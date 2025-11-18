@@ -57,8 +57,8 @@ export default async function AdminUsersPage() {
   })
 
   const stats = {
-    totalStudents: users.filter(u => u.role === "STUDENT").length,
-    totalInstructors: users.filter(u => u.role === "INSTRUCTOR").length,
+    totalStudents: users.filter((u: any) => u.role === "STUDENT").length,
+    totalInstructors: users.filter((u: any) => u.role === "INSTRUCTOR").length,
     totalUsers: users.length,
   }
 
