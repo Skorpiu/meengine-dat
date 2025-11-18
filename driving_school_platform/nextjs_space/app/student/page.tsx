@@ -89,7 +89,7 @@ export default async function StudentDashboard() {
   })
 
   // Serialize lessons with Decimal fields
-  const scheduledLessonsForMap = scheduledLessonsForMapRaw.map(lesson => ({
+  const scheduledLessonsForMap = scheduledLessonsForMapRaw.map((lesson: any) => ({
     ...lesson,
     instructor: lesson.instructor ? {
       user: {
@@ -104,7 +104,7 @@ export default async function StudentDashboard() {
   const progressPercentage = lessonCounter?.progressPercentage?.toNumber() || 0
 
   // Serialize lessonCounters to avoid Decimal serialization issues
-  const serializedLessonCounters = student.lessonCounters.map(lc => ({
+  const serializedLessonCounters = student.lessonCounters.map((lc: any) => ({
     id: lc.id,
     category: {
       id: lc.category.id,

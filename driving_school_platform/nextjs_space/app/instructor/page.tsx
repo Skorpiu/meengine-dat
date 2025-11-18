@@ -110,7 +110,7 @@ export default async function InstructorDashboard() {
   })
 
   // Serialize lessons with Decimal fields
-  const scheduledLessonsForMap = scheduledLessonsForMapRaw.map(lesson => ({
+  const scheduledLessonsForMap = scheduledLessonsForMapRaw.map((lesson: any) => ({
     ...lesson,
     instructor: lesson.instructor ? {
       user: {

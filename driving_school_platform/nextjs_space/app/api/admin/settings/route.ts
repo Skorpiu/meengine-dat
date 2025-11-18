@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Parse values based on type
-    const parsedSettings = settings.map(setting => ({
+    const parsedSettings = settings.map((setting: any) => ({
       ...setting,
       parsedValue: parseSettingValue(setting.settingValue, setting.settingType),
     }));

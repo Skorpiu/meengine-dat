@@ -95,13 +95,13 @@ export default function RegisterPage() {
   }
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       [field]: value
     }))
     
     // Clear validation error for this field
-    setValidationErrors(prev => {
+    setValidationErrors((prev: any) => {
       const newErrors = { ...prev }
       delete newErrors[field]
       return newErrors
@@ -109,9 +109,9 @@ export default function RegisterPage() {
   }
 
   const handleCategoryToggle = (category: string) => {
-    setSelectedCategories(prev => 
+    setSelectedCategories((prev: any) => 
       prev.includes(category) 
-        ? prev.filter(c => c !== category)
+        ? prev.filter((c: any) => c !== category)
         : [...prev, category]
     )
   }
@@ -255,7 +255,7 @@ export default function RegisterPage() {
                 <Label htmlFor="role">{t.register.iWantToRegisterAs}</Label>
                 <Select
                   value={formData.role}
-                  onValueChange={(value) => handleInputChange("role", value)}
+                  onValueChange={(value: any) => handleInputChange("role", value)}
                 >
                   <SelectTrigger className="h-11">
                     <SelectValue placeholder={t.register.selectYourRole} />
@@ -278,7 +278,7 @@ export default function RegisterPage() {
                     id="firstName"
                     placeholder={t.register.enterFirstName}
                     value={formData.firstName}
-                    onChange={(e) => handleInputChange("firstName", e.target.value)}
+                    onChange={(e: any) => handleInputChange("firstName", e.target.value)}
                     required
                     className="h-11"
                   />
@@ -292,7 +292,7 @@ export default function RegisterPage() {
                     id="lastName"
                     placeholder={t.register.enterLastName}
                     value={formData.lastName}
-                    onChange={(e) => handleInputChange("lastName", e.target.value)}
+                    onChange={(e: any) => handleInputChange("lastName", e.target.value)}
                     required
                     className="h-11"
                   />
@@ -310,7 +310,7 @@ export default function RegisterPage() {
                   type="email"
                   placeholder={t.register.enterEmail}
                   value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  onChange={(e: any) => handleInputChange("email", e.target.value)}
                   required
                   className="h-11"
                 />
@@ -325,13 +325,13 @@ export default function RegisterPage() {
                 <div className="flex gap-2">
                   <Select
                     value={formData.countryCode}
-                    onValueChange={(value) => handleInputChange("countryCode", value)}
+                    onValueChange={(value: any) => handleInputChange("countryCode", value)}
                   >
                     <SelectTrigger className="h-11 w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {COUNTRY_CODES.map((country) => (
+                      {COUNTRY_CODES.map((country: any) => (
                         <SelectItem key={country.code} value={country.code}>
                           {country.flag} {country.code}
                         </SelectItem>
@@ -343,7 +343,7 @@ export default function RegisterPage() {
                     type="tel"
                     placeholder={t.register.enterPhoneNumber}
                     value={formData.phoneNumber}
-                    onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+                    onChange={(e: any) => handleInputChange("phoneNumber", e.target.value)}
                     required
                     className="h-11 flex-1"
                   />
@@ -359,7 +359,7 @@ export default function RegisterPage() {
                   id="dateOfBirth"
                   type="date"
                   value={formData.dateOfBirth}
-                  onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+                  onChange={(e: any) => handleInputChange("dateOfBirth", e.target.value)}
                   required
                   className="h-11"
                 />
@@ -373,7 +373,7 @@ export default function RegisterPage() {
                     id="address"
                     placeholder={t.register.enterAddress}
                     value={formData.address}
-                    onChange={(e) => handleInputChange("address", e.target.value)}
+                    onChange={(e: any) => handleInputChange("address", e.target.value)}
                     className="h-11"
                   />
                 </div>
@@ -384,7 +384,7 @@ export default function RegisterPage() {
                       id="city"
                       placeholder={t.register.enterCity}
                       value={formData.city}
-                      onChange={(e) => handleInputChange("city", e.target.value)}
+                      onChange={(e: any) => handleInputChange("city", e.target.value)}
                       className="h-11"
                     />
                   </div>
@@ -394,7 +394,7 @@ export default function RegisterPage() {
                       id="postalCode"
                       placeholder={t.register.enterPostalCode}
                       value={formData.postalCode}
-                      onChange={(e) => handleInputChange("postalCode", e.target.value)}
+                      onChange={(e: any) => handleInputChange("postalCode", e.target.value)}
                       className="h-11"
                     />
                   </div>
@@ -406,13 +406,13 @@ export default function RegisterPage() {
                 <Label htmlFor="drivingSchool">{t.register.drivingSchool}</Label>
                 <Select
                   value={formData.drivingSchoolId}
-                  onValueChange={(value) => handleInputChange("drivingSchoolId", value)}
+                  onValueChange={(value: any) => handleInputChange("drivingSchoolId", value)}
                 >
                   <SelectTrigger className="h-11">
                     <SelectValue placeholder={t.register.selectDrivingSchool} />
                   </SelectTrigger>
                   <SelectContent>
-                    {DRIVING_SCHOOLS.map((school) => (
+                    {DRIVING_SCHOOLS.map((school: any) => (
                       <SelectItem key={school.id} value={school.id}>
                         {school.name}
                       </SelectItem>
@@ -432,7 +432,7 @@ export default function RegisterPage() {
                   <div className="space-y-2">
                     <Label>{t.register.licenseCategories}</Label>
                     <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
-                      {CATEGORIES.map((category) => (
+                      {CATEGORIES.map((category: any) => (
                         <div key={category} className="flex items-center space-x-2">
                           <Checkbox
                             id={category}
@@ -482,7 +482,7 @@ export default function RegisterPage() {
                         id="instructorLicenseNumber"
                         placeholder={t.register.enterLicenseNumber}
                         value={instructorLicenseNumber}
-                        onChange={(e) => setInstructorLicenseNumber(e.target.value)}
+                        onChange={(e: any) => setInstructorLicenseNumber(e.target.value)}
                         required
                         className="h-11"
                       />
@@ -493,7 +493,7 @@ export default function RegisterPage() {
                         id="instructorLicenseExpiry"
                         type="date"
                         value={instructorLicenseExpiry}
-                        onChange={(e) => setInstructorLicenseExpiry(e.target.value)}
+                        onChange={(e: any) => setInstructorLicenseExpiry(e.target.value)}
                         required
                         className="h-11"
                       />
@@ -515,7 +515,7 @@ export default function RegisterPage() {
                       type={showPassword ? "text" : "password"}
                       placeholder={t.register.createPassword}
                       value={formData.password}
-                      onChange={(e) => handleInputChange("password", e.target.value)}
+                      onChange={(e: any) => handleInputChange("password", e.target.value)}
                       required
                       className="h-11 pr-10"
                     />
@@ -546,7 +546,7 @@ export default function RegisterPage() {
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder={t.register.confirmYourPassword}
                       value={formData.confirmPassword}
-                      onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                      onChange={(e: any) => handleInputChange("confirmPassword", e.target.value)}
                       required
                       className="h-11 pr-10"
                     />

@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     const enabledFeatures = await LicenseService.getEnabledFeatures(user.organizationId);
 
     // Build response with all features and their status
-    const features = Object.values(FEATURE_DEFINITIONS).map(feature => ({
+    const features = Object.values(FEATURE_DEFINITIONS).map((feature: any) => ({
       ...feature,
       isEnabled: enabledFeatures.includes(feature.key),
     }));

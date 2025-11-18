@@ -98,8 +98,9 @@ export default function LicenseManagementPage() {
     );
   }
 
-  const premiumFeatures = features.filter(f => f.category === 'PREMIUM');
-  const enabledCount = premiumFeatures.filter(f => f.isEnabled).length;
+  // premium features
+  const premiumFeatures = features.filter((f: any) => f.category === 'PREMIUM');
+  const enabledCount = premiumFeatures.filter((f: any) => f.isEnabled).length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -157,7 +158,7 @@ export default function LicenseManagementPage() {
                 <Input
                   placeholder="Enter license key (e.g., LIC-XXXX-XXXX-XXXX)"
                   value={licenseKey}
-                  onChange={(e) => setLicenseKey(e.target.value.toUpperCase())}
+                  onChange={(e: any) => setLicenseKey(e.target.value.toUpperCase())}
                   disabled={activating}
                 />
               </div>
@@ -195,7 +196,7 @@ export default function LicenseManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {premiumFeatures.map((feature, index) => (
+              {premiumFeatures.map((feature: any, index: number) => (
                 <div key={feature.key}>
                   {index > 0 && <Separator className="my-4" />}
                   <div className="flex items-center justify-between">
@@ -241,7 +242,7 @@ export default function LicenseManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {premiumFeatures.map(feature => (
+              {premiumFeatures.map((feature: any) => (
                 <div
                   key={feature.key}
                   className={`p-4 border rounded-lg ${
