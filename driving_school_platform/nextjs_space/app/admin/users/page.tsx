@@ -35,7 +35,7 @@ export default async function AdminUsersPage() {
   })
 
   // Serialize users with Decimal fields converted to numbers
-  const users = usersRaw.map(user => ({
+  const users = usersRaw.map((user: any) => ({
     ...user,
     instructor: user.instructor ? {
       ...user.instructor,
