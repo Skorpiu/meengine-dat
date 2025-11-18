@@ -2,7 +2,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import bcrypt from "bcryptjs"
-import { UserRole } from "@prisma/client"
+
+type UserRole = "STUDENT" | "INSTRUCTOR" | "ADMIN"
 
 export const dynamic = "force-dynamic"
 
