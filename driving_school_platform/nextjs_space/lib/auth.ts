@@ -4,9 +4,6 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import { prisma } from "./db"
 import bcrypt from "bcryptjs"
-import type { $Enums } from "@prisma/client"
-
-type UserRole = $Enums.UserRole
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -81,8 +78,8 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.sub!
-        session.user.role = token.role as UserRole
+        session.user.id = token.sub!;
+        (session.user as any).role = token.role as any
         session.user.firstName = token.firstName as string
         session.user.lastName = token.lastName as string
         session.user.isApproved = token.isApproved as boolean

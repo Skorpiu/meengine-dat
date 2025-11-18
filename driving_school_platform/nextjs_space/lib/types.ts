@@ -4,7 +4,11 @@
  * @module lib/types
  */
 
-import { UserRole, LessonStatus, LessonType, VehicleStatus } from '@prisma/client';
+export type UserRole = "STUDENT" | "INSTRUCTOR" | "SUPER_ADMIN"
+
+export type LessonStatus = string
+export type LessonType = string
+export type VehicleStatus = string
 
 /**
  * Base User Interface

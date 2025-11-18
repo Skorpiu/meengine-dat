@@ -2,9 +2,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import bcrypt from "bcryptjs"
-import type { $Enums } from "@prisma/client"
-
-type UserRole = $Enums.UserRole
 
 export const dynamic = "force-dynamic"
 
@@ -77,7 +74,7 @@ export async function POST(request: NextRequest) {
         data: {
           email: email.toLowerCase(),
           passwordHash: hashedPassword,
-          role: role as UserRole,
+          role: role as any,
           firstName,
           lastName,
           phoneNumber,
