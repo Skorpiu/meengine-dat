@@ -1,5 +1,5 @@
 
-import { PrismaClient, UserRole } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
@@ -199,13 +199,13 @@ async function main() {
 
   // 3. Create Super Admin User
   console.log('👑 Creating super admin user...')
-  const hashedPassword = await bcrypt.hash('E!C!Conquistadora!', 12)
+  const hashedPassword = await bcrypt.hash('Conquistadora!', 12)
   
   const superAdmin = await prisma.user.create({
     data: {
       email: 'conquistadora@drivingschool.com',
       passwordHash: hashedPassword,
-      role: UserRole.SUPER_ADMIN,
+      role: "SUPER_ADMIN" as any,
       firstName: 'Conquistadora',
       lastName: 'Admin',
       phoneNumber: '+1-555-0100',
@@ -224,7 +224,7 @@ async function main() {
     data: {
       email: 'john@doe.com',
       passwordHash: testUserPassword,
-      role: UserRole.SUPER_ADMIN,
+      role: "SUPER_ADMIN" as any,
       firstName: 'John',
       lastName: 'Doe',
       phoneNumber: '+1-555-0001',
@@ -242,7 +242,7 @@ async function main() {
       data: {
         email: 'michael.johnson@drivingschool.com',
         passwordHash: await bcrypt.hash('instructor123', 12),
-        role: UserRole.INSTRUCTOR,
+        role: "INSTRUCTOR" as any,
         firstName: 'Michael',
         lastName: 'Johnson',
         phoneNumber: '+1-555-0201',
@@ -254,7 +254,7 @@ async function main() {
       data: {
         email: 'sarah.williams@drivingschool.com',
         passwordHash: await bcrypt.hash('instructor123', 12),
-        role: UserRole.INSTRUCTOR,
+        role: "INSTRUCTOR" as any,
         firstName: 'Sarah',
         lastName: 'Williams',
         phoneNumber: '+1-555-0202',
@@ -266,7 +266,7 @@ async function main() {
       data: {
         email: 'david.brown@drivingschool.com',
         passwordHash: await bcrypt.hash('instructor123', 12),
-        role: UserRole.INSTRUCTOR,
+        role: "INSTRUCTOR" as any,
         firstName: 'David',
         lastName: 'Brown',
         phoneNumber: '+1-555-0203',
@@ -342,7 +342,7 @@ async function main() {
       data: {
         email: 'alice.smith@email.com',
         passwordHash: await bcrypt.hash('student123', 12),
-        role: UserRole.STUDENT,
+        role: "STUDENT" as any,
         firstName: 'Alice',
         lastName: 'Smith',
         phoneNumber: '+1-555-0301',
@@ -358,7 +358,7 @@ async function main() {
       data: {
         email: 'bob.wilson@email.com',
         passwordHash: await bcrypt.hash('student123', 12),
-        role: UserRole.STUDENT,
+        role: "STUDENT" as any,
         firstName: 'Bob',
         lastName: 'Wilson',
         phoneNumber: '+1-555-0302',
@@ -374,7 +374,7 @@ async function main() {
       data: {
         email: 'carol.davis@email.com',
         passwordHash: await bcrypt.hash('student123', 12),
-        role: UserRole.STUDENT,
+        role: "STUDENT" as any,
         firstName: 'Carol',
         lastName: 'Davis',
         phoneNumber: '+1-555-0303',
