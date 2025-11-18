@@ -5,7 +5,8 @@
  */
 
 import { prisma } from './db';
-import { SettingType } from '@prisma/client';
+
+export type SettingType = string;
 
 /**
  * Parse setting value based on type
@@ -87,13 +88,13 @@ export async function setSystemSetting(
     where: { settingKey: key },
     update: {
       settingValue: stringValue,
-      settingType: type,
+      settingType: type as any,
       ...options,
     },
     create: {
       settingKey: key,
       settingValue: stringValue,
-      settingType: type,
+      settingType: type as any,
       ...options,
     },
   });
