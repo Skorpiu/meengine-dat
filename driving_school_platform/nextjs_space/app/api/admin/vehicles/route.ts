@@ -90,12 +90,12 @@ export async function GET(request: NextRequest) {
 
     // Create a set of vehicle IDs currently in use
     const vehicleIdsInUse = new Set([
-      ...currentLessons.map(l => l.vehicleId).filter(id => id !== null),
-      ...currentExams.map(e => e.vehicleId).filter(id => id !== null),
+      ...currentLessons.map((l: any) => l.vehicleId).filter((id: any) => id !== null),
+      ...currentExams.map((e: any) => e.vehicleId).filter((id: any) => id !== null),
     ]);
 
     // Update vehicle status based on real-time usage
-    const vehiclesWithStatus = vehicles.map(vehicle => {
+    const vehiclesWithStatus = vehicles.map((vehicle: any) => {
       let status = vehicle.status;
       
       // Priority 1: Under Maintenance
