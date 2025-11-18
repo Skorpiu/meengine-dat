@@ -75,15 +75,15 @@ export default async function AdminDashboard() {
   })
 
   // Serialize lessons with Decimal fields
-  const scheduledLessonsForMap = scheduledLessonsForMapRaw.map(lesson => ({
+  const scheduledLessonsForMap = scheduledLessonsForMapRaw.map((lesson: any) => ({
     ...lesson,
     instructor: lesson.instructor ? {
       user: {
         firstName: lesson.instructor.user.firstName,
         lastName: lesson.instructor.user.lastName,
       },
-    } : undefined,
-  })) as any
+    } : null,
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50">
