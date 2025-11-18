@@ -83,7 +83,7 @@ export default async function AdminDashboard() {
         lastName: lesson.instructor.user.lastName,
       },
     } : null,
-  }));
+  }))
 
   return (
     <div className="min-h-screen bg-gray-50">
