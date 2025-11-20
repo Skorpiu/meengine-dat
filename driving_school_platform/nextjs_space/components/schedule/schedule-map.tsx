@@ -339,6 +339,36 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
     return start1Min < end2Min && start2Min < end1Min;
   };
   
+  // Check if the class has already ended in relation to the currentTime
+  const isLessonPast = (lesson: Lesson): boolean => {
+    if (!lesson.lessonDate || !lesson.endTime) return false;
+
+    const lessonDate =
+      lesson.lessonDate instanceof Date
+        ? lesson.lessonDate
+        : new Date(lesson.lessonDate);
+
+    const [endHour, endMin] = lesson.endTime.split(':').map(Number);
+    const lessonEnd = new Date(lessonDate);
+    lessonEnd.setHours(endHour, endMin, 0, 0);
+
+    // If it's already marked as completed/cancelled, it also counts as "past"
+    if (lesson.status === 'COMPLETED' || lesson.status === 'CANCELLED') {
+      return true;
+    }
+
+    return currentTime > lessonEnd;
+  };
+
+  const canModifyLesson = (lesson: Lesson): boolean => {
+    // Only admins and instructors can make changes
+    if (userRole !== 'admin' && userRole !== 'instructor') return false;
+
+    // If it's already passed, you can't change it
+    if (isLessonPast(lesson)) return false;
+
+    return true;
+  };
 
   // Calculate lesson positions for continuous timeline
   const calculateLessonPosition = (lesson: Lesson, allDayLessons: Lesson[]) => {
@@ -640,9 +670,11 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
                                           size="sm"
                                           onClick={(e) => {
                                             e.stopPropagation();
+                                            if (!canModifyLesson(lesson)) return;
                                             handleEditLesson(lesson.id);
                                           }}
-                                          className="h-6 w-6 p-0 bg-white hover:bg-blue-50 border border-blue-300 rounded"
+                                          disabled={!canModifyLesson(lesson)}
+                                          className="h-6 w-6 p-0 bg-white hover:bg-blue-50 border border-blue-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                                           title="Edit lesson"
                                         >
                                           <Edit className="h-3 w-3 text-blue-600" />
@@ -652,15 +684,18 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
                                           size="sm"
                                           onClick={(e) => {
                                             e.stopPropagation();
+                                            if (!canModifyLesson(lesson)) return;
                                             setLessonToDelete(lesson.id);
                                             setSelectedLesson(null);
                                           }}
-                                          className="h-6 w-6 p-0 bg-white hover:bg-red-50 border border-red-300 rounded"
+                                          disabled={!canModifyLesson(lesson)}
+                                          className="h-6 w-6 p-0 bg-white hover:bg-red-50 border border-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                                           title="Delete lesson"
                                         >
                                           <Trash2 className="h-3 w-3 text-red-600" />
                                         </Button>
                                       </div>
+
                                     )}
                                   </div>
                                 </div>
