@@ -733,7 +733,7 @@ async function main() {
 
 👑 Super Admin Credentials:
   Email: conquistadora@drivingschool.com
-  Password: E!C!Conquistadora!
+  Password: Conquistadora!
 
 👤 Test User Credentials:
   Email: john@doe.com

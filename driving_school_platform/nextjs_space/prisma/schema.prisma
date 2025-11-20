@@ -1,27 +1,25 @@
-// Driving School Management Platform - Prisma Schema
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")   // pooler
-  directUrl = env("DIRECT_URL")     // direct
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// Authentication and User Management
 model Account {
   id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -48,14 +46,13 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
-// Core User Table
 model User {
-  id                          String    @id @default(cuid())
-  email                       String    @unique
+  id                         String          @id @default(cuid())
+  email                      String          @unique
   emailVerified              DateTime?
   image                      String?
   passwordHash               String?
-  role                       UserRole  @default(STUDENT)
+  role                       UserRole        @default(STUDENT)
   firstName                  String
   lastName                   String
   phoneNumber                String?
@@ -64,39 +61,28 @@ model User {
   city                       String?
   postalCode                 String?
   profilePictureUrl          String?
-  
-  // Organization Link (License Management)
   organizationId             String?
-  
-  // Account status
-  isEmailVerified           Boolean   @default(false)
-  emailVerificationToken    String?
+  isEmailVerified            Boolean         @default(false)
+  emailVerificationToken     String?
   emailVerificationExpiresAt DateTime?
-  isApproved                Boolean   @default(false)
-  
-  // Password reset
-  passwordResetToken        String?
-  passwordResetExpiresAt    DateTime?
-  
-  // Metadata
-  createdAt                 DateTime  @default(now())
-  updatedAt                 DateTime  @updatedAt
-  lastLoginAt              DateTime?
+  isApproved                 Boolean         @default(false)
+  passwordResetToken         String?
+  passwordResetExpiresAt     DateTime?
+  createdAt                  DateTime        @default(now())
+  updatedAt                  DateTime        @updatedAt
+  lastLoginAt                DateTime?
+  accounts                   Account[]
+  auditLogs                  AuditLog[]
+  instructor                 Instructor?
+  lessonRequestsReviewed     LessonRequest[] @relation("ReviewedBy")
+  lessonsCancelled           Lesson[]        @relation("CancelledBy")
+  notifications              Notification[]
+  paymentsUser               Payment[]       @relation("PaymentUser")
+  sessions                   Session[]
+  student                    Student?
+  preferences                UserPreference?
+  organization               Organization?   @relation(fields: [organizationId], references: [id])
 
-  // Relations
-  organization              Organization? @relation(fields: [organizationId], references: [id])
-  accounts                  Account[]
-  sessions                  Session[]
-  student                   Student?
-  instructor               Instructor?
-  preferences              UserPreference?
-  lessonRequestsReviewed   LessonRequest[] @relation("ReviewedBy")
-  lessonsCancelled         Lesson[] @relation("CancelledBy")
-  paymentsUser             Payment[] @relation("PaymentUser")
-  notifications            Notification[]
-  auditLogs                AuditLog[]
-
-  // Indexes
   @@index([email])
   @@index([role])
   @@index([isApproved])
@@ -105,114 +91,85 @@ model User {
   @@map("users")
 }
 
-enum UserRole {
-  STUDENT
-  INSTRUCTOR
-  SUPER_ADMIN
-}
-
-// Transmission Types
 model TransmissionType {
-  id          Int       @id @default(autoincrement())
-  name        String    @unique
-  code        String    @unique
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  code        String       @unique
   description String?
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  // Relations
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   categories  Category[]
-  students    Student[]
-  instructors Instructor[] @relation("InstructorTransmissionTypes")
-  vehicles    Vehicle[]
   lessons     Lesson[]
+  students    Student[]
+  vehicles    Vehicle[]
+  instructors Instructor[] @relation("InstructorTransmissionTypes")
 
   @@map("transmission_types")
 }
 
-// Categories (License types)
 model Category {
-  id                     Int              @id @default(autoincrement())
-  name                   String           @unique
-  fullName               String
-  description            String?
-  transmissionTypeId     Int?
-  minAge                 Int?
-  requiresTheoryExam     Boolean          @default(true)
-  requiresPracticalExam  Boolean          @default(true)
-  minLessonHours         Int              @default(0)
-  isActive               Boolean          @default(true)
-  displayOrder           Int              @default(0)
-  createdAt              DateTime         @default(now())
-  updatedAt              DateTime         @updatedAt
-
-  // Relations
-  transmissionType       TransmissionType? @relation(fields: [transmissionTypeId], references: [id])
-  students               Student[]
-  instructors            Instructor[] @relation("InstructorCategories")
-  vehicles               Vehicle[]
-  lessons                Lesson[]
-  exams                  Exam[]
-  lessonCounters         LessonCounter[]
-  lessonRequests         LessonRequest[]
+  id                    Int               @id @default(autoincrement())
+  name                  String            @unique
+  fullName              String
+  description           String?
+  transmissionTypeId    Int?
+  minAge                Int?
+  requiresTheoryExam    Boolean           @default(true)
+  requiresPracticalExam Boolean           @default(true)
+  minLessonHours        Int               @default(0)
+  isActive              Boolean           @default(true)
+  displayOrder          Int               @default(0)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  transmissionType      TransmissionType? @relation(fields: [transmissionTypeId], references: [id])
+  exams                 Exam[]
+  lessonCounters        LessonCounter[]
+  lessonRequests        LessonRequest[]
+  lessons               Lesson[]
+  students              Student[]
+  vehicles              Vehicle[]
+  instructors           Instructor[]      @relation("InstructorCategories")
 
   @@map("categories")
 }
 
-// Students
 model Student {
-  id                             String          @id @default(cuid())
-  userId                         String          @unique
-  studentIdNumber                String?         @unique
-  categoryId                     Int?
-  transmissionTypeId             Int?
-  organizationId                 String?
-  
-  // License information
-  hasDrivingLicense              Boolean         @default(false)
-  existingLicenseNumber          String?
-  existingLicenseCategories      String[]
-  
-  // Medical
-  medicalCertificateUrl          String?
-  medicalCertificateExpiry       DateTime?
-  
-  // Emergency contact
-  emergencyContactName           String?
-  emergencyContactPhone          String?
-  emergencyContactRelationship   String?
-  
-  // Preferences
-  preferredInstructorId          String?
-  preferredLessonTime            String?
-  
-  // Progress tracking
-  theoryExamPassed               Boolean         @default(false)
-  practicalExamPassed            Boolean         @default(false)
-  enrollmentDate                 DateTime        @default(now())
-  graduationDate                 DateTime?
-  
-  // Notes
-  adminNotes                     String?
-  specialRequirements            String?
-  
-  createdAt                      DateTime        @default(now())
-  updatedAt                      DateTime        @updatedAt
+  id                           String             @id @default(cuid())
+  userId                       String             @unique
+  studentIdNumber              String?            @unique
+  categoryId                   Int?
+  transmissionTypeId           Int?
+  organizationId               String?
+  hasDrivingLicense            Boolean            @default(false)
+  existingLicenseNumber        String?
+  existingLicenseCategories    String[]
+  medicalCertificateUrl        String?
+  medicalCertificateExpiry     DateTime?
+  emergencyContactName         String?
+  emergencyContactPhone        String?
+  emergencyContactRelationship String?
+  preferredInstructorId        String?
+  preferredLessonTime          String?
+  theoryExamPassed             Boolean            @default(false)
+  practicalExamPassed          Boolean            @default(false)
+  enrollmentDate               DateTime           @default(now())
+  graduationDate               DateTime?
+  adminNotes                   String?
+  specialRequirements          String?
+  createdAt                    DateTime           @default(now())
+  updatedAt                    DateTime           @updatedAt
+  examRegistrations            ExamRegistration[]
+  lessonCounters               LessonCounter[]
+  lessonRequests               LessonRequest[]
+  lessons                      Lesson[]
+  paymentsStudent              Payment[]          @relation("PaymentStudent")
+  category                     Category?          @relation(fields: [categoryId], references: [id])
+  organization                 Organization?      @relation(fields: [organizationId], references: [id])
+  preferredInstructor          Instructor?        @relation("PreferredStudents", fields: [preferredInstructorId], references: [id])
+  transmissionType             TransmissionType?  @relation(fields: [transmissionTypeId], references: [id])
+  user                         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Relations
-  user                           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category                       Category?       @relation(fields: [categoryId], references: [id])
-  transmissionType               TransmissionType? @relation(fields: [transmissionTypeId], references: [id])
-  organization                   Organization?   @relation(fields: [organizationId], references: [id])
-  preferredInstructor            Instructor?     @relation("PreferredStudents", fields: [preferredInstructorId], references: [id])
-  lessons                        Lesson[]
-  lessonRequests                 LessonRequest[]
-  lessonCounters                 LessonCounter[]
-  examRegistrations              ExamRegistration[]
-  paymentsStudent                Payment[]       @relation("PaymentStudent")
-
-  // Indexes
   @@index([userId])
   @@index([categoryId])
   @@index([transmissionTypeId])
@@ -220,127 +177,526 @@ model Student {
   @@map("students")
 }
 
-// Instructors
 model Instructor {
-  id                            String          @id @default(cuid())
-  userId                        String          @unique
-  instructorIdNumber            String?         @unique
-  organizationId                String?
-  
-  // Certifications
-  instructorLicenseNumber       String          @unique
-  instructorLicenseExpiry       DateTime
-  instructorCertificateUrl      String?
-  
-  // Work information
-  hireDate                      DateTime?
-  employmentType                EmploymentType?
-  hourlyRate                    Decimal?
-  
-  // Availability
-  defaultWorkingHours           Json?
-  maxLessonsPerDay              Int             @default(8)
-  
-  // Performance metrics
-  totalLessonsCompleted         Int             @default(0)
-  averageRating                 Decimal         @default(0.00)
-  totalStudentsTrained          Int             @default(0)
-  passRatePercentage            Decimal         @default(0.00)
-  
-  // Status
-  isAvailableForBooking         Boolean         @default(true)
-  
-  // Notes
-  adminNotes                    String?
-  specializations               String?
-  
-  createdAt                     DateTime        @default(now())
-  updatedAt                     DateTime        @updatedAt
+  id                         String             @id @default(cuid())
+  userId                     String             @unique
+  instructorIdNumber         String?            @unique
+  organizationId             String?
+  instructorLicenseNumber    String             @unique
+  instructorLicenseExpiry    DateTime
+  instructorCertificateUrl   String?
+  hireDate                   DateTime?
+  employmentType             EmploymentType?
+  hourlyRate                 Decimal?
+  defaultWorkingHours        Json?
+  maxLessonsPerDay           Int                @default(8)
+  totalLessonsCompleted      Int                @default(0)
+  averageRating              Decimal            @default(0.00)
+  totalStudentsTrained       Int                @default(0)
+  passRatePercentage         Decimal            @default(0.00)
+  isAvailableForBooking      Boolean            @default(true)
+  adminNotes                 String?
+  specializations            String?
+  createdAt                  DateTime           @default(now())
+  updatedAt                  DateTime           @updatedAt
+  exams                      Exam[]
+  organization               Organization?      @relation(fields: [organizationId], references: [id])
+  user                       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonRequests             LessonRequest[]
+  lessons                    Lesson[]
+  preferredStudents          Student[]          @relation("PreferredStudents")
+  qualifiedCategories        Category[]         @relation("InstructorCategories")
+  qualifiedTransmissionTypes TransmissionType[] @relation("InstructorTransmissionTypes")
 
-  // Relations
-  user                          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organization                  Organization?   @relation(fields: [organizationId], references: [id])
-  qualifiedCategories           Category[]      @relation("InstructorCategories")
-  qualifiedTransmissionTypes    TransmissionType[] @relation("InstructorTransmissionTypes")
-  preferredStudents             Student[]       @relation("PreferredStudents")
-  lessons                       Lesson[]
-  lessonRequests                LessonRequest[]
-  exams                         Exam[]
-
-  // Indexes
   @@index([userId])
   @@index([isAvailableForBooking])
   @@index([organizationId])
   @@map("instructors")
 }
 
-enum EmploymentType {
-  FULL_TIME
-  PART_TIME
-  CONTRACTOR
-}
-
-// Vehicles
 model Vehicle {
   id                    Int              @id @default(autoincrement())
   registrationNumber    String           @unique
-  
-  // Vehicle details
   make                  String
   model                 String
   year                  Int
   color                 String?
   vin                   String?          @unique
-  
-  // Classification
   categoryId            Int?
   transmissionTypeId    Int
-  
-  // Status
   status                VehicleStatus    @default(AVAILABLE)
   isActive              Boolean          @default(true)
   underMaintenance      Boolean          @default(false)
-  
-  // Maintenance
   lastServiceDate       DateTime?
   nextServiceDate       DateTime?
   lastServiceMileage    Int?
   currentMileage        Int              @default(0)
   serviceIntervalKm     Int              @default(10000)
-  
-  // Insurance
   insurancePolicyNumber String?
   insuranceExpiryDate   DateTime?
   insuranceCompany      String?
-  
-  // Features
   hasDualControls       Boolean          @default(true)
   hasDashcam            Boolean          @default(false)
   fuelType              FuelType?
-  
-  // Media
   vehicleImageUrl       String?
-  
-  // Notes
   adminNotes            String?
-  
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
-
-  // Relations
-  category              Category?        @relation(fields: [categoryId], references: [id])
-  transmissionType      TransmissionType @relation(fields: [transmissionTypeId], references: [id])
-  lessons               Lesson[]
   exams                 Exam[]
   lessonRequests        LessonRequest[]
+  lessons               Lesson[]
+  category              Category?        @relation(fields: [categoryId], references: [id])
+  transmissionType      TransmissionType @relation(fields: [transmissionTypeId], references: [id])
 
-  // Indexes
   @@index([status])
   @@index([categoryId])
   @@index([transmissionTypeId])
   @@index([isActive])
   @@index([nextServiceDate])
   @@map("vehicles")
+}
+
+model LessonRequest {
+  id                 String        @id @default(cuid())
+  studentId          String
+  instructorId       String?
+  requestedDate      DateTime
+  requestedStartTime String
+  requestedEndTime   String
+  lessonType         LessonType
+  categoryId         Int
+  preferredVehicleId Int?
+  status             RequestStatus @default(PENDING)
+  reviewedBy         String?
+  reviewedAt         DateTime?
+  rejectionReason    String?
+  studentNotes       String?
+  adminNotes         String?
+  lessonId           String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  category           Category      @relation(fields: [categoryId], references: [id])
+  instructor         Instructor?   @relation(fields: [instructorId], references: [id])
+  lesson             Lesson?       @relation(fields: [lessonId], references: [id])
+  preferredVehicle   Vehicle?      @relation(fields: [preferredVehicleId], references: [id])
+  reviewer           User?         @relation("ReviewedBy", fields: [reviewedBy], references: [id])
+  student            Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([instructorId])
+  @@index([status])
+  @@index([requestedDate])
+  @@map("lesson_requests")
+}
+
+model Lesson {
+  id                       String            @id @default(cuid())
+  studentId                String?
+  instructorId             String
+  vehicleId                Int?
+  lessonDate               DateTime
+  startTime                String
+  endTime                  String
+  durationMinutes          Int
+  lessonType               LessonType
+  categoryId               Int
+  transmissionTypeId       Int?
+  status                   LessonStatus      @default(SCHEDULED)
+  startedAt                DateTime?
+  completedAt              DateTime?
+  startMileage             Int?
+  endMileage               Int?
+  pickupLocation           String?
+  dropoffLocation          String?
+  routeDescription         String?
+  instructorRating         Int?
+  instructorFeedback       String?
+  skillsPracticed          String[]
+  areasForImprovement      String?
+  studentPerformanceRating Int?
+  studentRating            Int?
+  studentFeedback          String?
+  cancelledBy              String?
+  cancelledAt              DateTime?
+  cancellationReason       String?
+  lessonPrice              Decimal?
+  paymentStatus            PaymentStatus     @default(PENDING)
+  adminNotes               String?
+  createdAt                DateTime          @default(now())
+  updatedAt                DateTime          @updatedAt
+  lessonRequests           LessonRequest[]
+  cancelledByUser          User?             @relation("CancelledBy", fields: [cancelledBy], references: [id])
+  category                 Category          @relation(fields: [categoryId], references: [id])
+  instructor               Instructor        @relation(fields: [instructorId], references: [id])
+  student                  Student?          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  transmissionType         TransmissionType? @relation(fields: [transmissionTypeId], references: [id])
+  vehicle                  Vehicle?          @relation(fields: [vehicleId], references: [id])
+  payments                 Payment[]
+
+  @@index([studentId])
+  @@index([instructorId])
+  @@index([vehicleId])
+  @@index([lessonDate])
+  @@index([status])
+  @@index([lessonType])
+  @@index([lessonDate, status])
+  @@index([instructorId, lessonDate])
+  @@index([studentId, lessonDate])
+  @@index([lessonType, lessonDate, status])
+  @@map("lessons")
+}
+
+model LessonCounter {
+  id                      String   @id @default(cuid())
+  studentId               String
+  categoryId              Int
+  totalDrivingLessons     Int      @default(0)
+  completedDrivingLessons Int      @default(0)
+  totalTheoryLessons      Int      @default(0)
+  completedTheoryLessons  Int      @default(0)
+  totalDrivingHours       Decimal  @default(0.00)
+  requiredDrivingHours    Decimal  @default(0.00)
+  theoryExamAttempts      Int      @default(0)
+  practicalExamAttempts   Int      @default(0)
+  progressPercentage      Decimal  @default(0.00)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  category                Category @relation(fields: [categoryId], references: [id])
+  student                 Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, categoryId])
+  @@map("lesson_counters")
+}
+
+model Exam {
+  id                   String             @id @default(cuid())
+  examType             ExamType
+  categoryId           Int
+  examDate             DateTime
+  startTime            String
+  endTime              String
+  examLocation         String
+  examCenterName       String?
+  vehicleId            Int?
+  examinerId           String?
+  maxStudents          Int                @default(1)
+  currentStudentsCount Int                @default(0)
+  status               ExamStatus         @default(SCHEDULED)
+  specialInstructions  String?
+  adminNotes           String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  registrations        ExamRegistration[]
+  category             Category           @relation(fields: [categoryId], references: [id])
+  examiner             Instructor?        @relation(fields: [examinerId], references: [id])
+  vehicle              Vehicle?           @relation(fields: [vehicleId], references: [id])
+
+  @@index([examDate])
+  @@index([status])
+  @@index([categoryId])
+  @@index([examinerId])
+  @@map("exams")
+}
+
+model ExamRegistration {
+  id                   String           @id @default(cuid())
+  examId               String
+  studentId            String
+  registrationDate     DateTime         @default(now())
+  registrationFee      Decimal?
+  paymentStatus        PaymentStatus    @default(PENDING)
+  attendanceStatus     AttendanceStatus @default(REGISTERED)
+  result               ExamResult?
+  score                Decimal?
+  examinerComments     String?
+  resultDate           DateTime?
+  attemptNumber        Int              @default(1)
+  certificateIssued    Boolean          @default(false)
+  certificateNumber    String?
+  certificateIssueDate DateTime?
+  certificateUrl       String?
+  updatedAt            DateTime         @updatedAt
+  exam                 Exam             @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student              Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  payments             Payment[]
+
+  @@unique([examId, studentId])
+  @@index([examId])
+  @@index([studentId])
+  @@index([result])
+  @@map("exam_registrations")
+}
+
+model Payment {
+  id                 String            @id @default(cuid())
+  userId             String
+  studentId          String?
+  amount             Decimal
+  currency           String            @default("USD")
+  paymentMethod      PaymentMethod?
+  paymentType        PaymentType
+  lessonId           String?
+  examRegistrationId String?
+  status             PaymentStatus     @default(PENDING)
+  transactionId      String?           @unique
+  transactionDate    DateTime          @default(now())
+  paymentGateway     String?
+  gatewayResponse    Json?
+  refundAmount       Decimal?
+  refundDate         DateTime?
+  refundReason       String?
+  receiptNumber      String?           @unique
+  receiptUrl         String?
+  description        String?
+  adminNotes         String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  examRegistration   ExamRegistration? @relation(fields: [examRegistrationId], references: [id])
+  lesson             Lesson?           @relation(fields: [lessonId], references: [id])
+  student            Student?          @relation("PaymentStudent", fields: [studentId], references: [id])
+  user               User              @relation("PaymentUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([studentId])
+  @@index([status])
+  @@index([transactionDate])
+  @@index([lessonId])
+  @@map("payments")
+}
+
+model Notification {
+  id              String               @id @default(cuid())
+  userId          String
+  type            NotificationType
+  title           String
+  message         String
+  lessonId        String?
+  examId          String?
+  lessonRequestId String?
+  isRead          Boolean              @default(false)
+  readAt          DateTime?
+  sendEmail       Boolean              @default(false)
+  emailSent       Boolean              @default(false)
+  emailSentAt     DateTime?
+  sendPush        Boolean              @default(false)
+  pushSent        Boolean              @default(false)
+  pushSentAt      DateTime?
+  priority        NotificationPriority @default(NORMAL)
+  actionUrl       String?
+  createdAt       DateTime             @default(now())
+  expiresAt       DateTime?
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id            String      @id @default(cuid())
+  userId        String?
+  userEmail     String?
+  userRole      UserRole?
+  action        String
+  entityType    String
+  entityId      String?
+  oldValues     Json?
+  newValues     Json?
+  ipAddress     String?
+  userAgent     String?
+  requestMethod String?
+  requestPath   String?
+  status        AuditStatus
+  errorMessage  String?
+  createdAt     DateTime    @default(now())
+  user          User?       @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entityType])
+  @@index([createdAt])
+  @@index([action])
+  @@map("audit_logs")
+}
+
+model Organization {
+  id                 String                @id @default(cuid())
+  name               String                @unique
+  email              String?
+  phoneNumber        String?
+  address            String?
+  city               String?
+  postalCode         String?
+  logo               String?
+  primaryColor       String?               @default("#2563eb")
+  secondaryColor     String?               @default("#dc2626")
+  subscriptionTier   SubscriptionTier      @default(BASE)
+  subscriptionStatus SubscriptionStatus    @default(ACTIVE)
+  trialEndsAt        DateTime?
+  subscriptionEndsAt DateTime?
+  contactName        String?
+  billingEmail       String?
+  isActive           Boolean               @default(true)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  instructors        Instructor[]
+  licenseKeys        LicenseKey[]
+  features           OrganizationFeature[]
+  students           Student[]
+  users              User[]
+
+  @@index([subscriptionTier])
+  @@index([subscriptionStatus])
+  @@index([isActive])
+  @@map("organizations")
+}
+
+model OrganizationFeature {
+  id             String       @id @default(cuid())
+  organizationId String
+  featureKey     String
+  isEnabled      Boolean      @default(false)
+  enabledAt      DateTime?
+  disabledAt     DateTime?
+  enabledBy      String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, featureKey])
+  @@index([organizationId])
+  @@index([featureKey])
+  @@index([isEnabled])
+  @@map("organization_features")
+}
+
+model LicenseKey {
+  id             String       @id @default(cuid())
+  organizationId String
+  key            String       @unique
+  featureKeys    String[]
+  isActive       Boolean      @default(true)
+  isUsed         Boolean      @default(false)
+  usedAt         DateTime?
+  expiresAt      DateTime?
+  notes          String?
+  createdBy      String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([key])
+  @@index([isActive])
+  @@map("license_keys")
+}
+
+model SystemSetting {
+  id           String      @id @default(cuid())
+  settingKey   String      @unique
+  settingValue String
+  settingType  SettingType @default(STRING)
+  description  String?
+  category     String?
+  isPublic     Boolean     @default(false)
+  updatedBy    String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([category])
+  @@index([isPublic])
+  @@map("system_settings")
+}
+
+model FeatureFlag {
+  id              String    @id @default(cuid())
+  flagKey         String    @unique
+  flagName        String
+  description     String?
+  isEnabled       Boolean   @default(false)
+  enabledForRoles String[]
+  enabledForUsers String[]
+  rolloutPercent  Int       @default(0)
+  environment     String    @default("production")
+  category        String?
+  tags            String[]
+  createdBy       String?
+  updatedBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  expiresAt       DateTime?
+
+  @@index([flagKey])
+  @@index([isEnabled])
+  @@index([environment])
+  @@map("feature_flags")
+}
+
+model UserPreference {
+  id                          String   @id @default(cuid())
+  userId                      String   @unique
+  theme                       String   @default("light")
+  language                    String   @default("en")
+  emailNotifications          Boolean  @default(true)
+  pushNotifications           Boolean  @default(true)
+  smsNotifications            Boolean  @default(false)
+  lessonReminders             Boolean  @default(true)
+  examReminders               Boolean  @default(true)
+  paymentReminders            Boolean  @default(true)
+  promotionalEmails           Boolean  @default(false)
+  weeklyDigest                Boolean  @default(true)
+  defaultDashboardView        String   @default("overview")
+  showCompletedLessons        Boolean  @default(true)
+  lessonDisplayCount          Int      @default(5)
+  calendarView                String   @default("month")
+  startOfWeek                 String   @default("monday")
+  timeFormat                  String   @default("24h")
+  profileVisibility           String   @default("school")
+  showProgressToInstructors   Boolean  @default(true)
+  allowContactFromInstructors Boolean  @default(true)
+  fontSize                    String   @default("medium")
+  highContrast                Boolean  @default(false)
+  reducedMotion               Boolean  @default(false)
+  customSettings              Json?
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+  user                        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model ConfigurationHistory {
+  id            String   @id @default(cuid())
+  entityType    String
+  entityId      String
+  entityKey     String?
+  action        String
+  oldValue      Json?
+  newValue      Json?
+  changedBy     String?
+  changedByRole String?
+  changedAt     DateTime @default(now())
+  changeReason  String?
+  ipAddress     String?
+
+  @@index([entityType])
+  @@index([entityId])
+  @@index([changedAt])
+  @@index([changedBy])
+  @@map("configuration_history")
+}
+
+enum UserRole {
+  STUDENT
+  INSTRUCTOR
+  SUPER_ADMIN
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACTOR
 }
 
 enum VehicleStatus {
@@ -357,145 +713,11 @@ enum FuelType {
   HYBRID
 }
 
-// Lesson Requests
-model LessonRequest {
-  id                    String          @id @default(cuid())
-  studentId             String
-  instructorId          String?
-  
-  // Request details
-  requestedDate         DateTime
-  requestedStartTime    String          // HH:MM format
-  requestedEndTime      String          // HH:MM format
-  lessonType            LessonType
-  categoryId            Int
-  
-  // Optional vehicle preference
-  preferredVehicleId    Int?
-  
-  // Status workflow
-  status                RequestStatus   @default(PENDING)
-  
-  // Approval tracking
-  reviewedBy            String?
-  reviewedAt            DateTime?
-  rejectionReason       String?
-  
-  // Notes
-  studentNotes          String?
-  adminNotes            String?
-  
-  // Reference to created lesson
-  lessonId              String?
-  
-  createdAt             DateTime        @default(now())
-  updatedAt             DateTime        @updatedAt
-
-  // Relations
-  student               Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  instructor            Instructor?     @relation(fields: [instructorId], references: [id])
-  category              Category        @relation(fields: [categoryId], references: [id])
-  preferredVehicle      Vehicle?        @relation(fields: [preferredVehicleId], references: [id])
-  reviewer              User?           @relation("ReviewedBy", fields: [reviewedBy], references: [id])
-  lesson                Lesson?         @relation(fields: [lessonId], references: [id])
-
-  // Indexes
-  @@index([studentId])
-  @@index([instructorId])
-  @@index([status])
-  @@index([requestedDate])
-  @@map("lesson_requests")
-}
-
 enum RequestStatus {
   PENDING
   APPROVED
   REJECTED
   CANCELLED
-}
-
-// Lessons
-model Lesson {
-  id                        String          @id @default(cuid())
-  
-  // Participants
-  studentId                 String?
-  instructorId              String
-  vehicleId                 Int?
-  
-  // Schedule
-  lessonDate                DateTime
-  startTime                 String          // HH:MM format
-  endTime                   String          // HH:MM format
-  durationMinutes           Int
-  
-  // Classification
-  lessonType                LessonType
-  categoryId                Int
-  transmissionTypeId        Int?
-  
-  // Status
-  status                    LessonStatus    @default(SCHEDULED)
-  
-  // Completion details
-  startedAt                 DateTime?
-  completedAt               DateTime?
-  startMileage              Int?
-  endMileage                Int?
-  
-  // Location
-  pickupLocation            String?
-  dropoffLocation           String?
-  routeDescription          String?
-  
-  // Evaluation
-  instructorRating          Int?
-  instructorFeedback        String?
-  skillsPracticed           String[]
-  areasForImprovement       String?
-  studentPerformanceRating  Int?
-  
-  // Student feedback
-  studentRating             Int?
-  studentFeedback           String?
-  
-  // Cancellation
-  cancelledBy               String?
-  cancelledAt               DateTime?
-  cancellationReason        String?
-  
-  // Pricing
-  lessonPrice               Decimal?
-  paymentStatus             PaymentStatus   @default(PENDING)
-  
-  // Notes
-  adminNotes                String?
-  
-  createdAt                 DateTime        @default(now())
-  updatedAt                 DateTime        @updatedAt
-
-  // Relations
-  student                   Student?        @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  instructor                Instructor      @relation(fields: [instructorId], references: [id])
-  vehicle                   Vehicle?        @relation(fields: [vehicleId], references: [id])
-  category                  Category        @relation(fields: [categoryId], references: [id])
-  transmissionType          TransmissionType? @relation(fields: [transmissionTypeId], references: [id])
-  cancelledByUser           User?           @relation("CancelledBy", fields: [cancelledBy], references: [id])
-  lessonRequests            LessonRequest[]
-  payments                  Payment[]
-
-  // Indexes
-  @@index([studentId])
-  @@index([instructorId])
-  @@index([vehicleId])
-  @@index([lessonDate])
-  @@index([status])
-  @@index([lessonType])
-  @@index([lessonDate, status])
-  @@index([instructorId, lessonDate])
-  @@index([studentId, lessonDate])
-  @@index([lessonType, lessonDate, status])
-  @@map("lessons")
 }
 
 enum LessonType {
@@ -519,89 +741,6 @@ enum PaymentStatus {
   WAIVED
 }
 
-// Lesson Counters
-model LessonCounter {
-  id                      String    @id @default(cuid())
-  studentId               String
-  categoryId              Int
-  
-  // Counters by lesson type
-  totalDrivingLessons     Int       @default(0)
-  completedDrivingLessons Int       @default(0)
-  totalTheoryLessons      Int       @default(0)
-  completedTheoryLessons  Int       @default(0)
-  
-  // Hours tracking
-  totalDrivingHours       Decimal   @default(0.00)
-  requiredDrivingHours    Decimal   @default(0.00)
-  
-  // Exam attempts
-  theoryExamAttempts      Int       @default(0)
-  practicalExamAttempts   Int       @default(0)
-  
-  // Progress percentage
-  progressPercentage      Decimal   @default(0.00)
-  
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-
-  // Relations
-  student                 Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  category                Category  @relation(fields: [categoryId], references: [id])
-
-  @@unique([studentId, categoryId])
-  @@map("lesson_counters")
-}
-
-// Exams
-model Exam {
-  id                    String              @id @default(cuid())
-  
-  // Exam details
-  examType              ExamType
-  categoryId            Int
-  
-  // Schedule
-  examDate              DateTime
-  startTime             String              // HH:MM format
-  endTime               String              // HH:MM format
-  
-  // Location
-  examLocation          String
-  examCenterName        String?
-  
-  // For practical exams
-  vehicleId             Int?
-  examinerId            String?
-  
-  // Capacity
-  maxStudents           Int                 @default(1)
-  currentStudentsCount  Int                 @default(0)
-  
-  // Status
-  status                ExamStatus          @default(SCHEDULED)
-  
-  // Notes
-  specialInstructions   String?
-  adminNotes            String?
-  
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
-
-  // Relations
-  category              Category            @relation(fields: [categoryId], references: [id])
-  vehicle               Vehicle?            @relation(fields: [vehicleId], references: [id])
-  examiner              Instructor?         @relation(fields: [examinerId], references: [id])
-  registrations         ExamRegistration[]
-
-  // Indexes
-  @@index([examDate])
-  @@index([status])
-  @@index([categoryId])
-  @@index([examinerId])
-  @@map("exams")
-}
-
 enum ExamType {
   THEORY
   PRACTICAL
@@ -612,50 +751,6 @@ enum ExamStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
-}
-
-// Exam Registrations
-model ExamRegistration {
-  id                    String              @id @default(cuid())
-  examId                String
-  studentId             String
-  
-  // Registration
-  registrationDate      DateTime            @default(now())
-  registrationFee       Decimal?
-  paymentStatus         PaymentStatus       @default(PENDING)
-  
-  // Status
-  attendanceStatus      AttendanceStatus    @default(REGISTERED)
-  
-  // Results
-  result                ExamResult?
-  score                 Decimal?
-  examinerComments      String?
-  resultDate            DateTime?
-  
-  // Attempt number
-  attemptNumber         Int                 @default(1)
-  
-  // Certificate
-  certificateIssued     Boolean             @default(false)
-  certificateNumber     String?
-  certificateIssueDate  DateTime?
-  certificateUrl        String?
-  
-  updatedAt             DateTime            @updatedAt
-
-  // Relations
-  exam                  Exam                @relation(fields: [examId], references: [id], onDelete: Cascade)
-  student               Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  payments              Payment[]
-
-  // Indexes
-  @@index([examId])
-  @@index([studentId])
-  @@index([result])
-  @@unique([examId, studentId])
-  @@map("exam_registrations")
 }
 
 enum AttendanceStatus {
@@ -669,68 +764,6 @@ enum ExamResult {
   PASS
   FAIL
   PENDING
-}
-
-// Payments
-model Payment {
-  id                    String              @id @default(cuid())
-  
-  // Payer
-  userId                String
-  studentId             String?
-  
-  // Payment details
-  amount                Decimal
-  currency              String              @default("USD")
-  paymentMethod         PaymentMethod?
-  
-  // Payment type
-  paymentType           PaymentType
-  
-  // References
-  lessonId              String?
-  examRegistrationId    String?
-  
-  // Status
-  status                PaymentStatus       @default(PENDING)
-  
-  // Transaction details
-  transactionId         String?             @unique
-  transactionDate       DateTime            @default(now())
-  
-  // Gateway information
-  paymentGateway        String?
-  gatewayResponse       Json?
-  
-  // Refund information
-  refundAmount          Decimal?
-  refundDate            DateTime?
-  refundReason          String?
-  
-  // Receipt
-  receiptNumber         String?             @unique
-  receiptUrl            String?
-  
-  // Notes
-  description           String?
-  adminNotes            String?
-  
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
-
-  // Relations
-  user                  User                @relation("PaymentUser", fields: [userId], references: [id], onDelete: Cascade)
-  student               Student?            @relation("PaymentStudent", fields: [studentId], references: [id])
-  lesson                Lesson?             @relation(fields: [lessonId], references: [id])
-  examRegistration      ExamRegistration?   @relation(fields: [examRegistrationId], references: [id])
-
-  // Indexes
-  @@index([userId])
-  @@index([studentId])
-  @@index([status])
-  @@index([transactionDate])
-  @@index([lessonId])
-  @@map("payments")
 }
 
 enum PaymentMethod {
@@ -749,54 +782,6 @@ enum PaymentType {
   MATERIAL_FEE
   LATE_FEE
   OTHER
-}
-
-// Notifications
-model Notification {
-  id                String              @id @default(cuid())
-  userId            String
-  
-  // Notification details
-  type              NotificationType
-  title             String
-  message           String
-  
-  // Related entities
-  lessonId          String?
-  examId            String?
-  lessonRequestId   String?
-  
-  // Status
-  isRead            Boolean             @default(false)
-  readAt            DateTime?
-  
-  // Delivery
-  sendEmail         Boolean             @default(false)
-  emailSent         Boolean             @default(false)
-  emailSentAt       DateTime?
-  
-  sendPush          Boolean             @default(false)
-  pushSent          Boolean             @default(false)
-  pushSentAt        DateTime?
-  
-  // Priority
-  priority          NotificationPriority @default(NORMAL)
-  
-  // Action link
-  actionUrl         String?
-  
-  createdAt         DateTime            @default(now())
-  expiresAt         DateTime?
-
-  // Relations
-  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Indexes
-  @@index([userId])
-  @@index([isRead])
-  @@index([createdAt])
-  @@index([userId, isRead])
-  @@map("notifications")
 }
 
 enum NotificationType {
@@ -821,102 +806,16 @@ enum NotificationPriority {
   URGENT
 }
 
-// Audit Logs
-model AuditLog {
-  id            String      @id @default(cuid())
-  
-  // Actor
-  userId        String?
-  userEmail     String?
-  userRole      UserRole?
-  
-  // Action details
-  action        String
-  entityType    String
-  entityId      String?
-  
-  // Changes
-  oldValues     Json?
-  newValues     Json?
-  
-  // Request context
-  ipAddress     String?
-  userAgent     String?
-  requestMethod String?
-  requestPath   String?
-  
-  // Status
-  status        AuditStatus
-  errorMessage  String?
-  
-  createdAt     DateTime    @default(now())
-
-  // Relations
-  user          User?       @relation(fields: [userId], references: [id])
-
-  // Indexes
-  @@index([userId])
-  @@index([entityType])
-  @@index([createdAt])
-  @@index([action])
-  @@map("audit_logs")
-}
-
 enum AuditStatus {
   SUCCESS
   FAILURE
   ERROR
 }
 
-// Organizations (Driving Schools with License Management)
-model Organization {
-  id                  String    @id @default(cuid())
-  name                String    @unique
-  email               String?
-  phoneNumber         String?
-  address             String?
-  city                String?
-  postalCode          String?
-  
-  // Branding
-  logo                String?
-  primaryColor        String?   @default("#2563eb")
-  secondaryColor      String?   @default("#dc2626")
-  
-  // License Management
-  subscriptionTier    SubscriptionTier @default(BASE)
-  subscriptionStatus  SubscriptionStatus @default(ACTIVE)
-  trialEndsAt         DateTime?
-  subscriptionEndsAt  DateTime?
-  
-  // Contact & Billing
-  contactName         String?
-  billingEmail        String?
-  
-  // Status
-  isActive            Boolean   @default(true)
-  
-  // Timestamps
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-
-  // Relations
-  users               User[]
-  students            Student[]
-  instructors         Instructor[]
-  features            OrganizationFeature[]
-  licenseKeys         LicenseKey[]
-
-  @@index([subscriptionTier])
-  @@index([subscriptionStatus])
-  @@index([isActive])
-  @@map("organizations")
-}
-
 enum SubscriptionTier {
-  BASE        // Basic features only
-  PREMIUM     // All features
-  ENTERPRISE  // Custom features (future)
+  BASE
+  PREMIUM
+  ENTERPRISE
 }
 
 enum SubscriptionStatus {
@@ -927,212 +826,10 @@ enum SubscriptionStatus {
   CANCELLED
 }
 
-// Organization Features (License Management)
-model OrganizationFeature {
-  id              String   @id @default(cuid())
-  organizationId  String
-  featureKey      String   // e.g., "STUDENT_ACCESS", "SCREENSHOT_PROTECTION"
-  
-  // Status
-  isEnabled       Boolean  @default(false)
-  
-  // Audit
-  enabledAt       DateTime?
-  disabledAt      DateTime?
-  enabledBy       String?  // User ID who enabled
-  
-  // Timestamps
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@unique([organizationId, featureKey])
-  @@index([organizationId])
-  @@index([featureKey])
-  @@index([isEnabled])
-  @@map("organization_features")
-}
-
-// License Keys (for manual activation)
-model LicenseKey {
-  id              String   @id @default(cuid())
-  organizationId  String
-  
-  // License Key
-  key             String   @unique
-  featureKeys     String[] // Features this key unlocks
-  
-  // Status
-  isActive        Boolean  @default(true)
-  isUsed          Boolean  @default(false)
-  usedAt          DateTime?
-  
-  // Expiration
-  expiresAt       DateTime?
-  
-  // Metadata
-  notes           String?
-  createdBy       String?
-  
-  // Timestamps
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@index([organizationId])
-  @@index([key])
-  @@index([isActive])
-  @@map("license_keys")
-}
-
-// System Settings
-model SystemSetting {
-  id           String      @id @default(cuid())
-  settingKey   String      @unique
-  settingValue String
-  settingType  SettingType @default(STRING)
-  description  String?
-  category     String?
-  isPublic     Boolean     @default(false)
-  updatedBy    String?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-
-  @@index([category])
-  @@index([isPublic])
-  @@map("system_settings")
-}
-
 enum SettingType {
   STRING
   INTEGER
   BOOLEAN
   JSON
   DECIMAL
-}
-
-// Feature Flags - for A/B testing and feature toggles
-model FeatureFlag {
-  id              String   @id @default(cuid())
-  flagKey         String   @unique
-  flagName        String
-  description     String?
-  isEnabled       Boolean  @default(false)
-  
-  // Targeting
-  enabledForRoles String[] // Empty array means all roles
-  enabledForUsers String[] // Specific user IDs
-  
-  // Rollout percentage (0-100)
-  rolloutPercent  Int      @default(0)
-  
-  // Environment
-  environment     String   @default("production") // production, staging, development
-  
-  // Metadata
-  category        String?
-  tags            String[]
-  
-  // Audit
-  createdBy       String?
-  updatedBy       String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  // Optional end date for time-limited features
-  expiresAt       DateTime?
-
-  @@index([flagKey])
-  @@index([isEnabled])
-  @@index([environment])
-  @@map("feature_flags")
-}
-
-// User Preferences - individual user customizations
-model UserPreference {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  
-  // Interface preferences
-  theme             String   @default("light") // light, dark, auto
-  language          String   @default("en") // en, pt
-  
-  // Notification preferences
-  emailNotifications            Boolean @default(true)
-  pushNotifications             Boolean @default(true)
-  smsNotifications              Boolean @default(false)
-  
-  // Specific notification types
-  lessonReminders               Boolean @default(true)
-  examReminders                 Boolean @default(true)
-  paymentReminders              Boolean @default(true)
-  promotionalEmails             Boolean @default(false)
-  weeklyDigest                  Boolean @default(true)
-  
-  // Dashboard preferences
-  defaultDashboardView          String  @default("overview") // overview, calendar, list
-  showCompletedLessons          Boolean @default(true)
-  lessonDisplayCount            Int     @default(5)
-  
-  // Calendar preferences
-  calendarView                  String  @default("month") // day, week, month
-  startOfWeek                   String  @default("monday") // monday, sunday
-  timeFormat                    String  @default("24h") // 12h, 24h
-  
-  // Privacy
-  profileVisibility             String  @default("school") // public, school, private
-  showProgressToInstructors     Boolean @default(true)
-  allowContactFromInstructors   Boolean @default(true)
-  
-  // Accessibility
-  fontSize                      String  @default("medium") // small, medium, large
-  highContrast                  Boolean @default(false)
-  reducedMotion                 Boolean @default(false)
-  
-  // Custom settings (JSON for extensibility)
-  customSettings                Json?
-  
-  createdAt                     DateTime @default(now())
-  updatedAt                     DateTime @updatedAt
-
-  // Relations
-  user                          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("user_preferences")
-}
-
-// Configuration History - track changes to settings and feature flags
-model ConfigurationHistory {
-  id            String   @id @default(cuid())
-  
-  // What was changed
-  entityType    String   // SystemSetting, FeatureFlag, UserPreference
-  entityId      String
-  entityKey     String?  // settingKey, flagKey, userId
-  
-  // Change details
-  action        String   // CREATED, UPDATED, DELETED, ENABLED, DISABLED
-  oldValue      Json?
-  newValue      Json?
-  
-  // Who changed it
-  changedBy     String?
-  changedByRole String?
-  
-  // When
-  changedAt     DateTime @default(now())
-  
-  // Context
-  changeReason  String?
-  ipAddress     String?
-
-  @@index([entityType])
-  @@index([entityId])
-  @@index([changedAt])
-  @@index([changedBy])
-  @@map("configuration_history")
 }
