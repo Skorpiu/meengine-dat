@@ -1,0 +1,26 @@
+image: node:20
+
+stages:
+  - test
+  - build
+
+variables:
+  PNPM_HOME: "$CI_PROJECT_DIR/.pnpm"
+  PATH: "$PNPM_HOME:$PATH"
+
+before_script:
+  - corepack enable
+  - pnpm install --frozen-lockfile
+
+test:
+  stage: test
+  script:
+    - pnpm lint
+    - pnpm test --if-present
+    - pnpm prisma validate
+    - pnpm next lint
+
+build:
+  stage: build
+  script:
+    - pnpm build
