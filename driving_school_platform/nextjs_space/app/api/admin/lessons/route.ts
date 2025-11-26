@@ -5,6 +5,7 @@
  */
 
 import { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { cleanupOldLessons } from '@/lib/cleanup';
 import {
@@ -28,7 +29,10 @@ import { lessonCreationSchema } from '@/lib/validation';
  */
 export const GET = withErrorHandling(async (request: NextRequest) => {
   // Verify authentication
-  const user = await verifyAuth(USER_ROLES.SUPER_ADMIN);
+  const user = await verifyAuth([
+    USER_ROLES.SUPER_ADMIN,
+    USER_ROLES.INSTRUCTOR,
+  ]);
   if (!user) {
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
   }
@@ -42,6 +46,38 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   }
 
   const { searchParams } = new URL(request.url);
+  const from = searchParams.get('from');
+  const to = searchParams.get('to');
+
+  // Calendar mode → used by ScheduleMap (day / week / month)
+  if (from && to) {
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
+    // If you want to limit organization in the future, here's the place:
+    // where: { lessonDate: { gte: fromDate, lte: toDate }, organizationId: user.organizationId }
+
+    const lessons = await prisma.lesson.findMany({
+      where: {
+        lessonDate: {
+          gte: fromDate,
+          lte: toDate,
+        },
+        // Later we can filter by organizationId: user.organizationId
+      },
+      include: {
+        student: { include: { user: true } },
+        instructor: { include: { user: true } },
+        vehicle: true,
+        category: true,
+      },
+      orderBy: [{ lessonDate: 'asc' }, { startTime: 'asc' }],
+    });
+
+    // IMPORTANT: Simple format for the ScheduleMap
+    return NextResponse.json({ lessons }, { status: 200 });
+  }
+
   const view = getQueryParam(searchParams, 'view', 'DRIVING');
   const { yesterday, today, tomorrow, currentTime } = getTimeRanges();
 
@@ -180,7 +216,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
  */
 export const POST = withErrorHandling(async (request: NextRequest) => {
   // Verify authentication
-  const user = await verifyAuth(USER_ROLES.SUPER_ADMIN);
+  const user = await verifyAuth([
+    USER_ROLES.SUPER_ADMIN,
+    USER_ROLES.INSTRUCTOR,
+  ]);
   if (!user) {
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
   }

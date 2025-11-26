@@ -506,8 +506,8 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
                 </Button>
               </div>
 
-              {/* Instructor Filter - Available for both admin and instructor */}
-              {(userRole === 'admin' || userRole === 'instructor') && (
+              {/* Instructor Filter - Available for admin only */}
+              {userRole === 'admin' && (
                 <Select 
                   value={selectedInstructor} 
                   onValueChange={setSelectedInstructor}
@@ -811,9 +811,11 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
                                             size="sm"
                                             onClick={(e) => {
                                               e.stopPropagation();
+                                              if (!canModifyLesson(lesson)) return;
                                               handleEditLesson(lesson.id);
                                             }}
-                                            className="h-6 w-6 p-0 bg-white hover:bg-blue-50 border border-blue-300 rounded"
+                                            disabled={!canModifyLesson(lesson)}
+                                            className="h-6 w-6 p-0 bg-white hover:bg-blue-50 border border-blue-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                                             title="Edit lesson"
                                           >
                                             <Edit className="h-3 w-3 text-blue-600" />
@@ -823,10 +825,11 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
                                             size="sm"
                                             onClick={(e) => {
                                               e.stopPropagation();
+                                              if (!canModifyLesson(lesson)) return;
                                               setLessonToDelete(lesson.id);
                                               setSelectedLesson(null);
                                             }}
-                                            className="h-6 w-6 p-0 bg-white hover:bg-red-50 border border-red-300 rounded"
+                                            className="h-6 w-6 p-0 bg-white hover:bg-red-50 border border-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                                             title="Delete lesson"
                                           >
                                             <Trash2 className="h-3 w-3 text-red-600" />
@@ -894,9 +897,11 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
                                             size="sm"
                                             onClick={(e) => {
                                               e.stopPropagation();
+                                              if (!canModifyLesson(lesson)) return;
                                               handleEditLesson(lesson.id);
                                             }}
-                                            className="h-6 w-6 p-0 bg-white hover:bg-blue-50 border border-blue-300 rounded"
+                                            disabled={!canModifyLesson(lesson)}
+                                            className="h-6 w-6 p-0 bg-white hover:bg-blue-50 border border-blue-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                                             title="Edit lesson"
                                           >
                                             <Edit className="h-3 w-3 text-blue-600" />
@@ -906,10 +911,12 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
                                             size="sm"
                                             onClick={(e) => {
                                               e.stopPropagation();
+                                              if (!canModifyLesson(lesson)) return;
                                               setLessonToDelete(lesson.id);
                                               setSelectedLesson(null);
                                             }}
-                                            className="h-6 w-6 p-0 bg-white hover:bg-red-50 border border-red-300 rounded"
+                                            disabled={!canModifyLesson(lesson)}
+                                            className="h-6 w-6 p-0 bg-white hover:bg-red-50 border border-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                                             title="Delete lesson"
                                           >
                                             <Trash2 className="h-3 w-3 text-red-600" />
