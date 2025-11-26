@@ -38,11 +38,11 @@ export default async function AdminDashboard() {
     prisma.lesson.count({ where: { status: "SCHEDULED" } }),
     prisma.lesson.count({ 
       where: { 
-        status: "COMPLETED",
+        status: "SCHEDULED",
         lessonDate: {
-          gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-        }
-      } 
+          gte: new Date(new Date().setHours(0, 0, 0, 0)),
+        },
+      },
     }),
   ])
 
