@@ -10,11 +10,11 @@ import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from '@/lib/constants';
 
 /**
  * GET handler - Fetch all instructors
- * Accessible by both SUPER_ADMIN and INSTRUCTOR roles (unified schedule map)
+ * Accessible by SUPER_ADMIN roles (unified schedule map)
  */
 export const GET = withErrorHandling(async (request: NextRequest) => {
-  // Verify authentication - Allow both admin and instructor access
-  const user = await verifyAuth([USER_ROLES.SUPER_ADMIN, USER_ROLES.INSTRUCTOR]);
+  // Verify authentication - Allow admin access
+  const user = await verifyAuth([USER_ROLES.SUPER_ADMIN]);
   if (!user) {
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
   }

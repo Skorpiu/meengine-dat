@@ -179,51 +179,30 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
   
   // Fetch all instructors (not just those with lessons)
   const [allInstructors, setAllInstructors] = useState<{ id: string; name: string; userId: string }[]>([]);
-  const [isLoadingInstructors, setIsLoadingInstructors] = useState(true);
+  const [isLoadingInstructors, setIsLoadingInstructors] = useState(false);
   
   // Fetch all instructors on component mount
   useEffect(() => {
-    const fetchAllInstructors = async () => {
+  // Only the SUPER_ADMIN needs the list of instructors (for the filter).
+  if (userRole !== 'admin') return;
+
+  const fetchInstructors = async () => {
+    try {
       setIsLoadingInstructors(true);
-      try {
-        const response = await fetch('/api/admin/instructors/all', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
-        
-        if (response.ok) {
-          const result = await response.json();
-          // Handle the API response format: { success: true, data: { instructors: [...] } }
-          const instructors = result.data?.instructors || result.instructors || [];
-          
-          // Map instructors to simplified format
-          const instructorsList = instructors.map((instructor: any) => {
-            const fullName = `${instructor.user.firstName} ${instructor.user.lastName}`;
-            return {
-              id: fullName, // Use full name for filtering (matches lesson data)
-              name: fullName,
-              userId: instructor.user.id,
-            };
-          });
-          
-          setAllInstructors(instructorsList);
-        } else {
-          console.error('Failed to fetch instructors. Status:', response.status);
-          setAllInstructors([]);
-        }
-      } catch (error) {
-        console.error('Error fetching instructors:', error);
-        setAllInstructors([]);
-      } finally {
-        setIsLoadingInstructors(false);
-      }
-    };
-    
-    fetchAllInstructors();
-  }, []);
+      const res = await fetch('/api/admin/instructors/all', { cache: 'no-store' });
+      if (!res.ok) return;
+
+      const data = await res.json();
+      setAllInstructors(data?.instructors ?? []);
+    } catch (e) {
+      // optional: console.error(e);
+    } finally {
+      setIsLoadingInstructors(false);
+    }
+  };
+
+  fetchInstructors();
+}, [userRole]);
   
   const instructors = allInstructors;
 
