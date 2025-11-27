@@ -1,4 +1,3 @@
-
 /**
  * Lesson Management API Routes
  * Handles individual lesson operations (GET, PUT, DELETE)
@@ -14,6 +13,17 @@ import {
 } from '@/lib/api-utils';
 import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from '@/lib/constants';
 
+function isInstructor(user: any) {
+  return user?.role === USER_ROLES.INSTRUCTOR;
+}
+
+function assertInstructorOwnsLesson(user: any, lesson: any) {
+  if (!isInstructor(user)) return null;
+  if (!lesson?.instructor?.userId) return errorResponse('Forbidden', HTTP_STATUS.FORBIDDEN);
+  if (lesson.instructor.userId !== user.id) return errorResponse('Forbidden', HTTP_STATUS.FORBIDDEN);
+  return null;
+}
+
 /**
  * GET handler - Fetch a single lesson by ID
  */
@@ -21,7 +31,7 @@ export const GET = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: { id: string } }
 ) => {
-  const user = await verifyAuth(USER_ROLES.SUPER_ADMIN);
+  const user = await verifyAuth([USER_ROLES.SUPER_ADMIN, USER_ROLES.INSTRUCTOR]);
   if (!user) {
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
   }
@@ -32,7 +42,7 @@ export const GET = withErrorHandling(async (
     where: { id },
     include: {
       student: { include: { user: true } },
-      instructor: { include: { user: true } },
+      instructor: { include: { user: true } }, // includes instructor.userId too
       vehicle: true,
       category: true,
     },
@@ -41,6 +51,9 @@ export const GET = withErrorHandling(async (
   if (!lesson) {
     return errorResponse('Lesson not found', HTTP_STATUS.NOT_FOUND);
   }
+
+  const forbidden = assertInstructorOwnsLesson(user, lesson);
+  if (forbidden) return forbidden;
 
   return successResponse(lesson);
 });
@@ -52,14 +65,27 @@ export const PUT = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: { id: string } }
 ) => {
-  const user = await verifyAuth(USER_ROLES.SUPER_ADMIN);
+  const user = await verifyAuth([USER_ROLES.SUPER_ADMIN, USER_ROLES.INSTRUCTOR]);
   if (!user) {
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
   }
 
   const { id } = params;
-  const body = await request.json();
 
+  // Permission check (must exist + ownership if instructor)
+  const existingLesson = await prisma.lesson.findUnique({
+    where: { id },
+    include: { instructor: true },
+  });
+
+  if (!existingLesson) {
+    return errorResponse('Lesson not found', HTTP_STATUS.NOT_FOUND);
+  }
+
+  const forbidden = assertInstructorOwnsLesson(user, existingLesson);
+  if (forbidden) return forbidden;
+
+  const body = await request.json();
   const { lessonDate, startTime, endTime, status, vehicleId } = body;
 
   // Calculate duration if times are provided
@@ -107,26 +133,26 @@ export const DELETE = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: { id: string } }
 ) => {
-  const user = await verifyAuth(USER_ROLES.SUPER_ADMIN);
+  const user = await verifyAuth([USER_ROLES.SUPER_ADMIN, USER_ROLES.INSTRUCTOR]);
   if (!user) {
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
   }
 
   const { id } = params;
 
-  // Check if lesson exists
   const lesson = await prisma.lesson.findUnique({
     where: { id },
+    include: { instructor: true },
   });
 
   if (!lesson) {
     return errorResponse('Lesson not found', HTTP_STATUS.NOT_FOUND);
   }
 
-  // Delete the lesson
-  await prisma.lesson.delete({
-    where: { id },
-  });
+  const forbidden = assertInstructorOwnsLesson(user, lesson);
+  if (forbidden) return forbidden;
+
+  await prisma.lesson.delete({ where: { id } });
 
   return successResponse({
     message: 'Lesson deleted successfully',

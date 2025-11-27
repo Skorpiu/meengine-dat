@@ -3,3 +3,4 @@
 *.tsx text eol=lf
 *.js text eol=lf
 *.prisma text eol=lf
+*.tsbuildinfo
