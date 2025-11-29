@@ -21,6 +21,10 @@ import {
 } from '@/lib/api-utils';
 import { HTTP_STATUS, API_MESSAGES, USER_ROLES, LESSON_STATUS, VALIDATION_RULES } from '@/lib/constants';
 import { lessonCreationSchema } from '@/lib/validation';
+import { startOfDay, addDays } from 'date-fns';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 /**
  * GET handler - Fetch lessons based on view type (DRIVING, CODE, EXAMS)
@@ -51,17 +55,18 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   // Calendar mode → used by ScheduleMap (day / week / month)
   if (from && to) {
-    const fromDate = new Date(from);
-    const toDate = new Date(to);
+    // Implement robust day range filtering: lessonDate >= startOfDay(from) AND lessonDate < startOfDay(to) + 1 day
+    const fromDate = startOfDay(new Date(from));
+    const toDate = addDays(startOfDay(new Date(to)), 1);
 
     // If you want to limit organization in the future, here's the place:
-    // where: { lessonDate: { gte: fromDate, lte: toDate }, organizationId: user.organizationId }
+    // where: { lessonDate: { gte: fromDate, lt: toDate }, organizationId: user.organizationId }
 
     const lessons = await prisma.lesson.findMany({
       where: {
         lessonDate: {
           gte: fromDate,
-          lte: toDate,
+          lt: toDate,
         },
         // Later we can filter by organizationId: user.organizationId
       },
@@ -74,8 +79,14 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       orderBy: [{ lessonDate: 'asc' }, { startTime: 'asc' }],
     });
 
-    // IMPORTANT: Simple format for the ScheduleMap
-    return NextResponse.json({ lessons }, { status: 200 });
+    // IMPORTANT: Simple format for the ScheduleMap with Cache-Control header
+    return NextResponse.json(
+      { lessons },
+      {
+        status: 200,
+        headers: { 'Cache-Control': 'no-store' },
+      }
+    );
   }
 
   const view = getQueryParam(searchParams, 'view', 'DRIVING');

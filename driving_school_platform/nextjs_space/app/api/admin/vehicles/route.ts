@@ -59,39 +59,42 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Calculate real-time vehicle status based on current lessons
+    // Calculate real-time vehicle status based on current lessons/exams
     const now = new Date();
-    const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
-    const today = new Date(now.setHours(0, 0, 0, 0));
+    const currentTime = now.toTimeString().slice(0, 5); // HH:MM
 
-    // Get all lessons happening right now
+    // Robust "today" range (avoid Date equality issues)
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const startOfTomorrow = new Date(startOfToday);
+    startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+
+    // Any lesson happening right now (includes lessonType = EXAM if exams are stored as Lesson)
     const currentLessons = await db.lesson.findMany({
       where: {
-        lessonDate: today,
+        lessonDate: { gte: startOfToday, lt: startOfTomorrow },
         startTime: { lte: currentTime },
         endTime: { gt: currentTime },
+        vehicleId: { not: null },
       },
-      select: {
-        vehicleId: true,
-      },
+      select: { vehicleId: true },
     });
 
-    // Get all exams happening right now
+    // Legacy exams table (keep if you still have old data there)
     const currentExams = await db.exam.findMany({
       where: {
-        examDate: today,
+        examDate: { gte: startOfToday, lt: startOfTomorrow },
         startTime: { lte: currentTime },
         endTime: { gt: currentTime },
+        vehicleId: { not: null },
       },
-      select: {
-        vehicleId: true,
-      },
+      select: { vehicleId: true },
     });
 
-    // Create a set of vehicle IDs currently in use
     const vehicleIdsInUse = new Set([
-      ...currentLessons.map((l: any) => l.vehicleId).filter((id: any) => id !== null),
-      ...currentExams.map((e: any) => e.vehicleId).filter((id: any) => id !== null),
+      ...currentLessons.map((l: any) => l.vehicleId).filter((id: any) => id != null),
+      ...currentExams.map((e: any) => e.vehicleId).filter((id: any) => id != null),
     ]);
 
     // Update vehicle status based on real-time usage

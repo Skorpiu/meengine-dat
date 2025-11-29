@@ -349,6 +349,22 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
     return true;
   };
 
+  const lessonPendingDelete = useMemo(
+    () => lessons.find(l => l.id === lessonToDelete) ?? null,
+    [lessons, lessonToDelete]
+  );
+
+  const canOpenDeleteDialog =
+    !!lessonPendingDelete && canModifyLesson(lessonPendingDelete);
+
+  useEffect(() => {
+    // Hardening: if for any reason you try to open the delete section for the unmodifiable class,
+    // we cleaned up the state and didn't open any dialogue.
+    if (lessonToDelete && !canOpenDeleteDialog) {
+      setLessonToDelete(null);
+    }
+  }, [lessonToDelete, canOpenDeleteDialog]);
+
   // Calculate lesson positions for continuous timeline
   const calculateLessonPosition = (lesson: Lesson, allDayLessons: Lesson[]) => {
     const startMinutes = timeToMinutes(lesson.startTime);
@@ -808,6 +824,7 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
                                               setLessonToDelete(lesson.id);
                                               setSelectedLesson(null);
                                             }}
+                                            disabled={!canModifyLesson(lesson)}
                                             className="h-6 w-6 p-0 bg-white hover:bg-red-50 border border-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                                             title="Delete lesson"
                                           >
@@ -998,7 +1015,7 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
       </Card>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!lessonToDelete} onOpenChange={(open) => !open && setLessonToDelete(null)}>
+      <AlertDialog open={canOpenDeleteDialog} onOpenChange={(open) => !open && setLessonToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Lesson</AlertDialogTitle>
@@ -1010,7 +1027,7 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteLesson}
-              disabled={isDeleting}
+              disabled={isDeleting || !canOpenDeleteDialog}
               className="bg-red-600 hover:bg-red-700"
             >
               {isDeleting ? 'Deleting...' : 'Delete'}

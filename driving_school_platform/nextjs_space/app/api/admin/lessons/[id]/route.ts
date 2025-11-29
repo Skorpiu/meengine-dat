@@ -24,6 +24,16 @@ function assertInstructorOwnsLesson(user: any, lesson: any) {
   return null;
 }
 
+function isPastLesson(lesson: any) {
+  if (!lesson?.lessonDate || !lesson?.endTime) return false;
+
+  const d = new Date(lesson.lessonDate);
+  const [h, m] = String(lesson.endTime).split(':').map(Number);
+  d.setHours(h || 0, m || 0, 0, 0);
+
+  return d.getTime() < Date.now();
+}
+
 /**
  * GET handler - Fetch a single lesson by ID
  */
@@ -84,6 +94,11 @@ export const PUT = withErrorHandling(async (
 
   const forbidden = assertInstructorOwnsLesson(user, existingLesson);
   if (forbidden) return forbidden;
+
+  if (isPastLesson(existingLesson)) {
+    return errorResponse('Cannot modify a lesson that already ended', HTTP_STATUS.BAD_REQUEST);
+  }
+
 
   const body = await request.json();
   const { lessonDate, startTime, endTime, status, vehicleId } = body;
@@ -151,6 +166,10 @@ export const DELETE = withErrorHandling(async (
 
   const forbidden = assertInstructorOwnsLesson(user, lesson);
   if (forbidden) return forbidden;
+
+  if (isPastLesson(lesson)) {
+    return errorResponse('Cannot delete a lesson that already ended', HTTP_STATUS.BAD_REQUEST);
+  }
 
   await prisma.lesson.delete({ where: { id } });
 
