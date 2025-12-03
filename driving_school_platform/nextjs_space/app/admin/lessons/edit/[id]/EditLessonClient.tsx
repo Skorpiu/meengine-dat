@@ -173,7 +173,7 @@ export function EditLessonClient({ lessonId, userRole, userId }: EditLessonClien
           <LessonForm
             mode="edit"
             initialLesson={lesson}
-            userRole={userRole === 'SUPER_ADMIN' ? 'admin' : 'instructor'}
+            userRole={userRole === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'INSTRUCTOR'}
             instructorUserId={lesson.instructorId}
             onSubmit={handleSubmit}
             onCancel={handleCancel}

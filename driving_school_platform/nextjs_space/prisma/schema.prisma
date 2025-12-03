@@ -138,6 +138,7 @@ model Student {
   id                           String             @id @default(cuid())
   userId                       String             @unique
   studentIdNumber              String?            @unique
+  studentNumber                Int                @unique @default(autoincrement())
   categoryId                   Int?
   transmissionTypeId           Int?
   organizationId               String?
@@ -174,6 +175,7 @@ model Student {
   @@index([categoryId])
   @@index([transmissionTypeId])
   @@index([organizationId])
+  @@index([studentNumber])
   @@map("students")
 }
 
@@ -724,6 +726,7 @@ enum LessonType {
   DRIVING
   THEORY
   EXAM
+  THEORY_EXAM
 }
 
 enum LessonStatus {

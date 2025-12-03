@@ -15,24 +15,38 @@ interface BookLessonDialogProps {
 export function BookLessonDialog({ open, onOpenChange, onSuccess }: BookLessonDialogProps) {
   const handleSubmit = async (payload: any) => {
     try {
+      const requestBody: any = {
+        lessonType: payload.lessonType,
+        instructorId: payload.instructorId,
+        lessonDate: payload.lessonDate,
+        startTime: payload.startTime,
+        endTime: payload.endTime,
+      };
+
+      // Add student data based on lesson type
+      if (payload.studentIds && payload.studentIds.length > 0) {
+        // Multi-student lesson types (EXAM, THEORY_EXAM)
+        requestBody.studentIds = payload.studentIds;
+      } else if (payload.studentId) {
+        // Single student lesson types (DRIVING, THEORY)
+        requestBody.studentId = payload.studentId;
+      }
+
+      // Add vehicle if selected
+      if (payload.vehicleId) {
+        requestBody.vehicleId = parseInt(payload.vehicleId);
+      }
+
       const response = await fetch('/api/admin/lessons', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lessonType: payload.lessonType,
-          instructorId: payload.instructorId,
-          studentId: payload.studentId || null,
-          vehicleId: payload.vehicleId ? parseInt(payload.vehicleId) : null,
-          lessonDate: payload.lessonDate,
-          startTime: payload.startTime,
-          endTime: payload.endTime,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        toast.success('Lesson booked successfully!');
+        toast.success(data.message || 'Lesson booked successfully!');
         onOpenChange(false);
         onSuccess();
       } else {
@@ -46,17 +60,17 @@ export function BookLessonDialog({ open, onOpenChange, onSuccess }: BookLessonDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Book Lesson</DialogTitle>
           <DialogDescription>
-            Schedule a new lesson for a student or instructor.
+            Schedule a new lesson, exam, or theory class for students.
           </DialogDescription>
         </DialogHeader>
 
         <LessonForm
           mode="create"
-          userRole="admin"
+          userRole="SUPER_ADMIN"
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
         />

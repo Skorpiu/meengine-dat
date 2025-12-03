@@ -134,7 +134,7 @@ export const userUpdateSchema = z.object({
  * Lesson Creation Schema
  */
 export const lessonCreationSchema = z.object({
-  lessonType: z.enum([LESSON_TYPES.THEORY, LESSON_TYPES.DRIVING, LESSON_TYPES.EXAM]),
+  lessonType: z.enum([LESSON_TYPES.THEORY, LESSON_TYPES.DRIVING, LESSON_TYPES.EXAM, LESSON_TYPES.THEORY_EXAM]),
   instructorId: commonSchemas.uuid,
   studentId: z.union([commonSchemas.uuid, z.null()]).optional(),
   studentIds: z.array(commonSchemas.uuid).optional(),

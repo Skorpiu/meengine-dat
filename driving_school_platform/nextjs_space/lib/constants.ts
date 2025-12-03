@@ -49,6 +49,7 @@ export const LESSON_TYPES = {
   THEORY: 'THEORY',
   DRIVING: 'DRIVING',
   EXAM: 'EXAM',
+  THEORY_EXAM: 'THEORY_EXAM',
 } as const;
 
 /**

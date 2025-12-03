@@ -1,17 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import toast from 'react-hot-toast';
 import { Lesson } from '@/lib/types';
+import { useLicense } from '@/hooks/use-license';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Lock, Search, X } from 'lucide-react';
 
 /**
  * User role types for permission-based rendering
  */
-type UserRole = 'admin' | 'instructor' | 'student';
+type UserRole = 'SUPER_ADMIN' | 'INSTRUCTOR' | 'STUDENT';
 
 /**
  * Lesson form mode
@@ -25,6 +29,7 @@ interface LessonFormPayload {
   lessonType: string;
   instructorId?: string;
   studentId?: string;
+  studentIds?: string[];
   vehicleId?: string;
   lessonDate: string;
   startTime: string;
@@ -46,8 +51,19 @@ interface LessonFormProps {
 }
 
 /**
+ * Student interface with studentNumber
+ */
+interface Student {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  studentNumber: number | null;
+}
+
+/**
  * Reusable LessonForm component
- * Handles both create and edit modes for lessons
+ * Handles both create and edit modes for lessons with multi-student support
  */
 export function LessonForm({
   mode,
@@ -58,6 +74,9 @@ export function LessonForm({
   onCancel,
   submitButtonText,
 }: LessonFormProps) {
+  const { isFeatureEnabled, isLoading: licenseLoading } = useLicense();
+  const isVehicleFeatureEnabled = isFeatureEnabled('VEHICLE_MANAGEMENT');
+  
   const [isLoading, setIsLoading] = useState(false);
   const [lessonType, setLessonType] = useState<string>(
     initialLesson?.lessonType || 'DRIVING'
@@ -65,9 +84,15 @@ export function LessonForm({
   const [instructorId, setInstructorId] = useState<string>(
     instructorUserId || (initialLesson?.instructor?.user?.id) || ''
   );
+  
+  // For single student selection (DRIVING, THEORY)
   const [studentId, setStudentId] = useState<string>(
     initialLesson?.student?.user?.id ? String(initialLesson.student.user.id) : ''
   );
+  
+  // For multiple student selection (EXAM, THEORY_EXAM)
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  
   const [vehicleId, setVehicleId] = useState<string>(
     initialLesson?.vehicleId?.toString() || ''
   );
@@ -85,17 +110,23 @@ export function LessonForm({
   );
 
   const [instructors, setInstructors] = useState<any[]>([]);
-  const [students, setStudents] = useState<any[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
+  
+  // Search state for students
+  const [studentSearchTerm, setStudentSearchTerm] = useState<string>('');
 
   // Fetch data when component mounts or when needed
   useEffect(() => {
-    if (userRole === 'admin') {
+    if (userRole === 'SUPER_ADMIN') {
       fetchInstructors();
     }
     fetchStudents();
-    fetchVehicles();
-  }, [userRole]);
+    // Only fetch vehicles if feature is enabled
+    if (isVehicleFeatureEnabled) {
+      fetchVehicles();
+    }
+  }, [userRole, isVehicleFeatureEnabled]);
 
   // Update form when initialLesson changes (for edit mode)
   useEffect(() => {
@@ -158,11 +189,55 @@ export function LessonForm({
     }
   };
 
+  // Filter students based on search term
+  const filteredStudents = useMemo(() => {
+    if (!studentSearchTerm.trim()) {
+      return students;
+    }
+    
+    const searchLower = studentSearchTerm.toLowerCase();
+    return students.filter(student => {
+      const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
+      const studentNumberStr = student.studentNumber?.toString() || '';
+      return fullName.includes(searchLower) || studentNumberStr.includes(searchLower);
+    });
+  }, [students, studentSearchTerm]);
+
+  // Check if lesson type requires multiple students
+  const isMultiStudentType = lessonType === 'EXAM' || lessonType === 'THEORY_EXAM';
+
+  // Get student selection limit based on lesson type
+  const getStudentLimit = () => {
+    if (lessonType === 'EXAM') return 2; // Max 2 for practical exams
+    if (lessonType === 'THEORY_EXAM') return undefined; // No limit for theory exams
+    return 1; // Single student for DRIVING and THEORY
+  };
+
+  const studentLimit = getStudentLimit();
+
+  // Handle student checkbox toggle
+  const handleStudentToggle = (studentId: string) => {
+    setSelectedStudents(prev => {
+      const isSelected = prev.includes(studentId);
+      
+      if (isSelected) {
+        return prev.filter(id => id !== studentId);
+      } else {
+        // Check limit
+        if (studentLimit && prev.length >= studentLimit) {
+          toast.error(`Maximum ${studentLimit} student(s) allowed for ${lessonType}`);
+          return prev;
+        }
+        return [...prev, studentId];
+      }
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate required fields
-    const requiredInstructor = userRole === 'admin';
+    const requiredInstructor = userRole === 'SUPER_ADMIN';
     if (requiredInstructor && !instructorId) {
       toast.error('Please select an instructor');
       return;
@@ -173,14 +248,22 @@ export function LessonForm({
       return;
     }
 
-    // Validate student field for non-THEORY lessons
-    if (lessonType !== 'THEORY' && !studentId) {
-      toast.error('Please select a student');
-      return;
+    // Validate student selection based on lesson type
+    if (isMultiStudentType) {
+      if (selectedStudents.length === 0) {
+        toast.error('Please select at least one student');
+        return;
+      }
+    } else {
+      // For non-exam types (DRIVING requires student, THEORY is optional)
+      if (lessonType !== 'THEORY' && !studentId) {
+        toast.error('Please select a student');
+        return;
+      }
     }
 
-    // Validate vehicle for driving lessons
-    if (lessonType === 'DRIVING' && !vehicleId) {
+    // Validate vehicle for driving lessons (only if vehicles feature is enabled)
+    if (lessonType === 'DRIVING' && !vehicleId && isVehicleFeatureEnabled) {
       toast.error('Please select a vehicle for driving lessons');
       return;
     }
@@ -191,12 +274,22 @@ export function LessonForm({
       const payload: LessonFormPayload = {
         lessonType,
         instructorId: instructorUserId || instructorId,
-        studentId: lessonType === 'THEORY' ? undefined : studentId,
-        vehicleId: vehicleId ? vehicleId : undefined,
         lessonDate,
         startTime,
         endTime,
       };
+
+      // Add student data based on lesson type
+      if (isMultiStudentType) {
+        payload.studentIds = selectedStudents;
+      } else {
+        payload.studentId = lessonType === 'THEORY' ? undefined : studentId;
+      }
+
+      // Add vehicle if selected
+      if (vehicleId) {
+        payload.vehicleId = vehicleId;
+      }
 
       // Include status only in edit mode
       if (mode === 'edit') {
@@ -210,6 +303,15 @@ export function LessonForm({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Get student display name with number
+  const getStudentDisplayName = (student: Student) => {
+    const fullName = `${student.firstName} ${student.lastName}`;
+    if (student.studentNumber) {
+      return `#${student.studentNumber} - ${fullName}`;
+    }
+    return fullName;
   };
 
   return (
@@ -228,12 +330,14 @@ export function LessonForm({
           <SelectContent>
             <SelectItem value="THEORY">Code Class (Theory)</SelectItem>
             <SelectItem value="DRIVING">Driving Class</SelectItem>
+            <SelectItem value="EXAM">Practical Exam</SelectItem>
+            <SelectItem value="THEORY_EXAM">Theoretical Exam</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Instructor Selection (Admin only) */}
-      {userRole === 'admin' && (
+      {userRole === 'SUPER_ADMIN' && (
         <div className="space-y-2">
           <Label htmlFor="instructor">Instructor *</Label>
           <Select value={instructorId || undefined} onValueChange={setInstructorId}>
@@ -257,8 +361,71 @@ export function LessonForm({
         </div>
       )}
 
-      {/* Student Selection */}
-      {lessonType && (
+      {/* Student Selection - Multi-select for EXAM and THEORY_EXAM */}
+      {lessonType && isMultiStudentType && (
+        <div className="space-y-2">
+          <Label>
+            Students *{' '}
+            {lessonType === 'EXAM' && '(Max 2)'}
+            {lessonType === 'THEORY_EXAM' && '(Unlimited)'}
+          </Label>
+          
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search by name or student number..."
+              value={studentSearchTerm}
+              onChange={(e) => setStudentSearchTerm(e.target.value)}
+              className="pl-10 pr-8"
+            />
+            {studentSearchTerm && (
+              <button
+                type="button"
+                onClick={() => setStudentSearchTerm('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Student List with Checkboxes */}
+          <div className="border rounded-lg p-3 max-h-64 overflow-y-auto space-y-2">
+            {filteredStudents.length === 0 ? (
+              <div className="text-sm text-gray-500">
+                {students.length === 0 ? 'No students available' : 'No students match your search'}
+              </div>
+            ) : (
+              filteredStudents.map((student) => (
+                <div key={student.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`student-${student.id}`}
+                    checked={selectedStudents.includes(student.id)}
+                    onCheckedChange={() => handleStudentToggle(student.id)}
+                  />
+                  <label 
+                    htmlFor={`student-${student.id}`} 
+                    className="text-sm cursor-pointer flex-1"
+                  >
+                    {getStudentDisplayName(student)}
+                  </label>
+                </div>
+              ))
+            )}
+          </div>
+          
+          {selectedStudents.length > 0 && (
+            <p className="text-sm text-muted-foreground">
+              {selectedStudents.length} student(s) selected
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Student Selection - Single select for DRIVING and THEORY */}
+      {lessonType && !isMultiStudentType && (
         <div className="space-y-2">
           <Label htmlFor="student">
             Student{' '}
@@ -266,6 +433,28 @@ export function LessonForm({
               ? '(Optional for group classes)'
               : '*'}
           </Label>
+          
+          {/* Search Input */}
+          <div className="relative mb-2">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search by name or student number..."
+              value={studentSearchTerm}
+              onChange={(e) => setStudentSearchTerm(e.target.value)}
+              className="pl-10 pr-8"
+            />
+            {studentSearchTerm && (
+              <button
+                type="button"
+                onClick={() => setStudentSearchTerm('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
           <Select value={studentId || undefined} onValueChange={setStudentId}>
             <SelectTrigger>
               <SelectValue
@@ -277,14 +466,14 @@ export function LessonForm({
               />
             </SelectTrigger>
             <SelectContent>
-              {students.length === 0 ? (
+              {filteredStudents.length === 0 ? (
                 <SelectItem value="loading-students" disabled>
-                  Loading students...
+                  {students.length === 0 ? 'Loading students...' : 'No students match your search'}
                 </SelectItem>
               ) : (
-                students.map((student) => (
+                filteredStudents.map((student) => (
                   <SelectItem key={student.id} value={student.id}>
-                    {student.firstName} {student.lastName}
+                    {getStudentDisplayName(student)}
                   </SelectItem>
                 ))
               )}
@@ -299,10 +488,10 @@ export function LessonForm({
         </div>
       )}
 
-      {/* Vehicle Selection (for Driving lessons) */}
-      {lessonType === 'DRIVING' && (
+      {/* Vehicle Selection (for Driving lessons and Exams) */}
+      {(lessonType === 'DRIVING' || lessonType === 'EXAM') && isVehicleFeatureEnabled && (
         <div className="space-y-2">
-          <Label htmlFor="vehicle">Vehicle *</Label>
+          <Label htmlFor="vehicle">Vehicle {lessonType === 'DRIVING' ? '*' : '(Optional)'}</Label>
           <Select value={vehicleId || undefined} onValueChange={setVehicleId}>
             <SelectTrigger>
               <SelectValue placeholder="Select vehicle" />
@@ -322,6 +511,17 @@ export function LessonForm({
             </SelectContent>
           </Select>
         </div>
+      )}
+      
+      {/* Vehicle Feature Locked Message (when feature is disabled) */}
+      {(lessonType === 'DRIVING' || lessonType === 'EXAM') && !isVehicleFeatureEnabled && !licenseLoading && (
+        <Alert>
+          <Lock className="h-4 w-4" />
+          <AlertTitle>Premium Feature</AlertTitle>
+          <AlertDescription>
+            Vehicle management requires an upgrade. Lessons will be created without vehicle assignment. Contact your administrator to unlock this feature.
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Lesson Date */}

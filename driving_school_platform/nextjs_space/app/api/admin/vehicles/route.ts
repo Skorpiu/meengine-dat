@@ -22,15 +22,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    // Check if Vehicle Management feature is enabled (only for admin operations)
-    if (session.user.role === 'SUPER_ADMIN') {
-      const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT');
-      if (!featureCheck.allowed) {
-        return NextResponse.json({ 
-          error: 'Vehicle Management feature is not enabled. Please upgrade to unlock this feature.',
-          requiresUpgrade: true,
-        }, { status: 403 });
-      }
+    // Check if Vehicle Management feature is enabled
+    // For SUPER_ADMIN: Check feature access
+    // For INSTRUCTOR: Also check feature access (defense in depth)
+    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT');
+    if (!featureCheck.allowed) {
+      return NextResponse.json({ 
+        error: 'Vehicles feature not enabled',
+        message: 'Vehicle Management feature is not enabled. Please upgrade to unlock this feature.',
+        requiresUpgrade: true,
+      }, { status: 403 });
     }
 
     // Get query parameters

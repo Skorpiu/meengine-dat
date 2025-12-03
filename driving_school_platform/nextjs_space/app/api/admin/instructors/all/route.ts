@@ -3,39 +3,64 @@
  * API endpoint to fetch all instructors for filtering purposes
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { successResponse, errorResponse, verifyAuth, withErrorHandling } from '@/lib/api-utils';
-import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from '@/lib/constants';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 /**
  * GET handler - Fetch all instructors
- * Accessible by SUPER_ADMIN roles (unified schedule map)
+ * Accessible by SUPER_ADMIN roles only
  */
-export const GET = withErrorHandling(async (request: NextRequest) => {
-  // Verify authentication - Allow admin access
-  const user = await verifyAuth([USER_ROLES.SUPER_ADMIN]);
-  if (!user) {
-    return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
+export async function GET(request: NextRequest) {
+  // Verify authentication - SUPER_ADMIN only
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    return NextResponse.json(
+      { error: 'Unauthorized - SUPER_ADMIN access required' },
+      { status: 401 }
+    );
   }
 
-  const instructors = await prisma.instructor.findMany({
-    include: {
-      user: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
+  try {
+    // Query User table where role === 'INSTRUCTOR'
+    const instructorUsers = await prisma.user.findMany({
+      where: {
+        role: 'INSTRUCTOR',
       },
-    },
-    orderBy: {
-      user: {
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+      },
+      orderBy: {
         firstName: 'asc',
       },
-    },
-  });
+    });
 
-  return successResponse({ instructors });
-});
+    // Format response as required: { instructors: [{ id, userId, name }] }
+    const instructors = instructorUsers.map(user => ({
+      id: user.id,
+      userId: user.id,
+      name: `${user.firstName} ${user.lastName}`.trim() || user.email || 'Instructor',
+    }));
+
+    return NextResponse.json(
+      { instructors },
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'no-store',
+        },
+      }
+    );
+  } catch (error) {
+    console.error('Error fetching instructors:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch instructors' },
+      { status: 500 }
+    );
+  }
+}

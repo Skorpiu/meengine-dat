@@ -39,12 +39,14 @@ interface Lesson {
   status: string;
   student?: {
     user: {
+      id: string;
       firstName: string;
       lastName: string;
     };
   };
   instructor?: {
     user: {
+      id: string;
       firstName: string;
       lastName: string;
     };
@@ -214,8 +216,8 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
     
     return lessons.filter(lesson => {
       if (!lesson.instructor?.user) return false;
-      const instructorName = `${lesson.instructor.user.firstName} ${lesson.instructor.user.lastName}`;
-      return instructorName === selectedInstructor;
+      // Match by instructor user ID
+      return lesson.instructor.user.id === selectedInstructor;
     });
   }, [lessons, selectedInstructor]);
 
@@ -707,8 +709,134 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
                     );
                   })}
                 </div>
+              ) : viewType === 'week' ? (
+                // Week view - 7-column grid with compact lesson chips (similar to month view)
+                <div className="grid grid-cols-7 gap-1">
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                    <div key={day} className="text-center font-semibold text-sm p-2 bg-gray-100 border">
+                      {day}
+                    </div>
+                  ))}
+                  {dates.map((date, idx) => {
+                    const dayLessons = filteredLessons.filter(lesson => 
+                      isSameDay(new Date(lesson.lessonDate), date)
+                    );
+                    const isToday = isSameDay(date, new Date());
+                    
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => {
+                          setCurrentDate(date);
+                          setViewType('day');
+                        }}
+                        className={`min-h-32 p-2 border cursor-pointer hover:bg-gray-50 transition-colors ${
+                          isToday ? 'bg-blue-50 border-blue-300' : 'bg-white'
+                        }`}
+                      >
+                        <div className={`text-sm font-medium mb-1 ${
+                          isToday ? 'text-blue-600' : 'text-gray-600'
+                        }`}>
+                          {format(date, 'EEE d')}
+                        </div>
+                        <div className="space-y-1">
+                          {dayLessons.map(lesson => (
+                            <div
+                              key={lesson.id}
+                              className={`relative text-xs p-1 rounded border ${getLessonColor(lesson)} transition-all duration-200 cursor-pointer ${
+                                selectedLesson === lesson.id ? 'z-50 scale-105 shadow-lg' : 'hover:shadow-md'
+                              }`}
+                              title={`${lesson.startTime} - ${lesson.student?.user.firstName || ''} ${lesson.student?.user.lastName || ''}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedLesson(selectedLesson === lesson.id ? null : lesson.id);
+                              }}
+                            >
+                              <div className="truncate font-medium">{lesson.startTime}</div>
+                              <div className="truncate text-[10px]">
+                                {lesson.student?.user.firstName || 'N/A'}
+                              </div>
+                              
+                              {/* Expanded click card for week view */}
+                              {selectedLesson === lesson.id && (
+                                <div className="absolute left-0 top-full mt-1 p-3 bg-white border-2 border-gray-300 rounded-lg shadow-xl z-50 min-w-[200px]">
+                                  <div className="text-sm space-y-2">
+                                    <div className="font-semibold border-b pb-1">
+                                      {lesson.startTime} - {lesson.endTime}
+                                    </div>
+                                    {lesson.student && (
+                                      <div>
+                                        <span className="font-medium">Student:</span> {lesson.student.user.firstName} {lesson.student.user.lastName}
+                                      </div>
+                                    )}
+                                    {lesson.instructor && (
+                                      <div>
+                                        <span className="font-medium">Instructor:</span> {lesson.instructor.user.firstName} {lesson.instructor.user.lastName}
+                                      </div>
+                                    )}
+                                    <div>
+                                      <span className="font-medium">Type:</span> {lesson.lessonType}
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">Status:</span> {lesson.status}
+                                    </div>
+                                    {lesson.vehicle && (
+                                      <div>
+                                        <span className="font-medium">Vehicle:</span> {lesson.vehicle.registrationNumber}
+                                      </div>
+                                    )}
+                                    {lesson.category && (
+                                      <div>
+                                        <span className="font-medium">Category:</span> {lesson.category.name}
+                                      </div>
+                                    )}
+                                    {/* Edit/Delete buttons - Available for admin and instructor */}
+                                    {(userRole === 'admin' || userRole === 'instructor') && (
+                                      <div className="flex gap-1 pt-2 border-t justify-end">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (!canModifyLesson(lesson)) return;
+                                            handleEditLesson(lesson.id);
+                                          }}
+                                          disabled={!canModifyLesson(lesson)}
+                                          className="h-6 w-6 p-0 bg-white hover:bg-blue-50 border border-blue-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                          title="Edit lesson"
+                                        >
+                                          <Edit className="h-3 w-3 text-blue-600" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (!canModifyLesson(lesson)) return;
+                                            setLessonToDelete(lesson.id);
+                                            setSelectedLesson(null);
+                                          }}
+                                          disabled={!canModifyLesson(lesson)}
+                                          className="h-6 w-6 p-0 bg-white hover:bg-red-50 border border-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                          title="Delete lesson"
+                                        >
+                                          <Trash2 className="h-3 w-3 text-red-600" />
+                                        </Button>
+                                      </div>
+
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               ) : (
-                // Day/Week view - Google Calendar style with expandable slots
+                // Day view - Google Calendar style with expandable slots
                 <div className="relative">
                   <div className="flex border-t">
                     {/* Time column */}
@@ -872,7 +1000,7 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
                                   )}
                                   
                                   {/* Week view - Aligned with Month (Google Calendar consistency) */}
-                                  {viewType === 'week' && !isExpanded && (
+                                  {(viewType as ViewType) === 'week' && !isExpanded && (
                                     // Collapsed state - Time and instructor
                                     <div className="p-1 text-xs overflow-hidden">
                                       <div className="font-semibold text-xs truncate">{lesson.startTime}</div>
@@ -882,7 +1010,7 @@ export function ScheduleMap({ lessons: initialLessons, showPrintButton = false, 
                                     </div>
                                   )}
                                   
-                                  {viewType === 'week' && isExpanded && (
+                                  {(viewType as ViewType) === 'week' && isExpanded && (
                                     // Expanded state with all details
                                     <div className="relative p-2 max-h-[400px] overflow-y-auto">
                                       {/* Edit/Remove buttons - Top-right corner, icon-only */}

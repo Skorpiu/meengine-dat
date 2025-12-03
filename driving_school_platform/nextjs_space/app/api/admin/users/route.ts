@@ -39,11 +39,23 @@ export async function GET(request: NextRequest) {
         lastName: true,
         role: true,
         isApproved: true,
+        student: {
+          select: {
+            studentNumber: true,
+          }
+        }
       },
       orderBy: { createdAt: 'desc' },
     })
 
-    return NextResponse.json({ users })
+    // Format the response to include studentNumber at the top level for students
+    const formattedUsers = users.map(user => ({
+      ...user,
+      studentNumber: user.student?.studentNumber || null,
+      student: undefined, // Remove the nested student object
+    }))
+
+    return NextResponse.json({ users: formattedUsers })
   } catch (error) {
     console.error("Error fetching users:", error)
     return NextResponse.json(

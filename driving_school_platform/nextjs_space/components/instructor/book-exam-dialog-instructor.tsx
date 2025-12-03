@@ -8,6 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import toast from 'react-hot-toast';
+import { useLicense } from '@/hooks/use-license';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Lock } from 'lucide-react';
 
 interface BookExamDialogProps {
   open: boolean;
@@ -17,6 +20,9 @@ interface BookExamDialogProps {
 }
 
 export function BookExamDialog({ open, onOpenChange, onSuccess, instructorUserId }: BookExamDialogProps) {
+  const { isFeatureEnabled, isLoading: licenseLoading } = useLicense();
+  const isVehicleFeatureEnabled = isFeatureEnabled('VEHICLE_MANAGEMENT');
+  
   const [isLoading, setIsLoading] = useState(false);
   const [studentIds, setStudentIds] = useState<string[]>([]);
   const [vehicleId, setVehicleId] = useState<string>('');
@@ -31,9 +37,12 @@ export function BookExamDialog({ open, onOpenChange, onSuccess, instructorUserId
   useEffect(() => {
     if (open) {
       fetchStudents();
-      fetchVehicles();
+      // Only fetch vehicles if feature is enabled
+      if (isVehicleFeatureEnabled) {
+        fetchVehicles();
+      }
     }
-  }, [open]);
+  }, [open, isVehicleFeatureEnabled]);
 
   const fetchStudents = async () => {
     try {
@@ -84,26 +93,39 @@ export function BookExamDialog({ open, onOpenChange, onSuccess, instructorUserId
       return;
     }
 
-    if (!vehicleId || !examDate || !startTime || !endTime) {
-      toast.error('Please fill in all required fields');
+    // Validate basic required fields
+    if (!examDate || !startTime || !endTime) {
+      toast.error('Please fill in all required fields (date and time)');
+      return;
+    }
+
+    // Validate vehicle only if feature is enabled
+    if (isVehicleFeatureEnabled && !vehicleId) {
+      toast.error('Please select a vehicle');
       return;
     }
 
     setIsLoading(true);
 
     try {
+      const payload: any = {
+        lessonType: 'EXAM',
+        instructorId: instructorUserId,
+        studentIds: selectedStudents,
+        lessonDate: examDate,
+        startTime,
+        endTime,
+      };
+
+      // Only include vehicleId if feature is enabled and vehicle is selected
+      if (isVehicleFeatureEnabled && vehicleId) {
+        payload.vehicleId = parseInt(vehicleId);
+      }
+
       const response = await fetch('/api/admin/lessons', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lessonType: 'EXAM',
-          instructorId: instructorUserId,
-          studentIds: selectedStudents,
-          vehicleId: parseInt(vehicleId),
-          lessonDate: examDate,
-          startTime,
-          endTime,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -169,25 +191,39 @@ export function BookExamDialog({ open, onOpenChange, onSuccess, instructorUserId
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="vehicle">Vehicle *</Label>
-            <Select value={vehicleId} onValueChange={setVehicleId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a vehicle" />
-              </SelectTrigger>
-              <SelectContent>
-                {vehicles.length === 0 ? (
-                  <div className="px-2 py-1.5 text-sm text-gray-500">No available vehicles</div>
-                ) : (
-                  vehicles.map((vehicle) => (
-                    <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                      {vehicle.registrationNumber} - {vehicle.make} {vehicle.model}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Vehicle selection - only show if feature is enabled */}
+          {isVehicleFeatureEnabled && (
+            <div className="space-y-2">
+              <Label htmlFor="vehicle">Vehicle *</Label>
+              <Select value={vehicleId} onValueChange={setVehicleId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a vehicle" />
+                </SelectTrigger>
+                <SelectContent>
+                  {vehicles.length === 0 ? (
+                    <div className="px-2 py-1.5 text-sm text-gray-500">No available vehicles</div>
+                  ) : (
+                    vehicles.map((vehicle) => (
+                      <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                        {vehicle.registrationNumber} - {vehicle.make} {vehicle.model}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Vehicle Feature Locked Message */}
+          {!isVehicleFeatureEnabled && !licenseLoading && (
+            <Alert>
+              <Lock className="h-4 w-4" />
+              <AlertTitle>Premium Feature</AlertTitle>
+              <AlertDescription>
+                Vehicle management requires an upgrade. Exams will be created without vehicle assignment. Contact your administrator to unlock this feature.
+              </AlertDescription>
+            </Alert>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="examDate">Date *</Label>

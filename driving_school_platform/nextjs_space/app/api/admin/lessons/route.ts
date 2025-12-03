@@ -311,16 +311,17 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     categoryId = instructor.qualifiedCategories[0].id;
   }
 
-  // Handle EXAM type (can have multiple students)
-  if (lessonType === 'EXAM') {
+  // Handle EXAM and THEORY_EXAM types (can have multiple students)
+  if (lessonType === 'EXAM' || lessonType === 'THEORY_EXAM') {
     if (!studentIds || studentIds.length === 0) {
       return errorResponse(
-        'At least one student is required for an exam',
+        `At least one student is required for ${lessonType === 'THEORY_EXAM' ? 'a theory exam' : 'an exam'}`,
         HTTP_STATUS.BAD_REQUEST
       );
     }
 
-    if (studentIds.length > VALIDATION_RULES.MAX_STUDENTS_PER_EXAM) {
+    // THEORY_EXAM has no limit on students, EXAM has a limit
+    if (lessonType === 'EXAM' && studentIds.length > VALIDATION_RULES.MAX_STUDENTS_PER_EXAM) {
       return errorResponse(
         `Maximum ${VALIDATION_RULES.MAX_STUDENTS_PER_EXAM} students per exam`,
         HTTP_STATUS.BAD_REQUEST
@@ -357,7 +358,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     return successResponse(
       {
-        message: `Exam booked successfully for ${lessons.length} student(s)`,
+        message: `${lessonType === 'THEORY_EXAM' ? 'Theory exam' : 'Exam'} booked successfully for ${lessons.length} student(s)`,
         lessons,
       },
       HTTP_STATUS.CREATED
