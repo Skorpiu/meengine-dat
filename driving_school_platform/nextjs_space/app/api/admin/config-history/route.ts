@@ -11,6 +11,9 @@ import { prisma } from '@/lib/db';
 import { configHistoryQuerySchema } from '@/lib/config-validation';
 import { HTTP_STATUS, API_MESSAGES } from '@/lib/constants';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/admin/config-history
  * Fetch configuration change history (admin only)

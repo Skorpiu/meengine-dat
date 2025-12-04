@@ -9,6 +9,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPublicSettings } from '@/lib/config-utils';
 import { HTTP_STATUS } from '@/lib/constants';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/config/public
  * Get all public configuration settings

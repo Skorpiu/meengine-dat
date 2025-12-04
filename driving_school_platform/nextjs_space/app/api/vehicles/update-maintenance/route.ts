@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { checkFeatureAccess } from '@/lib/middleware/feature-check';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +13,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      );
+    }
+
+    // Check if Vehicle Management feature is enabled
+    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT');
+    if (!featureCheck.allowed) {
+      return NextResponse.json(
+        { 
+          error: 'Vehicle Management feature is not enabled. Please upgrade to unlock this feature.',
+          requiresUpgrade: true 
+        },
+        { status: 403 }
       );
     }
 

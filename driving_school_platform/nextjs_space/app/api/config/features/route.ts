@@ -11,6 +11,9 @@ import { authOptions } from '@/lib/auth';
 import { getUserFeatureFlags } from '@/lib/config-utils';
 import { HTTP_STATUS } from '@/lib/constants';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/config/features
  * Get feature flags for the current user

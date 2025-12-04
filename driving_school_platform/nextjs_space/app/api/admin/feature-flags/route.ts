@@ -12,6 +12,9 @@ import { featureFlagSchema, featureFlagsQuerySchema } from '@/lib/config-validat
 import { logConfigurationChange } from '@/lib/config-utils';
 import { HTTP_STATUS, API_MESSAGES } from '@/lib/constants';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/admin/feature-flags
  * Fetch all feature flags (admin only)

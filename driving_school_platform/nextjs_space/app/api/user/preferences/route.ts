@@ -11,6 +11,9 @@ import { userPreferencesSchema } from '@/lib/config-validation';
 import { getUserPreferences, updateUserPreferences, logConfigurationChange } from '@/lib/config-utils';
 import { HTTP_STATUS, API_MESSAGES } from '@/lib/constants';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/user/preferences
  * Get current user's preferences
