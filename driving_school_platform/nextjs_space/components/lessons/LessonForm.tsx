@@ -425,7 +425,7 @@ export function LessonForm({
       )}
 
       {/* Student Selection - Single select for DRIVING and THEORY */}
-      {lessonType && !isMultiStudentType && (
+      {lessonType && !isMultiStudentType && lessonType !== 'THEORY' && (
         <div className="space-y-2">
           <Label htmlFor="student">
             Student{' '}

@@ -5,7 +5,8 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SessionProvider } from "@/components/providers/session-provider"
 import { LanguageProvider } from "@/contexts/language-context"
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster as SonnerToaster } from "@/components/ui/sonner"
+import { Toaster as HotToaster } from "react-hot-toast"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -32,7 +33,8 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               {children}
-              <Toaster />
+              <SonnerToaster />
+              <HotToaster position="top-right" />
             </ThemeProvider>
           </LanguageProvider>
         </SessionProvider>

@@ -22,6 +22,7 @@ import {
 import { HTTP_STATUS, API_MESSAGES, USER_ROLES, LESSON_STATUS, VALIDATION_RULES } from '@/lib/constants';
 import { lessonCreationSchema } from '@/lib/validation';
 import { startOfDay, addDays } from 'date-fns';
+import { checkFeatureAccess } from '@/lib/middleware/feature-check';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -248,6 +249,22 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   // Security: If user is INSTRUCTOR, force instructorId to be their own ID
   if (user.role === USER_ROLES.INSTRUCTOR) {
     instructorId = user.id;
+  }
+
+  // Defense-in-depth: block vehicle usage if feature is disabled
+  if (vehicleId) {
+    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT');
+    if (!featureCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Vehicles feature not enabled',
+          message:
+            'Vehicle Management feature is not enabled. Please upgrade to unlock this feature.',
+          requiresUpgrade: true,
+        },
+        { status: 403 }
+      );
+    }
   }
 
   // Calculate duration
