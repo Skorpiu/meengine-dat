@@ -144,23 +144,35 @@ export const lessonCreationSchema = z.object({
   vehicleId: z.union([z.number().int().positive(), z.null()]).optional(),
   categoryId: commonSchemas.uuid.optional(),
   notes: z.string().optional(),
-}).refine(
-  (data) => {
-    if (data.lessonType === LESSON_TYPES.EXAM) {
-      return data.studentIds && data.studentIds.length > 0;
+}).superRefine((data, ctx) => {
+  const isExam =
+    data.lessonType === LESSON_TYPES.EXAM ||
+    data.lessonType === LESSON_TYPES.THEORY_EXAM;
+
+  // EXAM / THEORY_EXAM => requer studentIds
+  if (isExam) {
+    if (!data.studentIds || data.studentIds.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'At least one student is required for exams',
+        path: ['studentIds'],
+      });
     }
-    // For THEORY lessons, studentId is optional (group classes)
-    if (data.lessonType === LESSON_TYPES.THEORY) {
-      return true;
-    }
-    // For DRIVING lessons, studentId is required
-    return data.studentId !== undefined && data.studentId !== null;
-  },
-  {
-    message: 'Student is required for driving lessons',
-    path: ['studentId'],
+    return;
   }
-);
+
+  // THEORY => pode ser group class (sem studentId)
+  if (data.lessonType === LESSON_TYPES.THEORY) return;
+
+  // DRIVING => requer studentId
+  if (data.studentId === undefined || data.studentId === null) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Student is required for driving lessons',
+      path: ['studentId'],
+    });
+  }
+});
 
 /**
  * Vehicle Creation/Update Schema
