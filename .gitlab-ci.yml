@@ -4,9 +4,6 @@ stages:
   - test
 
 variables:
-  PNPM_HOME: "$CI_PROJECT_DIR/.pnpm"
-  PATH: "$PNPM_HOME:$PATH"
-
   # Prisma needs these env vars to exist for `prisma generate` during install.
   # They do NOT need to be real DBs for unit/integration tests with mocks.
   DATABASE_URL: "postgresql://user:pass@localhost:5432/postgres?schema=public"
@@ -21,6 +18,8 @@ cache:
 before_script:
   - corepack enable
   - cd driving_school_platform/nextjs_space
+  - export PNPM_HOME="$CI_PROJECT_DIR/.pnpm"
+  - export PATH="$PNPM_HOME:$PATH"
   - pnpm config set store-dir .pnpm-store
   - pnpm install --frozen-lockfile
 
