@@ -64,7 +64,7 @@ export function BookLessonDialog({ open, onOpenChange, onSuccess, instructorUser
         <DialogHeader>
           <DialogTitle>Book Lesson</DialogTitle>
           <DialogDescription>
-            Schedule a new lesson, exam, or theory class for your students.
+            Schedule a new driving lesson or theory class for your students.
           </DialogDescription>
         </DialogHeader>
 
@@ -72,6 +72,7 @@ export function BookLessonDialog({ open, onOpenChange, onSuccess, instructorUser
           mode="create"
           userRole="INSTRUCTOR"
           instructorUserId={instructorUserId}
+          allowedLessonTypes={['THEORY', 'DRIVING']}
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
         />

@@ -64,13 +64,14 @@ export function BookLessonDialog({ open, onOpenChange, onSuccess }: BookLessonDi
         <DialogHeader>
           <DialogTitle>Book Lesson</DialogTitle>
           <DialogDescription>
-            Schedule a new lesson, exam, or theory class for students.
+            Schedule a new driving lesson or theory class for students.
           </DialogDescription>
         </DialogHeader>
 
         <LessonForm
           mode="create"
           userRole="SUPER_ADMIN"
+          allowedLessonTypes={['THEORY', 'DRIVING']}
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
         />

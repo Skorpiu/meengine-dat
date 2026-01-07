@@ -45,6 +45,7 @@ interface LessonFormProps {
   initialLesson?: Lesson;
   userRole: UserRole;
   instructorUserId?: string; // For instructor role, pre-set instructor
+  allowedLessonTypes?: Array<'THEORY'|'DRIVING'|'EXAM'|'THEORY_EXAM'>;
   onSubmit: (payload: LessonFormPayload) => Promise<void>;
   onCancel?: () => void;
   submitButtonText?: string;
@@ -70,6 +71,7 @@ export function LessonForm({
   initialLesson,
   userRole,
   instructorUserId,
+  allowedLessonTypes,
   onSubmit,
   onCancel,
   submitButtonText,
@@ -213,6 +215,21 @@ export function LessonForm({
     return 1; // Single student for DRIVING and THEORY
   };
 
+  // Lesson type options
+  const lessonTypeOptions = [
+    { value: 'THEORY', label: 'Code Class (Theory)' },
+    { value: 'DRIVING', label: 'Driving Class' },
+    { value: 'EXAM', label: 'Practical Exam' },
+    { value: 'THEORY_EXAM', label: 'Theoretical Exam' },
+  ];
+
+  // Filter lesson types based on allowedLessonTypes prop
+  const filteredLessonTypeOptions = mode === 'edit' 
+    ? lessonTypeOptions 
+    : allowedLessonTypes 
+      ? lessonTypeOptions.filter(option => allowedLessonTypes.includes(option.value as any))
+      : lessonTypeOptions;
+
   const studentLimit = getStudentLimit();
 
   // Handle student checkbox toggle
@@ -328,10 +345,11 @@ export function LessonForm({
             <SelectValue placeholder="Select lesson type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="THEORY">Code Class (Theory)</SelectItem>
-            <SelectItem value="DRIVING">Driving Class</SelectItem>
-            <SelectItem value="EXAM">Practical Exam</SelectItem>
-            <SelectItem value="THEORY_EXAM">Theoretical Exam</SelectItem>
+            {filteredLessonTypeOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
