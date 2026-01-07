@@ -20,7 +20,7 @@ interface LogEntry {
  */
 const config = {
   minLevel: (process.env.NODE_ENV === 'production' ? 'info' : 'debug') as LogLevel,
-  enableConsole: true,
+  enableConsole: !(process.env.NODE_ENV === 'test' || process.env.VITEST === 'true'),
   enableFile: false, // Set to true if you want to write logs to file
 };
 
