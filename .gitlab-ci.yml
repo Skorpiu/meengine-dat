@@ -17,7 +17,9 @@ cache:
 
 before_script:
   - corepack enable
+  - corepack prepare pnpm@8.15.9 --activate
   - cd driving_school_platform/nextjs_space
+  - pnpm -v
   - export PNPM_HOME="$CI_PROJECT_DIR/.pnpm"
   - export PATH="$PNPM_HOME:$PATH"
   - pnpm config set store-dir .pnpm-store
