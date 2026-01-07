@@ -1,23 +1,33 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // -----------------------------
-// Mocks (hoisted)
+// Hoisted mocks (Vitest-safe)
 // -----------------------------
-const instructorFindUniqueMock = vi.fn();
-const categoryFindFirstMock = vi.fn();
-const studentFindUniqueMock = vi.fn();
-const lessonCreateMock = vi.fn();
+const h = vi.hoisted(() => {
+  const instructorFindUniqueMock = vi.fn();
+  const categoryFindFirstMock = vi.fn();
+  const studentFindUniqueMock = vi.fn();
+  const lessonCreateMock = vi.fn();
 
-const prismaMock = {
-  instructor: { findUnique: instructorFindUniqueMock },
-  category: { findFirst: categoryFindFirstMock },
-  student: { findUnique: studentFindUniqueMock },
-  lesson: { create: lessonCreateMock },
-};
+  const prismaMock = {
+    instructor: { findUnique: instructorFindUniqueMock },
+    category: { findFirst: categoryFindFirstMock },
+    student: { findUnique: studentFindUniqueMock },
+    lesson: { create: lessonCreateMock },
+  };
+
+  return {
+    prismaMock,
+    instructorFindUniqueMock,
+    categoryFindFirstMock,
+    studentFindUniqueMock,
+    lessonCreateMock,
+  };
+});
 
 vi.mock('@/lib/db', () => ({
-  prisma: prismaMock,
-  db: prismaMock,
+  prisma: h.prismaMock,
+  db: h.prismaMock,
 }));
 
 vi.mock('@/lib/middleware/feature-check', () => ({
@@ -48,7 +58,6 @@ function reqJson(payload: any): Request {
   });
 }
 
-// Simple UUIDs that pass the zod uuid checks
 const UUID_A = '11111111-1111-1111-1111-111111111111';
 const UUID_B = '22222222-2222-2222-2222-222222222222';
 const UUID_C = '33333333-3333-3333-3333-333333333333';
@@ -57,21 +66,19 @@ const UUID_D = '44444444-4444-4444-4444-444444444444';
 beforeEach(() => {
   vi.resetAllMocks();
 
-  // default “happy path” prisma behavior
-  instructorFindUniqueMock.mockResolvedValue({
+  h.instructorFindUniqueMock.mockResolvedValue({
     id: 'inst-db-1',
     qualifiedCategories: [{ id: 1 }],
   });
 
-  categoryFindFirstMock.mockResolvedValue({ id: 1, name: 'B' });
+  h.categoryFindFirstMock.mockResolvedValue({ id: 1, name: 'B' });
 
-  studentFindUniqueMock.mockImplementation(async ({ where }: any) => {
-    // route uses where: { userId: sid }
+  h.studentFindUniqueMock.mockImplementation(async ({ where }: any) => {
     if (!where?.userId) return null;
     return { id: `student-db-${where.userId.slice(0, 8)}`, userId: where.userId };
   });
 
-  lessonCreateMock.mockImplementation(async ({ data }: any) => {
+  h.lessonCreateMock.mockImplementation(async ({ data }: any) => {
     return { id: `lesson-${Math.random().toString(16).slice(2)}`, ...data };
   });
 });
@@ -99,9 +106,8 @@ describe('POST /api/admin/lessons (handler integration)', () => {
     expect(body.requiresUpgrade).toBe(true);
     expect(body.error).toBe('Vehicles feature not enabled');
 
-    // Gate happens before any prisma calls
-    expect(instructorFindUniqueMock).not.toHaveBeenCalled();
-    expect(lessonCreateMock).not.toHaveBeenCalled();
+    expect(h.instructorFindUniqueMock).not.toHaveBeenCalled();
+    expect(h.lessonCreateMock).not.toHaveBeenCalled();
   });
 
   it('creates THEORY_EXAM for multiple students (201) and does not call feature check when vehicleId absent', async () => {
@@ -124,11 +130,9 @@ describe('POST /api/admin/lessons (handler integration)', () => {
     expect(body.success).toBe(true);
     expect(body.data?.lessons?.length).toBe(2);
 
-    // sanity: called once per student
-    expect(studentFindUniqueMock).toHaveBeenCalledTimes(2);
-    expect(lessonCreateMock).toHaveBeenCalledTimes(2);
+    expect(h.studentFindUniqueMock).toHaveBeenCalledTimes(2);
+    expect(h.lessonCreateMock).toHaveBeenCalledTimes(2);
 
-    // no vehicleId => no feature check
     expect(checkFeatureAccessMock).not.toHaveBeenCalled();
   });
 
@@ -138,7 +142,6 @@ describe('POST /api/admin/lessons (handler integration)', () => {
     const payload = {
       lessonType: 'DRIVING',
       instructorId: UUID_A,
-      // studentId missing
       lessonDate: '2026-01-06',
       startTime: '10:00',
       endTime: '11:00',
@@ -149,13 +152,11 @@ describe('POST /api/admin/lessons (handler integration)', () => {
     expect(res.status).toBe(400);
     const body: any = await res.json();
 
-    // validateRequest returns errorResponse('Validation failed', 400, details)
     expect(body.error).toBe('Validation failed');
     expect(body.details).toBeTruthy();
 
-    // should fail before touching prisma
-    expect(instructorFindUniqueMock).not.toHaveBeenCalled();
-    expect(lessonCreateMock).not.toHaveBeenCalled();
+    expect(h.instructorFindUniqueMock).not.toHaveBeenCalled();
+    expect(h.lessonCreateMock).not.toHaveBeenCalled();
   });
 
   it('forces instructorId to the logged-in instructor when role=INSTRUCTOR', async () => {
@@ -165,7 +166,7 @@ describe('POST /api/admin/lessons (handler integration)', () => {
 
     const payload = {
       lessonType: 'THEORY',
-      instructorId: UUID_A, // attacker tries to book under another instructor
+      instructorId: UUID_A,
       lessonDate: '2026-01-06',
       startTime: '10:00',
       endTime: '11:00',
@@ -173,10 +174,8 @@ describe('POST /api/admin/lessons (handler integration)', () => {
 
     await POST(reqJson(payload) as any);
 
-    // route should lookup instructor using overridden instructorId = user.id
-    expect(instructorFindUniqueMock).toHaveBeenCalledTimes(1);
-    const callArg = instructorFindUniqueMock.mock.calls[0]?.[0];
-
+    expect(h.instructorFindUniqueMock).toHaveBeenCalledTimes(1);
+    const callArg = h.instructorFindUniqueMock.mock.calls[0]?.[0];
     expect(callArg?.where?.userId).toBe(instructorUserId);
   });
 
@@ -186,7 +185,7 @@ describe('POST /api/admin/lessons (handler integration)', () => {
     const payload = {
       lessonType: 'EXAM',
       instructorId: UUID_A,
-      studentIds: [UUID_B, UUID_C, UUID_D], // MAX is 2
+      studentIds: [UUID_B, UUID_C, UUID_D],
       lessonDate: '2026-01-06',
       startTime: '10:00',
       endTime: '11:00',
@@ -198,8 +197,6 @@ describe('POST /api/admin/lessons (handler integration)', () => {
     const body: any = await res.json();
 
     expect(body.error).toMatch(/Maximum/i);
-
-    // should stop before creating lessons
-    expect(lessonCreateMock).not.toHaveBeenCalled();
+    expect(h.lessonCreateMock).not.toHaveBeenCalled();
   });
 });
