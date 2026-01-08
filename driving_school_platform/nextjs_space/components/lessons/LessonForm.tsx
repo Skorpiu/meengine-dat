@@ -80,9 +80,12 @@ export function LessonForm({
   const isVehicleFeatureEnabled = isFeatureEnabled('VEHICLE_MANAGEMENT');
   
   const [isLoading, setIsLoading] = useState(false);
-  const [lessonType, setLessonType] = useState<string>(
-    initialLesson?.lessonType || 'DRIVING'
-  );
+  const [lessonType, setLessonType] = useState<string>(() => {
+  if (initialLesson?.lessonType) return initialLesson.lessonType;
+  if (allowedLessonTypes?.includes('THEORY_EXAM')) return 'THEORY_EXAM';
+  if (allowedLessonTypes?.length) return allowedLessonTypes[0];
+  return 'DRIVING';
+  });
   const [instructorId, setInstructorId] = useState<string>(
     instructorUserId || (initialLesson?.instructor?.user?.id) || ''
   );
