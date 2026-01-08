@@ -11,6 +11,7 @@ import { Lesson } from '@/lib/types';
 import { useLicense } from '@/hooks/use-license';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Lock, Search, X } from 'lucide-react';
+import type { LessonType } from '@prisma/client';
 
 /**
  * User role types for permission-based rendering
@@ -26,7 +27,7 @@ type FormMode = 'create' | 'edit';
  * Lesson form payload structure
  */
 interface LessonFormPayload {
-  lessonType: string;
+  lessonType: LessonType;
   instructorId?: string;
   studentId?: string;
   studentIds?: string[];
@@ -45,7 +46,7 @@ interface LessonFormProps {
   initialLesson?: Lesson;
   userRole: UserRole;
   instructorUserId?: string; // For instructor role, pre-set instructor
-  allowedLessonTypes?: Array<'THEORY'|'DRIVING'|'EXAM'|'THEORY_EXAM'>;
+  allowedLessonTypes?: LessonType[];
   onSubmit: (payload: LessonFormPayload) => Promise<void>;
   onCancel?: () => void;
   submitButtonText?: string;
@@ -61,6 +62,12 @@ interface Student {
   email: string;
   studentNumber: number | null;
 }
+
+const ALL_LESSON_TYPES = ['DRIVING', 'THEORY', 'EXAM', 'THEORY_EXAM'] as const;
+
+const isLessonType = (value: unknown): value is LessonType =>
+  typeof value === 'string' &&
+  (ALL_LESSON_TYPES as readonly string[]).includes(value);
 
 /**
  * Reusable LessonForm component
@@ -80,17 +87,30 @@ export function LessonForm({
   const isVehicleFeatureEnabled = isFeatureEnabled('VEHICLE_MANAGEMENT');
   
   const [isLoading, setIsLoading] = useState(false);
-  const [lessonType, setLessonType] = useState<string>(() => {
-  if (initialLesson?.lessonType) return initialLesson.lessonType;
-  if (allowedLessonTypes?.includes('THEORY_EXAM')) return 'THEORY_EXAM';
-  if (allowedLessonTypes?.length) return allowedLessonTypes[0];
-  return 'DRIVING';
-  });
+  const getDefaultLessonType = (): LessonType => {
+    // 1) In edit mode, respect what comes from the registry
+    const existingType = initialLesson?.lessonType;
+    if (isLessonType(existingType)) return existingType;
+
+    // 2) In the create section, choose the default from the allowed list
+    //    (THEORY_EXAM by default, when applicable)
+    const allowed = allowedLessonTypes?.length ? allowedLessonTypes : (ALL_LESSON_TYPES as unknown as LessonType[]);
+
+    if (allowed.includes('THEORY_EXAM')) return 'THEORY_EXAM';
+    if (allowed.includes('EXAM')) return 'EXAM';
+    if (allowed.includes('DRIVING')) return 'DRIVING';
+    if (allowed.includes('THEORY')) return 'THEORY';
+
+    return 'DRIVING';
+  };
+
+  const [lessonType, setLessonType] = useState<LessonType>(getDefaultLessonType);
+
   const [instructorId, setInstructorId] = useState<string>(
     instructorUserId || (initialLesson?.instructor?.user?.id) || ''
   );
   
-  // For single student selection (DRIVING, THEORY)
+  // For single student selection (DRIVING)
   const [studentId, setStudentId] = useState<string>(
     initialLesson?.student?.user?.id ? String(initialLesson.student.user.id) : ''
   );
@@ -136,7 +156,7 @@ export function LessonForm({
   // Update form when initialLesson changes (for edit mode)
   useEffect(() => {
     if (mode === 'edit' && initialLesson) {
-      setLessonType(initialLesson.lessonType || 'DRIVING');
+      setLessonType(isLessonType(initialLesson.lessonType) ? initialLesson.lessonType : 'DRIVING');
       setInstructorId(initialLesson.instructor?.user?.id || '');
       setStudentId(initialLesson.student?.user?.id ? String(initialLesson.student.user.id) : '');
       setVehicleId(initialLesson.vehicleId?.toString() || '');
@@ -219,7 +239,7 @@ export function LessonForm({
   };
 
   // Lesson type options
-  const lessonTypeOptions = [
+  const lessonTypeOptions: Array<{ value: LessonType; label: string }> = [
     { value: 'THEORY', label: 'Code Class (Theory)' },
     { value: 'DRIVING', label: 'Driving Class' },
     { value: 'EXAM', label: 'Practical Exam' },
@@ -227,11 +247,12 @@ export function LessonForm({
   ];
 
   // Filter lesson types based on allowedLessonTypes prop
-  const filteredLessonTypeOptions = mode === 'edit' 
-    ? lessonTypeOptions 
-    : allowedLessonTypes 
-      ? lessonTypeOptions.filter(option => allowedLessonTypes.includes(option.value as any))
-      : lessonTypeOptions;
+  const filteredLessonTypeOptions =
+    mode === 'edit'
+      ? lessonTypeOptions
+      : allowedLessonTypes
+        ? lessonTypeOptions.filter(option => allowedLessonTypes.includes(option.value))
+        : lessonTypeOptions;
 
   const studentLimit = getStudentLimit();
 
@@ -341,7 +362,7 @@ export function LessonForm({
         <Label htmlFor="lessonType">Lesson Type *</Label>
         <Select 
           value={lessonType} 
-          onValueChange={setLessonType}
+          onValueChange={(v) => setLessonType(v as LessonType)}
           disabled={mode === 'edit'} // Don't allow changing lesson type in edit mode
         >
           <SelectTrigger>
@@ -445,22 +466,17 @@ export function LessonForm({
         </div>
       )}
 
-      {/* Student Selection - Single select for DRIVING and THEORY */}
-      {lessonType && !isMultiStudentType && lessonType !== 'THEORY' && (
+      {/* Student Selection - DRIVING requires exactly 1 student */}
+      {lessonType === 'DRIVING' && (
         <div className="space-y-2">
-          <Label htmlFor="student">
-            Student{' '}
-            {lessonType === 'THEORY'
-              ? '(Optional for group classes)'
-              : '*'}
-          </Label>
-          
+          <Label htmlFor="student">Student *</Label>
+
           {/* Search Input */}
           <div className="relative mb-2">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search by name or student number..."
+              placeholder="Search by name or student number."
               value={studentSearchTerm}
               onChange={(e) => setStudentSearchTerm(e.target.value)}
               className="pl-10 pr-8"
@@ -478,13 +494,7 @@ export function LessonForm({
 
           <Select value={studentId || undefined} onValueChange={setStudentId}>
             <SelectTrigger>
-              <SelectValue
-                placeholder={
-                  lessonType === 'THEORY'
-                    ? 'Select student (optional)'
-                    : 'Select student'
-                }
-              />
+              <SelectValue placeholder="Select student" />
             </SelectTrigger>
             <SelectContent>
               {filteredStudents.length === 0 ? (
@@ -500,12 +510,6 @@ export function LessonForm({
               )}
             </SelectContent>
           </Select>
-          {lessonType === 'THEORY' && (
-            <p className="text-xs text-muted-foreground">
-              For individual theory lessons, select a student. For group
-              classes, leave empty.
-            </p>
-          )}
         </div>
       )}
 
