@@ -67,7 +67,7 @@ const ALL_LESSON_TYPES = ['DRIVING', 'THEORY', 'EXAM', 'THEORY_EXAM'] as const;
 
 const isLessonType = (value: unknown): value is LessonType =>
   typeof value === 'string' &&
-  (ALL_LESSON_TYPES as readonly string[]).includes(value);
+  (ALL_LESSON_TYPES as readonly unknown[]).includes(value);
 
 /**
  * Reusable LessonForm component
