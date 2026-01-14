@@ -2,6 +2,13 @@
   "name": "app",
   "private": true,
   "packageManager": "pnpm@10.24.0",
+  "volta": {
+    "node": "20.20.0",
+    "pnpm": "10.24.0"
+  },
+  "engines": {
+    "node": ">=20 <21"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
