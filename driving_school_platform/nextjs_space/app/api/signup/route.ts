@@ -3,32 +3,76 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import bcrypt from "bcryptjs"
 import { resolveTenantOrganizationId } from "@/lib/tenant"
+import type { Prisma, UserRole } from "@prisma/client"
 
 export const dynamic = "force-dynamic"
 
+const USER_ROLES = ["STUDENT", "INSTRUCTOR", "SUPER_ADMIN"] as const
+
+const isUserRole = (value: unknown): value is UserRole =>
+  typeof value === "string" && (USER_ROLES as readonly string[]).includes(value)
+
+function parseOptionalDate(value: unknown): Date | null {
+  if (typeof value !== "string" || !value) return null
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    
-    const {
-      firstName,
-      lastName,
-      email,
-      phoneNumber,
-      password,
-      role,
-      dateOfBirth,
-      address,
-      city,
-      postalCode,
-      organizationId,
-      // Student-specific fields
-      selectedCategories,
-      transmissionType,
-      // Instructor-specific fields
-      instructorLicenseNumber,
-      instructorLicenseExpiry,
-    } = body
+    let rawBody: unknown
+    try {
+      rawBody = await request.json()
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON body" },
+        { status: 400 }
+      )
+    }
+
+    if (!rawBody || typeof rawBody !== "object") {
+      return NextResponse.json(
+        { error: "Invalid request body" },
+        { status: 400 }
+      )
+    }
+
+    const body = rawBody as Record<string, unknown>
+
+    const firstName = typeof body.firstName === "string" ? body.firstName.trim() : ""
+    const lastName = typeof body.lastName === "string" ? body.lastName.trim() : ""
+    const emailRaw = typeof body.email === "string" ? body.email.trim() : ""
+    const password = typeof body.password === "string" ? body.password : ""
+    const roleRaw = body.role
+
+    const phoneNumber = typeof body.phoneNumber === "string" ? body.phoneNumber : null
+    const address = typeof body.address === "string" ? body.address : null
+    const city = typeof body.city === "string" ? body.city : null
+    const postalCode = typeof body.postalCode === "string" ? body.postalCode : null
+    const organizationId = typeof body.organizationId === "string" ? body.organizationId : null
+
+    const selectedCategories = Array.isArray(body.selectedCategories)
+      ? body.selectedCategories.filter((x): x is string => typeof x === "string")
+      : null
+
+    const transmissionType = typeof body.transmissionType === "string" ? body.transmissionType : null
+
+    const instructorLicenseNumber =
+      typeof body.instructorLicenseNumber === "string" ? body.instructorLicenseNumber : null
+
+    const instructorLicenseExpiry = body.instructorLicenseExpiry
+
+    const dateOfBirthDate = parseOptionalDate(body.dateOfBirth)
+
+    if (!isUserRole(roleRaw)) {
+      return NextResponse.json(
+        { error: "Invalid role" },
+        { status: 400 }
+      )
+    }
+
+    const role: UserRole = roleRaw
+    const email = emailRaw.toLowerCase()
 
     // Validation
     if (!firstName || !lastName || !email || !password || !role) {
@@ -64,6 +108,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const instructorExpiryDate = parseOptionalDate(instructorLicenseExpiry)
+
+    if (role === "INSTRUCTOR") {
+      if (!instructorLicenseNumber || !instructorExpiryDate) {
+        return NextResponse.json(
+          { error: "Missing instructor license fields" },
+          { status: 400 }
+        )
+      }
+    }
+
+    const instructorLicenseNumberRequired =
+      role === "INSTRUCTOR" ? instructorLicenseNumber : null
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
@@ -80,17 +138,17 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 12)
 
     // Create user in transaction
-    const result = await prisma.$transaction(async (tx: any) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Create user
       const user = await tx.user.create({
         data: {
           email: email.toLowerCase(),
           passwordHash: hashedPassword,
-          role: role as any,
+          role: role,
           firstName,
           lastName,
           phoneNumber,
-          dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+          dateOfBirth: dateOfBirthDate,
           address,
           city,
           postalCode,
@@ -154,8 +212,8 @@ export async function POST(request: NextRequest) {
         await tx.instructor.create({
           data: {
             userId: user.id,
-            instructorLicenseNumber,
-            instructorLicenseExpiry: new Date(instructorLicenseExpiry),
+            instructorLicenseNumber: instructorLicenseNumberRequired!,
+            instructorLicenseExpiry: instructorExpiryDate!,
             organizationId: effectiveOrganizationId,
             instructorIdNumber: `INS-${Date.now()}`,
             employmentType: "FULL_TIME",

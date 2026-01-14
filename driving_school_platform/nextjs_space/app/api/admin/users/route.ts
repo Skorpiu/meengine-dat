@@ -4,9 +4,15 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { resolveTenantOrganizationId } from "@/lib/tenant"
+import type { Prisma, UserRole } from "@prisma/client"
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+const USER_ROLES = ["STUDENT", "INSTRUCTOR", "SUPER_ADMIN"] as const
+
+const isUserRole = (value: string): value is UserRole =>
+  (USER_ROLES as readonly string[]).includes(value)
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,12 +46,21 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const role = searchParams.get("role")
+    const roleParam = searchParams.get("role")
 
-    const where: any = {
+    if (roleParam && !isUserRole(roleParam)) {
+      return NextResponse.json(
+        { error: "Invalid role" },
+        { status: 400 }
+      )
+    }
+
+    const role: UserRole | null = roleParam && isUserRole(roleParam) ? roleParam : null
+
+    const where: Prisma.UserWhereInput = {
       organizationId: orgId,
     }
-    
+
     if (role) {
       where.role = role
     }
