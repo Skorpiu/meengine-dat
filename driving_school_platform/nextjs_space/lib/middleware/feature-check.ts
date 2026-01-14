@@ -10,8 +10,10 @@ import { authOptions } from '@/lib/auth';
 import { LicenseService } from '@/lib/services/license-service';
 import { db } from '@/lib/db';
 import type { FeatureKey } from '@/lib/config/license-features';
+import type { NextRequest } from 'next/server';
+import { resolveTenantOrganizationId } from '@/lib/tenant';
 
-export async function checkFeatureAccess(featureKey: FeatureKey): Promise<{
+export async function checkFeatureAccess(featureKey: FeatureKey, request?: NextRequest): Promise<{
   allowed: boolean;
   organizationId?: string;
   error?: string;
@@ -35,6 +37,13 @@ export async function checkFeatureAccess(featureKey: FeatureKey): Promise<{
 
     if (!user.organizationId) {
       return { allowed: false, error: 'No organization found' };
+    }
+
+    if (request) {
+      const tenant = await resolveTenantOrganizationId(request);
+      if (tenant.organizationId && tenant.organizationId !== user.organizationId) {
+        return { allowed: false, error: 'Wrong organization for this domain' };
+      }
     }
 
     // Check if feature is enabled

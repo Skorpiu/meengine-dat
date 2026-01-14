@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     // Check if Vehicle Management feature is enabled
     // For SUPER_ADMIN: Check feature access
     // For INSTRUCTOR: Also check feature access (defense in depth)
-    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT');
+    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT', request);
     if (!featureCheck.allowed) {
       return NextResponse.json({ 
         error: 'Vehicles feature not enabled',
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if Vehicle Management feature is enabled
-    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT');
+    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT', request);
     if (!featureCheck.allowed) {
       return NextResponse.json({ 
         error: 'Vehicle Management feature is not enabled. Please upgrade to unlock this feature.',
@@ -237,7 +237,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Check if Vehicle Management feature is enabled
-    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT');
+    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT', request);
     if (!featureCheck.allowed) {
       return NextResponse.json({ 
         error: 'Vehicle Management feature is not enabled. Please upgrade to unlock this feature.',
@@ -347,7 +347,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check if Vehicle Management feature is enabled
-    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT');
+    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT', request);
     if (!featureCheck.allowed) {
       return NextResponse.json({ 
         error: 'Vehicle Management feature is not enabled. Please upgrade to unlock this feature.',

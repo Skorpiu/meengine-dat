@@ -395,6 +395,7 @@ async function main() {
     prisma.student.create({
       data: {
         userId: studentUsers[0].id,
+        studentNumber: 1,
         studentIdNumber: 'STU-001-2024',
         categoryId: categoryB?.id,
         transmissionTypeId: automaticTransmission.id,
@@ -409,6 +410,7 @@ async function main() {
     prisma.student.create({
       data: {
         userId: studentUsers[1].id,
+        studentNumber: 2,
         studentIdNumber: 'STU-002-2024',
         categoryId: categoryB?.id,
         transmissionTypeId: manualTransmission.id,
@@ -422,6 +424,7 @@ async function main() {
     prisma.student.create({
       data: {
         userId: studentUsers[2].id,
+        studentNumber: 3,
         studentIdNumber: 'STU-003-2024',
         categoryId: categoryA1?.id,
         transmissionTypeId: manualTransmission.id,

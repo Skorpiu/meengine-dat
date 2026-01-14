@@ -62,6 +62,7 @@ export const authOptions: NextAuthOptions = {
           lastName: user.lastName,
           role: user.role,
           isApproved: user.isApproved,
+          organizationId: user.organizationId ?? null,
         }
       },
     }),
@@ -73,6 +74,7 @@ export const authOptions: NextAuthOptions = {
         token.firstName = user.firstName
         token.lastName = user.lastName
         token.isApproved = user.isApproved
+        token.organizationId = (user as any).organizationId ?? null
       }
       return token
     },
@@ -83,6 +85,7 @@ export const authOptions: NextAuthOptions = {
         session.user.firstName = token.firstName as string
         session.user.lastName = token.lastName as string
         session.user.isApproved = token.isApproved as boolean
+        session.user.organizationId = (token as any).organizationId ?? null
       }
       return session
     },

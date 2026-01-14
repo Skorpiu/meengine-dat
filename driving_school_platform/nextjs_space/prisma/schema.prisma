@@ -547,11 +547,26 @@ model Organization {
   features           OrganizationFeature[]
   students           Student[]
   users              User[]
+  domains            OrganizationDomain[]
 
   @@index([subscriptionTier])
   @@index([subscriptionStatus])
   @@index([isActive])
   @@map("organizations")
+}
+
+model OrganizationDomain {
+  id             String       @id @default(cuid())
+  organizationId String
+  host           String       @unique
+  isPrimary      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("organization_domains")
 }
 
 model OrganizationFeature {

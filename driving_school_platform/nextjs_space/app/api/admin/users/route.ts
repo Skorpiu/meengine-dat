@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
+import { resolveTenantOrganizationId } from "@/lib/tenant"
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -19,10 +20,31 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    if (!session.user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { organizationId: true },
+    })
+
+    const orgId = currentUser?.organizationId ?? null
+    if (!orgId) {
+      return NextResponse.json({ error: "No organization found" }, { status: 400 })
+    }
+
+    const tenant = await resolveTenantOrganizationId(request)
+    if (tenant.organizationId && tenant.organizationId !== orgId) {
+      return NextResponse.json({ error: "Wrong organization for this domain" }, { status: 403 })
+    }
+
     const { searchParams } = new URL(request.url)
     const role = searchParams.get("role")
 
-    const where: any = {}
+    const where: any = {
+      organizationId: orgId,
+    }
     
     if (role) {
       where.role = role

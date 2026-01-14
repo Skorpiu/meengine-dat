@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import bcrypt from "bcryptjs"
+import { resolveTenantOrganizationId } from "@/lib/tenant"
 
 export const dynamic = "force-dynamic"
 
@@ -37,9 +38,20 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    if (!organizationId) {
+    const tenant = await resolveTenantOrganizationId(request)
+    const effectiveOrganizationId = tenant.organizationId ?? organizationId
+
+    // If we are on a mapped domain, we don't allow "choose another org"
+    if (tenant.organizationId && organizationId && tenant.organizationId !== organizationId) {
       return NextResponse.json(
-        { error: "Please select a organization" },
+        { error: "Organization does not match this domain" },
+        { status: 400 }
+      )
+    }
+
+    if (!effectiveOrganizationId) {
+      return NextResponse.json(
+        { error: "Please select an organization" },
         { status: 400 }
       )
     }
@@ -84,6 +96,8 @@ export async function POST(request: NextRequest) {
           postalCode,
           isEmailVerified: true, // For demo purposes, skip email verification
           isApproved: true, // Auto-approve all users
+          organizationId: effectiveOrganizationId,
+
         },
       })
 
@@ -116,7 +130,7 @@ export async function POST(request: NextRequest) {
           userId: user.id,
           categoryId: category?.id || null,
           transmissionTypeId: transmission?.id || null,
-          organizationId: organizationId || null,
+          organizationId: effectiveOrganizationId,
           studentIdNumber: `STU-${Date.now()}`,
         }
 
@@ -142,7 +156,7 @@ export async function POST(request: NextRequest) {
             userId: user.id,
             instructorLicenseNumber,
             instructorLicenseExpiry: new Date(instructorLicenseExpiry),
-            organizationId: organizationId || null,
+            organizationId: effectiveOrganizationId,
             instructorIdNumber: `INS-${Date.now()}`,
             employmentType: "FULL_TIME",
             hourlyRate: 45.00,

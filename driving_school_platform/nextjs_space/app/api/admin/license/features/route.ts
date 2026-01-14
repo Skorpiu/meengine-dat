@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { LicenseService } from '@/lib/services/license-service';
 import { db } from '@/lib/db';
 import { FEATURE_DEFINITIONS } from '@/lib/config/license-features';
+import { resolveTenantOrganizationId } from '@/lib/tenant';
 
 /**
  * GET /api/admin/license/features
@@ -29,6 +30,11 @@ export async function GET(request: NextRequest) {
 
     if (!user.organizationId) {
       return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+    }
+
+    const tenant = await resolveTenantOrganizationId(request);
+    if (tenant.organizationId && tenant.organizationId !== user.organizationId) {
+      return NextResponse.json({ error: 'Wrong organization for this domain' }, { status: 403 });
     }
 
     // Get enabled features
@@ -75,6 +81,11 @@ export async function POST(request: NextRequest) {
 
     if (!user.organizationId) {
       return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+    }
+
+    const tenant = await resolveTenantOrganizationId(request);
+    if (tenant.organizationId && tenant.organizationId !== user.organizationId) {
+      return NextResponse.json({ error: 'Wrong organization for this domain' }, { status: 403 });
     }
 
     const body = await request.json();

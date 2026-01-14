@@ -1,4 +1,3 @@
-
 import { DefaultSession, DefaultUser } from "next-auth"
 import { DefaultJWT } from "next-auth/jwt"
 
@@ -12,6 +11,7 @@ declare module "next-auth" {
       firstName: string
       lastName: string
       isApproved: boolean
+      organizationId: string | null
     } & DefaultSession["user"]
   }
 
@@ -20,6 +20,7 @@ declare module "next-auth" {
     firstName: string
     lastName: string
     isApproved: boolean
+    organizationId: string | null
   }
 }
 
@@ -29,5 +30,6 @@ declare module "next-auth/jwt" {
     firstName: string
     lastName: string
     isApproved: boolean
+    organizationId: string | null
   }
 }

@@ -253,7 +253,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   // Defense-in-depth: block vehicle usage if feature is disabled
   if (vehicleId) {
-    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT');
+    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT', request);
     if (!featureCheck.allowed) {
       return NextResponse.json(
         {

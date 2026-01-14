@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { LicenseService } from '@/lib/services/license-service';
 import { db } from '@/lib/db';
+import { resolveTenantOrganizationId } from '@/lib/tenant';
 
 /**
  * POST /api/admin/license/activate
@@ -28,6 +29,11 @@ export async function POST(request: NextRequest) {
 
     if (!user.organizationId) {
       return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+    }
+
+    const tenant = await resolveTenantOrganizationId(request);
+    if (tenant.organizationId && tenant.organizationId !== user.organizationId) {
+      return NextResponse.json({ error: 'Wrong organization for this domain' }, { status: 403 });
     }
 
     const body = await request.json();

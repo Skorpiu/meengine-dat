@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if Vehicle Management feature is enabled
-    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT');
+    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT', request);
     if (!featureCheck.allowed) {
       return NextResponse.json(
         { 
