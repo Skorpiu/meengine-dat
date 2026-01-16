@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { errorResponse, verifyAuth, withErrorHandling } from '@/lib/api-utils';
 import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from '@/lib/constants';
 import { startOfDay, addDays } from 'date-fns';
+import { resolveTenantOrganizationId } from '@/lib/tenant';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -11,6 +12,16 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const user = await verifyAuth(USER_ROLES.STUDENT);
   if (!user) {
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
+  }
+
+  const orgId = (user as any).organizationId as string | null | undefined;
+  if (!orgId) {
+    return errorResponse('No organization found', HTTP_STATUS.BAD_REQUEST);
+  }
+
+  const tenant = await resolveTenantOrganizationId(request);
+  if (tenant.organizationId && tenant.organizationId !== orgId) {
+    return errorResponse('Organization does not match this domain', HTTP_STATUS.FORBIDDEN);
   }
 
   const { searchParams } = new URL(request.url);
@@ -29,9 +40,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return errorResponse('Invalid "from" or "to" date', HTTP_STATUS.BAD_REQUEST);
   }
 
-  const student = await prisma.student.findUnique({
-    where: { userId: user.id },
-    select: { id: true },
+  const student = await prisma.student.findFirst({
+    where: { userId: user.id, organizationId: orgId },
   });
 
   if (!student) {
@@ -40,6 +50,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   const lessons = await prisma.lesson.findMany({
     where: {
+      organizationId: orgId,
       studentId: student.id,
       lessonDate: { gte: fromDate, lt: toDate },
     },

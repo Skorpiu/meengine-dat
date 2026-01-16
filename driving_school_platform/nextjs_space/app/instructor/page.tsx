@@ -23,9 +23,12 @@ export default async function InstructorDashboard() {
     redirect("/auth/login")
   }
 
+  const orgId = session.user.organizationId;
+  if (!orgId) redirect("/auth/login");
+
   // Get instructor profile
-  const instructorRaw = await prisma.instructor.findUnique({
-    where: { userId: session.user.id },
+  const instructorRaw = await prisma.instructor.findFirst({
+    where: { userId: session.user.id, organizationId: orgId },
     include: {
       user: true,
       qualifiedCategories: true,
@@ -49,12 +52,14 @@ export default async function InstructorDashboard() {
   const stats = await Promise.all([
     prisma.lesson.count({ 
       where: { 
+        organizationId: orgId,
         instructorId: instructor.id, 
         status: "SCHEDULED" 
       } 
     }),
     prisma.lesson.count({ 
       where: { 
+        organizationId: orgId,
         instructorId: instructor.id, 
         status: "COMPLETED",
         lessonDate: {
@@ -64,6 +69,7 @@ export default async function InstructorDashboard() {
     }),
     prisma.lessonRequest.count({ 
       where: { 
+        organizationId: orgId,
         instructorId: instructor.id, 
         status: "PENDING" 
       } 
@@ -79,6 +85,7 @@ export default async function InstructorDashboard() {
   // Today's lessons count
   const todaysLessonsCount = await prisma.lesson.count({
     where: {
+      organizationId: orgId,
       instructorId: instructor.id,
       lessonDate: {
         gte: new Date(new Date().setHours(0, 0, 0, 0)),
@@ -94,6 +101,7 @@ export default async function InstructorDashboard() {
   
   const scheduledLessonsForMapRaw = await prisma.lesson.findMany({
     where: {
+      organizationId: orgId,
       instructorId: instructor.id,
       lessonDate: {
         gte: new Date(new Date().setHours(0, 0, 0, 0)),

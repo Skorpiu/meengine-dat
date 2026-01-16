@@ -48,6 +48,27 @@ async function main() {
           data: { organizationId: existingOrg.id },
         });
 
+        // Backfill core models (B2)
+        await prisma.vehicle.updateMany({
+          where: { organizationId: null },
+          data: { organizationId: existingOrg.id },
+        });
+
+        await prisma.lesson.updateMany({
+          where: { organizationId: null },
+          data: { organizationId: existingOrg.id },
+        });
+
+        await prisma.exam.updateMany({
+          where: { organizationId: null },
+          data: { organizationId: existingOrg.id },
+        });
+
+        await prisma.lessonRequest.updateMany({
+          where: { organizationId: null },
+          data: { organizationId: existingOrg.id },
+        });
+
         console.log('✅ Users linked successfully');
       }
 

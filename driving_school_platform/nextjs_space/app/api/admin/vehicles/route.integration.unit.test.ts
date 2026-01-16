@@ -59,7 +59,7 @@ beforeEach(() => {
   h.examFindManyMock.mockResolvedValue([]);
   h.vehicleFindManyMock.mockResolvedValue([]);
 
-  h.checkFeatureAccessMock.mockResolvedValue({ allowed: true });
+  h.checkFeatureAccessMock.mockResolvedValue({ allowed: true, organizationId: 'org1' });
 });
 
 describe('GET /api/admin/vehicles (handler integration)', () => {

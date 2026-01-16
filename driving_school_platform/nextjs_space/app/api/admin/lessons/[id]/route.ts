@@ -12,6 +12,8 @@ import {
   withErrorHandling,
 } from '@/lib/api-utils';
 import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from '@/lib/constants';
+import { resolveTenantOrganizationId } from '@/lib/tenant';
+import { checkFeatureAccess } from '@/lib/middleware/feature-check';
 
 function isInstructor(user: any) {
   return user?.role === USER_ROLES.INSTRUCTOR;
@@ -46,10 +48,20 @@ export const GET = withErrorHandling(async (
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
   }
 
+  const orgId = (user as any).organizationId as string | null | undefined;
+  if (!orgId) {
+    return errorResponse('No organization found', HTTP_STATUS.BAD_REQUEST);
+  }
+
+  const tenant = await resolveTenantOrganizationId(request);
+  if (tenant.organizationId && tenant.organizationId !== orgId) {
+    return errorResponse('Organization does not match this domain', HTTP_STATUS.FORBIDDEN);
+  }
+
   const { id } = params;
 
-  const lesson = await prisma.lesson.findUnique({
-    where: { id },
+  const lesson = await prisma.lesson.findFirst({
+    where: { id, organizationId: orgId },
     include: {
       student: { include: { user: true } },
       instructor: { include: { user: true } }, // includes instructor.userId too
@@ -83,8 +95,8 @@ export const PUT = withErrorHandling(async (
   const { id } = params;
 
   // Permission check (must exist + ownership if instructor)
-  const existingLesson = await prisma.lesson.findUnique({
-    where: { id },
+  const existingLesson = await prisma.lesson.findFirst({
+    where: { id, organizationId: orgId },
     include: { instructor: true },
   });
 
@@ -102,6 +114,22 @@ export const PUT = withErrorHandling(async (
 
   const body = await request.json();
   const { lessonDate, startTime, endTime, status, vehicleId } = body;
+
+  if (vehicleId) {
+    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT', request);
+    if (!featureCheck.allowed) {
+      return errorResponse('Vehicles feature not enabled', HTTP_STATUS.FORBIDDEN);
+    }
+
+    const vehicle = await prisma.vehicle.findFirst({
+      where: { id: vehicleId, organizationId: orgId },
+      select: { id: true },
+    });
+
+    if (!vehicle) {
+      return errorResponse('Vehicle not found', HTTP_STATUS.NOT_FOUND);
+    }
+  }
 
   // Calculate duration if times are provided
   let durationMinutes: number | undefined;
@@ -155,8 +183,8 @@ export const DELETE = withErrorHandling(async (
 
   const { id } = params;
 
-  const lesson = await prisma.lesson.findUnique({
-    where: { id },
+  const lesson = await prisma.lesson.findFirst({
+    where: { id, organizationId: orgId },
     include: { instructor: true },
   });
 
@@ -171,7 +199,7 @@ export const DELETE = withErrorHandling(async (
     return errorResponse('Cannot delete a lesson that already ended', HTTP_STATUS.BAD_REQUEST);
   }
 
-  await prisma.lesson.delete({ where: { id } });
+  await prisma.lesson.deleteMany({ where: { id, organizationId: orgId } });
 
   return successResponse({
     message: 'Lesson deleted successfully',

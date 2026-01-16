@@ -4,23 +4,23 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Hoisted mocks (Vitest-safe)
 // -----------------------------
 const h = vi.hoisted(() => {
-  const instructorFindUniqueMock = vi.fn();
+  const instructorFindFirstMock = vi.fn();
   const categoryFindFirstMock = vi.fn();
-  const studentFindUniqueMock = vi.fn();
+  const studentFindFirstMock = vi.fn();
   const lessonCreateMock = vi.fn();
 
   const prismaMock = {
-    instructor: { findUnique: instructorFindUniqueMock },
+    instructor: { findFirst: instructorFindFirstMock },
     category: { findFirst: categoryFindFirstMock },
-    student: { findUnique: studentFindUniqueMock },
+    student: { findFirst: studentFindFirstMock },
     lesson: { create: lessonCreateMock },
   };
 
   return {
     prismaMock,
-    instructorFindUniqueMock,
+    instructorFindFirstMock,
     categoryFindFirstMock,
-    studentFindUniqueMock,
+    studentFindFirstMock,
     lessonCreateMock,
   };
 });
@@ -66,14 +66,14 @@ const UUID_D = '44444444-4444-4444-4444-444444444444';
 beforeEach(() => {
   vi.resetAllMocks();
 
-  h.instructorFindUniqueMock.mockResolvedValue({
+  h.instructorFindFirstMock.mockResolvedValue({
     id: 'inst-db-1',
     qualifiedCategories: [{ id: 1 }],
   });
 
   h.categoryFindFirstMock.mockResolvedValue({ id: 1, name: 'B' });
 
-  h.studentFindUniqueMock.mockImplementation(async ({ where }: any) => {
+  h.studentFindFirstMock.mockImplementation(async ({ where }: any) => {
     if (!where?.userId) return null;
     return { id: `student-db-${where.userId.slice(0, 8)}`, userId: where.userId };
   });
@@ -106,7 +106,7 @@ describe('POST /api/admin/lessons (handler integration)', () => {
     expect(body.requiresUpgrade).toBe(true);
     expect(body.error).toBe('Vehicles feature not enabled');
 
-    expect(h.instructorFindUniqueMock).not.toHaveBeenCalled();
+    expect(h.instructorFindFirstMock).not.toHaveBeenCalled();
     expect(h.lessonCreateMock).not.toHaveBeenCalled();
   });
 
@@ -130,7 +130,7 @@ describe('POST /api/admin/lessons (handler integration)', () => {
     expect(body.success).toBe(true);
     expect(body.data?.lessons?.length).toBe(2);
 
-    expect(h.studentFindUniqueMock).toHaveBeenCalledTimes(2);
+    expect(h.studentFindFirstMock).toHaveBeenCalledTimes(2);
     expect(h.lessonCreateMock).toHaveBeenCalledTimes(2);
 
     expect(checkFeatureAccessMock).not.toHaveBeenCalled();
@@ -155,14 +155,14 @@ describe('POST /api/admin/lessons (handler integration)', () => {
     expect(body.error).toBe('Validation failed');
     expect(body.details).toBeTruthy();
 
-    expect(h.instructorFindUniqueMock).not.toHaveBeenCalled();
+    expect(h.instructorFindFirstMock).not.toHaveBeenCalled();
     expect(h.lessonCreateMock).not.toHaveBeenCalled();
   });
 
   it('forces instructorId to the logged-in instructor when role=INSTRUCTOR', async () => {
     const instructorUserId = UUID_D;
 
-    verifyAuthMock.mockResolvedValue({ id: instructorUserId, role: 'INSTRUCTOR' });
+    verifyAuthMock.mockResolvedValue({ id: instructorUserId, role: 'INSTRUCTOR', organizationId: 'org1' });
 
     const payload = {
       lessonType: 'THEORY',
@@ -174,8 +174,8 @@ describe('POST /api/admin/lessons (handler integration)', () => {
 
     await POST(reqJson(payload) as any);
 
-    expect(h.instructorFindUniqueMock).toHaveBeenCalledTimes(1);
-    const callArg = h.instructorFindUniqueMock.mock.calls[0]?.[0];
+    expect(h.instructorFindFirstMock).toHaveBeenCalledTimes(1);
+    const callArg = h.instructorFindFirstMock.mock.calls[0]?.[0];
     expect(callArg?.where?.userId).toBe(instructorUserId);
   });
 

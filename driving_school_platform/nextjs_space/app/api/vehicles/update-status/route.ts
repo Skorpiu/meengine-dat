@@ -28,6 +28,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const orgId = featureCheck.organizationId;
+    if (!orgId) return NextResponse.json({ error: "No organization found" }, { status: 400 });
+
     const { vehicleId, status } = await request.json()
 
     if (!vehicleId || !status) {
@@ -38,10 +41,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Update vehicle status
-    await prisma.vehicle.update({
-      where: { id: parseInt(vehicleId) },
+    const result = await prisma.vehicle.updateMany({
+      where: { id: parseInt(vehicleId), organizationId: orgId },
       data: { status },
-    })
+    });
+
+    if (result.count === 0) {
+      return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });
+    }
 
     return NextResponse.json({ 
       success: true, 

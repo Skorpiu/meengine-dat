@@ -24,9 +24,12 @@ export default async function StudentDashboard() {
     redirect("/auth/login")
   }
 
+  const orgId = session.user.organizationId;
+  if (!orgId) redirect("/auth/login");
+
   // Get student profile
-  const student = await prisma.student.findUnique({
-    where: { userId: session.user.id },
+  const student = await prisma.student.findFirst({
+    where: { userId: session.user.id, organizationId: orgId },
     include: {
       user: true,
       category: true,
@@ -43,19 +46,22 @@ export default async function StudentDashboard() {
   // Fetch dashboard statistics
   const stats = await Promise.all([
     prisma.lesson.count({ 
-      where: { 
+      where: {
+        organizationId: orgId,
         studentId: student.id, 
         status: "SCHEDULED" 
       } 
     }),
     prisma.lesson.count({ 
-      where: { 
+      where: {
+        organizationId: orgId,
         studentId: student.id, 
         status: "COMPLETED" 
       } 
     }),
     prisma.lessonRequest.count({ 
-      where: { 
+      where: {
+        organizationId: orgId,
         studentId: student.id, 
         status: "PENDING" 
       } 
@@ -74,6 +80,7 @@ export default async function StudentDashboard() {
   
   const scheduledLessonsForMapRaw = await prisma.lesson.findMany({
     where: {
+      organizationId: orgId,
       studentId: student.id,
       lessonDate: {
         gte: new Date(new Date().setHours(0, 0, 0, 0)),

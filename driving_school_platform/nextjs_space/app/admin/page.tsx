@@ -1,4 +1,3 @@
-
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
@@ -28,16 +27,20 @@ export default async function AdminDashboard() {
     redirect("/auth/login")
   }
 
+  const orgId = session.user.organizationId;
+  if (!orgId) redirect("/auth/login");
+
   const drivingSchoolName = getDrivingSchoolName()
 
   // Fetch dashboard statistics
   const stats = await Promise.all([
-    prisma.user.count({ where: { role: "STUDENT" } }),
-    prisma.user.count({ where: { role: "INSTRUCTOR" } }),
-    prisma.vehicle.count({ where: { isActive: true } }),
-    prisma.lesson.count({ where: { status: "SCHEDULED" } }),
+    prisma.user.count({ where: { organizationId: orgId, role: "STUDENT" } }),
+    prisma.user.count({ where: { organizationId: orgId, role: "INSTRUCTOR" } }),
+    prisma.vehicle.count({ where: { organizationId: orgId, isActive: true } }),
+    prisma.lesson.count({ where: { organizationId: orgId, status: "SCHEDULED" } }),
     prisma.lesson.count({ 
-      where: { 
+      where: {
+        organizationId: orgId,
         status: "SCHEDULED",
         lessonDate: {
           gte: new Date(new Date().setHours(0, 0, 0, 0)),
@@ -60,6 +63,7 @@ export default async function AdminDashboard() {
   
   const scheduledLessonsForMapRaw = await prisma.lesson.findMany({
     where: {
+      organizationId: orgId,
       lessonDate: {
         gte: new Date(new Date().setHours(0, 0, 0, 0)),
         lte: thirtyDaysFromNow,

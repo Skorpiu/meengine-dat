@@ -4,6 +4,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { checkFeatureAccess } from '@/lib/middleware/feature-check';
+import type { Prisma } from '@prisma/client';
+import { VehicleStatus } from '@prisma/client';
 
 /**
  * GET /api/admin/vehicles
@@ -39,13 +41,23 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const categoryId = searchParams.get('categoryId');
 
-    // Build where clause
-    const where: any = {};
-    if (status) {
-      where.status = status;
+    const orgId = featureCheck.organizationId;
+    if (!orgId) {
+      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
     }
+
+    // Build where clause (scoped to org)
+    const where: Prisma.VehicleWhereInput = { organizationId: orgId };
+
+    if (status) {
+      const normalized = status.toUpperCase() as VehicleStatus;
+      if (Object.values(VehicleStatus).includes(normalized)) {
+        where.status = normalized;
+      }
+    }
+
     if (categoryId) {
-      where.categoryId = parseInt(categoryId);
+      where.categoryId = parseInt(categoryId, 10);
     }
 
     // Fetch vehicles
@@ -74,6 +86,7 @@ export async function GET(request: NextRequest) {
     // Any lesson happening right now (includes lessonType = EXAM if exams are stored as Lesson)
     const currentLessons = await db.lesson.findMany({
       where: {
+        organizationId: orgId,
         lessonDate: { gte: startOfToday, lt: startOfTomorrow },
         startTime: { lte: currentTime },
         endTime: { gt: currentTime },
@@ -85,6 +98,7 @@ export async function GET(request: NextRequest) {
     // Legacy exams table (keep if you still have old data there)
     const currentExams = await db.exam.findMany({
       where: {
+        organizationId: orgId,
         examDate: { gte: startOfToday, lt: startOfTomorrow },
         startTime: { lte: currentTime },
         endTime: { gt: currentTime },
@@ -93,10 +107,14 @@ export async function GET(request: NextRequest) {
       select: { vehicleId: true },
     });
 
-    const vehicleIdsInUse = new Set([
-      ...currentLessons.map((l: any) => l.vehicleId).filter((id: any) => id != null),
-      ...currentExams.map((e: any) => e.vehicleId).filter((id: any) => id != null),
-    ]);
+    const vehicleIdsInUse = new Set<number>();
+
+    for (const l of currentLessons) {
+      if (l.vehicleId != null) vehicleIdsInUse.add(l.vehicleId);
+    }
+    for (const e of currentExams) {
+      if (e.vehicleId != null) vehicleIdsInUse.add(e.vehicleId);
+    }
 
     // Update vehicle status based on real-time usage
     const vehiclesWithStatus = vehicles.map((vehicle: any) => {
@@ -154,11 +172,17 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
+    const orgId = featureCheck.organizationId;
+    if (!orgId) {
+      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+    }
+
     const body = await request.json();
 
     // Check if registration number already exists
-    const existingByRegNumber = await db.vehicle.findUnique({
-      where: { registrationNumber: body.registrationNumber },
+    const existingByRegNumber = await db.vehicle.findFirst({
+      where: { organizationId: orgId, registrationNumber: body.registrationNumber },
+      select: { id: true },
     });
 
     if (existingByRegNumber) {
@@ -169,8 +193,9 @@ export async function POST(request: NextRequest) {
 
     // Check if VIN already exists (only if VIN is provided)
     if (body.vin && body.vin.trim()) {
-      const existingByVin = await db.vehicle.findUnique({
-        where: { vin: body.vin.trim() },
+      const existingByVin = await db.vehicle.findFirst({
+        where: { organizationId: orgId, vin: body.vin.trim() },
+        select: { id: true },
       });
 
       if (existingByVin) {
@@ -183,6 +208,7 @@ export async function POST(request: NextRequest) {
     // Create vehicle
     const vehicle = await db.vehicle.create({
       data: {
+        organizationId: orgId,
         registrationNumber: body.registrationNumber,
         make: body.make,
         model: body.model,
@@ -245,16 +271,24 @@ export async function PUT(request: NextRequest) {
       }, { status: 403 });
     }
 
+    const orgId = featureCheck.organizationId;
+    if (!orgId) {
+      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+    }
+
     const body = await request.json();
     const { vehicleId, ...updateData } = body;
 
-    if (!vehicleId) {
+    const vehicleIdNum =
+      typeof vehicleId === 'string' ? parseInt(vehicleId, 10) : vehicleId;
+
+    if (!vehicleIdNum || Number.isNaN(vehicleIdNum)) {
       return NextResponse.json({ error: 'Vehicle ID is required' }, { status: 400 });
     }
 
     // Check if vehicle exists
-    const existingVehicle = await db.vehicle.findUnique({
-      where: { id: vehicleId },
+    const existingVehicle = await db.vehicle.findFirst({
+      where: { id: vehicleIdNum, organizationId: orgId },
     });
 
     if (!existingVehicle) {
@@ -263,8 +297,13 @@ export async function PUT(request: NextRequest) {
 
     // Check if registration number is being changed and if it already exists
     if (updateData.registrationNumber !== existingVehicle.registrationNumber) {
-      const existingByRegNumber = await db.vehicle.findUnique({
-        where: { registrationNumber: updateData.registrationNumber },
+      const existingByRegNumber = await db.vehicle.findFirst({
+        where: {
+          organizationId: orgId,
+          registrationNumber: updateData.registrationNumber,
+          id: { not: vehicleIdNum },
+        },
+        select: { id: true },
       });
 
       if (existingByRegNumber) {
@@ -277,8 +316,13 @@ export async function PUT(request: NextRequest) {
     // Check if VIN is being changed and if it already exists (only if VIN is provided)
     if (updateData.vin && updateData.vin.trim()) {
       if (updateData.vin.trim() !== existingVehicle.vin) {
-        const existingByVin = await db.vehicle.findUnique({
-          where: { vin: updateData.vin.trim() },
+        const existingByVin = await db.vehicle.findFirst({
+          where: { 
+            organizationId: orgId, 
+            vin: updateData.vin.trim(), 
+            id: { not: vehicleIdNum } 
+          },
+          select: { id: true },
         });
 
         if (existingByVin) {
@@ -291,7 +335,7 @@ export async function PUT(request: NextRequest) {
 
     // Update vehicle
     const vehicle = await db.vehicle.update({
-      where: { id: vehicleId },
+      where: { id: vehicleIdNum },
       data: {
         registrationNumber: updateData.registrationNumber,
         make: updateData.make,
@@ -355,16 +399,22 @@ export async function DELETE(request: NextRequest) {
       }, { status: 403 });
     }
 
+    const orgId = featureCheck.organizationId;
+    if (!orgId) {
+      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+    }
+
     const { searchParams } = new URL(request.url);
     const vehicleId = searchParams.get('vehicleId');
 
-    if (!vehicleId) {
+    const vehicleIdNum = parseInt(vehicleId, 10);
+    if (Number.isNaN(vehicleIdNum)) {
       return NextResponse.json({ error: 'Vehicle ID is required' }, { status: 400 });
     }
 
     // Check if vehicle exists
-    const vehicle = await db.vehicle.findUnique({
-      where: { id: parseInt(vehicleId) },
+    const vehicle = await db.vehicle.findFirst({
+      where: { id: vehicleIdNum, organizationId: orgId },
       include: {
         _count: {
           select: {
@@ -387,8 +437,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete vehicle
-    await db.vehicle.delete({
-      where: { id: parseInt(vehicleId) },
+    await db.vehicle.deleteMany({
+      where: { id: vehicleIdNum, organizationId: orgId },
     });
 
     return NextResponse.json({ message: 'Vehicle deleted successfully' });

@@ -28,12 +28,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const orgId = featureCheck.organizationId;
+    if (!orgId) return NextResponse.json({ error: "No organization found" }, { status: 400 });
+
     const { vehicleId, underMaintenance } = await request.json();
 
-    await prisma.vehicle.update({
-      where: { id: vehicleId },
+    const result = await prisma.vehicle.updateMany({
+      where: { id: vehicleId, organizationId: orgId },
       data: { underMaintenance },
     });
+
+    if (result.count === 0) {
+      return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });
+    }
 
     return NextResponse.json({
       message: `Vehicle ${underMaintenance ? 'marked for' : 'removed from'} maintenance`,

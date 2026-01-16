@@ -23,6 +23,7 @@ import { HTTP_STATUS, API_MESSAGES, USER_ROLES, LESSON_STATUS, VALIDATION_RULES 
 import { lessonCreationSchema } from '@/lib/validation';
 import { startOfDay, addDays } from 'date-fns';
 import { checkFeatureAccess } from '@/lib/middleware/feature-check';
+import { resolveTenantOrganizationId } from '@/lib/tenant';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -39,6 +40,16 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   ]);
   if (!user) {
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
+  }
+
+  const orgId = (user as any).organizationId as string | null | undefined;
+  if (!orgId) {
+    return errorResponse('No organization found', HTTP_STATUS.BAD_REQUEST);
+  }
+
+  const tenant = await resolveTenantOrganizationId(request);
+  if (tenant.organizationId && tenant.organizationId !== orgId) {
+    return errorResponse('Organization does not match this domain', HTTP_STATUS.FORBIDDEN);
   }
 
   // Automatically cleanup old lessons (older than 30 days)
@@ -64,6 +75,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
     const lessons = await prisma.lesson.findMany({
       where: {
+        organizationId: orgId,
         lessonDate: {
           gte: fromDate,
           lt: toDate,
@@ -98,6 +110,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const [recentExams, currentExams, upcomingExams] = await Promise.all([
       prisma.lesson.findMany({
         where: {
+          organizationId: orgId,
           lessonType: 'EXAM',
           OR: [
             {
@@ -121,6 +134,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       // Current exams: happening right now (started but not yet ended)
       prisma.lesson.findMany({
         where: {
+          organizationId: orgId,
           lessonType: 'EXAM',
           lessonDate: today,
           startTime: { lte: currentTime },
@@ -136,6 +150,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       }),
       prisma.lesson.findMany({
         where: {
+          organizationId: orgId,
           lessonType: 'EXAM',
           OR: [
             { lessonDate: today, startTime: { gte: currentTime } },
@@ -162,6 +177,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const [recentLessons, currentLessons, upcomingLessons] = await Promise.all([
     prisma.lesson.findMany({
       where: {
+        organizationId: orgId,
         lessonType,
         OR: [
           {
@@ -185,6 +201,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     // Current lessons: happening right now (started but not yet ended)
     prisma.lesson.findMany({
       where: {
+        organizationId: orgId,
         lessonType,
         lessonDate: today,
         startTime: { lte: currentTime },
@@ -200,6 +217,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }),
     prisma.lesson.findMany({
       where: {
+        organizationId: orgId,
         lessonType,
         OR: [
           { lessonDate: today, startTime: { gte: currentTime } },
@@ -235,6 +253,16 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
   }
 
+  const orgId = (user as any).organizationId as string | null | undefined;
+  if (!orgId) {
+    return errorResponse('No organization found', HTTP_STATUS.BAD_REQUEST);
+  }
+
+  const tenant = await resolveTenantOrganizationId(request);
+  if (tenant.organizationId && tenant.organizationId !== orgId) {
+    return errorResponse('Organization does not match this domain', HTTP_STATUS.FORBIDDEN);
+  }
+
   // Parse and validate request body
   const body = await request.json();
   const validation = validateRequest(lessonCreationSchema, body);
@@ -265,6 +293,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         { status: 403 }
       );
     }
+    const vehicle = await prisma.vehicle.findFirst({
+      where: { id: vehicleId, organizationId: orgId },
+      select: { id: true },
+    });
+    if (!vehicle) {
+      return errorResponse('Vehicle not found', HTTP_STATUS.NOT_FOUND);
+    }
   }
 
   // Calculate duration
@@ -275,8 +310,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   }
 
   // Get instructor and verify qualified categories
-  const instructor = await prisma.instructor.findUnique({
-    where: { userId: instructorId },
+  const instructor = await prisma.instructor.findFirst({
+    where: { userId: instructorId, organizationId: orgId },
     include: { qualifiedCategories: true },
   });
 
@@ -348,8 +383,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // Create lessons for each student
     const lessons = await Promise.all(
       studentIds.map(async (sid) => {
-        const student = await prisma.student.findUnique({
-          where: { userId: sid },
+        const student = await prisma.student.findFirst({
+          where: { userId: sid, organizationId: orgId },
         });
 
         if (!student) {
@@ -358,6 +393,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
         return prisma.lesson.create({
           data: {
+            organizationId: orgId,
             studentId: student.id,
             instructorId: instructor.id,
             vehicleId: vehicleId || null,
@@ -391,6 +427,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // Create a generic "group class" lesson entry without a student reference
     const lesson = await prisma.lesson.create({
       data: {
+        organizationId: orgId,
         studentId: null, // No specific student for group classes
         instructorId: instructor.id,
         vehicleId: null, // Theory lessons don't require vehicles
@@ -420,8 +457,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     );
   }
 
-  const student = await prisma.student.findUnique({
-    where: { userId: studentId },
+  const student = await prisma.student.findFirst({
+    where: { userId: studentId, organizationId: orgId },
   });
 
   if (!student) {
@@ -431,6 +468,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   // Create the lesson
   const lesson = await prisma.lesson.create({
     data: {
+      organizationId: orgId,
       studentId: student.id,
       instructorId: instructor.id,
       vehicleId: vehicleId || null,

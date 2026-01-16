@@ -249,7 +249,10 @@ model Vehicle {
   lessons               Lesson[]
   category              Category?        @relation(fields: [categoryId], references: [id])
   transmissionType      TransmissionType @relation(fields: [transmissionTypeId], references: [id])
+  organizationId        String?
+  organization          Organization?    @relation(fields: [organizationId], references: [id])
 
+  @@index([organizationId])
   @@index([status])
   @@index([categoryId])
   @@index([transmissionTypeId])
@@ -283,7 +286,10 @@ model LessonRequest {
   preferredVehicle   Vehicle?      @relation(fields: [preferredVehicleId], references: [id])
   reviewer           User?         @relation("ReviewedBy", fields: [reviewedBy], references: [id])
   student            Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  organizationId     String?
+  organization       Organization? @relation(fields: [organizationId], references: [id])
 
+  @@index([organizationId])
   @@index([studentId])
   @@index([instructorId])
   @@index([status])
@@ -334,7 +340,10 @@ model Lesson {
   transmissionType         TransmissionType? @relation(fields: [transmissionTypeId], references: [id])
   vehicle                  Vehicle?          @relation(fields: [vehicleId], references: [id])
   payments                 Payment[]
+  organizationId           String?
+  organization             Organization? @relation(fields: [organizationId], references: [id])
 
+  @@index([organizationId])
   @@index([studentId])
   @@index([instructorId])
   @@index([vehicleId])
@@ -392,7 +401,10 @@ model Exam {
   category             Category           @relation(fields: [categoryId], references: [id])
   examiner             Instructor?        @relation(fields: [examinerId], references: [id])
   vehicle              Vehicle?           @relation(fields: [vehicleId], references: [id])
+  organizationId       String?
+  organization         Organization? @relation(fields: [organizationId], references: [id])
 
+  @@index([organizationId])
   @@index([examDate])
   @@index([status])
   @@index([categoryId])
@@ -548,6 +560,10 @@ model Organization {
   students           Student[]
   users              User[]
   domains            OrganizationDomain[]
+  vehicles          Vehicle[]
+  lessons           Lesson[]
+  exams             Exam[]
+  lessonRequests    LessonRequest[]
 
   @@index([subscriptionTier])
   @@index([subscriptionStatus])
