@@ -92,6 +92,16 @@ export const PUT = withErrorHandling(async (
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
   }
 
+  const orgId = (user as any).organizationId as string | null | undefined;
+  if (!orgId) {
+    return errorResponse('No organization found', HTTP_STATUS.BAD_REQUEST);
+  }
+
+  const tenant = await resolveTenantOrganizationId(request);
+  if (tenant.organizationId && tenant.organizationId !== orgId) {
+    return errorResponse('Organization does not match this domain', HTTP_STATUS.FORBIDDEN);
+  }
+
   const { id } = params;
 
   // Permission check (must exist + ownership if instructor)
@@ -179,6 +189,16 @@ export const DELETE = withErrorHandling(async (
   const user = await verifyAuth([USER_ROLES.SUPER_ADMIN, USER_ROLES.INSTRUCTOR]);
   if (!user) {
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
+  }
+
+  const orgId = (user as any).organizationId as string | null | undefined;
+  if (!orgId) {
+    return errorResponse('No organization found', HTTP_STATUS.BAD_REQUEST);
+  }
+
+  const tenant = await resolveTenantOrganizationId(request);
+  if (tenant.organizationId && tenant.organizationId !== orgId) {
+    return errorResponse('Organization does not match this domain', HTTP_STATUS.FORBIDDEN);
   }
 
   const { id } = params;

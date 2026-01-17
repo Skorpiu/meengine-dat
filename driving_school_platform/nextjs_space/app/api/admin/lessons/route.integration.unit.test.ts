@@ -85,7 +85,7 @@ beforeEach(() => {
 
 describe('POST /api/admin/lessons (handler integration)', () => {
   it('blocks vehicleId when vehicles feature is disabled (403) and does not touch DB', async () => {
-    verifyAuthMock.mockResolvedValue({ id: UUID_A, role: 'SUPER_ADMIN' });
+    verifyAuthMock.mockResolvedValue({ id: UUID_A, role: 'SUPER_ADMIN', organizationId: 'org1' });
     checkFeatureAccessMock.mockResolvedValue({ allowed: false, error: 'Feature not enabled' });
 
     const payload = {
@@ -111,7 +111,7 @@ describe('POST /api/admin/lessons (handler integration)', () => {
   });
 
   it('creates THEORY_EXAM for multiple students (201) and does not call feature check when vehicleId absent', async () => {
-    verifyAuthMock.mockResolvedValue({ id: UUID_A, role: 'SUPER_ADMIN' });
+    verifyAuthMock.mockResolvedValue({ id: UUID_A, role: 'SUPER_ADMIN', organizationId: 'org1' });
 
     const payload = {
       lessonType: 'THEORY_EXAM',
@@ -137,7 +137,7 @@ describe('POST /api/admin/lessons (handler integration)', () => {
   });
 
   it('returns 400 when DRIVING is missing studentId (validation)', async () => {
-    verifyAuthMock.mockResolvedValue({ id: UUID_A, role: 'SUPER_ADMIN' });
+    verifyAuthMock.mockResolvedValue({ id: UUID_A, role: 'SUPER_ADMIN', organizationId: 'org1' });
 
     const payload = {
       lessonType: 'DRIVING',
@@ -180,7 +180,7 @@ describe('POST /api/admin/lessons (handler integration)', () => {
   });
 
   it('returns 400 when EXAM exceeds MAX_STUDENTS_PER_EXAM', async () => {
-    verifyAuthMock.mockResolvedValue({ id: UUID_A, role: 'SUPER_ADMIN' });
+    verifyAuthMock.mockResolvedValue({ id: UUID_A, role: 'SUPER_ADMIN', organizationId: 'org1' });
 
     const payload = {
       lessonType: 'EXAM',

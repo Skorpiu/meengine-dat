@@ -117,6 +117,27 @@ async function main() {
       data: { organizationId: organization.id },
     });
 
+    // Backfill core models
+    await prisma.vehicle.updateMany({
+      where: { organizationId: null },
+      data: { organizationId: organization.id },
+    });
+
+    await prisma.lesson.updateMany({
+      where: { organizationId: null },
+      data: { organizationId: organization.id },
+    });
+
+    await prisma.exam.updateMany({
+      where: { organizationId: null },
+      data: { organizationId: organization.id },
+    });
+
+    await prisma.lessonRequest.updateMany({
+      where: { organizationId: null },
+      data: { organizationId: organization.id },
+    });
+
     console.log('✅ Users linked successfully');
 
     // Create default features (all disabled by default)

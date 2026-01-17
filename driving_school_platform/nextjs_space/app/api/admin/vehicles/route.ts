@@ -407,6 +407,10 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const vehicleId = searchParams.get('vehicleId');
 
+    if (!vehicleId) {
+      return NextResponse.json({ error: 'Vehicle ID is required' }, { status: 400 });
+    }
+
     const vehicleIdNum = parseInt(vehicleId, 10);
     if (Number.isNaN(vehicleIdNum)) {
       return NextResponse.json({ error: 'Vehicle ID is required' }, { status: 400 });
