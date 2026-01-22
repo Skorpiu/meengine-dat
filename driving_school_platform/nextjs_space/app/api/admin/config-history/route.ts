@@ -9,6 +9,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { configHistoryQuerySchema } from '@/lib/config-validation';
+import { resolveTenantOrganizationId } from '@/lib/tenant';
 import { HTTP_STATUS, API_MESSAGES } from '@/lib/constants';
 
 export const runtime = 'nodejs';
@@ -29,6 +30,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const orgId = session.user.organizationId;
+    if (!orgId) {
+      return NextResponse.json(
+        { error: 'No organization found' },
+        { status: HTTP_STATUS.BAD_REQUEST }
+      );
+    }
+
+    const tenant = await resolveTenantOrganizationId(request);
+    if (tenant.organizationId && tenant.organizationId !== orgId) {
+      return NextResponse.json(
+        { error: 'Organization does not match this domain' },
+        { status: HTTP_STATUS.FORBIDDEN }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const query = configHistoryQuerySchema.parse({
       entityType: searchParams.get('entityType') || undefined,
@@ -38,7 +55,7 @@ export async function GET(request: NextRequest) {
       offset: parseInt(searchParams.get('offset') || '0'),
     });
 
-    const where: any = {};
+    const where: any = { organizationId: orgId };
     
     if (query.entityType) {
       where.entityType = query.entityType;
