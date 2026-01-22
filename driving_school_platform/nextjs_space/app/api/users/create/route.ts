@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import bcrypt from "bcryptjs"
 import crypto from "crypto"
+import { resolveTenantOrganizationId } from "@/lib/tenant"
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +18,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
+    const orgId = session.user.organizationId
+    if (!orgId) {
+      return NextResponse.json({ error: "No organization found" }, { status: 400 })
+    }
+
+    const tenant = await resolveTenantOrganizationId(request)
+    if (tenant.organizationId && tenant.organizationId !== orgId) {
+      return NextResponse.json(
+        { error: "Organization does not match this domain" },
+        { status: 403 }
+      )
+    }
+
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+    }
+
     const {
       firstName,
       lastName,
@@ -67,15 +87,16 @@ export async function POST(request: NextRequest) {
     // Create user
     const user = await prisma.user.create({
       data: {
+        organizationId: orgId,
         email: email.toLowerCase(),
         passwordHash,
         firstName,
         lastName,
-        phoneNumber,
+        phoneNumber: phoneNumber ? phoneNumber : null,
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-        address,
-        city,
-        postalCode,
+        address: address || null,
+        city: city || null,
+        postalCode: postalCode || null,
         role,
         isApproved: true, // Admin-created users are pre-approved
         isEmailVerified: false, // Must verify email
@@ -105,6 +126,7 @@ export async function POST(request: NextRequest) {
       await prisma.student.create({
         data: {
           userId: user.id,
+          organizationId: orgId,
           categoryId: categoryRecord?.id,
           transmissionTypeId: transmissionTypeRecord?.id,
         },
@@ -122,6 +144,7 @@ export async function POST(request: NextRequest) {
       await prisma.instructor.create({
         data: {
           userId: user.id,
+          organizationId: orgId,
           instructorLicenseNumber,
           instructorLicenseExpiry: new Date(instructorLicenseExpiry),
         },
@@ -130,6 +153,8 @@ export async function POST(request: NextRequest) {
 
     // TODO: Send verification email with temporary password
     // For now, return the temp password (in production, this should be emailed)
+
+    const includeTempPassword = process.env.NODE_ENV !== "production"
 
     return NextResponse.json({
       success: true,
@@ -141,7 +166,7 @@ export async function POST(request: NextRequest) {
         lastName: user.lastName,
         role: user.role,
       },
-      tempPassword, // REMOVE THIS IN PRODUCTION - send via email instead
+      ...(includeTempPassword ? { tempPassword } : {}),
     })
   } catch (error) {
     console.error("Error creating user:", error)

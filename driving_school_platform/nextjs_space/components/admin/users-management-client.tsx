@@ -96,7 +96,11 @@ export function UsersManagementClient({ users, stats, categories, transmissionTy
       const data = await response.json()
 
       if (response.ok) {
-        toast.success(`User created! Temporary password: ${data.tempPassword}`)
+        if (data?.tempPassword) {
+          toast.success(`User created! Temporary password: ${data.tempPassword}`)
+        } else {
+          toast.success("User created successfully.")
+        }
         setIsCreateDialogOpen(false)
         resetForm()
         router.refresh()
