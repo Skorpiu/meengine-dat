@@ -158,6 +158,7 @@ export async function POST(request: NextRequest) {
       newValue: { [setting.settingKey]: parseSettingValue(setting.settingValue, setting.settingType) },
       changedBy: session.user.id,
       changedByRole: session.user.role,
+      organizationId: orgId,
     });
 
     return NextResponse.json({
@@ -260,6 +261,7 @@ export async function PUT(request: NextRequest) {
       newValue: { [setting.settingKey]: parseSettingValue(setting.settingValue, setting.settingType) },
       changedBy: session.user.id,
       changedByRole: session.user.role,
+      organizationId: orgId,
     });
 
     return NextResponse.json({
@@ -353,6 +355,7 @@ export async function DELETE(request: NextRequest) {
       oldValue: { [setting.settingKey]: parseSettingValue(setting.settingValue, setting.settingType) },
       changedBy: session.user.id,
       changedByRole: session.user.role,
+      organizationId: orgId,
     });
 
     return NextResponse.json({

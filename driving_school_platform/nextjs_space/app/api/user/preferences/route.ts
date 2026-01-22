@@ -79,6 +79,7 @@ export async function PUT(request: NextRequest) {
         newValue: preferences,
         changedBy: session.user.id,
         changedByRole: session.user.role,
+        organizationId: session.user.organizationId ?? null,
       });
     }
 

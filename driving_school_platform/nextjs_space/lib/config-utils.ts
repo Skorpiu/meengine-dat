@@ -217,6 +217,7 @@ export async function logConfigurationChange(
   entityId: string,
   action: 'CREATED' | 'UPDATED' | 'DELETED' | 'ENABLED' | 'DISABLED',
   options: {
+    organizationId?: string | null;
     entityKey?: string;
     oldValue?: any;
     newValue?: any;
@@ -227,12 +228,15 @@ export async function logConfigurationChange(
   }
 ) {
   try {
+    const { organizationId, ...rest } = options;
+
     await prisma.configurationHistory.create({
       data: {
         entityType,
         entityId,
         action,
-        ...options,
+        organizationId: organizationId ?? null,
+        ...rest,
       },
     });
   } catch (error) {
