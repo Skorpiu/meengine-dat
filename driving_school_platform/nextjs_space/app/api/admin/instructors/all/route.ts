@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { resolveTenantOrganizationId } from '@/lib/tenant';
 
 /**
  * GET handler - Fetch all instructors
@@ -23,11 +24,25 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const orgId = session.user.organizationId;
+  if (!orgId) {
+    return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+  }
+
+  const tenant = await resolveTenantOrganizationId(request);
+  if (tenant.organizationId && tenant.organizationId !== orgId) {
+    return NextResponse.json(
+      { error: 'Organization does not match this domain' },
+      { status: 403 }
+    );
+  }
+
   try {
     // Query User table where role === 'INSTRUCTOR'
     const instructorUsers = await prisma.user.findMany({
       where: {
         role: 'INSTRUCTOR',
+        organizationId: orgId,
       },
       select: {
         id: true,
