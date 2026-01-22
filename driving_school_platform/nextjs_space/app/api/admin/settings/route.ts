@@ -11,6 +11,7 @@ import { prisma } from '@/lib/db';
 import { systemSettingSchema, settingsQuerySchema } from '@/lib/config-validation';
 import { parseSettingValue, stringifySettingValue, logConfigurationChange } from '@/lib/config-utils';
 import { HTTP_STATUS, API_MESSAGES } from '@/lib/constants';
+import { resolveTenantOrganizationId } from '@/lib/tenant';
 
 /**
  * GET /api/admin/settings
@@ -27,23 +28,41 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const orgId = session.user.organizationId;
+    if (!orgId) {
+      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+    }
+
+    const tenant = await resolveTenantOrganizationId(request);
+    if (tenant.organizationId && tenant.organizationId !== orgId) {
+      return NextResponse.json(
+        { error: 'Organization does not match this domain' },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
+
+    const isPublicParam = searchParams.get('isPublic');
+
     const query = settingsQuerySchema.parse({
       category: searchParams.get('category') || undefined,
-      isPublic: searchParams.get('isPublic') === 'true',
+      isPublic: isPublicParam === null ? undefined : isPublicParam === 'true',
       search: searchParams.get('search') || undefined,
     });
 
-    const where: any = {};
-    
+    const where: any = {
+      organizationId: orgId,
+    };
+
     if (query.category) {
       where.category = query.category;
     }
-    
+
     if (query.isPublic !== undefined) {
       where.isPublic = query.isPublic;
     }
-    
+
     if (query.search) {
       where.OR = [
         { settingKey: { contains: query.search, mode: 'insensitive' } },
@@ -90,12 +109,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const orgId = session.user.organizationId;
+    if (!orgId) {
+      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+    }
+
+    const tenant = await resolveTenantOrganizationId(request);
+    if (tenant.organizationId && tenant.organizationId !== orgId) {
+      return NextResponse.json(
+        { error: 'Organization does not match this domain' },
+        { status: HTTP_STATUS.FORBIDDEN }
+      );
+    } 
+
     const body = await request.json();
     const validated = systemSettingSchema.parse(body);
 
-    // Check if setting already exists
-    const existing = await prisma.systemSetting.findUnique({
-      where: { settingKey: validated.settingKey },
+    // Check if setting already exists (scoped)
+    const existing = await prisma.systemSetting.findFirst({
+      where: { organizationId: orgId, settingKey: validated.settingKey },
+      select: { id: true },
     });
 
     if (existing) {
@@ -107,15 +140,17 @@ export async function POST(request: NextRequest) {
 
     const setting = await prisma.systemSetting.create({
       data: {
+        organizationId: orgId,
         settingKey: validated.settingKey,
         settingValue: validated.settingValue,
         settingType: validated.settingType,
-        description: validated.description,
-        category: validated.category,
+        description: validated.description ?? null,
+        category: validated.category ?? null,
         isPublic: validated.isPublic ?? false,
         updatedBy: session.user.id,
       },
     });
+
 
     // Log the change
     await logConfigurationChange('SystemSetting', setting.id, 'CREATED', {
@@ -164,6 +199,19 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    const orgId = session.user.organizationId;
+    if (!orgId) {
+      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+    }
+
+    const tenant = await resolveTenantOrganizationId(request);
+    if (tenant.organizationId && tenant.organizationId !== orgId) {
+      return NextResponse.json(
+        { error: 'Organization does not match this domain' },
+        { status: 403 }
+      );
+    } 
+
     const body = await request.json();
     const { settingKey, ...updates } = body;
 
@@ -174,9 +222,9 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Get old value for logging
-    const oldSetting = await prisma.systemSetting.findUnique({
-      where: { settingKey },
+    // Get old value for logging (scoped)
+    const oldSetting = await prisma.systemSetting.findFirst({
+      where: { organizationId: orgId, settingKey },
     });
 
     if (!oldSetting) {
@@ -186,13 +234,24 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const setting = await prisma.systemSetting.update({
-      where: { settingKey },
+    await prisma.systemSetting.updateMany({
+      where: { organizationId: orgId, settingKey },
       data: {
         ...updates,
         updatedBy: session.user.id,
       },
     });
+
+    const setting = await prisma.systemSetting.findFirst({
+      where: { organizationId: orgId, settingKey },
+    });
+
+    if (!setting) {
+      return NextResponse.json(
+        { error: 'Setting not found' },
+        { status: HTTP_STATUS.NOT_FOUND }
+      );
+    }
 
     // Log the change
     await logConfigurationChange('SystemSetting', setting.id, 'UPDATED', {
@@ -242,6 +301,19 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const orgId = session.user.organizationId;
+    if (!orgId) {
+      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+    }
+
+    const tenant = await resolveTenantOrganizationId(request);
+    if (tenant.organizationId && tenant.organizationId !== orgId) {
+      return NextResponse.json(
+        { error: 'Organization does not match this domain' },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const settingKey = searchParams.get('key');
 
@@ -252,9 +324,9 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Get setting before deletion for logging
-    const setting = await prisma.systemSetting.findUnique({
-      where: { settingKey },
+    // Get setting before deletion for logging (scoped)
+    const setting = await prisma.systemSetting.findFirst({
+      where: { organizationId: orgId, settingKey },
     });
 
     if (!setting) {
@@ -264,9 +336,16 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await prisma.systemSetting.delete({
-      where: { settingKey },
+    const deleted = await prisma.systemSetting.deleteMany({
+      where: { organizationId: orgId, settingKey },
     });
+
+    if (deleted.count === 0) {
+      return NextResponse.json(
+        { error: 'Setting not found' },
+        { status: HTTP_STATUS.NOT_FOUND }
+      );
+    }
 
     // Log the change
     await logConfigurationChange('SystemSetting', setting.id, 'DELETED', {
