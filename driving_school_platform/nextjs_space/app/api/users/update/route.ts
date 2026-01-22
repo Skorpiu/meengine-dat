@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { resolveTenantOrganizationId } from '@/lib/tenant';
 
 export async function PUT(request: NextRequest) {
   try {
@@ -15,7 +16,26 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    const orgId = session.user.organizationId;
+    if (!orgId) {
+      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+    }
+
+    const tenant = await resolveTenantOrganizationId(request);
+    if (tenant.organizationId && tenant.organizationId !== orgId) {
+      return NextResponse.json(
+        { error: 'Organization does not match this domain' },
+        { status: 403 }
+      );
+    }
+
+    let body: any;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
     const {
       userId,
       firstName,
@@ -29,9 +49,23 @@ export async function PUT(request: NextRequest) {
       instructorLicenseExpiry,
     } = body;
 
-    // Update user
-    await prisma.user.update({
-      where: { id: userId },
+    if (!userId || typeof userId !== 'string') {
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    }
+
+    // Ensure target user belongs to this organization
+    const target = await prisma.user.findFirst({
+      where: { id: userId, organizationId: orgId },
+      select: { id: true },
+    });
+
+    if (!target) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Update user (scoped)
+    const updated = await prisma.user.updateMany({
+      where: { id: userId, organizationId: orgId },
       data: {
         firstName,
         lastName,
@@ -40,44 +74,36 @@ export async function PUT(request: NextRequest) {
       },
     });
 
-    // Update role-specific data
-    if (role === 'STUDENT') {
-      const student = await prisma.student.findUnique({
-        where: { userId },
+    if (updated.count === 0) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Update role-specific data (scoped)
+    if (role === 'STUDENT' && selectedCategories?.[0]) {
+      const category = await prisma.category.findFirst({
+        where: { name: selectedCategories[0] },
       });
 
-      if (student && selectedCategories?.[0]) {
-        // Get category
-        const category = await prisma.category.findFirst({
-          where: { name: selectedCategories[0] },
-        });
+      const transmission = transmissionType
+        ? await prisma.transmissionType.findFirst({ where: { name: transmissionType } })
+        : null;
 
-        // Get transmission type
-        const transmission = transmissionType ? await prisma.transmissionType.findFirst({
-          where: { name: transmissionType },
-        }) : null;
-
-        await prisma.student.update({
-          where: { id: student.id },
-          data: {
-            categoryId: category?.id,
-            transmissionTypeId: transmission?.id,
-          },
-        });
-      }
+      await prisma.student.updateMany({
+        where: { userId, organizationId: orgId },
+        data: {
+          categoryId: category?.id,
+          transmissionTypeId: transmission?.id,
+        },
+      });
     } else if (role === 'INSTRUCTOR') {
-      const instructor = await prisma.instructor.findUnique({
-        where: { userId },
-      });
+      const data: any = {};
+      if (instructorLicenseNumber) data.instructorLicenseNumber = instructorLicenseNumber;
+      if (instructorLicenseExpiry) data.instructorLicenseExpiry = new Date(instructorLicenseExpiry);
 
-      if (instructor) {
-        await prisma.instructor.update({
-          where: { id: instructor.id },
-          data: {
-            instructorLicenseNumber: instructorLicenseNumber || instructor.instructorLicenseNumber,
-            instructorLicenseExpiry: instructorLicenseExpiry ? 
-              new Date(instructorLicenseExpiry) : instructor.instructorLicenseExpiry,
-          },
+      if (Object.keys(data).length > 0) {
+        await prisma.instructor.updateMany({
+          where: { userId, organizationId: orgId },
+          data,
         });
       }
     }
