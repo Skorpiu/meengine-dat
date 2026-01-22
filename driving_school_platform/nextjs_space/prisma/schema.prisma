@@ -341,7 +341,7 @@ model Lesson {
   vehicle                  Vehicle?          @relation(fields: [vehicleId], references: [id])
   payments                 Payment[]
   organizationId           String?
-  organization             Organization? @relation(fields: [organizationId], references: [id])
+  organization             Organization?     @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId])
   @@index([studentId])
@@ -402,7 +402,7 @@ model Exam {
   examiner             Instructor?        @relation(fields: [examinerId], references: [id])
   vehicle              Vehicle?           @relation(fields: [vehicleId], references: [id])
   organizationId       String?
-  organization         Organization? @relation(fields: [organizationId], references: [id])
+  organization         Organization?      @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId])
   @@index([examDate])
@@ -535,35 +535,37 @@ model AuditLog {
 }
 
 model Organization {
-  id                 String                @id @default(cuid())
-  name               String                @unique
-  email              String?
-  phoneNumber        String?
-  address            String?
-  city               String?
-  postalCode         String?
-  logo               String?
-  primaryColor       String?               @default("#2563eb")
-  secondaryColor     String?               @default("#dc2626")
-  subscriptionTier   SubscriptionTier      @default(BASE)
-  subscriptionStatus SubscriptionStatus    @default(ACTIVE)
-  trialEndsAt        DateTime?
-  subscriptionEndsAt DateTime?
-  contactName        String?
-  billingEmail       String?
-  isActive           Boolean               @default(true)
-  createdAt          DateTime              @default(now())
-  updatedAt          DateTime              @updatedAt
-  instructors        Instructor[]
-  licenseKeys        LicenseKey[]
-  features           OrganizationFeature[]
-  students           Student[]
-  users              User[]
-  domains            OrganizationDomain[]
-  vehicles          Vehicle[]
-  lessons           Lesson[]
-  exams             Exam[]
-  lessonRequests    LessonRequest[]
+  id                   String                 @id @default(cuid())
+  name                 String                 @unique
+  email                String?
+  phoneNumber          String?
+  address              String?
+  city                 String?
+  postalCode           String?
+  logo                 String?
+  primaryColor         String?                @default("#2563eb")
+  secondaryColor       String?                @default("#dc2626")
+  subscriptionTier     SubscriptionTier       @default(BASE)
+  subscriptionStatus   SubscriptionStatus     @default(ACTIVE)
+  trialEndsAt          DateTime?
+  subscriptionEndsAt   DateTime?
+  contactName          String?
+  billingEmail         String?
+  isActive             Boolean                @default(true)
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  instructors          Instructor[]
+  licenseKeys          LicenseKey[]
+  features             OrganizationFeature[]
+  students             Student[]
+  users                User[]
+  domains              OrganizationDomain[]
+  vehicles             Vehicle[]
+  lessons              Lesson[]
+  exams                Exam[]
+  lessonRequests       LessonRequest[]
+  systemSettings       SystemSetting[]
+  configurationHistory ConfigurationHistory[]
 
   @@index([subscriptionTier])
   @@index([subscriptionStatus])
@@ -572,14 +574,14 @@ model Organization {
 }
 
 model OrganizationDomain {
-  id             String       @id @default(cuid())
+  id             String   @id @default(cuid())
   organizationId String
-  host           String       @unique
-  isPrimary      Boolean      @default(false)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  host           String   @unique
+  isPrimary      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
   @@map("organization_domains")
@@ -626,17 +628,20 @@ model LicenseKey {
 }
 
 model SystemSetting {
-  id           String      @id @default(cuid())
-  settingKey   String      @unique
-  settingValue String
-  settingType  SettingType @default(STRING)
-  description  String?
-  category     String?
-  isPublic     Boolean     @default(false)
-  updatedBy    String?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id             String        @id @default(cuid())
+  settingKey     String        @unique
+  settingValue   String
+  settingType    SettingType   @default(STRING)
+  description    String?
+  category       String?
+  isPublic       Boolean       @default(false)
+  updatedBy      String?
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
+  @@index([organizationId])
   @@index([category])
   @@index([isPublic])
   @@map("system_settings")
@@ -700,19 +705,22 @@ model UserPreference {
 }
 
 model ConfigurationHistory {
-  id            String   @id @default(cuid())
-  entityType    String
-  entityId      String
-  entityKey     String?
-  action        String
-  oldValue      Json?
-  newValue      Json?
-  changedBy     String?
-  changedByRole String?
-  changedAt     DateTime @default(now())
-  changeReason  String?
-  ipAddress     String?
+  id             String        @id @default(cuid())
+  entityType     String
+  entityId       String
+  entityKey      String?
+  action         String
+  oldValue       Json?
+  newValue       Json?
+  changedBy      String?
+  changedByRole  String?
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  changedAt      DateTime      @default(now())
+  changeReason   String?
+  ipAddress      String?
 
+  @@index([organizationId])
   @@index([entityType])
   @@index([entityId])
   @@index([changedAt])

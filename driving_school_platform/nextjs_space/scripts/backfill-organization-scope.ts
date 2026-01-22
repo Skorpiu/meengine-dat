@@ -36,7 +36,7 @@ async function main(): Promise<void> {
 
   console.log(`✅ Using organization: ${org.name} (${org.id})\n`);
 
-  const results = await prisma.$transaction([
+    const results = await prisma.$transaction([
     prisma.vehicle.updateMany({
       where: { organizationId: null },
       data: { organizationId: org.id },
@@ -53,15 +53,27 @@ async function main(): Promise<void> {
       where: { organizationId: null },
       data: { organizationId: org.id },
     }),
+
+    // Settings / history (B2)
+    prisma.systemSetting.updateMany({
+      where: { organizationId: null },
+      data: { organizationId: org.id },
+    }),
+    prisma.configurationHistory.updateMany({
+      where: { organizationId: null },
+      data: { organizationId: org.id },
+    }),
   ]);
 
-  const [vehicles, lessons, exams, lessonRequests] = results;
+  const [vehicles, lessons, exams, lessonRequests, systemSettings, configHistory] = results;
 
   console.log("📌 Backfill results:");
   console.log(`- vehicles:       ${vehicles.count}`);
   console.log(`- lessons:        ${lessons.count}`);
   console.log(`- exams:          ${exams.count}`);
   console.log(`- lessonRequests: ${lessonRequests.count}`);
+  console.log(`- systemSettings: ${systemSettings.count}`);
+  console.log(`- configHistory:  ${configHistory.count}`);
   console.log("\n🎉 Done.\n");
 }
 
