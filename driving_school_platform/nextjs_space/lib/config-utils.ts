@@ -106,11 +106,16 @@ export async function setSystemSetting(
 export async function isFeatureEnabled(
   flagKey: string,
   userId?: string,
-  userRole?: string
+  userRole?: string,
+  organizationId?: string | null
 ): Promise<boolean> {
   try {
-    const flag = await prisma.featureFlag.findUnique({
-      where: { flagKey },
+    if (!organizationId) {
+      return false;
+    }
+
+    const flag = await prisma.featureFlag.findFirst({
+      where: { organizationId, flagKey },
     });
 
     if (!flag) {
@@ -249,17 +254,22 @@ export async function logConfigurationChange(
  */
 export async function getUserFeatureFlags(
   userId?: string,
-  userRole?: string
+  userRole?: string,
+  organizationId?: string | null
 ): Promise<Record<string, boolean>> {
-  try {
+    try {
+    if (!organizationId) {
+      return {};
+    }
+
     const flags = await prisma.featureFlag.findMany({
-      where: { isEnabled: true },
+      where: { isEnabled: true, organizationId },
     });
 
     const result: Record<string, boolean> = {};
 
     for (const flag of flags) {
-      result[flag.flagKey] = await isFeatureEnabled(flag.flagKey, userId, userRole);
+      result[flag.flagKey] = await isFeatureEnabled(flag.flagKey, userId, userRole, organizationId);
     }
 
     return result;

@@ -566,6 +566,7 @@ model Organization {
   lessonRequests       LessonRequest[]
   systemSettings       SystemSetting[]
   configurationHistory ConfigurationHistory[]
+  featureFlags         FeatureFlag[]
 
   @@index([subscriptionTier])
   @@index([subscriptionStatus])
@@ -648,8 +649,11 @@ model SystemSetting {
 }
 
 model FeatureFlag {
-  id              String    @id @default(cuid())
-  flagKey         String    @unique
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  flagKey         String
   flagName        String
   description     String?
   isEnabled       Boolean   @default(false)
@@ -665,6 +669,8 @@ model FeatureFlag {
   updatedAt       DateTime  @updatedAt
   expiresAt       DateTime?
 
+  @@unique([organizationId, flagKey])
+  @@index([organizationId])
   @@index([flagKey])
   @@index([isEnabled])
   @@index([environment])

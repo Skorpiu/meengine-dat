@@ -63,9 +63,13 @@ async function main(): Promise<void> {
       where: { organizationId: null },
       data: { organizationId: org.id },
     }),
+    prisma.featureFlag.updateMany({
+      where: { organizationId: null },
+      data: { organizationId: org.id },
+    }),
   ]);
 
-  const [vehicles, lessons, exams, lessonRequests, systemSettings, configHistory] = results;
+  const [vehicles, lessons, exams, lessonRequests, systemSettings, configHistory, featureFlags] = results;
 
   console.log("📌 Backfill results:");
   console.log(`- vehicles:       ${vehicles.count}`);
@@ -74,6 +78,7 @@ async function main(): Promise<void> {
   console.log(`- lessonRequests: ${lessonRequests.count}`);
   console.log(`- systemSettings: ${systemSettings.count}`);
   console.log(`- configHistory:  ${configHistory.count}`);
+  console.log(`- featureFlags:   ${featureFlags.count}`);
   console.log("\n🎉 Done.\n");
 }
 

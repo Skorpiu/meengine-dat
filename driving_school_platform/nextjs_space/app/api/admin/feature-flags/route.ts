@@ -11,6 +11,7 @@ import { prisma } from '@/lib/db';
 import { featureFlagSchema, featureFlagsQuerySchema } from '@/lib/config-validation';
 import { logConfigurationChange } from '@/lib/config-utils';
 import { HTTP_STATUS, API_MESSAGES } from '@/lib/constants';
+import { resolveTenantOrganizationId } from '@/lib/tenant';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,6 +31,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const orgId = session.user.organizationId;
+    if (!orgId) {
+      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+    }
+
+    const tenant = await resolveTenantOrganizationId(request);
+    if (tenant.organizationId && tenant.organizationId !== orgId) {
+      return NextResponse.json(
+        { error: 'Organization does not match this domain' },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const query = featureFlagsQuerySchema.parse({
       environment: searchParams.get('environment') || undefined,
@@ -38,7 +52,7 @@ export async function GET(request: NextRequest) {
       search: searchParams.get('search') || undefined,
     });
 
-    const where: any = {};
+    const where: any = { organizationId: orgId };
     
     if (query.environment) {
       where.environment = query.environment;
@@ -93,12 +107,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const orgId = session.user.organizationId;
+    if (!orgId) {
+      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+    }
+
+    const tenant = await resolveTenantOrganizationId(request);
+    if (tenant.organizationId && tenant.organizationId !== orgId) {
+      return NextResponse.json(
+        { error: 'Organization does not match this domain' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const validated = featureFlagSchema.parse(body);
 
     // Check if flag already exists
-    const existing = await prisma.featureFlag.findUnique({
-      where: { flagKey: validated.flagKey },
+    const existing = await prisma.featureFlag.findFirst({
+      where: { organizationId: orgId, flagKey: validated.flagKey },
+      select: { id: true },
     });
 
     if (existing) {
@@ -110,6 +138,7 @@ export async function POST(request: NextRequest) {
 
     const flag = await prisma.featureFlag.create({
       data: {
+        organizationId: orgId,
         flagKey: validated.flagKey,
         flagName: validated.flagName,
         description: validated.description,
@@ -132,6 +161,7 @@ export async function POST(request: NextRequest) {
       newValue: flag,
       changedBy: session.user.id,
       changedByRole: session.user.role,
+      organizationId: orgId,
     });
 
     return NextResponse.json({
@@ -170,8 +200,21 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    const orgId = session.user.organizationId;
+    if (!orgId) {
+      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+    }
+
+    const tenant = await resolveTenantOrganizationId(request);
+    if (tenant.organizationId && tenant.organizationId !== orgId) {
+      return NextResponse.json(
+        { error: 'Organization does not match this domain' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
-    const { flagKey, ...updates } = body;
+    const { flagKey, organizationId: _ignoredOrgId, ...updates } = body;
 
     if (!flagKey) {
       return NextResponse.json(
@@ -181,8 +224,8 @@ export async function PUT(request: NextRequest) {
     }
 
     // Get old value for logging
-    const oldFlag = await prisma.featureFlag.findUnique({
-      where: { flagKey },
+    const oldFlag = await prisma.featureFlag.findFirst({
+      where: { organizationId: orgId, flagKey },
     });
 
     if (!oldFlag) {
@@ -192,14 +235,32 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const flag = await prisma.featureFlag.update({
-      where: { flagKey },
+    const expiresAt =
+      updates.expiresAt === null
+        ? null
+        : updates.expiresAt
+          ? new Date(updates.expiresAt)
+          : undefined;
+
+    await prisma.featureFlag.updateMany({
+      where: { organizationId: orgId, flagKey },
       data: {
         ...updates,
-        expiresAt: updates.expiresAt ? new Date(updates.expiresAt) : undefined,
+        expiresAt,
         updatedBy: session.user.id,
       },
     });
+
+    const flag = await prisma.featureFlag.findFirst({
+      where: { organizationId: orgId, flagKey },
+    });
+
+    if (!flag) {
+      return NextResponse.json(
+        { error: 'Feature flag not found' },
+        { status: HTTP_STATUS.NOT_FOUND }
+      );
+    }
 
     // Log the change
     const action = oldFlag.isEnabled !== flag.isEnabled 
@@ -212,6 +273,7 @@ export async function PUT(request: NextRequest) {
       newValue: flag,
       changedBy: session.user.id,
       changedByRole: session.user.role,
+      organizationId: orgId,
     });
 
     return NextResponse.json({
@@ -250,6 +312,19 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const orgId = session.user.organizationId;
+    if (!orgId) {
+      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+    }
+
+    const tenant = await resolveTenantOrganizationId(request);
+    if (tenant.organizationId && tenant.organizationId !== orgId) {
+      return NextResponse.json(
+        { error: 'Organization does not match this domain' },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const flagKey = searchParams.get('key');
 
@@ -261,8 +336,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Get flag before deletion for logging
-    const flag = await prisma.featureFlag.findUnique({
-      where: { flagKey },
+    const flag = await prisma.featureFlag.findFirst({
+      where: { organizationId: orgId, flagKey },
     });
 
     if (!flag) {
@@ -272,8 +347,8 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await prisma.featureFlag.delete({
-      where: { flagKey },
+    await prisma.featureFlag.deleteMany({
+      where: { organizationId: orgId, flagKey },
     });
 
     // Log the change
@@ -282,6 +357,7 @@ export async function DELETE(request: NextRequest) {
       oldValue: flag,
       changedBy: session.user.id,
       changedByRole: session.user.role,
+      organizationId: orgId,
     });
 
     return NextResponse.json({
