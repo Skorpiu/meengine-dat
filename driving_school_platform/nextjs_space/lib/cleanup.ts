@@ -9,7 +9,7 @@ import { prisma } from '@/lib/db';
  * Delete lessons/exams that are more than 30 days old
  * This should be called periodically (e.g., daily cron job)
  */
-export async function cleanupOldLessons() {
+export async function cleanupOldLessons(organizationId: string) {
   try {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -17,13 +17,17 @@ export async function cleanupOldLessons() {
     // Delete lessons older than 30 days
     const result = await prisma.lesson.deleteMany({
       where: {
+        organizationId,
         lessonDate: {
           lt: thirtyDaysAgo,
         },
       },
     });
 
-    console.log(`Cleaned up ${result.count} old lessons/exams from ${thirtyDaysAgo.toISOString()}`);
+    console.log(
+      `Cleaned up ${result.count} old lessons/exams for org=${organizationId} from ${thirtyDaysAgo.toISOString()}`
+    );
+
     return result;
   } catch (error) {
     console.error('Error cleaning up old lessons:', error);

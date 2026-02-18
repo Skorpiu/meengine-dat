@@ -54,7 +54,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   // Automatically cleanup old lessons (older than 30 days)
   try {
-    await cleanupOldLessons();
+    await cleanupOldLessons(orgId);
   } catch (error) {
     // Log error but don't fail the request
     console.error('Failed to cleanup old lessons:', error);
