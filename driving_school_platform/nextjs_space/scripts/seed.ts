@@ -7,6 +7,11 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('🌱 Starting database seeding...')
 
+  // Safety guard: never run destructive seed in production by accident
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PROD_SEED !== 'true') {
+    throw new Error('Refusing to run seed in production. Set ALLOW_PROD_SEED=true if you really mean it.');
+  }
+
   // Clear existing data (be careful in production!)
   console.log('🗑️ Clearing existing data...')
   await prisma.auditLog.deleteMany()
@@ -26,6 +31,91 @@ async function main() {
   await prisma.category.deleteMany()
   await prisma.transmissionType.deleteMany()
   await prisma.systemSetting.deleteMany()
+  await prisma.featureFlag.deleteMany()
+  await prisma.configurationHistory.deleteMany()
+  await prisma.licenseKey.deleteMany()
+  await prisma.organizationFeature.deleteMany()
+  await prisma.organizationDomain.deleteMany()
+  await prisma.organization.deleteMany()
+
+
+  // 0. Create Default Organization (multi-tenant baseline)
+  console.log('🏢 Creating default organization...')
+  const organization = await prisma.organization.create({
+    data: {
+      name: 'A Conquistadora',
+      email: 'admin@aconquistadora.com',
+      phoneNumber: '+1234567890',
+      address: '123 Main Street',
+      city: 'Guimarães',
+      postalCode: '4800-000',
+      subscriptionTier: 'BASE',
+      subscriptionStatus: 'ACTIVE',
+      primaryColor: '#2563eb',
+      secondaryColor: '#dc2626',
+    },
+  })
+  const orgId = organization.id
+  console.log(`✅ Organization created: ${organization.name} (${orgId})`)
+
+  // Seed tenant hosts → organization domains
+  const hosts = (process.env.TENANT_HOSTS ?? 'www.meengine.io,meengine-dat.vercel.app')
+    .split(',')
+    .map(h => h.trim())
+    .filter(Boolean)
+
+  for (let i = 0; i < hosts.length; i++) {
+    const host = hosts[i]
+    await prisma.organizationDomain.upsert({
+      where: { host },
+      create: { host, organizationId: orgId, isPrimary: i === 0 },
+      update: { organizationId: orgId, isPrimary: i === 0 },
+    })
+  }
+  console.log(`✅ Seeded ${hosts.length} organization domains`)
+
+  // Create organization features (disabled by default)
+  const featureKeys = [
+    'STUDENT_ACCESS',
+    'VEHICLE_MANAGEMENT',
+    'LESSON_MANAGEMENT',
+    'SCREENSHOT_PROTECTION',
+    'ADVANCED_REPORTING',
+    'SMS_NOTIFICATIONS',
+    'MOBILE_APP',
+    'PAYMENT_INTEGRATION',
+    'MULTI_LANGUAGE',
+  ] as const
+
+  for (const featureKey of featureKeys) {
+    await prisma.organizationFeature.upsert({
+      where: {
+        organizationId_featureKey: {
+          organizationId: orgId,
+          featureKey,
+        },
+      },
+      create: {
+        organizationId: orgId,
+        featureKey,
+        isEnabled: false,
+      },
+      update: {},
+    })
+  }
+  console.log('✅ Organization features created (disabled by default)')
+
+  // Create sample license key for testing
+  const licenseKey = await prisma.licenseKey.create({
+    data: {
+      organizationId: orgId,
+      key: `LIC-${Date.now()}-SEED`,
+      featureKeys: ['STUDENT_ACCESS', 'VEHICLE_MANAGEMENT'],
+      isUsed: false,
+      notes: 'Seed sample license key for testing',
+    },
+  })
+  console.log(`✅ Sample license key created: ${licenseKey.key}`)
 
   // 1. Create Transmission Types
   console.log('📡 Creating transmission types...')
@@ -204,6 +294,7 @@ async function main() {
   const superAdmin = await prisma.user.create({
     data: {
       email: 'conquistadora@drivingschool.com',
+      organizationId: orgId,
       passwordHash: hashedPassword,
       role: "SUPER_ADMIN" as any,
       firstName: 'Conquistadora',
@@ -223,6 +314,7 @@ async function main() {
   const testUser = await prisma.user.create({
     data: {
       email: 'john@doe.com',
+      organizationId: orgId,
       passwordHash: testUserPassword,
       role: "SUPER_ADMIN" as any,
       firstName: 'John',
@@ -241,6 +333,7 @@ async function main() {
     prisma.user.create({
       data: {
         email: 'michael.johnson@drivingschool.com',
+        organizationId: orgId,
         passwordHash: await bcrypt.hash('instructor123', 12),
         role: "INSTRUCTOR" as any,
         firstName: 'Michael',
@@ -253,6 +346,7 @@ async function main() {
     prisma.user.create({
       data: {
         email: 'sarah.williams@drivingschool.com',
+        organizationId: orgId,
         passwordHash: await bcrypt.hash('instructor123', 12),
         role: "INSTRUCTOR" as any,
         firstName: 'Sarah',
@@ -265,6 +359,7 @@ async function main() {
     prisma.user.create({
       data: {
         email: 'david.brown@drivingschool.com',
+        organizationId: orgId,
         passwordHash: await bcrypt.hash('instructor123', 12),
         role: "INSTRUCTOR" as any,
         firstName: 'David',
@@ -341,6 +436,7 @@ async function main() {
     prisma.user.create({
       data: {
         email: 'alice.smith@email.com',
+        organizationId: orgId,
         passwordHash: await bcrypt.hash('student123', 12),
         role: "STUDENT" as any,
         firstName: 'Alice',
@@ -357,6 +453,7 @@ async function main() {
     prisma.user.create({
       data: {
         email: 'bob.wilson@email.com',
+        organizationId: orgId,
         passwordHash: await bcrypt.hash('student123', 12),
         role: "STUDENT" as any,
         firstName: 'Bob',
@@ -373,6 +470,7 @@ async function main() {
     prisma.user.create({
       data: {
         email: 'carol.davis@email.com',
+        organizationId: orgId,
         passwordHash: await bcrypt.hash('student123', 12),
         role: "STUDENT" as any,
         firstName: 'Carol',
@@ -673,6 +771,12 @@ async function main() {
   ])
 
   console.log(`✅ Created ${systemSettings.length} system settings`)
+
+  // Backfill org scope for seeded rows (keeps seed simpler/less error-prone)
+  await prisma.instructor.updateMany({ data: { organizationId: orgId } })
+  await prisma.student.updateMany({ data: { organizationId: orgId } })
+  await prisma.vehicle.updateMany({ data: { organizationId: orgId } })
+  await prisma.systemSetting.updateMany({ data: { organizationId: orgId } })
 
   // 9. Create Sample Lesson Counter for students
   console.log('📊 Creating lesson counters...')
