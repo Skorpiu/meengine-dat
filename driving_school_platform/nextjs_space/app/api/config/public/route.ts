@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPublicSettings } from '@/lib/config-utils';
 import { HTTP_STATUS } from '@/lib/constants';
+import { resolveTenantOrganizationId } from '@/lib/tenant';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -18,10 +19,41 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    const settings = await getPublicSettings();
+    const tenant = await resolveTenantOrganizationId(request);
+
+    if (!tenant.host) {
+      return NextResponse.json(
+        { error: 'No host provided' },
+        { status: HTTP_STATUS.BAD_REQUEST }
+      );
+    }
+
+    const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
+    const isLocal = LOCAL_HOSTS.has(tenant.host) || tenant.host.endsWith('.localhost');
+
+    // In production: host must map to an org. In local dev: allow empty (non-breaking).
+    if (!tenant.organizationId) {
+      if (!isLocal) {
+        return NextResponse.json(
+          { error: 'No organization found for this domain' },
+          { status: HTTP_STATUS.BAD_REQUEST }
+        );
+      }
+
+      return NextResponse.json({
+        settings: {},
+        organizationId: null,
+        host: tenant.host,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const settings = await getPublicSettings(tenant.organizationId);
 
     return NextResponse.json({
       settings,
+      organizationId: tenant.organizationId,
+      host: tenant.host,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

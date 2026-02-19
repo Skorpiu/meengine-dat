@@ -280,21 +280,22 @@ export async function getUserFeatureFlags(
 }
 
 /**
- * Get all public system settings
+ * Get all public system settings (scoped to an organization)
  */
-export async function getPublicSettings(): Promise<Record<string, any>> {
+export async function getPublicSettings(organizationId: string): Promise<Record<string, any>> {
   try {
+    if (!organizationId) {
+      return {};
+    }
+
     const settings = await prisma.systemSetting.findMany({
-      where: { isPublic: true },
+      where: { isPublic: true, organizationId },
     });
 
     const result: Record<string, any> = {};
 
     for (const setting of settings) {
-      result[setting.settingKey] = parseSettingValue(
-        setting.settingValue,
-        setting.settingType
-      );
+      result[setting.settingKey] = parseSettingValue(setting.settingValue, setting.settingType);
     }
 
     return result;
