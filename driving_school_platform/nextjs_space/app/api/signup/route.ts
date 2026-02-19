@@ -83,31 +83,37 @@ export async function POST(request: NextRequest) {
     }
     
     const tenant = await resolveTenantOrganizationId(request)
-    const effectiveOrganizationId = tenant.organizationId ?? organizationId
+
+    // Public signup must be scoped by tenant domain (except local dev)
+    const host = tenant.host
+    const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"])
+    const isLocal = !!host && (LOCAL_HOSTS.has(host) || host.endsWith(".localhost"))
+
+    const effectiveOrganizationId = tenant.organizationId ?? (isLocal ? organizationId : null)
 
     // If we are on a mapped domain, we don't allow "choose another org"
     if (tenant.organizationId && organizationId && tenant.organizationId !== organizationId) {
       return NextResponse.json(
         { error: "Organization does not match this domain" },
-        { status: 400 }
+        { status: 403 }
       )
     }
 
     if (!effectiveOrganizationId) {
       return NextResponse.json(
-        { error: "Please select an organization" },
+        { error: isLocal ? "Please select an organization" : "No organization found for this domain" },
         { status: 400 }
       )
     }
 
-    const validRoles = ["STUDENT", "INSTRUCTOR", "SUPER_ADMIN"]
-    if (!validRoles.includes(role)) {
+    // Production-grade: SUPER_ADMIN must not be created through a public endpoint
+    if (role === "SUPER_ADMIN") {
       return NextResponse.json(
-        { error: "Invalid role" },
-        { status: 400 }
+        { error: "SUPER_ADMIN cannot be created via public signup" },
+        { status: 403 }
       )
     }
-
+    
     const instructorExpiryDate = parseOptionalDate(instructorLicenseExpiry)
 
     if (role === "INSTRUCTOR") {
@@ -153,7 +159,7 @@ export async function POST(request: NextRequest) {
           city,
           postalCode,
           isEmailVerified: true, // For demo purposes, skip email verification
-          isApproved: true, // Auto-approve all users
+          isApproved: role !== "INSTRUCTOR", // Auto-approve all users
           organizationId: effectiveOrganizationId,
 
         },
