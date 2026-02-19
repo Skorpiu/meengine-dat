@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import { prisma } from "./db"
 import bcrypt from "bcryptjs"
+import { getRequestHost, resolveOrganizationIdFromHost } from "./tenant"
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -20,7 +21,7 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Invalid credentials")
         }
@@ -36,6 +37,15 @@ export const authOptions: NextAuthOptions = {
         })
 
         if (!user || !user.passwordHash) {
+          throw new Error("Invalid credentials")
+        }
+
+        const host = req ? getRequestHost(req as any) : null
+        const tenantOrgId = host ? await resolveOrganizationIdFromHost(host) : null
+        const userOrgId = user.organizationId ?? null
+
+        // If this Host maps to a tenant, user must belong to that tenant
+        if (tenantOrgId && tenantOrgId !== userOrgId) {
           throw new Error("Invalid credentials")
         }
 

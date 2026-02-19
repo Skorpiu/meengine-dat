@@ -18,6 +18,7 @@ import { HTTP_STATUS } from '@/lib/constants';
 import { userLoginSchema } from '@/lib/validation';
 import { RATE_LIMITS } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
+import { resolveTenantOrganizationId } from '@/lib/tenant';
 
 /**
  * POST /api/auth/login
@@ -58,6 +59,26 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       'Invalid email or password',
       HTTP_STATUS.UNAUTHORIZED
     );
+  }
+
+  const tenant = await resolveTenantOrganizationId(request);
+  const userOrgId = user.organizationId ?? null;
+
+  if (!userOrgId) {
+    logger.warn('Login attempt with user missing organizationId', { email, userId: user.id, host: tenant.host });
+    return errorResponse('No organization found', HTTP_STATUS.BAD_REQUEST);
+  }
+
+  if (tenant.organizationId && tenant.organizationId !== userOrgId) {
+    logger.warn('Login attempt on wrong domain', {
+      email,
+      userId: user.id,
+      host: tenant.host,
+      tenantOrgId: tenant.organizationId,
+      userOrgId,
+    });
+
+    return errorResponse('Organization does not match this domain', HTTP_STATUS.FORBIDDEN);
   }
 
   // Check if user has a password (might use OAuth only)
