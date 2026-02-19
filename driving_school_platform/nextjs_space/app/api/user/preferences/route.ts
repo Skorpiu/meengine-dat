@@ -10,6 +10,7 @@ import { authOptions } from '@/lib/auth';
 import { userPreferencesSchema } from '@/lib/config-validation';
 import { getUserPreferences, updateUserPreferences, logConfigurationChange } from '@/lib/config-utils';
 import { HTTP_STATUS, API_MESSAGES } from '@/lib/constants';
+import { resolveTenantOrganizationId } from '@/lib/tenant';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,6 +27,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: API_MESSAGES.UNAUTHORIZED },
         { status: HTTP_STATUS.UNAUTHORIZED }
+      );
+    }
+
+    const orgId = session.user.organizationId ?? null;
+    if (!orgId) {
+      return NextResponse.json(
+        { error: 'No organization found' },
+        { status: HTTP_STATUS.BAD_REQUEST }
+      );
+    }
+
+    const tenant = await resolveTenantOrganizationId(request);
+    if (tenant.organizationId && tenant.organizationId !== orgId) {
+      return NextResponse.json(
+        { error: 'Organization does not match this domain' },
+        { status: HTTP_STATUS.FORBIDDEN }
       );
     }
 
@@ -60,6 +77,22 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json(
         { error: API_MESSAGES.UNAUTHORIZED },
         { status: HTTP_STATUS.UNAUTHORIZED }
+      );
+    }
+
+    const orgId = session.user.organizationId ?? null;
+    if (!orgId) {
+      return NextResponse.json(
+        { error: 'No organization found' },
+        { status: HTTP_STATUS.BAD_REQUEST }
+      );
+    }
+
+    const tenant = await resolveTenantOrganizationId(request);
+    if (tenant.organizationId && tenant.organizationId !== orgId) {
+      return NextResponse.json(
+        { error: 'Organization does not match this domain' },
+        { status: HTTP_STATUS.FORBIDDEN }
       );
     }
 
