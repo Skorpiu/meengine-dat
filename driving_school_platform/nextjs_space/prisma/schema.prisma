@@ -738,6 +738,7 @@ enum UserRole {
   STUDENT
   INSTRUCTOR
   SUPER_ADMIN
+  PLATFORM_ADMIN
 }
 
 enum EmploymentType {

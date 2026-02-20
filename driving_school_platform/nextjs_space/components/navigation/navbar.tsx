@@ -72,14 +72,23 @@ export function Navbar({ currentPage }: NavbarProps) {
         )
         
         return adminItems
+
+      case "PLATFORM_ADMIN":
+        return [
+          ...baseItems,
+          { label: "Platform", href: "/platform", icon: Settings },
+        ]
+
       case "INSTRUCTOR":
         return [
           ...baseItems,
         ]
+
       case "STUDENT":
         return [
           ...baseItems,
         ]
+
       default:
         return baseItems
     }
@@ -91,6 +100,8 @@ export function Navbar({ currentPage }: NavbarProps) {
     switch (session.user.role) {
       case "SUPER_ADMIN":
         return "/admin"
+      case "PLATFORM_ADMIN":
+        return "/platform"
       case "INSTRUCTOR":
         return "/instructor"
       case "STUDENT":

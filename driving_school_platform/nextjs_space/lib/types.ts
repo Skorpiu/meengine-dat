@@ -4,7 +4,7 @@
  * @module lib/types
  */
 
-export type UserRole = "STUDENT" | "INSTRUCTOR" | "SUPER_ADMIN"
+export type UserRole = "STUDENT" | "INSTRUCTOR" | "SUPER_ADMIN" | "PLATFORM_ADMIN"
 
 export type LessonStatus = string
 export type LessonType = string

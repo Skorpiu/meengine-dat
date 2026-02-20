@@ -45,6 +45,8 @@ export default function LoginPage() {
           router.push("/instructor")
         } else if (session?.user?.role === "STUDENT") {
           router.push("/student")
+        } else if (session?.user?.role === "PLATFORM_ADMIN") {
+          router.push("/platform")
         } else {
           router.push("/dashboard")
         }

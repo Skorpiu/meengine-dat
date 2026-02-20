@@ -29,6 +29,8 @@ export default function HomePage() {
           router.push("/instructor");
         } else if (session.user.role === "STUDENT") {
           router.push("/student");
+        } else if (session.user.role === "PLATFORM_ADMIN") {
+          router.push("/platform");
         }
       }
     }

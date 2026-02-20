@@ -14,6 +14,7 @@ export const HTTP_STATUS = {
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
   NOT_FOUND: 404,
+  CONFLICT: 409,
   INTERNAL_SERVER_ERROR: 500,
 } as const;
 
@@ -24,6 +25,7 @@ export const API_MESSAGES = {
   UNAUTHORIZED: 'Unauthorized',
   MISSING_FIELDS: 'Missing required fields',
   INVALID_ACTION: 'Invalid action',
+  INVALID_REQUEST: 'Invalid request',
   CREATED_SUCCESS: 'Created successfully',
   UPDATED_SUCCESS: 'Updated successfully',
   DELETED_SUCCESS: 'Deleted successfully',
@@ -33,6 +35,7 @@ export const API_MESSAGES = {
   DELETE_ERROR: 'Failed to delete record',
 } as const;
 
+
 /**
  * User Role Constants
  */
@@ -40,6 +43,7 @@ export const USER_ROLES = {
   SUPER_ADMIN: 'SUPER_ADMIN',
   INSTRUCTOR: 'INSTRUCTOR',
   STUDENT: 'STUDENT',
+  PLATFORM_ADMIN: 'PLATFORM_ADMIN',
 } as const;
 
 /**
