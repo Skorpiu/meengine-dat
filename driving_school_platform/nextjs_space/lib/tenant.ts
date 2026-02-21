@@ -7,9 +7,27 @@ export function normalizeHost(raw: string): string {
   return raw.toLowerCase().trim().replace(/:\d+$/, '');
 }
 
-export function getRequestHost(request: Pick<NextRequest, 'headers'>): string | null {
-  const xfHost = request.headers.get('x-forwarded-host');
-  const host = xfHost || request.headers.get('host');
+type HeadersLike = Headers | Record<string, string | string[] | undefined>;
+
+function readHeader(headers: HeadersLike, name: string): string | null {
+  const anyHeaders: any = headers as any;
+
+  // NextRequest / Request (Headers)
+  if (anyHeaders && typeof anyHeaders.get === 'function') {
+    return anyHeaders.get(name);
+  }
+
+  // NextAuth authorize() req.headers (plain object)
+  const key = name.toLowerCase();
+  const v = anyHeaders?.[key] ?? anyHeaders?.[name];
+
+  if (Array.isArray(v)) return v.join(',');
+  return typeof v === 'string' ? v : null;
+}
+
+export function getRequestHost(request: { headers: HeadersLike }): string | null {
+  const xfHost = readHeader(request.headers, 'x-forwarded-host');
+  const host = xfHost || readHeader(request.headers, 'host');
   if (!host) return null;
 
   // Pode vir "a.com, b.com" — queremos o primeiro
