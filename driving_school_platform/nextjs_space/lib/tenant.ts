@@ -3,11 +3,34 @@ import { db } from '@/lib/db';
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
 
+function getPlatformHosts(): Set<string> {
+  const raw = process.env.PLATFORM_HOSTS ?? 'platform.meengine.io';
+  const hosts = raw
+    .split(',')
+    .map((h) => normalizeHost(h))
+    .filter(Boolean);
+  return new Set(hosts);
+}
+
+export function isLocalHost(host: string | null): boolean {
+  if (!host) return false;
+  const h = normalizeHost(host);
+  return LOCAL_HOSTS.has(h) || h.endsWith('.localhost');
+}
+
+export function isPlatformHost(host: string | null): boolean {
+  if (!host) return false;
+  const h = normalizeHost(host);
+  return getPlatformHosts().has(h);
+}
+
 export function normalizeHost(raw: string): string {
   return raw.toLowerCase().trim().replace(/:\d+$/, '');
 }
 
-type HeadersLike = Headers | Record<string, string | string[] | undefined>;
+type HeadersLike =
+  | { get(name: string): string | null }
+  | Record<string, string | string[] | undefined>;
 
 function readHeader(headers: HeadersLike, name: string): string | null {
   const anyHeaders: any = headers as any;
@@ -38,7 +61,7 @@ export function getRequestHost(request: { headers: HeadersLike }): string | null
 export async function resolveOrganizationIdFromHost(host: string): Promise<string | null> {
   const h = normalizeHost(host);
 
-  if (LOCAL_HOSTS.has(h) || h.endsWith('.localhost')) return null;
+  if (isLocalHost(h)) return null;
 
   const domain = await db.organizationDomain.findUnique({
     where: { host: h },

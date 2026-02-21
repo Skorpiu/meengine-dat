@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { HTTP_STATUS, API_MESSAGES } from '@/lib/constants';
-import { resolveTenantOrganizationId } from '@/lib/tenant';
+import { resolveTenantOrganizationId, isLocalHost, isPlatformHost } from '@/lib/tenant';
 import { LicenseService } from '@/lib/services/license-service';
 import { FEATURE_DEFINITIONS, type FeatureKey } from '@/lib/config/license-features';
 
@@ -44,8 +44,16 @@ export async function GET(request: NextRequest) {
 
     // Hard rule: platform APIs must NOT run on a tenant-mapped host
     const tenant = await resolveTenantOrganizationId(request);
+    if (!tenant.host) {
+      return NextResponse.json({ error: API_MESSAGES.INVALID_REQUEST }, { status: HTTP_STATUS.BAD_REQUEST });
+    }
     if (tenant.organizationId) {
       return NextResponse.json({ error: 'Platform endpoint not allowed on tenant domains' }, { status: HTTP_STATUS.FORBIDDEN });
+    }
+
+    // Hard rule: platform APIs must run ONLY on local dev or platform hosts (avoid random/unmapped hosts)
+    if (!isLocalHost(tenant.host) && !isPlatformHost(tenant.host)) {
+      return NextResponse.json({ error: 'Platform endpoint not allowed on this host' }, { status: HTTP_STATUS.FORBIDDEN });
     }
 
     const orgs = await db.organization.findMany({
@@ -72,8 +80,16 @@ export async function POST(request: NextRequest) {
 
     // Hard rule: platform APIs must NOT run on a tenant-mapped host
     const tenant = await resolveTenantOrganizationId(request);
+    if (!tenant.host) {
+      return NextResponse.json({ error: API_MESSAGES.INVALID_REQUEST }, { status: HTTP_STATUS.BAD_REQUEST });
+    }
     if (tenant.organizationId) {
       return NextResponse.json({ error: 'Platform endpoint not allowed on tenant domains' }, { status: HTTP_STATUS.FORBIDDEN });
+    }
+
+    // Hard rule: platform APIs must run ONLY on local dev or platform hosts (avoid random/unmapped hosts)
+    if (!isLocalHost(tenant.host) && !isPlatformHost(tenant.host)) {
+      return NextResponse.json({ error: 'Platform endpoint not allowed on this host' }, { status: HTTP_STATUS.FORBIDDEN });
     }
 
     let body: unknown;
