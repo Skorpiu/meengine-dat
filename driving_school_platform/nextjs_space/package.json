@@ -15,10 +15,15 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "prebuild": "prisma generate",
     "postinstall": "prisma generate",
+    "prebuild": "pnpm -s env:check && prisma generate",
+    "pretest:run": "pnpm -s env:check",
     "test": "vitest",
     "test:run": "vitest run",
+
+    "env:check": "tsx scripts/env-check.ts",
+    "predev": "pnpm -s env:check",
+
     "check": "pnpm -s lint && pnpm -s typecheck && pnpm -s test:run && pnpm -s build",
     "fix": "prettier --write . && eslint --fix ."
   },
@@ -26,6 +31,7 @@
     "seed": "tsx --require dotenv/config scripts/seed.ts"
   },
   "devDependencies": {
+    "@next/env": "^16.1.6",
     "@next/eslint-plugin-next": "14.2.28",
     "@next/swc-wasm-nodejs": "13.5.1",
     "@playwright/test": "^1.57.0",
