@@ -1,6 +1,3 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT/driving_school_platform/nextjs_space" || exit 1
 pnpm -s lint-staged
