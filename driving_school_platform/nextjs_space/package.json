@@ -14,15 +14,25 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "prebuild": "prisma generate",
+    "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate",
+    "prebuild": "pnpm -s env:check && prisma generate",
+    "pretest:run": "pnpm -s env:check",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+
+    "env:check": "tsx scripts/env-check.ts",
+    "predev": "pnpm -s env:check",
+
+    "check": "pnpm -s lint && pnpm -s typecheck && pnpm -s test:run && pnpm -s build",
+    "fix": "prettier --write . && eslint --fix ."
   },
   "prisma": {
     "seed": "tsx --require dotenv/config scripts/seed.ts"
   },
   "devDependencies": {
+    "@next/env": "^16.1.6",
+    "@next/eslint-plugin-next": "14.2.28",
     "@next/swc-wasm-nodejs": "13.5.1",
     "@playwright/test": "^1.57.0",
     "@types/node": "20.6.2",
@@ -30,8 +40,8 @@
     "@types/react-dom": "18.2.7",
     "@typescript-eslint/eslint-plugin": "7.0.0",
     "@typescript-eslint/parser": "7.0.0",
-    "eslint": "9.24.0",
-    "eslint-config-next": "15.3.0",
+    "eslint": "8.57.0",
+    "eslint-config-next": "14.2.28",
     "eslint-plugin-prettier": "5.1.3",
     "eslint-plugin-react-hooks": "4.6.0",
     "postcss": "8.4.30",
