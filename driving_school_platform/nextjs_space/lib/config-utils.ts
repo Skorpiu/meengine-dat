@@ -222,7 +222,7 @@ type PrismaJsonField =
   | Prisma.NullableJsonNullValueInput;
 
 function toPrismaJsonField(value: unknown): PrismaJsonField {
-  if (value === null) return Prisma.JsonNull;
+  if (value === null) return Prisma.JsonNull!;
 
   const t = typeof value;
 
