@@ -109,14 +109,21 @@ export type RouteHandler<C = unknown> = (
   context: C,
 ) => Promise<NextResponse> | NextResponse;
 
+// Wrapper that Next and tests can call with 1 or 2 args
+export type WrappedRouteHandler<C = unknown> = (
+  request: NextRequest,
+  context?: C,
+) => Promise<NextResponse> | NextResponse;
+
 export function withErrorHandling<C = unknown>(
   handler: RouteHandler<C>,
   options?: {
     rateLimit?: (typeof RATE_LIMITS)[keyof typeof RATE_LIMITS];
     trackPerformance?: boolean;
   },
-): RouteHandler<C> {
-  return async (request: NextRequest, context: C) => {
+): WrappedRouteHandler<C> {
+  return async (request: NextRequest, context?: C) => {
+    const ctx = context ?? ({} as C);
     const url = new URL(request.url);
     const method = request.method;
     const perf = options?.trackPerformance
@@ -158,7 +165,7 @@ export function withErrorHandling<C = unknown>(
         }
       }
 
-      const response = await handler(request, context);
+      const response = await handler(request, ctx);
 
       const duration = perf?.end();
       logger.info(`${method} ${url.pathname}`, {
