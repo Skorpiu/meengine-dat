@@ -4,6 +4,7 @@
  */
 
 import { prisma } from "./db";
+import { Prisma } from "@prisma/client";
 
 export type SettingType = "STRING" | "INTEGER" | "DECIMAL" | "BOOLEAN" | "JSON";
 
@@ -216,6 +217,37 @@ export async function updateUserPreferences(
   }
 }
 
+type PrismaJsonField =
+  | Prisma.InputJsonValue
+  | Prisma.NullableJsonNullValueInput;
+
+function toPrismaJsonField(value: unknown): PrismaJsonField {
+  if (value === null) return Prisma.JsonNull;
+
+  const t = typeof value;
+
+  if (t === "string" || t === "number" || t === "boolean") return value;
+  if (value instanceof Date) return value.toISOString();
+
+  if (Array.isArray(value)) {
+    return value.map((v) =>
+      toPrismaJsonField(v),
+    ) as unknown as Prisma.InputJsonValue;
+  }
+
+  if (t === "object" && value) {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (v === undefined) continue;
+      out[k] = toPrismaJsonField(v);
+    }
+    return out as unknown as Prisma.InputJsonValue;
+  }
+
+  // fallback (symbol, bigint, function, etc.)
+  return String(value);
+}
+
 /**
  * Log configuration change
  */
@@ -235,7 +267,7 @@ export async function logConfigurationChange(
   },
 ) {
   try {
-    const { organizationId, ...rest } = options;
+    const { organizationId, oldValue, newValue, ...rest } = options;
 
     await prisma.configurationHistory.create({
       data: {
@@ -244,6 +276,12 @@ export async function logConfigurationChange(
         action,
         organizationId: organizationId ?? null,
         ...rest,
+        ...(oldValue !== undefined
+          ? { oldValue: toPrismaJsonField(oldValue) }
+          : {}),
+        ...(newValue !== undefined
+          ? { newValue: toPrismaJsonField(newValue) }
+          : {}),
       },
     });
   } catch (error) {
