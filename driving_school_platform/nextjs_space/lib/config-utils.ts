@@ -221,7 +221,13 @@ type PrismaJsonField =
   | Prisma.InputJsonValue
   | Prisma.NullableJsonNullValueInput;
 
+// Prisma.JsonNull may be typed in a "strange" way in some clients.
+// We freeze the type here so TS doesn't invent `undefined`.
+const PRISMA_JSON_NULL = Prisma.JsonNull as unknown as PrismaJsonField;
+
 function toPrismaJsonField(value: unknown): PrismaJsonField {
+  if (value === null || value === undefined) return PRISMA_JSON_NULL;
+
   if (
     typeof value === "string" ||
     typeof value === "number" ||
@@ -238,7 +244,7 @@ function toPrismaJsonField(value: unknown): PrismaJsonField {
     ) as unknown as Prisma.InputJsonValue;
   }
 
-  if (value && typeof value === "object") {
+  if (typeof value === "object") {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
       if (v === undefined) continue;
@@ -246,6 +252,9 @@ function toPrismaJsonField(value: unknown): PrismaJsonField {
     }
     return out as unknown as Prisma.InputJsonValue;
   }
+
+  // fallback (bigint/symbol/function/etc.) -> string JSON-safe
+  return String(value);
 }
 
 /**
