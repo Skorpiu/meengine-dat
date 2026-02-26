@@ -104,19 +104,19 @@ export function validateRequest<T>(
   }
 }
 
-type RouteHandler = (
+export type RouteHandler<C = unknown> = (
   request: NextRequest,
-  context?: unknown,
+  context: C,
 ) => Promise<NextResponse> | NextResponse;
 
-export function withErrorHandling(
-  handler: RouteHandler,
+export function withErrorHandling<C = unknown>(
+  handler: RouteHandler<C>,
   options?: {
     rateLimit?: (typeof RATE_LIMITS)[keyof typeof RATE_LIMITS];
     trackPerformance?: boolean;
   },
-): RouteHandler {
-  return async (request: NextRequest, context?: unknown) => {
+): RouteHandler<C> {
+  return async (request: NextRequest, context: C) => {
     const url = new URL(request.url);
     const method = request.method;
     const perf = options?.trackPerformance

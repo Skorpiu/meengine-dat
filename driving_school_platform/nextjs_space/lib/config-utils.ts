@@ -217,22 +217,19 @@ export async function updateUserPreferences(
   }
 }
 
-type PrismaJsonField = Exclude<
-  Prisma.ConfigurationHistoryCreateInput["oldValue"],
-  undefined
->;
-
-// Prisma.JsonNull aparece tipado como {} | undefined em alguns clients.
-// Fix: cast para o tipo exato que o create() aceita.
-const PRISMA_JSON_NULL: PrismaJsonField =
-  Prisma.JsonNull as unknown as PrismaJsonField;
+type PrismaJsonField =
+  | Prisma.InputJsonValue
+  | Prisma.NullableJsonNullValueInput;
 
 function toPrismaJsonField(value: unknown): PrismaJsonField {
-  if (value === null) return PRISMA_JSON_NULL;
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return value;
+  }
 
-  const t = typeof value;
-
-  if (t === "string" || t === "number" || t === "boolean") return value;
   if (value instanceof Date) return value.toISOString();
 
   if (Array.isArray(value)) {
@@ -241,7 +238,7 @@ function toPrismaJsonField(value: unknown): PrismaJsonField {
     ) as unknown as Prisma.InputJsonValue;
   }
 
-  if (t === "object" && value) {
+  if (value && typeof value === "object") {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
       if (v === undefined) continue;
@@ -249,8 +246,6 @@ function toPrismaJsonField(value: unknown): PrismaJsonField {
     }
     return out as unknown as Prisma.InputJsonValue;
   }
-
-  return String(value);
 }
 
 /**
