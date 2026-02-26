@@ -1,17 +1,16 @@
-
 /**
  * Logging Utility
  * Provides structured logging for the application
  * @module lib/logger
  */
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+type LogLevel = "debug" | "info" | "warn" | "error";
 
 interface LogEntry {
   timestamp: string;
   level: LogLevel;
   message: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   error?: Error;
 }
 
@@ -19,8 +18,12 @@ interface LogEntry {
  * Logger configuration
  */
 const config = {
-  minLevel: (process.env.NODE_ENV === 'production' ? 'info' : 'debug') as LogLevel,
-  enableConsole: !(process.env.NODE_ENV === 'test' || process.env.VITEST === 'true'),
+  minLevel: (process.env.NODE_ENV === "production"
+    ? "info"
+    : "debug") as LogLevel,
+  enableConsole: !(
+    process.env.NODE_ENV === "test" || process.env.VITEST === "true"
+  ),
   enableFile: false, // Set to true if you want to write logs to file
 };
 
@@ -41,7 +44,7 @@ const LOG_LEVELS: Record<LogLevel, number> = {
  */
 function formatLogEntry(entry: LogEntry): string {
   const { timestamp, level, message, context } = entry;
-  const contextStr = context ? ` ${JSON.stringify(context)}` : '';
+  const contextStr = context ? ` ${JSON.stringify(context)}` : "";
   return `[${timestamp}] [${level.toUpperCase()}] ${message}${contextStr}`;
 }
 
@@ -60,26 +63,26 @@ function shouldLog(level: LogLevel): boolean {
  */
 function writeLog(entry: LogEntry): void {
   if (!shouldLog(entry.level)) return;
-  
+
   const formatted = formatLogEntry(entry);
-  
+
   if (config.enableConsole) {
     switch (entry.level) {
-      case 'debug':
+      case "debug":
         console.debug(formatted);
         break;
-      case 'info':
+      case "info":
         console.info(formatted);
         break;
-      case 'warn':
+      case "warn":
         console.warn(formatted);
         break;
-      case 'error':
+      case "error":
         console.error(formatted, entry.error);
         break;
     }
   }
-  
+
   // In production, you might want to send logs to an external service
   // like Sentry, LogRocket, or CloudWatch
 }
@@ -88,79 +91,83 @@ function writeLog(entry: LogEntry): void {
  * Logger class for structured logging
  */
 class Logger {
-  private context: Record<string, any>;
-  
-  constructor(context: Record<string, any> = {}) {
+  private context: Record<string, unknown>;
+
+  constructor(context: Record<string, unknown> = {}) {
     this.context = context;
   }
-  
+
   /**
    * Create a child logger with additional context
    * @param additionalContext - Additional context to add
    * @returns New logger instance
    */
-  child(additionalContext: Record<string, any>): Logger {
+  child(additionalContext: Record<string, unknown>): Logger {
     return new Logger({ ...this.context, ...additionalContext });
   }
-  
+
   /**
    * Log debug message
    * @param message - Log message
    * @param context - Additional context
    */
-  debug(message: string, context?: Record<string, any>): void {
+  debug(message: string, context?: Record<string, unknown>): void {
     writeLog({
       timestamp: new Date().toISOString(),
-      level: 'debug',
+      level: "debug",
       message,
       context: { ...this.context, ...context },
     });
   }
-  
+
   /**
    * Log info message
    * @param message - Log message
    * @param context - Additional context
    */
-  info(message: string, context?: Record<string, any>): void {
+  info(message: string, context?: Record<string, unknown>): void {
     writeLog({
       timestamp: new Date().toISOString(),
-      level: 'info',
+      level: "info",
       message,
       context: { ...this.context, ...context },
     });
   }
-  
+
   /**
    * Log warning message
    * @param message - Log message
    * @param context - Additional context
    */
-  warn(message: string, context?: Record<string, any>): void {
+  warn(message: string, context?: Record<string, unknown>): void {
     writeLog({
       timestamp: new Date().toISOString(),
-      level: 'warn',
+      level: "warn",
       message,
       context: { ...this.context, ...context },
     });
   }
-  
+
   /**
    * Log error message
    * @param message - Log message
    * @param error - Error object
    * @param context - Additional context
    */
-  error(message: string, error?: Error, context?: Record<string, any>): void {
+  error(
+    message: string,
+    error?: Error,
+    context?: Record<string, unknown>,
+  ): void {
     writeLog({
       timestamp: new Date().toISOString(),
-      level: 'error',
+      level: "error",
       message,
       error,
       context: { ...this.context, ...context },
     });
   }
-  
+
   /**
    * Log API request
    * @param method - HTTP method
@@ -168,10 +175,15 @@ class Logger {
    * @param statusCode - Response status code
    * @param duration - Request duration in ms
    */
-  apiRequest(method: string, path: string, statusCode: number, duration: number): void {
+  apiRequest(
+    method: string,
+    path: string,
+    statusCode: number,
+    duration: number,
+  ): void {
     this.info(`${method} ${path} ${statusCode}`, { duration });
   }
-  
+
   /**
    * Log database query
    * @param model - Prisma model name
@@ -193,7 +205,7 @@ export const logger = new Logger();
  * @param context - Context object
  * @returns Logger instance
  */
-export function createLogger(context: Record<string, any>): Logger {
+export function createLogger(context: Record<string, unknown>): Logger {
   return new Logger(context);
 }
 
@@ -204,11 +216,14 @@ export function createLogger(context: Record<string, any>): Logger {
  */
 export function measurePerformance(operation: string) {
   const start = Date.now();
-  
+
   return {
-    end: (additionalContext?: Record<string, any>) => {
+    end: (additionalContext?: Record<string, unknown>) => {
       const duration = Date.now() - start;
-      logger.debug(`Performance: ${operation}`, { duration, ...additionalContext });
+      logger.debug(`Performance: ${operation}`, {
+        duration,
+        ...additionalContext,
+      });
       return duration;
     },
   };
