@@ -396,9 +396,14 @@ export function SettingsManagementClient() {
                 <Label htmlFor="settingType">Type *</Label>
                 <Select
                   value={formData.settingType}
-                  onValueChange={(value: any) =>
-                    setFormData({ ...formData, settingType: value })
-                  }
+                  onValueChange={(
+                    value:
+                      | "STRING"
+                      | "INTEGER"
+                      | "BOOLEAN"
+                      | "JSON"
+                      | "DECIMAL",
+                  ) => setFormData({ ...formData, settingType: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />

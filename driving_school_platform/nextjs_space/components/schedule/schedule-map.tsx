@@ -115,7 +115,7 @@ export function ScheduleMap({
 
   // Fixed data persistence - Seed local state from props and fetch client-side
   const [lessons, setLessons] = useState<Lesson[]>(initialLessons);
-  const [isLoadingLessons, setIsLoadingLessons] = useState(false);
+  const [_isLoadingLessons, setIsLoadingLessons] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const { toast } = useToast();
@@ -349,15 +349,6 @@ export function ScheduleMap({
     }
   };
 
-  // Calculate lesson duration in hours
-  const getLessonDuration = (lesson: Lesson) => {
-    const [startHour, startMin] = lesson.startTime.split(":").map(Number);
-    const [endHour, endMin] = lesson.endTime.split(":").map(Number);
-    const startInMinutes = startHour * 60 + startMin;
-    const endInMinutes = endHour * 60 + endMin;
-    return (endInMinutes - startInMinutes) / 60; // Duration in hours
-  };
-
   // Convert time string to minutes since midnight
   const timeToMinutes = (timeStr: string) => {
     const [hours, minutes] = timeStr.split(":").map(Number);
@@ -530,7 +521,6 @@ export function ScheduleMap({
   };
 
   const currentTimePosition = getCurrentTimePosition();
-  const isCurrentDateToday = dates.some((date) => isSameDay(date, currentTime));
 
   return (
     <>

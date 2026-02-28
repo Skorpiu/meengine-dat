@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { Navbar } from "@/components/navigation/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminDashboardClient } from "@/components/admin/admin-dashboard-client";
+import type { Lesson as ScheduleLesson } from "@/components/schedule/schedule-map";
 import { getDrivingSchoolName } from "@/lib/config/features";
 import { Users, Car, Calendar, TrendingUp, CheckCircle } from "lucide-react";
 
@@ -71,17 +72,50 @@ export default async function AdminDashboard() {
   });
 
   // Serialize lessons with Decimal fields
-  const scheduledLessonsForMap = scheduledLessonsForMapRaw.map((lesson) => ({
-    ...lesson,
-    instructor: lesson.instructor
-      ? {
-          user: {
-            firstName: lesson.instructor.user.firstName,
-            lastName: lesson.instructor.user.lastName,
-          },
-        }
-      : null,
-  }));
+  // Normalize lessons to the ScheduleMap shape
+  const scheduledLessonsForMap: ScheduleLesson[] =
+    scheduledLessonsForMapRaw.map((lesson) => ({
+      id: lesson.id,
+      lessonDate: lesson.lessonDate,
+      startTime: lesson.startTime,
+      endTime: lesson.endTime,
+      lessonType: lesson.lessonType,
+      status: lesson.status,
+
+      student: lesson.student
+        ? {
+            user: {
+              id: lesson.student.user.id,
+              firstName: lesson.student.user.firstName,
+              lastName: lesson.student.user.lastName,
+            },
+          }
+        : undefined,
+
+      instructor: lesson.instructor
+        ? {
+            user: {
+              id: lesson.instructor.user.id,
+              firstName: lesson.instructor.user.firstName,
+              lastName: lesson.instructor.user.lastName,
+            },
+          }
+        : undefined,
+
+      vehicle: lesson.vehicle
+        ? {
+            registrationNumber: lesson.vehicle.registrationNumber ?? undefined,
+            make: lesson.vehicle.make ?? undefined,
+            model: lesson.vehicle.model ?? undefined,
+          }
+        : null,
+
+      category: lesson.category
+        ? {
+            name: lesson.category.name,
+          }
+        : undefined,
+    }));
 
   return (
     <div className="min-h-screen bg-gray-50">
