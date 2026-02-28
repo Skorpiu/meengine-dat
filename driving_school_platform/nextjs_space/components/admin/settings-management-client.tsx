@@ -3,19 +3,19 @@
  * Full CRUD interface for system settings
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -31,24 +31,29 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Plus, Edit, Trash2, Search, RefreshCw } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+} from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Settings, Plus, Edit, Trash2, Search, RefreshCw } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface SystemSetting {
   id: string;
   settingKey: string;
   settingValue: string;
-  settingType: 'STRING' | 'INTEGER' | 'BOOLEAN' | 'JSON' | 'DECIMAL';
+  settingType: "STRING" | "INTEGER" | "BOOLEAN" | "JSON" | "DECIMAL";
   description?: string;
   category?: string;
   isPublic: boolean;
-  parsedValue?: any;
+  parsedValue?: unknown;
   createdAt: string;
   updatedAt: string;
 }
@@ -56,23 +61,25 @@ interface SystemSetting {
 export function SettingsManagementClient() {
   const [settings, setSettings] = useState<SystemSetting[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [showDialog, setShowDialog] = useState(false);
-  const [editingSetting, setEditingSetting] = useState<SystemSetting | null>(null);
+  const [editingSetting, setEditingSetting] = useState<SystemSetting | null>(
+    null,
+  );
   const [formData, setFormData] = useState<{
     settingKey: string;
     settingValue: string;
-    settingType: 'STRING' | 'INTEGER' | 'BOOLEAN' | 'JSON' | 'DECIMAL';
+    settingType: "STRING" | "INTEGER" | "BOOLEAN" | "JSON" | "DECIMAL";
     description: string;
     category: string;
     isPublic: boolean;
   }>({
-    settingKey: '',
-    settingValue: '',
-    settingType: 'STRING',
-    description: '',
-    category: '',
+    settingKey: "",
+    settingValue: "",
+    settingType: "STRING",
+    description: "",
+    category: "",
     isPublic: false,
   });
 
@@ -83,15 +90,15 @@ export function SettingsManagementClient() {
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/settings');
-      
-      if (!response.ok) throw new Error('Failed to fetch settings');
-      
+      const response = await fetch("/api/admin/settings");
+
+      if (!response.ok) throw new Error("Failed to fetch settings");
+
       const data = await response.json();
       setSettings(data.settings || []);
     } catch (error) {
-      console.error('Error fetching settings:', error);
-      toast.error('Failed to load settings');
+      console.error("Error fetching settings:", error);
+      toast.error("Failed to load settings");
     } finally {
       setLoading(false);
     }
@@ -99,24 +106,25 @@ export function SettingsManagementClient() {
 
   const handleCreate = async () => {
     try {
-      const response = await fetch('/api/admin/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to create setting');
+        throw new Error(error.error || "Failed to create setting");
       }
 
-      toast.success('Setting created successfully');
+      toast.success("Setting created successfully");
       setShowDialog(false);
       resetForm();
       fetchSettings();
-    } catch (error: any) {
-      console.error('Error creating setting:', error);
-      toast.error(error.message);
+    } catch (error: unknown) {
+      console.error("Error creating setting:", error);
+      const msg = error instanceof Error ? error.message : "Unexpected error";
+      toast.error(msg);
     }
   };
 
@@ -124,9 +132,9 @@ export function SettingsManagementClient() {
     if (!editingSetting) return;
 
     try {
-      const response = await fetch('/api/admin/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
           settingKey: editingSetting.settingKey,
@@ -135,38 +143,40 @@ export function SettingsManagementClient() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to update setting');
+        throw new Error(error.error || "Failed to update setting");
       }
 
-      toast.success('Setting updated successfully');
+      toast.success("Setting updated successfully");
       setShowDialog(false);
       setEditingSetting(null);
       resetForm();
       fetchSettings();
-    } catch (error: any) {
-      console.error('Error updating setting:', error);
-      toast.error(error.message);
+    } catch (error: unknown) {
+      console.error("Error ...:", error);
+      const msg = error instanceof Error ? error.message : "Unexpected error";
+      toast.error(msg);
     }
   };
 
   const handleDelete = async (settingKey: string) => {
-    if (!confirm('Are you sure you want to delete this setting?')) return;
+    if (!confirm("Are you sure you want to delete this setting?")) return;
 
     try {
       const response = await fetch(`/api/admin/settings?key=${settingKey}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to delete setting');
+        throw new Error(error.error || "Failed to delete setting");
       }
 
-      toast.success('Setting deleted successfully');
+      toast.success("Setting deleted successfully");
       fetchSettings();
-    } catch (error: any) {
-      console.error('Error deleting setting:', error);
-      toast.error(error.message);
+    } catch (error: unknown) {
+      console.error("Error ...:", error);
+      const msg = error instanceof Error ? error.message : "Unexpected error";
+      toast.error(msg);
     }
   };
 
@@ -182,8 +192,8 @@ export function SettingsManagementClient() {
       settingKey: setting.settingKey,
       settingValue: setting.settingValue,
       settingType: setting.settingType,
-      description: setting.description || '',
-      category: setting.category || '',
+      description: setting.description || "",
+      category: setting.category || "",
       isPublic: setting.isPublic,
     });
     setShowDialog(true);
@@ -191,33 +201,38 @@ export function SettingsManagementClient() {
 
   const resetForm = () => {
     setFormData({
-      settingKey: '',
-      settingValue: '',
-      settingType: 'STRING',
-      description: '',
-      category: '',
+      settingKey: "",
+      settingValue: "",
+      settingType: "STRING",
+      description: "",
+      category: "",
       isPublic: false,
     });
   };
 
   const categories = Array.from(
-    new Set(settings.map(s => s.category).filter(Boolean))
+    new Set(settings.map((s) => s.category).filter(Boolean)),
   ).sort();
 
-  const filteredSettings = settings.filter(setting => {
-    const matchesSearch = !searchQuery || 
+  const filteredSettings = settings.filter((setting) => {
+    const matchesSearch =
+      !searchQuery ||
       setting.settingKey.toLowerCase().includes(searchQuery.toLowerCase()) ||
       setting.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || setting.category === selectedCategory;
+    const matchesCategory =
+      selectedCategory === "all" || setting.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const settingsByCategory = filteredSettings.reduce((acc, setting) => {
-    const category = setting.category || 'Uncategorized';
-    if (!acc[category]) acc[category] = [];
-    acc[category].push(setting);
-    return acc;
-  }, {} as Record<string, SystemSetting[]>);
+  const settingsByCategory = filteredSettings.reduce(
+    (acc, setting) => {
+      const category = setting.category || "Uncategorized";
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(setting);
+      return acc;
+    },
+    {} as Record<string, SystemSetting[]>,
+  );
 
   if (loading) {
     return (
@@ -247,9 +262,9 @@ export function SettingsManagementClient() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(cat => (
-                <SelectItem key={cat} value={cat || 'Uncategorized'}>
-                  {cat || 'Uncategorized'}
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat || "Uncategorized"}>
+                  {cat || "Uncategorized"}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -268,76 +283,81 @@ export function SettingsManagementClient() {
 
       {/* Settings by Category */}
       <div className="space-y-6">
-        {Object.entries(settingsByCategory).map(([category, categorySettings]) => (
-          <Card key={category}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="w-5 h-5" />
-                {category}
-              </CardTitle>
-              <CardDescription>
-                {categorySettings.length} setting{categorySettings.length !== 1 ? 's' : ''}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Key</TableHead>
-                    <TableHead>Value</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Visibility</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {categorySettings.map((setting) => (
-                    <TableRow key={setting.id}>
-                      <TableCell className="font-mono text-sm">
-                        {setting.settingKey}
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate">
-                        <code className="bg-gray-100 px-2 py-1 rounded text-sm">
-                          {setting.settingValue}
-                        </code>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{setting.settingType}</Badge>
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate text-sm text-gray-600">
-                        {setting.description || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={setting.isPublic ? 'default' : 'secondary'}>
-                          {setting.isPublic ? 'Public' : 'Private'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEditDialog(setting)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(setting.settingKey)}
-                          >
-                            <Trash2 className="w-4 h-4 text-red-600" />
-                          </Button>
-                        </div>
-                      </TableCell>
+        {Object.entries(settingsByCategory).map(
+          ([category, categorySettings]) => (
+            <Card key={category}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="w-5 h-5" />
+                  {category}
+                </CardTitle>
+                <CardDescription>
+                  {categorySettings.length} setting
+                  {categorySettings.length !== 1 ? "s" : ""}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Key</TableHead>
+                      <TableHead>Value</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Visibility</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        ))}
+                  </TableHeader>
+                  <TableBody>
+                    {categorySettings.map((setting) => (
+                      <TableRow key={setting.id}>
+                        <TableCell className="font-mono text-sm">
+                          {setting.settingKey}
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate">
+                          <code className="bg-gray-100 px-2 py-1 rounded text-sm">
+                            {setting.settingValue}
+                          </code>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{setting.settingType}</Badge>
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate text-sm text-gray-600">
+                          {setting.description || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={setting.isPublic ? "default" : "secondary"}
+                          >
+                            {setting.isPublic ? "Public" : "Private"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEditDialog(setting)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(setting.settingKey)}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-600" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          ),
+        )}
       </div>
 
       {/* Create/Edit Dialog */}
@@ -345,10 +365,12 @@ export function SettingsManagementClient() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {editingSetting ? 'Edit Setting' : 'Create New Setting'}
+              {editingSetting ? "Edit Setting" : "Create New Setting"}
             </DialogTitle>
             <DialogDescription>
-              {editingSetting ? 'Update system setting configuration' : 'Add a new system setting'}
+              {editingSetting
+                ? "Update system setting configuration"
+                : "Add a new system setting"}
             </DialogDescription>
           </DialogHeader>
 
@@ -359,7 +381,9 @@ export function SettingsManagementClient() {
                 id="settingKey"
                 placeholder="e.g., max_lesson_duration"
                 value={formData.settingKey}
-                onChange={(e) => setFormData({ ...formData, settingKey: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, settingKey: e.target.value })
+                }
                 disabled={!!editingSetting}
               />
               <p className="text-xs text-gray-500">
@@ -372,7 +396,9 @@ export function SettingsManagementClient() {
                 <Label htmlFor="settingType">Type *</Label>
                 <Select
                   value={formData.settingType}
-                  onValueChange={(value: any) => setFormData({ ...formData, settingType: value })}
+                  onValueChange={(value: any) =>
+                    setFormData({ ...formData, settingType: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -393,7 +419,9 @@ export function SettingsManagementClient() {
                   id="category"
                   placeholder="e.g., general, lessons"
                   value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, category: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -404,7 +432,9 @@ export function SettingsManagementClient() {
                 id="settingValue"
                 placeholder="Enter setting value"
                 value={formData.settingValue}
-                onChange={(e) => setFormData({ ...formData, settingValue: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, settingValue: e.target.value })
+                }
                 rows={3}
               />
             </div>
@@ -415,7 +445,9 @@ export function SettingsManagementClient() {
                 id="description"
                 placeholder="Describe what this setting controls"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 rows={2}
               />
             </div>
@@ -424,7 +456,9 @@ export function SettingsManagementClient() {
               <Switch
                 id="isPublic"
                 checked={formData.isPublic}
-                onCheckedChange={(checked) => setFormData({ ...formData, isPublic: checked })}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, isPublic: checked })
+                }
               />
               <Label htmlFor="isPublic" className="cursor-pointer">
                 Make this setting publicly accessible (via API)
@@ -437,7 +471,7 @@ export function SettingsManagementClient() {
               Cancel
             </Button>
             <Button onClick={editingSetting ? handleUpdate : handleCreate}>
-              {editingSetting ? 'Update Setting' : 'Create Setting'}
+              {editingSetting ? "Update Setting" : "Create Setting"}
             </Button>
           </DialogFooter>
         </DialogContent>

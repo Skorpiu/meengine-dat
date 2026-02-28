@@ -1,17 +1,20 @@
-
 /**
  * System Settings API
  * @route /api/admin/settings
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/db';
-import { systemSettingSchema, settingsQuerySchema } from '@/lib/config-validation';
-import { parseSettingValue, stringifySettingValue, logConfigurationChange } from '@/lib/config-utils';
-import { HTTP_STATUS, API_MESSAGES } from '@/lib/constants';
-import { resolveTenantOrganizationId } from '@/lib/tenant';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import {
+  systemSettingSchema,
+  settingsQuerySchema,
+} from "@/lib/config-validation";
+import { parseSettingValue, logConfigurationChange } from "@/lib/config-utils";
+import { HTTP_STATUS, API_MESSAGES } from "@/lib/constants";
+import { resolveTenantOrganizationId } from "@/lib/tenant";
+import type { Prisma } from "@prisma/client";
 
 /**
  * GET /api/admin/settings
@@ -21,37 +24,40 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    if (!session?.user || session.user.role !== "SUPER_ADMIN") {
       return NextResponse.json(
         { error: API_MESSAGES.UNAUTHORIZED },
-        { status: HTTP_STATUS.UNAUTHORIZED }
+        { status: HTTP_STATUS.UNAUTHORIZED },
       );
     }
 
     const orgId = session.user.organizationId;
     if (!orgId) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
     const tenant = await resolveTenantOrganizationId(request);
     if (tenant.organizationId && tenant.organizationId !== orgId) {
       return NextResponse.json(
-        { error: 'Organization does not match this domain' },
-        { status: 403 }
+        { error: "Organization does not match this domain" },
+        { status: 403 },
       );
     }
 
     const { searchParams } = new URL(request.url);
 
-    const isPublicParam = searchParams.get('isPublic');
+    const isPublicParam = searchParams.get("isPublic");
 
     const query = settingsQuerySchema.parse({
-      category: searchParams.get('category') || undefined,
-      isPublic: isPublicParam === null ? undefined : isPublicParam === 'true',
-      search: searchParams.get('search') || undefined,
+      category: searchParams.get("category") || undefined,
+      isPublic: isPublicParam === null ? undefined : isPublicParam === "true",
+      search: searchParams.get("search") || undefined,
     });
 
-    const where: any = {
+    const where: Prisma.SystemSettingWhereInput = {
       organizationId: orgId,
     };
 
@@ -65,18 +71,18 @@ export async function GET(request: NextRequest) {
 
     if (query.search) {
       where.OR = [
-        { settingKey: { contains: query.search, mode: 'insensitive' } },
-        { description: { contains: query.search, mode: 'insensitive' } },
+        { settingKey: { contains: query.search, mode: "insensitive" } },
+        { description: { contains: query.search, mode: "insensitive" } },
       ];
     }
 
     const settings = await prisma.systemSetting.findMany({
       where,
-      orderBy: [{ category: 'asc' }, { settingKey: 'asc' }],
+      orderBy: [{ category: "asc" }, { settingKey: "asc" }],
     });
 
     // Parse values based on type
-    const parsedSettings = settings.map((setting: any) => ({
+    const parsedSettings = settings.map((setting) => ({
       ...setting,
       parsedValue: parseSettingValue(setting.settingValue, setting.settingType),
     }));
@@ -86,10 +92,10 @@ export async function GET(request: NextRequest) {
       total: parsedSettings.length,
     });
   } catch (error) {
-    console.error('Error fetching settings:', error);
+    console.error("Error fetching settings:", error);
     return NextResponse.json(
       { error: API_MESSAGES.FETCH_ERROR },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }
@@ -102,25 +108,28 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    if (!session?.user || session.user.role !== "SUPER_ADMIN") {
       return NextResponse.json(
         { error: API_MESSAGES.UNAUTHORIZED },
-        { status: HTTP_STATUS.UNAUTHORIZED }
+        { status: HTTP_STATUS.UNAUTHORIZED },
       );
     }
 
     const orgId = session.user.organizationId;
     if (!orgId) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
     const tenant = await resolveTenantOrganizationId(request);
     if (tenant.organizationId && tenant.organizationId !== orgId) {
       return NextResponse.json(
-        { error: 'Organization does not match this domain' },
-        { status: HTTP_STATUS.FORBIDDEN }
+        { error: "Organization does not match this domain" },
+        { status: HTTP_STATUS.FORBIDDEN },
       );
-    } 
+    }
 
     const body = await request.json();
     const validated = systemSettingSchema.parse(body);
@@ -133,8 +142,8 @@ export async function POST(request: NextRequest) {
 
     if (existing) {
       return NextResponse.json(
-        { error: 'Setting already exists' },
-        { status: HTTP_STATUS.BAD_REQUEST }
+        { error: "Setting already exists" },
+        { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
 
@@ -151,36 +160,47 @@ export async function POST(request: NextRequest) {
       },
     });
 
-
     // Log the change
-    await logConfigurationChange('SystemSetting', setting.id, 'CREATED', {
+    await logConfigurationChange("SystemSetting", setting.id, "CREATED", {
       entityKey: setting.settingKey,
-      newValue: { [setting.settingKey]: parseSettingValue(setting.settingValue, setting.settingType) },
+      newValue: {
+        [setting.settingKey]: parseSettingValue(
+          setting.settingValue,
+          setting.settingType,
+        ),
+      },
       changedBy: session.user.id,
       changedByRole: session.user.role,
       organizationId: orgId,
     });
 
-    return NextResponse.json({
-      message: API_MESSAGES.CREATED_SUCCESS,
-      setting: {
-        ...setting,
-        parsedValue: parseSettingValue(setting.settingValue, setting.settingType),
+    return NextResponse.json(
+      {
+        message: API_MESSAGES.CREATED_SUCCESS,
+        setting: {
+          ...setting,
+          parsedValue: parseSettingValue(
+            setting.settingValue,
+            setting.settingType,
+          ),
+        },
       },
-    }, { status: HTTP_STATUS.CREATED });
-  } catch (error: any) {
-    console.error('Error creating setting:', error);
-    
-    if (error.name === 'ZodError') {
+      { status: HTTP_STATUS.CREATED },
+    );
+  } catch (error: unknown) {
+    console.error("Error creating setting:", error);
+
+    const err = error as { name?: string; errors?: unknown };
+    if (err?.name === "ZodError") {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: HTTP_STATUS.BAD_REQUEST }
+        { error: "Validation failed", details: err.errors },
+        { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
 
     return NextResponse.json(
       { error: API_MESSAGES.CREATE_ERROR },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }
@@ -193,33 +213,36 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    if (!session?.user || session.user.role !== "SUPER_ADMIN") {
       return NextResponse.json(
         { error: API_MESSAGES.UNAUTHORIZED },
-        { status: HTTP_STATUS.UNAUTHORIZED }
+        { status: HTTP_STATUS.UNAUTHORIZED },
       );
     }
 
     const orgId = session.user.organizationId;
     if (!orgId) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
     const tenant = await resolveTenantOrganizationId(request);
     if (tenant.organizationId && tenant.organizationId !== orgId) {
       return NextResponse.json(
-        { error: 'Organization does not match this domain' },
-        { status: 403 }
+        { error: "Organization does not match this domain" },
+        { status: 403 },
       );
-    } 
+    }
 
     const body = await request.json();
     const { settingKey, ...updates } = body;
 
     if (!settingKey) {
       return NextResponse.json(
-        { error: 'Setting key is required' },
-        { status: HTTP_STATUS.BAD_REQUEST }
+        { error: "Setting key is required" },
+        { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
 
@@ -230,8 +253,8 @@ export async function PUT(request: NextRequest) {
 
     if (!oldSetting) {
       return NextResponse.json(
-        { error: 'Setting not found' },
-        { status: HTTP_STATUS.NOT_FOUND }
+        { error: "Setting not found" },
+        { status: HTTP_STATUS.NOT_FOUND },
       );
     }
 
@@ -249,16 +272,26 @@ export async function PUT(request: NextRequest) {
 
     if (!setting) {
       return NextResponse.json(
-        { error: 'Setting not found' },
-        { status: HTTP_STATUS.NOT_FOUND }
+        { error: "Setting not found" },
+        { status: HTTP_STATUS.NOT_FOUND },
       );
     }
 
     // Log the change
-    await logConfigurationChange('SystemSetting', setting.id, 'UPDATED', {
+    await logConfigurationChange("SystemSetting", setting.id, "UPDATED", {
       entityKey: setting.settingKey,
-      oldValue: { [oldSetting.settingKey]: parseSettingValue(oldSetting.settingValue, oldSetting.settingType) },
-      newValue: { [setting.settingKey]: parseSettingValue(setting.settingValue, setting.settingType) },
+      oldValue: {
+        [oldSetting.settingKey]: parseSettingValue(
+          oldSetting.settingValue,
+          oldSetting.settingType,
+        ),
+      },
+      newValue: {
+        [setting.settingKey]: parseSettingValue(
+          setting.settingValue,
+          setting.settingType,
+        ),
+      },
       changedBy: session.user.id,
       changedByRole: session.user.role,
       organizationId: orgId,
@@ -268,22 +301,26 @@ export async function PUT(request: NextRequest) {
       message: API_MESSAGES.UPDATED_SUCCESS,
       setting: {
         ...setting,
-        parsedValue: parseSettingValue(setting.settingValue, setting.settingType),
+        parsedValue: parseSettingValue(
+          setting.settingValue,
+          setting.settingType,
+        ),
       },
     });
-  } catch (error: any) {
-    console.error('Error updating setting:', error);
-    
-    if (error.name === 'ZodError') {
+  } catch (error: unknown) {
+    console.error("Error updating setting:", error);
+
+    const err = error as { name?: string; errors?: unknown };
+    if (err?.name === "ZodError") {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: HTTP_STATUS.BAD_REQUEST }
+        { error: "Validation failed", details: err.errors },
+        { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
 
     return NextResponse.json(
       { error: API_MESSAGES.UPDATE_ERROR },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }
@@ -296,33 +333,36 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    if (!session?.user || session.user.role !== "SUPER_ADMIN") {
       return NextResponse.json(
         { error: API_MESSAGES.UNAUTHORIZED },
-        { status: HTTP_STATUS.UNAUTHORIZED }
+        { status: HTTP_STATUS.UNAUTHORIZED },
       );
     }
 
     const orgId = session.user.organizationId;
     if (!orgId) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
     const tenant = await resolveTenantOrganizationId(request);
     if (tenant.organizationId && tenant.organizationId !== orgId) {
       return NextResponse.json(
-        { error: 'Organization does not match this domain' },
-        { status: 403 }
+        { error: "Organization does not match this domain" },
+        { status: 403 },
       );
     }
 
     const { searchParams } = new URL(request.url);
-    const settingKey = searchParams.get('key');
+    const settingKey = searchParams.get("key");
 
     if (!settingKey) {
       return NextResponse.json(
-        { error: 'Setting key is required' },
-        { status: HTTP_STATUS.BAD_REQUEST }
+        { error: "Setting key is required" },
+        { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
 
@@ -333,8 +373,8 @@ export async function DELETE(request: NextRequest) {
 
     if (!setting) {
       return NextResponse.json(
-        { error: 'Setting not found' },
-        { status: HTTP_STATUS.NOT_FOUND }
+        { error: "Setting not found" },
+        { status: HTTP_STATUS.NOT_FOUND },
       );
     }
 
@@ -344,15 +384,20 @@ export async function DELETE(request: NextRequest) {
 
     if (deleted.count === 0) {
       return NextResponse.json(
-        { error: 'Setting not found' },
-        { status: HTTP_STATUS.NOT_FOUND }
+        { error: "Setting not found" },
+        { status: HTTP_STATUS.NOT_FOUND },
       );
     }
 
     // Log the change
-    await logConfigurationChange('SystemSetting', setting.id, 'DELETED', {
+    await logConfigurationChange("SystemSetting", setting.id, "DELETED", {
       entityKey: setting.settingKey,
-      oldValue: { [setting.settingKey]: parseSettingValue(setting.settingValue, setting.settingType) },
+      oldValue: {
+        [setting.settingKey]: parseSettingValue(
+          setting.settingValue,
+          setting.settingType,
+        ),
+      },
       changedBy: session.user.id,
       changedByRole: session.user.role,
       organizationId: orgId,
@@ -362,10 +407,10 @@ export async function DELETE(request: NextRequest) {
       message: API_MESSAGES.DELETED_SUCCESS,
     });
   } catch (error) {
-    console.error('Error deleting setting:', error);
+    console.error("Error deleting setting:", error);
     return NextResponse.json(
       { error: API_MESSAGES.DELETE_ERROR },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }

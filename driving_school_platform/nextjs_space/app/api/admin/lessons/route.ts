@@ -4,29 +4,34 @@
  * @module app/api/admin/lessons
  */
 
-import { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { cleanupOldLessons } from '@/lib/cleanup';
+import { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { cleanupOldLessons } from "@/lib/cleanup";
 import {
   successResponse,
   errorResponse,
   verifyAuth,
   validateRequest,
   withErrorHandling,
-  logApiError,
   getQueryParam,
   getTimeRanges,
   calculateDuration,
-} from '@/lib/api-utils';
-import { HTTP_STATUS, API_MESSAGES, USER_ROLES, LESSON_STATUS, VALIDATION_RULES } from '@/lib/constants';
-import { lessonCreationSchema } from '@/lib/validation';
-import { startOfDay, addDays } from 'date-fns';
-import { checkFeatureAccess } from '@/lib/middleware/feature-check';
-import { resolveTenantOrganizationId } from '@/lib/tenant';
+} from "@/lib/api-utils";
+import {
+  HTTP_STATUS,
+  API_MESSAGES,
+  USER_ROLES,
+  LESSON_STATUS,
+  VALIDATION_RULES,
+} from "@/lib/constants";
+import { lessonCreationSchema } from "@/lib/validation";
+import { startOfDay, addDays } from "date-fns";
+import { checkFeatureAccess } from "@/lib/middleware/feature-check";
+import { resolveTenantOrganizationId } from "@/lib/tenant";
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 /**
  * GET handler - Fetch lessons based on view type (DRIVING, CODE, EXAMS)
@@ -35,21 +40,22 @@ export const dynamic = 'force-dynamic';
  */
 export const GET = withErrorHandling(async (request: NextRequest) => {
   // Verify authentication - Admin only
-  const user = await verifyAuth([
-    USER_ROLES.SUPER_ADMIN,
-  ]);
+  const user = await verifyAuth([USER_ROLES.SUPER_ADMIN]);
   if (!user) {
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
   }
 
-  const orgId = (user as any).organizationId as string | null | undefined;
+  const orgId = user.organizationId;
   if (!orgId) {
-    return errorResponse('No organization found', HTTP_STATUS.BAD_REQUEST);
+    return errorResponse("No organization found", HTTP_STATUS.BAD_REQUEST);
   }
 
   const tenant = await resolveTenantOrganizationId(request);
   if (tenant.organizationId && tenant.organizationId !== orgId) {
-    return errorResponse('Organization does not match this domain', HTTP_STATUS.FORBIDDEN);
+    return errorResponse(
+      "Organization does not match this domain",
+      HTTP_STATUS.FORBIDDEN,
+    );
   }
 
   // Automatically cleanup old lessons (older than 30 days)
@@ -57,12 +63,12 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     await cleanupOldLessons(orgId);
   } catch (error) {
     // Log error but don't fail the request
-    console.error('Failed to cleanup old lessons:', error);
+    console.error("Failed to cleanup old lessons:", error);
   }
 
   const { searchParams } = new URL(request.url);
-  const from = searchParams.get('from');
-  const to = searchParams.get('to');
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
 
   // Calendar mode → used by ScheduleMap (day / week / month)
   if (from && to) {
@@ -88,7 +94,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         vehicle: true,
         category: true,
       },
-      orderBy: [{ lessonDate: 'asc' }, { startTime: 'asc' }],
+      orderBy: [{ lessonDate: "asc" }, { startTime: "asc" }],
     });
 
     // IMPORTANT: Simple format for the ScheduleMap with Cache-Control header
@@ -96,22 +102,22 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       { lessons },
       {
         status: 200,
-        headers: { 'Cache-Control': 'no-store' },
-      }
+        headers: { "Cache-Control": "no-store" },
+      },
     );
   }
 
-  const view = getQueryParam(searchParams, 'view', 'DRIVING');
+  const view = getQueryParam(searchParams, "view", "DRIVING");
   const { yesterday, today, tomorrow, currentTime } = getTimeRanges();
 
-  if (view === 'EXAMS') {
+  if (view === "EXAMS") {
     // Note: Exams are stored as lessons with lessonType = 'EXAM'
     // Fetch exams from lessons table
     const [recentExams, currentExams, upcomingExams] = await Promise.all([
       prisma.lesson.findMany({
         where: {
           organizationId: orgId,
-          lessonType: 'EXAM',
+          lessonType: "EXAM",
           OR: [
             {
               lessonDate: yesterday,
@@ -128,14 +134,14 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           vehicle: true,
           category: true,
         },
-        orderBy: [{ lessonDate: 'desc' }, { startTime: 'desc' }],
+        orderBy: [{ lessonDate: "desc" }, { startTime: "desc" }],
         take: 50, // Limit to recent 50
       }),
       // Current exams: happening right now (started but not yet ended)
       prisma.lesson.findMany({
         where: {
           organizationId: orgId,
-          lessonType: 'EXAM',
+          lessonType: "EXAM",
           lessonDate: today,
           startTime: { lte: currentTime },
           endTime: { gt: currentTime },
@@ -146,12 +152,12 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           vehicle: true,
           category: true,
         },
-        orderBy: [{ startTime: 'asc' }],
+        orderBy: [{ startTime: "asc" }],
       }),
       prisma.lesson.findMany({
         where: {
           organizationId: orgId,
-          lessonType: 'EXAM',
+          lessonType: "EXAM",
           OR: [
             { lessonDate: today, startTime: { gte: currentTime } },
             { lessonDate: { gt: today, lte: tomorrow } },
@@ -163,16 +169,20 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           vehicle: true,
           category: true,
         },
-        orderBy: [{ lessonDate: 'asc' }, { startTime: 'asc' }],
+        orderBy: [{ lessonDate: "asc" }, { startTime: "asc" }],
         take: 50, // Limit to next 50
       }),
     ]);
 
-    return successResponse({ recent: recentExams, current: currentExams, upcoming: upcomingExams });
+    return successResponse({
+      recent: recentExams,
+      current: currentExams,
+      upcoming: upcomingExams,
+    });
   }
 
   // Fetch lessons (DRIVING or THEORY)
-  const lessonType = view === 'CODE' ? 'THEORY' : 'DRIVING';
+  const lessonType = view === "CODE" ? "THEORY" : "DRIVING";
 
   const [recentLessons, currentLessons, upcomingLessons] = await Promise.all([
     prisma.lesson.findMany({
@@ -195,7 +205,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         vehicle: true,
         category: true,
       },
-      orderBy: [{ lessonDate: 'desc' }, { startTime: 'desc' }],
+      orderBy: [{ lessonDate: "desc" }, { startTime: "desc" }],
       take: 50, // Limit to recent 50
     }),
     // Current lessons: happening right now (started but not yet ended)
@@ -213,7 +223,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         vehicle: true,
         category: true,
       },
-      orderBy: [{ startTime: 'asc' }],
+      orderBy: [{ startTime: "asc" }],
     }),
     prisma.lesson.findMany({
       where: {
@@ -230,12 +240,16 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         vehicle: true,
         category: true,
       },
-      orderBy: [{ lessonDate: 'asc' }, { startTime: 'asc' }],
+      orderBy: [{ lessonDate: "asc" }, { startTime: "asc" }],
       take: 50, // Limit to next 50
     }),
   ]);
 
-  return successResponse({ recent: recentLessons, current: currentLessons, upcoming: upcomingLessons });
+  return successResponse({
+    recent: recentLessons,
+    current: currentLessons,
+    upcoming: upcomingLessons,
+  });
 });
 
 /**
@@ -253,14 +267,17 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
   }
 
-  const orgId = (user as any).organizationId as string | null | undefined;
+  const orgId = user.organizationId;
   if (!orgId) {
-    return errorResponse('No organization found', HTTP_STATUS.BAD_REQUEST);
+    return errorResponse("No organization found", HTTP_STATUS.BAD_REQUEST);
   }
 
   const tenant = await resolveTenantOrganizationId(request);
   if (tenant.organizationId && tenant.organizationId !== orgId) {
-    return errorResponse('Organization does not match this domain', HTTP_STATUS.FORBIDDEN);
+    return errorResponse(
+      "Organization does not match this domain",
+      HTTP_STATUS.FORBIDDEN,
+    );
   }
 
   // Parse and validate request body
@@ -271,8 +288,16 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return validation.error;
   }
 
-  let { lessonType, instructorId, studentId, studentIds, vehicleId, lessonDate, startTime, endTime } =
-    validation.data;
+  const {
+    lessonType,
+    studentId,
+    studentIds,
+    vehicleId,
+    lessonDate,
+    startTime,
+    endTime,
+  } = validation.data;
+  let { instructorId } = validation.data;
 
   // Security: If user is INSTRUCTOR, force instructorId to be their own ID
   if (user.role === USER_ROLES.INSTRUCTOR) {
@@ -281,16 +306,19 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   // Defense-in-depth: block vehicle usage if feature is disabled
   if (vehicleId) {
-    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT', request);
+    const featureCheck = await checkFeatureAccess(
+      "VEHICLE_MANAGEMENT",
+      request,
+    );
     if (!featureCheck.allowed) {
       return NextResponse.json(
         {
-          error: 'Vehicles feature not enabled',
+          error: "Vehicles feature not enabled",
           message:
-            'Vehicle Management feature is not enabled. Please upgrade to unlock this feature.',
+            "Vehicle Management feature is not enabled. Please upgrade to unlock this feature.",
           requiresUpgrade: true,
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
     const vehicle = await prisma.vehicle.findFirst({
@@ -298,7 +326,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       select: { id: true },
     });
     if (!vehicle) {
-      return errorResponse('Vehicle not found', HTTP_STATUS.NOT_FOUND);
+      return errorResponse("Vehicle not found", HTTP_STATUS.NOT_FOUND);
     }
   }
 
@@ -306,7 +334,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const durationMinutes = calculateDuration(startTime, endTime);
 
   if (durationMinutes <= 0) {
-    return errorResponse('End time must be after start time', HTTP_STATUS.BAD_REQUEST);
+    return errorResponse(
+      "End time must be after start time",
+      HTTP_STATUS.BAD_REQUEST,
+    );
   }
 
   // Get instructor and verify qualified categories
@@ -316,13 +347,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   });
 
   if (!instructor) {
-    return errorResponse('Instructor not found', HTTP_STATUS.NOT_FOUND);
+    return errorResponse("Instructor not found", HTTP_STATUS.NOT_FOUND);
   }
 
   // Determine categoryId based on lesson type
   let categoryId: number;
 
-  if (lessonType === 'THEORY') {
+  if (lessonType === "THEORY") {
     // For THEORY lessons (code classes), use the instructor's first category if available
     // Otherwise, use a default category (B - Car, the most common)
     if (instructor.qualifiedCategories.length > 0) {
@@ -330,22 +361,22 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     } else {
       // Get the default "B" category as fallback
       const defaultCategory = await prisma.category.findFirst({
-        where: { name: 'B' },
+        where: { name: "B" },
       });
-      
+
       if (!defaultCategory) {
         // If no B category exists, get any active category
         const anyCategory = await prisma.category.findFirst({
           where: { isActive: true },
         });
-        
+
         if (!anyCategory) {
           return errorResponse(
-            'No active categories found in the system',
-            HTTP_STATUS.INTERNAL_SERVER_ERROR
+            "No active categories found in the system",
+            HTTP_STATUS.INTERNAL_SERVER_ERROR,
           );
         }
-        
+
         categoryId = anyCategory.id;
       } else {
         categoryId = defaultCategory.id;
@@ -355,28 +386,31 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // For DRIVING and EXAM lessons, instructor must have qualified categories
     if (instructor.qualifiedCategories.length === 0) {
       return errorResponse(
-        'Instructor has no qualified categories for driving lessons. Please assign categories to this instructor first.',
-        HTTP_STATUS.BAD_REQUEST
+        "Instructor has no qualified categories for driving lessons. Please assign categories to this instructor first.",
+        HTTP_STATUS.BAD_REQUEST,
       );
     }
-    
+
     categoryId = instructor.qualifiedCategories[0].id;
   }
 
   // Handle EXAM and THEORY_EXAM types (can have multiple students)
-  if (lessonType === 'EXAM' || lessonType === 'THEORY_EXAM') {
+  if (lessonType === "EXAM" || lessonType === "THEORY_EXAM") {
     if (!studentIds || studentIds.length === 0) {
       return errorResponse(
-        `At least one student is required for ${lessonType === 'THEORY_EXAM' ? 'a theory exam' : 'an exam'}`,
-        HTTP_STATUS.BAD_REQUEST
+        `At least one student is required for ${lessonType === "THEORY_EXAM" ? "a theory exam" : "an exam"}`,
+        HTTP_STATUS.BAD_REQUEST,
       );
     }
 
     // THEORY_EXAM has no limit on students, EXAM has a limit
-    if (lessonType === 'EXAM' && studentIds.length > VALIDATION_RULES.MAX_STUDENTS_PER_EXAM) {
+    if (
+      lessonType === "EXAM" &&
+      studentIds.length > VALIDATION_RULES.MAX_STUDENTS_PER_EXAM
+    ) {
       return errorResponse(
         `Maximum ${VALIDATION_RULES.MAX_STUDENTS_PER_EXAM} students per exam`,
-        HTTP_STATUS.BAD_REQUEST
+        HTTP_STATUS.BAD_REQUEST,
       );
     }
 
@@ -406,23 +440,23 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
             status: LESSON_STATUS.SCHEDULED,
           },
         });
-      })
+      }),
     );
 
     return successResponse(
       {
-        message: `${lessonType === 'THEORY_EXAM' ? 'Theory exam' : 'Exam'} booked successfully for ${lessons.length} student(s)`,
+        message: `${lessonType === "THEORY_EXAM" ? "Theory exam" : "Exam"} booked successfully for ${lessons.length} student(s)`,
         lessons,
       },
-      HTTP_STATUS.CREATED
+      HTTP_STATUS.CREATED,
     );
   }
 
   // Handle THEORY or DRIVING type (single student)
   // THEORY lessons can be group classes (no specific student required)
   // DRIVING lessons require a specific student
-  
-  if (lessonType === 'THEORY' && !studentId) {
+
+  if (lessonType === "THEORY" && !studentId) {
     // For THEORY lessons (group classes) without a specific student
     // Create a generic "group class" lesson entry without a student reference
     const lesson = await prisma.lesson.create({
@@ -443,17 +477,17 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     return successResponse(
       {
-        message: 'Theory group class created successfully',
+        message: "Theory group class created successfully",
         lesson,
       },
-      HTTP_STATUS.CREATED
+      HTTP_STATUS.CREATED,
     );
   }
-  
+
   if (!studentId) {
     return errorResponse(
-      'Student is required for driving lessons',
-      HTTP_STATUS.BAD_REQUEST
+      "Student is required for driving lessons",
+      HTTP_STATUS.BAD_REQUEST,
     );
   }
 
@@ -462,7 +496,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   });
 
   if (!student) {
-    return errorResponse('Student not found', HTTP_STATUS.NOT_FOUND);
+    return errorResponse("Student not found", HTTP_STATUS.NOT_FOUND);
   }
 
   // Create the lesson
@@ -484,9 +518,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   return successResponse(
     {
-      message: 'Lesson booked successfully',
+      message: "Lesson booked successfully",
       lesson,
     },
-    HTTP_STATUS.CREATED
+    HTTP_STATUS.CREATED,
   );
 });
