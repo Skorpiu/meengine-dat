@@ -1,32 +1,38 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import toast from 'react-hot-toast';
-import { Lesson } from '@/lib/types';
-import { useLicense } from '@/hooks/use-license';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Lock, Search, X } from 'lucide-react';
-import type { LessonType } from '@prisma/client';
+import { useState, useEffect, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import toast from "react-hot-toast";
+import { Lesson } from "@/lib/types";
+import { useLicense } from "@/hooks/use-license";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Lock, Search, X } from "lucide-react";
+import type { LessonType } from "@prisma/client";
 
 /**
  * User role types for permission-based rendering
  */
-type UserRole = 'SUPER_ADMIN' | 'INSTRUCTOR' | 'STUDENT';
+type UserRole = "SUPER_ADMIN" | "INSTRUCTOR" | "STUDENT";
 
 /**
  * Lesson form mode
  */
-type FormMode = 'create' | 'edit';
+type FormMode = "create" | "edit";
 
 /**
  * Lesson form payload structure
  */
-interface LessonFormPayload {
+export interface LessonFormPayload {
   lessonType: LessonType;
   instructorId?: string;
   studentId?: string;
@@ -63,10 +69,25 @@ interface Student {
   studentNumber: number | null;
 }
 
-const ALL_LESSON_TYPES = ['DRIVING', 'THEORY', 'EXAM', 'THEORY_EXAM'] as const;
+interface InstructorOption {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
+
+interface VehicleOption {
+  id: number;
+  registrationNumber: string;
+  make: string;
+  model: string;
+  status: string;
+  underMaintenance: boolean;
+}
+
+const ALL_LESSON_TYPES = ["DRIVING", "THEORY", "EXAM", "THEORY_EXAM"] as const;
 
 const isLessonType = (value: unknown): value is LessonType =>
-  typeof value === 'string' &&
+  typeof value === "string" &&
   (ALL_LESSON_TYPES as readonly unknown[]).includes(value);
 
 /**
@@ -84,8 +105,8 @@ export function LessonForm({
   submitButtonText,
 }: LessonFormProps) {
   const { isFeatureEnabled, isLoading: licenseLoading } = useLicense();
-  const isVehicleFeatureEnabled = isFeatureEnabled('VEHICLE_MANAGEMENT');
-  
+  const isVehicleFeatureEnabled = isFeatureEnabled("VEHICLE_MANAGEMENT");
+
   const [isLoading, setIsLoading] = useState(false);
   const getDefaultLessonType = (): LessonType => {
     // 1) In edit mode, respect what comes from the registry
@@ -94,56 +115,61 @@ export function LessonForm({
 
     // 2) In the create section, choose the default from the allowed list
     //    (THEORY_EXAM by default, when applicable)
-    const allowed = allowedLessonTypes?.length ? allowedLessonTypes : (ALL_LESSON_TYPES as unknown as LessonType[]);
+    const allowed = allowedLessonTypes?.length
+      ? allowedLessonTypes
+      : (ALL_LESSON_TYPES as unknown as LessonType[]);
 
-    if (allowed.includes('THEORY_EXAM')) return 'THEORY_EXAM';
-    if (allowed.includes('EXAM')) return 'EXAM';
-    if (allowed.includes('DRIVING')) return 'DRIVING';
-    if (allowed.includes('THEORY')) return 'THEORY';
+    if (allowed.includes("THEORY_EXAM")) return "THEORY_EXAM";
+    if (allowed.includes("EXAM")) return "EXAM";
+    if (allowed.includes("DRIVING")) return "DRIVING";
+    if (allowed.includes("THEORY")) return "THEORY";
 
-    return 'DRIVING';
+    return "DRIVING";
   };
 
-  const [lessonType, setLessonType] = useState<LessonType>(getDefaultLessonType);
+  const [lessonType, setLessonType] =
+    useState<LessonType>(getDefaultLessonType);
 
   const [instructorId, setInstructorId] = useState<string>(
-    instructorUserId || (initialLesson?.instructor?.user?.id) || ''
+    instructorUserId || initialLesson?.instructor?.user?.id || "",
   );
-  
+
   // For single student selection (DRIVING)
   const [studentId, setStudentId] = useState<string>(
-    initialLesson?.student?.user?.id ? String(initialLesson.student.user.id) : ''
+    initialLesson?.student?.user?.id
+      ? String(initialLesson.student.user.id)
+      : "",
   );
-  
+
   // For multiple student selection (EXAM, THEORY_EXAM)
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-  
+
   const [vehicleId, setVehicleId] = useState<string>(
-    initialLesson?.vehicleId?.toString() || ''
+    initialLesson?.vehicleId?.toString() || "",
   );
   const [lessonDate, setLessonDate] = useState<string>(
     initialLesson?.lessonDate
-      ? new Date(initialLesson.lessonDate).toISOString().split('T')[0]
-      : ''
+      ? new Date(initialLesson.lessonDate).toISOString().split("T")[0]
+      : "",
   );
   const [startTime, setStartTime] = useState<string>(
-    initialLesson?.startTime || ''
+    initialLesson?.startTime || "",
   );
-  const [endTime, setEndTime] = useState<string>(initialLesson?.endTime || '');
+  const [endTime, setEndTime] = useState<string>(initialLesson?.endTime || "");
   const [status, setStatus] = useState<string>(
-    initialLesson?.status || 'SCHEDULED'
+    initialLesson?.status || "SCHEDULED",
   );
 
-  const [instructors, setInstructors] = useState<any[]>([]);
+  const [instructors, setInstructors] = useState<InstructorOption[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
-  const [vehicles, setVehicles] = useState<any[]>([]);
-  
+  const [vehicles, setVehicles] = useState<VehicleOption[]>([]);
+
   // Search state for students
-  const [studentSearchTerm, setStudentSearchTerm] = useState<string>('');
+  const [studentSearchTerm, setStudentSearchTerm] = useState<string>("");
 
   // Fetch data when component mounts or when needed
   useEffect(() => {
-    if (userRole === 'SUPER_ADMIN') {
+    if (userRole === "SUPER_ADMIN") {
       fetchInstructors();
     }
     fetchStudents();
@@ -155,61 +181,69 @@ export function LessonForm({
 
   // Update form when initialLesson changes (for edit mode)
   useEffect(() => {
-    if (mode === 'edit' && initialLesson) {
-      setLessonType(isLessonType(initialLesson.lessonType) ? initialLesson.lessonType : 'DRIVING');
-      setInstructorId(initialLesson.instructor?.user?.id || '');
-      setStudentId(initialLesson.student?.user?.id ? String(initialLesson.student.user.id) : '');
-      setVehicleId(initialLesson.vehicleId?.toString() || '');
+    if (mode === "edit" && initialLesson) {
+      setLessonType(
+        isLessonType(initialLesson.lessonType)
+          ? initialLesson.lessonType
+          : "DRIVING",
+      );
+      setInstructorId(initialLesson.instructor?.user?.id || "");
+      setStudentId(
+        initialLesson.student?.user?.id
+          ? String(initialLesson.student.user.id)
+          : "",
+      );
+      setVehicleId(initialLesson.vehicleId?.toString() || "");
       setLessonDate(
         initialLesson.lessonDate
-          ? new Date(initialLesson.lessonDate).toISOString().split('T')[0]
-          : ''
+          ? new Date(initialLesson.lessonDate).toISOString().split("T")[0]
+          : "",
       );
-      setStartTime(initialLesson.startTime || '');
-      setEndTime(initialLesson.endTime || '');
-      setStatus(initialLesson.status || 'SCHEDULED');
+      setStartTime(initialLesson.startTime || "");
+      setEndTime(initialLesson.endTime || "");
+      setStatus(initialLesson.status || "SCHEDULED");
     }
   }, [mode, initialLesson]);
 
   const fetchInstructors = async () => {
     try {
-      const response = await fetch('/api/admin/users?role=INSTRUCTOR', {
-        credentials: 'include',
+      const response = await fetch("/api/admin/users?role=INSTRUCTOR", {
+        credentials: "include",
       });
       const data = await response.json();
       setInstructors(data.users || []);
     } catch (error) {
-      console.error('Error fetching instructors:', error);
+      console.error("Error fetching instructors:", error);
       setInstructors([]);
     }
   };
 
   const fetchStudents = async () => {
     try {
-      const response = await fetch('/api/admin/users?role=STUDENT', {
-        credentials: 'include',
+      const response = await fetch("/api/admin/users?role=STUDENT", {
+        credentials: "include",
       });
       const data = await response.json();
       setStudents(data.users || []);
     } catch (error) {
-      console.error('Error fetching students:', error);
+      console.error("Error fetching students:", error);
       setStudents([]);
     }
   };
 
   const fetchVehicles = async () => {
     try {
-      const response = await fetch('/api/admin/vehicles', {
-        credentials: 'include',
+      const response = await fetch("/api/admin/vehicles", {
+        credentials: "include",
       });
       const data = await response.json();
       // Filter for available vehicles only
       const availableVehicles = (data.vehicles || []).filter(
-        (v: any) => v.status === 'AVAILABLE' && !v.underMaintenance
+        (v: VehicleOption) => v.status === "AVAILABLE" && !v.underMaintenance,
       );
       setVehicles(availableVehicles);
     } catch (error) {
-      console.error('Error fetching vehicles:', error);
+      console.error("Error fetching vehicles:", error);
       setVehicles([]);
     }
   };
@@ -219,54 +253,61 @@ export function LessonForm({
     if (!studentSearchTerm.trim()) {
       return students;
     }
-    
+
     const searchLower = studentSearchTerm.toLowerCase();
-    return students.filter(student => {
+    return students.filter((student) => {
       const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
-      const studentNumberStr = student.studentNumber?.toString() || '';
-      return fullName.includes(searchLower) || studentNumberStr.includes(searchLower);
+      const studentNumberStr = student.studentNumber?.toString() || "";
+      return (
+        fullName.includes(searchLower) || studentNumberStr.includes(searchLower)
+      );
     });
   }, [students, studentSearchTerm]);
 
   // Check if lesson type requires multiple students
-  const isMultiStudentType = lessonType === 'EXAM' || lessonType === 'THEORY_EXAM';
+  const isMultiStudentType =
+    lessonType === "EXAM" || lessonType === "THEORY_EXAM";
 
   // Get student selection limit based on lesson type
   const getStudentLimit = () => {
-    if (lessonType === 'EXAM') return 2; // Max 2 for practical exams
-    if (lessonType === 'THEORY_EXAM') return undefined; // No limit for theory exams
+    if (lessonType === "EXAM") return 2; // Max 2 for practical exams
+    if (lessonType === "THEORY_EXAM") return undefined; // No limit for theory exams
     return 1; // Single student for DRIVING and THEORY
   };
 
   // Lesson type options
   const lessonTypeOptions: Array<{ value: LessonType; label: string }> = [
-    { value: 'THEORY', label: 'Code Class (Theory)' },
-    { value: 'DRIVING', label: 'Driving Class' },
-    { value: 'EXAM', label: 'Practical Exam' },
-    { value: 'THEORY_EXAM', label: 'Theoretical Exam' },
+    { value: "THEORY", label: "Code Class (Theory)" },
+    { value: "DRIVING", label: "Driving Class" },
+    { value: "EXAM", label: "Practical Exam" },
+    { value: "THEORY_EXAM", label: "Theoretical Exam" },
   ];
 
   // Filter lesson types based on allowedLessonTypes prop
   const filteredLessonTypeOptions =
-    mode === 'edit'
+    mode === "edit"
       ? lessonTypeOptions
       : allowedLessonTypes
-        ? lessonTypeOptions.filter(option => allowedLessonTypes.includes(option.value))
+        ? lessonTypeOptions.filter((option) =>
+            allowedLessonTypes.includes(option.value),
+          )
         : lessonTypeOptions;
 
   const studentLimit = getStudentLimit();
 
   // Handle student checkbox toggle
   const handleStudentToggle = (studentId: string) => {
-    setSelectedStudents(prev => {
+    setSelectedStudents((prev) => {
       const isSelected = prev.includes(studentId);
-      
+
       if (isSelected) {
-        return prev.filter(id => id !== studentId);
+        return prev.filter((id) => id !== studentId);
       } else {
         // Check limit
         if (studentLimit && prev.length >= studentLimit) {
-          toast.error(`Maximum ${studentLimit} student(s) allowed for ${lessonType}`);
+          toast.error(
+            `Maximum ${studentLimit} student(s) allowed for ${lessonType}`,
+          );
           return prev;
         }
         return [...prev, studentId];
@@ -278,34 +319,34 @@ export function LessonForm({
     e.preventDefault();
 
     // Validate required fields
-    const requiredInstructor = userRole === 'SUPER_ADMIN';
+    const requiredInstructor = userRole === "SUPER_ADMIN";
     if (requiredInstructor && !instructorId) {
-      toast.error('Please select an instructor');
+      toast.error("Please select an instructor");
       return;
     }
 
     if (!lessonType || !lessonDate || !startTime || !endTime) {
-      toast.error('Please fill in all required fields');
+      toast.error("Please fill in all required fields");
       return;
     }
 
     // Validate student selection based on lesson type
     if (isMultiStudentType) {
       if (selectedStudents.length === 0) {
-        toast.error('Please select at least one student');
+        toast.error("Please select at least one student");
         return;
       }
     } else {
       // For non-exam types (DRIVING requires student, THEORY is optional)
-      if (lessonType !== 'THEORY' && !studentId) {
-        toast.error('Please select a student');
+      if (lessonType !== "THEORY" && !studentId) {
+        toast.error("Please select a student");
         return;
       }
     }
 
     // Validate vehicle for driving lessons (only if vehicles feature is enabled)
-    if (lessonType === 'DRIVING' && !vehicleId && isVehicleFeatureEnabled) {
-      toast.error('Please select a vehicle for driving lessons');
+    if (lessonType === "DRIVING" && !vehicleId && isVehicleFeatureEnabled) {
+      toast.error("Please select a vehicle for driving lessons");
       return;
     }
 
@@ -324,7 +365,7 @@ export function LessonForm({
       if (isMultiStudentType) {
         payload.studentIds = selectedStudents;
       } else {
-        payload.studentId = lessonType === 'THEORY' ? undefined : studentId;
+        payload.studentId = lessonType === "THEORY" ? undefined : studentId;
       }
 
       // Add vehicle if selected
@@ -333,14 +374,14 @@ export function LessonForm({
       }
 
       // Include status only in edit mode
-      if (mode === 'edit') {
+      if (mode === "edit") {
         payload.status = status;
       }
 
       await onSubmit(payload);
     } catch (error) {
-      console.error('Error submitting form:', error);
-      toast.error('An error occurred');
+      console.error("Error submitting form:", error);
+      toast.error("An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -360,10 +401,10 @@ export function LessonForm({
       {/* Lesson Type */}
       <div className="space-y-2">
         <Label htmlFor="lessonType">Lesson Type *</Label>
-        <Select 
-          value={lessonType} 
+        <Select
+          value={lessonType}
           onValueChange={(v) => setLessonType(v as LessonType)}
-          disabled={mode === 'edit'} // Don't allow changing lesson type in edit mode
+          disabled={mode === "edit"} // Don't allow changing lesson type in edit mode
         >
           <SelectTrigger>
             <SelectValue placeholder="Select lesson type" />
@@ -379,10 +420,13 @@ export function LessonForm({
       </div>
 
       {/* Instructor Selection (Admin only) */}
-      {userRole === 'SUPER_ADMIN' && (
+      {userRole === "SUPER_ADMIN" && (
         <div className="space-y-2">
           <Label htmlFor="instructor">Instructor *</Label>
-          <Select value={instructorId || undefined} onValueChange={setInstructorId}>
+          <Select
+            value={instructorId || undefined}
+            onValueChange={setInstructorId}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select instructor" />
             </SelectTrigger>
@@ -407,11 +451,10 @@ export function LessonForm({
       {lessonType && isMultiStudentType && (
         <div className="space-y-2">
           <Label>
-            Students *{' '}
-            {lessonType === 'EXAM' && '(Max 2)'}
-            {lessonType === 'THEORY_EXAM' && '(Unlimited)'}
+            Students * {lessonType === "EXAM" && "(Max 2)"}
+            {lessonType === "THEORY_EXAM" && "(Unlimited)"}
           </Label>
-          
+
           {/* Search Input */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -425,7 +468,7 @@ export function LessonForm({
             {studentSearchTerm && (
               <button
                 type="button"
-                onClick={() => setStudentSearchTerm('')}
+                onClick={() => setStudentSearchTerm("")}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 <X className="h-4 w-4" />
@@ -437,7 +480,9 @@ export function LessonForm({
           <div className="border rounded-lg p-3 max-h-64 overflow-y-auto space-y-2">
             {filteredStudents.length === 0 ? (
               <div className="text-sm text-gray-500">
-                {students.length === 0 ? 'No students available' : 'No students match your search'}
+                {students.length === 0
+                  ? "No students available"
+                  : "No students match your search"}
               </div>
             ) : (
               filteredStudents.map((student) => (
@@ -447,8 +492,8 @@ export function LessonForm({
                     checked={selectedStudents.includes(student.id)}
                     onCheckedChange={() => handleStudentToggle(student.id)}
                   />
-                  <label 
-                    htmlFor={`student-${student.id}`} 
+                  <label
+                    htmlFor={`student-${student.id}`}
                     className="text-sm cursor-pointer flex-1"
                   >
                     {getStudentDisplayName(student)}
@@ -457,7 +502,7 @@ export function LessonForm({
               ))
             )}
           </div>
-          
+
           {selectedStudents.length > 0 && (
             <p className="text-sm text-muted-foreground">
               {selectedStudents.length} student(s) selected
@@ -467,7 +512,7 @@ export function LessonForm({
       )}
 
       {/* Student Selection - DRIVING requires exactly 1 student */}
-      {lessonType === 'DRIVING' && (
+      {lessonType === "DRIVING" && (
         <div className="space-y-2">
           <Label htmlFor="student">Student *</Label>
 
@@ -484,7 +529,7 @@ export function LessonForm({
             {studentSearchTerm && (
               <button
                 type="button"
-                onClick={() => setStudentSearchTerm('')}
+                onClick={() => setStudentSearchTerm("")}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 <X className="h-4 w-4" />
@@ -499,7 +544,9 @@ export function LessonForm({
             <SelectContent>
               {filteredStudents.length === 0 ? (
                 <SelectItem value="loading-students" disabled>
-                  {students.length === 0 ? 'Loading students...' : 'No students match your search'}
+                  {students.length === 0
+                    ? "Loading students..."
+                    : "No students match your search"}
                 </SelectItem>
               ) : (
                 filteredStudents.map((student) => (
@@ -514,40 +561,50 @@ export function LessonForm({
       )}
 
       {/* Vehicle Selection (for Driving lessons and Exams) */}
-      {(lessonType === 'DRIVING' || lessonType === 'EXAM') && isVehicleFeatureEnabled && (
-        <div className="space-y-2">
-          <Label htmlFor="vehicle">Vehicle {lessonType === 'DRIVING' ? '*' : '(Optional)'}</Label>
-          <Select value={vehicleId || undefined} onValueChange={setVehicleId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select vehicle" />
-            </SelectTrigger>
-            <SelectContent>
-              {vehicles.length === 0 ? (
-                <SelectItem value="loading-vehicles" disabled>
-                  {mode === 'edit' ? 'No available vehicles' : 'Loading vehicles...'}
-                </SelectItem>
-              ) : (
-                vehicles.map((vehicle) => (
-                  <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                    {vehicle.registrationNumber} - {vehicle.make} {vehicle.model}
+      {(lessonType === "DRIVING" || lessonType === "EXAM") &&
+        isVehicleFeatureEnabled && (
+          <div className="space-y-2">
+            <Label htmlFor="vehicle">
+              Vehicle {lessonType === "DRIVING" ? "*" : "(Optional)"}
+            </Label>
+            <Select value={vehicleId || undefined} onValueChange={setVehicleId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select vehicle" />
+              </SelectTrigger>
+              <SelectContent>
+                {vehicles.length === 0 ? (
+                  <SelectItem value="loading-vehicles" disabled>
+                    {mode === "edit"
+                      ? "No available vehicles"
+                      : "Loading vehicles..."}
                   </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-      
+                ) : (
+                  vehicles.map((vehicle) => (
+                    <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                      {vehicle.registrationNumber} - {vehicle.make}{" "}
+                      {vehicle.model}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
       {/* Vehicle Feature Locked Message (when feature is disabled) */}
-      {(lessonType === 'DRIVING' || lessonType === 'EXAM') && !isVehicleFeatureEnabled && !licenseLoading && (
-        <Alert>
-          <Lock className="h-4 w-4" />
-          <AlertTitle>Premium Feature</AlertTitle>
-          <AlertDescription>
-            Vehicle management requires an upgrade. Lessons will be created without vehicle assignment. Contact your administrator to unlock this feature.
-          </AlertDescription>
-        </Alert>
-      )}
+      {(lessonType === "DRIVING" || lessonType === "EXAM") &&
+        !isVehicleFeatureEnabled &&
+        !licenseLoading && (
+          <Alert>
+            <Lock className="h-4 w-4" />
+            <AlertTitle>Premium Feature</AlertTitle>
+            <AlertDescription>
+              Vehicle management requires an upgrade. Lessons will be created
+              without vehicle assignment. Contact your administrator to unlock
+              this feature.
+            </AlertDescription>
+          </Alert>
+        )}
 
       {/* Lesson Date */}
       <div className="space-y-2">
@@ -557,7 +614,11 @@ export function LessonForm({
           type="date"
           value={lessonDate}
           onChange={(e) => setLessonDate(e.target.value)}
-          min={mode === 'create' ? new Date().toISOString().split('T')[0] : undefined}
+          min={
+            mode === "create"
+              ? new Date().toISOString().split("T")[0]
+              : undefined
+          }
           required
         />
       </div>
@@ -588,7 +649,7 @@ export function LessonForm({
       </div>
 
       {/* Status (Edit mode only) */}
-      {mode === 'edit' && (
+      {mode === "edit" && (
         <div className="space-y-2">
           <Label htmlFor="status">Status</Label>
           <Select value={status} onValueChange={setStatus}>
@@ -620,11 +681,11 @@ export function LessonForm({
         )}
         <Button type="submit" disabled={isLoading}>
           {isLoading
-            ? mode === 'edit'
-              ? 'Updating...'
-              : 'Booking...'
+            ? mode === "edit"
+              ? "Updating..."
+              : "Booking..."
             : submitButtonText ||
-              (mode === 'edit' ? 'Update Lesson' : 'Book Lesson')}
+              (mode === "edit" ? "Update Lesson" : "Book Lesson")}
         </Button>
       </div>
     </form>

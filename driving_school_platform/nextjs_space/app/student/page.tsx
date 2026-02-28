@@ -1,27 +1,23 @@
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/db";
+import { Navbar } from "@/components/navigation/navbar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ScheduleMap,
+  type Lesson as ScheduleLesson,
+} from "@/components/schedule/schedule-map";
+import { Calendar, TrendingUp, Award, CheckCircle } from "lucide-react";
+import { CategoryProgressSelector } from "@/components/student/category-progress-selector";
 
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
-import { redirect } from "next/navigation"
-import { prisma } from "@/lib/db"
-import { Navbar } from "@/components/navigation/navbar"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScheduleMap } from "@/components/schedule/schedule-map"
-import { 
-  Calendar, 
-  Clock,
-  TrendingUp,
-  Award,
-  CheckCircle
-} from "lucide-react"
-import { CategoryProgressSelector } from "@/components/student/category-progress-selector"
-
-export const dynamic = "force-dynamic"
+export const dynamic = "force-dynamic";
 
 export default async function StudentDashboard() {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession(authOptions);
 
   if (!session?.user || session.user.role !== "STUDENT") {
-    redirect("/auth/login")
+    redirect("/auth/login");
   }
 
   const orgId = session.user.organizationId;
@@ -37,47 +33,43 @@ export default async function StudentDashboard() {
       preferredInstructor: { include: { user: true } },
       lessonCounters: { include: { category: true } },
     },
-  })
+  });
 
   if (!student) {
-    redirect("/auth/login")
+    redirect("/auth/login");
   }
 
   // Fetch dashboard statistics
   const stats = await Promise.all([
-    prisma.lesson.count({ 
+    prisma.lesson.count({
       where: {
         organizationId: orgId,
-        studentId: student.id, 
-        status: "SCHEDULED" 
-      } 
+        studentId: student.id,
+        status: "SCHEDULED",
+      },
     }),
-    prisma.lesson.count({ 
+    prisma.lesson.count({
       where: {
         organizationId: orgId,
-        studentId: student.id, 
-        status: "COMPLETED" 
-      } 
+        studentId: student.id,
+        status: "COMPLETED",
+      },
     }),
-    prisma.lessonRequest.count({ 
+    prisma.lessonRequest.count({
       where: {
         organizationId: orgId,
-        studentId: student.id, 
-        status: "PENDING" 
-      } 
+        studentId: student.id,
+        status: "PENDING",
+      },
     }),
-  ])
+  ]);
 
-  const [
-    scheduledLessons,
-    completedLessons,
-    pendingRequests,
-  ] = stats
+  const [scheduledLessons, completedLessons] = stats;
 
   // Get lessons for schedule map (next 30 days)
-  const thirtyDaysFromNow = new Date()
-  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
-  
+  const thirtyDaysFromNow = new Date();
+  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
   const scheduledLessonsForMapRaw = await prisma.lesson.findMany({
     where: {
       organizationId: orgId,
@@ -93,25 +85,49 @@ export default async function StudentDashboard() {
       category: true,
     },
     orderBy: [{ lessonDate: "asc" }, { startTime: "asc" }],
-  })
+  });
 
   // Serialize lessons with Decimal fields
-  const scheduledLessonsForMap = scheduledLessonsForMapRaw.map((lesson: any) => ({
-    ...lesson,
-    instructor: lesson.instructor ? {
-      user: {
-        firstName: lesson.instructor.user.firstName,
-        lastName: lesson.instructor.user.lastName,
-      },
-    } : undefined,
-  })) as any
+  const scheduledLessonsForMap: ScheduleLesson[] =
+    scheduledLessonsForMapRaw.map((lesson) => ({
+      id: lesson.id,
+      lessonDate: lesson.lessonDate,
+      startTime: lesson.startTime,
+      endTime: lesson.endTime,
+      lessonType: lesson.lessonType,
+      status: lesson.status,
+
+      instructor: lesson.instructor
+        ? {
+            user: {
+              id: lesson.instructor.user.id,
+              firstName: lesson.instructor.user.firstName,
+              lastName: lesson.instructor.user.lastName,
+            },
+          }
+        : undefined,
+
+      vehicle: lesson.vehicle
+        ? {
+            registrationNumber: lesson.vehicle.registrationNumber ?? undefined,
+            make: lesson.vehicle.make ?? undefined,
+            model: lesson.vehicle.model ?? undefined,
+          }
+        : null,
+
+      category: lesson.category
+        ? {
+            name: lesson.category.name,
+          }
+        : undefined,
+    }));
 
   // Progress calculation
-  const lessonCounter = student.lessonCounters?.[0]
-  const progressPercentage = lessonCounter?.progressPercentage?.toNumber() || 0
+  const lessonCounter = student.lessonCounters?.[0];
+  const progressPercentage = lessonCounter?.progressPercentage?.toNumber() || 0;
 
   // Serialize lessonCounters to avoid Decimal serialization issues
-  const serializedLessonCounters = student.lessonCounters.map((lc: any) => ({
+  const serializedLessonCounters = student.lessonCounters.map((lc) => ({
     id: lc.id,
     category: {
       id: lc.category.id,
@@ -124,18 +140,21 @@ export default async function StudentDashboard() {
     completedTheoryLessons: lc.completedTheoryLessons || 0,
     totalDrivingLessons: lc.totalDrivingLessons || 0,
     completedDrivingLessons: lc.completedDrivingLessons || 0,
-  }))
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar currentPage="student" />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Student Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Student Dashboard
+          </h1>
           <p className="text-gray-600 mt-2">
-            Welcome back, {session.user.firstName}! Track your learning progress and manage your lessons.
+            Welcome back, {session.user.firstName}! Track your learning progress
+            and manage your lessons.
           </p>
         </div>
 
@@ -147,13 +166,17 @@ export default async function StudentDashboard() {
                 <Calendar className="w-6 h-6 text-blue-600" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-lg text-blue-900 mb-2">Lesson Booking</h3>
+                <h3 className="font-semibold text-lg text-blue-900 mb-2">
+                  Lesson Booking
+                </h3>
                 <p className="text-blue-700 text-sm mb-3">
-                  Your instructor or school administrator will schedule lessons for you. 
-                  You'll see all upcoming lessons in your dashboard below.
+                  Your instructor or school administrator will schedule lessons
+                  for you. You&apos;ll see all upcoming lessons in your
+                  dashboard below.
                 </p>
                 <p className="text-blue-600 text-sm">
-                  Need to request a change? Contact your instructor or administrator.
+                  Need to request a change? Contact your instructor or
+                  administrator.
                 </p>
               </div>
             </div>
@@ -164,34 +187,48 @@ export default async function StudentDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card className="hover-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Scheduled Lessons</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Scheduled Lessons
+              </CardTitle>
               <Calendar className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{scheduledLessons}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {scheduledLessons}
+              </div>
               <p className="text-xs text-muted-foreground">Upcoming lessons</p>
             </CardContent>
           </Card>
 
           <Card className="hover-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed Lessons</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Completed Lessons
+              </CardTitle>
               <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{completedLessons}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {completedLessons}
+              </div>
               <p className="text-xs text-muted-foreground">Total completed</p>
             </CardContent>
           </Card>
 
           <Card className="hover-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Course Progress</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Course Progress
+              </CardTitle>
               <TrendingUp className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600">{Math.round(progressPercentage)}%</div>
-              <p className="text-xs text-muted-foreground">Overall completion</p>
+              <div className="text-2xl font-bold text-purple-600">
+                {Math.round(progressPercentage)}%
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Overall completion
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -199,8 +236,8 @@ export default async function StudentDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Schedule Map */}
           <div className="lg:col-span-2">
-            <ScheduleMap 
-              lessons={scheduledLessonsForMap} 
+            <ScheduleMap
+              lessons={scheduledLessonsForMap}
               showPrintButton={false}
               userRole="student"
             />
@@ -227,5 +264,5 @@ export default async function StudentDashboard() {
         </div>
       </div>
     </div>
-  )
+  );
 }

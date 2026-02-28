@@ -1,24 +1,29 @@
-
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
-import { redirect } from "next/navigation"
-import { Navbar } from "@/components/navigation/navbar"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { User, Mail, Phone, Calendar, Settings } from "lucide-react"
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { Navbar } from "@/components/navigation/navbar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { User, Mail, Calendar, Settings } from "lucide-react";
 
 export default async function ProfilePage() {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession(authOptions);
 
   if (!session?.user) {
-    redirect("/auth/login")
+    redirect("/auth/login");
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar currentPage="profile" />
-      
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -37,23 +42,30 @@ export default async function ProfilePage() {
                   <User className="w-5 h-5" />
                   <span>Profile Information</span>
                 </CardTitle>
-                <CardDescription>Your account details and contact information</CardDescription>
+                <CardDescription>
+                  Your account details and contact information
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
                   <div className="flex items-center space-x-4">
                     <div className="w-20 h-20 rounded-full bg-driving-primary text-white flex items-center justify-center text-2xl font-bold">
-                      {session.user.firstName?.[0]}{session.user.lastName?.[0]}
+                      {session.user.firstName?.[0]}
+                      {session.user.lastName?.[0]}
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900">
                         {session.user.firstName} {session.user.lastName}
                       </h2>
-                      <Badge variant={
-                        session.user.role === "SUPER_ADMIN" ? "destructive" :
-                        session.user.role === "INSTRUCTOR" ? "default" :
-                        "secondary"
-                      }>
+                      <Badge
+                        variant={
+                          session.user.role === "SUPER_ADMIN"
+                            ? "destructive"
+                            : session.user.role === "INSTRUCTOR"
+                              ? "default"
+                              : "secondary"
+                        }
+                      >
                         {session.user.role.replace("_", " ").toLowerCase()}
                       </Badge>
                     </div>
@@ -72,9 +84,17 @@ export default async function ProfilePage() {
                       <div className="flex items-center space-x-3">
                         <User className="w-5 h-5 text-gray-400" />
                         <div>
-                          <p className="text-sm text-gray-500">Account Status</p>
-                          <Badge variant={session.user.isApproved ? "default" : "secondary"}>
-                            {session.user.isApproved ? "Approved" : "Pending Approval"}
+                          <p className="text-sm text-gray-500">
+                            Account Status
+                          </p>
+                          <Badge
+                            variant={
+                              session.user.isApproved ? "default" : "secondary"
+                            }
+                          >
+                            {session.user.isApproved
+                              ? "Approved"
+                              : "Pending Approval"}
                           </Badge>
                         </div>
                       </div>
@@ -86,9 +106,9 @@ export default async function ProfilePage() {
                         <div>
                           <p className="text-sm text-gray-500">Member Since</p>
                           <p className="font-medium">
-                            {new Date().toLocaleDateString('en-US', { 
-                              year: 'numeric', 
-                              month: 'long' 
+                            {new Date().toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "long",
                             })}
                           </p>
                         </div>
@@ -123,12 +143,12 @@ export default async function ProfilePage() {
                     <Settings className="w-4 h-4 mr-2" />
                     Account Settings
                   </Button>
-                  
+
                   <Button variant="outline" className="w-full justify-start">
                     <Mail className="w-4 h-4 mr-2" />
                     Change Email
                   </Button>
-                  
+
                   <Button variant="outline" className="w-full justify-start">
                     <User className="w-4 h-4 mr-2" />
                     Update Profile
@@ -147,7 +167,7 @@ export default async function ProfilePage() {
                   <Button variant="outline" className="w-full justify-start">
                     Change Password
                   </Button>
-                  
+
                   <Button variant="outline" className="w-full justify-start">
                     Two-Factor Authentication
                   </Button>
@@ -158,5 +178,5 @@ export default async function ProfilePage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

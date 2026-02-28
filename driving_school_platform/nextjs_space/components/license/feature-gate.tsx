@@ -1,16 +1,14 @@
-
 /**
  * Feature Gate Component
- * 
+ *
  * Conditionally renders content based on feature availability
  */
 
-'use client';
+"use client";
 
-import { useLicense } from '@/hooks/use-license';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Lock } from 'lucide-react';
+import { useLicense } from "@/hooks/use-license";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Lock } from "lucide-react";
 
 interface FeatureGateProps {
   featureKey: string;
@@ -55,7 +53,8 @@ export function FeatureGate({
           <Lock className="h-4 w-4" />
           <AlertTitle>Premium Feature</AlertTitle>
           <AlertDescription>
-            This feature requires an upgrade. Contact your administrator to unlock it.
+            This feature requires an upgrade. Contact your administrator to
+            unlock it.
           </AlertDescription>
         </Alert>
       </div>
