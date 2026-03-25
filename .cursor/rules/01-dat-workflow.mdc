@@ -1,0 +1,23 @@
+---
+description: How to work in this repo
+---
+# Workflow
+
+Before coding:
+1) Restate the goal in 1 sentence.
+2) List the files you intend to change and why.
+
+Implementation rules:
+- Prefer minimal, safe diffs.
+- Do not refactor unrelated code.
+- Avoid introducing `any` unless justified.
+- If >3 files will be changed, pause and summarize the plan first.
+
+After changes (run from repo root):
+- pnpm -C driving_school_platform/nextjs_space lint
+- pnpm -C driving_school_platform/nextjs_space typecheck
+- pnpm -C driving_school_platform/nextjs_space test:run
+- If requested or integration-heavy: pnpm -C driving_school_platform/nextjs_space build
+
+Output:
+- Summarize: changed files + why + risks + next steps.

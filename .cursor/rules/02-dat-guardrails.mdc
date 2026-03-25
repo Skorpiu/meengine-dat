@@ -1,0 +1,16 @@
+---
+description: Safety guardrails
+---
+# Guardrails
+
+Never touch unless explicitly requested:
+- .env / secrets / auth secrets
+- Vercel/Cloudflare/deployment settings
+- destructive scripts
+- prisma migrations that could delete/reshape prod data
+
+Security:
+- Never output secrets.
+- Treat NEXT_PUBLIC_* as public.
+
+If uncertain about tenancy/auth scope, stop and ask for human review.

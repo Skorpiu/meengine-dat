@@ -1,0 +1,24 @@
+---
+description: DAT code style & conventions
+---
+# Style & conventions (DAT)
+
+TypeScript
+- Keep types strict; avoid `any` unless there is a clear reason.
+- Prefer explicit types on public functions/exports and API boundaries.
+- Prefer `unknown` + narrowing over `any` when unsure.
+
+Next.js / App Router
+- Follow existing project patterns before creating new abstractions.
+- Avoid introducing new server/client boundaries unless required.
+- Prefer minimal server-safe changes; avoid "magic" global side effects.
+
+Prisma / DB
+- Preserve organization scoping and tenancy boundaries.
+- Do not introduce schema/migration changes unless explicitly requested.
+- Prefer query changes that are easy to review (no cleverness).
+
+General
+- Small functions, small diffs.
+- No unrelated refactors, renames, formatting sweeps, or “cleanup” unless asked.
+- Keep behavior changes measurable: explain what changes in runtime behavior.
