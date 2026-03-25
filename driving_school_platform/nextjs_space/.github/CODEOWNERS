@@ -1,0 +1,11 @@
+# Default owner
+* @rukahh
+
+# Application code
+/app @rukahh
+
+# Database schema
+/prisma @rukahh
+
+# Documentation
+/docs @rukahh
