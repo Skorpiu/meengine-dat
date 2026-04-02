@@ -1,41 +1,45 @@
-
-import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/db"
-import bcrypt from "bcryptjs"
-import crypto from "crypto"
-import { resolveTenantOrganizationId } from "@/lib/tenant"
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
 
     if (!session?.user || session.user.role !== "SUPER_ADMIN") {
       return NextResponse.json(
-        { error: "Unauthorized. Only administrators can create user accounts." },
-        { status: 401 }
-      )
+        {
+          error: "Unauthorized. Only administrators can create user accounts.",
+        },
+        { status: 401 },
+      );
     }
 
-    const orgId = session.user.organizationId
+    const orgId = session.user.organizationId;
     if (!orgId) {
-      return NextResponse.json({ error: "No organization found" }, { status: 400 })
-    }
-
-    const tenant = await resolveTenantOrganizationId(request)
-    if (tenant.organizationId && tenant.organizationId !== orgId) {
       return NextResponse.json(
-        { error: "Organization does not match this domain" },
-        { status: 403 }
-      )
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
-    let body: any
+    const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+    if (!tenantGuard.allowed) {
+      return NextResponse.json(
+        { error: tenantGuard.error },
+        { status: tenantGuard.status },
+      );
+    }
+
+    let body: any;
     try {
-      body = await request.json()
+      body = await request.json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
     const {
@@ -54,35 +58,37 @@ export async function POST(request: NextRequest) {
       // Instructor-specific
       instructorLicenseNumber,
       instructorLicenseExpiry,
-    } = body
+    } = body;
 
     // Validate required fields
     if (!firstName || !lastName || !email || !role) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
-    })
+    });
 
     if (existingUser) {
       return NextResponse.json(
         { error: "A user with this email already exists" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
     // Generate a temporary password
-    const tempPassword = crypto.randomBytes(8).toString('hex')
-    const passwordHash = await bcrypt.hash(tempPassword, 10)
+    const tempPassword = crypto.randomBytes(8).toString("hex");
+    const passwordHash = await bcrypt.hash(tempPassword, 10);
 
     // Generate email verification token
-    const emailVerificationToken = crypto.randomBytes(32).toString('hex')
-    const emailVerificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+    const emailVerificationToken = crypto.randomBytes(32).toString("hex");
+    const emailVerificationExpiresAt = new Date(
+      Date.now() + 24 * 60 * 60 * 1000,
+    ); // 24 hours
 
     // Create user
     const user = await prisma.user.create({
@@ -103,24 +109,24 @@ export async function POST(request: NextRequest) {
         emailVerificationToken,
         emailVerificationExpiresAt,
       },
-    })
+    });
 
     // Create role-specific profile
     if (role === "STUDENT") {
       // Get transmission type
-      let transmissionTypeRecord = null
+      let transmissionTypeRecord = null;
       if (transmissionType) {
         transmissionTypeRecord = await prisma.transmissionType.findFirst({
           where: { name: transmissionType },
-        })
+        });
       }
 
       // Get first selected category
-      let categoryRecord = null
+      let categoryRecord = null;
       if (selectedCategories && selectedCategories.length > 0) {
         categoryRecord = await prisma.category.findFirst({
           where: { name: selectedCategories[0] },
-        })
+        });
       }
 
       await prisma.student.create({
@@ -130,15 +136,15 @@ export async function POST(request: NextRequest) {
           categoryId: categoryRecord?.id,
           transmissionTypeId: transmissionTypeRecord?.id,
         },
-      })
+      });
     } else if (role === "INSTRUCTOR") {
       if (!instructorLicenseNumber || !instructorLicenseExpiry) {
         // Clean up user if instructor data is missing
-        await prisma.user.delete({ where: { id: user.id } })
+        await prisma.user.delete({ where: { id: user.id } });
         return NextResponse.json(
           { error: "Instructor license information is required" },
-          { status: 400 }
-        )
+          { status: 400 },
+        );
       }
 
       await prisma.instructor.create({
@@ -148,13 +154,13 @@ export async function POST(request: NextRequest) {
           instructorLicenseNumber,
           instructorLicenseExpiry: new Date(instructorLicenseExpiry),
         },
-      })
+      });
     }
 
     // TODO: Send verification email with temporary password
     // For now, return the temp password (in production, this should be emailed)
 
-    const includeTempPassword = process.env.NODE_ENV !== "production"
+    const includeTempPassword = process.env.NODE_ENV !== "production";
 
     return NextResponse.json({
       success: true,
@@ -167,12 +173,12 @@ export async function POST(request: NextRequest) {
         role: user.role,
       },
       ...(includeTempPassword ? { tempPassword } : {}),
-    })
+    });
   } catch (error) {
-    console.error("Error creating user:", error)
+    console.error("Error creating user:", error);
     return NextResponse.json(
       { error: "Failed to create user" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

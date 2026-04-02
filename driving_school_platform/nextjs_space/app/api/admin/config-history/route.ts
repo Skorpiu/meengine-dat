@@ -1,19 +1,18 @@
-
 /**
  * Configuration History API
  * @route /api/admin/config-history
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/db';
-import { configHistoryQuerySchema } from '@/lib/config-validation';
-import { resolveTenantOrganizationId } from '@/lib/tenant';
-import { HTTP_STATUS, API_MESSAGES } from '@/lib/constants';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { configHistoryQuerySchema } from "@/lib/config-validation";
+import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import { HTTP_STATUS, API_MESSAGES } from "@/lib/constants";
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 /**
  * GET /api/admin/config-history
@@ -23,48 +22,48 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    if (!session?.user || session.user.role !== "SUPER_ADMIN") {
       return NextResponse.json(
         { error: API_MESSAGES.UNAUTHORIZED },
-        { status: HTTP_STATUS.UNAUTHORIZED }
+        { status: HTTP_STATUS.UNAUTHORIZED },
       );
     }
 
     const orgId = session.user.organizationId;
     if (!orgId) {
       return NextResponse.json(
-        { error: 'No organization found' },
-        { status: HTTP_STATUS.BAD_REQUEST }
+        { error: "No organization found" },
+        { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
 
-    const tenant = await resolveTenantOrganizationId(request);
-    if (tenant.organizationId && tenant.organizationId !== orgId) {
+    const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+    if (!tenantGuard.allowed) {
       return NextResponse.json(
-        { error: 'Organization does not match this domain' },
-        { status: HTTP_STATUS.FORBIDDEN }
+        { error: tenantGuard.error },
+        { status: tenantGuard.status },
       );
     }
 
     const { searchParams } = new URL(request.url);
     const query = configHistoryQuerySchema.parse({
-      entityType: searchParams.get('entityType') || undefined,
-      entityId: searchParams.get('entityId') || undefined,
-      action: searchParams.get('action') || undefined,
-      limit: parseInt(searchParams.get('limit') || '50'),
-      offset: parseInt(searchParams.get('offset') || '0'),
+      entityType: searchParams.get("entityType") || undefined,
+      entityId: searchParams.get("entityId") || undefined,
+      action: searchParams.get("action") || undefined,
+      limit: parseInt(searchParams.get("limit") || "50"),
+      offset: parseInt(searchParams.get("offset") || "0"),
     });
 
     const where: any = { organizationId: orgId };
-    
+
     if (query.entityType) {
       where.entityType = query.entityType;
     }
-    
+
     if (query.entityId) {
       where.entityId = query.entityId;
     }
-    
+
     if (query.action) {
       where.action = query.action;
     }
@@ -72,7 +71,7 @@ export async function GET(request: NextRequest) {
     const [history, total] = await Promise.all([
       prisma.configurationHistory.findMany({
         where,
-        orderBy: { changedAt: 'desc' },
+        orderBy: { changedAt: "desc" },
         take: query.limit,
         skip: query.offset,
       }),
@@ -86,10 +85,10 @@ export async function GET(request: NextRequest) {
       offset: query.offset,
     });
   } catch (error) {
-    console.error('Error fetching config history:', error);
+    console.error("Error fetching config history:", error);
     return NextResponse.json(
       { error: API_MESSAGES.FETCH_ERROR },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }

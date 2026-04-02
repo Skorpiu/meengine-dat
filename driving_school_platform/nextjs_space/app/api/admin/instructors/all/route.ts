@@ -1,13 +1,12 @@
-
 /**
  * API endpoint to fetch all instructors for filtering purposes
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { resolveTenantOrganizationId } from '@/lib/tenant';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 
 /**
  * GET handler - Fetch all instructors
@@ -16,24 +15,27 @@ import { resolveTenantOrganizationId } from '@/lib/tenant';
 export async function GET(request: NextRequest) {
   // Verify authentication - SUPER_ADMIN only
   const session = await getServerSession(authOptions);
-  
-  if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+
+  if (!session?.user || session.user.role !== "SUPER_ADMIN") {
     return NextResponse.json(
-      { error: 'Unauthorized - SUPER_ADMIN access required' },
-      { status: 401 }
+      { error: "Unauthorized - SUPER_ADMIN access required" },
+      { status: 401 },
     );
   }
 
   const orgId = session.user.organizationId;
   if (!orgId) {
-    return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+    return NextResponse.json(
+      { error: "No organization found" },
+      { status: 400 },
+    );
   }
 
-  const tenant = await resolveTenantOrganizationId(request);
-  if (tenant.organizationId && tenant.organizationId !== orgId) {
+  const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+  if (!tenantGuard.allowed) {
     return NextResponse.json(
-      { error: 'Organization does not match this domain' },
-      { status: 403 }
+      { error: tenantGuard.error },
+      { status: tenantGuard.status },
     );
   }
 
@@ -41,7 +43,7 @@ export async function GET(request: NextRequest) {
     // Query User table where role === 'INSTRUCTOR'
     const instructorUsers = await prisma.user.findMany({
       where: {
-        role: 'INSTRUCTOR',
+        role: "INSTRUCTOR",
         organizationId: orgId,
       },
       select: {
@@ -51,15 +53,18 @@ export async function GET(request: NextRequest) {
         email: true,
       },
       orderBy: {
-        firstName: 'asc',
+        firstName: "asc",
       },
     });
 
     // Format response as required: { instructors: [{ id, userId, name }] }
-    const instructors = instructorUsers.map(user => ({
+    const instructors = instructorUsers.map((user) => ({
       id: user.id,
       userId: user.id,
-      name: `${user.firstName} ${user.lastName}`.trim() || user.email || 'Instructor',
+      name:
+        `${user.firstName} ${user.lastName}`.trim() ||
+        user.email ||
+        "Instructor",
     }));
 
     return NextResponse.json(
@@ -67,15 +72,15 @@ export async function GET(request: NextRequest) {
       {
         status: 200,
         headers: {
-          'Cache-Control': 'no-store',
+          "Cache-Control": "no-store",
         },
-      }
+      },
     );
   } catch (error) {
-    console.error('Error fetching instructors:', error);
+    console.error("Error fetching instructors:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch instructors' },
-      { status: 500 }
+      { error: "Failed to fetch instructors" },
+      { status: 500 },
     );
   }
 }

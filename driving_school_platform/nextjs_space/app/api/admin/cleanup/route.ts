@@ -4,16 +4,16 @@
  * @module app/api/admin/cleanup
  */
 
-import { NextRequest } from 'next/server';
-import { cleanupOldLessons } from '@/lib/cleanup';
+import { NextRequest } from "next/server";
+import { cleanupOldLessons } from "@/lib/cleanup";
 import {
   successResponse,
   errorResponse,
   verifyAuth,
   withErrorHandling,
-} from '@/lib/api-utils';
-import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from '@/lib/constants';
-import { resolveTenantOrganizationId } from '@/lib/tenant';
+} from "@/lib/api-utils";
+import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from "@/lib/constants";
+import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 
 /**
  * POST handler - Trigger cleanup of old lessons/exams
@@ -29,12 +29,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const orgId = (user as any).organizationId as string | null | undefined;
   if (!orgId) {
-    return errorResponse('No organization found', HTTP_STATUS.BAD_REQUEST);
+    return errorResponse("No organization found", HTTP_STATUS.BAD_REQUEST);
   }
 
-  const tenant = await resolveTenantOrganizationId(request);
-  if (tenant.organizationId && tenant.organizationId !== orgId) {
-    return errorResponse('Organization does not match this domain', HTTP_STATUS.FORBIDDEN);
+  const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+  if (!tenantGuard.allowed) {
+    return errorResponse(tenantGuard.error, tenantGuard.status);
   }
 
   const result = await cleanupOldLessons(orgId);
@@ -44,6 +44,6 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       message: `Successfully cleaned up ${result.count} old lessons/exams`,
       count: result.count,
     },
-    HTTP_STATUS.OK
+    HTTP_STATUS.OK,
   );
 });

@@ -1,31 +1,30 @@
-
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/db';
-import { resolveTenantOrganizationId } from '@/lib/tenant';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    if (!session?.user || session.user.role !== "SUPER_ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const orgId = session.user.organizationId;
     if (!orgId) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
-    const tenant = await resolveTenantOrganizationId(request);
-    if (tenant.organizationId && tenant.organizationId !== orgId) {
+    const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+    if (!tenantGuard.allowed) {
       return NextResponse.json(
-        { error: 'Organization does not match this domain' },
-        { status: 403 }
+        { error: tenantGuard.error },
+        { status: tenantGuard.status },
       );
     }
 
@@ -33,7 +32,7 @@ export async function PUT(request: NextRequest) {
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
     const {
@@ -49,8 +48,11 @@ export async function PUT(request: NextRequest) {
       instructorLicenseExpiry,
     } = body;
 
-    if (!userId || typeof userId !== 'string') {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    if (!userId || typeof userId !== "string") {
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 },
+      );
     }
 
     // Ensure target user belongs to this organization
@@ -60,7 +62,7 @@ export async function PUT(request: NextRequest) {
     });
 
     if (!target) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Update user (scoped)
@@ -75,17 +77,19 @@ export async function PUT(request: NextRequest) {
     });
 
     if (updated.count === 0) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Update role-specific data (scoped)
-    if (role === 'STUDENT' && selectedCategories?.[0]) {
+    if (role === "STUDENT" && selectedCategories?.[0]) {
       const category = await prisma.category.findFirst({
         where: { name: selectedCategories[0] },
       });
 
       const transmission = transmissionType
-        ? await prisma.transmissionType.findFirst({ where: { name: transmissionType } })
+        ? await prisma.transmissionType.findFirst({
+            where: { name: transmissionType },
+          })
         : null;
 
       await prisma.student.updateMany({
@@ -95,10 +99,12 @@ export async function PUT(request: NextRequest) {
           transmissionTypeId: transmission?.id,
         },
       });
-    } else if (role === 'INSTRUCTOR') {
+    } else if (role === "INSTRUCTOR") {
       const data: any = {};
-      if (instructorLicenseNumber) data.instructorLicenseNumber = instructorLicenseNumber;
-      if (instructorLicenseExpiry) data.instructorLicenseExpiry = new Date(instructorLicenseExpiry);
+      if (instructorLicenseNumber)
+        data.instructorLicenseNumber = instructorLicenseNumber;
+      if (instructorLicenseExpiry)
+        data.instructorLicenseExpiry = new Date(instructorLicenseExpiry);
 
       if (Object.keys(data).length > 0) {
         await prisma.instructor.updateMany({
@@ -108,12 +114,12 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ message: 'User updated successfully' });
+    return NextResponse.json({ message: "User updated successfully" });
   } catch (error) {
-    console.error('Error updating user:', error);
+    console.error("Error updating user:", error);
     return NextResponse.json(
-      { error: 'Failed to update user' },
-      { status: 500 }
+      { error: "Failed to update user" },
+      { status: 500 },
     );
   }
 }
