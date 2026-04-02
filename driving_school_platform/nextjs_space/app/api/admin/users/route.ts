@@ -1,73 +1,77 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import type { Prisma, UserRole } from "@prisma/client";
 
-import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/db"
-import { resolveTenantOrganizationId } from "@/lib/tenant"
-import type { Prisma, UserRole } from "@prisma/client"
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
-const USER_ROLES = ["STUDENT", "INSTRUCTOR", "SUPER_ADMIN"] as const
+const USER_ROLES = ["STUDENT", "INSTRUCTOR", "SUPER_ADMIN"] as const;
 
 const isUserRole = (value: string): value is UserRole =>
-  (USER_ROLES as readonly string[]).includes(value)
+  (USER_ROLES as readonly string[]).includes(value);
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
 
     // Allow both SUPER_ADMIN and INSTRUCTOR to access
-    if (!session?.user || (session.user.role !== "SUPER_ADMIN" && session.user.role !== "INSTRUCTOR")) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      )
+    if (
+      !session?.user ||
+      (session.user.role !== "SUPER_ADMIN" &&
+        session.user.role !== "INSTRUCTOR")
+    ) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     if (!session.user.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const currentUser = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { organizationId: true },
-    })
+    });
 
-    const orgId = currentUser?.organizationId ?? null
+    const orgId = currentUser?.organizationId ?? null;
     if (!orgId) {
-      return NextResponse.json({ error: "No organization found" }, { status: 400 })
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
-    const tenant = await resolveTenantOrganizationId(request)
-    if (tenant.organizationId && tenant.organizationId !== orgId) {
-      return NextResponse.json({ error: "Wrong organization for this domain" }, { status: 403 })
+    const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+    if (!tenantGuard.allowed) {
+      return NextResponse.json(
+        { error: tenantGuard.error },
+        { status: tenantGuard.status },
+      );
     }
 
-    const { searchParams } = new URL(request.url)
-    const roleParam = searchParams.get("role")
+    const { searchParams } = new URL(request.url);
+    const roleParam = searchParams.get("role");
 
     if (roleParam && !isUserRole(roleParam)) {
-      return NextResponse.json(
-        { error: "Invalid role" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
 
-    const role: UserRole | null = roleParam && isUserRole(roleParam) ? roleParam : null
+    const role: UserRole | null =
+      roleParam && isUserRole(roleParam) ? roleParam : null;
 
     const where: Prisma.UserWhereInput = {
       organizationId: orgId,
-    }
+    };
 
     if (role) {
-      where.role = role
+      where.role = role;
     }
 
     // Instructors can only see students, not other users
     if (session.user.role === "INSTRUCTOR" && role !== "STUDENT") {
-      where.role = "STUDENT"
+      where.role = "STUDENT";
     }
 
     const users = await prisma.user.findMany({
@@ -82,25 +86,25 @@ export async function GET(request: NextRequest) {
         student: {
           select: {
             studentNumber: true,
-          }
-        }
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' },
-    })
+      orderBy: { createdAt: "desc" },
+    });
 
     // Format the response to include studentNumber at the top level for students
-    const formattedUsers = users.map(user => ({
+    const formattedUsers = users.map((user) => ({
       ...user,
       studentNumber: user.student?.studentNumber || null,
       student: undefined, // Remove the nested student object
-    }))
+    }));
 
-    return NextResponse.json({ users: formattedUsers })
+    return NextResponse.json({ users: formattedUsers });
   } catch (error) {
-    console.error("Error fetching users:", error)
+    console.error("Error fetching users:", error);
     return NextResponse.json(
       { error: "Failed to fetch users" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

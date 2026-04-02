@@ -28,7 +28,7 @@ import {
 import { lessonCreationSchema } from "@/lib/validation";
 import { startOfDay, addDays } from "date-fns";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
-import { resolveTenantOrganizationId } from "@/lib/tenant";
+import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,12 +50,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return errorResponse("No organization found", HTTP_STATUS.BAD_REQUEST);
   }
 
-  const tenant = await resolveTenantOrganizationId(request);
-  if (tenant.organizationId && tenant.organizationId !== orgId) {
-    return errorResponse(
-      "Organization does not match this domain",
-      HTTP_STATUS.FORBIDDEN,
-    );
+  const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+  if (!tenantGuard.allowed) {
+    return errorResponse(tenantGuard.error, tenantGuard.status);
   }
 
   // Automatically cleanup old lessons (older than 30 days)
@@ -272,12 +269,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return errorResponse("No organization found", HTTP_STATUS.BAD_REQUEST);
   }
 
-  const tenant = await resolveTenantOrganizationId(request);
-  if (tenant.organizationId && tenant.organizationId !== orgId) {
-    return errorResponse(
-      "Organization does not match this domain",
-      HTTP_STATUS.FORBIDDEN,
-    );
+  const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+  if (!tenantGuard.allowed) {
+    return errorResponse(tenantGuard.error, tenantGuard.status);
   }
 
   // Parse and validate request body

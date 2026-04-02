@@ -13,7 +13,7 @@ import {
 } from "@/lib/config-validation";
 import { parseSettingValue, logConfigurationChange } from "@/lib/config-utils";
 import { HTTP_STATUS, API_MESSAGES } from "@/lib/constants";
-import { resolveTenantOrganizationId } from "@/lib/tenant";
+import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 import type { Prisma } from "@prisma/client";
 
 /**
@@ -39,11 +39,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const tenant = await resolveTenantOrganizationId(request);
-    if (tenant.organizationId && tenant.organizationId !== orgId) {
+    const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+    if (!tenantGuard.allowed) {
       return NextResponse.json(
-        { error: "Organization does not match this domain" },
-        { status: 403 },
+        { error: tenantGuard.error },
+        { status: tenantGuard.status },
       );
     }
 
@@ -123,11 +123,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const tenant = await resolveTenantOrganizationId(request);
-    if (tenant.organizationId && tenant.organizationId !== orgId) {
+    const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+    if (!tenantGuard.allowed) {
       return NextResponse.json(
-        { error: "Organization does not match this domain" },
-        { status: HTTP_STATUS.FORBIDDEN },
+        { error: tenantGuard.error },
+        { status: tenantGuard.status },
       );
     }
 
@@ -228,11 +228,11 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const tenant = await resolveTenantOrganizationId(request);
-    if (tenant.organizationId && tenant.organizationId !== orgId) {
+    const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+    if (!tenantGuard.allowed) {
       return NextResponse.json(
-        { error: "Organization does not match this domain" },
-        { status: 403 },
+        { error: tenantGuard.error },
+        { status: tenantGuard.status },
       );
     }
 
@@ -348,11 +348,11 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const tenant = await resolveTenantOrganizationId(request);
-    if (tenant.organizationId && tenant.organizationId !== orgId) {
+    const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+    if (!tenantGuard.allowed) {
       return NextResponse.json(
-        { error: "Organization does not match this domain" },
-        { status: 403 },
+        { error: tenantGuard.error },
+        { status: tenantGuard.status },
       );
     }
 

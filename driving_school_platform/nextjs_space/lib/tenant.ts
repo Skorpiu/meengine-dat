@@ -87,3 +87,50 @@ export async function resolveTenantOrganizationId(
   const organizationId = await resolveOrganizationIdFromHost(host);
   return { host, organizationId };
 }
+
+export type TenantRouteGuardResult =
+  | { allowed: true }
+  | { allowed: false; status: number; error: string };
+
+/**
+ * Tenant/admin authenticated route guard.
+ *
+ * Rules:
+ * - Allow localhost and *.localhost
+ * - Forbid platform hosts
+ * - Forbid unmapped non-local hosts
+ * - Forbid mapped tenant hosts whose organizationId does not match the authenticated user's organizationId
+ * - Allow only matching tenant hosts
+ */
+export async function guardTenantAuthenticatedRoute(
+  request: NextRequest,
+  authenticatedOrganizationId: string,
+): Promise<TenantRouteGuardResult> {
+  const host = getRequestHost(request);
+  if (!host) return { allowed: true };
+
+  if (isLocalHost(host)) return { allowed: true };
+
+  if (isPlatformHost(host)) {
+    return {
+      allowed: false,
+      status: 403,
+      error: "Platform host is not allowed",
+    };
+  }
+
+  const tenantOrganizationId = await resolveOrganizationIdFromHost(host);
+  if (!tenantOrganizationId) {
+    return { allowed: false, status: 403, error: "Unmapped tenant host" };
+  }
+
+  if (tenantOrganizationId !== authenticatedOrganizationId) {
+    return {
+      allowed: false,
+      status: 403,
+      error: "Organization does not match this domain",
+    };
+  }
+
+  return { allowed: true };
+}
