@@ -13,6 +13,7 @@ variables:
   # They do NOT need to be real DBs for unit/integration tests with mocks.
   DATABASE_URL: "postgresql://user:pass@localhost:5432/postgres?schema=public"
   DIRECT_URL: "postgresql://user:pass@localhost:5432/postgres?schema=public"
+  NEXTAUTH_SECRET: "ci_dummy_nextauth_secret"
 
 cache:
   key:
