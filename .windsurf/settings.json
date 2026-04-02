@@ -1,4 +1,0 @@
-{
-  "prisma.pinToPrisma6": true,
-  "prisma.schemaPath": "driving_school_platform/nextjs_space/prisma/schema.prisma"
-}
