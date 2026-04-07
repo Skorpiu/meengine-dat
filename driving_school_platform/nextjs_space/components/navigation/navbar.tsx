@@ -1,9 +1,8 @@
+"use client";
 
-"use client"
-
-import { useState } from "react"
-import { useSession, signOut } from "next-auth/react"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,114 +10,118 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { 
-  Car, 
-  Calendar, 
-  Users, 
-  Settings, 
-  LogOut, 
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Car,
+  Calendar,
+  Users,
+  Settings,
+  LogOut,
   User,
   Bell,
   Menu,
   X,
-  Key
-} from "lucide-react"
-import Link from "next/link"
-import { LanguageSelector } from "@/components/language-selector"
-import { useLicense } from "@/hooks/use-license"
+  Key,
+} from "lucide-react";
+import Link from "next/link";
+import { LanguageSelector } from "@/components/language-selector";
+import { useLicense } from "@/hooks/use-license";
 
 interface NavbarProps {
-  currentPage?: string
+  currentPage?: string;
 }
 
 export function Navbar({ currentPage }: NavbarProps) {
-  const { data: session } = useSession()
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { isFeatureEnabled } = useLicense()
+  const { data: session } = useSession();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isFeatureEnabled } = useLicense();
 
-  const getInitials = (firstName?: string, lastName?: string) => {
-    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase()
-  }
+  const getInitials = (firstName?: string | null, lastName?: string | null) => {
+    return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
+  };
 
   const getNavItems = () => {
-    if (!session?.user) return []
+    if (!session?.user) return [];
 
     const baseItems = [
       { label: "Dashboard", href: getDashboardPath(), icon: Calendar },
-    ]
+    ];
 
     switch (session.user.role) {
       case "SUPER_ADMIN":
         const adminItems = [
           ...baseItems,
           { label: "Users", href: "/admin/users", icon: Users },
-        ]
-        
+        ];
+
         // Only show Vehicles tab if VEHICLE_MANAGEMENT feature is enabled
-        if (isFeatureEnabled('VEHICLE_MANAGEMENT')) {
-          adminItems.push({ label: "Vehicles", href: "/admin/vehicles", icon: Car })
+        if (isFeatureEnabled("VEHICLE_MANAGEMENT")) {
+          adminItems.push({
+            label: "Vehicles",
+            href: "/admin/vehicles",
+            icon: Car,
+          });
         }
-        
+
         // Only show Lessons tab if LESSON_MANAGEMENT feature is enabled
-        if (isFeatureEnabled('LESSON_MANAGEMENT')) {
-          adminItems.push({ label: "Lessons", href: "/admin/lessons", icon: Calendar })
+        if (isFeatureEnabled("LESSON_MANAGEMENT")) {
+          adminItems.push({
+            label: "Lessons",
+            href: "/admin/lessons",
+            icon: Calendar,
+          });
         }
-        
+
         adminItems.push(
           { label: "License", href: "/admin/license", icon: Key },
-          { label: "Settings", href: "/admin/settings", icon: Settings }
-        )
-        
-        return adminItems
+          { label: "Settings", href: "/admin/settings", icon: Settings },
+        );
+
+        return adminItems;
 
       case "PLATFORM_ADMIN":
         return [
           ...baseItems,
           { label: "Platform", href: "/platform", icon: Settings },
-        ]
+        ];
 
       case "INSTRUCTOR":
-        return [
-          ...baseItems,
-        ]
+        return [...baseItems];
 
       case "STUDENT":
-        return [
-          ...baseItems,
-        ]
+        return [...baseItems];
 
       default:
-        return baseItems
+        return baseItems;
     }
-  }
+  };
 
   const getDashboardPath = () => {
-    if (!session?.user) return "/"
-    
+    if (!session?.user) return "/";
+
     switch (session.user.role) {
       case "SUPER_ADMIN":
-        return "/admin"
+        return "/admin";
       case "PLATFORM_ADMIN":
-        return "/platform"
+        return "/platform";
       case "INSTRUCTOR":
-        return "/instructor"
+        return "/instructor";
       case "STUDENT":
-        return "/student"
+        return "/student";
       default:
-        return "/dashboard"
+        return "/dashboard";
     }
-  }
+  };
 
-  const navItems = getNavItems()
+  const navItems = getNavItems();
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/" })
-  }
+    await signOut({ callbackUrl: "/" });
+  };
 
   if (!session?.user) {
-    return null
+    return null;
   }
 
   return (
@@ -126,7 +129,11 @@ export function Navbar({ currentPage }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href={getDashboardPath()} className="flex items-center space-x-3" title="Driving School Academy">
+          <Link
+            href={getDashboardPath()}
+            className="flex items-center space-x-3"
+            title="Driving School Academy"
+          >
             <div className="bg-driving-primary rounded-full p-2">
               <Car className="w-6 h-6 text-white" />
             </div>
@@ -138,9 +145,9 @@ export function Navbar({ currentPage }: NavbarProps) {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => {
-              const Icon = item.icon
-              const isActive = currentPage === item.href.split('/').pop()
-              
+              const Icon = item.icon;
+              const isActive = currentPage === item.href.split("/").pop();
+
               return (
                 <Link
                   key={item.href}
@@ -154,7 +161,7 @@ export function Navbar({ currentPage }: NavbarProps) {
                   <Icon className="w-4 h-4" />
                   <span>{item.label}</span>
                 </Link>
-              )
+              );
             })}
           </div>
 
@@ -162,7 +169,7 @@ export function Navbar({ currentPage }: NavbarProps) {
           <div className="flex items-center space-x-4">
             {/* Language Selector */}
             <LanguageSelector />
-            
+
             {/* Notifications (placeholder) */}
             <Button variant="ghost" size="sm" className="relative">
               <Bell className="w-5 h-5" />
@@ -174,10 +181,17 @@ export function Navbar({ currentPage }: NavbarProps) {
             {/* User Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full" aria-label="User menu">
+                <Button
+                  variant="ghost"
+                  className="relative h-10 w-10 rounded-full"
+                  aria-label="User menu"
+                >
                   <Avatar>
                     <AvatarFallback className="bg-driving-primary text-white">
-                      {getInitials(session.user.firstName, session.user.lastName)}
+                      {getInitials(
+                        session.user.firstName,
+                        session.user.lastName,
+                      )}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -192,19 +206,25 @@ export function Navbar({ currentPage }: NavbarProps) {
                       {session.user.email}
                     </p>
                     <p className="text-xs leading-none text-muted-foreground capitalize">
-                      {session.user.role.toLowerCase().replace('_', ' ')}
+                      {session.user.role.toLowerCase().replace("_", " ")}
                     </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/profile" className="flex items-center w-full cursor-pointer">
+                  <Link
+                    href="/profile"
+                    className="flex items-center w-full cursor-pointer"
+                  >
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/profile" className="flex items-center w-full cursor-pointer">
+                  <Link
+                    href="/profile"
+                    className="flex items-center w-full cursor-pointer"
+                  >
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </Link>
@@ -239,9 +259,9 @@ export function Navbar({ currentPage }: NavbarProps) {
           <div className="md:hidden border-t border-gray-200 py-4">
             <div className="space-y-1">
               {navItems.map((item) => {
-                const Icon = item.icon
-                const isActive = currentPage === item.href.split('/').pop()
-                
+                const Icon = item.icon;
+                const isActive = currentPage === item.href.split("/").pop();
+
                 return (
                   <Link
                     key={item.href}
@@ -256,12 +276,12 @@ export function Navbar({ currentPage }: NavbarProps) {
                     <Icon className="w-5 h-5" />
                     <span>{item.label}</span>
                   </Link>
-                )
+                );
               })}
             </div>
           </div>
         )}
       </div>
     </nav>
-  )
+  );
 }
