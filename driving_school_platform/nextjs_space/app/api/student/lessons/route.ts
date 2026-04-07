@@ -14,7 +14,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
   }
 
-  const orgId = (user as any).organizationId as string | null | undefined;
+  const orgId = user.organizationId;
   if (!orgId) {
     return errorResponse("No organization found", HTTP_STATUS.BAD_REQUEST);
   }
