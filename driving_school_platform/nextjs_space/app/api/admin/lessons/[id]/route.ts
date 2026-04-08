@@ -15,11 +15,32 @@ import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from "@/lib/constants";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
 
-function isInstructor(user: any) {
+type RoleUser = {
+  role?: string | null;
+};
+
+type OrgScopedUser = RoleUser & {
+  id: string;
+  organizationId?: string | null;
+};
+
+type LessonWithInstructorUserId = {
+  instructor?: { userId?: string | null } | null;
+};
+
+type LessonWithEndTime = {
+  lessonDate?: string | Date | null;
+  endTime?: string | null;
+};
+
+function isInstructor(user: RoleUser) {
   return user?.role === USER_ROLES.INSTRUCTOR;
 }
 
-function assertInstructorOwnsLesson(user: any, lesson: any) {
+function assertInstructorOwnsLesson(
+  user: OrgScopedUser,
+  lesson: LessonWithInstructorUserId,
+) {
   if (!isInstructor(user)) return null;
   if (!lesson?.instructor?.userId)
     return errorResponse("Forbidden", HTTP_STATUS.FORBIDDEN);
@@ -28,7 +49,7 @@ function assertInstructorOwnsLesson(user: any, lesson: any) {
   return null;
 }
 
-function isPastLesson(lesson: any) {
+function isPastLesson(lesson: LessonWithEndTime) {
   if (!lesson?.lessonDate || !lesson?.endTime) return false;
 
   const d = new Date(lesson.lessonDate);
@@ -51,7 +72,10 @@ export const GET = withErrorHandling(
       return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
     }
 
-    const orgId = (user as any).organizationId as string | null | undefined;
+    const orgId = (user as OrgScopedUser).organizationId as
+      | string
+      | null
+      | undefined;
     if (!orgId) {
       return errorResponse("No organization found", HTTP_STATUS.BAD_REQUEST);
     }
@@ -97,7 +121,10 @@ export const PUT = withErrorHandling(
       return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
     }
 
-    const orgId = (user as any).organizationId as string | null | undefined;
+    const orgId = (user as OrgScopedUser).organizationId as
+      | string
+      | null
+      | undefined;
     if (!orgId) {
       return errorResponse("No organization found", HTTP_STATUS.BAD_REQUEST);
     }
@@ -209,7 +236,10 @@ export const DELETE = withErrorHandling(
       return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
     }
 
-    const orgId = (user as any).organizationId as string | null | undefined;
+    const orgId = (user as OrgScopedUser).organizationId as
+      | string
+      | null
+      | undefined;
     if (!orgId) {
       return errorResponse("No organization found", HTTP_STATUS.BAD_REQUEST);
     }
