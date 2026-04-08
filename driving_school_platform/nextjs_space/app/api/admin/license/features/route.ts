@@ -1,11 +1,10 @@
-
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { LicenseService } from '@/lib/services/license-service';
-import { db } from '@/lib/db';
-import { FEATURE_DEFINITIONS } from '@/lib/config/license-features';
-import { resolveTenantOrganizationId } from '@/lib/tenant';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { LicenseService } from "@/lib/services/license-service";
+import { db } from "@/lib/db";
+import { FEATURE_DEFINITIONS } from "@/lib/config/license-features";
+import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 
 /**
  * GET /api/admin/license/features
@@ -15,7 +14,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get user with organization
@@ -24,21 +23,32 @@ export async function GET(request: NextRequest) {
       include: { organization: true },
     });
 
-    if (!user || user.role !== 'SUPER_ADMIN') {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    if (!user || user.role !== "SUPER_ADMIN") {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     if (!user.organizationId) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
-    const tenant = await resolveTenantOrganizationId(request);
-    if (tenant.organizationId && tenant.organizationId !== user.organizationId) {
-      return NextResponse.json({ error: 'Wrong organization for this domain' }, { status: 403 });
+    const tenantGuard = await guardTenantAuthenticatedRoute(
+      request,
+      user.organizationId,
+    );
+    if (!tenantGuard.allowed) {
+      return NextResponse.json(
+        { error: tenantGuard.error },
+        { status: tenantGuard.status },
+      );
     }
 
     // Get enabled features
-    const enabledFeatures = await LicenseService.getEnabledFeatures(user.organizationId);
+    const enabledFeatures = await LicenseService.getEnabledFeatures(
+      user.organizationId,
+    );
 
     // Build response with all features and their status
     const features = Object.values(FEATURE_DEFINITIONS).map((feature: any) => ({
@@ -53,8 +63,11 @@ export async function GET(request: NextRequest) {
       features,
     });
   } catch (error) {
-    console.error('Error fetching features:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error fetching features:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -66,7 +79,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get user with organization
@@ -75,46 +88,68 @@ export async function POST(request: NextRequest) {
       include: { organization: true },
     });
 
-    if (!user || user.role !== 'SUPER_ADMIN') {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    if (!user || user.role !== "SUPER_ADMIN") {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     if (!user.organizationId) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
-    const tenant = await resolveTenantOrganizationId(request);
-    if (tenant.organizationId && tenant.organizationId !== user.organizationId) {
-      return NextResponse.json({ error: 'Wrong organization for this domain' }, { status: 403 });
+    const tenantGuard = await guardTenantAuthenticatedRoute(
+      request,
+      user.organizationId,
+    );
+    if (!tenantGuard.allowed) {
+      return NextResponse.json(
+        { error: tenantGuard.error },
+        { status: tenantGuard.status },
+      );
     }
 
     const body = await request.json();
     const { featureKey, enabled } = body;
 
-    if (!featureKey || typeof enabled !== 'boolean') {
-      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+    if (!featureKey || typeof enabled !== "boolean") {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
     // Verify feature exists
     if (!FEATURE_DEFINITIONS[featureKey as keyof typeof FEATURE_DEFINITIONS]) {
-      return NextResponse.json({ error: 'Invalid feature key' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid feature key" },
+        { status: 400 },
+      );
     }
 
     // Toggle the feature
     const success = enabled
-      ? await LicenseService.enableFeature(user.organizationId, featureKey, session.user.id)
+      ? await LicenseService.enableFeature(
+          user.organizationId,
+          featureKey,
+          session.user.id,
+        )
       : await LicenseService.disableFeature(user.organizationId, featureKey);
 
     if (!success) {
-      return NextResponse.json({ error: 'Failed to update feature' }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to update feature" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({
       success: true,
-      message: `Feature ${enabled ? 'enabled' : 'disabled'} successfully`,
+      message: `Feature ${enabled ? "enabled" : "disabled"} successfully`,
     });
   } catch (error) {
-    console.error('Error updating feature:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error updating feature:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

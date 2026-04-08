@@ -1,62 +1,66 @@
+"use client";
 
-"use client"
-
-import { useState } from "react"
-import { signIn, getSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, LogIn, Car } from "lucide-react"
-import Link from "next/link"
-import { LanguageSelector } from "@/components/language-selector"
+import { useState } from "react";
+import { signIn, getSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Eye, EyeOff, LogIn, Car } from "lucide-react";
+import { LanguageSelector } from "@/components/language-selector";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
       const result = await signIn("credentials", {
         email: email.toLowerCase(),
         password,
         redirect: false,
-      })
+      });
 
       if (result?.error) {
-        setError(result.error)
+        setError(result.error);
       } else if (result?.ok) {
         // Get the session to check user role
-        const session = await getSession()
-        
+        const session = await getSession();
+
         if (session?.user?.role === "SUPER_ADMIN") {
-          router.push("/admin")
+          router.push("/admin");
         } else if (session?.user?.role === "INSTRUCTOR") {
-          router.push("/instructor")
+          router.push("/instructor");
         } else if (session?.user?.role === "STUDENT") {
-          router.push("/student")
+          router.push("/student");
         } else if (session?.user?.role === "PLATFORM_ADMIN") {
-          router.push("/platform")
+          router.push("/platform");
         } else {
-          router.push("/dashboard")
+          router.push("/dashboard");
         }
       }
     } catch (error) {
-      setError("An unexpected error occurred. Please try again.")
+      setError("An unexpected error occurred. Please try again.");
     }
 
-    setIsLoading(false)
-  }
+    setIsLoading(false);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-red-50 flex items-center justify-center p-4">
@@ -64,7 +68,7 @@ export default function LoginPage() {
       <div className="fixed top-4 right-4 z-50">
         <LanguageSelector />
       </div>
-      
+
       <div className="w-full max-w-md space-y-6">
         {/* Logo and Header */}
         <div className="text-center space-y-4">
@@ -74,7 +78,9 @@ export default function LoginPage() {
             </div>
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Driving School Academy</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Driving School Academy
+            </h1>
             <p className="text-gray-600 mt-2">Sign in to your account</p>
           </div>
         </div>
@@ -152,7 +158,8 @@ export default function LoginPage() {
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Don't have an account? Contact your driving school secretariat to get your account created.
+                Don&apos;t have an account? Contact your driving school
+                secretariat to get your account created.
               </p>
             </div>
           </CardContent>
@@ -165,10 +172,12 @@ export default function LoginPage() {
               <h3 className="font-medium text-gray-900">Demo Credentials</h3>
               <div className="grid grid-cols-1 gap-2 text-sm">
                 <div className="p-2 bg-white rounded border">
-                  <strong>Admin:</strong> conquistadora@drivingschool.com / E!C!Conquistadora!
+                  <strong>Admin:</strong> conquistadora@drivingschool.com /
+                  E!C!Conquistadora!
                 </div>
                 <div className="p-2 bg-white rounded border">
-                  <strong>Instructor:</strong> michael.johnson@drivingschool.com / instructor123
+                  <strong>Instructor:</strong> michael.johnson@drivingschool.com
+                  / instructor123
                 </div>
                 <div className="p-2 bg-white rounded border">
                   <strong>Student:</strong> alice.smith@email.com / student123
@@ -179,5 +188,5 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

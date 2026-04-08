@@ -1,10 +1,17 @@
+"use client";
 
-
-'use client';
-
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { LessonForm } from '@/components/lessons/LessonForm';
-import toast from 'react-hot-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  LessonForm,
+  type LessonFormPayload,
+} from "@/components/lessons/LessonForm";
+import toast from "react-hot-toast";
 
 interface BookLessonDialogProps {
   open: boolean;
@@ -12,10 +19,14 @@ interface BookLessonDialogProps {
   onSuccess: () => void;
 }
 
-export function BookLessonDialog({ open, onOpenChange, onSuccess }: BookLessonDialogProps) {
-  const handleSubmit = async (payload: any) => {
+export function BookLessonDialog({
+  open,
+  onOpenChange,
+  onSuccess,
+}: BookLessonDialogProps) {
+  const handleSubmit = async (payload: LessonFormPayload) => {
     try {
-      const requestBody: any = {
+      const requestBody: Record<string, unknown> = {
         lessonType: payload.lessonType,
         instructorId: payload.instructorId,
         lessonDate: payload.lessonDate,
@@ -37,24 +48,24 @@ export function BookLessonDialog({ open, onOpenChange, onSuccess }: BookLessonDi
         requestBody.vehicleId = parseInt(payload.vehicleId);
       }
 
-      const response = await fetch('/api/admin/lessons', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/admin/lessons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        toast.success(data.message || 'Lesson booked successfully!');
+        toast.success(data.message || "Lesson booked successfully!");
         onOpenChange(false);
         onSuccess();
       } else {
-        toast.error(data.error || 'Failed to book lesson');
+        toast.error(data.error || "Failed to book lesson");
       }
     } catch (error) {
-      console.error('Error booking lesson:', error);
-      toast.error('An error occurred');
+      console.error("Error booking lesson:", error);
+      toast.error("An error occurred");
     }
   };
 
@@ -71,7 +82,7 @@ export function BookLessonDialog({ open, onOpenChange, onSuccess }: BookLessonDi
         <LessonForm
           mode="create"
           userRole="SUPER_ADMIN"
-          allowedLessonTypes={['THEORY', 'DRIVING']}
+          allowedLessonTypes={["THEORY", "DRIVING"]}
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
         />

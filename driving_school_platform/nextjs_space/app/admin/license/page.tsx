@@ -1,31 +1,36 @@
-
-
 /**
  * License Management Page
- * 
+ *
  * Admin interface for managing premium features and license keys
  */
 
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useLicense } from '@/hooks/use-license';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, Loader2, Key, Lock, Unlock } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { Navbar } from '@/components/navigation/navbar';
+import { useState } from "react";
+import { useLicense } from "@/hooks/use-license";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, XCircle, Loader2, Key, Lock, Unlock } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Navbar } from "@/components/navigation/navbar";
 
 export default function LicenseManagementPage() {
-  const { license, features, isLoading, toggleFeature, activateLicense } = useLicense();
+  const { license, features, isLoading, toggleFeature, activateLicense } =
+    useLicense();
   const { toast } = useToast();
-  const [licenseKey, setLicenseKey] = useState('');
+  const [licenseKey, setLicenseKey] = useState("");
   const [activating, setActivating] = useState(false);
   const [togglingFeature, setTogglingFeature] = useState<string | null>(null);
 
@@ -33,9 +38,9 @@ export default function LicenseManagementPage() {
   const handleActivateLicense = async () => {
     if (!licenseKey.trim()) {
       toast({
-        title: 'Error',
-        description: 'Please enter a license key',
-        variant: 'destructive',
+        title: "Error",
+        description: "Please enter a license key",
+        variant: "destructive",
       });
       return;
     }
@@ -47,15 +52,15 @@ export default function LicenseManagementPage() {
 
       if (result.success) {
         toast({
-          title: 'Success',
-          description: result.message || 'License activated successfully',
+          title: "Success",
+          description: result.message || "License activated successfully",
         });
-        setLicenseKey('');
+        setLicenseKey("");
       } else {
         toast({
-          title: 'Error',
-          description: result.error || 'Failed to activate license',
-          variant: 'destructive',
+          title: "Error",
+          description: result.error || "Failed to activate license",
+          variant: "destructive",
         });
       }
     } finally {
@@ -64,7 +69,10 @@ export default function LicenseManagementPage() {
   };
 
   // Handle feature toggle
-  const handleToggleFeature = async (featureKey: string, currentlyEnabled: boolean) => {
+  const handleToggleFeature = async (
+    featureKey: string,
+    currentlyEnabled: boolean,
+  ) => {
     setTogglingFeature(featureKey);
 
     try {
@@ -72,14 +80,14 @@ export default function LicenseManagementPage() {
 
       if (result.success) {
         toast({
-          title: 'Success',
-          description: `Feature ${!currentlyEnabled ? 'enabled' : 'disabled'} successfully`,
+          title: "Success",
+          description: `Feature ${!currentlyEnabled ? "enabled" : "disabled"} successfully`,
         });
       } else {
         toast({
-          title: 'Error',
-          description: result.error || 'Failed to update feature',
-          variant: 'destructive',
+          title: "Error",
+          description: result.error || "Failed to update feature",
+          variant: "destructive",
         });
       }
     } finally {
@@ -99,13 +107,13 @@ export default function LicenseManagementPage() {
   }
 
   // premium features
-  const premiumFeatures = features.filter((f: any) => f.category === 'PREMIUM');
-  const enabledCount = premiumFeatures.filter((f: any) => f.isEnabled).length;
+  const premiumFeatures = features.filter((f) => f.category === "PREMIUM");
+  const enabledCount = premiumFeatures.filter((f) => f.isEnabled).length;
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar currentPage="license" />
-      
+
       <div className="container mx-auto py-8 space-y-8 px-4 sm:px-6 lg:px-8 max-w-7xl">
         <div>
           <h1 className="text-3xl font-bold">License Management</h1>
@@ -122,18 +130,32 @@ export default function LicenseManagementPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm text-muted-foreground">Organization Name</Label>
-                <p className="font-medium">{license?.organizationName || 'Not Set'}</p>
+                <Label className="text-sm text-muted-foreground">
+                  Organization Name
+                </Label>
+                <p className="font-medium">
+                  {license?.organizationName || "Not Set"}
+                </p>
               </div>
               <div>
-                <Label className="text-sm text-muted-foreground">Subscription Tier</Label>
-                <Badge variant={license?.subscriptionTier === 'PREMIUM' ? 'default' : 'secondary'}>
-                  {license?.subscriptionTier || 'BASE'}
+                <Label className="text-sm text-muted-foreground">
+                  Subscription Tier
+                </Label>
+                <Badge
+                  variant={
+                    license?.subscriptionTier === "PREMIUM"
+                      ? "default"
+                      : "secondary"
+                  }
+                >
+                  {license?.subscriptionTier || "BASE"}
                 </Badge>
               </div>
             </div>
             <div>
-              <Label className="text-sm text-muted-foreground">Active Premium Features</Label>
+              <Label className="text-sm text-muted-foreground">
+                Active Premium Features
+              </Label>
               <p className="font-medium">
                 {enabledCount} / {premiumFeatures.length} features enabled
               </p>
@@ -158,7 +180,7 @@ export default function LicenseManagementPage() {
                 <Input
                   placeholder="Enter license key (e.g., LIC-XXXX-XXXX-XXXX)"
                   value={licenseKey}
-                  onChange={(e: any) => setLicenseKey(e.target.value.toUpperCase())}
+                  onChange={(e) => setLicenseKey(e.target.value.toUpperCase())}
                   disabled={activating}
                 />
               </div>
@@ -172,15 +194,16 @@ export default function LicenseManagementPage() {
                     Activating...
                   </>
                 ) : (
-                  'Activate'
+                  "Activate"
                 )}
               </Button>
             </div>
             <Alert>
               <AlertTitle>How to get a license key?</AlertTitle>
               <AlertDescription>
-                Contact your sales representative or visit our website to purchase premium features.
-                Each license key can unlock one or more features.
+                Contact your sales representative or visit our website to
+                purchase premium features. Each license key can unlock one or
+                more features.
               </AlertDescription>
             </Alert>
           </CardContent>
@@ -191,12 +214,13 @@ export default function LicenseManagementPage() {
           <CardHeader>
             <CardTitle>Premium Features</CardTitle>
             <CardDescription>
-              Toggle premium features on or off (requires manual activation by administrator)
+              Toggle premium features on or off (requires manual activation by
+              administrator)
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {premiumFeatures.map((feature: any, index: number) => (
+              {premiumFeatures.map((feature, index: number) => (
                 <div key={feature.key}>
                   {index > 0 && <Separator className="my-4" />}
                   <div className="flex items-center justify-between">
@@ -205,7 +229,10 @@ export default function LicenseManagementPage() {
                         <span className="text-2xl">{feature.icon}</span>
                         <h3 className="font-semibold">{feature.name}</h3>
                         {feature.isEnabled ? (
-                          <Badge variant="default" className="bg-green-100 text-green-800">
+                          <Badge
+                            variant="default"
+                            className="bg-green-100 text-green-800"
+                          >
                             <CheckCircle className="mr-1 h-3 w-3" />
                             Active
                           </Badge>
@@ -216,7 +243,9 @@ export default function LicenseManagementPage() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground">{feature.description}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {feature.description}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2">
                       {togglingFeature === feature.key ? (
@@ -224,7 +253,9 @@ export default function LicenseManagementPage() {
                       ) : (
                         <Switch
                           checked={feature.isEnabled}
-                          onCheckedChange={() => handleToggleFeature(feature.key, feature.isEnabled)}
+                          onCheckedChange={() =>
+                            handleToggleFeature(feature.key, feature.isEnabled)
+                          }
                         />
                       )}
                     </div>
@@ -242,11 +273,13 @@ export default function LicenseManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {premiumFeatures.map((feature: any) => (
+              {premiumFeatures.map((feature) => (
                 <div
                   key={feature.key}
                   className={`p-4 border rounded-lg ${
-                    feature.isEnabled ? 'border-green-200 bg-green-50' : 'border-gray-200'
+                    feature.isEnabled
+                      ? "border-green-200 bg-green-50"
+                      : "border-gray-200"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">

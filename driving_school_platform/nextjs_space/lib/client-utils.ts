@@ -1,10 +1,9 @@
-
 /**
  * Client-side utility functions for API calls and data handling
  * @module lib/client-utils
  */
 
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 
 /**
  * Generic API call wrapper with error handling
@@ -12,15 +11,15 @@ import toast from 'react-hot-toast';
  * @param options - Fetch options
  * @returns Response data or throws error
  */
-export async function apiCall<T = any>(
+export async function apiCall<T = unknown>(
   url: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<T> {
   try {
     const response = await fetch(url, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...options?.headers,
       },
     });
@@ -28,12 +27,13 @@ export async function apiCall<T = any>(
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || 'Request failed');
+      throw new Error(data.error || "Request failed");
     }
 
     return data;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+    const errorMessage =
+      error instanceof Error ? error.message : "An unexpected error occurred";
     throw new Error(errorMessage);
   }
 }
@@ -43,8 +43,8 @@ export async function apiCall<T = any>(
  * @param url - API endpoint URL
  * @returns Response data
  */
-export async function apiGet<T = any>(url: string): Promise<T> {
-  return apiCall<T>(url, { method: 'GET' });
+export async function apiGet<T = unknown>(url: string): Promise<T> {
+  return apiCall<T>(url, { method: "GET" });
 }
 
 /**
@@ -53,9 +53,12 @@ export async function apiGet<T = any>(url: string): Promise<T> {
  * @param body - Request body
  * @returns Response data
  */
-export async function apiPost<T = any>(url: string, body: any): Promise<T> {
+export async function apiPost<T = unknown>(
+  url: string,
+  body: unknown,
+): Promise<T> {
   return apiCall<T>(url, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify(body),
   });
 }
@@ -66,9 +69,12 @@ export async function apiPost<T = any>(url: string, body: any): Promise<T> {
  * @param body - Request body
  * @returns Response data
  */
-export async function apiPut<T = any>(url: string, body: any): Promise<T> {
+export async function apiPut<T = unknown>(
+  url: string,
+  body: unknown,
+): Promise<T> {
   return apiCall<T>(url, {
-    method: 'PUT',
+    method: "PUT",
     body: JSON.stringify(body),
   });
 }
@@ -78,8 +84,8 @@ export async function apiPut<T = any>(url: string, body: any): Promise<T> {
  * @param url - API endpoint URL
  * @returns Response data
  */
-export async function apiDelete<T = any>(url: string): Promise<T> {
-  return apiCall<T>(url, { method: 'DELETE' });
+export async function apiDelete<T = unknown>(url: string): Promise<T> {
+  return apiCall<T>(url, { method: "DELETE" });
 }
 
 /**
@@ -104,7 +110,7 @@ export function showError(error: string | Error): void {
  * @param message - Loading message
  * @returns Toast ID for dismissal
  */
-export function showLoading(message: string = 'Loading...'): string {
+export function showLoading(message: string = "Loading..."): string {
   return toast.loading(message);
 }
 
@@ -125,23 +131,23 @@ export function dismissToast(toastId: string): void {
  */
 export async function withLoading<T>(
   operation: () => Promise<T>,
-  loadingMessage: string = 'Processing...',
-  successMessage?: string
+  loadingMessage: string = "Processing...",
+  successMessage?: string,
 ): Promise<T> {
   const toastId = showLoading(loadingMessage);
-  
+
   try {
     const result = await operation();
     dismissToast(toastId);
-    
+
     if (successMessage) {
       showSuccess(successMessage);
     }
-    
+
     return result;
   } catch (error) {
     dismissToast(toastId);
-    showError(error instanceof Error ? error : 'Operation failed');
+    showError(error instanceof Error ? error : "Operation failed");
     throw error;
   }
 }
@@ -152,12 +158,12 @@ export async function withLoading<T>(
  * @param delay - Delay in milliseconds
  * @returns Debounced function
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
-  delay: number
+  delay: number,
 ): (...args: Parameters<T>) => void {
   let timeoutId: NodeJS.Timeout;
-  
+
   return (...args: Parameters<T>) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => func(...args), delay);
@@ -172,10 +178,10 @@ export function debounce<T extends (...args: any[]) => any>(
  */
 export function formatFullName(
   firstName?: string | null,
-  lastName?: string | null
+  lastName?: string | null,
 ): string {
-  if (!firstName && !lastName) return 'Unknown';
-  if (!firstName) return lastName || 'Unknown';
+  if (!firstName && !lastName) return "Unknown";
+  if (!firstName) return lastName || "Unknown";
   if (!lastName) return firstName;
   return `${firstName} ${lastName}`;
 }
@@ -188,11 +194,11 @@ export function formatFullName(
  */
 export function getInitials(
   firstName?: string | null,
-  lastName?: string | null
+  lastName?: string | null,
 ): string {
-  const first = firstName?.[0] || '';
-  const last = lastName?.[0] || '';
-  return (first + last).toUpperCase() || '?';
+  const first = firstName?.[0] || "";
+  const last = lastName?.[0] || "";
+  return (first + last).toUpperCase() || "?";
 }
 
 /**
@@ -202,22 +208,23 @@ export function getInitials(
  * @param defaultValue - Default value if property doesn't exist
  * @returns Property value or default
  */
-export function safeGet<T = any>(
-  obj: any,
+export function safeGet<T = unknown>(
+  obj: unknown,
   path: string,
-  defaultValue?: T
+  defaultValue?: T,
 ): T | undefined {
-  const keys = path.split('.');
-  let result = obj;
-  
+  const keys = path.split(".");
+  let result: unknown = obj;
+
   for (const key of keys) {
-    if (result == null || typeof result !== 'object') {
-      return defaultValue;
-    }
-    result = result[key];
+    if (result === null || result === undefined) return defaultValue;
+    if (typeof result !== "object") return defaultValue;
+
+    const record = result as Record<string, unknown>;
+    result = record[key];
   }
-  
-  return result !== undefined ? result : defaultValue;
+
+  return result !== undefined ? (result as T) : defaultValue;
 }
 
 /**
@@ -255,7 +262,7 @@ export function isValidPhone(phone: string): boolean {
  */
 export function formatPhoneNumber(
   countryCode: string,
-  phoneNumber: string
+  phoneNumber: string,
 ): string {
   return `${countryCode}${phoneNumber}`;
 }
@@ -268,19 +275,21 @@ export function formatPhoneNumber(
  */
 export function parsePhoneNumber(
   fullPhoneNumber: string,
-  availableCodes: string[] = ['+351', '+1', '+44', '+34', '+33', '+49']
+  availableCodes: string[] = ["+351", "+1", "+44", "+34", "+33", "+49"],
 ): { countryCode: string; phoneNumber: string } {
-  const foundCode = availableCodes.find(code => fullPhoneNumber.startsWith(code));
-  
+  const foundCode = availableCodes.find((code) =>
+    fullPhoneNumber.startsWith(code),
+  );
+
   if (foundCode) {
     return {
       countryCode: foundCode,
       phoneNumber: fullPhoneNumber.slice(foundCode.length),
     };
   }
-  
+
   return {
-    countryCode: '+351',
+    countryCode: "+351",
     phoneNumber: fullPhoneNumber,
   };
 }

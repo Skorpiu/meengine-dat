@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { errorResponse, verifyAuth, withErrorHandling } from '@/lib/api-utils';
-import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from '@/lib/constants';
-import { startOfDay, addDays } from 'date-fns';
-import { resolveTenantOrganizationId } from '@/lib/tenant';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { errorResponse, verifyAuth, withErrorHandling } from "@/lib/api-utils";
+import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from "@/lib/constants";
+import { startOfDay, addDays } from "date-fns";
+import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const user = await verifyAuth(USER_ROLES.INSTRUCTOR);
@@ -14,22 +14,25 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
   }
 
-  const orgId = (user as any).organizationId as string | null | undefined;
+  const orgId = user.organizationId;
   if (!orgId) {
-    return errorResponse('No organization found', HTTP_STATUS.BAD_REQUEST);
+    return errorResponse("No organization found", HTTP_STATUS.BAD_REQUEST);
   }
 
-  const tenant = await resolveTenantOrganizationId(request);
-  if (tenant.organizationId && tenant.organizationId !== orgId) {
-    return errorResponse('Organization does not match this domain', HTTP_STATUS.FORBIDDEN);
+  const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+  if (!tenantGuard.allowed) {
+    return errorResponse(tenantGuard.error, tenantGuard.status);
   }
 
   const { searchParams } = new URL(request.url);
-  const from = searchParams.get('from');
-  const to = searchParams.get('to');
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
 
   if (!from || !to) {
-    return errorResponse('Missing "from" and/or "to" query params', HTTP_STATUS.BAD_REQUEST);
+    return errorResponse(
+      'Missing "from" and/or "to" query params',
+      HTTP_STATUS.BAD_REQUEST,
+    );
   }
 
   // Implement robust day range filtering: lessonDate >= startOfDay(from) AND lessonDate < startOfDay(to) + 1 day
@@ -37,7 +40,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const toDate = addDays(startOfDay(new Date(to)), 1);
 
   if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
-    return errorResponse('Invalid "from" or "to" date', HTTP_STATUS.BAD_REQUEST);
+    return errorResponse(
+      'Invalid "from" or "to" date',
+      HTTP_STATUS.BAD_REQUEST,
+    );
   }
 
   const instructor = await prisma.instructor.findFirst({
@@ -45,7 +51,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   });
 
   if (!instructor) {
-    return errorResponse('Instructor profile not found', HTTP_STATUS.NOT_FOUND);
+    return errorResponse("Instructor profile not found", HTTP_STATUS.NOT_FOUND);
   }
 
   const lessons = await prisma.lesson.findMany({
@@ -60,11 +66,11 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       vehicle: true,
       category: true,
     },
-    orderBy: [{ lessonDate: 'asc' }, { startTime: 'asc' }],
+    orderBy: [{ lessonDate: "asc" }, { startTime: "asc" }],
   });
 
   return NextResponse.json(
     { lessons },
-    { status: 200, headers: { 'Cache-Control': 'no-store' } }
+    { status: 200, headers: { "Cache-Control": "no-store" } },
   );
 });

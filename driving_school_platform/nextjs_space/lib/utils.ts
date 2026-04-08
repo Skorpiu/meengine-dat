@@ -3,8 +3,8 @@
  * @module lib/utils
  */
 
-import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 /**
  * Merge Tailwind CSS classes intelligently
@@ -25,7 +25,7 @@ export function formatDuration(seconds: number): string {
   const minutes = Math.floor((seconds % 3600) / 60);
   const remainingSeconds = seconds % 60;
 
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
 
 /**
@@ -36,7 +36,7 @@ export function formatDuration(seconds: number): string {
 export function formatMinutesToReadable(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  
+
   if (hours === 0) return `${mins}min`;
   if (mins === 0) return `${hours}h`;
   return `${hours}h ${mins}min`;
@@ -59,7 +59,7 @@ export function truncateText(text: string, maxLength: number): string {
  * @returns Capitalized string
  */
 export function capitalize(str: string): string {
-  if (!str) return '';
+  if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
@@ -70,9 +70,9 @@ export function capitalize(str: string): string {
  */
 export function formatEnumValue(enumValue: string): string {
   return enumValue
-    .split('_')
-    .map(word => capitalize(word))
-    .join(' ');
+    .split("_")
+    .map((word) => capitalize(word))
+    .join(" ");
 }
 
 /**
@@ -81,7 +81,7 @@ export function formatEnumValue(enumValue: string): string {
  * @returns Promise that resolves after delay
  */
 export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -90,7 +90,9 @@ export function sleep(ms: number): Promise<void> {
  * @returns Random ID string
  */
 export function generateRandomId(length: number = 8): string {
-  return Math.random().toString(36).substring(2, 2 + length);
+  return Math.random()
+    .toString(36)
+    .substring(2, 2 + length);
 }
 
 /**
@@ -98,11 +100,12 @@ export function generateRandomId(length: number = 8): string {
  * @param value - Value to check
  * @returns True if empty
  */
-export function isEmpty(value: any): boolean {
-  if (value == null) return true;
-  if (typeof value === 'string') return value.trim().length === 0;
+export function isEmpty(value: unknown): boolean {
+  if (value === null || value === undefined) return true;
+  if (typeof value === "string") return value.trim().length === 0;
   if (Array.isArray(value)) return value.length === 0;
-  if (typeof value === 'object') return Object.keys(value).length === 0;
+  if (typeof value === "object")
+    return Object.keys(value as Record<string, unknown>).length === 0;
   return false;
 }
 
@@ -122,14 +125,17 @@ export function deepClone<T>(obj: T): T {
  * @returns Grouped object
  */
 export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
-  return array.reduce((result, item) => {
-    const groupKey = String(item[key]);
-    if (!result[groupKey]) {
-      result[groupKey] = [];
-    }
-    result[groupKey].push(item);
-    return result;
-  }, {} as Record<string, T[]>);
+  return array.reduce(
+    (result, item) => {
+      const groupKey = String(item[key]);
+      if (!result[groupKey]) {
+        result[groupKey] = [];
+      }
+      result[groupKey].push(item);
+      return result;
+    },
+    {} as Record<string, T[]>,
+  );
 }
 
 /**
@@ -142,14 +148,14 @@ export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
 export function sortBy<T>(
   array: T[],
   key: keyof T,
-  order: 'asc' | 'desc' = 'asc'
+  order: "asc" | "desc" = "asc",
 ): T[] {
   return [...array].sort((a, b) => {
     const aVal = a[key];
     const bVal = b[key];
-    
-    if (aVal < bVal) return order === 'asc' ? -1 : 1;
-    if (aVal > bVal) return order === 'asc' ? 1 : -1;
+
+    if (aVal < bVal) return order === "asc" ? -1 : 1;
+    if (aVal > bVal) return order === "asc" ? 1 : -1;
     return 0;
   });
 }
@@ -164,9 +170,9 @@ export function unique<T>(array: T[], key?: keyof T): T[] {
   if (!key) {
     return Array.from(new Set(array));
   }
-  
+
   const seen = new Set();
-  return array.filter(item => {
+  return array.filter((item) => {
     const value = item[key];
     if (seen.has(value)) {
       return false;
@@ -182,12 +188,12 @@ export function unique<T>(array: T[], key?: keyof T): T[] {
  * @returns Formatted file size
  */
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
-  
+  if (bytes === 0) return "0 Bytes";
+
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
@@ -198,14 +204,14 @@ export function formatFileSize(bytes: number): string {
  */
 export function parseQueryString(queryString: string): Record<string, string> {
   if (!queryString) return {};
-  
+
   const params = new URLSearchParams(queryString);
   const result: Record<string, string> = {};
-  
+
   params.forEach((value, key) => {
     result[key] = value;
   });
-  
+
   return result;
 }
 
@@ -214,15 +220,15 @@ export function parseQueryString(queryString: string): Record<string, string> {
  * @param params - Parameters object
  * @returns Query string
  */
-export function buildQueryString(params: Record<string, any>): string {
+export function buildQueryString(
+  params: Record<string, string | number | boolean | null | undefined>,
+): string {
   const searchParams = new URLSearchParams();
-  
+
   Object.entries(params).forEach(([key, value]) => {
-    if (value != null) {
-      searchParams.append(key, String(value));
-    }
+    if (value === undefined || value === null || value === "") return;
+    searchParams.append(key, String(value));
   });
-  
-  const queryString = searchParams.toString();
-  return queryString ? `?${queryString}` : '';
+
+  return searchParams.toString();
 }

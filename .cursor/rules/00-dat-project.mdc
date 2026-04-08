@@ -1,0 +1,14 @@
+---
+description: DAT project context (always on)
+---
+# DAT - project context
+
+- Stack: Next.js 14 (App Router) + TypeScript + Prisma + Supabase Postgres + NextAuth (Credentials).
+- Package manager: pnpm (nunca npm/yarn).
+- App path: driving_school_platform/nextjs_space
+- Prisma schema: driving_school_platform/nextjs_space/prisma/schema.prisma
+- Goal: production-grade changes only; keep CI green.
+
+Multi-tenant:
+- Organization + OrganizationDomain exist in Prisma schema.
+- Preserve organization scoping (organizationId) and host/domain routing logic.

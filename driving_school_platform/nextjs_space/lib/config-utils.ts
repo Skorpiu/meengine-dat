@@ -1,31 +1,31 @@
-
 /**
  * Configuration utilities for system settings, feature flags, and user preferences
  * @module lib/config-utils
  */
 
-import { prisma } from './db';
+import { prisma } from "./db";
+import { Prisma } from "@prisma/client";
 
-export type SettingType = string;
+export type SettingType = "STRING" | "INTEGER" | "DECIMAL" | "BOOLEAN" | "JSON";
 
 /**
  * Parse setting value based on type
  */
-export function parseSettingValue(value: string, type: SettingType): any {
+export function parseSettingValue(value: string, type: SettingType): unknown {
   switch (type) {
-    case 'INTEGER':
+    case "INTEGER":
       return parseInt(value, 10);
-    case 'BOOLEAN':
-      return value === 'true' || value === '1';
-    case 'DECIMAL':
+    case "BOOLEAN":
+      return value === "true" || value === "1";
+    case "DECIMAL":
       return parseFloat(value);
-    case 'JSON':
+    case "JSON":
       try {
         return JSON.parse(value);
       } catch {
         return value;
       }
-    case 'STRING':
+    case "STRING":
     default:
       return value;
   }
@@ -34,12 +34,15 @@ export function parseSettingValue(value: string, type: SettingType): any {
 /**
  * Stringify setting value for storage
  */
-export function stringifySettingValue(value: any, type: SettingType): string {
+export function stringifySettingValue(
+  value: unknown,
+  type: SettingType,
+): string {
   switch (type) {
-    case 'JSON':
-      return typeof value === 'string' ? value : JSON.stringify(value);
-    case 'BOOLEAN':
-      return value ? 'true' : 'false';
+    case "JSON":
+      return typeof value === "string" ? value : JSON.stringify(value);
+    case "BOOLEAN":
+      return value ? "true" : "false";
     default:
       return String(value);
   }
@@ -48,9 +51,9 @@ export function stringifySettingValue(value: any, type: SettingType): string {
 /**
  * Get a system setting by key with type parsing
  */
-export async function getSystemSetting<T = any>(
+export async function getSystemSetting<T = unknown>(
   key: string,
-  defaultValue?: T
+  defaultValue?: T,
 ): Promise<T | undefined> {
   try {
     const setting = await prisma.systemSetting.findUnique({
@@ -73,14 +76,14 @@ export async function getSystemSetting<T = any>(
  */
 export async function setSystemSetting(
   key: string,
-  value: any,
-  type: SettingType = 'STRING',
+  value: unknown,
+  type: SettingType = "STRING",
   options?: {
     description?: string;
     category?: string;
     isPublic?: boolean;
     updatedBy?: string;
-  }
+  },
 ): Promise<void> {
   const stringValue = stringifySettingValue(value, type);
 
@@ -88,13 +91,13 @@ export async function setSystemSetting(
     where: { settingKey: key },
     update: {
       settingValue: stringValue,
-      settingType: type as any,
+      settingType: type,
       ...options,
     },
     create: {
       settingKey: key,
       settingValue: stringValue,
-      settingType: type as any,
+      settingType: type,
       ...options,
     },
   });
@@ -107,7 +110,7 @@ export async function isFeatureEnabled(
   flagKey: string,
   userId?: string,
   userRole?: string,
-  organizationId?: string | null
+  organizationId?: string | null,
 ): Promise<boolean> {
   try {
     if (!organizationId) {
@@ -145,7 +148,7 @@ export async function isFeatureEnabled(
     // Check rollout percentage (deterministic based on user ID)
     if (flag.rolloutPercent < 100 && userId) {
       const hash = simpleHash(userId + flagKey);
-      return (hash % 100) < flag.rolloutPercent;
+      return hash % 100 < flag.rolloutPercent;
     }
 
     // If rollout is 100% and no specific targeting, enable for all
@@ -163,7 +166,7 @@ function simpleHash(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32-bit integer
   }
   return Math.abs(hash);
@@ -197,7 +200,7 @@ export async function getUserPreferences(userId: string) {
  */
 export async function updateUserPreferences(
   userId: string,
-  updates: Partial<any>
+  updates: Partial<unknown>,
 ) {
   try {
     return await prisma.userPreference.upsert({
@@ -214,26 +217,66 @@ export async function updateUserPreferences(
   }
 }
 
+type PrismaJsonField =
+  | Prisma.InputJsonValue
+  | Prisma.NullableJsonNullValueInput;
+
+// Prisma.JsonNull may be typed in a "strange" way in some clients.
+// We freeze the type here so TS doesn't invent `undefined`.
+const PRISMA_JSON_NULL = Prisma.JsonNull as unknown as PrismaJsonField;
+
+function toPrismaJsonField(value: unknown): PrismaJsonField {
+  if (value === null || value === undefined) return PRISMA_JSON_NULL;
+
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return value;
+  }
+
+  if (value instanceof Date) return value.toISOString();
+
+  if (Array.isArray(value)) {
+    return value.map((v) =>
+      toPrismaJsonField(v),
+    ) as unknown as Prisma.InputJsonValue;
+  }
+
+  if (typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (v === undefined) continue;
+      out[k] = toPrismaJsonField(v);
+    }
+    return out as unknown as Prisma.InputJsonValue;
+  }
+
+  // fallback (bigint/symbol/function/etc.) -> string JSON-safe
+  return String(value);
+}
+
 /**
  * Log configuration change
  */
 export async function logConfigurationChange(
-  entityType: 'SystemSetting' | 'FeatureFlag' | 'UserPreference',
+  entityType: "SystemSetting" | "FeatureFlag" | "UserPreference",
   entityId: string,
-  action: 'CREATED' | 'UPDATED' | 'DELETED' | 'ENABLED' | 'DISABLED',
+  action: "CREATED" | "UPDATED" | "DELETED" | "ENABLED" | "DISABLED",
   options: {
     organizationId?: string | null;
     entityKey?: string;
-    oldValue?: any;
-    newValue?: any;
+    oldValue?: unknown;
+    newValue?: unknown;
     changedBy?: string;
     changedByRole?: string;
     changeReason?: string;
     ipAddress?: string;
-  }
+  },
 ) {
   try {
-    const { organizationId, ...rest } = options;
+    const { organizationId, oldValue, newValue, ...rest } = options;
 
     await prisma.configurationHistory.create({
       data: {
@@ -242,10 +285,16 @@ export async function logConfigurationChange(
         action,
         organizationId: organizationId ?? null,
         ...rest,
+        ...(oldValue !== undefined
+          ? { oldValue: toPrismaJsonField(oldValue) }
+          : {}),
+        ...(newValue !== undefined
+          ? { newValue: toPrismaJsonField(newValue) }
+          : {}),
       },
     });
   } catch (error) {
-    console.error('Error logging configuration change:', error);
+    console.error("Error logging configuration change:", error);
   }
 }
 
@@ -255,9 +304,9 @@ export async function logConfigurationChange(
 export async function getUserFeatureFlags(
   userId?: string,
   userRole?: string,
-  organizationId?: string | null
+  organizationId?: string | null,
 ): Promise<Record<string, boolean>> {
-    try {
+  try {
     if (!organizationId) {
       return {};
     }
@@ -269,12 +318,17 @@ export async function getUserFeatureFlags(
     const result: Record<string, boolean> = {};
 
     for (const flag of flags) {
-      result[flag.flagKey] = await isFeatureEnabled(flag.flagKey, userId, userRole, organizationId);
+      result[flag.flagKey] = await isFeatureEnabled(
+        flag.flagKey,
+        userId,
+        userRole,
+        organizationId,
+      );
     }
 
     return result;
   } catch (error) {
-    console.error('Error fetching user feature flags:', error);
+    console.error("Error fetching user feature flags:", error);
     return {};
   }
 }
@@ -282,7 +336,9 @@ export async function getUserFeatureFlags(
 /**
  * Get all public system settings (scoped to an organization)
  */
-export async function getPublicSettings(organizationId: string): Promise<Record<string, any>> {
+export async function getPublicSettings(
+  organizationId: string,
+): Promise<Record<string, unknown>> {
   try {
     if (!organizationId) {
       return {};
@@ -292,15 +348,18 @@ export async function getPublicSettings(organizationId: string): Promise<Record<
       where: { isPublic: true, organizationId },
     });
 
-    const result: Record<string, any> = {};
+    const result: Record<string, unknown> = {};
 
     for (const setting of settings) {
-      result[setting.settingKey] = parseSettingValue(setting.settingValue, setting.settingType);
+      result[setting.settingKey] = parseSettingValue(
+        setting.settingValue,
+        setting.settingType,
+      );
     }
 
     return result;
   } catch (error) {
-    console.error('Error fetching public settings:', error);
+    console.error("Error fetching public settings:", error);
     return {};
   }
 }

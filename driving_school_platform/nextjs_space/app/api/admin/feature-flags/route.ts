@@ -1,20 +1,22 @@
-
 /**
  * Feature Flags API
  * @route /api/admin/feature-flags
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/db';
-import { featureFlagSchema, featureFlagsQuerySchema } from '@/lib/config-validation';
-import { logConfigurationChange } from '@/lib/config-utils';
-import { HTTP_STATUS, API_MESSAGES } from '@/lib/constants';
-import { resolveTenantOrganizationId } from '@/lib/tenant';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import {
+  featureFlagSchema,
+  featureFlagsQuerySchema,
+} from "@/lib/config-validation";
+import { logConfigurationChange } from "@/lib/config-utils";
+import { HTTP_STATUS, API_MESSAGES } from "@/lib/constants";
+import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 /**
  * GET /api/admin/feature-flags
@@ -24,59 +26,62 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    if (!session?.user || session.user.role !== "SUPER_ADMIN") {
       return NextResponse.json(
         { error: API_MESSAGES.UNAUTHORIZED },
-        { status: HTTP_STATUS.UNAUTHORIZED }
+        { status: HTTP_STATUS.UNAUTHORIZED },
       );
     }
 
     const orgId = session.user.organizationId;
     if (!orgId) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
-    const tenant = await resolveTenantOrganizationId(request);
-    if (tenant.organizationId && tenant.organizationId !== orgId) {
+    const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+    if (!tenantGuard.allowed) {
       return NextResponse.json(
-        { error: 'Organization does not match this domain' },
-        { status: 403 }
+        { error: tenantGuard.error },
+        { status: tenantGuard.status },
       );
     }
 
     const { searchParams } = new URL(request.url);
     const query = featureFlagsQuerySchema.parse({
-      environment: searchParams.get('environment') || undefined,
-      category: searchParams.get('category') || undefined,
-      isEnabled: searchParams.get('isEnabled') === 'true' || undefined,
-      search: searchParams.get('search') || undefined,
+      environment: searchParams.get("environment") || undefined,
+      category: searchParams.get("category") || undefined,
+      isEnabled: searchParams.get("isEnabled") === "true" || undefined,
+      search: searchParams.get("search") || undefined,
     });
 
     const where: any = { organizationId: orgId };
-    
+
     if (query.environment) {
       where.environment = query.environment;
     }
-    
+
     if (query.category) {
       where.category = query.category;
     }
-    
+
     if (query.isEnabled !== undefined) {
       where.isEnabled = query.isEnabled;
     }
-    
+
     if (query.search) {
       where.OR = [
-        { flagKey: { contains: query.search, mode: 'insensitive' } },
-        { flagName: { contains: query.search, mode: 'insensitive' } },
-        { description: { contains: query.search, mode: 'insensitive' } },
+        { flagKey: { contains: query.search, mode: "insensitive" } },
+        { flagName: { contains: query.search, mode: "insensitive" } },
+        { description: { contains: query.search, mode: "insensitive" } },
       ];
     }
 
     const flags = await prisma.featureFlag.findMany({
       where,
-      orderBy: [{ category: 'asc' }, { flagKey: 'asc' }],
+      orderBy: [{ category: "asc" }, { flagKey: "asc" }],
     });
 
     return NextResponse.json({
@@ -84,10 +89,10 @@ export async function GET(request: NextRequest) {
       total: flags.length,
     });
   } catch (error) {
-    console.error('Error fetching feature flags:', error);
+    console.error("Error fetching feature flags:", error);
     return NextResponse.json(
       { error: API_MESSAGES.FETCH_ERROR },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }
@@ -100,23 +105,26 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    if (!session?.user || session.user.role !== "SUPER_ADMIN") {
       return NextResponse.json(
         { error: API_MESSAGES.UNAUTHORIZED },
-        { status: HTTP_STATUS.UNAUTHORIZED }
+        { status: HTTP_STATUS.UNAUTHORIZED },
       );
     }
 
     const orgId = session.user.organizationId;
     if (!orgId) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
-    const tenant = await resolveTenantOrganizationId(request);
-    if (tenant.organizationId && tenant.organizationId !== orgId) {
+    const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+    if (!tenantGuard.allowed) {
       return NextResponse.json(
-        { error: 'Organization does not match this domain' },
-        { status: 403 }
+        { error: tenantGuard.error },
+        { status: tenantGuard.status },
       );
     }
 
@@ -131,8 +139,8 @@ export async function POST(request: NextRequest) {
 
     if (existing) {
       return NextResponse.json(
-        { error: 'Feature flag already exists' },
-        { status: HTTP_STATUS.BAD_REQUEST }
+        { error: "Feature flag already exists" },
+        { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
 
@@ -146,7 +154,7 @@ export async function POST(request: NextRequest) {
         enabledForRoles: validated.enabledForRoles || [],
         enabledForUsers: validated.enabledForUsers || [],
         rolloutPercent: validated.rolloutPercent || 0,
-        environment: validated.environment || 'production',
+        environment: validated.environment || "production",
         category: validated.category,
         tags: validated.tags || [],
         expiresAt: validated.expiresAt ? new Date(validated.expiresAt) : null,
@@ -156,7 +164,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Log the change
-    await logConfigurationChange('FeatureFlag', flag.id, 'CREATED', {
+    await logConfigurationChange("FeatureFlag", flag.id, "CREATED", {
       entityKey: flag.flagKey,
       newValue: flag,
       changedBy: session.user.id,
@@ -164,23 +172,26 @@ export async function POST(request: NextRequest) {
       organizationId: orgId,
     });
 
-    return NextResponse.json({
-      message: API_MESSAGES.CREATED_SUCCESS,
-      flag,
-    }, { status: HTTP_STATUS.CREATED });
+    return NextResponse.json(
+      {
+        message: API_MESSAGES.CREATED_SUCCESS,
+        flag,
+      },
+      { status: HTTP_STATUS.CREATED },
+    );
   } catch (error: any) {
-    console.error('Error creating feature flag:', error);
-    
-    if (error.name === 'ZodError') {
+    console.error("Error creating feature flag:", error);
+
+    if (error.name === "ZodError") {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: HTTP_STATUS.BAD_REQUEST }
+        { error: "Validation failed", details: error.errors },
+        { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
 
     return NextResponse.json(
       { error: API_MESSAGES.CREATE_ERROR },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }
@@ -193,23 +204,26 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    if (!session?.user || session.user.role !== "SUPER_ADMIN") {
       return NextResponse.json(
         { error: API_MESSAGES.UNAUTHORIZED },
-        { status: HTTP_STATUS.UNAUTHORIZED }
+        { status: HTTP_STATUS.UNAUTHORIZED },
       );
     }
 
     const orgId = session.user.organizationId;
     if (!orgId) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
-    const tenant = await resolveTenantOrganizationId(request);
-    if (tenant.organizationId && tenant.organizationId !== orgId) {
+    const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+    if (!tenantGuard.allowed) {
       return NextResponse.json(
-        { error: 'Organization does not match this domain' },
-        { status: 403 }
+        { error: tenantGuard.error },
+        { status: tenantGuard.status },
       );
     }
 
@@ -218,8 +232,8 @@ export async function PUT(request: NextRequest) {
 
     if (!flagKey) {
       return NextResponse.json(
-        { error: 'Flag key is required' },
-        { status: HTTP_STATUS.BAD_REQUEST }
+        { error: "Flag key is required" },
+        { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
 
@@ -230,8 +244,8 @@ export async function PUT(request: NextRequest) {
 
     if (!oldFlag) {
       return NextResponse.json(
-        { error: 'Feature flag not found' },
-        { status: HTTP_STATUS.NOT_FOUND }
+        { error: "Feature flag not found" },
+        { status: HTTP_STATUS.NOT_FOUND },
       );
     }
 
@@ -257,17 +271,20 @@ export async function PUT(request: NextRequest) {
 
     if (!flag) {
       return NextResponse.json(
-        { error: 'Feature flag not found' },
-        { status: HTTP_STATUS.NOT_FOUND }
+        { error: "Feature flag not found" },
+        { status: HTTP_STATUS.NOT_FOUND },
       );
     }
 
     // Log the change
-    const action = oldFlag.isEnabled !== flag.isEnabled 
-      ? (flag.isEnabled ? 'ENABLED' : 'DISABLED')
-      : 'UPDATED';
+    const action =
+      oldFlag.isEnabled !== flag.isEnabled
+        ? flag.isEnabled
+          ? "ENABLED"
+          : "DISABLED"
+        : "UPDATED";
 
-    await logConfigurationChange('FeatureFlag', flag.id, action, {
+    await logConfigurationChange("FeatureFlag", flag.id, action, {
       entityKey: flag.flagKey,
       oldValue: oldFlag,
       newValue: flag,
@@ -281,18 +298,18 @@ export async function PUT(request: NextRequest) {
       flag,
     });
   } catch (error: any) {
-    console.error('Error updating feature flag:', error);
-    
-    if (error.name === 'ZodError') {
+    console.error("Error updating feature flag:", error);
+
+    if (error.name === "ZodError") {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: HTTP_STATUS.BAD_REQUEST }
+        { error: "Validation failed", details: error.errors },
+        { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
 
     return NextResponse.json(
       { error: API_MESSAGES.UPDATE_ERROR },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }
@@ -305,33 +322,36 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    if (!session?.user || session.user.role !== "SUPER_ADMIN") {
       return NextResponse.json(
         { error: API_MESSAGES.UNAUTHORIZED },
-        { status: HTTP_STATUS.UNAUTHORIZED }
+        { status: HTTP_STATUS.UNAUTHORIZED },
       );
     }
 
     const orgId = session.user.organizationId;
     if (!orgId) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
-    const tenant = await resolveTenantOrganizationId(request);
-    if (tenant.organizationId && tenant.organizationId !== orgId) {
+    const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
+    if (!tenantGuard.allowed) {
       return NextResponse.json(
-        { error: 'Organization does not match this domain' },
-        { status: 403 }
+        { error: tenantGuard.error },
+        { status: tenantGuard.status },
       );
     }
 
     const { searchParams } = new URL(request.url);
-    const flagKey = searchParams.get('key');
+    const flagKey = searchParams.get("key");
 
     if (!flagKey) {
       return NextResponse.json(
-        { error: 'Flag key is required' },
-        { status: HTTP_STATUS.BAD_REQUEST }
+        { error: "Flag key is required" },
+        { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
 
@@ -342,8 +362,8 @@ export async function DELETE(request: NextRequest) {
 
     if (!flag) {
       return NextResponse.json(
-        { error: 'Feature flag not found' },
-        { status: HTTP_STATUS.NOT_FOUND }
+        { error: "Feature flag not found" },
+        { status: HTTP_STATUS.NOT_FOUND },
       );
     }
 
@@ -352,7 +372,7 @@ export async function DELETE(request: NextRequest) {
     });
 
     // Log the change
-    await logConfigurationChange('FeatureFlag', flag.id, 'DELETED', {
+    await logConfigurationChange("FeatureFlag", flag.id, "DELETED", {
       entityKey: flag.flagKey,
       oldValue: flag,
       changedBy: session.user.id,
@@ -364,10 +384,10 @@ export async function DELETE(request: NextRequest) {
       message: API_MESSAGES.DELETED_SUCCESS,
     });
   } catch (error) {
-    console.error('Error deleting feature flag:', error);
+    console.error("Error deleting feature flag:", error);
     return NextResponse.json(
       { error: API_MESSAGES.DELETE_ERROR },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }

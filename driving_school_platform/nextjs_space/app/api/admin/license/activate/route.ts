@@ -1,10 +1,9 @@
-
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { LicenseService } from '@/lib/services/license-service';
-import { db } from '@/lib/db';
-import { resolveTenantOrganizationId } from '@/lib/tenant';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { LicenseService } from "@/lib/services/license-service";
+import { db } from "@/lib/db";
+import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 
 /**
  * POST /api/admin/license/activate
@@ -14,7 +13,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get user with organization
@@ -23,28 +22,43 @@ export async function POST(request: NextRequest) {
       include: { organization: true },
     });
 
-    if (!user || user.role !== 'SUPER_ADMIN') {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    if (!user || user.role !== "SUPER_ADMIN") {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     if (!user.organizationId) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
-    const tenant = await resolveTenantOrganizationId(request);
-    if (tenant.organizationId && tenant.organizationId !== user.organizationId) {
-      return NextResponse.json({ error: 'Wrong organization for this domain' }, { status: 403 });
+    const tenantGuard = await guardTenantAuthenticatedRoute(
+      request,
+      user.organizationId,
+    );
+    if (!tenantGuard.allowed) {
+      return NextResponse.json(
+        { error: tenantGuard.error },
+        { status: tenantGuard.status },
+      );
     }
 
     const body = await request.json();
     const { licenseKey } = body;
 
-    if (!licenseKey || typeof licenseKey !== 'string') {
-      return NextResponse.json({ error: 'Invalid license key' }, { status: 400 });
+    if (!licenseKey || typeof licenseKey !== "string") {
+      return NextResponse.json(
+        { error: "Invalid license key" },
+        { status: 400 },
+      );
     }
 
     // Activate the license key
-    const result = await LicenseService.activateLicenseKey(user.organizationId, licenseKey);
+    const result = await LicenseService.activateLicenseKey(
+      user.organizationId,
+      licenseKey,
+    );
 
     if (!result.success) {
       return NextResponse.json({ error: result.message }, { status: 400 });
@@ -56,7 +70,10 @@ export async function POST(request: NextRequest) {
       features: result.features,
     });
   } catch (error) {
-    console.error('Error activating license:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error activating license:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
