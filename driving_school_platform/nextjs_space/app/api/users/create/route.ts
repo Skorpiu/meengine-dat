@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import type { UserRole } from "@prisma/client";
 
 type CreateUserBody = {
   firstName?: string;
@@ -15,7 +16,7 @@ type CreateUserBody = {
   address?: string;
   city?: string;
   postalCode?: string;
-  role?: string;
+  role?: UserRole;
   selectedCategories?: string[];
   transmissionType?: string;
   instructorLicenseNumber?: string;
