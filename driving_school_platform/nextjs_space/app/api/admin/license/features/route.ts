@@ -51,10 +51,15 @@ export async function GET(request: NextRequest) {
     );
 
     // Build response with all features and their status
-    const features = Object.values(FEATURE_DEFINITIONS).map((feature: any) => ({
-      ...feature,
-      isEnabled: enabledFeatures.includes(feature.key),
-    }));
+    type FeatureDefinition =
+      (typeof FEATURE_DEFINITIONS)[keyof typeof FEATURE_DEFINITIONS];
+
+    const features = Object.values(FEATURE_DEFINITIONS).map(
+      (feature: FeatureDefinition) => ({
+        ...feature,
+        isEnabled: enabledFeatures.includes(feature.key),
+      }),
+    );
 
     return NextResponse.json({
       organizationId: user.organizationId,

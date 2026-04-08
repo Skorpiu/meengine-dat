@@ -1,11 +1,14 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { checkFeatureAccess } from "@/lib/middleware/feature-check";
+import type { Prisma } from "@prisma/client";
+import { VehicleStatus } from "@prisma/client";
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { checkFeatureAccess } from '@/lib/middleware/feature-check';
-import type { Prisma } from '@prisma/client';
-import { VehicleStatus } from '@prisma/client';
+type VehicleWithRelations = Prisma.VehicleGetPayload<{
+  include: { category: true; transmissionType: true };
+}>;
 
 /**
  * GET /api/admin/vehicles
@@ -16,34 +19,47 @@ export async function GET(request: NextRequest) {
     // Check if user is authenticated
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Allow both SUPER_ADMIN and INSTRUCTOR to access
-    if (session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'INSTRUCTOR') {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    if (
+      session.user.role !== "SUPER_ADMIN" &&
+      session.user.role !== "INSTRUCTOR"
+    ) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     // Check if Vehicle Management feature is enabled
     // For SUPER_ADMIN: Check feature access
     // For INSTRUCTOR: Also check feature access (defense in depth)
-    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT', request);
+    const featureCheck = await checkFeatureAccess(
+      "VEHICLE_MANAGEMENT",
+      request,
+    );
     if (!featureCheck.allowed) {
-      return NextResponse.json({ 
-        error: 'Vehicles feature not enabled',
-        message: 'Vehicle Management feature is not enabled. Please upgrade to unlock this feature.',
-        requiresUpgrade: true,
-      }, { status: 403 });
+      return NextResponse.json(
+        {
+          error: "Vehicles feature not enabled",
+          message:
+            "Vehicle Management feature is not enabled. Please upgrade to unlock this feature.",
+          requiresUpgrade: true,
+        },
+        { status: 403 },
+      );
     }
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
-    const categoryId = searchParams.get('categoryId');
+    const status = searchParams.get("status");
+    const categoryId = searchParams.get("categoryId");
 
     const orgId = featureCheck.organizationId;
     if (!orgId) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
     // Build where clause (scoped to org)
@@ -68,7 +84,7 @@ export async function GET(request: NextRequest) {
         transmissionType: true,
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
@@ -117,32 +133,37 @@ export async function GET(request: NextRequest) {
     }
 
     // Update vehicle status based on real-time usage
-    const vehiclesWithStatus = vehicles.map((vehicle: any) => {
-      let status = vehicle.status;
-      
-      // Priority 1: Under Maintenance
-      if (vehicle.underMaintenance) {
-        status = 'MAINTENANCE';
-      }
-      // Priority 2: Currently in use (has an active lesson/exam)
-      else if (vehicleIdsInUse.has(vehicle.id)) {
-        status = 'IN_USE';
-      }
-      // Priority 3: Available
-      else if (vehicle.isActive) {
-        status = 'AVAILABLE';
-      }
-      
-      return {
-        ...vehicle,
-        status,
-      };
-    });
+    const vehiclesWithStatus = (vehicles as VehicleWithRelations[]).map(
+      (vehicle) => {
+        let status = vehicle.status;
+
+        // Priority 1: Under Maintenance
+        if (vehicle.underMaintenance) {
+          status = "MAINTENANCE";
+        }
+        // Priority 2: Currently in use (has an active lesson/exam)
+        else if (vehicleIdsInUse.has(vehicle.id)) {
+          status = "IN_USE";
+        }
+        // Priority 3: Available
+        else if (vehicle.isActive) {
+          status = "AVAILABLE";
+        }
+
+        return {
+          ...vehicle,
+          status,
+        };
+      },
+    );
 
     return NextResponse.json({ vehicles: vehiclesWithStatus });
   } catch (error) {
-    console.error('Error fetching vehicles:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error fetching vehicles:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -155,40 +176,56 @@ export async function POST(request: NextRequest) {
     // Check if user is authenticated
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Check if user is admin
-    if (session.user.role !== 'SUPER_ADMIN') {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    if (session.user.role !== "SUPER_ADMIN") {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     // Check if Vehicle Management feature is enabled
-    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT', request);
+    const featureCheck = await checkFeatureAccess(
+      "VEHICLE_MANAGEMENT",
+      request,
+    );
     if (!featureCheck.allowed) {
-      return NextResponse.json({ 
-        error: 'Vehicle Management feature is not enabled. Please upgrade to unlock this feature.',
-        requiresUpgrade: true,
-      }, { status: 403 });
+      return NextResponse.json(
+        {
+          error:
+            "Vehicle Management feature is not enabled. Please upgrade to unlock this feature.",
+          requiresUpgrade: true,
+        },
+        { status: 403 },
+      );
     }
 
     const orgId = featureCheck.organizationId;
     if (!orgId) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
     const body = await request.json();
 
     // Check if registration number already exists
     const existingByRegNumber = await db.vehicle.findFirst({
-      where: { organizationId: orgId, registrationNumber: body.registrationNumber },
+      where: {
+        organizationId: orgId,
+        registrationNumber: body.registrationNumber,
+      },
       select: { id: true },
     });
 
     if (existingByRegNumber) {
-      return NextResponse.json({ 
-        error: 'A vehicle with this registration number already exists' 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "A vehicle with this registration number already exists",
+        },
+        { status: 400 },
+      );
     }
 
     // Check if VIN already exists (only if VIN is provided)
@@ -199,9 +236,12 @@ export async function POST(request: NextRequest) {
       });
 
       if (existingByVin) {
-        return NextResponse.json({ 
-          error: 'A vehicle with this VIN already exists' 
-        }, { status: 400 });
+        return NextResponse.json(
+          {
+            error: "A vehicle with this VIN already exists",
+          },
+          { status: 400 },
+        );
       }
     }
 
@@ -217,18 +257,25 @@ export async function POST(request: NextRequest) {
         vin: body.vin && body.vin.trim() ? body.vin.trim() : null,
         categoryId: body.categoryId ? parseInt(body.categoryId) : null,
         transmissionTypeId: parseInt(body.transmissionTypeId),
-        status: body.status || 'AVAILABLE',
+        status: body.status || "AVAILABLE",
         isActive: body.isActive !== undefined ? body.isActive : true,
-        hasDualControls: body.hasDualControls !== undefined ? body.hasDualControls : true,
+        hasDualControls:
+          body.hasDualControls !== undefined ? body.hasDualControls : true,
         hasDashcam: body.hasDashcam || false,
         fuelType: body.fuelType || null,
         insurancePolicyNumber: body.insurancePolicyNumber || null,
-        insuranceExpiryDate: body.insuranceExpiryDate ? new Date(body.insuranceExpiryDate) : null,
+        insuranceExpiryDate: body.insuranceExpiryDate
+          ? new Date(body.insuranceExpiryDate)
+          : null,
         insuranceCompany: body.insuranceCompany || null,
         currentMileage: body.currentMileage || 0,
         serviceIntervalKm: body.serviceIntervalKm || 10000,
-        lastServiceDate: body.lastServiceDate ? new Date(body.lastServiceDate) : null,
-        nextServiceDate: body.nextServiceDate ? new Date(body.nextServiceDate) : null,
+        lastServiceDate: body.lastServiceDate
+          ? new Date(body.lastServiceDate)
+          : null,
+        nextServiceDate: body.nextServiceDate
+          ? new Date(body.nextServiceDate)
+          : null,
         vehicleImageUrl: body.vehicleImageUrl || null,
         adminNotes: body.adminNotes || null,
       },
@@ -240,8 +287,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ vehicle }, { status: 201 });
   } catch (error) {
-    console.error('Error creating vehicle:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error creating vehicle:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -254,36 +304,49 @@ export async function PUT(request: NextRequest) {
     // Check if user is authenticated
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Check if user is admin
-    if (session.user.role !== 'SUPER_ADMIN') {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    if (session.user.role !== "SUPER_ADMIN") {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     // Check if Vehicle Management feature is enabled
-    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT', request);
+    const featureCheck = await checkFeatureAccess(
+      "VEHICLE_MANAGEMENT",
+      request,
+    );
     if (!featureCheck.allowed) {
-      return NextResponse.json({ 
-        error: 'Vehicle Management feature is not enabled. Please upgrade to unlock this feature.',
-        requiresUpgrade: true,
-      }, { status: 403 });
+      return NextResponse.json(
+        {
+          error:
+            "Vehicle Management feature is not enabled. Please upgrade to unlock this feature.",
+          requiresUpgrade: true,
+        },
+        { status: 403 },
+      );
     }
 
     const orgId = featureCheck.organizationId;
     if (!orgId) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
     const body = await request.json();
     const { vehicleId, ...updateData } = body;
 
     const vehicleIdNum =
-      typeof vehicleId === 'string' ? parseInt(vehicleId, 10) : vehicleId;
+      typeof vehicleId === "string" ? parseInt(vehicleId, 10) : vehicleId;
 
     if (!vehicleIdNum || Number.isNaN(vehicleIdNum)) {
-      return NextResponse.json({ error: 'Vehicle ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Vehicle ID is required" },
+        { status: 400 },
+      );
     }
 
     // Check if vehicle exists
@@ -292,7 +355,7 @@ export async function PUT(request: NextRequest) {
     });
 
     if (!existingVehicle) {
-      return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
+      return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });
     }
 
     // Check if registration number is being changed and if it already exists
@@ -307,9 +370,12 @@ export async function PUT(request: NextRequest) {
       });
 
       if (existingByRegNumber) {
-        return NextResponse.json({ 
-          error: 'A vehicle with this registration number already exists' 
-        }, { status: 400 });
+        return NextResponse.json(
+          {
+            error: "A vehicle with this registration number already exists",
+          },
+          { status: 400 },
+        );
       }
     }
 
@@ -317,18 +383,21 @@ export async function PUT(request: NextRequest) {
     if (updateData.vin && updateData.vin.trim()) {
       if (updateData.vin.trim() !== existingVehicle.vin) {
         const existingByVin = await db.vehicle.findFirst({
-          where: { 
-            organizationId: orgId, 
-            vin: updateData.vin.trim(), 
-            id: { not: vehicleIdNum } 
+          where: {
+            organizationId: orgId,
+            vin: updateData.vin.trim(),
+            id: { not: vehicleIdNum },
           },
           select: { id: true },
         });
 
         if (existingByVin) {
-          return NextResponse.json({ 
-            error: 'A vehicle with this VIN already exists' 
-          }, { status: 400 });
+          return NextResponse.json(
+            {
+              error: "A vehicle with this VIN already exists",
+            },
+            { status: 400 },
+          );
         }
       }
     }
@@ -342,8 +411,13 @@ export async function PUT(request: NextRequest) {
         model: updateData.model,
         year: updateData.year,
         color: updateData.color,
-        vin: updateData.vin && updateData.vin.trim() ? updateData.vin.trim() : null,
-        categoryId: updateData.categoryId ? parseInt(updateData.categoryId) : null,
+        vin:
+          updateData.vin && updateData.vin.trim()
+            ? updateData.vin.trim()
+            : null,
+        categoryId: updateData.categoryId
+          ? parseInt(updateData.categoryId)
+          : null,
         transmissionTypeId: parseInt(updateData.transmissionTypeId),
         status: updateData.status,
         isActive: updateData.isActive,
@@ -351,12 +425,18 @@ export async function PUT(request: NextRequest) {
         hasDashcam: updateData.hasDashcam,
         fuelType: updateData.fuelType,
         insurancePolicyNumber: updateData.insurancePolicyNumber,
-        insuranceExpiryDate: updateData.insuranceExpiryDate ? new Date(updateData.insuranceExpiryDate) : null,
+        insuranceExpiryDate: updateData.insuranceExpiryDate
+          ? new Date(updateData.insuranceExpiryDate)
+          : null,
         insuranceCompany: updateData.insuranceCompany,
         currentMileage: updateData.currentMileage,
         serviceIntervalKm: updateData.serviceIntervalKm,
-        lastServiceDate: updateData.lastServiceDate ? new Date(updateData.lastServiceDate) : null,
-        nextServiceDate: updateData.nextServiceDate ? new Date(updateData.nextServiceDate) : null,
+        lastServiceDate: updateData.lastServiceDate
+          ? new Date(updateData.lastServiceDate)
+          : null,
+        nextServiceDate: updateData.nextServiceDate
+          ? new Date(updateData.nextServiceDate)
+          : null,
         vehicleImageUrl: updateData.vehicleImageUrl,
         adminNotes: updateData.adminNotes,
       },
@@ -368,8 +448,11 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ vehicle });
   } catch (error) {
-    console.error('Error updating vehicle:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error updating vehicle:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -382,38 +465,54 @@ export async function DELETE(request: NextRequest) {
     // Check if user is authenticated
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Check if user is admin
-    if (session.user.role !== 'SUPER_ADMIN') {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    if (session.user.role !== "SUPER_ADMIN") {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     // Check if Vehicle Management feature is enabled
-    const featureCheck = await checkFeatureAccess('VEHICLE_MANAGEMENT', request);
+    const featureCheck = await checkFeatureAccess(
+      "VEHICLE_MANAGEMENT",
+      request,
+    );
     if (!featureCheck.allowed) {
-      return NextResponse.json({ 
-        error: 'Vehicle Management feature is not enabled. Please upgrade to unlock this feature.',
-        requiresUpgrade: true,
-      }, { status: 403 });
+      return NextResponse.json(
+        {
+          error:
+            "Vehicle Management feature is not enabled. Please upgrade to unlock this feature.",
+          requiresUpgrade: true,
+        },
+        { status: 403 },
+      );
     }
 
     const orgId = featureCheck.organizationId;
     if (!orgId) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 400 });
+      return NextResponse.json(
+        { error: "No organization found" },
+        { status: 400 },
+      );
     }
 
     const { searchParams } = new URL(request.url);
-    const vehicleId = searchParams.get('vehicleId');
+    const vehicleId = searchParams.get("vehicleId");
 
     if (!vehicleId) {
-      return NextResponse.json({ error: 'Vehicle ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Vehicle ID is required" },
+        { status: 400 },
+      );
     }
 
     const vehicleIdNum = parseInt(vehicleId, 10);
     if (Number.isNaN(vehicleIdNum)) {
-      return NextResponse.json({ error: 'Vehicle ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Vehicle ID is required" },
+        { status: 400 },
+      );
     }
 
     // Check if vehicle exists
@@ -430,14 +529,18 @@ export async function DELETE(request: NextRequest) {
     });
 
     if (!vehicle) {
-      return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
+      return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });
     }
 
     // Check if vehicle is used in any lessons or exams
     if (vehicle._count.lessons > 0 || vehicle._count.exams > 0) {
-      return NextResponse.json({ 
-        error: 'Cannot delete vehicle with existing lessons or exams. Please reassign them first.',
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error:
+            "Cannot delete vehicle with existing lessons or exams. Please reassign them first.",
+        },
+        { status: 400 },
+      );
     }
 
     // Delete vehicle
@@ -445,9 +548,12 @@ export async function DELETE(request: NextRequest) {
       where: { id: vehicleIdNum, organizationId: orgId },
     });
 
-    return NextResponse.json({ message: 'Vehicle deleted successfully' });
+    return NextResponse.json({ message: "Vehicle deleted successfully" });
   } catch (error) {
-    console.error('Error deleting vehicle:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error deleting vehicle:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
