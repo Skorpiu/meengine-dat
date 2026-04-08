@@ -14,6 +14,8 @@ import {
 import { logConfigurationChange } from "@/lib/config-utils";
 import { HTTP_STATUS, API_MESSAGES } from "@/lib/constants";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import type { Prisma } from "@prisma/client";
+import { ZodError } from "zod";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,7 +59,7 @@ export async function GET(request: NextRequest) {
       search: searchParams.get("search") || undefined,
     });
 
-    const where: any = { organizationId: orgId };
+    const where: Prisma.FeatureFlagWhereInput = { organizationId: orgId };
 
     if (query.environment) {
       where.environment = query.environment;
@@ -179,10 +181,10 @@ export async function POST(request: NextRequest) {
       },
       { status: HTTP_STATUS.CREATED },
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating feature flag:", error);
 
-    if (error.name === "ZodError") {
+    if (error instanceof ZodError) {
       return NextResponse.json(
         { error: "Validation failed", details: error.errors },
         { status: HTTP_STATUS.BAD_REQUEST },
@@ -297,10 +299,10 @@ export async function PUT(request: NextRequest) {
       message: API_MESSAGES.UPDATED_SUCCESS,
       flag,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating feature flag:", error);
 
-    if (error.name === "ZodError") {
+    if (error instanceof ZodError) {
       return NextResponse.json(
         { error: "Validation failed", details: error.errors },
         { status: HTTP_STATUS.BAD_REQUEST },
