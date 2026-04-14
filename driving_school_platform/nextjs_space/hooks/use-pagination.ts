@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 /**
  * Pagination Hook
@@ -7,8 +6,8 @@
  * @module hooks/use-pagination
  */
 
-import { useState, useMemo } from 'react';
-import { PAGINATION } from '@/lib/constants';
+import { useState, useMemo } from "react";
+import { PAGINATION } from "@/lib/constants";
 
 interface UsePaginationProps {
   /** Total number of items */
@@ -46,7 +45,7 @@ interface UsePaginationReturn<T> {
 
 /**
  * Hook for managing pagination state and utilities
- * 
+ *
  * @example
  * ```tsx
  * const {
@@ -57,11 +56,11 @@ interface UsePaginationReturn<T> {
  *   prevPage,
  *   getPaginatedItems,
  * } = usePagination({ totalItems: data.length });
- * 
+ *
  * const paginatedData = getPaginatedItems(data);
  * ```
  */
-export function usePagination<T = any>({
+export function usePagination<T = unknown>({
   totalItems,
   initialPage = 1,
   pageSize = PAGINATION.DEFAULT_PAGE_SIZE,
@@ -112,7 +111,7 @@ export function usePagination<T = any>({
     }
 
     if (currentPage - delta > 2) {
-      rangeWithDots.push(1, '...');
+      rangeWithDots.push(1, "...");
     } else {
       rangeWithDots.push(1);
     }
@@ -120,7 +119,7 @@ export function usePagination<T = any>({
     rangeWithDots.push(...range);
 
     if (currentPage + delta < totalPages - 1) {
-      rangeWithDots.push('...', totalPages);
+      rangeWithDots.push("...", totalPages);
     } else if (totalPages > 1) {
       rangeWithDots.push(totalPages);
     }

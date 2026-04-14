@@ -249,14 +249,11 @@ export function VehiclesManagementClient() {
   /**
    * Pagination for filtered vehicles
    */
-  const {
-    currentPage,
-    totalPages,
-    getPaginatedItems,
-    goToPage,
-    nextPage,
-    prevPage,
-  } = usePagination({ totalItems: filteredVehicles.length, pageSize: 10 });
+  const { currentPage, totalPages, getPaginatedItems, goToPage } =
+    usePagination<VehicleRow>({
+      totalItems: filteredVehicles.length,
+      pageSize: 10,
+    });
 
   const paginatedVehicles = getPaginatedItems(filteredVehicles);
 

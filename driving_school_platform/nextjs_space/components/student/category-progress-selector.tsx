@@ -1,9 +1,15 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Progress } from '@/components/ui/progress';
-import { CheckCircle, AlertCircle } from 'lucide-react';
+import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
+import { CheckCircle, AlertCircle } from "lucide-react";
 
 interface LessonCounter {
   id: string;
@@ -36,17 +42,18 @@ export function CategoryProgressSelector({
   practicalExamPassed,
 }: CategoryProgressSelectorProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(
-    lessonCounters.length > 0 ? lessonCounters[0].category.id.toString() : 'all'
+    lessonCounters.length > 0
+      ? lessonCounters[0].category.id.toString()
+      : "all",
   );
 
   const selectedCounter = lessonCounters.find(
-    (lc) => lc.category.id.toString() === selectedCategoryId
+    (lc) => lc.category.id.toString() === selectedCategoryId,
   );
 
   const progressPercentage = selectedCounter?.progressPercentage || 0;
-  const drivingHours = selectedCounter?.totalDrivingHours || 0;
-  const requiredHours = selectedCounter?.requiredDrivingHours || 0;
-  const categoryName = selectedCounter?.category.name || currentCategoryName || 'Not selected';
+  const categoryName =
+    selectedCounter?.category.name || currentCategoryName || "Not selected";
 
   return (
     <div className="space-y-6">
@@ -54,13 +61,19 @@ export function CategoryProgressSelector({
       {lessonCounters.length > 1 && (
         <div className="space-y-2">
           <label className="text-sm font-medium">Select Category</label>
-          <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+          <Select
+            value={selectedCategoryId}
+            onValueChange={setSelectedCategoryId}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
               {lessonCounters.map((lc) => (
-                <SelectItem key={lc.category.id} value={lc.category.id.toString()}>
+                <SelectItem
+                  key={lc.category.id}
+                  value={lc.category.id.toString()}
+                >
                   {lc.category.name}
                 </SelectItem>
               ))}
@@ -73,7 +86,9 @@ export function CategoryProgressSelector({
       <div>
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium">Overall Progress</span>
-          <span className="text-sm text-gray-600">{Math.round(progressPercentage)}%</span>
+          <span className="text-sm text-gray-600">
+            {Math.round(progressPercentage)}%
+          </span>
         </div>
         <Progress value={progressPercentage} className="h-2" />
       </div>
@@ -85,7 +100,9 @@ export function CategoryProgressSelector({
         </div>
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Transmission</span>
-          <span className="font-medium">{transmissionTypeName || 'Not selected'}</span>
+          <span className="font-medium">
+            {transmissionTypeName || "Not selected"}
+          </span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Code Lessons</span>
