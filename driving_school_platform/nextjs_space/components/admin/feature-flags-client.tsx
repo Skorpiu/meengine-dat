@@ -3,19 +3,19 @@
  * Interface for managing feature flags and A/B testing
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -31,14 +31,40 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
-import { Flag, Plus, Edit, Trash2, Search, RefreshCw, ToggleLeft, ToggleRight } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+} from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import {
+  Flag,
+  Plus,
+  Edit,
+  Trash2,
+  Search,
+  RefreshCw,
+  ToggleLeft,
+  ToggleRight,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
+
+function getErrorMessage(error: unknown): string {
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (message == null) return "";
+    return typeof message === "string" ? message : String(message);
+  }
+
+  if (error == null) return "";
+  return typeof error === "string" ? error : String(error);
+}
 
 interface FeatureFlag {
   id: string;
@@ -60,8 +86,8 @@ interface FeatureFlag {
 export function FeatureFlagsClient() {
   const [flags, setFlags] = useState<FeatureFlag[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [showDialog, setShowDialog] = useState(false);
   const [editingFlag, setEditingFlag] = useState<FeatureFlag | null>(null);
   const [formData, setFormData] = useState<{
@@ -76,16 +102,16 @@ export function FeatureFlagsClient() {
     tags: string[];
     expiresAt: string;
   }>({
-    flagKey: '',
-    flagName: '',
-    description: '',
+    flagKey: "",
+    flagName: "",
+    description: "",
     isEnabled: false,
     enabledForRoles: [],
     rolloutPercent: 0,
-    environment: 'production',
-    category: '',
+    environment: "production",
+    category: "",
     tags: [],
-    expiresAt: '',
+    expiresAt: "",
   });
 
   useEffect(() => {
@@ -95,15 +121,15 @@ export function FeatureFlagsClient() {
   const fetchFlags = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/feature-flags');
-      
-      if (!response.ok) throw new Error('Failed to fetch flags');
-      
+      const response = await fetch("/api/admin/feature-flags");
+
+      if (!response.ok) throw new Error("Failed to fetch flags");
+
       const data = await response.json();
       setFlags(data.flags || []);
     } catch (error) {
-      console.error('Error fetching flags:', error);
-      toast.error('Failed to load feature flags');
+      console.error("Error fetching flags:", error);
+      toast.error("Failed to load feature flags");
     } finally {
       setLoading(false);
     }
@@ -111,9 +137,9 @@ export function FeatureFlagsClient() {
 
   const handleCreate = async () => {
     try {
-      const response = await fetch('/api/admin/feature-flags', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/admin/feature-flags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
           expiresAt: formData.expiresAt || null,
@@ -122,16 +148,16 @@ export function FeatureFlagsClient() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to create flag');
+        throw new Error(error.error || "Failed to create flag");
       }
 
-      toast.success('Feature flag created successfully');
+      toast.success("Feature flag created successfully");
       setShowDialog(false);
       resetForm();
       fetchFlags();
-    } catch (error: any) {
-      console.error('Error creating flag:', error);
-      toast.error(error.message);
+    } catch (error: unknown) {
+      console.error("Error creating flag:", error);
+      toast.error(getErrorMessage(error));
     }
   };
 
@@ -139,9 +165,9 @@ export function FeatureFlagsClient() {
     if (!editingFlag) return;
 
     try {
-      const response = await fetch('/api/admin/feature-flags', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/admin/feature-flags", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
           flagKey: editingFlag.flagKey,
@@ -151,25 +177,25 @@ export function FeatureFlagsClient() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to update flag');
+        throw new Error(error.error || "Failed to update flag");
       }
 
-      toast.success('Feature flag updated successfully');
+      toast.success("Feature flag updated successfully");
       setShowDialog(false);
       setEditingFlag(null);
       resetForm();
       fetchFlags();
-    } catch (error: any) {
-      console.error('Error updating flag:', error);
-      toast.error(error.message);
+    } catch (error: unknown) {
+      console.error("Error updating flag:", error);
+      toast.error(getErrorMessage(error));
     }
   };
 
   const handleToggle = async (flag: FeatureFlag) => {
     try {
-      const response = await fetch('/api/admin/feature-flags', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/admin/feature-flags", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           flagKey: flag.flagKey,
           isEnabled: !flag.isEnabled,
@@ -178,35 +204,35 @@ export function FeatureFlagsClient() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to toggle flag');
+        throw new Error(error.error || "Failed to toggle flag");
       }
 
-      toast.success(`Feature flag ${!flag.isEnabled ? 'enabled' : 'disabled'}`);
+      toast.success(`Feature flag ${!flag.isEnabled ? "enabled" : "disabled"}`);
       fetchFlags();
-    } catch (error: any) {
-      console.error('Error toggling flag:', error);
-      toast.error(error.message);
+    } catch (error: unknown) {
+      console.error("Error toggling flag:", error);
+      toast.error(getErrorMessage(error));
     }
   };
 
   const handleDelete = async (flagKey: string) => {
-    if (!confirm('Are you sure you want to delete this feature flag?')) return;
+    if (!confirm("Are you sure you want to delete this feature flag?")) return;
 
     try {
       const response = await fetch(`/api/admin/feature-flags?key=${flagKey}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to delete flag');
+        throw new Error(error.error || "Failed to delete flag");
       }
 
-      toast.success('Feature flag deleted successfully');
+      toast.success("Feature flag deleted successfully");
       fetchFlags();
-    } catch (error: any) {
-      console.error('Error deleting flag:', error);
-      toast.error(error.message);
+    } catch (error: unknown) {
+      console.error("Error deleting flag:", error);
+      toast.error(getErrorMessage(error));
     }
   };
 
@@ -221,42 +247,44 @@ export function FeatureFlagsClient() {
     setFormData({
       flagKey: flag.flagKey,
       flagName: flag.flagName,
-      description: flag.description || '',
+      description: flag.description || "",
       isEnabled: flag.isEnabled,
       enabledForRoles: flag.enabledForRoles,
       rolloutPercent: flag.rolloutPercent,
       environment: flag.environment,
-      category: flag.category || '',
+      category: flag.category || "",
       tags: flag.tags,
-      expiresAt: flag.expiresAt ? flag.expiresAt.split('T')[0] : '',
+      expiresAt: flag.expiresAt ? flag.expiresAt.split("T")[0] : "",
     });
     setShowDialog(true);
   };
 
   const resetForm = () => {
     setFormData({
-      flagKey: '',
-      flagName: '',
-      description: '',
+      flagKey: "",
+      flagName: "",
+      description: "",
       isEnabled: false,
       enabledForRoles: [],
       rolloutPercent: 0,
-      environment: 'production',
-      category: '',
+      environment: "production",
+      category: "",
       tags: [],
-      expiresAt: '',
+      expiresAt: "",
     });
   };
 
   const categories = Array.from(
-    new Set(flags.map(f => f.category).filter(Boolean))
+    new Set(flags.map((f) => f.category).filter(Boolean)),
   ).sort();
 
-  const filteredFlags = flags.filter(flag => {
-    const matchesSearch = !searchQuery || 
+  const filteredFlags = flags.filter((flag) => {
+    const matchesSearch =
+      !searchQuery ||
       flag.flagKey.toLowerCase().includes(searchQuery.toLowerCase()) ||
       flag.flagName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || flag.category === selectedCategory;
+    const matchesCategory =
+      selectedCategory === "all" || flag.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -288,9 +316,9 @@ export function FeatureFlagsClient() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(cat => (
-                <SelectItem key={cat} value={cat || 'Uncategorized'}>
-                  {cat || 'Uncategorized'}
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat || "Uncategorized"}>
+                  {cat || "Uncategorized"}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -315,7 +343,7 @@ export function FeatureFlagsClient() {
             Feature Flags
           </CardTitle>
           <CardDescription>
-            {filteredFlags.length} flag{filteredFlags.length !== 1 ? 's' : ''}
+            {filteredFlags.length} flag{filteredFlags.length !== 1 ? "s" : ""}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -339,7 +367,9 @@ export function FeatureFlagsClient() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleToggle(flag)}
-                      className={flag.isEnabled ? 'text-green-600' : 'text-gray-400'}
+                      className={
+                        flag.isEnabled ? "text-green-600" : "text-gray-400"
+                      }
                     >
                       {flag.isEnabled ? (
                         <ToggleRight className="w-5 h-5" />
@@ -351,15 +381,21 @@ export function FeatureFlagsClient() {
                   <TableCell>
                     <div>
                       <div className="font-medium">{flag.flagName}</div>
-                      <div className="text-xs text-gray-500 font-mono">{flag.flagKey}</div>
+                      <div className="text-xs text-gray-500 font-mono">
+                        {flag.flagKey}
+                      </div>
                       {flag.description && (
-                        <div className="text-xs text-gray-600 mt-1">{flag.description}</div>
+                        <div className="text-xs text-gray-600 mt-1">
+                          {flag.description}
+                        </div>
                       )}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <div className="text-sm font-medium">{flag.rolloutPercent}%</div>
+                      <div className="text-sm font-medium">
+                        {flag.rolloutPercent}%
+                      </div>
                       <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-blue-600"
@@ -375,17 +411,22 @@ export function FeatureFlagsClient() {
                     <div className="flex flex-wrap gap-1">
                       {flag.enabledForRoles.length > 0 && (
                         <Badge variant="secondary" className="text-xs">
-                          {flag.enabledForRoles.length} role{flag.enabledForRoles.length !== 1 ? 's' : ''}
+                          {flag.enabledForRoles.length} role
+                          {flag.enabledForRoles.length !== 1 ? "s" : ""}
                         </Badge>
                       )}
                       {flag.enabledForUsers.length > 0 && (
                         <Badge variant="secondary" className="text-xs">
-                          {flag.enabledForUsers.length} user{flag.enabledForUsers.length !== 1 ? 's' : ''}
+                          {flag.enabledForUsers.length} user
+                          {flag.enabledForUsers.length !== 1 ? "s" : ""}
                         </Badge>
                       )}
-                      {flag.enabledForRoles.length === 0 && flag.enabledForUsers.length === 0 && (
-                        <span className="text-xs text-gray-500">All users</span>
-                      )}
+                      {flag.enabledForRoles.length === 0 &&
+                        flag.enabledForUsers.length === 0 && (
+                          <span className="text-xs text-gray-500">
+                            All users
+                          </span>
+                        )}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -427,10 +468,12 @@ export function FeatureFlagsClient() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingFlag ? 'Edit Feature Flag' : 'Create New Feature Flag'}
+              {editingFlag ? "Edit Feature Flag" : "Create New Feature Flag"}
             </DialogTitle>
             <DialogDescription>
-              {editingFlag ? 'Update feature flag configuration' : 'Add a new feature flag'}
+              {editingFlag
+                ? "Update feature flag configuration"
+                : "Add a new feature flag"}
             </DialogDescription>
           </DialogHeader>
 
@@ -441,7 +484,9 @@ export function FeatureFlagsClient() {
                 id="flagKey"
                 placeholder="e.g., enable_new_dashboard"
                 value={formData.flagKey}
-                onChange={(e) => setFormData({ ...formData, flagKey: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, flagKey: e.target.value })
+                }
                 disabled={!!editingFlag}
               />
             </div>
@@ -452,7 +497,9 @@ export function FeatureFlagsClient() {
                 id="flagName"
                 placeholder="e.g., Enable New Dashboard"
                 value={formData.flagName}
-                onChange={(e) => setFormData({ ...formData, flagName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, flagName: e.target.value })
+                }
               />
             </div>
 
@@ -462,7 +509,9 @@ export function FeatureFlagsClient() {
                 id="description"
                 placeholder="Describe this feature flag"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 rows={2}
               />
             </div>
@@ -472,7 +521,9 @@ export function FeatureFlagsClient() {
                 <Label htmlFor="environment">Environment</Label>
                 <Select
                   value={formData.environment}
-                  onValueChange={(value) => setFormData({ ...formData, environment: value })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, environment: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -491,7 +542,9 @@ export function FeatureFlagsClient() {
                   id="category"
                   placeholder="e.g., ui, api, experimental"
                   value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, category: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -506,7 +559,9 @@ export function FeatureFlagsClient() {
                 max={100}
                 step={5}
                 value={[formData.rolloutPercent]}
-                onValueChange={(value) => setFormData({ ...formData, rolloutPercent: value[0] })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, rolloutPercent: value[0] })
+                }
               />
               <p className="text-xs text-gray-500">
                 Percentage of users who will see this feature
@@ -519,7 +574,9 @@ export function FeatureFlagsClient() {
                 id="expiresAt"
                 type="date"
                 value={formData.expiresAt}
-                onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, expiresAt: e.target.value })
+                }
               />
             </div>
 
@@ -527,7 +584,9 @@ export function FeatureFlagsClient() {
               <Switch
                 id="isEnabled"
                 checked={formData.isEnabled}
-                onCheckedChange={(checked) => setFormData({ ...formData, isEnabled: checked })}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, isEnabled: checked })
+                }
               />
               <Label htmlFor="isEnabled" className="cursor-pointer">
                 Enable this feature flag
@@ -540,7 +599,7 @@ export function FeatureFlagsClient() {
               Cancel
             </Button>
             <Button onClick={editingFlag ? handleUpdate : handleCreate}>
-              {editingFlag ? 'Update Flag' : 'Create Flag'}
+              {editingFlag ? "Update Flag" : "Create Flag"}
             </Button>
           </DialogFooter>
         </DialogContent>
