@@ -22,6 +22,16 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import toast from "react-hot-toast";
 
+async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().includes("application/json")) return null;
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
 type Category = {
   id: number;
   name: string;
@@ -172,8 +182,8 @@ export function VehicleDialog({
   const fetchCategories = async () => {
     try {
       const response = await fetch("/api/categories");
-      const data = await response.json();
-      setCategories(data.categories || []);
+      const data = await tryReadJson<{ categories?: Category[] }>(response);
+      setCategories(data?.categories || []);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
@@ -182,8 +192,10 @@ export function VehicleDialog({
   const fetchTransmissionTypes = async () => {
     try {
       const response = await fetch("/api/transmission-types");
-      const data = await response.json();
-      setTransmissionTypes(data.transmissionTypes || []);
+      const data = await tryReadJson<{
+        transmissionTypes?: TransmissionType[];
+      }>(response);
+      setTransmissionTypes(data?.transmissionTypes || []);
     } catch (error) {
       console.error("Error fetching transmission types:", error);
     }
@@ -274,7 +286,7 @@ export function VehicleDialog({
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const data = await tryReadJson<{ error?: string }>(response);
 
       if (response.ok) {
         toast.success(
@@ -290,7 +302,7 @@ export function VehicleDialog({
         }, 100);
       } else {
         console.error("Server error:", data);
-        toast.error(data.error || "Failed to save vehicle");
+        toast.error(data?.error || "Failed to save vehicle");
       }
     } catch (error) {
       console.error("Error saving vehicle:", error);
