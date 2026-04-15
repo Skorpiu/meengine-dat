@@ -3,33 +3,39 @@
  * Allows users to customize their experience
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
-import { Separator } from '@/components/ui/separator';
-import { 
-  Bell, 
-  Eye, 
-  Palette, 
-  Calendar, 
-  Globe, 
-  Accessibility, 
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import { Separator } from "@/components/ui/separator";
+import {
+  Bell,
+  Eye,
+  Palette,
+  Calendar,
+  Globe,
+  Accessibility,
   Save,
-  RefreshCw
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
+  RefreshCw,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface UserPreferences {
   id: string;
@@ -71,16 +77,16 @@ export function UserPreferencesClient() {
   const fetchPreferences = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/user/preferences');
-      
-      if (!response.ok) throw new Error('Failed to fetch preferences');
-      
+      const response = await fetch("/api/user/preferences");
+
+      if (!response.ok) throw new Error("Failed to fetch preferences");
+
       const data = await response.json();
       setPreferences(data.preferences);
       setHasChanges(false);
     } catch (error) {
-      console.error('Error fetching preferences:', error);
-      toast.error('Failed to load preferences');
+      console.error("Error fetching preferences:", error);
+      toast.error("Failed to load preferences");
     } finally {
       setLoading(false);
     }
@@ -91,28 +97,33 @@ export function UserPreferencesClient() {
 
     try {
       setSaving(true);
-      const response = await fetch('/api/user/preferences', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/user/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(preferences),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to update preferences');
+        throw new Error(error.error || "Failed to update preferences");
       }
 
-      toast.success('Preferences saved successfully');
+      toast.success("Preferences saved successfully");
       setHasChanges(false);
-    } catch (error: any) {
-      console.error('Error saving preferences:', error);
-      toast.error(error.message);
+    } catch (error: unknown) {
+      console.error("Error saving preferences:", error);
+      const message =
+        error instanceof Error ? error.message : "Failed to save preferences";
+      toast.error(message);
     } finally {
       setSaving(false);
     }
   };
 
-  const updatePreference = (key: keyof UserPreferences, value: any) => {
+  const updatePreference = <K extends keyof UserPreferences>(
+    key: K,
+    value: UserPreferences[K],
+  ) => {
     if (!preferences) return;
     setPreferences({ ...preferences, [key]: value });
     setHasChanges(true);
@@ -142,9 +153,14 @@ export function UserPreferencesClient() {
       {/* Save Button (Sticky) */}
       {hasChanges && (
         <div className="fixed bottom-8 right-8 z-50">
-          <Button onClick={handleSave} disabled={saving} size="lg" className="shadow-lg">
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            size="lg"
+            className="shadow-lg"
+          >
             <Save className="w-4 h-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       )}
@@ -166,7 +182,7 @@ export function UserPreferencesClient() {
               <Label htmlFor="theme">Theme</Label>
               <Select
                 value={preferences.theme}
-                onValueChange={(value) => updatePreference('theme', value)}
+                onValueChange={(value) => updatePreference("theme", value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -183,7 +199,7 @@ export function UserPreferencesClient() {
               <Label htmlFor="language">Language</Label>
               <Select
                 value={preferences.language}
-                onValueChange={(value) => updatePreference('language', value)}
+                onValueChange={(value) => updatePreference("language", value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -214,12 +230,16 @@ export function UserPreferencesClient() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="emailNotifications">Email Notifications</Label>
-                <p className="text-sm text-gray-500">Receive notifications via email</p>
+                <p className="text-sm text-gray-500">
+                  Receive notifications via email
+                </p>
               </div>
               <Switch
                 id="emailNotifications"
                 checked={preferences.emailNotifications}
-                onCheckedChange={(checked) => updatePreference('emailNotifications', checked)}
+                onCheckedChange={(checked) =>
+                  updatePreference("emailNotifications", checked)
+                }
               />
             </div>
 
@@ -228,26 +248,34 @@ export function UserPreferencesClient() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="pushNotifications">Push Notifications</Label>
-                <p className="text-sm text-gray-500">Receive browser push notifications</p>
+                <p className="text-sm text-gray-500">
+                  Receive browser push notifications
+                </p>
               </div>
               <Switch
                 id="pushNotifications"
                 checked={preferences.pushNotifications}
-                onCheckedChange={(checked) => updatePreference('pushNotifications', checked)}
+                onCheckedChange={(checked) =>
+                  updatePreference("pushNotifications", checked)
+                }
               />
             </div>
 
             <Separator />
 
             <div className="pl-6 space-y-4">
-              <p className="text-sm font-medium text-gray-700">Notification Types</p>
-              
+              <p className="text-sm font-medium text-gray-700">
+                Notification Types
+              </p>
+
               <div className="flex items-center justify-between">
                 <Label htmlFor="lessonReminders">Lesson Reminders</Label>
                 <Switch
                   id="lessonReminders"
                   checked={preferences.lessonReminders}
-                  onCheckedChange={(checked) => updatePreference('lessonReminders', checked)}
+                  onCheckedChange={(checked) =>
+                    updatePreference("lessonReminders", checked)
+                  }
                 />
               </div>
 
@@ -256,7 +284,9 @@ export function UserPreferencesClient() {
                 <Switch
                   id="examReminders"
                   checked={preferences.examReminders}
-                  onCheckedChange={(checked) => updatePreference('examReminders', checked)}
+                  onCheckedChange={(checked) =>
+                    updatePreference("examReminders", checked)
+                  }
                 />
               </div>
 
@@ -265,7 +295,9 @@ export function UserPreferencesClient() {
                 <Switch
                   id="paymentReminders"
                   checked={preferences.paymentReminders}
-                  onCheckedChange={(checked) => updatePreference('paymentReminders', checked)}
+                  onCheckedChange={(checked) =>
+                    updatePreference("paymentReminders", checked)
+                  }
                 />
               </div>
 
@@ -274,7 +306,9 @@ export function UserPreferencesClient() {
                 <Switch
                   id="weeklyDigest"
                   checked={preferences.weeklyDigest}
-                  onCheckedChange={(checked) => updatePreference('weeklyDigest', checked)}
+                  onCheckedChange={(checked) =>
+                    updatePreference("weeklyDigest", checked)
+                  }
                 />
               </div>
 
@@ -283,7 +317,9 @@ export function UserPreferencesClient() {
                 <Switch
                   id="promotionalEmails"
                   checked={preferences.promotionalEmails}
-                  onCheckedChange={(checked) => updatePreference('promotionalEmails', checked)}
+                  onCheckedChange={(checked) =>
+                    updatePreference("promotionalEmails", checked)
+                  }
                 />
               </div>
             </div>
@@ -298,17 +334,19 @@ export function UserPreferencesClient() {
             <Eye className="w-5 h-5" />
             Dashboard & Display
           </CardTitle>
-          <CardDescription>
-            Customize your dashboard experience
-          </CardDescription>
+          <CardDescription>Customize your dashboard experience</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="defaultDashboardView">Default Dashboard View</Label>
+              <Label htmlFor="defaultDashboardView">
+                Default Dashboard View
+              </Label>
               <Select
                 value={preferences.defaultDashboardView}
-                onValueChange={(value) => updatePreference('defaultDashboardView', value)}
+                onValueChange={(value) =>
+                  updatePreference("defaultDashboardView", value)
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -322,26 +360,36 @@ export function UserPreferencesClient() {
             </div>
 
             <div className="space-y-2">
-              <Label>Lessons to Display: {preferences.lessonDisplayCount}</Label>
+              <Label>
+                Lessons to Display: {preferences.lessonDisplayCount}
+              </Label>
               <Slider
                 min={3}
                 max={20}
                 step={1}
                 value={[preferences.lessonDisplayCount]}
-                onValueChange={(value) => updatePreference('lessonDisplayCount', value[0])}
+                onValueChange={(value) =>
+                  updatePreference("lessonDisplayCount", value[0])
+                }
               />
             </div>
           </div>
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="showCompletedLessons">Show Completed Lessons</Label>
-              <p className="text-sm text-gray-500">Display completed lessons on dashboard</p>
+              <Label htmlFor="showCompletedLessons">
+                Show Completed Lessons
+              </Label>
+              <p className="text-sm text-gray-500">
+                Display completed lessons on dashboard
+              </p>
             </div>
             <Switch
               id="showCompletedLessons"
               checked={preferences.showCompletedLessons}
-              onCheckedChange={(checked) => updatePreference('showCompletedLessons', checked)}
+              onCheckedChange={(checked) =>
+                updatePreference("showCompletedLessons", checked)
+              }
             />
           </div>
         </CardContent>
@@ -364,7 +412,9 @@ export function UserPreferencesClient() {
               <Label htmlFor="calendarView">Default Calendar View</Label>
               <Select
                 value={preferences.calendarView}
-                onValueChange={(value) => updatePreference('calendarView', value)}
+                onValueChange={(value) =>
+                  updatePreference("calendarView", value)
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -381,7 +431,9 @@ export function UserPreferencesClient() {
               <Label htmlFor="startOfWeek">Week Starts On</Label>
               <Select
                 value={preferences.startOfWeek}
-                onValueChange={(value) => updatePreference('startOfWeek', value)}
+                onValueChange={(value) =>
+                  updatePreference("startOfWeek", value)
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -397,7 +449,7 @@ export function UserPreferencesClient() {
               <Label htmlFor="timeFormat">Time Format</Label>
               <Select
                 value={preferences.timeFormat}
-                onValueChange={(value) => updatePreference('timeFormat', value)}
+                onValueChange={(value) => updatePreference("timeFormat", value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -428,15 +480,21 @@ export function UserPreferencesClient() {
             <Label htmlFor="profileVisibility">Profile Visibility</Label>
             <Select
               value={preferences.profileVisibility}
-              onValueChange={(value) => updatePreference('profileVisibility', value)}
+              onValueChange={(value) =>
+                updatePreference("profileVisibility", value)
+              }
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="public">Public - Anyone can see</SelectItem>
-                <SelectItem value="school">School Only - Only school members</SelectItem>
-                <SelectItem value="private">Private - Hidden from others</SelectItem>
+                <SelectItem value="school">
+                  School Only - Only school members
+                </SelectItem>
+                <SelectItem value="private">
+                  Private - Hidden from others
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -445,25 +503,37 @@ export function UserPreferencesClient() {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="showProgressToInstructors">Show Progress to Instructors</Label>
-              <p className="text-sm text-gray-500">Allow instructors to see your learning progress</p>
+              <Label htmlFor="showProgressToInstructors">
+                Show Progress to Instructors
+              </Label>
+              <p className="text-sm text-gray-500">
+                Allow instructors to see your learning progress
+              </p>
             </div>
             <Switch
               id="showProgressToInstructors"
               checked={preferences.showProgressToInstructors}
-              onCheckedChange={(checked) => updatePreference('showProgressToInstructors', checked)}
+              onCheckedChange={(checked) =>
+                updatePreference("showProgressToInstructors", checked)
+              }
             />
           </div>
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="allowContactFromInstructors">Allow Contact from Instructors</Label>
-              <p className="text-sm text-gray-500">Instructors can send you direct messages</p>
+              <Label htmlFor="allowContactFromInstructors">
+                Allow Contact from Instructors
+              </Label>
+              <p className="text-sm text-gray-500">
+                Instructors can send you direct messages
+              </p>
             </div>
             <Switch
               id="allowContactFromInstructors"
               checked={preferences.allowContactFromInstructors}
-              onCheckedChange={(checked) => updatePreference('allowContactFromInstructors', checked)}
+              onCheckedChange={(checked) =>
+                updatePreference("allowContactFromInstructors", checked)
+              }
             />
           </div>
         </CardContent>
@@ -485,7 +555,7 @@ export function UserPreferencesClient() {
             <Label htmlFor="fontSize">Font Size</Label>
             <Select
               value={preferences.fontSize}
-              onValueChange={(value) => updatePreference('fontSize', value)}
+              onValueChange={(value) => updatePreference("fontSize", value)}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -501,24 +571,32 @@ export function UserPreferencesClient() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="highContrast">High Contrast Mode</Label>
-              <p className="text-sm text-gray-500">Increase contrast for better visibility</p>
+              <p className="text-sm text-gray-500">
+                Increase contrast for better visibility
+              </p>
             </div>
             <Switch
               id="highContrast"
               checked={preferences.highContrast}
-              onCheckedChange={(checked) => updatePreference('highContrast', checked)}
+              onCheckedChange={(checked) =>
+                updatePreference("highContrast", checked)
+              }
             />
           </div>
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="reducedMotion">Reduced Motion</Label>
-              <p className="text-sm text-gray-500">Minimize animations and transitions</p>
+              <p className="text-sm text-gray-500">
+                Minimize animations and transitions
+              </p>
             </div>
             <Switch
               id="reducedMotion"
               checked={preferences.reducedMotion}
-              onCheckedChange={(checked) => updatePreference('reducedMotion', checked)}
+              onCheckedChange={(checked) =>
+                updatePreference("reducedMotion", checked)
+              }
             />
           </div>
         </CardContent>
@@ -528,7 +606,7 @@ export function UserPreferencesClient() {
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saving || !hasChanges} size="lg">
           <Save className="w-4 h-4 mr-2" />
-          {saving ? 'Saving...' : 'Save All Changes'}
+          {saving ? "Saving..." : "Save All Changes"}
         </Button>
       </div>
     </div>

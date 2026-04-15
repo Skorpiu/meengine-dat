@@ -15,6 +15,10 @@ import {
 import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from "@/lib/constants";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 
+type UserWithOrganizationId = {
+  organizationId?: string | null;
+};
+
 /**
  * POST handler - Trigger cleanup of old lessons/exams
  * @param request - Next.js request object
@@ -27,7 +31,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
   }
 
-  const orgId = (user as any).organizationId as string | null | undefined;
+  const orgId = (user as UserWithOrganizationId).organizationId;
   if (!orgId) {
     return errorResponse("No organization found", HTTP_STATUS.BAD_REQUEST);
   }

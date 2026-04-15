@@ -10,6 +10,7 @@ import { prisma } from "@/lib/db";
 import { configHistoryQuerySchema } from "@/lib/config-validation";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 import { HTTP_STATUS, API_MESSAGES } from "@/lib/constants";
+import type { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -54,7 +55,9 @@ export async function GET(request: NextRequest) {
       offset: parseInt(searchParams.get("offset") || "0"),
     });
 
-    const where: any = { organizationId: orgId };
+    const where: Prisma.ConfigurationHistoryWhereInput = {
+      organizationId: orgId,
+    };
 
     if (query.entityType) {
       where.entityType = query.entityType;

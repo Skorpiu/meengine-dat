@@ -5,6 +5,23 @@ import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import type { UserRole } from "@prisma/client";
+
+type CreateUserBody = {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  role?: UserRole;
+  selectedCategories?: string[];
+  transmissionType?: string;
+  instructorLicenseNumber?: string;
+  instructorLicenseExpiry?: string;
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,7 +52,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let body: any;
+    let body: unknown;
     try {
       body = await request.json();
     } catch {
@@ -58,7 +75,7 @@ export async function POST(request: NextRequest) {
       // Instructor-specific
       instructorLicenseNumber,
       instructorLicenseExpiry,
-    } = body;
+    } = body as CreateUserBody;
 
     // Validate required fields
     if (!firstName || !lastName || !email || !role) {

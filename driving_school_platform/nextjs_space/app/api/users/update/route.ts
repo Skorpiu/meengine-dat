@@ -4,6 +4,19 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 
+type UpdateUserBody = {
+  userId?: unknown;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  address?: string;
+  role?: string;
+  selectedCategories?: string[];
+  transmissionType?: string;
+  instructorLicenseNumber?: string;
+  instructorLicenseExpiry?: string;
+};
+
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -28,7 +41,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    let body: any;
+    let body: unknown;
     try {
       body = await request.json();
     } catch {
@@ -46,7 +59,7 @@ export async function PUT(request: NextRequest) {
       transmissionType,
       instructorLicenseNumber,
       instructorLicenseExpiry,
-    } = body;
+    } = body as UpdateUserBody;
 
     if (!userId || typeof userId !== "string") {
       return NextResponse.json(
@@ -100,7 +113,10 @@ export async function PUT(request: NextRequest) {
         },
       });
     } else if (role === "INSTRUCTOR") {
-      const data: any = {};
+      const data: {
+        instructorLicenseNumber?: string;
+        instructorLicenseExpiry?: Date;
+      } = {};
       if (instructorLicenseNumber)
         data.instructorLicenseNumber = instructorLicenseNumber;
       if (instructorLicenseExpiry)

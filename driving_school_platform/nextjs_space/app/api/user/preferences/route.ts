@@ -14,6 +14,7 @@ import {
 } from "@/lib/config-utils";
 import { HTTP_STATUS, API_MESSAGES } from "@/lib/constants";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import { ZodError } from "zod";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -128,10 +129,10 @@ export async function PUT(request: NextRequest) {
       message: API_MESSAGES.UPDATED_SUCCESS,
       preferences,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating preferences:", error);
 
-    if (error.name === "ZodError") {
+    if (error instanceof ZodError) {
       return NextResponse.json(
         { error: "Validation failed", details: error.errors },
         { status: HTTP_STATUS.BAD_REQUEST },

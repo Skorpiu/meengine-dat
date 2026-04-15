@@ -1,21 +1,20 @@
-
 /**
  * Custom hook for handling async operations with loading states
  * @module hooks/use-async
  */
 
-import { useState, useCallback } from 'react';
-import { showError, showSuccess } from '@/lib/client-utils';
+import { useState, useCallback } from "react";
+import { showError, showSuccess } from "@/lib/client-utils";
 
-interface UseAsyncOptions {
-  onSuccess?: (data: any) => void;
+interface UseAsyncOptions<T> {
+  onSuccess?: (data: T) => void;
   onError?: (error: Error) => void;
   successMessage?: string;
   showErrorToast?: boolean;
 }
 
-interface UseAsyncReturn<T> {
-  execute: (...args: any[]) => Promise<T | undefined>;
+interface UseAsyncReturn<T, Args extends unknown[]> {
+  execute: (...args: Args) => Promise<T | undefined>;
   isLoading: boolean;
   error: Error | null;
   data: T | null;
@@ -28,23 +27,18 @@ interface UseAsyncReturn<T> {
  * @param options - Configuration options
  * @returns Object with execute function, loading state, error, and data
  */
-export function useAsync<T = any>(
-  asyncFunction: (...args: any[]) => Promise<T>,
-  options: UseAsyncOptions = {}
-): UseAsyncReturn<T> {
+export function useAsync<T = unknown, Args extends unknown[] = unknown[]>(
+  asyncFunction: (...args: Args) => Promise<T>,
+  options: UseAsyncOptions<T> = {},
+): UseAsyncReturn<T, Args> {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [data, setData] = useState<T | null>(null);
 
-  const {
-    onSuccess,
-    onError,
-    successMessage,
-    showErrorToast = true,
-  } = options;
+  const { onSuccess, onError, successMessage, showErrorToast = true } = options;
 
   const execute = useCallback(
-    async (...args: any[]) => {
+    async (...args: Args) => {
       setIsLoading(true);
       setError(null);
 
@@ -62,7 +56,8 @@ export function useAsync<T = any>(
 
         return result;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('An error occurred');
+        const error =
+          err instanceof Error ? err : new Error("An error occurred");
         setError(error);
 
         if (showErrorToast) {
@@ -78,7 +73,7 @@ export function useAsync<T = any>(
         setIsLoading(false);
       }
     },
-    [asyncFunction, onSuccess, onError, successMessage, showErrorToast]
+    [asyncFunction, onSuccess, onError, successMessage, showErrorToast],
   );
 
   const reset = useCallback(() => {
