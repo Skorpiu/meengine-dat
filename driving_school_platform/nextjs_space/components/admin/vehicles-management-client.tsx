@@ -36,6 +36,16 @@ import { usePagination } from "@/hooks/use-pagination";
 import { apiPost, apiDelete, showSuccess, showError } from "@/lib/client-utils";
 import { useEffect } from "react";
 
+async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().includes("application/json")) return null;
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
 type FleetType =
   | "all"
   | "motorcycle"
@@ -107,8 +117,8 @@ export function VehiclesManagementClient() {
     try {
       const response = await fetch("/api/admin/vehicles");
       if (!response.ok) throw new Error("Failed to fetch vehicles");
-      const data = await response.json();
-      setVehicles(data.vehicles || []);
+      const data = await tryReadJson<{ vehicles?: VehicleRow[] }>(response);
+      setVehicles(data?.vehicles || []);
     } catch (error) {
       showError(
         error instanceof Error ? error : new Error("Failed to fetch vehicles"),
@@ -196,7 +206,11 @@ export function VehiclesManagementClient() {
     if (!vehicleToDelete) return;
 
     try {
-      await apiDelete(`/api/admin/vehicles?vehicleId=${vehicleToDelete.id}`);
+      await apiDelete(
+        `/api/admin/vehicles?vehicleId=${encodeURIComponent(
+          vehicleToDelete.id.toString(),
+        )}`,
+      );
       showSuccess("Vehicle deleted successfully");
       fetchVehicles();
       setDeleteDialogOpen(false);
