@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -90,6 +90,15 @@ const isLessonType = (value: unknown): value is LessonType =>
   typeof value === "string" &&
   (ALL_LESSON_TYPES as readonly unknown[]).includes(value);
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getArrayProp = <T,>(value: unknown, key: string): T[] => {
+  if (!isRecord(value)) return [];
+  const prop = value[key];
+  return Array.isArray(prop) ? (prop as T[]) : [];
+};
+
 /**
  * Reusable LessonForm component
  * Handles both create and edit modes for lessons with multi-student support
@@ -167,17 +176,120 @@ export function LessonForm({
   // Search state for students
   const [studentSearchTerm, setStudentSearchTerm] = useState<string>("");
 
+  const fetchInstructors = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        const response = await fetch("/api/admin/users?role=INSTRUCTOR", {
+          credentials: "include",
+          signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch instructors (${response.status})`);
+        }
+
+        let data: unknown = null;
+        try {
+          data = await response.json();
+        } catch {
+          data = null;
+        }
+
+        setInstructors(getArrayProp<InstructorOption>(data, "users"));
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError")
+          return;
+        console.error("Error fetching instructors:", error);
+        setInstructors([]);
+      }
+    },
+    [setInstructors],
+  );
+
+  const fetchStudents = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        const response = await fetch("/api/admin/users?role=STUDENT", {
+          credentials: "include",
+          signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch students (${response.status})`);
+        }
+
+        let data: unknown = null;
+        try {
+          data = await response.json();
+        } catch {
+          data = null;
+        }
+
+        setStudents(getArrayProp<Student>(data, "users"));
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError")
+          return;
+        console.error("Error fetching students:", error);
+        setStudents([]);
+      }
+    },
+    [setStudents],
+  );
+
+  const fetchVehicles = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        const response = await fetch("/api/admin/vehicles", {
+          credentials: "include",
+          signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch vehicles (${response.status})`);
+        }
+
+        let data: unknown = null;
+        try {
+          data = await response.json();
+        } catch {
+          data = null;
+        }
+
+        const vehiclesRaw = getArrayProp<VehicleOption>(data, "vehicles");
+        const availableVehicles = vehiclesRaw.filter(
+          (v) => v.status === "AVAILABLE" && !v.underMaintenance,
+        );
+        setVehicles(availableVehicles);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError")
+          return;
+        console.error("Error fetching vehicles:", error);
+        setVehicles([]);
+      }
+    },
+    [setVehicles],
+  );
+
   // Fetch data when component mounts or when needed
   useEffect(() => {
+    const controller = new AbortController();
+
     if (userRole === "SUPER_ADMIN") {
-      fetchInstructors();
+      void fetchInstructors(controller.signal);
     }
-    fetchStudents();
+    void fetchStudents(controller.signal);
     // Only fetch vehicles if feature is enabled
     if (isVehicleFeatureEnabled) {
-      fetchVehicles();
+      void fetchVehicles(controller.signal);
     }
-  }, [userRole, isVehicleFeatureEnabled]);
+    return () => controller.abort();
+  }, [
+    userRole,
+    isVehicleFeatureEnabled,
+    fetchInstructors,
+    fetchStudents,
+    fetchVehicles,
+  ]);
 
   // Update form when initialLesson changes (for edit mode)
   useEffect(() => {
@@ -204,49 +316,6 @@ export function LessonForm({
       setStatus(initialLesson.status || "SCHEDULED");
     }
   }, [mode, initialLesson]);
-
-  const fetchInstructors = async () => {
-    try {
-      const response = await fetch("/api/admin/users?role=INSTRUCTOR", {
-        credentials: "include",
-      });
-      const data = await response.json();
-      setInstructors(data.users || []);
-    } catch (error) {
-      console.error("Error fetching instructors:", error);
-      setInstructors([]);
-    }
-  };
-
-  const fetchStudents = async () => {
-    try {
-      const response = await fetch("/api/admin/users?role=STUDENT", {
-        credentials: "include",
-      });
-      const data = await response.json();
-      setStudents(data.users || []);
-    } catch (error) {
-      console.error("Error fetching students:", error);
-      setStudents([]);
-    }
-  };
-
-  const fetchVehicles = async () => {
-    try {
-      const response = await fetch("/api/admin/vehicles", {
-        credentials: "include",
-      });
-      const data = await response.json();
-      // Filter for available vehicles only
-      const availableVehicles = (data.vehicles || []).filter(
-        (v: VehicleOption) => v.status === "AVAILABLE" && !v.underMaintenance,
-      );
-      setVehicles(availableVehicles);
-    } catch (error) {
-      console.error("Error fetching vehicles:", error);
-      setVehicles([]);
-    }
-  };
 
   // Filter students based on search term
   const filteredStudents = useMemo(() => {
@@ -403,7 +472,9 @@ export function LessonForm({
         <Label htmlFor="lessonType">Lesson Type *</Label>
         <Select
           value={lessonType}
-          onValueChange={(v) => setLessonType(v as LessonType)}
+          onValueChange={(v) => {
+            if (isLessonType(v)) setLessonType(v);
+          }}
           disabled={mode === "edit"} // Don't allow changing lesson type in edit mode
         >
           <SelectTrigger>
