@@ -35,9 +35,6 @@
       "prettier --write"
     ]
   },
-  "prisma": {
-    "seed": "tsx --require dotenv/config scripts/seed.ts"
-  },
   "devDependencies": {
     "@next/env": "^16.1.6",
     "@next/eslint-plugin-next": "14.2.28",
