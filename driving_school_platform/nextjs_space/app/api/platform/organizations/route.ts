@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
-import { db } from "@/lib/db";
 import { HTTP_STATUS, API_MESSAGES } from "@/lib/constants";
 import {
   resolveTenantOrganizationId,
@@ -11,6 +10,7 @@ import {
 } from "@/lib/tenant";
 import { onboardOrganization } from "@/lib/platform/onboard-organization";
 import { platformOnboardOrganizationServerSchema } from "@/lib/platform/contracts/onboarding";
+import { listPlatformOrganizations } from "@/lib/platform/list-organizations";
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,12 +46,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const orgs = await db.organization.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        domains: { orderBy: { isPrimary: "desc" } },
-      },
-    });
+    const orgs = await listPlatformOrganizations();
 
     return NextResponse.json(
       { organizations: orgs },
