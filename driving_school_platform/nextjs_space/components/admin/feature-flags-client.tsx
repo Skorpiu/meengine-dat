@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,6 +66,16 @@ function getErrorMessage(error: unknown): string {
   return typeof error === "string" ? error : String(error);
 }
 
+async function readJsonSafely(response: Response): Promise<unknown> {
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
+}
+
 interface FeatureFlag {
   id: string;
   flagKey: string;
@@ -114,26 +124,28 @@ export function FeatureFlagsClient() {
     expiresAt: "",
   });
 
-  useEffect(() => {
-    fetchFlags();
-  }, []);
-
-  const fetchFlags = async () => {
+  const fetchFlags = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch("/api/admin/feature-flags");
 
       if (!response.ok) throw new Error("Failed to fetch flags");
 
-      const data = await response.json();
-      setFlags(data.flags || []);
+      const data = (await readJsonSafely(response)) as {
+        flags?: FeatureFlag[];
+      } | null;
+      setFlags(data?.flags ?? []);
     } catch (error) {
       console.error("Error fetching flags:", error);
       toast.error("Failed to load feature flags");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchFlags();
+  }, [fetchFlags]);
 
   const handleCreate = async () => {
     try {
@@ -147,8 +159,12 @@ export function FeatureFlagsClient() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create flag");
+        const body = (await readJsonSafely(response)) as {
+          error?: unknown;
+        } | null;
+        const message =
+          body?.error != null ? String(body.error) : "Failed to create flag";
+        throw new Error(message);
       }
 
       toast.success("Feature flag created successfully");
@@ -176,8 +192,12 @@ export function FeatureFlagsClient() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update flag");
+        const body = (await readJsonSafely(response)) as {
+          error?: unknown;
+        } | null;
+        const message =
+          body?.error != null ? String(body.error) : "Failed to update flag";
+        throw new Error(message);
       }
 
       toast.success("Feature flag updated successfully");
@@ -203,8 +223,12 @@ export function FeatureFlagsClient() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to toggle flag");
+        const body = (await readJsonSafely(response)) as {
+          error?: unknown;
+        } | null;
+        const message =
+          body?.error != null ? String(body.error) : "Failed to toggle flag";
+        throw new Error(message);
       }
 
       toast.success(`Feature flag ${!flag.isEnabled ? "enabled" : "disabled"}`);
@@ -219,13 +243,20 @@ export function FeatureFlagsClient() {
     if (!confirm("Are you sure you want to delete this feature flag?")) return;
 
     try {
-      const response = await fetch(`/api/admin/feature-flags?key=${flagKey}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/admin/feature-flags?key=${encodeURIComponent(flagKey)}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to delete flag");
+        const body = (await readJsonSafely(response)) as {
+          error?: unknown;
+        } | null;
+        const message =
+          body?.error != null ? String(body.error) : "Failed to delete flag";
+        throw new Error(message);
       }
 
       toast.success("Feature flag deleted successfully");
