@@ -13,6 +13,36 @@ import {
 } from "@/components/lessons/LessonForm";
 import toast from "react-hot-toast";
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function getString(value: unknown): string | undefined {
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+async function safeReadJson(response: Response): Promise<unknown> {
+  const contentType = response.headers.get("content-type") ?? "";
+  const isLikelyJson = contentType.toLowerCase().includes("application/json");
+
+  const text = await response.text();
+  if (!text) return {};
+
+  if (!isLikelyJson) {
+    try {
+      return JSON.parse(text) as unknown;
+    } catch {
+      return { message: text };
+    }
+  }
+
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return {};
+  }
+}
+
 interface BookExamDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -35,8 +65,13 @@ export function BookExamDialog({
       });
 
       if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? "Failed to create exam");
+        const data = await safeReadJson(res);
+        const payloadObj = isRecord(data) ? data : {};
+        const errorMessage =
+          getString(payloadObj.error) ??
+          getString(payloadObj.message) ??
+          "Failed to create exam";
+        throw new Error(errorMessage);
       }
 
       toast.success("Exam created successfully");
