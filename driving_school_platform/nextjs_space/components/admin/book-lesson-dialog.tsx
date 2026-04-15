@@ -13,6 +13,16 @@ import {
 } from "@/components/lessons/LessonForm";
 import toast from "react-hot-toast";
 
+async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().includes("application/json")) return null;
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
 interface BookLessonDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -54,14 +64,16 @@ export function BookLessonDialog({
         body: JSON.stringify(requestBody),
       });
 
-      const data = await response.json();
+      const data = await tryReadJson<{ message?: string; error?: string }>(
+        response,
+      );
 
       if (response.ok) {
-        toast.success(data.message || "Lesson booked successfully!");
+        toast.success(data?.message || "Lesson booked successfully!");
         onOpenChange(false);
         onSuccess();
       } else {
-        toast.error(data.error || "Failed to book lesson");
+        toast.error(data?.error || "Failed to book lesson");
       }
     } catch (error) {
       console.error("Error booking lesson:", error);
