@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -36,6 +36,26 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+
+function getErrorMessage(error: unknown): string {
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (message == null) return "";
+    return typeof message === "string" ? message : String(message);
+  }
+  if (error == null) return "";
+  return typeof error === "string" ? error : String(error);
+}
+
+async function readJsonSafely(response: Response): Promise<unknown> {
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
+}
 
 interface UserPreferences {
   id: string;
@@ -70,19 +90,17 @@ export function UserPreferencesClient() {
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  useEffect(() => {
-    fetchPreferences();
-  }, []);
-
-  const fetchPreferences = async () => {
+  const fetchPreferences = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch("/api/user/preferences");
 
       if (!response.ok) throw new Error("Failed to fetch preferences");
 
-      const data = await response.json();
-      setPreferences(data.preferences);
+      const data = (await readJsonSafely(response)) as {
+        preferences?: UserPreferences;
+      } | null;
+      setPreferences(data?.preferences ?? null);
       setHasChanges(false);
     } catch (error) {
       console.error("Error fetching preferences:", error);
@@ -90,7 +108,11 @@ export function UserPreferencesClient() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchPreferences();
+  }, [fetchPreferences]);
 
   const handleSave = async () => {
     if (!preferences) return;
@@ -104,17 +126,21 @@ export function UserPreferencesClient() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update preferences");
+        const body = (await readJsonSafely(response)) as {
+          error?: unknown;
+        } | null;
+        const message =
+          body?.error != null
+            ? String(body.error)
+            : "Failed to update preferences";
+        throw new Error(message);
       }
 
       toast.success("Preferences saved successfully");
       setHasChanges(false);
     } catch (error: unknown) {
       console.error("Error saving preferences:", error);
-      const message =
-        error instanceof Error ? error.message : "Failed to save preferences";
-      toast.error(message);
+      toast.error(getErrorMessage(error) || "Failed to save preferences");
     } finally {
       setSaving(false);
     }
@@ -124,8 +150,10 @@ export function UserPreferencesClient() {
     key: K,
     value: UserPreferences[K],
   ) => {
-    if (!preferences) return;
-    setPreferences({ ...preferences, [key]: value });
+    setPreferences((prev) => {
+      if (!prev) return prev;
+      return { ...prev, [key]: value };
+    });
     setHasChanges(true);
   };
 
