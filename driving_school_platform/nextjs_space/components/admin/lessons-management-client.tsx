@@ -14,6 +14,24 @@ import { BookOpen, Car, FileText, Clock, RefreshCw } from "lucide-react";
 import { FeatureGate } from "@/components/license/feature-gate";
 import { useToast } from "@/hooks/use-toast";
 
+async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().includes("application/json")) return null;
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function asArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
 type LessonView = "CODE" | "DRIVING" | "EXAMS";
 
 type LessonListItem = {
@@ -76,10 +94,16 @@ export function LessonsManagementClient() {
         throw new Error("Failed to fetch lessons");
       }
 
-      const data = (await response.json()) as LessonsResponse;
-      setRecentLessons(data.recent || []);
-      setCurrentLessons(data.current || []);
-      setUpcomingLessons(data.upcoming || []);
+      const raw = await tryReadJson<unknown>(response);
+      if (!raw) throw new Error("Failed to parse lessons response");
+
+      const data: LessonsResponse = isRecord(raw)
+        ? (raw as LessonsResponse)
+        : {};
+
+      setRecentLessons(asArray<LessonListItem>(data.recent));
+      setCurrentLessons(asArray<LessonListItem>(data.current));
+      setUpcomingLessons(asArray<LessonListItem>(data.upcoming));
       setLastRefresh(new Date());
     } catch (error) {
       console.error("Error fetching lessons:", error);

@@ -55,6 +55,36 @@ import { useRouter } from "next/navigation";
 
 type ViewType = "day" | "week" | "month";
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function safeGetArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+async function safeReadJson(response: Response): Promise<unknown> {
+  const contentType = response.headers.get("content-type") ?? "";
+  const isLikelyJson = contentType.toLowerCase().includes("application/json");
+
+  const text = await response.text();
+  if (!text) return {};
+
+  if (!isLikelyJson) {
+    try {
+      return JSON.parse(text) as unknown;
+    } catch {
+      return { message: text };
+    }
+  }
+
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return {};
+  }
+}
+
 export interface Lesson {
   id: string;
   lessonDate: Date;
@@ -168,16 +198,20 @@ export function ScheduleMap({
           throw new Error("Failed to fetch lessons");
         }
 
-        const data = await response.json();
-        const fetchedLessons = data.data?.lessons || data.lessons || [];
+        const data = await safeReadJson(response);
+        const payloadObj = isRecord(data) ? data : {};
+        const dataObj = isRecord(payloadObj.data) ? payloadObj.data : {};
+        const fetchedLessons = safeGetArray(
+          dataObj.lessons ?? payloadObj.lessons,
+        );
 
         // Convert lessonDate strings to Date objects
         const processedLessons: Lesson[] = (fetchedLessons as unknown[]).map(
           (lesson) => {
-            const l = lesson as Record<string, unknown>;
+            const l = isRecord(lesson) ? lesson : {};
             return {
-              ...(lesson as object),
-              lessonDate: new Date(String(l.lessonDate)),
+              ...l,
+              lessonDate: new Date(String(l.lessonDate ?? "")),
             } as Lesson;
           },
         );
@@ -236,8 +270,16 @@ export function ScheduleMap({
         });
         if (!res.ok) return;
 
-        const data = await res.json();
-        setAllInstructors(data?.instructors ?? []);
+        const data = await safeReadJson(res);
+        const payloadObj = isRecord(data) ? data : {};
+        const instructorsList = safeGetArray(payloadObj.instructors);
+        setAllInstructors(
+          instructorsList.filter(isRecord).map((instructor) => ({
+            id: String(instructor.id ?? ""),
+            name: String(instructor.name ?? ""),
+            userId: String(instructor.userId ?? ""),
+          })),
+        );
       } catch (e) {
         // optional: console.error(e);
       } finally {

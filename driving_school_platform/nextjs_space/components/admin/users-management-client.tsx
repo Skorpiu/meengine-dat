@@ -26,6 +26,16 @@ import { Users, UserPlus, Trash2, CheckCircle, Edit2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
+async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().includes("application/json")) return null;
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
 type CategoryOption = {
   id: number;
   name: string;
@@ -134,7 +144,9 @@ export function UsersManagementClient({
         }),
       });
 
-      const data = await response.json();
+      const data = await tryReadJson<{ tempPassword?: string; error?: string }>(
+        response,
+      );
 
       if (response.ok) {
         if (data?.tempPassword) {
@@ -148,7 +160,7 @@ export function UsersManagementClient({
         resetForm();
         router.refresh();
       } else {
-        toast.error(data.error || "Failed to create user");
+        toast.error(data?.error || "Failed to create user");
       }
     } catch (error) {
       toast.error("An error occurred");
@@ -187,7 +199,7 @@ export function UsersManagementClient({
         }),
       });
 
-      const data = await response.json();
+      const data = await tryReadJson<{ error?: string }>(response);
 
       if (response.ok) {
         toast.success("User updated successfully");
@@ -196,7 +208,7 @@ export function UsersManagementClient({
         resetForm();
         router.refresh();
       } else {
-        toast.error(data.error || "Failed to update user");
+        toast.error(data?.error || "Failed to update user");
       }
     } catch (error) {
       toast.error("An error occurred");
@@ -268,17 +280,22 @@ export function UsersManagementClient({
     }
 
     try {
-      const response = await fetch(`/api/users/delete?userId=${userId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/users/delete?userId=${encodeURIComponent(userId)}`,
+        {
+          method: "DELETE",
+        },
+      );
 
-      const data = await response.json();
+      const data = await tryReadJson<{ message?: string; error?: string }>(
+        response,
+      );
 
       if (response.ok) {
-        toast.success(data.message);
+        toast.success(data?.message || "User deleted successfully");
         router.refresh();
       } else {
-        toast.error(data.error || "Failed to delete user");
+        toast.error(data?.error || "Failed to delete user");
       }
     } catch (error) {
       toast.error("An error occurred");
