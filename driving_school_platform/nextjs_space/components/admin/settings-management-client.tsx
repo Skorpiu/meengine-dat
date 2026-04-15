@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,6 +58,27 @@ interface SystemSetting {
   updatedAt: string;
 }
 
+function getErrorMessage(error: unknown): string {
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (message == null) return "";
+    return typeof message === "string" ? message : String(message);
+  }
+  if (error == null) return "";
+  return typeof error === "string" ? error : String(error);
+}
+
+async function readJsonSafely(response: Response): Promise<unknown> {
+  // Avoid throwing when body is empty or not JSON (common on 4xx/5xx).
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
+}
+
 export function SettingsManagementClient() {
   const [settings, setSettings] = useState<SystemSetting[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,26 +104,28 @@ export function SettingsManagementClient() {
     isPublic: false,
   });
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch("/api/admin/settings");
 
       if (!response.ok) throw new Error("Failed to fetch settings");
 
-      const data = await response.json();
-      setSettings(data.settings || []);
+      const data = (await readJsonSafely(response)) as {
+        settings?: SystemSetting[];
+      } | null;
+      setSettings(data?.settings ?? []);
     } catch (error) {
       console.error("Error fetching settings:", error);
       toast.error("Failed to load settings");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   const handleCreate = async () => {
     try {
@@ -113,8 +136,12 @@ export function SettingsManagementClient() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create setting");
+        const body = (await readJsonSafely(response)) as {
+          error?: unknown;
+        } | null;
+        const message =
+          body?.error != null ? String(body.error) : "Failed to create setting";
+        throw new Error(message);
       }
 
       toast.success("Setting created successfully");
@@ -123,8 +150,7 @@ export function SettingsManagementClient() {
       fetchSettings();
     } catch (error: unknown) {
       console.error("Error creating setting:", error);
-      const msg = error instanceof Error ? error.message : "Unexpected error";
-      toast.error(msg);
+      toast.error(getErrorMessage(error) || "Unexpected error");
     }
   };
 
@@ -142,8 +168,12 @@ export function SettingsManagementClient() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update setting");
+        const body = (await readJsonSafely(response)) as {
+          error?: unknown;
+        } | null;
+        const message =
+          body?.error != null ? String(body.error) : "Failed to update setting";
+        throw new Error(message);
       }
 
       toast.success("Setting updated successfully");
@@ -152,9 +182,8 @@ export function SettingsManagementClient() {
       resetForm();
       fetchSettings();
     } catch (error: unknown) {
-      console.error("Error ...:", error);
-      const msg = error instanceof Error ? error.message : "Unexpected error";
-      toast.error(msg);
+      console.error("Error updating setting:", error);
+      toast.error(getErrorMessage(error) || "Unexpected error");
     }
   };
 
@@ -162,21 +191,27 @@ export function SettingsManagementClient() {
     if (!confirm("Are you sure you want to delete this setting?")) return;
 
     try {
-      const response = await fetch(`/api/admin/settings?key=${settingKey}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/admin/settings?key=${encodeURIComponent(settingKey)}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to delete setting");
+        const body = (await readJsonSafely(response)) as {
+          error?: unknown;
+        } | null;
+        const message =
+          body?.error != null ? String(body.error) : "Failed to delete setting";
+        throw new Error(message);
       }
 
       toast.success("Setting deleted successfully");
       fetchSettings();
     } catch (error: unknown) {
-      console.error("Error ...:", error);
-      const msg = error instanceof Error ? error.message : "Unexpected error";
-      toast.error(msg);
+      console.error("Error deleting setting:", error);
+      toast.error(getErrorMessage(error) || "Unexpected error");
     }
   };
 
