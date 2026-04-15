@@ -19,6 +19,24 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().includes("application/json")) return null;
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function hasData(value: unknown): value is { data: unknown } {
+  return isRecord(value) && "data" in value;
+}
+
 interface EditLessonClientProps {
   lessonId: string;
   userRole: "SUPER_ADMIN" | "INSTRUCTOR";
@@ -67,10 +85,16 @@ export function EditLessonClient({
         throw new Error("Failed to fetch lesson");
       }
 
-      const result = await response.json();
+      const result = await tryReadJson<unknown>(response);
+      if (!result) throw new Error("Failed to parse lesson response");
 
       // Handle both response formats: { data: lesson } or lesson directly
-      const lessonData = result.data || result;
+      const lessonDataUnknown =
+        hasData(result) && result.data != null ? result.data : result;
+      if (!lessonDataUnknown || !isRecord(lessonDataUnknown)) {
+        throw new Error("Invalid lesson response shape");
+      }
+      const lessonData = lessonDataUnknown as unknown as Lesson;
 
       // Verify instructor ownership if user is an instructor
       if (
@@ -117,13 +141,13 @@ export function EditLessonClient({
         return;
       }
 
-      const data = await response.json();
+      const data = await tryReadJson<{ error?: string }>(response);
 
       if (response.ok) {
         toast.success("Lesson updated successfully!");
         router.push(backHref);
       } else {
-        toast.error(data.error || "Failed to update lesson");
+        toast.error(data?.error || "Failed to update lesson");
       }
     } catch (error) {
       console.error("Error updating lesson:", error);
