@@ -1,25 +1,26 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import bcrypt from 'bcryptjs';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 
-import { authOptions } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { HTTP_STATUS, API_MESSAGES } from '@/lib/constants';
-import { resolveTenantOrganizationId, isLocalHost, isPlatformHost } from '@/lib/tenant';
-import { LicenseService } from '@/lib/services/license-service';
-import { FEATURE_DEFINITIONS, type FeatureKey } from '@/lib/config/license-features';
+import { authOptions } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { HTTP_STATUS, API_MESSAGES } from "@/lib/constants";
+import {
+  resolveTenantOrganizationId,
+  isLocalHost,
+  isPlatformHost,
+} from "@/lib/tenant";
+import {
+  FEATURE_DEFINITIONS,
+  type FeatureKey,
+} from "@/lib/config/license-features";
+import { onboardOrganization } from "@/lib/platform/onboard-organization";
 
-import { z } from 'zod';
+import { z } from "zod";
 
-function parseHost(raw: string): string {
-  let h = raw.trim().toLowerCase();
-  h = h.replace(/^https?:\/\//, '');
-  h = h.split('/')[0] ?? '';
-  h = h.replace(/:\d+$/, '');
-  return h;
-}
-
-const FEATURE_KEYS = Object.keys(FEATURE_DEFINITIONS) as [FeatureKey, ...FeatureKey[]];
+const FEATURE_KEYS = Object.keys(FEATURE_DEFINITIONS) as [
+  FeatureKey,
+  ...FeatureKey[],
+];
 
 const onboardSchema = z.object({
   name: z.string().min(2),
@@ -38,35 +39,53 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== 'PLATFORM_ADMIN') {
-      return NextResponse.json({ error: API_MESSAGES.UNAUTHORIZED }, { status: HTTP_STATUS.UNAUTHORIZED });
+    if (!session?.user || session.user.role !== "PLATFORM_ADMIN") {
+      return NextResponse.json(
+        { error: API_MESSAGES.UNAUTHORIZED },
+        { status: HTTP_STATUS.UNAUTHORIZED },
+      );
     }
 
     // Hard rule: platform APIs must NOT run on a tenant-mapped host
     const tenant = await resolveTenantOrganizationId(request);
     if (!tenant.host) {
-      return NextResponse.json({ error: API_MESSAGES.INVALID_REQUEST }, { status: HTTP_STATUS.BAD_REQUEST });
+      return NextResponse.json(
+        { error: API_MESSAGES.INVALID_REQUEST },
+        { status: HTTP_STATUS.BAD_REQUEST },
+      );
     }
     if (tenant.organizationId) {
-      return NextResponse.json({ error: 'Platform endpoint not allowed on tenant domains' }, { status: HTTP_STATUS.FORBIDDEN });
+      return NextResponse.json(
+        { error: "Platform endpoint not allowed on tenant domains" },
+        { status: HTTP_STATUS.FORBIDDEN },
+      );
     }
 
     // Hard rule: platform APIs must run ONLY on local dev or platform hosts (avoid random/unmapped hosts)
     if (!isLocalHost(tenant.host) && !isPlatformHost(tenant.host)) {
-      return NextResponse.json({ error: 'Platform endpoint not allowed on this host' }, { status: HTTP_STATUS.FORBIDDEN });
+      return NextResponse.json(
+        { error: "Platform endpoint not allowed on this host" },
+        { status: HTTP_STATUS.FORBIDDEN },
+      );
     }
 
     const orgs = await db.organization.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: {
-        domains: { orderBy: { isPrimary: 'desc' } },
+        domains: { orderBy: { isPrimary: "desc" } },
       },
     });
 
-    return NextResponse.json({ organizations: orgs }, { status: HTTP_STATUS.OK });
+    return NextResponse.json(
+      { organizations: orgs },
+      { status: HTTP_STATUS.OK },
+    );
   } catch (error) {
-    console.error('Error listing organizations:', error);
-    return NextResponse.json({ error: API_MESSAGES.FETCH_ERROR }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
+    console.error("Error listing organizations:", error);
+    return NextResponse.json(
+      { error: API_MESSAGES.FETCH_ERROR },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
+    );
   }
 }
 
@@ -74,142 +93,80 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== 'PLATFORM_ADMIN') {
-      return NextResponse.json({ error: API_MESSAGES.UNAUTHORIZED }, { status: HTTP_STATUS.UNAUTHORIZED });
+    if (!session?.user || session.user.role !== "PLATFORM_ADMIN") {
+      return NextResponse.json(
+        { error: API_MESSAGES.UNAUTHORIZED },
+        { status: HTTP_STATUS.UNAUTHORIZED },
+      );
     }
 
     // Hard rule: platform APIs must NOT run on a tenant-mapped host
     const tenant = await resolveTenantOrganizationId(request);
     if (!tenant.host) {
-      return NextResponse.json({ error: API_MESSAGES.INVALID_REQUEST }, { status: HTTP_STATUS.BAD_REQUEST });
+      return NextResponse.json(
+        { error: API_MESSAGES.INVALID_REQUEST },
+        { status: HTTP_STATUS.BAD_REQUEST },
+      );
     }
     if (tenant.organizationId) {
-      return NextResponse.json({ error: 'Platform endpoint not allowed on tenant domains' }, { status: HTTP_STATUS.FORBIDDEN });
+      return NextResponse.json(
+        { error: "Platform endpoint not allowed on tenant domains" },
+        { status: HTTP_STATUS.FORBIDDEN },
+      );
     }
 
     // Hard rule: platform APIs must run ONLY on local dev or platform hosts (avoid random/unmapped hosts)
     if (!isLocalHost(tenant.host) && !isPlatformHost(tenant.host)) {
-      return NextResponse.json({ error: 'Platform endpoint not allowed on this host' }, { status: HTTP_STATUS.FORBIDDEN });
+      return NextResponse.json(
+        { error: "Platform endpoint not allowed on this host" },
+        { status: HTTP_STATUS.FORBIDDEN },
+      );
     }
 
     let body: unknown;
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: API_MESSAGES.INVALID_REQUEST }, { status: HTTP_STATUS.BAD_REQUEST });
+      return NextResponse.json(
+        { error: API_MESSAGES.INVALID_REQUEST },
+        { status: HTTP_STATUS.BAD_REQUEST },
+      );
     }
 
     const parsed = onboardSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.flatten() },
-        { status: HTTP_STATUS.BAD_REQUEST }
+        { error: "Validation failed", details: parsed.error.flatten() },
+        { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
 
     const data = parsed.data;
 
-    const hosts = Array.from(new Set(data.hosts.map(parseHost)));
-    const primaryHost = parseHost(data.primaryHost);
-
-    if (!hosts.includes(primaryHost)) {
-      return NextResponse.json({ error: 'primaryHost must be included in hosts' }, { status: HTTP_STATUS.BAD_REQUEST });
-    }
-
-    // Reject obvious bad hosts
-    for (const h of hosts) {
-      if (!h || h.includes(' ') || h.includes('/') || !h.includes('.')) {
-        return NextResponse.json({ error: `Invalid host: ${h}` }, { status: HTTP_STATUS.BAD_REQUEST });
-      }
-    }
-
-    // Guard against domain collisions
-    const existingDomains = await db.organizationDomain.findMany({
-      where: { host: { in: hosts } },
-      select: { host: true, organizationId: true },
+    const result = await onboardOrganization(data, {
+      createdByUserId: session.user.id,
     });
 
-    if (existingDomains.length > 0) {
-      return NextResponse.json(
-        { error: 'One or more domains already exist', details: { domains: existingDomains.map(d => d.host).join(', ') } },
-        { status: HTTP_STATUS.CONFLICT }
-      );
+    if (!result.ok) {
+      return NextResponse.json(result.body, { status: result.status });
     }
-
-    // Guard against email collisions
-    const existingUser = await db.user.findUnique({
-      where: { email: data.superAdminEmail.toLowerCase() },
-      select: { id: true },
-    });
-
-    if (existingUser) {
-      return NextResponse.json({ error: 'Super admin email already exists' }, { status: HTTP_STATUS.CONFLICT });
-    }
-
-    const passwordHash = await bcrypt.hash(data.superAdminPassword, 12);
-
-    const result = await db.$transaction(async (tx) => {
-      const org = await tx.organization.create({
-        data: {
-          name: data.name,
-        },
-      });
-
-      await tx.organizationDomain.createMany({
-        data: hosts.map((h) => ({
-          organizationId: org.id,
-          host: h,
-          isPrimary: h === primaryHost,
-        })),
-      });
-
-      const superAdmin = await tx.user.create({
-        data: {
-          email: data.superAdminEmail.toLowerCase(),
-          passwordHash,
-          role: 'SUPER_ADMIN',
-          firstName: data.superAdminFirstName,
-          lastName: data.superAdminLastName,
-          isApproved: true,
-          isEmailVerified: true,
-          emailVerified: new Date(),
-          organizationId: org.id,
-        },
-        select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          role: true,
-        },
-      });
-
-      const expiresAt = data.licenseExpiresAt ? new Date(data.licenseExpiresAt) : undefined;
-
-      const license = await LicenseService.createLicenseKey(
-        org.id,
-        data.licenseFeatureKeys,
-        expiresAt,
-        data.licenseNotes,
-        session.user.id
-      );
-
-      return { org, superAdmin, licenseKey: license.key ?? null };
-    });
 
     return NextResponse.json(
       {
-        message: 'Organization created',
-        organizationId: result.org.id,
-        primaryHost,
-        hosts,
-        superAdmin: result.superAdmin,
-        licenseKey: result.licenseKey,
+        message: "Organization created",
+        organizationId: result.value.organizationId,
+        primaryHost: result.value.primaryHost,
+        hosts: result.value.hosts,
+        superAdmin: result.value.superAdmin,
+        licenseKey: result.value.licenseKey,
       },
-      { status: HTTP_STATUS.CREATED }
+      { status: HTTP_STATUS.CREATED },
     );
   } catch (error) {
-    console.error('Error creating organization:', error);
-    return NextResponse.json({ error: API_MESSAGES.CREATE_ERROR }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
+    console.error("Error creating organization:", error);
+    return NextResponse.json(
+      { error: API_MESSAGES.CREATE_ERROR },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
+    );
   }
 }
