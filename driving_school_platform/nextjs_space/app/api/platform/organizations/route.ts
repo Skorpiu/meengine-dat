@@ -9,31 +9,8 @@ import {
   isLocalHost,
   isPlatformHost,
 } from "@/lib/tenant";
-import {
-  FEATURE_DEFINITIONS,
-  type FeatureKey,
-} from "@/lib/config/license-features";
 import { onboardOrganization } from "@/lib/platform/onboard-organization";
-
-import { z } from "zod";
-
-const FEATURE_KEYS = Object.keys(FEATURE_DEFINITIONS) as [
-  FeatureKey,
-  ...FeatureKey[],
-];
-
-const onboardSchema = z.object({
-  name: z.string().min(2),
-  hosts: z.array(z.string().min(3)).min(1),
-  primaryHost: z.string().min(3),
-  superAdminEmail: z.string().email(),
-  superAdminPassword: z.string().min(8),
-  superAdminFirstName: z.string().min(1),
-  superAdminLastName: z.string().min(1),
-  licenseFeatureKeys: z.array(z.enum(FEATURE_KEYS)).min(1),
-  licenseNotes: z.string().optional(),
-  licenseExpiresAt: z.string().datetime().optional(),
-});
+import { platformOnboardOrganizationServerSchema } from "@/lib/platform/contracts/onboarding";
 
 export async function GET(request: NextRequest) {
   try {
@@ -133,7 +110,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const parsed = onboardSchema.safeParse(body);
+    const parsed = platformOnboardOrganizationServerSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Validation failed", details: parsed.error.flatten() },
