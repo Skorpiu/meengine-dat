@@ -13,6 +13,38 @@ import {
 } from "@/components/lessons/LessonForm";
 import toast from "react-hot-toast";
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function getString(value: unknown): string | undefined {
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+async function safeReadJson(response: Response): Promise<unknown> {
+  const contentType = response.headers.get("content-type") ?? "";
+  const isLikelyJson = contentType.toLowerCase().includes("application/json");
+
+  // Some routes return empty bodies or non-JSON on errors; keep this defensive.
+  const text = await response.text();
+  if (!text) return {};
+
+  if (!isLikelyJson) {
+    // If the server didn't mark it as JSON, still attempt JSON parse as a best effort.
+    try {
+      return JSON.parse(text) as unknown;
+    } catch {
+      return { message: text };
+    }
+  }
+
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return {};
+  }
+}
+
 interface BookLessonDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -47,7 +79,10 @@ export function BookLessonDialog({
 
       // Add vehicle if selected
       if (payload.vehicleId) {
-        requestBody.vehicleId = parseInt(payload.vehicleId);
+        const vehicleId = Number.parseInt(payload.vehicleId, 10);
+        if (Number.isFinite(vehicleId)) {
+          requestBody.vehicleId = vehicleId;
+        }
       }
 
       const response = await fetch("/api/admin/lessons", {
@@ -56,14 +91,17 @@ export function BookLessonDialog({
         body: JSON.stringify(requestBody),
       });
 
-      const data = await response.json();
+      const data = await safeReadJson(response);
+      const payloadObj = isRecord(data) ? data : {};
+      const message = getString(payloadObj.message);
+      const errorMessage = getString(payloadObj.error);
 
       if (response.ok) {
-        toast.success(data.message || "Lesson booked successfully!");
+        toast.success(message || "Lesson booked successfully!");
         onOpenChange(false);
         onSuccess();
       } else {
-        toast.error(data.error || "Failed to book lesson");
+        toast.error(errorMessage || message || "Failed to book lesson");
       }
     } catch (error) {
       console.error("Error booking lesson:", error);
