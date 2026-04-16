@@ -3,8 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { LicenseService } from "@/lib/services/license-service";
 import { db } from "@/lib/db";
-import { FEATURE_DEFINITIONS } from "@/lib/config/license-features";
+import { isFeatureKey } from "@/lib/config/license-features";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import type { AdminLicenseEntitlementsGetResponse } from "@/lib/platform/contracts/license-entitlements";
 
 /**
  * GET /api/admin/license/features
@@ -50,23 +51,18 @@ export async function GET(request: NextRequest) {
       user.organizationId,
     );
 
-    // Build response with all features and their status
-    type FeatureDefinition =
-      (typeof FEATURE_DEFINITIONS)[keyof typeof FEATURE_DEFINITIONS];
+    const enabledFeatureKeys = enabledFeatures
+      .filter((k): k is string => typeof k === "string")
+      .filter(isFeatureKey);
 
-    const features = Object.values(FEATURE_DEFINITIONS).map(
-      (feature: FeatureDefinition) => ({
-        ...feature,
-        isEnabled: enabledFeatures.includes(feature.key),
-      }),
-    );
-
-    return NextResponse.json({
+    const body: AdminLicenseEntitlementsGetResponse = {
       organizationId: user.organizationId,
-      organizationName: user.organization?.name,
-      subscriptionTier: user.organization?.subscriptionTier,
-      features,
-    });
+      organizationName: user.organization?.name ?? null,
+      subscriptionTier: user.organization?.subscriptionTier ?? null,
+      enabledFeatureKeys,
+    };
+
+    return NextResponse.json(body);
   } catch (error) {
     console.error("Error fetching features:", error);
     return NextResponse.json(
@@ -123,7 +119,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify feature exists
-    if (!FEATURE_DEFINITIONS[featureKey as keyof typeof FEATURE_DEFINITIONS]) {
+    if (typeof featureKey !== "string" || !isFeatureKey(featureKey)) {
       return NextResponse.json(
         { error: "Invalid feature key" },
         { status: 400 },
