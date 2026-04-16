@@ -6,19 +6,9 @@ import {
   type FeatureKey,
 } from "@/lib/config/license-features";
 import { platformOnboardOrganizationClientSchema } from "@/lib/platform/contracts/onboarding";
+import type { PlatformOrganizationDto } from "@/lib/platform/contracts/organizations-response";
 
-type OrganizationDomain = {
-  id: string;
-  host: string;
-  isPrimary: boolean;
-};
-
-type Organization = {
-  id: string;
-  name: string;
-  createdAt: string | Date;
-  domains: OrganizationDomain[];
-};
+type Organization = PlatformOrganizationDto;
 
 type FieldErrors = Record<string, string[]>;
 

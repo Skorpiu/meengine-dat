@@ -11,6 +11,7 @@ import {
   resolveOrganizationIdFromHost,
 } from "@/lib/tenant";
 import PlatformDashboard from "@/components/platform/platform-dashboard";
+import { toPlatformOrganizationDto } from "@/lib/platform/contracts/organizations-response";
 
 export default async function PlatformPage() {
   const session = await getServerSession(authOptions);
@@ -33,5 +34,7 @@ export default async function PlatformPage() {
     include: { domains: { orderBy: { isPrimary: "desc" } } },
   });
 
-  return <PlatformDashboard initialOrganizations={orgs} />;
+  const initialOrganizations = orgs.map(toPlatformOrganizationDto);
+
+  return <PlatformDashboard initialOrganizations={initialOrganizations} />;
 }
