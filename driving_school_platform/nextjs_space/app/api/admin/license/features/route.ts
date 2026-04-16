@@ -5,7 +5,11 @@ import { LicenseService } from "@/lib/services/license-service";
 import { db } from "@/lib/db";
 import { isFeatureKey } from "@/lib/config/license-features";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
-import type { AdminLicenseEntitlementsGetResponse } from "@/lib/platform/contracts/license-entitlements";
+import type {
+  AdminLicenseEntitlementsGetResponse,
+  AdminLicenseFeaturesPostRequest,
+  AdminLicenseFeaturesPostResponse,
+} from "@/lib/platform/contracts/license-entitlements";
 
 /**
  * GET /api/admin/license/features
@@ -111,8 +115,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { featureKey, enabled } = body;
+    const rawBody: unknown = await request.json();
+    const body = rawBody as Partial<AdminLicenseFeaturesPostRequest>;
+    const featureKey = body.featureKey;
+    const enabled = body.enabled;
 
     if (!featureKey || typeof enabled !== "boolean") {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
@@ -142,10 +148,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
+    const resBody: AdminLicenseFeaturesPostResponse = {
       success: true,
       message: `Feature ${enabled ? "enabled" : "disabled"} successfully`,
-    });
+    };
+
+    return NextResponse.json(resBody);
   } catch (error) {
     console.error("Error updating feature:", error);
     return NextResponse.json(

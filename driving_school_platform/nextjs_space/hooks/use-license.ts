@@ -11,7 +11,13 @@ import {
   type FeatureKey,
   isFeatureKey,
 } from "@/lib/config/license-features";
-import type { AdminLicenseEntitlementsGetResponse } from "@/lib/platform/contracts/license-entitlements";
+import type {
+  AdminLicenseActivatePostRequest,
+  AdminLicenseActivatePostResponse,
+  AdminLicenseEntitlementsGetResponse,
+  AdminLicenseFeaturesPostRequest,
+  AdminLicenseFeaturesPostResponse,
+} from "@/lib/platform/contracts/license-entitlements";
 
 interface LicenseFeature {
   key: FeatureKey;
@@ -86,16 +92,24 @@ export function useLicense() {
    */
   const toggleFeature = async (featureKey: string, enabled: boolean) => {
     try {
+      const body: AdminLicenseFeaturesPostRequest = {
+        featureKey: featureKey as FeatureKey,
+        enabled,
+      };
+
       const response = await fetch("/api/admin/license/features", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ featureKey, enabled }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || "Failed to update feature");
       }
+
+      const _result =
+        (await response.json()) as AdminLicenseFeaturesPostResponse;
 
       // Revalidate the data
       await mutate();
@@ -115,25 +129,34 @@ export function useLicense() {
    */
   const activateLicense = async (licenseKey: string) => {
     try {
+      const body: AdminLicenseActivatePostRequest = { licenseKey };
+
       const response = await fetch("/api/admin/license/activate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ licenseKey }),
+        body: JSON.stringify(body),
       });
 
-      const result = await response.json();
+      const result = (await response.json()) as
+        | AdminLicenseActivatePostResponse
+        | { error?: string };
 
       if (!response.ok) {
-        throw new Error(result.error || "Failed to activate license");
+        throw new Error(
+          "error" in result
+            ? result.error || "Failed to activate license"
+            : "Failed to activate license",
+        );
       }
 
       // Revalidate the data
       await mutate();
 
+      const ok = result as AdminLicenseActivatePostResponse;
       return {
         success: true,
-        message: result.message,
-        features: result.features,
+        message: ok.message,
+        features: ok.features,
       };
     } catch (error) {
       console.error("Error activating license:", error);

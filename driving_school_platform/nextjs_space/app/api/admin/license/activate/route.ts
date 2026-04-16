@@ -4,6 +4,11 @@ import { authOptions } from "@/lib/auth";
 import { LicenseService } from "@/lib/services/license-service";
 import { db } from "@/lib/db";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import { isFeatureKey } from "@/lib/config/license-features";
+import type {
+  AdminLicenseActivatePostRequest,
+  AdminLicenseActivatePostResponse,
+} from "@/lib/platform/contracts/license-entitlements";
 
 /**
  * POST /api/admin/license/activate
@@ -44,8 +49,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { licenseKey } = body;
+    const rawBody: unknown = await request.json();
+    const body = rawBody as Partial<AdminLicenseActivatePostRequest>;
+    const licenseKey = body.licenseKey;
 
     if (!licenseKey || typeof licenseKey !== "string") {
       return NextResponse.json(
@@ -64,11 +70,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: result.message }, { status: 400 });
     }
 
-    return NextResponse.json({
+    const featureKeys = (result.features ?? [])
+      .filter((k): k is string => typeof k === "string")
+      .filter(isFeatureKey);
+
+    const resBody: AdminLicenseActivatePostResponse = {
       success: true,
       message: result.message,
-      features: result.features,
-    });
+      features: featureKeys,
+    };
+
+    return NextResponse.json(resBody);
   } catch (error) {
     console.error("Error activating license:", error);
     return NextResponse.json(
