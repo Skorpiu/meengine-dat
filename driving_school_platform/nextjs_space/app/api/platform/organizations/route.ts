@@ -3,14 +3,11 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
 import { HTTP_STATUS, API_MESSAGES } from "@/lib/constants";
-import {
-  resolveTenantOrganizationId,
-  isLocalHost,
-  isPlatformHost,
-} from "@/lib/tenant";
+import { resolveTenantOrganizationId } from "@/lib/tenant";
 import { onboardOrganization } from "@/lib/platform/onboard-organization";
 import { platformOnboardOrganizationServerSchema } from "@/lib/platform/contracts/onboarding";
 import { listPlatformOrganizations } from "@/lib/platform/list-organizations";
+import { decidePlatformSurfaceAccess } from "@/lib/platform/access-policy";
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,24 +22,35 @@ export async function GET(request: NextRequest) {
 
     // Hard rule: platform APIs must NOT run on a tenant-mapped host
     const tenant = await resolveTenantOrganizationId(request);
-    if (!tenant.host) {
-      return NextResponse.json(
-        { error: API_MESSAGES.INVALID_REQUEST },
-        { status: HTTP_STATUS.BAD_REQUEST },
-      );
-    }
-    if (tenant.organizationId) {
-      return NextResponse.json(
-        { error: "Platform endpoint not allowed on tenant domains" },
-        { status: HTTP_STATUS.FORBIDDEN },
-      );
-    }
+    const access = decidePlatformSurfaceAccess({
+      mode: "api",
+      userRole: session.user.role,
+      host: tenant.host,
+      tenantOrganizationId: tenant.organizationId,
+    });
+    if (!access.allowed) {
+      if (access.reason === "missing_host") {
+        return NextResponse.json(
+          { error: API_MESSAGES.INVALID_REQUEST },
+          { status: HTTP_STATUS.BAD_REQUEST },
+        );
+      }
+      if (access.reason === "tenant_mapped_host") {
+        return NextResponse.json(
+          { error: "Platform endpoint not allowed on tenant domains" },
+          { status: HTTP_STATUS.FORBIDDEN },
+        );
+      }
+      if (access.reason === "host_not_allowed") {
+        return NextResponse.json(
+          { error: "Platform endpoint not allowed on this host" },
+          { status: HTTP_STATUS.FORBIDDEN },
+        );
+      }
 
-    // Hard rule: platform APIs must run ONLY on local dev or platform hosts (avoid random/unmapped hosts)
-    if (!isLocalHost(tenant.host) && !isPlatformHost(tenant.host)) {
       return NextResponse.json(
-        { error: "Platform endpoint not allowed on this host" },
-        { status: HTTP_STATUS.FORBIDDEN },
+        { error: API_MESSAGES.UNAUTHORIZED },
+        { status: HTTP_STATUS.UNAUTHORIZED },
       );
     }
 
@@ -74,24 +82,35 @@ export async function POST(request: NextRequest) {
 
     // Hard rule: platform APIs must NOT run on a tenant-mapped host
     const tenant = await resolveTenantOrganizationId(request);
-    if (!tenant.host) {
-      return NextResponse.json(
-        { error: API_MESSAGES.INVALID_REQUEST },
-        { status: HTTP_STATUS.BAD_REQUEST },
-      );
-    }
-    if (tenant.organizationId) {
-      return NextResponse.json(
-        { error: "Platform endpoint not allowed on tenant domains" },
-        { status: HTTP_STATUS.FORBIDDEN },
-      );
-    }
+    const access = decidePlatformSurfaceAccess({
+      mode: "api",
+      userRole: session.user.role,
+      host: tenant.host,
+      tenantOrganizationId: tenant.organizationId,
+    });
+    if (!access.allowed) {
+      if (access.reason === "missing_host") {
+        return NextResponse.json(
+          { error: API_MESSAGES.INVALID_REQUEST },
+          { status: HTTP_STATUS.BAD_REQUEST },
+        );
+      }
+      if (access.reason === "tenant_mapped_host") {
+        return NextResponse.json(
+          { error: "Platform endpoint not allowed on tenant domains" },
+          { status: HTTP_STATUS.FORBIDDEN },
+        );
+      }
+      if (access.reason === "host_not_allowed") {
+        return NextResponse.json(
+          { error: "Platform endpoint not allowed on this host" },
+          { status: HTTP_STATUS.FORBIDDEN },
+        );
+      }
 
-    // Hard rule: platform APIs must run ONLY on local dev or platform hosts (avoid random/unmapped hosts)
-    if (!isLocalHost(tenant.host) && !isPlatformHost(tenant.host)) {
       return NextResponse.json(
-        { error: "Platform endpoint not allowed on this host" },
-        { status: HTTP_STATUS.FORBIDDEN },
+        { error: API_MESSAGES.UNAUTHORIZED },
+        { status: HTTP_STATUS.UNAUTHORIZED },
       );
     }
 
