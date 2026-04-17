@@ -4,27 +4,25 @@ import { headers } from "next/headers";
 
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import {
-  getRequestHost,
-  isLocalHost,
-  isPlatformHost,
-  resolveOrganizationIdFromHost,
-} from "@/lib/tenant";
+import { getRequestHost, resolveOrganizationIdFromHost } from "@/lib/tenant";
 import PlatformDashboard from "@/components/platform/platform-dashboard";
 import { toPlatformOrganizationDto } from "@/lib/platform/contracts/organizations-response";
+import { decidePlatformSurfaceAccess } from "@/lib/platform/access-policy";
 
 export default async function PlatformPage() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user) redirect("/auth/login");
-  if (session.user.role !== "PLATFORM_ADMIN") notFound();
-
   const host = getRequestHost({ headers: headers() });
-  if (!isLocalHost(host) && !isPlatformHost(host)) notFound();
-  if (host) {
-    const mappedOrgId = await resolveOrganizationIdFromHost(host);
-    if (mappedOrgId) notFound();
-  }
+
+  const mappedOrgId = host ? await resolveOrganizationIdFromHost(host) : null;
+  const access = decidePlatformSurfaceAccess({
+    mode: "page",
+    userRole: session.user.role,
+    host,
+    tenantOrganizationId: mappedOrgId,
+  });
+  if (!access.allowed) notFound();
 
   // This page should not be used on tenant domains
   // (platform host must NOT be mapped in organization_domains)
