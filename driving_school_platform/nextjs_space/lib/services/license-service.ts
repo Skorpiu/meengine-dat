@@ -1,12 +1,15 @@
-
 /**
  * License Management Service
- * 
+ *
  * Handles license verification, feature access control, and organization management
  */
 
-import { db } from '@/lib/db';
-import type { FeatureKey } from '@/lib/config/license-features';
+import { db } from "@/lib/db";
+import type { FeatureKey } from "@/lib/config/license-features";
+import {
+  getEnabledFeatureKeysForOrganization,
+  isFeatureEnabledForOrganization,
+} from "@/lib/licensing/effective-entitlements";
 
 export class LicenseService {
   /**
@@ -14,25 +17,16 @@ export class LicenseService {
    */
   static async isFeatureEnabled(
     organizationId: string | null,
-    featureKey: FeatureKey
+    featureKey: FeatureKey,
   ): Promise<boolean> {
     if (!organizationId) {
       return false;
     }
 
     try {
-      const feature = await db.organizationFeature.findUnique({
-        where: {
-          organizationId_featureKey: {
-            organizationId,
-            featureKey,
-          },
-        },
-      });
-
-      return feature?.isEnabled ?? false;
+      return await isFeatureEnabledForOrganization(organizationId, featureKey);
     } catch (error) {
-      console.error('Error checking feature status:', error);
+      console.error("Error checking feature status:", error);
       return false;
     }
   }
@@ -42,19 +36,9 @@ export class LicenseService {
    */
   static async getEnabledFeatures(organizationId: string): Promise<string[]> {
     try {
-      const features = await db.organizationFeature.findMany({
-        where: {
-          organizationId,
-          isEnabled: true,
-        },
-        select: {
-          featureKey: true,
-        },
-      });
-
-      return features.map((f: { featureKey: string }) => f.featureKey);
+      return await getEnabledFeatureKeysForOrganization(organizationId);
     } catch (error) {
-      console.error('Error fetching enabled features:', error);
+      console.error("Error fetching enabled features:", error);
       return [];
     }
   }
@@ -65,7 +49,7 @@ export class LicenseService {
   static async enableFeature(
     organizationId: string,
     featureKey: FeatureKey,
-    enabledBy?: string
+    enabledBy?: string,
   ): Promise<boolean> {
     try {
       await db.organizationFeature.upsert({
@@ -91,7 +75,7 @@ export class LicenseService {
 
       return true;
     } catch (error) {
-      console.error('Error enabling feature:', error);
+      console.error("Error enabling feature:", error);
       return false;
     }
   }
@@ -101,7 +85,7 @@ export class LicenseService {
    */
   static async disableFeature(
     organizationId: string,
-    featureKey: FeatureKey
+    featureKey: FeatureKey,
   ): Promise<boolean> {
     try {
       await db.organizationFeature.upsert({
@@ -125,7 +109,7 @@ export class LicenseService {
 
       return true;
     } catch (error) {
-      console.error('Error disabling feature:', error);
+      console.error("Error disabling feature:", error);
       return false;
     }
   }
@@ -135,7 +119,7 @@ export class LicenseService {
    */
   static async activateLicenseKey(
     organizationId: string,
-    licenseKey: string
+    licenseKey: string,
   ): Promise<{ success: boolean; message: string; features?: string[] }> {
     try {
       // Find the license key
@@ -144,23 +128,26 @@ export class LicenseService {
       });
 
       if (!license) {
-        return { success: false, message: 'Invalid license key' };
+        return { success: false, message: "Invalid license key" };
       }
 
       if (license.organizationId !== organizationId) {
-        return { success: false, message: 'License key not valid for this organization' };
+        return {
+          success: false,
+          message: "License key not valid for this organization",
+        };
       }
 
       if (!license.isActive) {
-        return { success: false, message: 'License key has been deactivated' };
+        return { success: false, message: "License key has been deactivated" };
       }
 
       if (license.isUsed) {
-        return { success: false, message: 'License key has already been used' };
+        return { success: false, message: "License key has already been used" };
       }
 
       if (license.expiresAt && license.expiresAt < new Date()) {
-        return { success: false, message: 'License key has expired' };
+        return { success: false, message: "License key has expired" };
       }
 
       // Activate the features
@@ -179,12 +166,12 @@ export class LicenseService {
 
       return {
         success: true,
-        message: 'License key activated successfully',
+        message: "License key activated successfully",
         features: license.featureKeys,
       };
     } catch (error) {
-      console.error('Error activating license key:', error);
-      return { success: false, message: 'Error activating license key' };
+      console.error("Error activating license key:", error);
+      return { success: false, message: "Error activating license key" };
     }
   }
 
@@ -211,7 +198,7 @@ export class LicenseService {
         },
       });
     } catch (error) {
-      console.error('Error fetching organization:', error);
+      console.error("Error fetching organization:", error);
       return null;
     }
   }
@@ -224,11 +211,12 @@ export class LicenseService {
     featureKeys: FeatureKey[],
     expiresAt?: Date,
     notes?: string,
-    createdBy?: string
+    createdBy?: string,
   ): Promise<{ success: boolean; key?: string; message?: string }> {
     try {
       // Generate a unique license key
-      const key = `LIC-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`.toUpperCase();
+      const key =
+        `LIC-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`.toUpperCase();
 
       await db.licenseKey.create({
         data: {
@@ -243,8 +231,8 @@ export class LicenseService {
 
       return { success: true, key };
     } catch (error) {
-      console.error('Error creating license key:', error);
-      return { success: false, message: 'Error creating license key' };
+      console.error("Error creating license key:", error);
+      return { success: false, message: "Error creating license key" };
     }
   }
 }
