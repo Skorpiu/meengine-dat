@@ -567,6 +567,7 @@ model Organization {
   systemSettings       SystemSetting[]
   configurationHistory ConfigurationHistory[]
   featureFlags         FeatureFlag[]
+  billingEvents        BillingEvent[]
 
   @@index([subscriptionTier])
   @@index([subscriptionStatus])
@@ -626,6 +627,27 @@ model LicenseKey {
   @@index([key])
   @@index([isActive])
   @@map("license_keys")
+}
+
+model BillingEvent {
+  id              String        @id @default(cuid())
+  provider        BillingProvider
+  providerEventId String
+  eventType       BillingEventType
+  organizationId  String?
+  status          BillingEventStatus @default(RECEIVED)
+  payload         Json
+  receivedAt      DateTime      @default(now())
+  processedAt     DateTime?
+  processingResult Json?
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, providerEventId])
+  @@index([organizationId])
+  @@index([receivedAt])
+  @@index([processedAt])
+  @@map("billing_events")
 }
 
 model SystemSetting {
@@ -873,6 +895,29 @@ enum SubscriptionStatus {
   EXPIRED
   SUSPENDED
   CANCELLED
+}
+
+enum BillingProvider {
+  SIBS
+  STRIPE
+  PAYPAL
+}
+
+enum BillingEventType {
+  CHECKOUT_SESSION_CREATED
+  PAYMENT_SUCCEEDED
+  PAYMENT_FAILED
+  SUBSCRIPTION_STARTED
+  SUBSCRIPTION_RENEWED
+  SUBSCRIPTION_CANCELLED
+  SUBSCRIPTION_EXPIRED
+  REFUND_ISSUED
+}
+
+enum BillingEventStatus {
+  RECEIVED
+  PROCESSED
+  FAILED
 }
 
 enum SettingType {

@@ -22,3 +22,9 @@ export {
   billingPlanKeyFromSubscriptionTier,
   subscriptionTierFromBillingPlanKey,
 } from "./prisma-bridge";
+
+export {
+  getBillingEventByProviderEventId,
+  recordBillingEvent,
+  type RecordBillingEventInput,
+} from "./event-store";
