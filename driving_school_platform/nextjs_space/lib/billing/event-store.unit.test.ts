@@ -3,15 +3,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const h = vi.hoisted(() => {
   const createMock = vi.fn();
   const findUniqueMock = vi.fn();
+  const updateMock = vi.fn();
 
   const prismaMock = {
     billingEvent: {
       create: createMock,
       findUnique: findUniqueMock,
+      update: updateMock,
     },
   };
 
-  return { prismaMock, createMock, findUniqueMock };
+  return { prismaMock, createMock, findUniqueMock, updateMock };
 });
 
 vi.mock("@/lib/db", () => ({
@@ -21,6 +23,8 @@ vi.mock("@/lib/db", () => ({
 import {
   recordBillingEvent,
   getBillingEventByProviderEventId,
+  markBillingEventFailed,
+  markBillingEventProcessed,
 } from "./event-store";
 
 describe("billing event store (idempotent foundation)", () => {
@@ -75,6 +79,41 @@ describe("billing event store (idempotent foundation)", () => {
           provider: "STRIPE",
           providerEventId: "evt_99",
         },
+      },
+    });
+  });
+
+  it("marks an event as PROCESSED with processedAt and processingResult", async () => {
+    h.updateMock.mockResolvedValue({ id: "e1", status: "PROCESSED" });
+
+    const res = await markBillingEventProcessed("e1", { ok: true });
+
+    expect(res).toEqual({ id: "e1", status: "PROCESSED" });
+    expect(h.updateMock).toHaveBeenCalledWith({
+      where: { id: "e1" },
+      data: {
+        status: "PROCESSED",
+        processedAt: expect.any(Date),
+        processingResult: { ok: true },
+      },
+    });
+  });
+
+  it("marks an event as FAILED with processedAt and processingResult", async () => {
+    h.updateMock.mockResolvedValue({ id: "e2", status: "FAILED" });
+
+    const res = await markBillingEventFailed("e2", {
+      error: "boom",
+      retryable: false,
+    });
+
+    expect(res).toEqual({ id: "e2", status: "FAILED" });
+    expect(h.updateMock).toHaveBeenCalledWith({
+      where: { id: "e2" },
+      data: {
+        status: "FAILED",
+        processedAt: expect.any(Date),
+        processingResult: { error: "boom", retryable: false },
       },
     });
   });

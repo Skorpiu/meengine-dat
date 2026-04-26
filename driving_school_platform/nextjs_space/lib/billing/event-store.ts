@@ -114,3 +114,37 @@ export async function recordBillingEvent(input: RecordBillingEventInput) {
     return existing;
   }
 }
+
+export async function markBillingEventProcessed(
+  billingEventId: string,
+  processingResult?: unknown,
+) {
+  return await db.billingEvent.update({
+    where: { id: billingEventId },
+    data: {
+      status: BillingEventStatus.PROCESSED,
+      processedAt: new Date(),
+      processingResult:
+        typeof processingResult === "undefined"
+          ? undefined
+          : (processingResult as Prisma.InputJsonValue),
+    },
+  });
+}
+
+export async function markBillingEventFailed(
+  billingEventId: string,
+  processingResult?: unknown,
+) {
+  return await db.billingEvent.update({
+    where: { id: billingEventId },
+    data: {
+      status: BillingEventStatus.FAILED,
+      processedAt: new Date(),
+      processingResult:
+        typeof processingResult === "undefined"
+          ? undefined
+          : (processingResult as Prisma.InputJsonValue),
+    },
+  });
+}
