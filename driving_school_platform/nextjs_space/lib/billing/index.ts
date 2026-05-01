@@ -26,6 +26,7 @@ export {
 export {
   getBillingEventByProviderEventId,
   recordBillingEvent,
+  recordBillingEventWithOutcome,
   markBillingEventFailed,
   markBillingEventProcessed,
   type RecordBillingEventInput,
@@ -51,3 +52,8 @@ export {
   processPersistedBillingEventPayload,
   type BillingProcessResult,
 } from "./processor";
+
+export {
+  processPersistedBillingEventLifecycle,
+  type BillingEventProcessingLifecycleResult,
+} from "./processing-lifecycle";
