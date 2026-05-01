@@ -55,5 +55,6 @@ export {
 
 export {
   processPersistedBillingEventLifecycle,
+  retryPersistedBillingEventLifecycle,
   type BillingEventProcessingLifecycleResult,
 } from "./processing-lifecycle";

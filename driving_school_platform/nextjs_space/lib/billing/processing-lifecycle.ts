@@ -14,33 +14,11 @@ export type BillingEventProcessingLifecycleResult =
   | { ok: true; status: "PROCESSED" | "SKIPPED" }
   | { ok: false; status: "FAILED"; error: unknown };
 
-/**
- * Provider-agnostic processing lifecycle for a persisted BillingEvent row.
- *
- * Semantics:
- * - Only processes events in RECEIVED status.
- * - Marks PROCESSED on successful apply.
- * - Marks FAILED on parse/apply errors.
- */
-export async function processPersistedBillingEventLifecycle(
+async function applyLifecycleForEvent(
   billingEventId: string,
+  payload: unknown,
 ): Promise<BillingEventProcessingLifecycleResult> {
-  const event = await db.billingEvent.findUnique({
-    where: { id: billingEventId },
-  });
-  if (!event) {
-    return {
-      ok: false,
-      status: "FAILED",
-      error: { code: "NOT_FOUND", message: "BillingEvent not found" },
-    };
-  }
-
-  if (event.status !== BillingEventStatus.RECEIVED) {
-    return { ok: true, status: "SKIPPED" };
-  }
-
-  const parsed = parseBillingEventPayloadV1(event.payload);
+  const parsed = parseBillingEventPayloadV1(payload);
   if (!parsed.ok) {
     await markBillingEventFailed(billingEventId, {
       error: parsed.error,
@@ -70,12 +48,68 @@ export async function processPersistedBillingEventLifecycle(
       projection,
     });
 
-    await markBillingEventProcessed(billingEventId, {
-      ok: true,
-    });
+    await markBillingEventProcessed(billingEventId, { ok: true });
     return { ok: true, status: "PROCESSED" };
   } catch (error) {
     await markBillingEventFailed(billingEventId, { error, stage: "apply" });
     return { ok: false, status: "FAILED", error };
   }
+}
+
+/**
+ * Provider-agnostic processing lifecycle for a persisted BillingEvent row.
+ *
+ * Semantics:
+ * - Only processes events in RECEIVED status.
+ * - Marks PROCESSED on successful apply.
+ * - Marks FAILED on parse/apply errors.
+ */
+export async function processPersistedBillingEventLifecycle(
+  billingEventId: string,
+): Promise<BillingEventProcessingLifecycleResult> {
+  const event = await db.billingEvent.findUnique({
+    where: { id: billingEventId },
+  });
+  if (!event) {
+    return {
+      ok: false,
+      status: "FAILED",
+      error: { code: "NOT_FOUND", message: "BillingEvent not found" },
+    };
+  }
+
+  if (event.status !== BillingEventStatus.RECEIVED) {
+    return { ok: true, status: "SKIPPED" };
+  }
+
+  return await applyLifecycleForEvent(billingEventId, event.payload);
+}
+
+export async function retryPersistedBillingEventLifecycle(
+  billingEventId: string,
+): Promise<BillingEventProcessingLifecycleResult> {
+  const event = await db.billingEvent.findUnique({
+    where: { id: billingEventId },
+  });
+  if (!event) {
+    return {
+      ok: false,
+      status: "FAILED",
+      error: { code: "NOT_FOUND", message: "BillingEvent not found" },
+    };
+  }
+
+  if (event.status === BillingEventStatus.PROCESSED) {
+    return { ok: true, status: "SKIPPED" };
+  }
+
+  // Explicit behavior: retry supports both FAILED (reprocess) and RECEIVED (process).
+  if (
+    event.status !== BillingEventStatus.RECEIVED &&
+    event.status !== BillingEventStatus.FAILED
+  ) {
+    return { ok: true, status: "SKIPPED" };
+  }
+
+  return await applyLifecycleForEvent(billingEventId, event.payload);
 }
