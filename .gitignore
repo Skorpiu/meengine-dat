@@ -15,4 +15,5 @@ prisma/*.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*gitlab-runner-config.toml
+pnpm-debug.log*
+gitlab-runner-config.toml

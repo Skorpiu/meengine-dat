@@ -6,6 +6,10 @@ import { HTTP_STATUS, API_MESSAGES } from "@/lib/constants";
 import { resolveTenantOrganizationId } from "@/lib/tenant";
 import { onboardOrganization } from "@/lib/platform/onboard-organization";
 import { platformOnboardOrganizationServerSchema } from "@/lib/platform/contracts/onboarding";
+import {
+  toPlatformOrganizationsGetResponse,
+  toPlatformOrganizationsPostResponse,
+} from "@/lib/platform/contracts/organizations-response";
 import { listPlatformOrganizations } from "@/lib/platform/list-organizations";
 import { decidePlatformSurfaceAccess } from "@/lib/platform/access-policy";
 
@@ -56,10 +60,9 @@ export async function GET(request: NextRequest) {
 
     const orgs = await listPlatformOrganizations();
 
-    return NextResponse.json(
-      { organizations: orgs },
-      { status: HTTP_STATUS.OK },
-    );
+    return NextResponse.json(toPlatformOrganizationsGetResponse(orgs), {
+      status: HTTP_STATUS.OK,
+    });
   } catch (error) {
     console.error("Error listing organizations:", error);
     return NextResponse.json(
@@ -143,14 +146,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      {
-        message: "Organization created",
-        organizationId: result.value.organizationId,
-        primaryHost: result.value.primaryHost,
-        hosts: result.value.hosts,
-        superAdmin: result.value.superAdmin,
-        licenseKey: result.value.licenseKey,
-      },
+      toPlatformOrganizationsPostResponse(result.value),
       { status: HTTP_STATUS.CREATED },
     );
   } catch (error) {
