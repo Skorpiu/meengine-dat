@@ -1,50 +1,12 @@
 import { NextResponse } from "next/server";
-import { recordBillingEvent } from "@/lib/billing";
-import type { BillingEventType, BillingProviderId } from "@/lib/billing";
+import {
+  billingEventToPayloadV1,
+  getBillingProvider,
+  isSupportedBillingProviderId,
+  recordBillingEvent,
+} from "@/lib/billing";
 
 type Params = { provider: string };
-
-type BillingWebhookSkeletonBody = {
-  providerEventId?: string;
-  eventType?: BillingEventType;
-  organizationId?: string | null;
-  payload?: unknown;
-};
-
-function isBillingProviderId(p: string): p is BillingProviderId {
-  return p === "sibs" || p === "stripe" || p === "paypal";
-}
-
-function isBillingEventType(x: unknown): x is BillingEventType {
-  return (
-    x === "CHECKOUT_SESSION_CREATED" ||
-    x === "PAYMENT_SUCCEEDED" ||
-    x === "PAYMENT_FAILED" ||
-    x === "SUBSCRIPTION_STARTED" ||
-    x === "SUBSCRIPTION_RENEWED" ||
-    x === "SUBSCRIPTION_CANCELLED" ||
-    x === "SUBSCRIPTION_EXPIRED" ||
-    x === "REFUND_ISSUED"
-  );
-}
-
-async function readBody(
-  request: Request,
-): Promise<{ json: BillingWebhookSkeletonBody | null; raw: string }> {
-  const contentType = request.headers.get("content-type") ?? "";
-  if (contentType.includes("application/json")) {
-    try {
-      const j = (await request.json()) as BillingWebhookSkeletonBody;
-      return { json: j ?? null, raw: "" };
-    } catch {
-      const raw = await request.text();
-      return { json: null, raw };
-    }
-  }
-
-  const raw = await request.text();
-  return { json: null, raw };
-}
 
 /**
  * Billing webhook boundary skeleton.
@@ -52,54 +14,50 @@ async function readBody(
  * No real provider signatures/crypto parsing is done in this batch.
  * We only:
  * - validate provider param
- * - accept a minimal internal "event envelope"
- * - persist the received event idempotently (provider + providerEventId)
+ * - delegate parsing to the provider adapter (registry)
+ * - persist normalized BillingEventPayloadV1 idempotently (provider + providerEventId)
  */
 export async function POST(request: Request, ctx: { params: Params }) {
   const providerParam = ctx?.params?.provider ?? "";
-  if (!isBillingProviderId(providerParam)) {
+  if (!isSupportedBillingProviderId(providerParam)) {
     return NextResponse.json(
       { error: "Unsupported provider" },
       { status: 400 },
     );
   }
 
-  const { json, raw } = await readBody(request);
+  const provider = getBillingProvider(providerParam);
 
-  const providerEventId =
-    (json?.providerEventId && typeof json.providerEventId === "string"
-      ? json.providerEventId
-      : null) ??
-    request.headers.get("x-provider-event-id") ??
-    request.headers.get("x-event-id");
+  const headers: Record<string, string | undefined> = {};
+  request.headers.forEach((value, key) => {
+    headers[key.toLowerCase()] = value;
+  });
 
-  if (!providerEventId || typeof providerEventId !== "string") {
-    return NextResponse.json(
-      { error: "Missing providerEventId" },
-      { status: 400 },
-    );
+  const body = await request.text();
+  const parsed = await provider.parseWebhook({ headers, body });
+
+  if (parsed.events.length === 0) {
+    return NextResponse.json({ error: "No events parsed" }, { status: 400 });
   }
 
-  const eventType: BillingEventType = isBillingEventType(json?.eventType)
-    ? json!.eventType
-    : "CHECKOUT_SESSION_CREATED";
-
-  const payload =
-    typeof json?.payload !== "undefined" ? json.payload : (json ?? raw);
-
-  const recorded = await recordBillingEvent({
-    provider: providerParam,
-    providerEventId,
-    eventType,
-    organizationId:
-      typeof json?.organizationId === "string" ? json.organizationId : null,
-    payload,
-  });
+  const recorded = await Promise.all(
+    parsed.events.map(async (e) => {
+      const payloadV1 = billingEventToPayloadV1(e);
+      return await recordBillingEvent({
+        provider: providerParam,
+        providerEventId: e.providerEventId,
+        eventType: e.type,
+        organizationId: e.organizationId ?? null,
+        payload: payloadV1,
+      });
+    }),
+  );
 
   return NextResponse.json(
     {
       ok: true,
-      billingEventId: recorded.id,
+      billingEventId: recorded.length === 1 ? recorded[0]!.id : undefined,
+      billingEventIds: recorded.map((x) => x.id),
     },
     { status: 200 },
   );

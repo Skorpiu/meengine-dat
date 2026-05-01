@@ -1,13 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { sibsBillingProvider } from "@/lib/billing/providers";
 
 const h = vi.hoisted(() => {
   const recordBillingEventMock = vi.fn();
   return { recordBillingEventMock };
 });
 
-vi.mock("@/lib/billing", () => ({
-  recordBillingEvent: h.recordBillingEventMock,
-}));
+vi.mock("@/lib/billing", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/lib/billing")>();
+  return {
+    ...original,
+    recordBillingEvent: h.recordBillingEventMock,
+  };
+});
 
 // IMPORT AFTER MOCKS
 import { POST } from "./[provider]/route";
@@ -25,6 +30,23 @@ beforeEach(() => {
 });
 
 describe("Billing Webhooks boundary (skeleton)", () => {
+  it("uses the adapter from the provider registry (sibs)", async () => {
+    const spy = vi.spyOn(sibsBillingProvider, "parseWebhook");
+    h.recordBillingEventMock.mockResolvedValue({ id: "be_1" });
+
+    const res = await POST(
+      jsonReq({
+        providerEventId: "evt_1",
+        eventType: "PAYMENT_SUCCEEDED",
+        payload: { any: "thing" },
+      }) as any,
+      { params: { provider: "sibs" } } as any,
+    );
+
+    expect(res.status).toBe(200);
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
   it("returns 400 for invalid provider", async () => {
     const res = await POST(
       jsonReq({ providerEventId: "evt_1" }) as any,
@@ -53,14 +75,19 @@ describe("Billing Webhooks boundary (skeleton)", () => {
 
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toEqual({ ok: true, billingEventId: "be_1" });
+    expect(body).toMatchObject({ ok: true, billingEventId: "be_1" });
 
     expect(h.recordBillingEventMock).toHaveBeenCalledWith({
       provider: "sibs",
       providerEventId: "evt_1",
       eventType: "PAYMENT_SUCCEEDED",
       organizationId: null,
-      payload: { any: "thing" },
+      payload: expect.objectContaining({
+        v: 1,
+        provider: "sibs",
+        providerEventId: "evt_1",
+        type: "PAYMENT_SUCCEEDED",
+      }),
     });
   });
 

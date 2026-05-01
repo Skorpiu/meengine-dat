@@ -46,3 +46,8 @@ export {
   type BillingPayloadParseError,
   type BillingPayloadParseResult,
 } from "./payload-v1";
+
+export {
+  processPersistedBillingEventPayload,
+  type BillingProcessResult,
+} from "./processor";
