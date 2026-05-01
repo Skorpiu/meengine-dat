@@ -30,3 +30,19 @@ export {
   markBillingEventProcessed,
   type RecordBillingEventInput,
 } from "./event-store";
+
+export {
+  BILLING_PROVIDERS,
+  getBillingProvider,
+  isSupportedBillingProviderId,
+} from "./providers";
+
+export type { BillingEventPayloadV1 } from "./payload-v1";
+
+export {
+  billingEventToPayloadV1,
+  parseBillingEventPayloadV1,
+  projectBillingEventPayloadV1,
+  type BillingPayloadParseError,
+  type BillingPayloadParseResult,
+} from "./payload-v1";

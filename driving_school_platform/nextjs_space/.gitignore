@@ -7,3 +7,7 @@ node_modules/
 /playwright/.cache/
 /playwright/.auth/
 *.tsbuildinfo
+
+# Local-only private business/billing data (never commit real values)
+/private/
+/private/*.local.json
