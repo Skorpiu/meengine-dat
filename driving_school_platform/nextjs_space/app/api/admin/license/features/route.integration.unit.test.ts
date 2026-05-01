@@ -2,14 +2,30 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const h = vi.hoisted(() => {
   const findUniqueMock = vi.fn();
+  const orgFeatureFindManyMock = vi.fn();
+  const orgFeatureUpsertMock = vi.fn();
+  const grantFindManyMock = vi.fn();
 
   const prismaMock = {
     user: {
       findUnique: findUniqueMock,
     },
+    organizationFeature: {
+      findMany: orgFeatureFindManyMock,
+      upsert: orgFeatureUpsertMock,
+    },
+    entitlementGrant: {
+      findMany: grantFindManyMock,
+    },
   };
 
-  return { prismaMock, findUniqueMock };
+  return {
+    prismaMock,
+    findUniqueMock,
+    orgFeatureFindManyMock,
+    orgFeatureUpsertMock,
+    grantFindManyMock,
+  };
 });
 
 vi.mock("@/lib/db", () => ({
@@ -29,33 +45,16 @@ vi.mock("@/lib/tenant", () => ({
   guardTenantAuthenticatedRoute: vi.fn(),
 }));
 
-vi.mock("@/lib/services/license-service", () => ({
-  LicenseService: {
-    getEnabledFeatures: vi.fn(),
-    enableFeature: vi.fn(),
-    disableFeature: vi.fn(),
-  },
-}));
-
 // IMPORT AFTER MOCKS
 import { GET, POST } from "./route";
 import { getServerSession } from "next-auth";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
-import { LicenseService } from "@/lib/services/license-service";
 
 const getServerSessionMock = getServerSession as unknown as ReturnType<
   typeof vi.fn
 >;
 const guardTenantAuthenticatedRouteMock =
   guardTenantAuthenticatedRoute as unknown as ReturnType<typeof vi.fn>;
-const getEnabledFeaturesMock = (LicenseService as any)
-  .getEnabledFeatures as ReturnType<typeof vi.fn>;
-const enableFeatureMock = (LicenseService as any).enableFeature as ReturnType<
-  typeof vi.fn
->;
-const disableFeatureMock = (LicenseService as any).disableFeature as ReturnType<
-  typeof vi.fn
->;
 
 function jsonReq(method: string, url: string, payload?: unknown): Request {
   return new Request(url, {
@@ -75,13 +74,25 @@ beforeEach(() => {
     organizationId: "orgA",
     organization: { name: "Org A", subscriptionTier: "PREMIUM" },
   });
+
+  h.orgFeatureFindManyMock.mockResolvedValue([]);
+  h.grantFindManyMock.mockResolvedValue([]);
+  h.orgFeatureUpsertMock.mockResolvedValue({});
 });
 
 describe("Admin License Features API (contracts)", () => {
   it("GET returns entitlements + minimal metadata and does not return rich catalog", async () => {
-    getEnabledFeaturesMock.mockResolvedValue([
-      "VEHICLE_MANAGEMENT",
-      "NOT_A_REAL_KEY",
+    h.grantFindManyMock.mockResolvedValue([
+      {
+        featureKey: "VEHICLE_MANAGEMENT",
+        startsAt: new Date("2026-05-01T00:00:00.000Z"),
+        expiresAt: new Date("2026-06-01T00:00:00.000Z"),
+      },
+      {
+        featureKey: "NOT_A_REAL_KEY",
+        startsAt: new Date("2026-05-01T00:00:00.000Z"),
+        expiresAt: null,
+      },
     ]);
 
     const res = await GET(
@@ -101,9 +112,21 @@ describe("Admin License Features API (contracts)", () => {
     expect("features" in body).toBe(false);
   });
 
-  it("POST accepts { featureKey, enabled } and returns { success: true, message }", async () => {
-    enableFeatureMock.mockResolvedValue(true);
+  it("GET includes manual OrganizationFeature entitlements", async () => {
+    h.orgFeatureFindManyMock.mockResolvedValue([
+      { featureKey: "ADVANCED_REPORTING" },
+    ]);
 
+    const res = await GET(
+      jsonReq("GET", "http://localhost/api/admin/license/features") as any,
+    );
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.enabledFeatureKeys).toEqual(["ADVANCED_REPORTING"]);
+  });
+
+  it("POST accepts { featureKey, enabled } and returns { success: true, message }", async () => {
     const res = await POST(
       jsonReq("POST", "http://localhost/api/admin/license/features", {
         featureKey: "VEHICLE_MANAGEMENT",
@@ -116,11 +139,6 @@ describe("Admin License Features API (contracts)", () => {
     expect(body).toMatchObject({ success: true });
     expect(typeof body.message).toBe("string");
 
-    expect(enableFeatureMock).toHaveBeenCalledWith(
-      "orgA",
-      "VEHICLE_MANAGEMENT",
-      "u1",
-    );
-    expect(disableFeatureMock).not.toHaveBeenCalled();
+    expect(h.orgFeatureUpsertMock).toHaveBeenCalledTimes(1);
   });
 });

@@ -150,18 +150,29 @@ export class LicenseService {
         return { success: false, message: "License key has expired" };
       }
 
-      // Activate the features
-      for (const featureKey of license.featureKeys) {
-        await this.enableFeature(organizationId, featureKey as FeatureKey);
-      }
+      const now = new Date();
 
-      // Mark the license as used
-      await db.licenseKey.update({
-        where: { id: license.id },
-        data: {
-          isUsed: true,
-          usedAt: new Date(),
-        },
+      await db.$transaction(async (tx) => {
+        if (license.featureKeys.length > 0) {
+          await tx.entitlementGrant.createMany({
+            data: license.featureKeys.map((fk) => ({
+              organizationId,
+              featureKey: fk,
+              source: "LICENSE_KEY",
+              startsAt: now,
+              expiresAt: license.expiresAt ?? null,
+            })),
+          });
+        }
+
+        // Mark the license as used
+        await tx.licenseKey.update({
+          where: { id: license.id },
+          data: {
+            isUsed: true,
+            usedAt: now,
+          },
+        });
       });
 
       return {
