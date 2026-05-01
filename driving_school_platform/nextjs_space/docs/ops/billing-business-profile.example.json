@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "purpose": "Template/example for local billing/business profile (structure only).",
+    "security": "Never commit real billing/business data. Fill real values only in the ignored local file at: private/billing-business-profile.local.json"
+  },
+  "legalCompanyName": "<LEGAL_COMPANY_NAME>",
+  "taxId": "<TAX_ID>",
+  "iban": "<IBAN>",
+  "financeEmail": "<FINANCE_EMAIL>",
+  "representativeName": "<REPRESENTATIVE_NAME>",
+  "representativeAddress": "<REPRESENTATIVE_ADDRESS>",
+  "paypalAccountEmail": "<PAYPAL_ACCOUNT_EMAIL>",
+  "notes": "<NOTES>"
+}
