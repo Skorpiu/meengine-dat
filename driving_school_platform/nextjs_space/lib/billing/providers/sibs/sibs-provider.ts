@@ -4,6 +4,8 @@ import type {
   BillingCheckoutResponse,
   BillingEvent,
   BillingEventType,
+  BillingPlanKey,
+  BillingSubscriptionStatus,
   BillingWebhookInput,
   BillingWebhookParseResult,
 } from "@/lib/billing/types";
@@ -47,6 +49,74 @@ function tryParseJsonEnvelope(raw: string): SibsWebhookEnvelope | null {
   }
 }
 
+function asObject(x: unknown): Record<string, unknown> | null {
+  if (!x || typeof x !== "object") return null;
+  return x as Record<string, unknown>;
+}
+
+function isSubscriptionStatus(x: unknown): x is BillingSubscriptionStatus {
+  return (
+    x === "ACTIVE" ||
+    x === "TRIAL" ||
+    x === "PAST_DUE" ||
+    x === "SUSPENDED" ||
+    x === "CANCELLED" ||
+    x === "EXPIRED"
+  );
+}
+
+function isPlanKey(x: unknown): x is BillingPlanKey {
+  return x === "BASE" || x === "PREMIUM" || x === "ENTERPRISE";
+}
+
+function toDateOrNull(x: unknown): Date | null {
+  if (x === null) return null;
+  if (x instanceof Date) return x;
+  if (typeof x === "string") {
+    const ms = Date.parse(x);
+    if (!Number.isNaN(ms)) return new Date(ms);
+  }
+  return null;
+}
+
+function tryParseSubscriptionFromRawPayload(
+  rawPayload: unknown,
+): BillingEvent["subscription"] | null {
+  const root = asObject(rawPayload);
+  const subObj = root ? asObject(root.subscription) : null;
+  if (!subObj) return null;
+
+  const externalId =
+    typeof subObj.externalId === "string" ? subObj.externalId : null;
+  const status = isSubscriptionStatus(subObj.status) ? subObj.status : null;
+  const planKey = isPlanKey(subObj.planKey) ? subObj.planKey : null;
+
+  const currentPeriodStart =
+    toDateOrNull(subObj.currentPeriodStartIso) ??
+    toDateOrNull(subObj.currentPeriodStart);
+  const currentPeriodEnd =
+    toDateOrNull(subObj.currentPeriodEndIso) ??
+    toDateOrNull(subObj.currentPeriodEnd);
+
+  if (
+    !externalId &&
+    !status &&
+    !planKey &&
+    !currentPeriodStart &&
+    !currentPeriodEnd
+  ) {
+    return null;
+  }
+
+  return {
+    externalId,
+    status,
+    planKey,
+    currentPeriodStart,
+    currentPeriodEnd,
+  };
+}
+
 function normalizeWebhookToSingleEvent(
   input: BillingWebhookInput,
 ): BillingEvent | null {
@@ -79,7 +149,7 @@ function normalizeWebhookToSingleEvent(
     type,
     occurredAt: new Date(0),
     organizationId,
-    subscription: null,
+    subscription: tryParseSubscriptionFromRawPayload(rawPayload),
     payment: null,
     raw: {
       headers: input.headers,
