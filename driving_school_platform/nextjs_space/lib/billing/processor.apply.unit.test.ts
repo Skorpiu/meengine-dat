@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const h = vi.hoisted(() => {
   const orgUpdateMock = vi.fn();
   const grantCreateManyMock = vi.fn();
+  const grantUpdateManyMock = vi.fn();
 
   const prismaMock = {
     organization: {
@@ -10,10 +11,16 @@ const h = vi.hoisted(() => {
     },
     entitlementGrant: {
       createMany: grantCreateManyMock,
+      updateMany: grantUpdateManyMock,
     },
   };
 
-  return { prismaMock, orgUpdateMock, grantCreateManyMock };
+  return {
+    prismaMock,
+    orgUpdateMock,
+    grantCreateManyMock,
+    grantUpdateManyMock,
+  };
 });
 
 vi.mock("@/lib/db", () => ({
@@ -28,6 +35,7 @@ describe("billing processor apply (subscription -> org patch + entitlement grant
     vi.resetAllMocks();
     h.orgUpdateMock.mockResolvedValue({});
     h.grantCreateManyMock.mockResolvedValue({ count: 0 });
+    h.grantUpdateManyMock.mockResolvedValue({ count: 0 });
   });
 
   it("updates subscription fields and creates BILLING EntitlementGrant rows for plan features", async () => {
@@ -79,6 +87,7 @@ describe("billing processor apply (subscription -> org patch + entitlement grant
         },
       ],
     });
+    expect(h.grantUpdateManyMock).not.toHaveBeenCalled();
   });
 
   it("falls back to occurredAt when currentPeriodStart is missing", async () => {
@@ -112,9 +121,10 @@ describe("billing processor apply (subscription -> org patch + entitlement grant
         },
       ],
     });
+    expect(h.grantUpdateManyMock).not.toHaveBeenCalled();
   });
 
-  it("does not create grants when subscription is not active", async () => {
+  it("expires active BILLING grants for terminal subscription events (CANCELLED)", async () => {
     const occurredAt = new Date("2026-05-01T00:00:00.000Z");
 
     await applyBillingProjectionForOrganization({
@@ -135,5 +145,37 @@ describe("billing processor apply (subscription -> org patch + entitlement grant
 
     expect(h.orgUpdateMock).toHaveBeenCalledTimes(1);
     expect(h.grantCreateManyMock).not.toHaveBeenCalled();
+    expect(h.grantUpdateManyMock).toHaveBeenCalledWith({
+      where: {
+        organizationId: "orgA",
+        source: "BILLING",
+        featureKey: { in: ["VEHICLE_MANAGEMENT"] },
+        startsAt: { lte: occurredAt },
+        OR: [{ expiresAt: null }, { expiresAt: { gt: occurredAt } }],
+      },
+      data: { expiresAt: occurredAt },
+    });
+  });
+
+  it("does not expire grants when disableFeatureKeys is empty", async () => {
+    const occurredAt = new Date("2026-05-01T00:00:00.000Z");
+
+    await applyBillingProjectionForOrganization({
+      organizationId: "orgA",
+      occurredAt,
+      projection: {
+        subscriptionPatch: {
+          status: "EXPIRED",
+          planKey: "PREMIUM",
+          currentPeriodEnd: null,
+        },
+        entitlementsDelta: {
+          enableFeatureKeys: [],
+          disableFeatureKeys: [],
+        },
+      },
+    });
+
+    expect(h.grantUpdateManyMock).not.toHaveBeenCalled();
   });
 });
