@@ -4,6 +4,10 @@ import {
   projectBillingEventPayloadV1,
   type BillingPayloadParseError,
 } from "./payload-v1";
+import { db } from "@/lib/db";
+import { subscriptionTierFromBillingPlanKey } from "./prisma-bridge";
+import { SubscriptionStatus } from "@prisma/client";
+import type { BillingSubscriptionStatus } from "./types";
 
 export type BillingProcessResult =
   | { ok: true; projection: BillingProjection }
@@ -24,4 +28,69 @@ export function processPersistedBillingEventPayload(
   }
 
   return { ok: true, projection: projectBillingEventPayloadV1(parsed.value) };
+}
+
+function toSubscriptionStatus(
+  status: BillingSubscriptionStatus,
+): SubscriptionStatus {
+  switch (status) {
+    case "ACTIVE":
+      return SubscriptionStatus.ACTIVE;
+    case "TRIAL":
+      return SubscriptionStatus.TRIAL;
+    case "EXPIRED":
+      return SubscriptionStatus.EXPIRED;
+    case "CANCELLED":
+      return SubscriptionStatus.CANCELLED;
+    case "SUSPENDED":
+      return SubscriptionStatus.SUSPENDED;
+    case "PAST_DUE":
+      // closest equivalent in current DB enum
+      return SubscriptionStatus.SUSPENDED;
+  }
+}
+
+export async function applyBillingProjectionForOrganization(input: {
+  organizationId: string;
+  occurredAt: Date;
+  projection: BillingProjection;
+}): Promise<void> {
+  const patch = input.projection.subscriptionPatch;
+  if (patch) {
+    await db.organization.update({
+      where: { id: input.organizationId },
+      data: {
+        subscriptionTier: patch.planKey
+          ? subscriptionTierFromBillingPlanKey(patch.planKey)
+          : undefined,
+        subscriptionStatus: patch.status
+          ? toSubscriptionStatus(patch.status)
+          : undefined,
+        subscriptionEndsAt:
+          typeof patch.currentPeriodEnd === "undefined"
+            ? undefined
+            : patch.currentPeriodEnd,
+      },
+    });
+  }
+
+  const enableKeys =
+    input.projection.entitlementsDelta?.enableFeatureKeys ?? [];
+  const expiresAt = patch?.currentPeriodEnd ?? null;
+
+  const shouldGrant =
+    (patch?.status === "ACTIVE" || patch?.status === "TRIAL") &&
+    enableKeys.length > 0;
+
+  if (!shouldGrant) return;
+
+  await db.entitlementGrant.createMany({
+    data: enableKeys.map((featureKey) => ({
+      organizationId: input.organizationId,
+      featureKey,
+      source: "BILLING",
+      startsAt: input.occurredAt,
+      expiresAt,
+    })),
+  });
 }
