@@ -557,6 +557,7 @@ model Organization {
   instructors          Instructor[]
   licenseKeys          LicenseKey[]
   features             OrganizationFeature[]
+  entitlementGrants    EntitlementGrant[]
   students             Student[]
   users                User[]
   domains              OrganizationDomain[]
@@ -573,6 +574,24 @@ model Organization {
   @@index([subscriptionStatus])
   @@index([isActive])
   @@map("organizations")
+}
+
+model EntitlementGrant {
+  id             String       @id @default(cuid())
+  organizationId String
+  featureKey     String
+  source         String
+  startsAt       DateTime
+  expiresAt      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, featureKey])
+  @@index([organizationId, startsAt, expiresAt])
+  @@map("entitlement_grants")
 }
 
 model OrganizationDomain {

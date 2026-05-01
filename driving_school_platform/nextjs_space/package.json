@@ -15,6 +15,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "pretypecheck": "pnpm -s env:check && prisma generate",
     "postinstall": "prisma generate",
     "prebuild": "pnpm -s env:check && prisma generate",
     "pretest:run": "pnpm -s env:check",
