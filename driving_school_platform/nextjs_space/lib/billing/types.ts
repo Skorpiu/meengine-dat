@@ -57,6 +57,7 @@ export type BillingEvent = {
     externalId: string | null;
     status: BillingSubscriptionStatus | null;
     planKey: BillingPlanKey | null;
+    currentPeriodStart: Date | null;
     currentPeriodEnd: Date | null;
   } | null;
   payment: {
@@ -114,6 +115,7 @@ export type BillingProjection = {
   subscriptionPatch?: {
     status?: BillingSubscriptionStatus;
     planKey?: BillingPlanKey;
+    currentPeriodStart?: Date | null;
     currentPeriodEnd?: Date | null;
   };
   entitlementsDelta?: BillingEntitlementsDelta;

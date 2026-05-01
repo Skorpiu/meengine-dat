@@ -16,6 +16,7 @@ describe("billing payload v1 codec (foundation)", () => {
         externalId: "sub_1",
         status: "ACTIVE",
         planKey: "PREMIUM",
+        currentPeriodStart: new Date("2025-12-01T00:00:00.000Z"),
         currentPeriodEnd: new Date("2026-02-01T00:00:00.000Z"),
       },
       payment: null,
@@ -35,6 +36,7 @@ describe("billing payload v1 codec (foundation)", () => {
         externalId: "sub_1",
         status: "ACTIVE",
         planKey: "PREMIUM",
+        currentPeriodStartIso: "2025-12-01T00:00:00.000Z",
         currentPeriodEndIso: "2026-02-01T00:00:00.000Z",
       },
     });
@@ -61,6 +63,7 @@ describe("billing payload v1 codec (foundation)", () => {
         externalId: "sub_1",
         status: "ACTIVE",
         planKey: "PREMIUM",
+        currentPeriodStartIso: "2026-03-01T00:00:00.000Z",
         currentPeriodEndIso: "2026-04-01T00:00:00.000Z",
       },
       payment: null,
@@ -74,6 +77,7 @@ describe("billing payload v1 codec (foundation)", () => {
     expect(projection.subscriptionPatch).toEqual({
       status: "ACTIVE",
       planKey: "PREMIUM",
+      currentPeriodStart: new Date("2026-03-01T00:00:00.000Z"),
       currentPeriodEnd: new Date("2026-04-01T00:00:00.000Z"),
     });
     expect(

@@ -32,6 +32,7 @@ describe("billing processor apply (subscription -> org patch + entitlement grant
 
   it("updates subscription fields and creates BILLING EntitlementGrant rows for plan features", async () => {
     const occurredAt = new Date("2026-05-01T00:00:00.000Z");
+    const periodStart = new Date("2026-04-01T00:00:00.000Z");
     const periodEnd = new Date("2026-06-01T00:00:00.000Z");
 
     await applyBillingProjectionForOrganization({
@@ -41,6 +42,7 @@ describe("billing processor apply (subscription -> org patch + entitlement grant
         subscriptionPatch: {
           status: "ACTIVE",
           planKey: "PREMIUM",
+          currentPeriodStart: periodStart,
           currentPeriodEnd: periodEnd,
         },
         entitlementsDelta: {
@@ -65,12 +67,45 @@ describe("billing processor apply (subscription -> org patch + entitlement grant
           organizationId: "orgA",
           featureKey: "VEHICLE_MANAGEMENT",
           source: "BILLING",
-          startsAt: occurredAt,
+          startsAt: periodStart,
           expiresAt: periodEnd,
         },
         {
           organizationId: "orgA",
           featureKey: "LESSON_MANAGEMENT",
+          source: "BILLING",
+          startsAt: periodStart,
+          expiresAt: periodEnd,
+        },
+      ],
+    });
+  });
+
+  it("falls back to occurredAt when currentPeriodStart is missing", async () => {
+    const occurredAt = new Date("2026-05-01T00:00:00.000Z");
+    const periodEnd = new Date("2026-06-01T00:00:00.000Z");
+
+    await applyBillingProjectionForOrganization({
+      organizationId: "orgA",
+      occurredAt,
+      projection: {
+        subscriptionPatch: {
+          status: "ACTIVE",
+          planKey: "PREMIUM",
+          currentPeriodEnd: periodEnd,
+        },
+        entitlementsDelta: {
+          enableFeatureKeys: ["VEHICLE_MANAGEMENT"],
+          disableFeatureKeys: [],
+        },
+      },
+    });
+
+    expect(h.grantCreateManyMock).toHaveBeenCalledWith({
+      data: [
+        {
+          organizationId: "orgA",
+          featureKey: "VEHICLE_MANAGEMENT",
           source: "BILLING",
           startsAt: occurredAt,
           expiresAt: periodEnd,
