@@ -1,0 +1,52 @@
+import { describe, it, expect } from "vitest";
+import type { BillingProvider } from "@/lib/billing/provider";
+import { sibsBillingProvider } from "./sibs-provider";
+
+describe("SIBS billing provider adapter (skeleton)", () => {
+  it("matches the BillingProvider boundary shape", () => {
+    const p: BillingProvider = sibsBillingProvider;
+    expect(p.id).toBe("sibs");
+    expect(typeof p.createCheckout).toBe("function");
+    expect(typeof p.parseWebhook).toBe("function");
+  });
+
+  it("parseWebhook returns a coherent BillingWebhookParseResult (controlled stub)", async () => {
+    const res = await sibsBillingProvider.parseWebhook({
+      headers: { "x-provider-event-id": "evt_123" },
+      body: JSON.stringify({
+        providerEventId: "evt_123",
+        eventType: "PAYMENT_SUCCEEDED",
+        organizationId: "org_1",
+        payload: { ok: true },
+      }),
+    });
+
+    expect(res.events).toHaveLength(1);
+    expect(res.events[0]).toEqual({
+      provider: "sibs",
+      providerEventId: "evt_123",
+      type: "PAYMENT_SUCCEEDED",
+      occurredAt: new Date(0),
+      organizationId: "org_1",
+      subscription: null,
+      payment: null,
+      raw: expect.anything(),
+    });
+  });
+
+  it("createCheckout returns a coherent BillingCheckoutResponse (controlled stub)", async () => {
+    const res = await sibsBillingProvider.createCheckout({
+      organizationId: "org_1",
+      planKey: "BASE",
+      successUrl: "https://example.com/success",
+      cancelUrl: "https://example.com/cancel",
+      customerEmail: "a@b.com",
+      metadata: { hello: "world" },
+    });
+
+    expect(res.provider).toBe("sibs");
+    expect(typeof res.redirectUrl).toBe("string");
+    expect(res.redirectUrl).toContain("https://checkout.sibs.invalid/session/");
+    expect(res.checkoutExternalId).toBe("sibs_co_stub_org_1_BASE");
+  });
+});
