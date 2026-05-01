@@ -18,6 +18,11 @@ export type RecordBillingEventInput = {
   payload: unknown;
 };
 
+export type RecordBillingEventResult = {
+  event: Awaited<ReturnType<typeof recordBillingEvent>>;
+  created: boolean;
+};
+
 function toPrismaProvider(provider: BillingProviderId): BillingProvider {
   switch (provider) {
     case "sibs":
@@ -112,6 +117,39 @@ export async function recordBillingEvent(input: RecordBillingEventInput) {
     }
 
     return existing;
+  }
+}
+
+/**
+ * Record a billing event idempotently, returning whether a new row was created.
+ *
+ * This is useful when the caller wants to avoid double-processing duplicates.
+ */
+export async function recordBillingEventWithOutcome(
+  input: RecordBillingEventInput,
+): Promise<RecordBillingEventResult> {
+  try {
+    const event = await db.billingEvent.create({
+      data: {
+        provider: toPrismaProvider(input.provider),
+        providerEventId: input.providerEventId,
+        eventType: toPrismaEventType(input.eventType),
+        organizationId: input.organizationId ?? null,
+        status: BillingEventStatus.RECEIVED,
+        payload: input.payload as Prisma.InputJsonValue,
+      },
+    });
+    return { event, created: true };
+  } catch (err) {
+    if (!isUniqueConstraintError(err)) throw err;
+
+    const existing = await getBillingEventByProviderEventId(
+      input.provider,
+      input.providerEventId,
+    );
+    if (!existing) throw err;
+
+    return { event: existing, created: false };
   }
 }
 

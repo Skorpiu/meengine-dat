@@ -3,7 +3,8 @@ import {
   billingEventToPayloadV1,
   getBillingProvider,
   isSupportedBillingProviderId,
-  recordBillingEvent,
+  recordBillingEventWithOutcome,
+  processPersistedBillingEventLifecycle,
 } from "@/lib/billing";
 
 type Params = { provider: string };
@@ -43,7 +44,7 @@ export async function POST(request: Request, ctx: { params: Params }) {
   const recorded = await Promise.all(
     parsed.events.map(async (e) => {
       const payloadV1 = billingEventToPayloadV1(e);
-      return await recordBillingEvent({
+      return await recordBillingEventWithOutcome({
         provider: providerParam,
         providerEventId: e.providerEventId,
         eventType: e.type,
@@ -53,11 +54,17 @@ export async function POST(request: Request, ctx: { params: Params }) {
     }),
   );
 
+  await Promise.all(
+    recorded
+      .filter((r) => r.created)
+      .map((r) => processPersistedBillingEventLifecycle(r.event.id)),
+  );
+
   return NextResponse.json(
     {
       ok: true,
-      billingEventId: recorded.length === 1 ? recorded[0]!.id : undefined,
-      billingEventIds: recorded.map((x) => x.id),
+      billingEventId: recorded.length === 1 ? recorded[0]!.event.id : undefined,
+      billingEventIds: recorded.map((x) => x.event.id),
     },
     { status: 200 },
   );
