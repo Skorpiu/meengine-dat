@@ -74,6 +74,21 @@ export async function applyBillingProjectionForOrganization(input: {
     });
   }
 
+  const disableKeys =
+    input.projection.entitlementsDelta?.disableFeatureKeys ?? [];
+  if (disableKeys.length > 0) {
+    await db.entitlementGrant.updateMany({
+      where: {
+        organizationId: input.organizationId,
+        source: "BILLING",
+        featureKey: { in: disableKeys },
+        startsAt: { lte: input.occurredAt },
+        OR: [{ expiresAt: null }, { expiresAt: { gt: input.occurredAt } }],
+      },
+      data: { expiresAt: input.occurredAt },
+    });
+  }
+
   const enableKeys =
     input.projection.entitlementsDelta?.enableFeatureKeys ?? [];
   const expiresAt = patch?.currentPeriodEnd ?? null;
