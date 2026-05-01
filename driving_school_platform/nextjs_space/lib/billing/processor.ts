@@ -77,6 +77,7 @@ export async function applyBillingProjectionForOrganization(input: {
   const enableKeys =
     input.projection.entitlementsDelta?.enableFeatureKeys ?? [];
   const expiresAt = patch?.currentPeriodEnd ?? null;
+  const startsAt = patch?.currentPeriodStart ?? input.occurredAt;
 
   const shouldGrant =
     (patch?.status === "ACTIVE" || patch?.status === "TRIAL") &&
@@ -89,7 +90,7 @@ export async function applyBillingProjectionForOrganization(input: {
       organizationId: input.organizationId,
       featureKey,
       source: "BILLING",
-      startsAt: input.occurredAt,
+      startsAt,
       expiresAt,
     })),
   });

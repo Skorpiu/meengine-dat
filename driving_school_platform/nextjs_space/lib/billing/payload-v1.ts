@@ -20,6 +20,7 @@ export type BillingEventPayloadV1 = {
     externalId: string | null;
     status: BillingSubscriptionStatus | null;
     planKey: BillingPlanKey | null;
+    currentPeriodStartIso?: string | null;
     currentPeriodEndIso: string | null;
   } | null;
   payment: {
@@ -141,6 +142,12 @@ export function parseBillingEventPayloadV1(
                 typeof subObj.planKey === "string"
                   ? (subObj.planKey as BillingPlanKey)
                   : null,
+              currentPeriodStartIso:
+                typeof subObj.currentPeriodStartIso === "string" ||
+                subObj.currentPeriodStartIso === null ||
+                typeof subObj.currentPeriodStartIso === "undefined"
+                  ? (subObj.currentPeriodStartIso as string | null | undefined)
+                  : null,
               currentPeriodEndIso:
                 typeof subObj.currentPeriodEndIso === "string" ||
                 subObj.currentPeriodEndIso === null
@@ -248,6 +255,7 @@ export function parseBillingEventPayloadV1(
               typeof subObj.planKey === "string"
                 ? (subObj.planKey as BillingPlanKey)
                 : null,
+            currentPeriodStartIso: toIso(subObj.currentPeriodStart),
             currentPeriodEndIso: toIso(subObj.currentPeriodEnd),
           }
         : null;
@@ -318,11 +326,18 @@ export function projectBillingEventPayloadV1(
   if (
     sub.status ||
     sub.planKey ||
+    typeof sub.currentPeriodStartIso !== "undefined" ||
     typeof sub.currentPeriodEndIso !== "undefined"
   ) {
     projection.subscriptionPatch = {
       status: sub.status ?? undefined,
       planKey: sub.planKey ?? undefined,
+      currentPeriodStart:
+        typeof sub.currentPeriodStartIso === "undefined"
+          ? undefined
+          : sub.currentPeriodStartIso
+            ? new Date(sub.currentPeriodStartIso)
+            : null,
       currentPeriodEnd: sub.currentPeriodEndIso
         ? new Date(sub.currentPeriodEndIso)
         : null,
@@ -362,6 +377,9 @@ export function billingEventToPayloadV1(
           externalId: event.subscription.externalId,
           status: event.subscription.status,
           planKey: event.subscription.planKey,
+          currentPeriodStartIso: event.subscription.currentPeriodStart
+            ? event.subscription.currentPeriodStart.toISOString()
+            : null,
           currentPeriodEndIso: event.subscription.currentPeriodEnd
             ? event.subscription.currentPeriodEnd.toISOString()
             : null,
