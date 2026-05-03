@@ -84,4 +84,91 @@ describe("billing payload v1 codec (foundation)", () => {
       projection.entitlementsDelta?.enableFeatureKeys.length,
     ).toBeGreaterThan(0);
   });
+
+  it("policy: PAST_DUE updates subscription status but does not disable (or enable) plan features", () => {
+    const parsed = parseBillingEventPayloadV1({
+      v: 1,
+      provider: "stripe",
+      providerEventId: "evt_sub_past_due_1",
+      type: "SUBSCRIPTION_RENEWED",
+      occurredAtIso: "2026-03-10T00:00:00.000Z",
+      organizationId: "org_1",
+      subscription: {
+        externalId: "sub_1",
+        status: "PAST_DUE",
+        planKey: "PREMIUM",
+        currentPeriodEndIso: "2026-04-01T00:00:00.000Z",
+      },
+      payment: null,
+    });
+
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+
+    const projection = projectBillingEventPayloadV1(parsed.value);
+    expect(projection.subscriptionPatch?.status).toBe("PAST_DUE");
+    expect(projection.entitlementsDelta).toEqual({
+      enableFeatureKeys: [],
+      disableFeatureKeys: [],
+    });
+  });
+
+  it("policy: SUSPENDED disables billing-granted plan features", () => {
+    const parsed = parseBillingEventPayloadV1({
+      v: 1,
+      provider: "stripe",
+      providerEventId: "evt_sub_suspended_1",
+      type: "SUBSCRIPTION_RENEWED",
+      occurredAtIso: "2026-03-10T00:00:00.000Z",
+      organizationId: "org_1",
+      subscription: {
+        externalId: "sub_1",
+        status: "SUSPENDED",
+        planKey: "PREMIUM",
+        currentPeriodEndIso: "2026-04-01T00:00:00.000Z",
+      },
+      payment: null,
+    });
+
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+
+    const projection = projectBillingEventPayloadV1(parsed.value);
+    expect(projection.subscriptionPatch?.status).toBe("SUSPENDED");
+    expect(projection.entitlementsDelta?.enableFeatureKeys).toEqual([]);
+    expect(
+      projection.entitlementsDelta?.disableFeatureKeys.length,
+    ).toBeGreaterThan(0);
+  });
+
+  it.each(["CANCELLED", "EXPIRED"] as const)(
+    "policy: %s disables billing-granted plan features",
+    (status) => {
+      const parsed = parseBillingEventPayloadV1({
+        v: 1,
+        provider: "stripe",
+        providerEventId: `evt_sub_${status.toLowerCase()}_1`,
+        type: "SUBSCRIPTION_RENEWED",
+        occurredAtIso: "2026-03-10T00:00:00.000Z",
+        organizationId: "org_1",
+        subscription: {
+          externalId: "sub_1",
+          status,
+          planKey: "PREMIUM",
+          currentPeriodEndIso: "2026-04-01T00:00:00.000Z",
+        },
+        payment: null,
+      });
+
+      expect(parsed.ok).toBe(true);
+      if (!parsed.ok) return;
+
+      const projection = projectBillingEventPayloadV1(parsed.value);
+      expect(projection.subscriptionPatch?.status).toBe(status);
+      expect(projection.entitlementsDelta?.enableFeatureKeys).toEqual([]);
+      expect(
+        projection.entitlementsDelta?.disableFeatureKeys.length,
+      ).toBeGreaterThan(0);
+    },
+  );
 });
