@@ -345,13 +345,21 @@ export function projectBillingEventPayloadV1(
   }
 
   if (sub.planKey) {
-    const enableFeatureKeys = BILLING_PLAN_FEATURES[sub.planKey] ?? [];
+    const planFeatureKeys = unique(BILLING_PLAN_FEATURES[sub.planKey] ?? []);
+
+    const enableFeatureKeys =
+      sub.status === "ACTIVE" || sub.status === "TRIAL" ? planFeatureKeys : [];
+
+    const disableFeatureKeys =
+      sub.status === "SUSPENDED" ||
+      sub.status === "CANCELLED" ||
+      sub.status === "EXPIRED"
+        ? planFeatureKeys
+        : [];
+
     projection.entitlementsDelta = {
-      enableFeatureKeys: unique(enableFeatureKeys),
-      disableFeatureKeys:
-        sub.status === "CANCELLED" || sub.status === "EXPIRED"
-          ? unique(enableFeatureKeys)
-          : [],
+      enableFeatureKeys,
+      disableFeatureKeys,
     } satisfies BillingEntitlementsDelta;
   }
 
