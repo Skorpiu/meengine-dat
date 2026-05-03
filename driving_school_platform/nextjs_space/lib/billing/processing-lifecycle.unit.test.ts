@@ -142,6 +142,61 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
     expect(h.prismaMock.entitlementGrant.updateMany).toHaveBeenCalledTimes(1);
   });
 
+  it("pipeline applies PAST_DUE -> status patch only (no grant create/expire)", async () => {
+    h.findUniqueMock.mockResolvedValueOnce({
+      id: "be_past_due",
+      status: "RECEIVED",
+      payload: {
+        v: 1,
+        provider: "stripe",
+        providerEventId: "evt_fx_past_due",
+        type: "SUBSCRIPTION_RENEWED",
+        occurredAtIso: "2026-05-10T00:00:00.000Z",
+        organizationId: "orgA",
+        subscription: {
+          externalId: "sub_1",
+          status: "PAST_DUE",
+          planKey: "PREMIUM",
+          currentPeriodEndIso: "2026-06-01T00:00:00.000Z",
+        },
+        payment: null,
+      },
+    });
+
+    const res = await processPersistedBillingEventLifecycle("be_past_due");
+    expect(res).toEqual({ ok: true, status: "PROCESSED" });
+    expect(h.prismaMock.organization.update).toHaveBeenCalledTimes(1);
+    expect(h.prismaMock.entitlementGrant.createMany).not.toHaveBeenCalled();
+    expect(h.prismaMock.entitlementGrant.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("pipeline applies CANCELLED -> updateMany expiry", async () => {
+    h.findUniqueMock.mockResolvedValueOnce({
+      id: "be_cancelled",
+      status: "RECEIVED",
+      payload: {
+        v: 1,
+        provider: "stripe",
+        providerEventId: "evt_fx_cancelled",
+        type: "SUBSCRIPTION_CANCELLED",
+        occurredAtIso: "2026-05-20T00:00:00.000Z",
+        organizationId: "orgA",
+        subscription: {
+          externalId: "sub_1",
+          status: "CANCELLED",
+          planKey: "PREMIUM",
+          currentPeriodEndIso: "2026-06-01T00:00:00.000Z",
+        },
+        payment: null,
+      },
+    });
+
+    const res = await processPersistedBillingEventLifecycle("be_cancelled");
+    expect(res).toEqual({ ok: true, status: "PROCESSED" });
+    expect(h.prismaMock.entitlementGrant.createMany).not.toHaveBeenCalled();
+    expect(h.prismaMock.entitlementGrant.updateMany).toHaveBeenCalledTimes(1);
+  });
+
   it("marks FAILED on parse error", async () => {
     h.findUniqueMock.mockResolvedValue({
       id: "be_2",

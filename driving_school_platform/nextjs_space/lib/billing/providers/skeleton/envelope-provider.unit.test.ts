@@ -4,6 +4,8 @@ import { createEnvelopeBillingProvider } from "./envelope-provider";
 import { assertBillingProviderSubscriptionPayloadContract } from "../billing-provider-contract-test-helper";
 import {
   fixtureSubscriptionActive,
+  fixtureSubscriptionCancelled,
+  fixtureSubscriptionPastDue,
   fixtureSubscriptionSuspended,
   makeProviderLikeSubscriptionWebhookEnvelope,
 } from "./provider-fixtures";
@@ -87,6 +89,38 @@ describe("envelope billing provider adapter (skeleton)", () => {
     );
     expect(
       suspendedProjection.entitlementsDelta?.disableFeatureKeys.length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("fixture sandbox: PAST_DUE is status-only (no enable/disable delta)", async () => {
+    const provider = createEnvelopeBillingProvider("stripe");
+    const fx = fixtureSubscriptionPastDue({ provider: "stripe" });
+    const req = makeProviderLikeSubscriptionWebhookEnvelope(fx);
+    const res = await provider.parseWebhook(req);
+    expect(res.events).toHaveLength(1);
+
+    const payload = billingEventToPayloadV1(res.events[0]!);
+    const projection = projectBillingEventPayloadV1(payload);
+    expect(projection.subscriptionPatch?.status).toBe("PAST_DUE");
+    expect(projection.entitlementsDelta).toEqual({
+      enableFeatureKeys: [],
+      disableFeatureKeys: [],
+    });
+  });
+
+  it("fixture sandbox: CANCELLED disables plan features", async () => {
+    const provider = createEnvelopeBillingProvider("stripe");
+    const fx = fixtureSubscriptionCancelled({ provider: "stripe" });
+    const req = makeProviderLikeSubscriptionWebhookEnvelope(fx);
+    const res = await provider.parseWebhook(req);
+    expect(res.events).toHaveLength(1);
+
+    const payload = billingEventToPayloadV1(res.events[0]!);
+    const projection = projectBillingEventPayloadV1(payload);
+    expect(projection.subscriptionPatch?.status).toBe("CANCELLED");
+    expect(projection.entitlementsDelta?.enableFeatureKeys).toEqual([]);
+    expect(
+      projection.entitlementsDelta?.disableFeatureKeys.length,
     ).toBeGreaterThan(0);
   });
 });
