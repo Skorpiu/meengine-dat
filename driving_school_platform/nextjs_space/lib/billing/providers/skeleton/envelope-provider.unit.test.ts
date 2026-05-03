@@ -6,7 +6,9 @@ import {
   fixtureSubscriptionActive,
   fixtureSubscriptionCancelled,
   fixtureSubscriptionPastDue,
+  fixtureSubscriptionExpired,
   fixtureSubscriptionSuspended,
+  fixtureSubscriptionTrial,
   makeProviderLikeSubscriptionWebhookEnvelope,
 } from "./provider-fixtures";
 import {
@@ -108,6 +110,22 @@ describe("envelope billing provider adapter (skeleton)", () => {
     });
   });
 
+  it("fixture sandbox: TRIAL enables plan features", async () => {
+    const provider = createEnvelopeBillingProvider("stripe");
+    const fx = fixtureSubscriptionTrial({ provider: "stripe" });
+    const req = makeProviderLikeSubscriptionWebhookEnvelope(fx);
+    const res = await provider.parseWebhook(req);
+    expect(res.events).toHaveLength(1);
+
+    const payload = billingEventToPayloadV1(res.events[0]!);
+    const projection = projectBillingEventPayloadV1(payload);
+    expect(projection.subscriptionPatch?.status).toBe("TRIAL");
+    expect(
+      projection.entitlementsDelta?.enableFeatureKeys.length,
+    ).toBeGreaterThan(0);
+    expect(projection.entitlementsDelta?.disableFeatureKeys).toEqual([]);
+  });
+
   it("fixture sandbox: CANCELLED disables plan features", async () => {
     const provider = createEnvelopeBillingProvider("stripe");
     const fx = fixtureSubscriptionCancelled({ provider: "stripe" });
@@ -118,6 +136,22 @@ describe("envelope billing provider adapter (skeleton)", () => {
     const payload = billingEventToPayloadV1(res.events[0]!);
     const projection = projectBillingEventPayloadV1(payload);
     expect(projection.subscriptionPatch?.status).toBe("CANCELLED");
+    expect(projection.entitlementsDelta?.enableFeatureKeys).toEqual([]);
+    expect(
+      projection.entitlementsDelta?.disableFeatureKeys.length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("fixture sandbox: EXPIRED disables plan features", async () => {
+    const provider = createEnvelopeBillingProvider("stripe");
+    const fx = fixtureSubscriptionExpired({ provider: "stripe" });
+    const req = makeProviderLikeSubscriptionWebhookEnvelope(fx);
+    const res = await provider.parseWebhook(req);
+    expect(res.events).toHaveLength(1);
+
+    const payload = billingEventToPayloadV1(res.events[0]!);
+    const projection = projectBillingEventPayloadV1(payload);
+    expect(projection.subscriptionPatch?.status).toBe("EXPIRED");
     expect(projection.entitlementsDelta?.enableFeatureKeys).toEqual([]);
     expect(
       projection.entitlementsDelta?.disableFeatureKeys.length,

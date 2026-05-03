@@ -197,6 +197,72 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
     expect(h.prismaMock.entitlementGrant.updateMany).toHaveBeenCalledTimes(1);
   });
 
+  it("pipeline applies TRIAL -> createMany", async () => {
+    h.findUniqueMock.mockResolvedValueOnce({
+      id: "be_trial",
+      status: "RECEIVED",
+      payload: {
+        v: 1,
+        provider: "stripe",
+        providerEventId: "evt_fx_trial",
+        type: "SUBSCRIPTION_STARTED",
+        occurredAtIso: "2026-05-01T00:00:00.000Z",
+        organizationId: "orgA",
+        subscription: {
+          externalId: "sub_1",
+          status: "TRIAL",
+          planKey: "PREMIUM",
+          currentPeriodStartIso: "2026-05-01T00:00:00.000Z",
+          currentPeriodEndIso: "2026-06-01T00:00:00.000Z",
+        },
+        payment: null,
+      },
+    });
+
+    const res = await processPersistedBillingEventLifecycle("be_trial");
+    expect(res).toEqual({ ok: true, status: "PROCESSED" });
+    expect(h.prismaMock.entitlementGrant.createMany).toHaveBeenCalledTimes(1);
+    expect(h.prismaMock.entitlementGrant.updateMany).not.toHaveBeenCalled();
+
+    const expectedFeatureKeys = BILLING_PLAN_FEATURES.PREMIUM ?? [];
+    expect(h.prismaMock.entitlementGrant.createMany).toHaveBeenCalledWith({
+      data: expectedFeatureKeys.map((featureKey: string) => ({
+        organizationId: "orgA",
+        featureKey,
+        source: "BILLING",
+        startsAt: new Date("2026-05-01T00:00:00.000Z"),
+        expiresAt: new Date("2026-06-01T00:00:00.000Z"),
+      })),
+    });
+  });
+
+  it("pipeline applies EXPIRED -> updateMany expiry", async () => {
+    h.findUniqueMock.mockResolvedValueOnce({
+      id: "be_expired",
+      status: "RECEIVED",
+      payload: {
+        v: 1,
+        provider: "stripe",
+        providerEventId: "evt_fx_expired",
+        type: "SUBSCRIPTION_EXPIRED",
+        occurredAtIso: "2026-05-25T00:00:00.000Z",
+        organizationId: "orgA",
+        subscription: {
+          externalId: "sub_1",
+          status: "EXPIRED",
+          planKey: "PREMIUM",
+          currentPeriodEndIso: "2026-06-01T00:00:00.000Z",
+        },
+        payment: null,
+      },
+    });
+
+    const res = await processPersistedBillingEventLifecycle("be_expired");
+    expect(res).toEqual({ ok: true, status: "PROCESSED" });
+    expect(h.prismaMock.entitlementGrant.createMany).not.toHaveBeenCalled();
+    expect(h.prismaMock.entitlementGrant.updateMany).toHaveBeenCalledTimes(1);
+  });
+
   it("marks FAILED on parse error", async () => {
     h.findUniqueMock.mockResolvedValue({
       id: "be_2",
