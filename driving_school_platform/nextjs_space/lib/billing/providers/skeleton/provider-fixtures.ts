@@ -11,7 +11,13 @@ export type ProviderLikeSubscriptionFixture = {
   organizationId: string;
   subscription: {
     externalId: string;
-    status: "ACTIVE" | "PAST_DUE" | "SUSPENDED" | "CANCELLED";
+    status:
+      | "ACTIVE"
+      | "TRIAL"
+      | "PAST_DUE"
+      | "SUSPENDED"
+      | "CANCELLED"
+      | "EXPIRED";
     planKey: BillingPlanKey;
     currentPeriodStartIso: string;
     currentPeriodEndIso: string;
@@ -53,6 +59,26 @@ export function fixtureSubscriptionActive(input?: {
     subscription: {
       externalId: "sub_fx_1",
       status: "ACTIVE",
+      planKey: input?.planKey ?? "PREMIUM",
+      currentPeriodStartIso: "2026-05-01T00:00:00.000Z",
+      currentPeriodEndIso: "2026-06-01T00:00:00.000Z",
+    },
+  };
+}
+
+export function fixtureSubscriptionTrial(input?: {
+  provider?: Exclude<BillingProviderId, "sibs">;
+  organizationId?: string;
+  planKey?: BillingPlanKey;
+}): ProviderLikeSubscriptionFixture {
+  return {
+    provider: input?.provider ?? "stripe",
+    providerEventId: "evt_fx_sub_trial_1",
+    eventType: "SUBSCRIPTION_STARTED",
+    organizationId: input?.organizationId ?? "org_fx_1",
+    subscription: {
+      externalId: "sub_fx_1",
+      status: "TRIAL",
       planKey: input?.planKey ?? "PREMIUM",
       currentPeriodStartIso: "2026-05-01T00:00:00.000Z",
       currentPeriodEndIso: "2026-06-01T00:00:00.000Z",
@@ -113,6 +139,26 @@ export function fixtureSubscriptionCancelled(input?: {
     subscription: {
       externalId: "sub_fx_1",
       status: "CANCELLED",
+      planKey: input?.planKey ?? "PREMIUM",
+      currentPeriodStartIso: "2026-05-01T00:00:00.000Z",
+      currentPeriodEndIso: "2026-06-01T00:00:00.000Z",
+    },
+  };
+}
+
+export function fixtureSubscriptionExpired(input?: {
+  provider?: Exclude<BillingProviderId, "sibs">;
+  organizationId?: string;
+  planKey?: BillingPlanKey;
+}): ProviderLikeSubscriptionFixture {
+  return {
+    provider: input?.provider ?? "stripe",
+    providerEventId: "evt_fx_sub_expired_1",
+    eventType: "SUBSCRIPTION_EXPIRED",
+    organizationId: input?.organizationId ?? "org_fx_1",
+    subscription: {
+      externalId: "sub_fx_1",
+      status: "EXPIRED",
       planKey: input?.planKey ?? "PREMIUM",
       currentPeriodStartIso: "2026-05-01T00:00:00.000Z",
       currentPeriodEndIso: "2026-06-01T00:00:00.000Z",
