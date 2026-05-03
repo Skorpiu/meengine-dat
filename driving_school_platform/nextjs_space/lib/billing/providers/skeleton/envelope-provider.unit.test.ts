@@ -2,6 +2,15 @@ import { describe, it, expect } from "vitest";
 import type { BillingProvider } from "@/lib/billing/provider";
 import { createEnvelopeBillingProvider } from "./envelope-provider";
 import { assertBillingProviderSubscriptionPayloadContract } from "../billing-provider-contract-test-helper";
+import {
+  fixtureSubscriptionActive,
+  fixtureSubscriptionSuspended,
+  makeProviderLikeSubscriptionWebhookEnvelope,
+} from "./provider-fixtures";
+import {
+  billingEventToPayloadV1,
+  projectBillingEventPayloadV1,
+} from "@/lib/billing/payload-v1";
 
 describe("envelope billing provider adapter (skeleton)", () => {
   it("matches the BillingProvider boundary shape", () => {
@@ -46,5 +55,38 @@ describe("envelope billing provider adapter (skeleton)", () => {
       currentPeriodStartIso: "2026-03-01T00:00:00.000Z",
       currentPeriodEndIso: "2026-04-01T00:00:00.000Z",
     });
+  });
+
+  it("fixture sandbox: envelope -> BillingEventPayloadV1 -> projection (ACTIVE then SUSPENDED)", async () => {
+    const provider = createEnvelopeBillingProvider("stripe");
+
+    const activeFx = fixtureSubscriptionActive({ provider: "stripe" });
+    const activeReq = makeProviderLikeSubscriptionWebhookEnvelope(activeFx);
+    const activeRes = await provider.parseWebhook(activeReq);
+    expect(activeRes.events).toHaveLength(1);
+    const activeEvent = activeRes.events[0]!;
+    const activePayload = billingEventToPayloadV1(activeEvent);
+    const activeProjection = projectBillingEventPayloadV1(activePayload);
+    expect(activeProjection.subscriptionPatch?.status).toBe("ACTIVE");
+    expect(
+      activeProjection.entitlementsDelta?.enableFeatureKeys.length,
+    ).toBeGreaterThan(0);
+    expect(activeProjection.entitlementsDelta?.disableFeatureKeys).toEqual([]);
+
+    const suspendedFx = fixtureSubscriptionSuspended({ provider: "stripe" });
+    const suspendedReq =
+      makeProviderLikeSubscriptionWebhookEnvelope(suspendedFx);
+    const suspendedRes = await provider.parseWebhook(suspendedReq);
+    expect(suspendedRes.events).toHaveLength(1);
+    const suspendedEvent = suspendedRes.events[0]!;
+    const suspendedPayload = billingEventToPayloadV1(suspendedEvent);
+    const suspendedProjection = projectBillingEventPayloadV1(suspendedPayload);
+    expect(suspendedProjection.subscriptionPatch?.status).toBe("SUSPENDED");
+    expect(suspendedProjection.entitlementsDelta?.enableFeatureKeys).toEqual(
+      [],
+    );
+    expect(
+      suspendedProjection.entitlementsDelta?.disableFeatureKeys.length,
+    ).toBeGreaterThan(0);
   });
 });

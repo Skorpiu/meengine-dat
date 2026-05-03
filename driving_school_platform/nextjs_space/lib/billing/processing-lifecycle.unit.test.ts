@@ -14,6 +14,7 @@ const h = vi.hoisted(() => {
     },
     entitlementGrant: {
       createMany: vi.fn(),
+      updateMany: vi.fn(),
     },
   };
 
@@ -28,6 +29,7 @@ import {
   processPersistedBillingEventLifecycle,
   retryPersistedBillingEventLifecycle,
 } from "./processing-lifecycle";
+import { BILLING_PLAN_FEATURES } from "./billing-plans";
 
 describe("billing processing lifecycle (persisted event -> apply -> status)", () => {
   beforeEach(() => {
@@ -68,6 +70,76 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
         processingResult: { ok: true },
       },
     });
+  });
+
+  it("pipeline applies ACTIVE -> createMany and SUSPENDED -> updateMany expiry", async () => {
+    // ACTIVE
+    h.findUniqueMock.mockResolvedValueOnce({
+      id: "be_active",
+      status: "RECEIVED",
+      payload: {
+        v: 1,
+        provider: "stripe",
+        providerEventId: "evt_fx_active",
+        type: "SUBSCRIPTION_STARTED",
+        occurredAtIso: "2026-05-01T00:00:00.000Z",
+        organizationId: "orgA",
+        subscription: {
+          externalId: "sub_1",
+          status: "ACTIVE",
+          planKey: "PREMIUM",
+          currentPeriodStartIso: "2026-05-01T00:00:00.000Z",
+          currentPeriodEndIso: "2026-06-01T00:00:00.000Z",
+        },
+        payment: null,
+      },
+    });
+
+    const resActive = await processPersistedBillingEventLifecycle("be_active");
+    expect(resActive).toEqual({ ok: true, status: "PROCESSED" });
+    expect(h.prismaMock.entitlementGrant.createMany).toHaveBeenCalledTimes(1);
+    expect(h.prismaMock.entitlementGrant.updateMany).not.toHaveBeenCalled();
+
+    const expectedFeatureKeys = BILLING_PLAN_FEATURES.PREMIUM ?? [];
+    expect(h.prismaMock.entitlementGrant.createMany).toHaveBeenCalledWith({
+      data: expectedFeatureKeys.map((featureKey: string) => ({
+        organizationId: "orgA",
+        featureKey,
+        source: "BILLING",
+        startsAt: new Date("2026-05-01T00:00:00.000Z"),
+        expiresAt: new Date("2026-06-01T00:00:00.000Z"),
+      })),
+    });
+
+    vi.resetAllMocks();
+    h.updateMock.mockResolvedValue({ id: "be_suspended" });
+
+    // SUSPENDED
+    h.findUniqueMock.mockResolvedValueOnce({
+      id: "be_suspended",
+      status: "RECEIVED",
+      payload: {
+        v: 1,
+        provider: "stripe",
+        providerEventId: "evt_fx_suspended",
+        type: "SUBSCRIPTION_RENEWED",
+        occurredAtIso: "2026-05-15T00:00:00.000Z",
+        organizationId: "orgA",
+        subscription: {
+          externalId: "sub_1",
+          status: "SUSPENDED",
+          planKey: "PREMIUM",
+          currentPeriodEndIso: "2026-06-01T00:00:00.000Z",
+        },
+        payment: null,
+      },
+    });
+
+    const resSuspended =
+      await processPersistedBillingEventLifecycle("be_suspended");
+    expect(resSuspended).toEqual({ ok: true, status: "PROCESSED" });
+    expect(h.prismaMock.entitlementGrant.createMany).not.toHaveBeenCalled();
+    expect(h.prismaMock.entitlementGrant.updateMany).toHaveBeenCalledTimes(1);
   });
 
   it("marks FAILED on parse error", async () => {
