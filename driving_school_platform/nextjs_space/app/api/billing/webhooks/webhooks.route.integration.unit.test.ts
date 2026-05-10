@@ -87,7 +87,7 @@ describe("Billing Webhooks boundary (skeleton)", () => {
     const body = await res.json();
     expect(body).toEqual({
       error: "Provider webhook parse failed",
-      detail: "Invalid subscription field: foo",
+      detail: "Invalid provider webhook payload",
     });
 
     expect(spy).toHaveBeenCalledTimes(1);

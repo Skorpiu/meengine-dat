@@ -42,7 +42,7 @@ export async function POST(request: Request, ctx: { params: Params }) {
     return NextResponse.json(
       {
         error: "Provider webhook parse failed",
-        detail: err instanceof Error ? err.message : String(err),
+        detail: "Invalid provider webhook payload",
       },
       { status: 400 },
     );
