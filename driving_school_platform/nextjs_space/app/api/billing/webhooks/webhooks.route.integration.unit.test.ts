@@ -144,6 +144,13 @@ describe("Billing Webhooks boundary (skeleton)", () => {
         type: "PAYMENT_SUCCEEDED",
       }),
     });
+
+    expect(h.processPersistedBillingEventLifecycleMock).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(h.processPersistedBillingEventLifecycleMock).toHaveBeenCalledWith(
+      "be_1",
+    );
   });
 
   it("is stable on duplicate providerEventId (idempotency via event store)", async () => {
@@ -181,6 +188,42 @@ describe("Billing Webhooks boundary (skeleton)", () => {
     // Only process newly created events (do not double-apply on duplicates)
     expect(h.processPersistedBillingEventLifecycleMock).toHaveBeenCalledTimes(
       1,
+    );
+  });
+
+  it("returns 202 when lifecycle processing fails after persistence (accepted but deferred)", async () => {
+    h.recordBillingEventWithOutcomeMock.mockResolvedValue({
+      event: { id: "be_fail" },
+      created: true,
+    });
+    h.processPersistedBillingEventLifecycleMock.mockRejectedValue(
+      new Error("apply failed"),
+    );
+
+    const res = await POST(
+      jsonReq({
+        providerEventId: "evt_throws",
+        eventType: "PAYMENT_SUCCEEDED",
+        payload: { ok: true },
+      }) as any,
+      { params: { provider: "sibs" } } as any,
+    );
+
+    expect(res.status).toBe(202);
+    const body = await res.json();
+    expect(body).toMatchObject({
+      ok: true,
+      accepted: true,
+      processing: "DEFERRED",
+      billingEventId: "be_fail",
+    });
+
+    expect(h.recordBillingEventWithOutcomeMock).toHaveBeenCalledTimes(1);
+    expect(h.processPersistedBillingEventLifecycleMock).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(h.processPersistedBillingEventLifecycleMock).toHaveBeenCalledWith(
+      "be_fail",
     );
   });
 });

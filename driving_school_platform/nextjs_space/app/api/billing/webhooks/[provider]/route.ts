@@ -65,11 +65,27 @@ export async function POST(request: Request, ctx: { params: Params }) {
     }),
   );
 
-  await Promise.all(
-    recorded
-      .filter((r) => r.created)
-      .map((r) => processPersistedBillingEventLifecycle(r.event.id)),
+  const toProcess = recorded.filter((r) => r.created);
+  const processing = await Promise.allSettled(
+    toProcess.map((r) => processPersistedBillingEventLifecycle(r.event.id)),
   );
+
+  const processingFailed = processing.some(
+    (x) => x.status === "rejected" || (x.status === "fulfilled" && !x.value.ok),
+  );
+  if (processingFailed) {
+    return NextResponse.json(
+      {
+        ok: true,
+        accepted: true,
+        processing: "DEFERRED",
+        billingEventId:
+          recorded.length === 1 ? recorded[0]!.event.id : undefined,
+        billingEventIds: recorded.map((x) => x.event.id),
+      },
+      { status: 202 },
+    );
+  }
 
   return NextResponse.json(
     {
