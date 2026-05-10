@@ -193,16 +193,6 @@ export function parseBillingEventPayloadV1(
               ) {
                 return { __error: "INVALID_FIELDS" as const };
               }
-              if (!currentPeriodEndIso) {
-                return { __error: "MISSING_FIELDS" as const };
-              }
-              if (
-                (status === "ACTIVE" || status === "TRIAL") &&
-                (!currentPeriodStartIso ||
-                  typeof currentPeriodStartIso !== "string")
-              ) {
-                return { __error: "MISSING_FIELDS" as const };
-              }
 
               return {
                 externalId,

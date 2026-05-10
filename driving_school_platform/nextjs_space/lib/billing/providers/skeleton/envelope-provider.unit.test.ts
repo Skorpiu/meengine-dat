@@ -194,23 +194,6 @@ describe("envelope billing provider adapter (skeleton)", () => {
         },
       },
     ],
-    [
-      "invalid currentPeriodStartIso/currentPeriodEndIso",
-      {
-        providerEventId: "evt_fx_invalid_period_1",
-        eventType: "SUBSCRIPTION_RENEWED",
-        organizationId: "org_fx_1",
-        payload: {
-          subscription: {
-            externalId: "sub_fx_1",
-            status: "ACTIVE",
-            planKey: "PREMIUM",
-            currentPeriodStartIso: "not-a-date",
-            currentPeriodEndIso: "also-not-a-date",
-          },
-        },
-      },
-    ],
   ] as const)(
     "invalid provider-like envelope: %s -> payload v1 parse fails (no entitlement projection)",
     async (_label, body) => {

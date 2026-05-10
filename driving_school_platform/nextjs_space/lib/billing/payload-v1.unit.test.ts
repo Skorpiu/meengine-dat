@@ -51,6 +51,31 @@ describe("billing payload v1 codec (foundation)", () => {
     });
   });
 
+  it.each(["ACTIVE", "TRIAL"] as const)(
+    "parses %s subscription even when currentPeriodStartIso is missing (backwards compatible)",
+    (status) => {
+      const parsed = parseBillingEventPayloadV1({
+        v: 1,
+        provider: "stripe",
+        providerEventId: `evt_sub_${status.toLowerCase()}_missing_start`,
+        type: "SUBSCRIPTION_RENEWED",
+        occurredAtIso: "2026-03-01T00:00:00.000Z",
+        organizationId: "org_1",
+        subscription: {
+          externalId: "sub_1",
+          status,
+          planKey: "PREMIUM",
+          currentPeriodEndIso: "2026-04-01T00:00:00.000Z",
+        },
+        payment: null,
+      });
+
+      expect(parsed.ok).toBe(true);
+      if (!parsed.ok) return;
+      expect(parsed.value.subscription?.currentPeriodStartIso).toBeUndefined();
+    },
+  );
+
   it.each([
     [
       "invalid subscription status",

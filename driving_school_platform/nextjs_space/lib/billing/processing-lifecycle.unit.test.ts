@@ -143,6 +143,43 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
     expect(h.prismaMock.entitlementGrant.updateMany).toHaveBeenCalledTimes(1);
   });
 
+  it("ACTIVE without currentPeriodStartIso falls back to occurredAt for entitlement startsAt", async () => {
+    h.findUniqueMock.mockResolvedValueOnce({
+      id: "be_active_no_start",
+      status: "RECEIVED",
+      payload: {
+        v: 1,
+        provider: "stripe",
+        providerEventId: "evt_fx_active_no_start",
+        type: "SUBSCRIPTION_STARTED",
+        occurredAtIso: "2026-05-02T00:00:00.000Z",
+        organizationId: "orgA",
+        subscription: {
+          externalId: "sub_1",
+          status: "ACTIVE",
+          planKey: "PREMIUM",
+          currentPeriodEndIso: "2026-06-01T00:00:00.000Z",
+        },
+        payment: null,
+      },
+    });
+
+    const res =
+      await processPersistedBillingEventLifecycle("be_active_no_start");
+    expect(res).toEqual({ ok: true, status: "PROCESSED" });
+
+    const expectedFeatureKeys = BILLING_PLAN_FEATURES.PREMIUM ?? [];
+    expect(h.prismaMock.entitlementGrant.createMany).toHaveBeenCalledWith({
+      data: expectedFeatureKeys.map((featureKey: string) => ({
+        organizationId: "orgA",
+        featureKey,
+        source: "BILLING",
+        startsAt: new Date("2026-05-02T00:00:00.000Z"),
+        expiresAt: new Date("2026-06-01T00:00:00.000Z"),
+      })),
+    });
+  });
+
   it("pipeline applies PAST_DUE -> status patch only (no grant create/expire)", async () => {
     h.findUniqueMock.mockResolvedValueOnce({
       id: "be_past_due",
