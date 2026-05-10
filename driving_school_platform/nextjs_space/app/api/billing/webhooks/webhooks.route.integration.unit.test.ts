@@ -60,6 +60,41 @@ describe("Billing Webhooks boundary (skeleton)", () => {
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
+  it("returns 400 and does not persist/apply when provider parseWebhook throws", async () => {
+    const spy = vi
+      .spyOn(sibsBillingProvider, "parseWebhook")
+      .mockRejectedValueOnce(new Error("Invalid subscription field: foo"));
+
+    const res = await POST(
+      jsonReq({
+        providerEventId: "evt_bad_1",
+        eventType: "SUBSCRIPTION_RENEWED",
+        organizationId: "org_1",
+        payload: {
+          subscription: {
+            externalId: "sub_1",
+            status: "ACTIVE",
+            planKey: "PREMIUM",
+            currentPeriodStartIso: "not-a-date",
+            currentPeriodEndIso: "2026-02-01T00:00:00.000Z",
+          },
+        },
+      }) as any,
+      { params: { provider: "sibs" } } as any,
+    );
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body).toEqual({
+      error: "Provider webhook parse failed",
+      detail: "Invalid subscription field: foo",
+    });
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(h.recordBillingEventWithOutcomeMock).not.toHaveBeenCalled();
+    expect(h.processPersistedBillingEventLifecycleMock).not.toHaveBeenCalled();
+  });
+
   it("returns 400 for invalid provider", async () => {
     const res = await POST(
       jsonReq({ providerEventId: "evt_1" }) as any,
