@@ -51,6 +51,93 @@ describe("billing payload v1 codec (foundation)", () => {
     });
   });
 
+  it.each([
+    [
+      "invalid subscription status",
+      {
+        v: 1,
+        provider: "stripe",
+        providerEventId: "evt_bad_status",
+        type: "SUBSCRIPTION_RENEWED",
+        occurredAtIso: "2026-03-01T00:00:00.000Z",
+        organizationId: "org_1",
+        subscription: {
+          externalId: "sub_1",
+          status: "NOPE",
+          planKey: "PREMIUM",
+          currentPeriodStartIso: "2026-03-01T00:00:00.000Z",
+          currentPeriodEndIso: "2026-04-01T00:00:00.000Z",
+        },
+        payment: null,
+      },
+    ],
+    [
+      "invalid subscription planKey",
+      {
+        v: 1,
+        provider: "stripe",
+        providerEventId: "evt_bad_plan",
+        type: "SUBSCRIPTION_RENEWED",
+        occurredAtIso: "2026-03-01T00:00:00.000Z",
+        organizationId: "org_1",
+        subscription: {
+          externalId: "sub_1",
+          status: "ACTIVE",
+          planKey: "GOLD",
+          currentPeriodStartIso: "2026-03-01T00:00:00.000Z",
+          currentPeriodEndIso: "2026-04-01T00:00:00.000Z",
+        },
+        payment: null,
+      },
+    ],
+    [
+      "invalid subscription period date",
+      {
+        v: 1,
+        provider: "stripe",
+        providerEventId: "evt_bad_period",
+        type: "SUBSCRIPTION_RENEWED",
+        occurredAtIso: "2026-03-01T00:00:00.000Z",
+        organizationId: "org_1",
+        subscription: {
+          externalId: "sub_1",
+          status: "ACTIVE",
+          planKey: "PREMIUM",
+          currentPeriodStartIso: "not-a-date",
+          currentPeriodEndIso: "2026-04-01T00:00:00.000Z",
+        },
+        payment: null,
+      },
+    ],
+    [
+      "missing required subscription fields",
+      {
+        v: 1,
+        provider: "stripe",
+        providerEventId: "evt_missing_sub_fields",
+        type: "SUBSCRIPTION_RENEWED",
+        occurredAtIso: "2026-03-01T00:00:00.000Z",
+        organizationId: "org_1",
+        subscription: {
+          // externalId missing
+          status: "ACTIVE",
+          planKey: "PREMIUM",
+          currentPeriodStartIso: "2026-03-01T00:00:00.000Z",
+          currentPeriodEndIso: "2026-04-01T00:00:00.000Z",
+        },
+        payment: null,
+      },
+    ],
+  ] as const)(
+    "fails v1 parse for %s and cannot project entitlements",
+    (_label, badPayload) => {
+      const parsed = parseBillingEventPayloadV1(badPayload);
+      expect(parsed.ok).toBe(false);
+      if (parsed.ok) return;
+      expect(parsed.error.code).toMatch(/MISSING_FIELDS|INVALID_FIELDS/);
+    },
+  );
+
   it("projector supports the subscription case using the normalized payload", () => {
     const parsed = parseBillingEventPayloadV1({
       v: 1,

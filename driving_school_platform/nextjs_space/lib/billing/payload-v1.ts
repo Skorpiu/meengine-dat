@@ -65,6 +65,21 @@ function isEventType(x: unknown): x is BillingEventType {
   );
 }
 
+function isSubscriptionStatus(x: unknown): x is BillingSubscriptionStatus {
+  return (
+    x === "ACTIVE" ||
+    x === "TRIAL" ||
+    x === "PAST_DUE" ||
+    x === "SUSPENDED" ||
+    x === "CANCELLED" ||
+    x === "EXPIRED"
+  );
+}
+
+function isPlanKey(x: unknown): x is BillingPlanKey {
+  return x === "BASE" || x === "PREMIUM" || x === "ENTERPRISE";
+}
+
 function isIsoString(x: unknown): x is string {
   if (typeof x !== "string") return false;
   // Minimal ISO check; `Date.parse` accepts some non-ISO formats, but this is enough for v1.
@@ -129,32 +144,95 @@ export function parseBillingEventPayloadV1(
       obj.subscription === null
         ? null
         : subObj
-          ? {
-              externalId:
+          ? (() => {
+              const externalId =
                 typeof subObj.externalId === "string"
                   ? subObj.externalId
-                  : null,
-              status:
-                typeof subObj.status === "string"
-                  ? (subObj.status as BillingSubscriptionStatus)
-                  : null,
-              planKey:
-                typeof subObj.planKey === "string"
-                  ? (subObj.planKey as BillingPlanKey)
-                  : null,
-              currentPeriodStartIso:
-                typeof subObj.currentPeriodStartIso === "string" ||
-                subObj.currentPeriodStartIso === null ||
-                typeof subObj.currentPeriodStartIso === "undefined"
-                  ? (subObj.currentPeriodStartIso as string | null | undefined)
-                  : null,
-              currentPeriodEndIso:
-                typeof subObj.currentPeriodEndIso === "string" ||
-                subObj.currentPeriodEndIso === null
-                  ? (subObj.currentPeriodEndIso as string | null)
-                  : null,
-            }
+                  : null;
+
+              const statusRaw = subObj.status;
+              const status =
+                typeof statusRaw === "string" && isSubscriptionStatus(statusRaw)
+                  ? statusRaw
+                  : null;
+
+              const planKeyRaw = subObj.planKey;
+              const planKey =
+                typeof planKeyRaw === "string" && isPlanKey(planKeyRaw)
+                  ? planKeyRaw
+                  : null;
+
+              const currentPeriodStartIsoRaw = subObj.currentPeriodStartIso;
+              const currentPeriodStartIso =
+                typeof currentPeriodStartIsoRaw === "undefined"
+                  ? undefined
+                  : typeof currentPeriodStartIsoRaw === "string" &&
+                      isIsoString(currentPeriodStartIsoRaw)
+                    ? currentPeriodStartIsoRaw
+                    : currentPeriodStartIsoRaw === null
+                      ? null
+                      : "__invalid__";
+
+              const currentPeriodEndIsoRaw = subObj.currentPeriodEndIso;
+              const currentPeriodEndIso =
+                typeof currentPeriodEndIsoRaw === "string" &&
+                isIsoString(currentPeriodEndIsoRaw)
+                  ? currentPeriodEndIsoRaw
+                  : currentPeriodEndIsoRaw === null
+                    ? null
+                    : "__invalid__";
+
+              // If the payload claims to be a subscription payload, enforce the contract
+              // so invalid provider-like envelopes fail deterministically at parse stage.
+              if (!externalId || !status || !planKey) {
+                return { __error: "MISSING_FIELDS" as const };
+              }
+              if (
+                currentPeriodEndIso === "__invalid__" ||
+                currentPeriodStartIso === "__invalid__"
+              ) {
+                return { __error: "INVALID_FIELDS" as const };
+              }
+              if (!currentPeriodEndIso) {
+                return { __error: "MISSING_FIELDS" as const };
+              }
+              if (
+                (status === "ACTIVE" || status === "TRIAL") &&
+                (!currentPeriodStartIso ||
+                  typeof currentPeriodStartIso !== "string")
+              ) {
+                return { __error: "MISSING_FIELDS" as const };
+              }
+
+              return {
+                externalId,
+                status,
+                planKey,
+                currentPeriodStartIso,
+                currentPeriodEndIso,
+              };
+            })()
           : null;
+
+    if (
+      subscription &&
+      typeof subscription === "object" &&
+      "__error" in subscription
+    ) {
+      const err = (
+        subscription as { __error: "MISSING_FIELDS" | "INVALID_FIELDS" }
+      ).__error;
+      return {
+        ok: false,
+        error: {
+          code: err,
+          message:
+            err === "MISSING_FIELDS"
+              ? "Missing required v1 subscription fields"
+              : "Invalid v1 subscription fields",
+        },
+      };
+    }
 
     const payObj = obj.payment ? asObject(obj.payment) : null;
     const payment =

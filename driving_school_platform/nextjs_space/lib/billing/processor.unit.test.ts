@@ -14,6 +14,7 @@ describe("billing processor (payload v1 end-to-end)", () => {
         externalId: "sub_1",
         status: "ACTIVE",
         planKey: "PREMIUM",
+        currentPeriodStartIso: "2026-01-01T00:00:00.000Z",
         currentPeriodEndIso: "2026-02-01T00:00:00.000Z",
       },
       payment: null,
@@ -26,6 +27,7 @@ describe("billing processor (payload v1 end-to-end)", () => {
     expect(res.projection.subscriptionPatch).toEqual({
       status: "ACTIVE",
       planKey: "PREMIUM",
+      currentPeriodStart: new Date("2026-01-01T00:00:00.000Z"),
       currentPeriodEnd: new Date("2026-02-01T00:00:00.000Z"),
     });
   });

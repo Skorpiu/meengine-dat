@@ -52,6 +52,7 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
           externalId: "sub_1",
           status: "ACTIVE",
           planKey: "PREMIUM",
+          currentPeriodStartIso: "2026-01-01T00:00:00.000Z",
           currentPeriodEndIso: "2026-02-01T00:00:00.000Z",
         },
         payment: null,
@@ -287,6 +288,116 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
     });
   });
 
+  it.each([
+    [
+      "invalid status",
+      {
+        v: 1,
+        provider: "stripe",
+        providerEventId: "evt_bad_status",
+        type: "SUBSCRIPTION_RENEWED",
+        occurredAtIso: "2026-01-01T00:00:00.000Z",
+        organizationId: "orgA",
+        subscription: {
+          externalId: "sub_1",
+          status: "NOPE",
+          planKey: "PREMIUM",
+          currentPeriodStartIso: "2026-01-01T00:00:00.000Z",
+          currentPeriodEndIso: "2026-02-01T00:00:00.000Z",
+        },
+        payment: null,
+      },
+    ],
+    [
+      "invalid planKey",
+      {
+        v: 1,
+        provider: "stripe",
+        providerEventId: "evt_bad_plan",
+        type: "SUBSCRIPTION_RENEWED",
+        occurredAtIso: "2026-01-01T00:00:00.000Z",
+        organizationId: "orgA",
+        subscription: {
+          externalId: "sub_1",
+          status: "ACTIVE",
+          planKey: "GOLD",
+          currentPeriodStartIso: "2026-01-01T00:00:00.000Z",
+          currentPeriodEndIso: "2026-02-01T00:00:00.000Z",
+        },
+        payment: null,
+      },
+    ],
+    [
+      "invalid period date",
+      {
+        v: 1,
+        provider: "stripe",
+        providerEventId: "evt_bad_period",
+        type: "SUBSCRIPTION_RENEWED",
+        occurredAtIso: "2026-01-01T00:00:00.000Z",
+        organizationId: "orgA",
+        subscription: {
+          externalId: "sub_1",
+          status: "ACTIVE",
+          planKey: "PREMIUM",
+          currentPeriodStartIso: "not-a-date",
+          currentPeriodEndIso: "2026-02-01T00:00:00.000Z",
+        },
+        payment: null,
+      },
+    ],
+    [
+      "missing required subscription fields",
+      {
+        v: 1,
+        provider: "stripe",
+        providerEventId: "evt_missing_sub_fields",
+        type: "SUBSCRIPTION_RENEWED",
+        occurredAtIso: "2026-01-01T00:00:00.000Z",
+        organizationId: "orgA",
+        subscription: {
+          // externalId missing
+          status: "ACTIVE",
+          planKey: "PREMIUM",
+          currentPeriodStartIso: "2026-01-01T00:00:00.000Z",
+          currentPeriodEndIso: "2026-02-01T00:00:00.000Z",
+        },
+        payment: null,
+      },
+    ],
+  ] as const)(
+    "marks FAILED and does not mutate org/grants for %s",
+    async (_label, payload) => {
+      h.findUniqueMock.mockResolvedValueOnce({
+        id: "be_bad",
+        status: "RECEIVED",
+        payload,
+      });
+
+      const res = await processPersistedBillingEventLifecycle("be_bad");
+      expect(res.ok).toBe(false);
+      expect(res.status).toBe("FAILED");
+
+      expect(h.prismaMock.organization.update).not.toHaveBeenCalled();
+      expect(h.prismaMock.entitlementGrant.createMany).not.toHaveBeenCalled();
+      expect(h.prismaMock.entitlementGrant.updateMany).not.toHaveBeenCalled();
+
+      expect(h.updateMock).toHaveBeenLastCalledWith({
+        where: { id: "be_bad" },
+        data: {
+          status: "FAILED",
+          processedAt: expect.any(Date),
+          processingResult: {
+            error: expect.objectContaining({
+              code: expect.stringMatching(/MISSING_FIELDS|INVALID_FIELDS/),
+            }),
+            stage: "parse",
+          },
+        },
+      });
+    },
+  );
+
   it("retries FAILED event and marks PROCESSED on success", async () => {
     h.findUniqueMock.mockResolvedValue({
       id: "be_3",
@@ -371,6 +482,7 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
           externalId: "sub_1",
           status: "ACTIVE",
           planKey: "PREMIUM",
+          currentPeriodStartIso: "2026-01-01T00:00:00.000Z",
           currentPeriodEndIso: "2026-02-01T00:00:00.000Z",
         },
         payment: null,
