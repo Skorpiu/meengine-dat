@@ -77,12 +77,50 @@ function toDateOrNull(x: unknown): Date | null {
   return null;
 }
 
+function assertOptionalDateField(
+  subObj: Record<string, unknown>,
+  field: string,
+): void {
+  if (!(field in subObj)) return; // absent is allowed
+  const v = subObj[field];
+  if (v === null) return;
+  if (v instanceof Date) return;
+  if (typeof v === "string" && !Number.isNaN(Date.parse(v))) return;
+  throw new Error(`Invalid subscription field: ${field}`);
+}
+
+function assertOptionalEnumField(
+  subObj: Record<string, unknown>,
+  field: "status" | "planKey",
+): void {
+  if (!(field in subObj)) return; // absent is allowed
+  const v = subObj[field];
+  if (typeof v !== "string") {
+    throw new Error(`Invalid subscription field: ${field}`);
+  }
+  if (field === "status" && !isSubscriptionStatus(v)) {
+    throw new Error(`Invalid subscription field: ${field}`);
+  }
+  if (field === "planKey" && !isPlanKey(v)) {
+    throw new Error(`Invalid subscription field: ${field}`);
+  }
+}
+
 function tryParseSubscriptionFromRawPayload(
   rawPayload: unknown,
 ): BillingEvent["subscription"] | null {
   const root = asObject(rawPayload);
   const subObj = root ? asObject(root.subscription) : null;
   if (!subObj) return null;
+
+  // Adapter policy: if a field is present but invalid, fail deterministically.
+  // Missing optional fields remain allowed for backwards compatibility.
+  assertOptionalEnumField(subObj, "status");
+  assertOptionalEnumField(subObj, "planKey");
+  assertOptionalDateField(subObj, "currentPeriodStartIso");
+  assertOptionalDateField(subObj, "currentPeriodEndIso");
+  assertOptionalDateField(subObj, "currentPeriodStart");
+  assertOptionalDateField(subObj, "currentPeriodEnd");
 
   const externalId =
     typeof subObj.externalId === "string" ? subObj.externalId : null;

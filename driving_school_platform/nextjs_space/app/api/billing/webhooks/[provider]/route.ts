@@ -35,7 +35,18 @@ export async function POST(request: Request, ctx: { params: Params }) {
   });
 
   const body = await request.text();
-  const parsed = await provider.parseWebhook({ headers, body });
+  let parsed;
+  try {
+    parsed = await provider.parseWebhook({ headers, body });
+  } catch (err) {
+    return NextResponse.json(
+      {
+        error: "Provider webhook parse failed",
+        detail: err instanceof Error ? err.message : String(err),
+      },
+      { status: 400 },
+    );
+  }
 
   if (parsed.events.length === 0) {
     return NextResponse.json({ error: "No events parsed" }, { status: 400 });

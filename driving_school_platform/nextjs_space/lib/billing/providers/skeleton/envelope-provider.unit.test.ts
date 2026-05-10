@@ -194,20 +194,50 @@ describe("envelope billing provider adapter (skeleton)", () => {
         },
       },
     ],
+    [
+      "present invalid currentPeriodStartIso",
+      {
+        providerEventId: "evt_fx_invalid_start_1",
+        eventType: "SUBSCRIPTION_RENEWED",
+        organizationId: "org_fx_1",
+        payload: {
+          subscription: {
+            externalId: "sub_fx_1",
+            status: "ACTIVE",
+            planKey: "PREMIUM",
+            currentPeriodStartIso: "not-a-date",
+            currentPeriodEndIso: "2026-06-01T00:00:00.000Z",
+          },
+        },
+      },
+    ],
+    [
+      "present invalid currentPeriodEndIso",
+      {
+        providerEventId: "evt_fx_invalid_end_1",
+        eventType: "SUBSCRIPTION_RENEWED",
+        organizationId: "org_fx_1",
+        payload: {
+          subscription: {
+            externalId: "sub_fx_1",
+            status: "ACTIVE",
+            planKey: "PREMIUM",
+            currentPeriodStartIso: "2026-05-01T00:00:00.000Z",
+            currentPeriodEndIso: "also-not-a-date",
+          },
+        },
+      },
+    ],
   ] as const)(
-    "invalid provider-like envelope: %s -> payload v1 parse fails (no entitlement projection)",
+    "invalid provider-like envelope: %s fails deterministically at provider parsing",
     async (_label, body) => {
       const provider = createEnvelopeBillingProvider("stripe");
-      const res = await provider.parseWebhook({
-        headers: { "x-provider-event-id": body.providerEventId },
-        body: JSON.stringify(body),
-      });
-      expect(res.events).toHaveLength(1);
-      const payload = billingEventToPayloadV1(res.events[0]!);
-      const parsed = parseBillingEventPayloadV1(payload);
-      expect(parsed.ok).toBe(false);
-      if (parsed.ok) return;
-      expect(parsed.error.code).toMatch(/MISSING_FIELDS|INVALID_FIELDS/);
+      await expect(
+        provider.parseWebhook({
+          headers: { "x-provider-event-id": body.providerEventId },
+          body: JSON.stringify(body),
+        }),
+      ).rejects.toThrow(/Invalid subscription field/);
     },
   );
 });

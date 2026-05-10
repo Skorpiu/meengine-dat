@@ -69,6 +69,87 @@ describe("SIBS billing provider adapter (skeleton)", () => {
     });
   });
 
+  it.each([
+    [
+      "present invalid currentPeriodStartIso",
+      {
+        providerEventId: "evt_sub_bad_start",
+        eventType: "SUBSCRIPTION_STARTED",
+        organizationId: "org_1",
+        payload: {
+          subscription: {
+            externalId: "sub_1",
+            status: "ACTIVE",
+            planKey: "PREMIUM",
+            currentPeriodStartIso: "not-a-date",
+            currentPeriodEndIso: "2026-02-01T00:00:00.000Z",
+          },
+        },
+      },
+    ],
+    [
+      "present invalid currentPeriodEndIso",
+      {
+        providerEventId: "evt_sub_bad_end",
+        eventType: "SUBSCRIPTION_STARTED",
+        organizationId: "org_1",
+        payload: {
+          subscription: {
+            externalId: "sub_1",
+            status: "ACTIVE",
+            planKey: "PREMIUM",
+            currentPeriodStartIso: "2026-01-01T00:00:00.000Z",
+            currentPeriodEndIso: "also-not-a-date",
+          },
+        },
+      },
+    ],
+    [
+      "invalid status",
+      {
+        providerEventId: "evt_sub_bad_status",
+        eventType: "SUBSCRIPTION_STARTED",
+        organizationId: "org_1",
+        payload: {
+          subscription: {
+            externalId: "sub_1",
+            status: "NOPE",
+            planKey: "PREMIUM",
+            currentPeriodStartIso: "2026-01-01T00:00:00.000Z",
+            currentPeriodEndIso: "2026-02-01T00:00:00.000Z",
+          },
+        },
+      },
+    ],
+    [
+      "invalid planKey",
+      {
+        providerEventId: "evt_sub_bad_plan",
+        eventType: "SUBSCRIPTION_STARTED",
+        organizationId: "org_1",
+        payload: {
+          subscription: {
+            externalId: "sub_1",
+            status: "ACTIVE",
+            planKey: "GOLD",
+            currentPeriodStartIso: "2026-01-01T00:00:00.000Z",
+            currentPeriodEndIso: "2026-02-01T00:00:00.000Z",
+          },
+        },
+      },
+    ],
+  ] as const)(
+    "fails deterministically when %s is provided",
+    async (_label, body) => {
+      await expect(
+        sibsBillingProvider.parseWebhook({
+          headers: { "x-provider-event-id": body.providerEventId },
+          body: JSON.stringify(body),
+        }),
+      ).rejects.toThrow(/Invalid subscription field/);
+    },
+  );
+
   it("createCheckout returns a coherent BillingCheckoutResponse (controlled stub)", async () => {
     const res = await sibsBillingProvider.createCheckout({
       organizationId: "org_1",
