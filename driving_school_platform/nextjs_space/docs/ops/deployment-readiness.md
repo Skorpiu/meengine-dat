@@ -41,6 +41,10 @@ In short: `lib/env.ts` + `scripts/env-check.ts` require `DATABASE_URL` and `NEXT
 
 Use this for load balancer health checks and post-deploy smoke tests. A separate database readiness check is not part of this baseline.
 
+## Local GitLab Runner (Windows + Docker Desktop)
+
+If you run GitLab CI jobs on a **Windows** machine with **Docker Desktop** and **Git Bash**, see **[gitlab-runner-docker.md](./gitlab-runner-docker.md)** for runner container setup, `MSYS_NO_PATHCONV=1`, registration with `glrt` tokens, recommended Docker executor cache settings, and verification commands.
+
 ## Not integrated in this baseline
 
 The following are intentionally out of scope for minimal deploy validation:

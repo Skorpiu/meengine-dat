@@ -56,6 +56,7 @@ Infrastructure
 
 CI/CD
 - GitLab CI
+- Local GitLab Runner (Docker Desktop on Windows + Git Bash): [gitlab-runner-docker.md](./driving_school_platform/nextjs_space/docs/ops/gitlab-runner-docker.md)
 
 
 # Architecture
