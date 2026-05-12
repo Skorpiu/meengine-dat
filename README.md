@@ -52,6 +52,7 @@ Authentication
 
 Infrastructure
 - Vercel deployment — [driving_school_platform/nextjs_space/docs/ops/vercel-deployment.md](./driving_school_platform/nextjs_space/docs/ops/vercel-deployment.md)
+- Release / deploy checklist — [driving_school_platform/nextjs_space/docs/ops/release-checklist.md](./driving_school_platform/nextjs_space/docs/ops/release-checklist.md)
 - Cloudflare DNS
 
 CI/CD
