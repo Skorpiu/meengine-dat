@@ -51,7 +51,7 @@ Authentication
 - NextAuth (Credentials provider)
 
 Infrastructure
-- Vercel deployment
+- Vercel deployment — [driving_school_platform/nextjs_space/docs/ops/vercel-deployment.md](./driving_school_platform/nextjs_space/docs/ops/vercel-deployment.md)
 - Cloudflare DNS
 
 CI/CD

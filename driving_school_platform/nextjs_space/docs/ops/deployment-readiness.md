@@ -20,6 +20,10 @@ See **[environment-variables.md](./environment-variables.md)** for variables by 
 
 In short: `lib/env.ts` + `scripts/env-check.ts` require `DATABASE_URL` and `NEXTAUTH_SECRET` for check/build; store real values in `.env.local` (local) or the host’s secret manager (CI/Vercel), not in git.
 
+## Vercel (hosted)
+
+For root directory, install/build commands, Node 20, environment variables on Vercel, Prisma/migration cautions, and domain/DNS notes, see **[vercel-deployment.md](./vercel-deployment.md)**.
+
 ## Prisma migrations
 
 - After pulling schema changes, apply migrations against the target database before or as part of deploy (for example `pnpm exec prisma migrate deploy` from `driving_school_platform/nextjs_space` with the correct `DATABASE_URL`).
