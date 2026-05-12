@@ -65,6 +65,8 @@ Additional keys validated in `lib/env.ts` (for example server-side `SUPABASE_URL
 - Do **not** run **destructive** migration or reset commands from the Vercel build step; keep builds non-destructive and repeatable.
 - **Prisma 7** upgrades are **not** part of this baseline; the app pins Prisma 6.x per `package.json`.
 
+Step-by-step Supabase connection guidance, safe inspection commands, and a deploy checklist: **[supabase-prisma-migrations.md](./supabase-prisma-migrations.md)**.
+
 ---
 
 ## Domains and DNS (high level)
@@ -79,5 +81,6 @@ Additional keys validated in `lib/env.ts` (for example server-side `SUPABASE_URL
 ## Related
 
 - [deployment-readiness.md](./deployment-readiness.md) — local `pnpm check`, health JSON, migrations overview.
+- [supabase-prisma-migrations.md](./supabase-prisma-migrations.md) — safe Prisma migrate workflow with Supabase.
 - [environment-variables.md](./environment-variables.md) — authoritative env list and “must not commit” paths.
 - [gitlab-runner-docker.md](./gitlab-runner-docker.md) — optional local GitLab Runner on Windows.

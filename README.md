@@ -45,7 +45,7 @@ Backend
 - Prisma ORM
 
 Database
-- PostgreSQL (Supabase)
+- PostgreSQL (Supabase) — Prisma migrations: [driving_school_platform/nextjs_space/docs/ops/supabase-prisma-migrations.md](./driving_school_platform/nextjs_space/docs/ops/supabase-prisma-migrations.md)
 
 Authentication
 - NextAuth (Credentials provider)
