@@ -35,7 +35,8 @@ In short: apply migrations **intentionally** before or with deploy (for example 
 ## Health endpoint
 
 - **URL:** `GET /api/health`
-- **Purpose:** Liveness check only; does not query the database or external services.
+- **Purpose:** Liveness check only; does not query the database or external services (not a DB readiness probe).
+- **Caching:** Sends `Cache-Control: no-store, max-age=0` so probes and clients do not treat a cached `200` as current liveness.
 - **Success:** HTTP `200` with JSON body:
 
 ```json
