@@ -2,7 +2,7 @@
 
 Concise baseline for validating the Next.js app in hosted environments. Product behavior is unchanged; this doc captures operational expectations.
 
-For a **step-by-step release path** (preconditions → deploy → smoke → rollback), see **[release-checklist.md](./release-checklist.md)**.
+For a **step-by-step release path** (preconditions → deploy → smoke → rollback), see **[release-checklist.md](./release-checklist.md)**. For a **manual smoke pass** after deploy or before a demo, see **[smoke-test-checklist.md](./smoke-test-checklist.md)**.
 
 ## Required local commands before deploy
 
