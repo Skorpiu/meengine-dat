@@ -112,3 +112,5 @@ These are used by **scripts**, **Playwright**, or **tenant defaults** and are **
 ## Related docs
 
 - [deployment-readiness.md](./deployment-readiness.md) — pre-deploy commands, migrations, `/api/health`.
+- [supabase-prisma-migrations.md](./supabase-prisma-migrations.md) — `DATABASE_URL` / `DIRECT_URL`, safe migrate workflow, deploy checklist.
+- [vercel-deployment.md](./vercel-deployment.md) — Vercel project settings and build-time Prisma notes.

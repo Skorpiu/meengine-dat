@@ -26,8 +26,9 @@ For root directory, install/build commands, Node 20, environment variables on Ve
 
 ## Prisma migrations
 
-- After pulling schema changes, apply migrations against the target database before or as part of deploy (for example `pnpm exec prisma migrate deploy` from `driving_school_platform/nextjs_space` with the correct `DATABASE_URL`).
-- Run `pnpm exec prisma generate` as needed so the client matches the deployed schema (the app’s `prebuild` / `pretypecheck` hooks already run `prisma generate` when using pnpm scripts).
+Full **Supabase + Prisma** migration workflow (pooled vs direct URLs, safe local commands, production rules, deploy checklist) is in **[supabase-prisma-migrations.md](./supabase-prisma-migrations.md)**.
+
+In short: apply migrations **intentionally** before or with deploy (for example `pnpm exec prisma migrate deploy` from `driving_school_platform/nextjs_space` with the correct env); `prisma generate` runs via existing `pnpm` hooks (`prebuild` / `pretypecheck`).
 
 ## Health endpoint
 
