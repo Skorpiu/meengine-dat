@@ -12,11 +12,13 @@ pnpm -C driving_school_platform/nextjs_space check
 
 That runs `lint`, `typecheck`, `test:run`, and `build`. For a quicker pre-push loop you can run individual scripts from `driving_school_platform/nextjs_space/package.json` (for example `lint`, `typecheck`, `test:run`).
 
+**New machine:** after clone/pull, run `pnpm -C driving_school_platform/nextjs_space install` then `pnpm -C driving_school_platform/nextjs_space check` (with `.env.local` filled from `.env.example`).
+
 ## Environment and secrets
 
-- Ensure production (and staging) environment variables match what `scripts/env-check.ts` expects for the target environment. Missing or placeholder values often surface only at build or first request.
-- Store secrets in the host’s secret manager or encrypted env configuration; do not commit `.env` files with real credentials.
-- Review NextAuth, database URL, and any license or feature-flag related variables for the deployment target.
+See **[environment-variables.md](./environment-variables.md)** for variables by surface (local, GitLab CI, Vercel, Supabase), required vs optional, `NEXT_PUBLIC_*` vs server-only, and files that must never be committed.
+
+In short: `lib/env.ts` + `scripts/env-check.ts` require `DATABASE_URL` and `NEXTAUTH_SECRET` for check/build; store real values in `.env.local` (local) or the host’s secret manager (CI/Vercel), not in git.
 
 ## Prisma migrations
 

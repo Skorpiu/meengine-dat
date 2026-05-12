@@ -94,6 +94,15 @@ pnpm dev
 
 Environment variables are required and should be defined in `.env.local`.
 
+**New machine / second device:** after cloning or pulling, install dependencies and run the full gate from the repo root:
+
+```bash
+pnpm -C driving_school_platform/nextjs_space install
+pnpm -C driving_school_platform/nextjs_space check
+```
+
+Copy `driving_school_platform/nextjs_space/.env.example` to `.env.local` and fill placeholders (never commit secrets). Full variable reference: [driving_school_platform/nextjs_space/docs/ops/environment-variables.md](./driving_school_platform/nextjs_space/docs/ops/environment-variables.md).
+
 **Git hooks:** Husky runs `lint-staged` from `driving_school_platform/nextjs_space` on commit. Run `pnpm install` in that directory (or from the repo root if your workspace layout installs that package) so `prettier` and `eslint` resolve from local `node_modules`—you should not need globally installed Prettier or ESLint.
 
 
