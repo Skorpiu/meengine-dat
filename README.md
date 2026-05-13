@@ -53,6 +53,7 @@ Authentication
 Infrastructure
 - Vercel deployment — [driving_school_platform/nextjs_space/docs/ops/vercel-deployment.md](./driving_school_platform/nextjs_space/docs/ops/vercel-deployment.md)
 - Production tenant vs platform hostnames (smoke and DNS) — [driving_school_platform/nextjs_space/docs/ops/production-host-split.md](./driving_school_platform/nextjs_space/docs/ops/production-host-split.md)
+- PLATFORM_ADMIN provisioning (operators, script runbook) — [driving_school_platform/nextjs_space/docs/ops/platform-admin-runbook.md](./driving_school_platform/nextjs_space/docs/ops/platform-admin-runbook.md)
 - Release / deploy checklist — [driving_school_platform/nextjs_space/docs/ops/release-checklist.md](./driving_school_platform/nextjs_space/docs/ops/release-checklist.md)
 - Post-deploy / demo manual smoke tests — [driving_school_platform/nextjs_space/docs/ops/smoke-test-checklist.md](./driving_school_platform/nextjs_space/docs/ops/smoke-test-checklist.md)
 - First Vercel deploy smoke (ordered minimal pass) — [driving_school_platform/nextjs_space/docs/ops/first-deploy-smoke.md](./driving_school_platform/nextjs_space/docs/ops/first-deploy-smoke.md)

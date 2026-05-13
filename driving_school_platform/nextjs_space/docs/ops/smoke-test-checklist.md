@@ -14,6 +14,7 @@ For release ordering, env, migrations, and rollback, see **[release-checklist.md
 | Optional GitLab Runner                     | [gitlab-runner-docker.md](./gitlab-runner-docker.md)             |
 | First Vercel deploy (ordered minimal pass) | [first-deploy-smoke.md](./first-deploy-smoke.md)                 |
 | Tenant vs platform hostname (production)   | [production-host-split.md](./production-host-split.md)           |
+| PLATFORM_ADMIN account (script, operators) | [platform-admin-runbook.md](./platform-admin-runbook.md)         |
 
 ---
 
@@ -32,7 +33,7 @@ When production uses **two hostnames** on the same Vercel project (tenant app ho
 
 - Run **tenant** checks (health, `/`, login, admin, instructor, student) on the **tenant host** (for example `https://www.meengine.io`).
 - Run **platform** checks on the **platform host** at **`/platform`** (for example `https://platform.meengine.io/platform`). **`/platform` on the tenant host is not the intended operator path** in that layout.
-- **PLATFORM_ADMIN** sign-in and platform UI smoke use **platform** credentials from your secret process only—**never** document or share them as demo credentials.
+- **PLATFORM_ADMIN** sign-in and platform UI smoke use **platform** credentials from your secret process only—**never** document or share them as demo credentials. To provision or rotate the DB user, see **[platform-admin-runbook.md](./platform-admin-runbook.md)**.
 
 ---
 
