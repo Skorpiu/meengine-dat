@@ -91,6 +91,8 @@ Set `DATABASE_URL` / `DIRECT_URL` from your Supabase connection strings. Set `NE
 
 Supabase is the **source of truth** for the database and project API identifiers; Vercel and local env files **reference** those values.
 
+**Data API vs Postgres URL:** the app’s primary data path is **Prisma over `DATABASE_URL` / `DIRECT_URL`**, not PostgREST/GraphQL. Optional `SUPABASE_*` / `NEXT_PUBLIC_SUPABASE_*` keys are validated in `lib/env.ts` for future or ancillary use; baseline runtime code does not call the Data API for `public` tables. Policy and Supabase grant timelines: **[supabase-data-api-grants.md](./supabase-data-api-grants.md)**.
+
 ---
 
 ## Optional variables (not in `lib/env.ts`)
@@ -113,5 +115,6 @@ These are used by **scripts**, **Playwright**, or **tenant defaults** and are **
 
 - [deployment-readiness.md](./deployment-readiness.md) — pre-deploy commands, migrations, `/api/health`.
 - [supabase-prisma-migrations.md](./supabase-prisma-migrations.md) — `DATABASE_URL` / `DIRECT_URL`, safe migrate workflow, deploy checklist.
+- [supabase-data-api-grants.md](./supabase-data-api-grants.md) — Data API / `public` grants policy; audit that DAT uses Prisma, not PostgREST, for app tables.
 - [vercel-deployment.md](./vercel-deployment.md) — Vercel project settings and build-time Prisma notes.
 - [production-host-split.md](./production-host-split.md) — tenant vs platform hosts, `PLATFORM_HOSTS`, OrganizationDomain cautions.

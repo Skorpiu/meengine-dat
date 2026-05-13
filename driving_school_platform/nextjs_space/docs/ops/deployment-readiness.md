@@ -34,6 +34,8 @@ Full **Supabase + Prisma** migration workflow (pooled vs direct URLs, safe local
 
 In short: apply migrations **intentionally** before or with deploy (for example `pnpm exec prisma migrate deploy` from `driving_school_platform/nextjs_space` with the correct env); `prisma generate` runs via existing `pnpm` hooks (`prebuild` / `pretypecheck`).
 
+**Supabase Data API:** baseline app data uses **Prisma + Postgres URLs**, not PostgREST. If Supabase changes default grants for `public` and Data API access, see **[supabase-data-api-grants.md](./supabase-data-api-grants.md)** for project policy (explicit grants, RLS, `service_role` handling).
+
 ## Health endpoint
 
 - **URL:** `GET /api/health`
