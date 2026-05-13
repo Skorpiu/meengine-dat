@@ -102,6 +102,25 @@ describe("decideDemoRouteMutation", () => {
     });
   });
 
+  it.each(["settings_management", "feature_flags", "licensing"] as const)(
+    "blocks %s for demo org",
+    async (category) => {
+      h.organizationFindUniqueMock.mockResolvedValue({ isDemo: true });
+
+      const result = await decideDemoRouteMutation({
+        organizationId: "org-demo",
+        category,
+      });
+
+      expect(result).toEqual({
+        allowed: false,
+        reason: "demo_restricted_action",
+        status: 403,
+        message: STABLE_MESSAGE,
+      });
+    },
+  );
+
   it("allows profile_preferences for demo org", async () => {
     h.organizationFindUniqueMock.mockResolvedValue({ isDemo: true });
 

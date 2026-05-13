@@ -4,8 +4,10 @@ const h = vi.hoisted(() => {
   const systemSettingFindManyMock = vi.fn();
   const systemSettingFindFirstMock = vi.fn();
   const systemSettingCreateMock = vi.fn();
+  const organizationFindUniqueMock = vi.fn();
 
   const prismaMock = {
+    organization: { findUnique: organizationFindUniqueMock },
     systemSetting: {
       findMany: systemSettingFindManyMock,
       findFirst: systemSettingFindFirstMock,
@@ -18,6 +20,7 @@ const h = vi.hoisted(() => {
     systemSettingFindManyMock,
     systemSettingFindFirstMock,
     systemSettingCreateMock,
+    organizationFindUniqueMock,
   };
 });
 
@@ -68,6 +71,7 @@ function req(method: string, url: string, payload?: any): Request {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  h.organizationFindUniqueMock.mockResolvedValue({ isDemo: false });
 });
 
 describe("Admin Settings API (tenant scoping)", () => {

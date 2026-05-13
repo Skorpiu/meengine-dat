@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import { decideDemoRouteMutation } from "@/lib/demo/demo-route-guard";
 
 type UpdateUserBody = {
   userId?: unknown;
@@ -38,6 +39,17 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json(
         { error: tenantGuard.error },
         { status: tenantGuard.status },
+      );
+    }
+
+    const demoDecision = await decideDemoRouteMutation({
+      organizationId: orgId,
+      category: "user_management",
+    });
+    if (!demoDecision.allowed) {
+      return NextResponse.json(
+        { error: demoDecision.message, code: demoDecision.reason },
+        { status: demoDecision.status },
       );
     }
 

@@ -20,16 +20,36 @@ Operational expectations for any **public** or **portfolio** exposure of the dri
 
 ## Implemented guards
 
-The following mutating admin paths enforce `Organization.isDemo` (403 with stable JSON: `error` + `code: "demo_restricted_action"` when blocked):
+Mutating admin paths below enforce `Organization.isDemo` via `decideDemoRouteMutation`. When blocked, responses are **403** with stable JSON:
 
-- **User management (destructive):** `DELETE /api/users/delete`
+`{ "error": "This action is restricted in the public demo environment.", "code": "demo_restricted_action" }`
+
+**Tenant SUPER_ADMIN (session organization)**
+
+- **User management:** `DELETE /api/users/delete`; `POST /api/users/create`; `PUT /api/users/update`
 - **Vehicle management (writes/deletes):** `POST`, `PUT`, `DELETE` on `/api/admin/vehicles` (not `GET`)
 - **Lesson management (writes/deletes):** `POST` on `/api/admin/lessons`; `PUT` and `DELETE` on `/api/admin/lessons/[id]` (not lesson `GET`)
 - **Cleanup:** `POST /api/admin/cleanup`
+- **Settings (writes/deletes):** `POST`, `PUT`, `DELETE` on `/api/admin/settings` (not `GET`)
+- **Feature flags (writes/deletes):** `POST`, `PUT`, `DELETE` on `/api/admin/feature-flags` (not `GET`)
+- **Licensing / entitlements (tenant admin writes):** `POST /api/admin/license/activate`; `POST /api/admin/license/features` (`GET` remains allowed)
 
 **GET** `/api/admin/lessons` remains read-only for demo orgs: automatic `cleanupOldLessons` inside that handler is **skipped** when `Organization.isDemo` is true (no 403 on read).
 
-Future batches may extend guards to settings, feature flags, licensing, billing admin actions, and a dedicated demo seed/reset strategy.
+**Not covered in this batch (follow-up)**
+
+- **`POST /api/billing/webhooks/[provider]`** — skeleton inbound webhook; events may carry `organizationId` but there is no single clear “target org” for a stable demo guard without per-event policy; treat as follow-up if demo tenants must never persist billing side-effects from webhooks.
+- **`POST /api/platform/organizations`** — platform onboarding creates **new** organizations; no existing `organizationId` to evaluate for `isDemo` in the same request. Optional future: block or flag demo onboarding separately; not required for tenant demo read-mostly.
+
+## Still not a full public demo
+
+Guards reduce risk on marked demo tenants; they do **not** replace:
+
+- **Seed / reset strategy** — repeatable fictional data and refresh cadence
+- **Demo data policy** — what may be stored, retention, and who may operate resets
+- **Optional separated demo deployment / database** — strongest isolation from production
+- **Public portfolio messaging** — landing and docs that set expectations (no billing claims, no embedded credentials)
+- **Deeper role smoke matrix** — automated checks beyond shallow smoke for admin/instructor/student paths
 
 ## Billing
 
@@ -39,7 +59,7 @@ Future batches may extend guards to settings, feature flags, licensing, billing 
 
 - Before relying on guards in production, ensure the migration that adds `organizations.isDemo` has been applied on the target database.
 
-## This batch vs next steps
+## Foundation vs batches
 
 - **Foundation:** `Organization.isDemo`, pure policy in `lib/demo/demo-policy.ts`, and route helper `lib/demo/demo-route-guard.ts`.
-- **Current scope:** P0 destructive/admin routes listed under **Implemented guards**; broader surfaces remain for later batches.
+- **Shipped batches:** P0 destructive routes, then control-plane tenant admin (settings, feature flags, licensing writes, user create/update) as listed above.

@@ -14,6 +14,7 @@ import {
 import { logConfigurationChange } from "@/lib/config-utils";
 import { HTTP_STATUS, API_MESSAGES } from "@/lib/constants";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import { decideDemoRouteMutation } from "@/lib/demo/demo-route-guard";
 import type { Prisma } from "@prisma/client";
 import { ZodError } from "zod";
 
@@ -130,6 +131,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const demoDecision = await decideDemoRouteMutation({
+      organizationId: orgId,
+      category: "feature_flags",
+    });
+    if (!demoDecision.allowed) {
+      return NextResponse.json(
+        { error: demoDecision.message, code: demoDecision.reason },
+        { status: demoDecision.status },
+      );
+    }
+
     const body = await request.json();
     const validated = featureFlagSchema.parse(body);
 
@@ -226,6 +238,17 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json(
         { error: tenantGuard.error },
         { status: tenantGuard.status },
+      );
+    }
+
+    const demoDecision = await decideDemoRouteMutation({
+      organizationId: orgId,
+      category: "feature_flags",
+    });
+    if (!demoDecision.allowed) {
+      return NextResponse.json(
+        { error: demoDecision.message, code: demoDecision.reason },
+        { status: demoDecision.status },
       );
     }
 
@@ -344,6 +367,17 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         { error: tenantGuard.error },
         { status: tenantGuard.status },
+      );
+    }
+
+    const demoDecision = await decideDemoRouteMutation({
+      organizationId: orgId,
+      category: "feature_flags",
+    });
+    if (!demoDecision.allowed) {
+      return NextResponse.json(
+        { error: demoDecision.message, code: demoDecision.reason },
+        { status: demoDecision.status },
       );
     }
 

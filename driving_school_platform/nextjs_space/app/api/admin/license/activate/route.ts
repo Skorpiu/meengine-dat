@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { LicenseService } from "@/lib/services/license-service";
 import { db } from "@/lib/db";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import { decideDemoRouteMutation } from "@/lib/demo/demo-route-guard";
 import { isFeatureKey } from "@/lib/config/license-features";
 import type {
   AdminLicenseActivatePostRequest,
@@ -46,6 +47,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: tenantGuard.error },
         { status: tenantGuard.status },
+      );
+    }
+
+    const demoDecision = await decideDemoRouteMutation({
+      organizationId: user.organizationId,
+      category: "licensing",
+    });
+    if (!demoDecision.allowed) {
+      return NextResponse.json(
+        { error: demoDecision.message, code: demoDecision.reason },
+        { status: demoDecision.status },
       );
     }
 
