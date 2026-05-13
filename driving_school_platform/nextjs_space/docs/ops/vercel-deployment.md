@@ -21,6 +21,8 @@ For the full variable matrix (local, CI, Vercel, Supabase), see **[environment-v
 
 After a deployment succeeds, smoke-test liveness with **`GET /api/health`** on the deployment URL (see [deployment-readiness.md](./deployment-readiness.md)). That route is intentionally **DB-free**.
 
+For a short **first hosted deploy** sequence (CI → env → migrations → Vercel URL → health → optional `pnpm smoke:health` → login → logs), see **[first-deploy-smoke.md](./first-deploy-smoke.md)**.
+
 ---
 
 ## Environment variables on Vercel
@@ -80,6 +82,7 @@ Step-by-step Supabase connection guidance, safe inspection commands, and a deplo
 
 ## Related
 
+- [first-deploy-smoke.md](./first-deploy-smoke.md) — first Vercel render validation (links out for env and migrations detail).
 - [deployment-readiness.md](./deployment-readiness.md) — local `pnpm check`, health JSON, migrations overview.
 - [supabase-prisma-migrations.md](./supabase-prisma-migrations.md) — safe Prisma migrate workflow with Supabase.
 - [environment-variables.md](./environment-variables.md) — authoritative env list and “must not commit” paths.

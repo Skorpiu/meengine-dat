@@ -2,16 +2,17 @@
 
 Short manual pass to confirm core surfaces load and role paths are not obviously broken after a **local build** or **hosted deployment**. Use a **non-production** test tenant and credentials from your own secret process—do **not** record real passwords, API keys, or billing data in tickets or screenshots.
 
-For release ordering, env, migrations, and rollback, see **[release-checklist.md](./release-checklist.md)** and the linked ops docs below instead of duplicating them here.
+For release ordering, env, migrations, and rollback, see **[release-checklist.md](./release-checklist.md)** and the linked ops docs below instead of duplicating them here. For a **first** hosted deploy on Vercel, start with **[first-deploy-smoke.md](./first-deploy-smoke.md)** then return here for depth.
 
-| Topic                                    | Doc                                                              |
-| ---------------------------------------- | ---------------------------------------------------------------- |
-| Preconditions, deploy order, rollback    | [release-checklist.md](./release-checklist.md)                   |
-| Local gate (`pnpm … check`), health JSON | [deployment-readiness.md](./deployment-readiness.md)             |
-| Environment variables                    | [environment-variables.md](./environment-variables.md)           |
-| Vercel project settings                  | [vercel-deployment.md](./vercel-deployment.md)                   |
-| Prisma + Supabase migrations             | [supabase-prisma-migrations.md](./supabase-prisma-migrations.md) |
-| Optional GitLab Runner                   | [gitlab-runner-docker.md](./gitlab-runner-docker.md)             |
+| Topic                                      | Doc                                                              |
+| ------------------------------------------ | ---------------------------------------------------------------- |
+| Preconditions, deploy order, rollback      | [release-checklist.md](./release-checklist.md)                   |
+| Local gate (`pnpm … check`), health JSON   | [deployment-readiness.md](./deployment-readiness.md)             |
+| Environment variables                      | [environment-variables.md](./environment-variables.md)           |
+| Vercel project settings                    | [vercel-deployment.md](./vercel-deployment.md)                   |
+| Prisma + Supabase migrations               | [supabase-prisma-migrations.md](./supabase-prisma-migrations.md) |
+| Optional GitLab Runner                     | [gitlab-runner-docker.md](./gitlab-runner-docker.md)             |
+| First Vercel deploy (ordered minimal pass) | [first-deploy-smoke.md](./first-deploy-smoke.md)                 |
 
 ---
 

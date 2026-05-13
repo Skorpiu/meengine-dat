@@ -6,6 +6,7 @@ Practical path for shipping DAT safely. Details live in linked ops docs—do **n
 | ------------------------------ | ---------------------------------------------------------------- |
 | Local gate, health JSON        | [deployment-readiness.md](./deployment-readiness.md)             |
 | Manual smoke (post-deploy)     | [smoke-test-checklist.md](./smoke-test-checklist.md)             |
+| First hosted deploy smoke      | [first-deploy-smoke.md](./first-deploy-smoke.md)                 |
 | Env vars by surface            | [environment-variables.md](./environment-variables.md)           |
 | Vercel project settings        | [vercel-deployment.md](./vercel-deployment.md)                   |
 | Prisma + Supabase migrations   | [supabase-prisma-migrations.md](./supabase-prisma-migrations.md) |
@@ -45,7 +46,7 @@ pnpm -C driving_school_platform/nextjs_space check
 
 ## Post-deploy smoke
 
-Follow **[smoke-test-checklist.md](./smoke-test-checklist.md)** for a concise manual pass (public routes, auth, role surfaces, licensing smoke, logs, and re-check of `/api/health`). The bullets below stay as a minimal reminder only.
+For the **first** Vercel-hosted validation in order, see **[first-deploy-smoke.md](./first-deploy-smoke.md)**. For a fuller manual pass (public routes, auth, role surfaces, licensing smoke, logs, and re-check of `/api/health`), follow **[smoke-test-checklist.md](./smoke-test-checklist.md)**. The bullets below stay as a minimal reminder only.
 
 1. **`GET /api/health`** on the deployment URL — expect `200` and JSON `ok: true` (DB-free; [deployment-readiness.md](./deployment-readiness.md)). Optionally run `pnpm smoke:health` from `driving_school_platform/nextjs_space` with `HEALTH_BASE_URL` or `--url` set to your deployment base URL (see that doc).
 2. **Load the login page** in a browser (sanity: routing, assets).
