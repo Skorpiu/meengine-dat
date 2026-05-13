@@ -23,6 +23,7 @@
     "test:run": "vitest run",
     "env:check": "tsx scripts/env-check.ts",
     "smoke:health": "tsx scripts/smoke-health.ts",
+    "demo:reset:dry-run": "tsx scripts/reset-demo-organization.ts",
     "predev": "pnpm -s env:check",
     "check": "pnpm -s lint && pnpm -s typecheck && pnpm -s test:run && pnpm -s build",
     "fix": "prettier --write . && eslint --fix .",

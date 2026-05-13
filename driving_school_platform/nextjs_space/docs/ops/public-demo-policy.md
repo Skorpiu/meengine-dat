@@ -8,6 +8,8 @@ Operational expectations for any **public** or **portfolio** exposure of the dri
 - Prefer a **separate** deployment and **separate** database (for example a future `demo.meengine.io` stack) so mistakes cannot touch production tenants.
 - Until that exists, a **transitional** option is a single tenant marked with `Organization.isDemo = true` on a non-production or tightly controlled database.
 
+For **seed personas, reset policy, and dry-run tooling**, see [public-demo-seed-reset.md](./public-demo-seed-reset.md).
+
 ## Credentials
 
 - **Never** publish **PLATFORM_ADMIN** credentials in README, marketing, tickets, or the product UI.
@@ -63,3 +65,4 @@ Guards reduce risk on marked demo tenants; they do **not** replace:
 
 - **Foundation:** `Organization.isDemo`, pure policy in `lib/demo/demo-policy.ts`, and route helper `lib/demo/demo-route-guard.ts`.
 - **Shipped batches:** P0 destructive routes, then control-plane tenant admin (settings, feature flags, licensing writes, user create/update) as listed above.
+- **Operations:** seed/reset runbook [public-demo-seed-reset.md](./public-demo-seed-reset.md); dry-run helper `pnpm demo:reset:dry-run` (requires `DEMO_ORGANIZATION_ID`).

@@ -10,6 +10,7 @@ Practical path for shipping DAT safely. Details live in linked ops docs—do **n
 | Production smoke baseline note          | [production-smoke-baseline.md](./production-smoke-baseline.md)         |
 | Public demo / portfolio gaps            | [dat-production-readiness-gaps.md](./dat-production-readiness-gaps.md) |
 | Public demo policy (credentials / data) | [public-demo-policy.md](./public-demo-policy.md)                       |
+| Demo seed / reset runbook               | [public-demo-seed-reset.md](./public-demo-seed-reset.md)               |
 | Env vars by surface                     | [environment-variables.md](./environment-variables.md)                 |
 | Vercel project settings                 | [vercel-deployment.md](./vercel-deployment.md)                         |
 | Prisma + Supabase migrations            | [supabase-prisma-migrations.md](./supabase-prisma-migrations.md)       |
@@ -24,6 +25,7 @@ Practical path for shipping DAT safely. Details live in linked ops docs—do **n
 - **GitLab pipeline green:** pipeline for that commit succeeded (see `.gitlab-ci.yml` and optional [gitlab-runner-docker.md](./gitlab-runner-docker.md) if you use a project runner).
 - **Vercel env configured:** production (and preview, if used) variables set per [vercel-deployment.md](./vercel-deployment.md) and [environment-variables.md](./environment-variables.md)—never from git.
 - **Migrations reviewed and committed:** `prisma/migrations` matches what you expect to apply; see [supabase-prisma-migrations.md](./supabase-prisma-migrations.md).
+- **Public demo (if applicable):** before sharing broad demo access, confirm the demo tenant is marked `Organization.isDemo = true` and that refresh/reset follows [public-demo-seed-reset.md](./public-demo-seed-reset.md) (no public reset endpoint; no privileged credentials in git).
 
 ---
 
@@ -74,6 +76,6 @@ The following are intentionally **not** part of minimal release validation for D
 - **Billing portal** / billing management UI
 - **i18n** (internationalization)
 
-Any **public demo** must follow [public-demo-policy.md](./public-demo-policy.md): no public privileged credentials; fictional / resettable data; read-mostly demo tenants until guards are wired.
+Any **public demo** must follow [public-demo-policy.md](./public-demo-policy.md): no public privileged credentials; fictional / resettable data; read-mostly demo tenants until guards are wired. Seed and reset expectations: [public-demo-seed-reset.md](./public-demo-seed-reset.md) (`pnpm demo:reset:dry-run` for org validation only).
 
 See also **Not integrated in this baseline** in [deployment-readiness.md](./deployment-readiness.md). For **public demo / portfolio** gaps after smoke (data isolation, credential policy, messaging), see [dat-production-readiness-gaps.md](./dat-production-readiness-gaps.md).
