@@ -47,7 +47,7 @@ pnpm -C driving_school_platform/nextjs_space check
 
 Follow **[smoke-test-checklist.md](./smoke-test-checklist.md)** for a concise manual pass (public routes, auth, role surfaces, licensing smoke, logs, and re-check of `/api/health`). The bullets below stay as a minimal reminder only.
 
-1. **`GET /api/health`** on the deployment URL — expect `200` and JSON `ok: true` (DB-free; [deployment-readiness.md](./deployment-readiness.md)).
+1. **`GET /api/health`** on the deployment URL — expect `200` and JSON `ok: true` (DB-free; [deployment-readiness.md](./deployment-readiness.md)). Optionally run `pnpm smoke:health` from `driving_school_platform/nextjs_space` with `HEALTH_BASE_URL` or `--url` set to your deployment base URL (see that doc).
 2. **Load the login page** in a browser (sanity: routing, assets).
 3. **If safe for this environment:** one short **authenticated** admin or platform smoke path (credentials only from your secret process—never log real passwords).
 4. **Vercel / app logs:** scan for obvious errors after traffic hits the new deployment.

@@ -28,7 +28,7 @@ For release ordering, env, migrations, and rollback, see **[release-checklist.md
 
 Run against the deployment base URL (or `http://localhost:3000` for a local production build).
 
-1. **`GET /api/health`** — expect `200` and JSON with `ok: true` (DB-free; details in [deployment-readiness.md](./deployment-readiness.md)).
+1. **`GET /api/health`** — expect `200` and JSON with `ok: true` (DB-free; details in [deployment-readiness.md](./deployment-readiness.md)). You can hit it with a browser, `curl`, or the optional `pnpm smoke:health` script from `driving_school_platform/nextjs_space` (`HEALTH_BASE_URL` or `pnpm smoke:health -- --url <base>`).
 2. **Landing** — open `/` (home); page loads, no blank shell from asset or routing failure.
 3. **Login** — open `/auth/login`; form and layout render.
 
