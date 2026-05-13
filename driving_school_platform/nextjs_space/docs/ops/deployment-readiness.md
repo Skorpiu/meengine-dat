@@ -26,6 +26,8 @@ In short: `lib/env.ts` + `scripts/env-check.ts` require `DATABASE_URL` and `NEXT
 
 For root directory, install/build commands, Node 20, environment variables on Vercel, Prisma/migration cautions, and domain/DNS notes, see **[vercel-deployment.md](./vercel-deployment.md)**.
 
+When production uses **separate hostnames** for tenant traffic versus platform operator traffic (for example `www` vs `platform` under the same Vercel project), see **[production-host-split.md](./production-host-split.md)** for where to run smoke tests, `PLATFORM_HOSTS`, and why the platform host must not be mapped as a tenant **OrganizationDomain**.
+
 ## Prisma migrations
 
 Full **Supabase + Prisma** migration workflow (pooled vs direct URLs, safe local commands, production rules, deploy checklist) is in **[supabase-prisma-migrations.md](./supabase-prisma-migrations.md)**.
@@ -49,7 +51,7 @@ In short: apply migrations **intentionally** before or with deploy (for example 
 
 Use this for load balancer health checks and post-deploy smoke tests. A separate database readiness check is not part of this baseline.
 
-**Automated smoke (optional):** from `driving_school_platform/nextjs_space`, run `pnpm smoke:health` with the target base URL via `HEALTH_BASE_URL` or `pnpm smoke:health -- --url <base-url>` (no secrets; the script only requests `/api/health`). For an ordered **first hosted** pass on Vercel, see [first-deploy-smoke.md](./first-deploy-smoke.md); for a fuller manual pass, see [smoke-test-checklist.md](./smoke-test-checklist.md).
+**Automated smoke (optional):** from `driving_school_platform/nextjs_space`, run `pnpm smoke:health` with the target base URL via `HEALTH_BASE_URL` or `pnpm smoke:health -- --url <base-url>` (no secrets; the script only requests `/api/health`). If production uses **separate tenant and platform hostnames**, you can point the script at each **HTTPS origin** in turn. For an ordered **first hosted** pass on Vercel, see [first-deploy-smoke.md](./first-deploy-smoke.md); for a fuller manual pass, see [smoke-test-checklist.md](./smoke-test-checklist.md). Hostname roles: [production-host-split.md](./production-host-split.md).
 
 ## Local GitLab Runner (Windows + Docker Desktop)
 
