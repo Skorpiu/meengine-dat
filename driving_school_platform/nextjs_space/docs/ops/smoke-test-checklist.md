@@ -2,19 +2,20 @@
 
 Short manual pass to confirm core surfaces load and role paths are not obviously broken after a **local build** or **hosted deployment**. Use a **non-production** test tenant and credentials from your own secret process—do **not** record real passwords, API keys, or billing data in tickets or screenshots.
 
-For release ordering, env, migrations, and rollback, see **[release-checklist.md](./release-checklist.md)** and the linked ops docs below instead of duplicating them here. For a **first** hosted deploy on Vercel, start with **[first-deploy-smoke.md](./first-deploy-smoke.md)** then return here for depth.
+For release ordering, env, migrations, and rollback, see **[release-checklist.md](./release-checklist.md)** and the linked ops docs below instead of duplicating them here. For a **first** hosted deploy on Vercel, start with **[first-deploy-smoke.md](./first-deploy-smoke.md)** then return here for depth. A **date-neutral** summary of the first successful production smoke (no secrets) lives in **[production-smoke-baseline.md](./production-smoke-baseline.md)**—re-run checks on every release; do not treat that file as live status.
 
-| Topic                                      | Doc                                                              |
-| ------------------------------------------ | ---------------------------------------------------------------- |
-| Preconditions, deploy order, rollback      | [release-checklist.md](./release-checklist.md)                   |
-| Local gate (`pnpm … check`), health JSON   | [deployment-readiness.md](./deployment-readiness.md)             |
-| Environment variables                      | [environment-variables.md](./environment-variables.md)           |
-| Vercel project settings                    | [vercel-deployment.md](./vercel-deployment.md)                   |
-| Prisma + Supabase migrations               | [supabase-prisma-migrations.md](./supabase-prisma-migrations.md) |
-| Optional GitLab Runner                     | [gitlab-runner-docker.md](./gitlab-runner-docker.md)             |
-| First Vercel deploy (ordered minimal pass) | [first-deploy-smoke.md](./first-deploy-smoke.md)                 |
-| Tenant vs platform hostname (production)   | [production-host-split.md](./production-host-split.md)           |
-| PLATFORM_ADMIN account (script, operators) | [platform-admin-runbook.md](./platform-admin-runbook.md)         |
+| Topic                                          | Doc                                                              |
+| ---------------------------------------------- | ---------------------------------------------------------------- |
+| Preconditions, deploy order, rollback          | [release-checklist.md](./release-checklist.md)                   |
+| Local gate (`pnpm … check`), health JSON       | [deployment-readiness.md](./deployment-readiness.md)             |
+| Environment variables                          | [environment-variables.md](./environment-variables.md)           |
+| Vercel project settings                        | [vercel-deployment.md](./vercel-deployment.md)                   |
+| Prisma + Supabase migrations                   | [supabase-prisma-migrations.md](./supabase-prisma-migrations.md) |
+| Optional GitLab Runner                         | [gitlab-runner-docker.md](./gitlab-runner-docker.md)             |
+| First Vercel deploy (ordered minimal pass)     | [first-deploy-smoke.md](./first-deploy-smoke.md)                 |
+| Tenant vs platform hostname (production)       | [production-host-split.md](./production-host-split.md)           |
+| PLATFORM_ADMIN account (script, operators)     | [platform-admin-runbook.md](./platform-admin-runbook.md)         |
+| Production smoke baseline (record, no secrets) | [production-smoke-baseline.md](./production-smoke-baseline.md)   |
 
 ---
 

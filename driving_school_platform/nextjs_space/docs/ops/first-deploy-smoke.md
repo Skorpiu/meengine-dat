@@ -14,6 +14,7 @@ Do **not** commit secrets, real database URLs, Supabase keys, or production cust
 | Deeper manual smoke (roles, licensing shallow pass) | [smoke-test-checklist.md](./smoke-test-checklist.md)             |
 | Optional local runner                               | [gitlab-runner-docker.md](./gitlab-runner-docker.md)             |
 | Tenant vs platform host (production smoke)          | [production-host-split.md](./production-host-split.md)           |
+| Recorded production smoke baseline (no secrets)     | [production-smoke-baseline.md](./production-smoke-baseline.md)   |
 
 ---
 
@@ -39,5 +40,7 @@ Run from top to bottom once the app is live on the host shown in the Vercel depl
 9. **One safe authenticated path** only if a **non-production** test account exists (credentials from your own process—never log real passwords); fuller steps in [smoke-test-checklist.md](./smoke-test-checklist.md). Skip if you have no test user.
 10. **Vercel / runtime logs** — quick scan for obvious errors after the steps above.
 11. **Do not** hit **real payment-provider webhooks**; baseline DAT does not integrate live billing providers—keep webhook checks out of this pass (see [smoke-test-checklist.md](./smoke-test-checklist.md)).
+
+After a successful first production validation, operators may record a **high-level** outcome (no credentials, no raw logs) in **[production-smoke-baseline.md](./production-smoke-baseline.md)** and still re-run smoke for every subsequent deploy.
 
 When you need a broader pass (roles, surfaces, licensing shallow checks), continue with **[smoke-test-checklist.md](./smoke-test-checklist.md)**.
