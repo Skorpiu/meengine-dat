@@ -53,3 +53,4 @@ See [release-checklist.md](./release-checklist.md) (**Known not yet integrated**
 - [smoke-test-checklist.md](./smoke-test-checklist.md) — fuller manual smoke.
 - [release-checklist.md](./release-checklist.md) — deploy order and rollback.
 - [production-host-split.md](./production-host-split.md) — tenant vs platform hostnames.
+- [dat-production-readiness-gaps.md](./dat-production-readiness-gaps.md) — P0/P1/P2 gaps for public demo / portfolio readiness after this baseline.
