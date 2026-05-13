@@ -56,6 +56,19 @@ Dry-run tooling today: see `scripts/reset-demo-organization.ts` and `pnpm demo:r
 
 ---
 
+## Readiness check
+
+Before sharing **controlled** or **portfolio** demo access to a tenant:
+
+1. Set `DEMO_ORGANIZATION_ID` to the target organization CUID (same variable as the reset dry-run script).
+2. Run **`pnpm demo:readiness`** from `driving_school_platform/nextjs_space` (with `DATABASE_URL` available, e.g. via `.env.local`).
+
+The readiness script is **read-only**: it does not modify the database. It prints **aggregate counts only** (no emails, password hashes, tokens, or connection strings). It **fails** if the organization is missing, is not marked `isDemo`, or has **PLATFORM_ADMIN** users tied to that organization (operator accounts must not be scoped to a public demo org).
+
+Use it as a **preflight** gate alongside [public-demo-policy.md](./public-demo-policy.md) and manual smoke checks.
+
+---
+
 ## Minimum safe reset scope (future implementation)
 
 When implementing a destructive reset for a demo org, consider **tenant-scoped** data tied to that `organizationId` (align with your Prisma schema—names may vary):
