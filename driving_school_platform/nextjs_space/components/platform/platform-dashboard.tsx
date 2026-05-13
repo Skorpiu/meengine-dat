@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { signOut } from "next-auth/react";
 import {
   FEATURE_DEFINITIONS,
   type FeatureKey,
@@ -137,13 +138,26 @@ export default function PlatformDashboard({
     });
   }
 
+  async function handleSignOut() {
+    await signOut({ callbackUrl: "/" });
+  }
+
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Platform</h1>
-        <p className="text-gray-600">
-          Onboard de organizações/domínios/licenças (PLATFORM_ADMIN).
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Platform</h1>
+          <p className="text-gray-600">
+            Onboard de organizações/domínios/licenças (PLATFORM_ADMIN).
+          </p>
+        </div>
+        <button
+          type="button"
+          className="shrink-0 self-start border border-gray-300 rounded px-4 py-2 text-gray-800 hover:bg-gray-50"
+          onClick={handleSignOut}
+        >
+          Sign out
+        </button>
       </div>
 
       {error && (
