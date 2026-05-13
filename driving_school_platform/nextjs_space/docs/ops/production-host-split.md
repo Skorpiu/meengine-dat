@@ -27,7 +27,7 @@ In the current production layout, **both hostnames attach to the same Vercel pro
 
 - **PLATFORM_ADMIN** accounts are **not** tenant (school) users. Do not treat them like org admins tied to a single school for product or DNS purposes.
 - **Do not** associate the platform hostname with a tenant via **`OrganizationDomain`** (or equivalent tenant domain mapping). The platform host must remain outside normal tenant domain resolution.
-- **Credentials** for PLATFORM_ADMIN are secrets: manage via your vault / rotation process. **Do not** document them as demo credentials, placeholders in git, or ticket screenshots.
+- **Credentials** for PLATFORM_ADMIN are secrets: manage via your vault / rotation process. **Do not** document them as demo credentials, placeholders in git, or ticket screenshots. Creating or updating the DB user: **[platform-admin-runbook.md](./platform-admin-runbook.md)**.
 
 ---
 
@@ -41,6 +41,7 @@ In the current production layout, **both hostnames attach to the same Vercel pro
 
 ## Related
 
+- [platform-admin-runbook.md](./platform-admin-runbook.md) — create/update PLATFORM_ADMIN via `scripts/create-platform-admin.ts`.
 - [vercel-deployment.md](./vercel-deployment.md) — project settings and domains.
 - [environment-variables.md](./environment-variables.md) — `PLATFORM_HOSTS` and related optional vars.
 - [smoke-test-checklist.md](./smoke-test-checklist.md) — manual pass by role.
