@@ -2,7 +2,7 @@
 
 Concise baseline for validating the Next.js app in hosted environments. Product behavior is unchanged; this doc captures operational expectations.
 
-For a **step-by-step release path** (preconditions → deploy → smoke → rollback), see **[release-checklist.md](./release-checklist.md)**. For a **manual smoke pass** after deploy or before a demo, see **[smoke-test-checklist.md](./smoke-test-checklist.md)**.
+For a **step-by-step release path** (preconditions → deploy → smoke → rollback), see **[release-checklist.md](./release-checklist.md)**. For a **manual smoke pass** after deploy or before a demo, see **[smoke-test-checklist.md](./smoke-test-checklist.md)**. For a **first Vercel-hosted** ordered smoke, see **[first-deploy-smoke.md](./first-deploy-smoke.md)**.
 
 ## Required local commands before deploy
 
@@ -49,7 +49,7 @@ In short: apply migrations **intentionally** before or with deploy (for example 
 
 Use this for load balancer health checks and post-deploy smoke tests. A separate database readiness check is not part of this baseline.
 
-**Automated smoke (optional):** from `driving_school_platform/nextjs_space`, run `pnpm smoke:health` with the target base URL via `HEALTH_BASE_URL` or `pnpm smoke:health -- --url <base-url>` (no secrets; the script only requests `/api/health`). See [smoke-test-checklist.md](./smoke-test-checklist.md) for the full manual pass.
+**Automated smoke (optional):** from `driving_school_platform/nextjs_space`, run `pnpm smoke:health` with the target base URL via `HEALTH_BASE_URL` or `pnpm smoke:health -- --url <base-url>` (no secrets; the script only requests `/api/health`). For an ordered **first hosted** pass on Vercel, see [first-deploy-smoke.md](./first-deploy-smoke.md); for a fuller manual pass, see [smoke-test-checklist.md](./smoke-test-checklist.md).
 
 ## Local GitLab Runner (Windows + Docker Desktop)
 
