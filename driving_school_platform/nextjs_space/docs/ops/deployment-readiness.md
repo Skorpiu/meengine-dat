@@ -49,6 +49,8 @@ In short: apply migrations **intentionally** before or with deploy (for example 
 
 Use this for load balancer health checks and post-deploy smoke tests. A separate database readiness check is not part of this baseline.
 
+**Automated smoke (optional):** from `driving_school_platform/nextjs_space`, run `pnpm smoke:health` with the target base URL via `HEALTH_BASE_URL` or `pnpm smoke:health -- --url <base-url>` (no secrets; the script only requests `/api/health`). See [smoke-test-checklist.md](./smoke-test-checklist.md) for the full manual pass.
+
 ## Local GitLab Runner (Windows + Docker Desktop)
 
 If you run GitLab CI jobs on a **Windows** machine with **Docker Desktop** and **Git Bash**, see **[gitlab-runner-docker.md](./gitlab-runner-docker.md)** for runner container setup, `MSYS_NO_PATHCONV=1`, registration with `glrt` tokens, recommended Docker executor cache settings, and verification commands.
