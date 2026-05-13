@@ -2,19 +2,20 @@
 
 Practical path for shipping DAT safely. Details live in linked ops docs—do **not** commit secrets, real database URLs, Supabase keys, or runner tokens.
 
-| Topic                                   | Doc                                                                    |
-| --------------------------------------- | ---------------------------------------------------------------------- |
-| Local gate, health JSON                 | [deployment-readiness.md](./deployment-readiness.md)                   |
-| Manual smoke (post-deploy)              | [smoke-test-checklist.md](./smoke-test-checklist.md)                   |
-| First hosted deploy smoke               | [first-deploy-smoke.md](./first-deploy-smoke.md)                       |
-| Production smoke baseline note          | [production-smoke-baseline.md](./production-smoke-baseline.md)         |
-| Public demo / portfolio gaps            | [dat-production-readiness-gaps.md](./dat-production-readiness-gaps.md) |
-| Public demo policy (credentials / data) | [public-demo-policy.md](./public-demo-policy.md)                       |
-| Demo seed / reset runbook               | [public-demo-seed-reset.md](./public-demo-seed-reset.md)               |
-| Env vars by surface                     | [environment-variables.md](./environment-variables.md)                 |
-| Vercel project settings                 | [vercel-deployment.md](./vercel-deployment.md)                         |
-| Prisma + Supabase migrations            | [supabase-prisma-migrations.md](./supabase-prisma-migrations.md)       |
-| Local GitLab Runner (optional)          | [gitlab-runner-docker.md](./gitlab-runner-docker.md)                   |
+| Topic                                   | Doc                                                                                                  |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Local gate, health JSON                 | [deployment-readiness.md](./deployment-readiness.md)                                                 |
+| Manual smoke (post-deploy)              | [smoke-test-checklist.md](./smoke-test-checklist.md)                                                 |
+| First hosted deploy smoke               | [first-deploy-smoke.md](./first-deploy-smoke.md)                                                     |
+| Production smoke baseline note          | [production-smoke-baseline.md](./production-smoke-baseline.md)                                       |
+| Public demo / portfolio gaps            | [dat-production-readiness-gaps.md](./dat-production-readiness-gaps.md)                               |
+| Public demo policy (credentials / data) | [public-demo-policy.md](./public-demo-policy.md)                                                     |
+| Demo seed / reset runbook               | [public-demo-seed-reset.md](./public-demo-seed-reset.md)                                             |
+| Demo readiness (read-only preflight)    | `pnpm demo:readiness` — see [public-demo-seed-reset.md](./public-demo-seed-reset.md#readiness-check) |
+| Env vars by surface                     | [environment-variables.md](./environment-variables.md)                                               |
+| Vercel project settings                 | [vercel-deployment.md](./vercel-deployment.md)                                                       |
+| Prisma + Supabase migrations            | [supabase-prisma-migrations.md](./supabase-prisma-migrations.md)                                     |
+| Local GitLab Runner (optional)          | [gitlab-runner-docker.md](./gitlab-runner-docker.md)                                                 |
 
 ---
 
@@ -25,7 +26,7 @@ Practical path for shipping DAT safely. Details live in linked ops docs—do **n
 - **GitLab pipeline green:** pipeline for that commit succeeded (see `.gitlab-ci.yml` and optional [gitlab-runner-docker.md](./gitlab-runner-docker.md) if you use a project runner).
 - **Vercel env configured:** production (and preview, if used) variables set per [vercel-deployment.md](./vercel-deployment.md) and [environment-variables.md](./environment-variables.md)—never from git.
 - **Migrations reviewed and committed:** `prisma/migrations` matches what you expect to apply; see [supabase-prisma-migrations.md](./supabase-prisma-migrations.md).
-- **Public demo (if applicable):** before sharing broad demo access, confirm the demo tenant is marked `Organization.isDemo = true` and that refresh/reset follows [public-demo-seed-reset.md](./public-demo-seed-reset.md) (no public reset endpoint; no privileged credentials in git).
+- **Public demo (if applicable):** before sharing broad demo access, confirm the demo tenant is marked `Organization.isDemo = true`, run **`pnpm demo:readiness`** (read-only; see [public-demo-seed-reset.md](./public-demo-seed-reset.md)), and ensure refresh/reset follows that runbook (no public reset endpoint; no privileged credentials in git).
 
 ---
 
