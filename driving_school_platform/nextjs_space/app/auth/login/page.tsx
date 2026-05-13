@@ -164,28 +164,6 @@ export default function LoginPage() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Demo Credentials */}
-        <Card className="bg-gray-50 border-gray-200">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-3">
-              <h3 className="font-medium text-gray-900">Demo Credentials</h3>
-              <div className="grid grid-cols-1 gap-2 text-sm">
-                <div className="p-2 bg-white rounded border">
-                  <strong>Admin:</strong> conquistadora@drivingschool.com /
-                  E!C!Conquistadora!
-                </div>
-                <div className="p-2 bg-white rounded border">
-                  <strong>Instructor:</strong> michael.johnson@drivingschool.com
-                  / instructor123
-                </div>
-                <div className="p-2 bg-white rounded border">
-                  <strong>Student:</strong> alice.smith@email.com / student123
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

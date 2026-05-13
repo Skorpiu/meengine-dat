@@ -19,11 +19,11 @@ Do **not** put credentials, customer emails, URLs with embedded secrets, or bill
 
 ### P0 — must fix before broad public sharing / open demo
 
-| Gap                         | Why it matters                                                                                                                                                                                                        | Direction (no implementation in this doc)                                                                                                                    |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Demo vs production data** | Production DB today holds **real** org and user data. A public “try it” link on the **same** deployment lets visitors mutate lessons, users, vehicles, license settings, etc., via existing **SUPER_ADMIN** surfaces. | Prefer a **dedicated demo tenant** + **low-privilege demo users**, or a **separate demo deployment** with resettable data—not shared production credentials. |
-| **Credential policy**       | **PLATFORM_ADMIN** and **SUPER_ADMIN** secrets must never appear in README, issues, or “quick start” snippets ([platform-admin-runbook.md](./platform-admin-runbook.md)).                                             | Document **who** gets which role; use vault + rotation; never ship demo PLATFORM_ADMIN passwords.                                                            |
-| **High-privilege exposure** | Sharing **one** production admin account for demos is a **destructive-data** and **reputation** risk (delete users, change license, onboarding on platform host).                                                     | If demos are required on prod-like infra, use **scoped** accounts and **runbooks** for reset/restore—not “the” admin.                                        |
+| Gap                         | Why it matters                                                                                                                                                                                                        | Direction (no implementation in this doc)                                                                                                                                                                          |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Demo vs production data** | Production DB today holds **real** org and user data. A public “try it” link on the **same** deployment lets visitors mutate lessons, users, vehicles, license settings, etc., via existing **SUPER_ADMIN** surfaces. | Prefer a **dedicated demo tenant** + **low-privilege demo users**, or a **separate demo deployment** with resettable data—not shared production credentials. See [public-demo-policy.md](./public-demo-policy.md). |
+| **Credential policy**       | **PLATFORM_ADMIN** and **SUPER_ADMIN** secrets must never appear in README, issues, or “quick start” snippets ([platform-admin-runbook.md](./platform-admin-runbook.md)).                                             | Document **who** gets which role; use vault + rotation; never ship demo PLATFORM_ADMIN passwords.                                                                                                                  |
+| **High-privilege exposure** | Sharing **one** production admin account for demos is a **destructive-data** and **reputation** risk (delete users, change license, onboarding on platform host).                                                     | If demos are required on prod-like infra, use **scoped** accounts and **runbooks** for reset/restore—not “the” admin.                                                                                              |
 
 ### P1 — should fix soon
 
@@ -47,7 +47,7 @@ Do **not** put credentials, customer emails, URLs with embedded secrets, or bill
 
 ## Suggested next batches (priority order)
 
-1. **Demo isolation** — dedicated demo org + seeded low-priv users, or separate preview project with reset script; document access policy.
+1. **Demo isolation** — dedicated demo org + seeded low-priv users, or separate preview project with reset script; document access policy ([public-demo-policy.md](./public-demo-policy.md)).
 2. **Admin mutation audit** — inventory destructive actions (user delete, org onboarding, license); decide read-only demo or confirmation modals + audit log.
 3. **Public messaging** — README + landing footnote: not a billing product yet; where to get access; no embedded credentials.
 4. **Security pass** — API response review in production, optional security headers / rate limits for public endpoints.
@@ -57,6 +57,7 @@ Do **not** put credentials, customer emails, URLs with embedded secrets, or bill
 
 ## Related
 
+- [public-demo-policy.md](./public-demo-policy.md) — public demo data, credentials, and read-mostly expectations.
 - [production-smoke-baseline.md](./production-smoke-baseline.md) — what already passed once.
 - [smoke-test-checklist.md](./smoke-test-checklist.md) — how to re-smoke each deploy.
 - [release-checklist.md](./release-checklist.md) — ship order and “not integrated” baseline.
