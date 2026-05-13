@@ -141,9 +141,21 @@ You should see the runner configuration checked successfully.
 
 Re-running uses the same commit and `.gitlab-ci.yml` unless you start a new pipeline from a new push.
 
-## Known non-blocking warning: long polling
+## 8. Non-blocking warnings (troubleshooting)
 
-You may see a warning about **long polling** and `request_concurrency=1`. For small projects and a single local runner, this is usually **non-blocking** and can be ignored unless GitLab or runner docs for your version recommend a specific tuning.
+After a working setup (for example **`disable_cache = true`**, **`volumes = []`**, **`pull_policy = "if-not-present"`**, and **`node:20`** present locally), job logs may still show warnings that **do not** stop the job from finishing successfully.
+
+- **Cache adapter / “cache factory not found”** — With the Docker executor cache **disabled** and **no** cache volume or S3-style backend configured, the runner may log that it **could not create a cache adapter** or that a **cache factory** is missing. That reflects “no cache backend,” not a broken pipeline. It is expected noise for this minimal local layout unless you intentionally add a supported cache configuration.
+
+- **Long polling and `request_concurrency=1`** — A warning about **long polling** tied to **`request_concurrency=1`** is common. For a **small private project runner** on one machine, it is usually **acceptable** and can be left as-is unless GitLab or runner documentation for your version recommends a specific change and you have a concrete problem to solve.
+
+- **Transient Docker connection reset** — If **Docker Desktop** restarts, sleeps, or the **runner container** is restarted **while a job is active**, the executor can log a **connection reset** or similar Docker API error for that attempt. A following run after Docker and the runner are stable again is the normal recovery path.
+
+**How to react**
+
+- If the **job succeeded**, treat the above as **informational**; do not over-tune runner settings immediately.
+- If jobs **regularly hang or fail** with the same error, then revisit **`config.toml`**, image pull policy, and host resources—and consult GitLab Runner release notes for your image tag.
+- **Avoid editing `config.toml` while jobs are running**; races can confuse the runner or leave a half-written file. Prefer **idle** runner, apply changes, **restart** the runner container if needed, then **retry** the job in GitLab (section 7) rather than chasing one-off warnings in a successful log.
 
 ## Related
 
