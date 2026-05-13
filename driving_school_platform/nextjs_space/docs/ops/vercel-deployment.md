@@ -78,6 +78,14 @@ Step-by-step Supabase connection guidance, safe inspection commands, and a deplo
 3. After cutover, set **`NEXTAUTH_URL`** (and any public app URL vars you use) to the production hostname.
 4. Do **not** hard-code production hostnames in application source; prefer environment configuration.
 
+### Tenant host vs platform host (production)
+
+For deployments that split **school (tenant) traffic** and **platform operator** traffic across two hostnames on the **same Vercel project**:
+
+- Add **both** domains in Vercel (tenant/app host and platform host).
+- If you use **`PLATFORM_HOSTS`**, include every platform hostname the app should treat as the platform origin (comma-separated). Details: [environment-variables.md](./environment-variables.md) and **[production-host-split.md](./production-host-split.md)**.
+- **Do not** register the platform hostname as a tenant **`OrganizationDomain`**; **PLATFORM_ADMIN** users are not tenant users and must not be tied to a school domain for routing. Full checklist: [production-host-split.md](./production-host-split.md).
+
 ---
 
 ## Related
@@ -86,4 +94,5 @@ Step-by-step Supabase connection guidance, safe inspection commands, and a deplo
 - [deployment-readiness.md](./deployment-readiness.md) — local `pnpm check`, health JSON, migrations overview.
 - [supabase-prisma-migrations.md](./supabase-prisma-migrations.md) — safe Prisma migrate workflow with Supabase.
 - [environment-variables.md](./environment-variables.md) — authoritative env list and “must not commit” paths.
+- [production-host-split.md](./production-host-split.md) — tenant vs platform hostnames, Vercel domains, `PLATFORM_HOSTS`, smoke routing.
 - [gitlab-runner-docker.md](./gitlab-runner-docker.md) — optional local GitLab Runner on Windows.

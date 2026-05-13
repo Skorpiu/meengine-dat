@@ -13,6 +13,7 @@ For release ordering, env, migrations, and rollback, see **[release-checklist.md
 | Prisma + Supabase migrations               | [supabase-prisma-migrations.md](./supabase-prisma-migrations.md) |
 | Optional GitLab Runner                     | [gitlab-runner-docker.md](./gitlab-runner-docker.md)             |
 | First Vercel deploy (ordered minimal pass) | [first-deploy-smoke.md](./first-deploy-smoke.md)                 |
+| Tenant vs platform hostname (production)   | [production-host-split.md](./production-host-split.md)           |
 
 ---
 
@@ -25,9 +26,19 @@ For release ordering, env, migrations, and rollback, see **[release-checklist.md
 
 ---
 
+## Production host split (where to point the browser)
+
+When production uses **two hostnames** on the same Vercel project (tenant app host vs platform host), see **[production-host-split.md](./production-host-split.md)** for the full model. In short:
+
+- Run **tenant** checks (health, `/`, login, admin, instructor, student) on the **tenant host** (for example `https://www.meengine.io`).
+- Run **platform** checks on the **platform host** at **`/platform`** (for example `https://platform.meengine.io/platform`). **`/platform` on the tenant host is not the intended operator path** in that layout.
+- **PLATFORM_ADMIN** sign-in and platform UI smoke use **platform** credentials from your secret process only—**never** document or share them as demo credentials.
+
+---
+
 ## Public checks
 
-Run against the deployment base URL (or `http://localhost:3000` for a local production build).
+Run against the deployment base URL (or `http://localhost:3000` for a local production build). For split-host production, pick the **tenant** origin for the steps below unless the row explicitly says **platform host**.
 
 1. **`GET /api/health`** — expect `200` and JSON with `ok: true` (DB-free; details in [deployment-readiness.md](./deployment-readiness.md)). You can hit it with a browser, `curl`, or the optional `pnpm smoke:health` script from `driving_school_platform/nextjs_space` (`HEALTH_BASE_URL` or `pnpm smoke:health -- --url <base>`).
 2. **Landing** — open `/` (home); page loads, no blank shell from asset or routing failure.
@@ -49,12 +60,12 @@ Use a **known non-production test account** if your environment has one (seeded 
 
 Adjust URLs if your app’s routing differs; current App Router examples:
 
-| Role / intent       | Example path  | Expect                                                                                                                                             |
-| ------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Admin               | `/admin`      | Dashboard loads for an admin-capable test user.                                                                                                    |
-| Instructor          | `/instructor` | Instructor dashboard loads for an instructor test user.                                                                                            |
-| Student             | `/student`    | Student dashboard loads for a student test user.                                                                                                   |
-| Platform (elevated) | `/platform`   | Loads **only** for a user authorized for that surface; others should not see full privileged UI (redirect, forbidden, or empty state—not a crash). |
+| Role / intent       | Example path  | Expect                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Admin               | `/admin`      | Dashboard loads for an admin-capable test user.                                                                                                                                                                                                                                                                                                                                                                                  |
+| Instructor          | `/instructor` | Instructor dashboard loads for an instructor test user.                                                                                                                                                                                                                                                                                                                                                                          |
+| Student             | `/student`    | Student dashboard loads for a student test user.                                                                                                                                                                                                                                                                                                                                                                                 |
+| Platform (elevated) | `/platform`   | On **split-host production**, test on the **platform hostname** (see [production-host-split.md](./production-host-split.md)); not via `/platform` on the tenant host as the expected path. Loads **only** for a user authorized for that surface; others should not see full privileged UI (redirect, forbidden, or empty state—not a crash). **PLATFORM_ADMIN** is not a tenant user—do not use demo/example passwords in docs. |
 
 If a user lacks a role, confirm **access denied or redirect** rather than a broken page.
 
@@ -82,13 +93,13 @@ Baseline product does **not** integrate real billing providers; keep checks shal
 
 These paths match the current App Router layout for naming only; if routes move, update this table in the same doc.
 
-| Path                                            | Notes                         |
-| ----------------------------------------------- | ----------------------------- |
-| `/`                                             | Landing                       |
-| `/auth/login`                                   | Login                         |
-| `/auth/register`                                | Registration (optional smoke) |
-| `/admin`, `/admin/lessons`, `/admin/license`, … | Admin area                    |
-| `/instructor`                                   | Instructor home               |
-| `/student`                                      | Student home                  |
-| `/platform`                                     | Platform / elevated surface   |
-| `/api/health`                                   | Liveness JSON                 |
+| Path                                            | Notes                                                                                                                                 |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                                             | Landing                                                                                                                               |
+| `/auth/login`                                   | Login                                                                                                                                 |
+| `/auth/register`                                | Registration (optional smoke)                                                                                                         |
+| `/admin`, `/admin/lessons`, `/admin/license`, … | Admin area                                                                                                                            |
+| `/instructor`                                   | Instructor home                                                                                                                       |
+| `/student`                                      | Student home                                                                                                                          |
+| `/platform`                                     | Platform / elevated surface (use **platform host** in split-host production — [production-host-split.md](./production-host-split.md)) |
+| `/api/health`                                   | Liveness JSON                                                                                                                         |
