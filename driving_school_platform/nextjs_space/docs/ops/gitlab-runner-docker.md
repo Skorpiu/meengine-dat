@@ -2,7 +2,7 @@
 
 This document describes a **local** GitLab Runner setup used for DAT development and CI on a Windows laptop: GitLab Runner runs in Docker Desktop, jobs use the Docker executor, and shells use Git Bash. It is operational guidance only; it does not change application or CI behavior.
 
-Do **not** commit a `config.toml` that contains real runner authentication tokens. Use placeholders in notes and examples.
+Do **not** commit `config.toml` from the runner into git: it lives in the Docker volume and includes the registration `token = ...` line. Use placeholders in notes and examples only.
 
 ## Prerequisites
 
@@ -61,19 +61,72 @@ Replace `<GITLAB_RUNNER_TOKEN>` with the value from the GitLab UI. Do not paste 
 
 After registration, open the runner in GitLab and ensure tag **`dat`** is set so it picks up this project’s jobs.
 
-## 4. Docker executor cache and volumes (recommended)
+## 4. Docker executor cache, volumes, and pull policy (recommended)
 
-On Windows, naive cache bind mounts are easy to misconfigure (for example Git Bash rewriting paths, pointing at `C:/Program Files/Git/cache`, or duplicating `/cache` entries). A **simple, reliable** local setup is to disable the runner’s Docker executor cache and use no extra volumes:
+On Windows, naive cache bind mounts are easy to misconfigure (for example Git Bash rewriting paths, pointing at `C:/Program Files/Git/cache`, or duplicating `/cache` entries). A **simple, reliable** local setup is to disable the runner’s Docker executor cache, use no extra volumes, and (for a **private project runner on one machine**) set **`pull_policy = "if-not-present"`** so jobs prefer the local `node:20` image instead of always pulling from the registry.
 
 ```toml
 [runners.docker]
+  pull_policy = "if-not-present"
   disable_cache = true
   volumes = []
 ```
 
+If the runner is **shared** or **exposed beyond your own laptop**, review GitLab’s guidance on `pull_policy` and supply-chain expectations; `if-not-present` trades fresher automatic pulls for fewer registry round-trips and is not always appropriate on multi-tenant or untrusted workloads.
+
 Edit the runner’s `config.toml` inside the config volume (for example by `docker exec` with an editor, or by inspecting the volume mount path from Docker Desktop’s docs). **Never** commit a file that contains your real `token =` line.
 
-## 5. Verify the runner
+## 5. Timeouts while pulling `node:20` (effective pull policy `always`)
+
+**Symptom:** a job sits for a long time and eventually times out while the log shows something like:
+
+- `Using effective pull policy of [always]`
+- `Pulling docker image node:20 ...`
+
+**Why:** depending on runner defaults and registration, the effective Docker executor pull policy can be **`always`**, so every job tries to pull `node:20` from the registry. On a slow or flaky network (common on a home or mobile connection), that step can exceed the job’s patience window even though the image would work if it were already local.
+
+**Mitigation (private project runner on your machine):**
+
+1. **Pre-pull the image on the Docker host** (same machine where Docker Desktop runs):
+
+   ```bash
+   docker pull node:20
+   ```
+
+2. **Set `pull_policy = "if-not-present"`** under `[runners.docker]` in `/etc/gitlab-runner/config.toml` inside the runner container (merge with the fragment in section 4; keep **`disable_cache = true`** and **`volumes = []`** unless you have a deliberate, tested reason to change them). Edit without exposing secrets—for example open a shell and use an editor on the file:
+
+   ```bash
+   MSYS_NO_PATHCONV=1 docker exec -it gitlab-runner sh -lc 'vi /etc/gitlab-runner/config.toml'
+   ```
+
+   Avoid pasting or screensharing lines that contain **`token =`**. You are only adding or adjusting executor keys such as `pull_policy`, `disable_cache`, and `volumes`.
+
+3. **Restart the runner container** so the change is picked up:
+
+   ```bash
+   docker restart gitlab-runner
+   ```
+
+4. **Verify** configuration still loads:
+
+   ```bash
+   MSYS_NO_PATHCONV=1 docker exec -it gitlab-runner gitlab-runner verify
+   ```
+
+5. In GitLab, **retry** the failed job or pipeline (see section 7).
+
+**Same commands without `MSYS_NO_PATHCONV=1`** (for example **PowerShell** or **Command Prompt** on the Docker host):
+
+```bash
+docker pull node:20
+docker exec -it gitlab-runner sh -lc 'vi /etc/gitlab-runner/config.toml'
+docker restart gitlab-runner
+docker exec -it gitlab-runner gitlab-runner verify
+```
+
+From **Git Bash**, keep the `MSYS_NO_PATHCONV=1` prefix on `docker exec` / `docker run` so POSIX paths are not rewritten (see above).
+
+## 6. Verify the runner
 
 ```bash
 MSYS_NO_PATHCONV=1 docker exec -it gitlab-runner gitlab-runner verify
@@ -81,7 +134,7 @@ MSYS_NO_PATHCONV=1 docker exec -it gitlab-runner gitlab-runner verify
 
 You should see the runner configuration checked successfully.
 
-## 6. Retry a failed pipeline or job
+## 7. Retry a failed pipeline or job
 
 - **Whole pipeline:** GitLab → **CI/CD → Pipelines** → open the pipeline → **Retry**.
 - **Single job:** open the job log → **Retry** (or from the pipeline graph, retry one job).
