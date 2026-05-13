@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // -----------------------------
 // Hoisted mocks (Vitest-safe)
@@ -8,12 +8,14 @@ const h = vi.hoisted(() => {
   const categoryFindFirstMock = vi.fn();
   const studentFindFirstMock = vi.fn();
   const lessonCreateMock = vi.fn();
+  const organizationFindUniqueMock = vi.fn();
 
   const prismaMock = {
     instructor: { findFirst: instructorFindFirstMock },
     category: { findFirst: categoryFindFirstMock },
     student: { findFirst: studentFindFirstMock },
     lesson: { create: lessonCreateMock },
+    organization: { findUnique: organizationFindUniqueMock },
   };
 
   return {
@@ -22,20 +24,21 @@ const h = vi.hoisted(() => {
     categoryFindFirstMock,
     studentFindFirstMock,
     lessonCreateMock,
+    organizationFindUniqueMock,
   };
 });
 
-vi.mock('@/lib/db', () => ({
+vi.mock("@/lib/db", () => ({
   prisma: h.prismaMock,
   db: h.prismaMock,
 }));
 
-vi.mock('@/lib/middleware/feature-check', () => ({
+vi.mock("@/lib/middleware/feature-check", () => ({
   checkFeatureAccess: vi.fn(),
 }));
 
-vi.mock('@/lib/api-utils', async () => {
-  const actual = await vi.importActual<any>('@/lib/api-utils');
+vi.mock("@/lib/api-utils", async () => {
+  const actual = await vi.importActual<any>("@/lib/api-utils");
   return {
     ...actual,
     verifyAuth: vi.fn(),
@@ -43,39 +46,46 @@ vi.mock('@/lib/api-utils', async () => {
 });
 
 // IMPORTANT: import AFTER mocks
-import { POST } from './route';
-import { verifyAuth } from '@/lib/api-utils';
-import { checkFeatureAccess } from '@/lib/middleware/feature-check';
+import { POST } from "./route";
+import { verifyAuth } from "@/lib/api-utils";
+import { checkFeatureAccess } from "@/lib/middleware/feature-check";
 
 const verifyAuthMock = verifyAuth as unknown as ReturnType<typeof vi.fn>;
-const checkFeatureAccessMock = checkFeatureAccess as unknown as ReturnType<typeof vi.fn>;
+const checkFeatureAccessMock = checkFeatureAccess as unknown as ReturnType<
+  typeof vi.fn
+>;
 
 function reqJson(payload: any): Request {
-  return new Request('http://localhost/api/admin/lessons', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
+  return new Request("http://localhost/api/admin/lessons", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
     body: JSON.stringify(payload),
   });
 }
 
-const UUID_A = '11111111-1111-1111-1111-111111111111';
-const UUID_B = '22222222-2222-2222-2222-222222222222';
-const UUID_C = '33333333-3333-3333-3333-333333333333';
-const UUID_D = '44444444-4444-4444-4444-444444444444';
+const UUID_A = "11111111-1111-1111-1111-111111111111";
+const UUID_B = "22222222-2222-2222-2222-222222222222";
+const UUID_C = "33333333-3333-3333-3333-333333333333";
+const UUID_D = "44444444-4444-4444-4444-444444444444";
 
 beforeEach(() => {
   vi.resetAllMocks();
 
+  h.organizationFindUniqueMock.mockResolvedValue({ isDemo: false });
+
   h.instructorFindFirstMock.mockResolvedValue({
-    id: 'inst-db-1',
+    id: "inst-db-1",
     qualifiedCategories: [{ id: 1 }],
   });
 
-  h.categoryFindFirstMock.mockResolvedValue({ id: 1, name: 'B' });
+  h.categoryFindFirstMock.mockResolvedValue({ id: 1, name: "B" });
 
   h.studentFindFirstMock.mockImplementation(async ({ where }: any) => {
     if (!where?.userId) return null;
-    return { id: `student-db-${where.userId.slice(0, 8)}`, userId: where.userId };
+    return {
+      id: `student-db-${where.userId.slice(0, 8)}`,
+      userId: where.userId,
+    };
   });
 
   h.lessonCreateMock.mockImplementation(async ({ data }: any) => {
@@ -83,18 +93,25 @@ beforeEach(() => {
   });
 });
 
-describe('POST /api/admin/lessons (handler integration)', () => {
-  it('blocks vehicleId when vehicles feature is disabled (403) and does not touch DB', async () => {
-    verifyAuthMock.mockResolvedValue({ id: UUID_A, role: 'SUPER_ADMIN', organizationId: 'org1' });
-    checkFeatureAccessMock.mockResolvedValue({ allowed: false, error: 'Feature not enabled' });
+describe("POST /api/admin/lessons (handler integration)", () => {
+  it("blocks vehicleId when vehicles feature is disabled (403) and does not touch DB", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
+    checkFeatureAccessMock.mockResolvedValue({
+      allowed: false,
+      error: "Feature not enabled",
+    });
 
     const payload = {
-      lessonType: 'DRIVING',
+      lessonType: "DRIVING",
       instructorId: UUID_A,
       studentId: UUID_B,
-      lessonDate: '2026-01-06',
-      startTime: '10:00',
-      endTime: '11:00',
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
       vehicleId: 1,
     };
 
@@ -104,22 +121,26 @@ describe('POST /api/admin/lessons (handler integration)', () => {
     const body: any = await res.json();
 
     expect(body.requiresUpgrade).toBe(true);
-    expect(body.error).toBe('Vehicles feature not enabled');
+    expect(body.error).toBe("Vehicles feature not enabled");
 
     expect(h.instructorFindFirstMock).not.toHaveBeenCalled();
     expect(h.lessonCreateMock).not.toHaveBeenCalled();
   });
 
-  it('creates THEORY_EXAM for multiple students (201) and does not call feature check when vehicleId absent', async () => {
-    verifyAuthMock.mockResolvedValue({ id: UUID_A, role: 'SUPER_ADMIN', organizationId: 'org1' });
+  it("creates THEORY_EXAM for multiple students (201) and does not call feature check when vehicleId absent", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
 
     const payload = {
-      lessonType: 'THEORY_EXAM',
+      lessonType: "THEORY_EXAM",
       instructorId: UUID_A,
       studentIds: [UUID_B, UUID_C],
-      lessonDate: '2026-01-06',
-      startTime: '10:00',
-      endTime: '11:00',
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
     };
 
     const res = await POST(reqJson(payload) as any);
@@ -136,15 +157,19 @@ describe('POST /api/admin/lessons (handler integration)', () => {
     expect(checkFeatureAccessMock).not.toHaveBeenCalled();
   });
 
-  it('returns 400 when DRIVING is missing studentId (validation)', async () => {
-    verifyAuthMock.mockResolvedValue({ id: UUID_A, role: 'SUPER_ADMIN', organizationId: 'org1' });
+  it("returns 400 when DRIVING is missing studentId (validation)", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
 
     const payload = {
-      lessonType: 'DRIVING',
+      lessonType: "DRIVING",
       instructorId: UUID_A,
-      lessonDate: '2026-01-06',
-      startTime: '10:00',
-      endTime: '11:00',
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
     };
 
     const res = await POST(reqJson(payload) as any);
@@ -152,24 +177,28 @@ describe('POST /api/admin/lessons (handler integration)', () => {
     expect(res.status).toBe(400);
     const body: any = await res.json();
 
-    expect(body.error).toBe('Validation failed');
+    expect(body.error).toBe("Validation failed");
     expect(body.details).toBeTruthy();
 
     expect(h.instructorFindFirstMock).not.toHaveBeenCalled();
     expect(h.lessonCreateMock).not.toHaveBeenCalled();
   });
 
-  it('forces instructorId to the logged-in instructor when role=INSTRUCTOR', async () => {
+  it("forces instructorId to the logged-in instructor when role=INSTRUCTOR", async () => {
     const instructorUserId = UUID_D;
 
-    verifyAuthMock.mockResolvedValue({ id: instructorUserId, role: 'INSTRUCTOR', organizationId: 'org1' });
+    verifyAuthMock.mockResolvedValue({
+      id: instructorUserId,
+      role: "INSTRUCTOR",
+      organizationId: "org1",
+    });
 
     const payload = {
-      lessonType: 'THEORY',
+      lessonType: "THEORY",
       instructorId: UUID_A,
-      lessonDate: '2026-01-06',
-      startTime: '10:00',
-      endTime: '11:00',
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
     };
 
     await POST(reqJson(payload) as any);
@@ -179,16 +208,20 @@ describe('POST /api/admin/lessons (handler integration)', () => {
     expect(callArg?.where?.userId).toBe(instructorUserId);
   });
 
-  it('returns 400 when EXAM exceeds MAX_STUDENTS_PER_EXAM', async () => {
-    verifyAuthMock.mockResolvedValue({ id: UUID_A, role: 'SUPER_ADMIN', organizationId: 'org1' });
+  it("returns 400 when EXAM exceeds MAX_STUDENTS_PER_EXAM", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
 
     const payload = {
-      lessonType: 'EXAM',
+      lessonType: "EXAM",
       instructorId: UUID_A,
       studentIds: [UUID_B, UUID_C, UUID_D],
-      lessonDate: '2026-01-06',
-      startTime: '10:00',
-      endTime: '11:00',
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
     };
 
     const res = await POST(reqJson(payload) as any);

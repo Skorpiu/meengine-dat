@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { decideDemoRouteMutation } from "@/lib/demo/demo-route-guard";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 
 export async function DELETE(request: NextRequest) {
@@ -25,6 +26,17 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         { error: tenantGuard.error },
         { status: tenantGuard.status },
+      );
+    }
+
+    const demoDecision = await decideDemoRouteMutation({
+      organizationId: orgId,
+      category: "user_management",
+    });
+    if (!demoDecision.allowed) {
+      return NextResponse.json(
+        { error: demoDecision.message, code: demoDecision.reason },
+        { status: demoDecision.status },
       );
     }
 

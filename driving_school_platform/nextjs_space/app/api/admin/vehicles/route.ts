@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { decideDemoRouteMutation } from "@/lib/demo/demo-route-guard";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
 import type { Prisma } from "@prisma/client";
 import { VehicleStatus } from "@prisma/client";
@@ -208,6 +209,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const demoDecision = await decideDemoRouteMutation({
+      organizationId: orgId,
+      category: "vehicle_management",
+    });
+    if (!demoDecision.allowed) {
+      return NextResponse.json(
+        { error: demoDecision.message, code: demoDecision.reason },
+        { status: demoDecision.status },
+      );
+    }
+
     const body = await request.json();
 
     // Check if registration number already exists
@@ -333,6 +345,17 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json(
         { error: "No organization found" },
         { status: 400 },
+      );
+    }
+
+    const demoDecision = await decideDemoRouteMutation({
+      organizationId: orgId,
+      category: "vehicle_management",
+    });
+    if (!demoDecision.allowed) {
+      return NextResponse.json(
+        { error: demoDecision.message, code: demoDecision.reason },
+        { status: demoDecision.status },
       );
     }
 
@@ -494,6 +517,17 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         { error: "No organization found" },
         { status: 400 },
+      );
+    }
+
+    const demoDecision = await decideDemoRouteMutation({
+      organizationId: orgId,
+      category: "vehicle_management",
+    });
+    if (!demoDecision.allowed) {
+      return NextResponse.json(
+        { error: demoDecision.message, code: demoDecision.reason },
+        { status: demoDecision.status },
       );
     }
 
