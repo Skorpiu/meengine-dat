@@ -1,5 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+const h = vi.hoisted(() => ({
+  decideDemoRouteMutationMock: vi.fn(),
+}));
+
+vi.mock("@/lib/demo/demo-route-guard", () => ({
+  decideDemoRouteMutation: (...args: unknown[]) =>
+    h.decideDemoRouteMutationMock(...args),
+}));
+
 vi.mock("@/lib/cleanup", () => ({
   cleanupOldLessons: vi.fn(),
 }));
@@ -30,6 +39,7 @@ const guardTenantAuthenticatedRouteMock =
 
 beforeEach(() => {
   vi.resetAllMocks();
+  h.decideDemoRouteMutationMock.mockResolvedValue({ allowed: true });
 });
 
 describe("Admin Cleanup API (tenant scoping)", () => {
@@ -91,5 +101,35 @@ describe("Admin Cleanup API (tenant scoping)", () => {
     const body: any = await res.json();
     expect(body.success).toBe(true);
     expect(body.data.count).toBe(7);
+  });
+
+  it("returns 403 with stable demo payload when demo guard blocks cleanup", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: "u1",
+      role: "SUPER_ADMIN",
+      organizationId: "orgA",
+    });
+    guardTenantAuthenticatedRouteMock.mockResolvedValue({ allowed: true });
+    h.decideDemoRouteMutationMock.mockResolvedValue({
+      allowed: false,
+      reason: "demo_restricted_action",
+      status: 403,
+      message: "This action is restricted in the public demo environment.",
+    });
+
+    const res = await POST(
+      new Request("http://localhost/api/admin/cleanup", {
+        method: "POST",
+      }) as any,
+    );
+    expect(res.status).toBe(403);
+
+    const body: any = await res.json();
+    expect(body.error).toBe(
+      "This action is restricted in the public demo environment.",
+    );
+    expect(body.code).toBe("demo_restricted_action");
+
+    expect(cleanupOldLessonsMock).not.toHaveBeenCalled();
   });
 });

@@ -4,8 +4,7 @@
  * @module app/api/admin/lessons
  */
 
-import { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { cleanupOldLessons } from "@/lib/cleanup";
 import {
@@ -29,6 +28,7 @@ import { lessonCreationSchema } from "@/lib/validation";
 import { startOfDay, addDays } from "date-fns";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import { decideDemoRouteMutation } from "@/lib/demo/demo-route-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -55,12 +55,18 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return errorResponse(tenantGuard.error, tenantGuard.status);
   }
 
-  // Automatically cleanup old lessons (older than 30 days)
-  try {
-    await cleanupOldLessons(orgId);
-  } catch (error) {
-    // Log error but don't fail the request
-    console.error("Failed to cleanup old lessons:", error);
+  const orgRow = await prisma.organization.findUnique({
+    where: { id: orgId },
+    select: { isDemo: true },
+  });
+
+  if (!orgRow?.isDemo) {
+    try {
+      await cleanupOldLessons(orgId);
+    } catch (error) {
+      // Log error but don't fail the request
+      console.error("Failed to cleanup old lessons:", error);
+    }
   }
 
   const { searchParams } = new URL(request.url);
@@ -272,6 +278,17 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
   if (!tenantGuard.allowed) {
     return errorResponse(tenantGuard.error, tenantGuard.status);
+  }
+
+  const demoDecision = await decideDemoRouteMutation({
+    organizationId: orgId,
+    category: "lesson_management",
+  });
+  if (!demoDecision.allowed) {
+    return NextResponse.json(
+      { error: demoDecision.message, code: demoDecision.reason },
+      { status: demoDecision.status },
+    );
   }
 
   // Parse and validate request body

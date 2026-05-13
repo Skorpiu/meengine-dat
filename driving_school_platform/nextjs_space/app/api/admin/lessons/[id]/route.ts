@@ -3,7 +3,7 @@
  * Handles individual lesson operations (GET, PUT, DELETE)
  */
 
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import {
   successResponse,
@@ -14,6 +14,7 @@ import {
 import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from "@/lib/constants";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
+import { decideDemoRouteMutation } from "@/lib/demo/demo-route-guard";
 
 type RoleUser = {
   role?: string | null;
@@ -134,6 +135,17 @@ export const PUT = withErrorHandling(
       return errorResponse(tenantGuard.error, tenantGuard.status);
     }
 
+    const demoDecision = await decideDemoRouteMutation({
+      organizationId: orgId,
+      category: "lesson_management",
+    });
+    if (!demoDecision.allowed) {
+      return NextResponse.json(
+        { error: demoDecision.message, code: demoDecision.reason },
+        { status: demoDecision.status },
+      );
+    }
+
     const { id } = params;
 
     // Permission check (must exist + ownership if instructor)
@@ -247,6 +259,17 @@ export const DELETE = withErrorHandling(
     const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
     if (!tenantGuard.allowed) {
       return errorResponse(tenantGuard.error, tenantGuard.status);
+    }
+
+    const demoDecision = await decideDemoRouteMutation({
+      organizationId: orgId,
+      category: "lesson_management",
+    });
+    if (!demoDecision.allowed) {
+      return NextResponse.json(
+        { error: demoDecision.message, code: demoDecision.reason },
+        { status: demoDecision.status },
+      );
     }
 
     const { id } = params;
