@@ -15,6 +15,8 @@ Practical path for shipping DAT safely. Details live in linked ops docs—do **n
 | Env vars by surface                     | [environment-variables.md](./environment-variables.md)                                               |
 | Vercel project settings                 | [vercel-deployment.md](./vercel-deployment.md)                                                       |
 | Prisma + Supabase migrations            | [supabase-prisma-migrations.md](./supabase-prisma-migrations.md)                                     |
+| Supabase Data API + RLS policy          | [supabase-data-api-policy.md](./supabase-data-api-policy.md)                                         |
+| Supabase Data API grants audit          | [supabase-data-api-grants.md](./supabase-data-api-grants.md)                                         |
 | Local GitLab Runner (optional)          | [gitlab-runner-docker.md](./gitlab-runner-docker.md)                                                 |
 
 ---
@@ -26,6 +28,7 @@ Practical path for shipping DAT safely. Details live in linked ops docs—do **n
 - **GitLab pipeline green:** pipeline for that commit succeeded (see `.gitlab-ci.yml` and optional [gitlab-runner-docker.md](./gitlab-runner-docker.md) if you use a project runner).
 - **Vercel env configured:** production (and preview, if used) variables set per [vercel-deployment.md](./vercel-deployment.md) and [environment-variables.md](./environment-variables.md)—never from git.
 - **Migrations reviewed and committed:** `prisma/migrations` matches what you expect to apply; see [supabase-prisma-migrations.md](./supabase-prisma-migrations.md).
+- **Supabase Security Advisor:** no **critical** “RLS disabled” findings for internal `public` tables that DAT intentionally hardens (see [supabase-data-api-policy.md](./supabase-data-api-policy.md)); do **not** add blanket permissive `anon` / `authenticated` policies on internal tables by default.
 - **Public demo (if applicable):** before sharing broad demo access, confirm the demo tenant is marked `Organization.isDemo = true`, run **`pnpm demo:readiness`** (read-only; see [public-demo-seed-reset.md](./public-demo-seed-reset.md)), and ensure refresh/reset follows that runbook (no public reset endpoint; no privileged credentials in git).
 
 ---

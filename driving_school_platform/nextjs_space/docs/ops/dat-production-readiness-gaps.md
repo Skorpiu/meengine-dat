@@ -12,7 +12,7 @@ Do **not** put credentials, customer emails, URLs with embedded secrets, or bill
 - **Hosting** — Vercel production deploy serving the app; **`GET /api/health`** OK; optional `pnpm smoke:health` pattern documented.
 - **Split hosts** — tenant-facing app vs platform operator host model documented ([production-host-split.md](./production-host-split.md)); smoke baseline reflects successful login and core routes for admin / instructor / student / **PLATFORM_ADMIN** on the intended origins ([production-smoke-baseline.md](./production-smoke-baseline.md)).
 - **Demo / tenant isolation (code)** — `Organization.isDemo`, P0 destructive guards, and control-plane tenant guards (settings, feature flags, licensing writes, user create/update) — see [public-demo-policy.md](./public-demo-policy.md); **demo environment, separated DB, destructive reset, and safe demo credential distribution** are still open — initial runbook: [public-demo-seed-reset.md](./public-demo-seed-reset.md), dry-run script `pnpm demo:reset:dry-run`.
-- **Platform surface** — treat as a **separate operator product** over time; **do not** expand Platform UI/API for DAT’s public portfolio story in ad-hoc batches without product intent.
+- **Supabase RLS (internal `public` tables)** — Security Advisor–flagged tables `billing_events`, `entitlement_grants`, and `organization_domains` have **RLS enabled** without permissive `anon`/`authenticated` policies (migration + policy: [supabase-data-api-policy.md](./supabase-data-api-policy.md)). **Future:** optional hardening such as removing `public` from exposed Data API schemas or a dedicated `api` schema if PostgREST is adopted.
 
 ---
 
@@ -37,12 +37,13 @@ Do **not** put credentials, customer emails, URLs with embedded secrets, or bill
 
 ### P2 — later polish
 
-| Gap                        | Why it matters                                                                                                                                                                                              | Direction                                                                            |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| **Homepage / positioning** | Landing (`/`) is product marketing + i18n; it does not spell out “demo vs production” or data-safety expectations.                                                                                          | Short, honest **demo mode** or **portfolio** strip if you open the app to strangers. |
-| **Login UX**               | `/auth/login` is functional (credentials, role redirect); little **guided** copy for “request access” vs self-serve demo.                                                                                   | Copy and links only—no i18n expansion required in one batch.                         |
-| **Session affordances**    | Tenant app uses **Navbar** sign-out; **Platform** surface historically had a thinner chrome—confirm operators can **end session** without confusion ([smoke-test-checklist.md](./smoke-test-checklist.md)). | Small UX consistency passes.                                                         |
-| **Error / empty states**   | Smoke confirms “no white screen”; not exhaustive for every forbidden path.                                                                                                                                  | Targeted UX for **403/404** on high-traffic routes.                                  |
+| Gap                           | Why it matters                                                                                                                                                                                              | Direction                                                                                                                                                                                    |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Homepage / positioning**    | Landing (`/`) is product marketing + i18n; it does not spell out “demo vs production” or data-safety expectations.                                                                                          | Short, honest **demo mode** or **portfolio** strip if you open the app to strangers.                                                                                                         |
+| **Login UX**                  | `/auth/login` is functional (credentials, role redirect); little **guided** copy for “request access” vs self-serve demo.                                                                                   | Copy and links only—no i18n expansion required in one batch.                                                                                                                                 |
+| **Session affordances**       | Tenant app uses **Navbar** sign-out; **Platform** surface historically had a thinner chrome—confirm operators can **end session** without confusion ([smoke-test-checklist.md](./smoke-test-checklist.md)). | Small UX consistency passes.                                                                                                                                                                 |
+| **Error / empty states**      | Smoke confirms “no white screen”; not exhaustive for every forbidden path.                                                                                                                                  | Targeted UX for **403/404** on high-traffic routes.                                                                                                                                          |
+| **Supabase Data API surface** | If the project later exposes more of `public` to PostgREST, RLS and grants must stay least-privilege; today’s app path is Prisma-only.                                                                      | Prefer keeping internal tables out of exposed schemas; follow [supabase-data-api-policy.md](./supabase-data-api-policy.md) and [supabase-data-api-grants.md](./supabase-data-api-grants.md). |
 
 ---
 
@@ -58,6 +59,7 @@ Do **not** put credentials, customer emails, URLs with embedded secrets, or bill
 
 ## Related
 
+- [supabase-data-api-policy.md](./supabase-data-api-policy.md) — Supabase Data API posture, RLS on internal tables.
 - [public-demo-seed-reset.md](./public-demo-seed-reset.md) — demo personas (no passwords in git), reset strategy, minimum safe scope, dry-run script.
 - [public-demo-policy.md](./public-demo-policy.md) — public demo data, credentials, and read-mostly expectations.
 - [production-smoke-baseline.md](./production-smoke-baseline.md) — what already passed once.

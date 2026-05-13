@@ -1,6 +1,6 @@
 # Supabase Data API and `public` grants (DAT)
 
-Operational policy and audit notes for **Supabase’s Data API** (PostgREST under `/rest/v1/`, GraphQL under `/graphql/v1/`, and client access via keys such as the **anon** or **service_role** JWT). This complements **[supabase-prisma-migrations.md](./supabase-prisma-migrations.md)** (Prisma + Postgres URLs) and does **not** replace it.
+Operational policy and audit notes for **Supabase’s Data API** (PostgREST under `/rest/v1/`, GraphQL under `/graphql/v1/`, and client access via keys such as the **anon** or **service_role** JWT). This complements **[supabase-prisma-migrations.md](./supabase-prisma-migrations.md)** (Prisma + Postgres URLs), **[supabase-data-api-policy.md](./supabase-data-api-policy.md)** (RLS + consolidated Data API posture), and does **not** replace them.
 
 Supabase has announced that, on a defined timeline, **new tables in `public` will not be exposed to the Data API by default** without explicit grants. DAT operators should assume that future Supabase defaults may require deliberate SQL if anything ever reads app tables through the Data API.
 
@@ -48,6 +48,7 @@ Prisma-created tables used by the Next.js app should **not** automatically be gr
 
 ## Related docs
 
+- **[supabase-data-api-policy.md](./supabase-data-api-policy.md)** — RLS on internal tables, no default anon/authenticated policies, future schema posture.
 - **[environment-variables.md](./environment-variables.md)** — Supabase-related env vars and secret handling.
 - **[supabase-prisma-migrations.md](./supabase-prisma-migrations.md)** — pooled vs direct URLs, `prisma migrate deploy`, deploy checklist.
 - **[deployment-readiness.md](./deployment-readiness.md)** — pre-deploy checks and health smoke.
