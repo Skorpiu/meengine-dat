@@ -4,6 +4,8 @@ Safe, **intentional** database migration practices for deployments using **Prism
 
 Do **not** paste real `DATABASE_URL`, `DIRECT_URL`, or Supabase credentials into tickets, chat, or git. Configure secrets in **Supabase**, **Vercel**, **GitLab CI variables**, or local `.env.local` only.
 
+For **Supabase Data API** exposure of `public` tables (PostgREST / future `supabase-js` usage) and explicit **GRANT** / **RLS** policy, see **[supabase-data-api-grants.md](./supabase-data-api-grants.md)**. DAT’s default is Prisma + Postgres URLs, not the Data API, for application data.
+
 **Prisma 7** upgrades and migration-format changes are **out of scope** for this project baseline.
 
 ---
@@ -78,3 +80,4 @@ Use a **non-production** database URL when experimenting. Ensure `DATABASE_URL` 
 - [deployment-readiness.md](./deployment-readiness.md) — `pnpm check`, health endpoint, high-level migration note.
 - [vercel-deployment.md](./vercel-deployment.md) — Vercel build env and Prisma cautions.
 - [environment-variables.md](./environment-variables.md) — `DATABASE_URL` / `DIRECT_URL` and secret handling.
+- [supabase-data-api-grants.md](./supabase-data-api-grants.md) — Data API grants / RLS policy; audit that migrations do not assume PostgREST access.
