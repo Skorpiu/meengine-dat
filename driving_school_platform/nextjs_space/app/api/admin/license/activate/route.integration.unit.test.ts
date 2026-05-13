@@ -2,14 +2,18 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const h = vi.hoisted(() => {
   const findUniqueMock = vi.fn();
+  const organizationFindUniqueMock = vi.fn();
 
   const prismaMock = {
     user: {
       findUnique: findUniqueMock,
     },
+    organization: {
+      findUnique: organizationFindUniqueMock,
+    },
   };
 
-  return { prismaMock, findUniqueMock };
+  return { prismaMock, findUniqueMock, organizationFindUniqueMock };
 });
 
 vi.mock("@/lib/db", () => ({
@@ -67,6 +71,7 @@ beforeEach(() => {
     organizationId: "orgA",
     organization: { name: "Org A", subscriptionTier: "PREMIUM" },
   });
+  h.organizationFindUniqueMock.mockResolvedValue({ isDemo: false });
 });
 
 describe("Admin License Activate API (contracts)", () => {

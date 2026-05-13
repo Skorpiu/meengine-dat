@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const h = vi.hoisted(() => {
   const findUniqueMock = vi.fn();
+  const organizationFindUniqueMock = vi.fn();
   const orgFeatureFindManyMock = vi.fn();
   const orgFeatureUpsertMock = vi.fn();
   const grantFindManyMock = vi.fn();
@@ -9,6 +10,9 @@ const h = vi.hoisted(() => {
   const prismaMock = {
     user: {
       findUnique: findUniqueMock,
+    },
+    organization: {
+      findUnique: organizationFindUniqueMock,
     },
     organizationFeature: {
       findMany: orgFeatureFindManyMock,
@@ -22,6 +26,7 @@ const h = vi.hoisted(() => {
   return {
     prismaMock,
     findUniqueMock,
+    organizationFindUniqueMock,
     orgFeatureFindManyMock,
     orgFeatureUpsertMock,
     grantFindManyMock,
@@ -78,6 +83,7 @@ beforeEach(() => {
   h.orgFeatureFindManyMock.mockResolvedValue([]);
   h.grantFindManyMock.mockResolvedValue([]);
   h.orgFeatureUpsertMock.mockResolvedValue({});
+  h.organizationFindUniqueMock.mockResolvedValue({ isDemo: false });
 });
 
 describe("Admin License Features API (contracts)", () => {

@@ -4,8 +4,10 @@ const h = vi.hoisted(() => {
   const findManyMock = vi.fn();
   const findFirstMock = vi.fn();
   const createMock = vi.fn();
+  const organizationFindUniqueMock = vi.fn();
 
   const prismaMock = {
+    organization: { findUnique: organizationFindUniqueMock },
     featureFlag: {
       findMany: findManyMock,
       findFirst: findFirstMock,
@@ -13,7 +15,13 @@ const h = vi.hoisted(() => {
     },
   };
 
-  return { prismaMock, findManyMock, findFirstMock, createMock };
+  return {
+    prismaMock,
+    findManyMock,
+    findFirstMock,
+    createMock,
+    organizationFindUniqueMock,
+  };
 });
 
 vi.mock("@/lib/db", () => ({
@@ -58,6 +66,7 @@ function req(method: string, url: string, payload?: any): Request {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  h.organizationFindUniqueMock.mockResolvedValue({ isDemo: false });
 });
 
 describe("Admin Feature Flags API (tenant scoping)", () => {
