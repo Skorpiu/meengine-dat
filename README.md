@@ -58,6 +58,7 @@ Infrastructure
 - Post-deploy / demo manual smoke tests — [driving_school_platform/nextjs_space/docs/ops/smoke-test-checklist.md](./driving_school_platform/nextjs_space/docs/ops/smoke-test-checklist.md)
 - First Vercel deploy smoke (ordered minimal pass) — [driving_school_platform/nextjs_space/docs/ops/first-deploy-smoke.md](./driving_school_platform/nextjs_space/docs/ops/first-deploy-smoke.md)
 - Production smoke baseline (first hosted validation summary, no secrets) — [driving_school_platform/nextjs_space/docs/ops/production-smoke-baseline.md](./driving_school_platform/nextjs_space/docs/ops/production-smoke-baseline.md)
+- Public demo / portfolio readiness gaps (P0–P2 audit) — [driving_school_platform/nextjs_space/docs/ops/dat-production-readiness-gaps.md](./driving_school_platform/nextjs_space/docs/ops/dat-production-readiness-gaps.md)
 - Cloudflare DNS
 
 CI/CD

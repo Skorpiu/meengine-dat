@@ -2,16 +2,17 @@
 
 Practical path for shipping DAT safely. Details live in linked ops docs—do **not** commit secrets, real database URLs, Supabase keys, or runner tokens.
 
-| Topic                          | Doc                                                              |
-| ------------------------------ | ---------------------------------------------------------------- |
-| Local gate, health JSON        | [deployment-readiness.md](./deployment-readiness.md)             |
-| Manual smoke (post-deploy)     | [smoke-test-checklist.md](./smoke-test-checklist.md)             |
-| First hosted deploy smoke      | [first-deploy-smoke.md](./first-deploy-smoke.md)                 |
-| Production smoke baseline note | [production-smoke-baseline.md](./production-smoke-baseline.md)   |
-| Env vars by surface            | [environment-variables.md](./environment-variables.md)           |
-| Vercel project settings        | [vercel-deployment.md](./vercel-deployment.md)                   |
-| Prisma + Supabase migrations   | [supabase-prisma-migrations.md](./supabase-prisma-migrations.md) |
-| Local GitLab Runner (optional) | [gitlab-runner-docker.md](./gitlab-runner-docker.md)             |
+| Topic                          | Doc                                                                    |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| Local gate, health JSON        | [deployment-readiness.md](./deployment-readiness.md)                   |
+| Manual smoke (post-deploy)     | [smoke-test-checklist.md](./smoke-test-checklist.md)                   |
+| First hosted deploy smoke      | [first-deploy-smoke.md](./first-deploy-smoke.md)                       |
+| Production smoke baseline note | [production-smoke-baseline.md](./production-smoke-baseline.md)         |
+| Public demo / portfolio gaps   | [dat-production-readiness-gaps.md](./dat-production-readiness-gaps.md) |
+| Env vars by surface            | [environment-variables.md](./environment-variables.md)                 |
+| Vercel project settings        | [vercel-deployment.md](./vercel-deployment.md)                         |
+| Prisma + Supabase migrations   | [supabase-prisma-migrations.md](./supabase-prisma-migrations.md)       |
+| Local GitLab Runner (optional) | [gitlab-runner-docker.md](./gitlab-runner-docker.md)                   |
 
 ---
 
@@ -72,4 +73,4 @@ The following are intentionally **not** part of minimal release validation for D
 - **Billing portal** / billing management UI
 - **i18n** (internationalization)
 
-See also **Not integrated in this baseline** in [deployment-readiness.md](./deployment-readiness.md).
+See also **Not integrated in this baseline** in [deployment-readiness.md](./deployment-readiness.md). For **public demo / portfolio** gaps after smoke (data isolation, credential policy, messaging), see [dat-production-readiness-gaps.md](./dat-production-readiness-gaps.md).
