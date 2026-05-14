@@ -43,6 +43,31 @@ For a **controlled** walkthrough where you want to show **one-off creates** with
 
 ---
 
+## Reset demo sandbox after a meeting
+
+After a **controlled** session with `DEMO_WRITE_SANDBOX_ENABLED=true`, operators can clear **lessons and vehicles** for the demo org with a **local script** (no public HTTP endpoint, no scheduler in this batch).
+
+**Dry-run** (prints counts only; requires `DATABASE_URL` and `DEMO_ORGANIZATION_ID`):
+
+```bash
+DEMO_ORGANIZATION_ID=<demo-org-id> pnpm demo:sandbox:reset
+```
+
+**Apply** (requires both `--apply` and `DEMO_SANDBOX_RESET_APPLY=true`):
+
+```bash
+DEMO_ORGANIZATION_ID=<demo-org-id> DEMO_SANDBOX_RESET_APPLY=true pnpm demo:sandbox:reset -- --apply
+```
+
+**Notes**
+
+- Run from `driving_school_platform/nextjs_space` (or use `pnpm -C driving_school_platform/nextjs_space …`).
+- Does **not** remove demo personas, users, `OrganizationDomain`, `OrganizationFeature`, `EntitlementGrant`, settings, feature flags, licensing keys, or billing tables.
+- Because there is **no** `createdByDemoSandbox` marker yet, the script deletes **all** lessons and **all** vehicles scoped to that demo org — seed data must be **re-runnable** or kept minimal until a finer-grained follow-up exists.
+- After apply, run **`pnpm demo:client-ready`** (read-only smoke) before the next external demo.
+
+---
+
 ## Domains
 
 | Host                       | Role                                                                                                                                                                                    |

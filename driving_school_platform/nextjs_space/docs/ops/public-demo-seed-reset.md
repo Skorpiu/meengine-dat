@@ -55,11 +55,21 @@ When a real reset is implemented (future batch—not this document’s script al
 
 Future seed/reset work should be able to prepare a **full showcase** demo org (operator-set `OrganizationFeature` / `EntitlementGrant` per [public-demo-feature-showcase.md](./public-demo-feature-showcase.md)) **without** embedding credentials in git—same private distribution rules as today. When that automation lands, it should **call or stay aligned** with the operator showcase configuration flow (`pnpm demo:showcase:configure` — see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md#configuring-full-showcase-features)) so feature rows stay **operator-controlled**, not demo-user-controlled.
 
-Dry-run tooling today: see `scripts/reset-demo-organization.ts` and `pnpm demo:reset:dry-run` in `package.json`.
+Dry-run tooling today: see `scripts/reset-demo-organization.ts` and `pnpm demo:reset:dry-run` in `package.json`. For clearing **sandbox lessons/vehicles** on a demo org after a meeting, see `scripts/reset-demo-sandbox.ts` and **`pnpm demo:sandbox:reset`** ([client-demo-runbook.md](./client-demo-runbook.md#reset-demo-sandbox-after-a-meeting)).
 
 **Obsolete demo user rows (transitional):** to drop a **small, explicit** list of old persona emails (e.g. temporary Gmail) from a **demo** org after migrating to canonical `@meengine.io` accounts, operators may use **`pnpm demo:personas:cleanup`** per [client-demo-runbook.md](./client-demo-runbook.md#cleanup-old-demo-personas). That is a **targeted** cleanup only—it does **not** replace a future full destructive reset of the demo tenant.
 
 **Controlled demo write sandbox:** rows created when `DEMO_WRITE_SANDBOX_ENABLED=true` (see [client-demo-runbook.md](./client-demo-runbook.md#controlled-demo-write-sandbox)) should eventually be removed by the same **scoped demo-org reset** flow once implemented; until then, operators should assume seed plus sandbox creates can fill quotas without a public reset endpoint.
+
+### Operational sandbox reset (initial)
+
+**`pnpm demo:sandbox:reset`** (`scripts/reset-demo-sandbox.ts`) is an **operator-only** script: it deletes **lessons** and **vehicles** for the org identified by `DEMO_ORGANIZATION_ID` when that org is marked **`isDemo`**. It is **dry-run by default**; apply requires **`--apply`** and **`DEMO_SANDBOX_RESET_APPLY=true`**. It does **not** remove personas, domains, features, entitlements, or billing configuration. Because there is still **no** `createdByDemoSandbox` marker, it currently removes **all** lessons and vehicles for that demo org (including seed rows) — treat seed as **re-creatable** or document a follow-up.
+
+**Follow-up (not this batch)**
+
+- **Scheduled** reset (e.g. 24h) for demo hosts.
+- **`createdByDemoSandbox`** (or equivalent) plus **baseline seed** so only sandbox-created rows are deleted.
+- **Separate demo database** for strongest isolation from production tenants.
 
 ---
 
