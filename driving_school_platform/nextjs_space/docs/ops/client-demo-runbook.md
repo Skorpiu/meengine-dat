@@ -16,6 +16,7 @@ Use this runbook when you need to **prepare**, **validate**, and **execute** a l
 - **Basic / Premium / Full** tier variants remain **future** work (separate orgs or domains per tier, stronger isolation, scripted tours)—see [public-portfolio-access.md](./public-portfolio-access.md#recommended-future-demo-structure).
 - **Demo users do not** manage licensing or feature rows; **operators** prepare `OrganizationFeature` (and related policy) via scripts—see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md#configuring-full-showcase-features).
 - Treat every client demo as **operator-prepared**: fictional data, private credentials, read-mostly posture with demo guards.
+- **Do not use public registration during a demo:** `/auth/register` may still render, but **`POST /api/signup` rejects organizations marked `isDemo`** (`403`, `code: demo_signup_disabled`). Walkthroughs should use **configured private demo personas** only — [Configure private demo personas](#configure-private-demo-personas).
 
 ---
 

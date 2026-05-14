@@ -238,12 +238,17 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Registration successful, redirect to login with success message
         router.push(
-          `/auth/login?message=${encodeURIComponent("Registration successful! Please check your email for verification instructions.")}`,
+          `/auth/login?message=${encodeURIComponent("Registration successful! You can sign in with your email and password.")}`,
         );
       } else {
-        setError(data.error || "Registration failed");
+        if (data.code === "demo_signup_disabled") {
+          setError(
+            "Registration is disabled on the public demo. Use provided demo credentials.",
+          );
+        } else {
+          setError(data.error || "Registration failed");
+        }
       }
     } catch (error) {
       setError("An unexpected error occurred. Please try again.");
