@@ -61,11 +61,49 @@ Use these **labels** in briefings and UI wording—**do not** put real emails or
 
 ---
 
+## Vercel and DNS setup for demo.meengine.io
+
+Traffic routing and TLS are controlled **outside** the database. Tenant resolution in the app uses **`OrganizationDomain.host`** in Postgres (e.g. `demo.meengine.io`). You need **both**: the hostname on **Vercel** (so the deployment accepts HTTPS for that host) **and** a matching row in **`organization_domains`** (so the app maps the host to the demo org—typically via `pnpm demo:org:bootstrap`).
+
+### Vercel
+
+1. Open the DAT **Vercel project** → **Settings** → **Domains**.
+2. Add **`demo.meengine.io`** and follow Vercel’s instructions until the domain shows as configured for this project.
+3. Copy the **CNAME target** Vercel shows for `demo` (or the exact record they require). The target is project-specific.
+
+### Cloudflare (DNS)
+
+Create a DNS record for the demo host (apex zone `meengine.io`, hostname `demo`):
+
+| Field            | Value                                                                                        |
+| ---------------- | -------------------------------------------------------------------------------------------- |
+| **Type**         | `CNAME`                                                                                      |
+| **Name**         | `demo`                                                                                       |
+| **Target**       | Value shown by Vercel for this project                                                       |
+| **Proxy status** | **DNS only** (grey cloud) during first verification so Vercel can validate ownership cleanly |
+| **TTL**          | Auto                                                                                         |
+
+After DNS propagates, return to Vercel: the domain should show **valid** configuration and **SSL** should be issued for `demo.meengine.io`.
+
+### Database (`OrganizationDomain`)
+
+Adding the domain in Vercel does **not** create the tenant mapping. The database still needs **`OrganizationDomain.host = demo.meengine.io`** (and the correct `organizationId`). Use **`pnpm demo:org:bootstrap`** (dry-run then apply) with `DEMO_ORGANIZATION_DOMAIN=demo.meengine.io` as described in [Commands](#commands).
+
+### Deployment choices
+
+- **Do not** point `demo.meengine.io` at a different Vercel project unless you **intentionally** use a separated demo deployment and matching demo database—otherwise you risk SSL on one stack while `DATABASE_URL` and org data belong to another.
+- **Initial recommended setup:** same Vercel project as production tenant traffic, **separate demo organization** (demo tenant + `isDemo`), shared app build, dedicated `OrganizationDomain` for `demo.meengine.io`.
+- **Future stronger setup:** separate Vercel project **and** separate demo database for stricter isolation.
+
+More hosting context: [vercel-deployment.md](./vercel-deployment.md).
+
+---
+
 ## One-time setup checklist
 
 Complete on an **operator** machine with `DATABASE_URL` (and related env) available, **before** the meeting:
 
-- [ ] **DNS / Vercel** — `demo.meengine.io` resolves to the correct deployment; `OrganizationDomain.host` matches (see [vercel-deployment.md](./vercel-deployment.md)).
+- [ ] **DNS / Vercel** — follow [Vercel and DNS setup for demo.meengine.io](#vercel-and-dns-setup-for-demo-meengine-io); confirm `demo.meengine.io` resolves and TLS works; confirm `OrganizationDomain.host` matches after bootstrap.
 - [ ] **Bootstrap org** — dry-run then apply (`pnpm demo:org:bootstrap`); see [Commands](#commands).
 - [ ] **List demo orgs** — `pnpm demo:orgs:list`; copy the organization **id** (CUID).
 - [ ] **Configure showcase profile** — `pnpm demo:showcase:configure` with `DEMO_SHOWCASE_PROFILE=full-showcase` (dry-run then apply).
@@ -249,14 +287,18 @@ Unless the session is a **scoped technical review** with written agreement:
 
 ## Troubleshooting
 
-| Symptom                                      | Likely cause                                             | What to do                                                                                                                                                                                                                                                                                     |
-| -------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `demo:client-ready` reports FAIL on personas | Misconfigured users or wrong roles                       | Run `pnpm demo:personas:check`; fix with `pnpm demo:personas:configure` (dry-run then apply).                                                                                                                                                                                                  |
-| `demo.meengine.io` does not load             | DNS, Vercel project domain, or wrong deployment          | Fix DNS / Vercel; confirm `OrganizationDomain.host` matches.                                                                                                                                                                                                                                   |
-| Persona / login issue                        | User missing, wrong org, or password policy              | Run `pnpm demo:personas:check` with all three emails; re-run `pnpm demo:personas:configure` (dry-run then apply). Passwords must meet app rules (see validation / signup). If apply fails on role switch, the user may have blocking related rows—use a clean demo user or clear dependencies. |
-| Expected UI / module missing                 | Feature rows or profile mismatch                         | Run `pnpm demo:features:check`; re-run `pnpm demo:showcase:configure` (dry-run then apply) per [public-demo-feature-showcase.md](./public-demo-feature-showcase.md).                                                                                                                           |
-| Org id unknown                               | Bootstrap not applied or wrong DB                        | Run `pnpm demo:orgs:list`; confirm `DATABASE_URL` targets the intended environment.                                                                                                                                                                                                            |
-| Destructive action **not** blocked           | Wrong org (`isDemo` false), guard gap, or non-demo stack | **Stop** the demo narrative; verify `Organization.isDemo` and demo guards ([public-demo-policy.md](./public-demo-policy.md)); escalate internally—do not present as “safe demo” until resolved.                                                                                                |
+| Symptom                                      | Likely cause                                                                   | What to do                                                                                                                                                                                                                                                                                     |
+| -------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `demo:client-ready` reports FAIL on personas | Misconfigured users or wrong roles                                             | Run `pnpm demo:personas:check`; fix with `pnpm demo:personas:configure` (dry-run then apply).                                                                                                                                                                                                  |
+| Vercel domain not verified                   | Wrong or missing Cloudflare CNAME, or Cloudflare proxy still on (orange cloud) | In Cloudflare, set **DNS only** (grey cloud) for the `demo` CNAME, target exactly what Vercel shows; wait for propagation; re-check Vercel **Domains**.                                                                                                                                        |
+| SSL pending on `demo.meengine.io`            | DNS not fully propagated or CNAME target mismatch                              | Wait for propagation; verify CNAME **Name** (`demo`) and **Target**; remove orange-cloud proxy until Vercel validates.                                                                                                                                                                         |
+| `demo.meengine.io` loads wrong tenant        | Host resolves but DB mapping wrong                                             | Confirm `OrganizationDomain.host` for the demo org is exactly `demo.meengine.io` (bootstrap); ensure `DATABASE_URL` points at the DB you updated.                                                                                                                                              |
+| App error / blank but Vercel domain valid    | Build/runtime or env on that deployment                                        | Check the deployment logs and Vercel env vars for that environment; confirm the same project you configured in **Domains**.                                                                                                                                                                    |
+| `demo.meengine.io` does not load             | DNS, Vercel project domain, or wrong deployment                                | Fix DNS / Vercel; confirm `OrganizationDomain.host` matches.                                                                                                                                                                                                                                   |
+| Persona / login issue                        | User missing, wrong org, or password policy                                    | Run `pnpm demo:personas:check` with all three emails; re-run `pnpm demo:personas:configure` (dry-run then apply). Passwords must meet app rules (see validation / signup). If apply fails on role switch, the user may have blocking related rows—use a clean demo user or clear dependencies. |
+| Expected UI / module missing                 | Feature rows or profile mismatch                                               | Run `pnpm demo:features:check`; re-run `pnpm demo:showcase:configure` (dry-run then apply) per [public-demo-feature-showcase.md](./public-demo-feature-showcase.md).                                                                                                                           |
+| Org id unknown                               | Bootstrap not applied or wrong DB                                              | Run `pnpm demo:orgs:list`; confirm `DATABASE_URL` targets the intended environment.                                                                                                                                                                                                            |
+| Destructive action **not** blocked           | Wrong org (`isDemo` false), guard gap, or non-demo stack                       | **Stop** the demo narrative; verify `Organization.isDemo` and demo guards ([public-demo-policy.md](./public-demo-policy.md)); escalate internally—do not present as “safe demo” until resolved.                                                                                                |
 
 ---
 
