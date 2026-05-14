@@ -1,151 +1,92 @@
 # Driving Academy Tool (DAT)
 
-Driving Academy Tool (DAT) is a SaaS platform designed to help driving schools manage students, instructors, vehicles and lessons in a structured and scalable way.
+## What is DAT?
 
-The project is built with modern web technologies and focuses on maintainability, security and future multi-tenant capabilities.
+DAT is a **multi-tenant SaaS** for **driving schools**: one codebase and data model scoped by organization, with staff and student workflows (lessons, vehicles, users, and related admin surfaces). The product is engineered for **tenant isolation**, operational checks, and a **controlled** public demo story when the app is shown as portfolio—not as an anonymous “try everything” playground.
 
+Application code lives under **`driving_school_platform/nextjs_space`**.
 
-# Project Goals
+---
 
-The main objective of DAT is to provide a modular and scalable platform that can support multiple driving schools while keeping data isolated and secure.
+## Current focus
 
-Key design goals:
+- **Product / portfolio** positioning: honest scope, no credential leaks, no billing fiction.
+- **Safe demo**: demo organizations (`Organization.isDemo`), mutation guards, read-only readiness and feature-showcase checks.
+- **Tenant isolation** and clear separation between **tenant app** and **platform operator** surfaces (platform remains roadmap / operator-only, not the main public story).
+- **Operational readiness**: CI gate, health smoke, migrations, and Supabase posture documented in ops runbooks.
 
-- clean architecture
-- secure multi-tenant foundation
-- role-based access control
-- maintainable codebase
-- automated CI/CD pipelines
+---
 
+## Architecture snapshot
 
-# Core Features
+| Layer | Choice |
+| ----- | ------ |
+| App | **Next.js 14** (App Router), **TypeScript**, React |
+| Data | **Prisma 6**, **Supabase Postgres** (migrations in-repo) |
+| Auth | **NextAuth** (credentials flow; secrets never in git) |
+| Hosting | **Vercel**; DNS / edge via **Cloudflare** |
+| CI | **GitLab CI** |
 
-Current capabilities include:
+More detail: [docs/architecture.md](./docs/architecture.md). Ops entry points: [driving_school_platform/nextjs_space/docs/ops/deployment-readiness.md](./driving_school_platform/nextjs_space/docs/ops/deployment-readiness.md).
 
-- role-based access control  
-  - SUPER_ADMIN  
-  - INSTRUCTOR  
-  - STUDENT
+---
 
-- lesson management
-- authentication and session management
-- deterministic seed data for development and testing
-- CI/CD pipelines for build validation
+## Production / demo model
 
+- **`www.meengine.io`** — tenant-facing app host (schools and their users).
+- **`platform.meengine.io`** — platform / operator host (not marketed as a public self-serve product front today).
+- **Demo access is controlled**: credentials and links are shared **privately**, not embedded in README or public snippets. There are **no public privileged credentials** (no demo **PLATFORM_ADMIN**, **SUPER_ADMIN**, or similar).
+- **Public demo rules** follow [driving_school_platform/nextjs_space/docs/ops/public-demo-policy.md](./driving_school_platform/nextjs_space/docs/ops/public-demo-policy.md) and [driving_school_platform/nextjs_space/docs/ops/public-portfolio-access.md](./driving_school_platform/nextjs_space/docs/ops/public-portfolio-access.md).
 
-# Technology Stack
+---
 
-Frontend
-- Next.js 14 (App Router)
-- TypeScript
-- React
+## Safety notes
 
-Backend
-- Next.js server environment
-- Prisma ORM
+- **No PLATFORM_ADMIN demo credentials** in docs, issues, or marketing—and platform admin is **not** part of a public demo narrative.
+- **No real customer or pupil data** in anything presented as a public demo; use fictional, resettable data only.
+- **Destructive and high-privilege demo actions** are limited by demo guards; they are a safety net, not a substitute for good access hygiene.
+- **Billing**: real **checkout**, **billing portal**, and **live payment service provider** flows are **not** production-ready in this baseline; do not present them as live commerce.
 
-Database
-- PostgreSQL (Supabase) — Prisma migrations: [driving_school_platform/nextjs_space/docs/ops/supabase-prisma-migrations.md](./driving_school_platform/nextjs_space/docs/ops/supabase-prisma-migrations.md)
+---
 
-Authentication
-- NextAuth (Credentials provider)
+## Engineering posture
 
-Infrastructure
-- Vercel deployment — [driving_school_platform/nextjs_space/docs/ops/vercel-deployment.md](./driving_school_platform/nextjs_space/docs/ops/vercel-deployment.md)
-- Production tenant vs platform hostnames (smoke and DNS) — [driving_school_platform/nextjs_space/docs/ops/production-host-split.md](./driving_school_platform/nextjs_space/docs/ops/production-host-split.md)
-- PLATFORM_ADMIN provisioning (operators, script runbook) — [driving_school_platform/nextjs_space/docs/ops/platform-admin-runbook.md](./driving_school_platform/nextjs_space/docs/ops/platform-admin-runbook.md)
-- Release / deploy checklist — [driving_school_platform/nextjs_space/docs/ops/release-checklist.md](./driving_school_platform/nextjs_space/docs/ops/release-checklist.md)
-- Post-deploy / demo manual smoke tests — [driving_school_platform/nextjs_space/docs/ops/smoke-test-checklist.md](./driving_school_platform/nextjs_space/docs/ops/smoke-test-checklist.md)
-- First Vercel deploy smoke (ordered minimal pass) — [driving_school_platform/nextjs_space/docs/ops/first-deploy-smoke.md](./driving_school_platform/nextjs_space/docs/ops/first-deploy-smoke.md)
-- Production smoke baseline (first hosted validation summary, no secrets) — [driving_school_platform/nextjs_space/docs/ops/production-smoke-baseline.md](./driving_school_platform/nextjs_space/docs/ops/production-smoke-baseline.md)
-- Public demo / portfolio readiness gaps (P0–P2 audit) — [driving_school_platform/nextjs_space/docs/ops/dat-production-readiness-gaps.md](./driving_school_platform/nextjs_space/docs/ops/dat-production-readiness-gaps.md)
-- Cloudflare DNS
+- **CI check** — `pnpm -C driving_school_platform/nextjs_space check` is the local gate aligned with pipeline expectations.
+- **Smoke health** — `GET /api/health` and optional scripted checks; see ops smoke docs under `driving_school_platform/nextjs_space/docs/ops/`.
+- **Prisma migrations** — committed migrations and deliberate deploy to target DB; see [driving_school_platform/nextjs_space/docs/ops/supabase-prisma-migrations.md](./driving_school_platform/nextjs_space/docs/ops/supabase-prisma-migrations.md).
+- **Tenant / platform separation** — hostname and responsibility split documented in [driving_school_platform/nextjs_space/docs/ops/production-host-split.md](./driving_school_platform/nextjs_space/docs/ops/production-host-split.md).
+- **Demo hardening** — policy, seed/reset runbook, `demo:readiness`, `demo:features:check`, dry-run reset tooling (links in [release-checklist.md](./driving_school_platform/nextjs_space/docs/ops/release-checklist.md)).
+- **Supabase Data API policy** — RLS and internal-table posture: [driving_school_platform/nextjs_space/docs/ops/supabase-data-api-policy.md](./driving_school_platform/nextjs_space/docs/ops/supabase-data-api-policy.md).
 
-CI/CD
-- GitLab CI
-- Local GitLab Runner (Docker Desktop on Windows + Git Bash): [gitlab-runner-docker.md](./driving_school_platform/nextjs_space/docs/ops/gitlab-runner-docker.md)
+---
 
+## Development
 
-# Architecture
-
-High-level architecture documentation can be found in:  
-[./docs/architecture.md](./docs/architecture.md)
-
-The system follows a modular structure that separates:
-
-- application logic
-- data access
-- authentication
-- infrastructure concerns
-
-This allows the system to evolve towards a multi-tenant SaaS architecture.
-
-
-# Security
-
-Security is implemented through:
-
-- Supabase Row Level Security (RLS)
-- role-based permissions
-- controlled access to tenant data
-
-This ensures that each organisation can only access its own information.
-
-
-# Development
-
-To run the project locally:
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Environment variables are required and should be defined in `.env.local`.
-
-**New machine / second device:** after cloning or pulling, install dependencies and run the full gate from the repo root:
+From a fresh clone, install the app package and run the full gate:
 
 ```bash
 pnpm -C driving_school_platform/nextjs_space install
 pnpm -C driving_school_platform/nextjs_space check
 ```
 
-Copy `driving_school_platform/nextjs_space/.env.example` to `.env.local` and fill placeholders (never commit secrets). Full variable reference: [driving_school_platform/nextjs_space/docs/ops/environment-variables.md](./driving_school_platform/nextjs_space/docs/ops/environment-variables.md).
+Copy `driving_school_platform/nextjs_space/.env.example` to `.env.local` and fill values from your secret process—**never** commit secrets. Variable reference: [driving_school_platform/nextjs_space/docs/ops/environment-variables.md](./driving_school_platform/nextjs_space/docs/ops/environment-variables.md).
 
-**Git hooks:** Husky runs `lint-staged` from `driving_school_platform/nextjs_space` on commit. Run `pnpm install` in that directory (or from the repo root if your workspace layout installs that package) so `prettier` and `eslint` resolve from local `node_modules`—you should not need globally installed Prettier or ESLint.
+Husky runs `lint-staged` from `driving_school_platform/nextjs_space` on commit; install dependencies there so Prettier and ESLint resolve locally.
 
+---
 
-# CI/CD
+## Contributing
 
-CI pipelines validate:
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-- build integrity
-- lint rules
-- test execution
+---
 
-This ensures that contributions follow defined quality standards.
-
-
-# Contributing
-
-This project follows collaborative development practices inspired by **Inner Source**.
-
-Please read:
-[CONTRIBUTING.md](CONTRIBUTING.md)
-
-before submitting contributions.
-
-
-# Roadmap
-
-Planned improvements:
-
-- multi-organisation support
-- tenant routing by domain/subdomain
-- licensing model
-- expanded lesson management features
-
-
-# Author
+## Author
 
 Rui Eduardo Alexandre Sousa  
 Software Engineer  

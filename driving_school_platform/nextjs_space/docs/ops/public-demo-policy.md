@@ -2,6 +2,8 @@
 
 Operational expectations for any **public** or **portfolio** exposure of the driving-school app. This doc is **not** a substitute for access control in code; additional endpoint guards land in focused batches.
 
+**Portfolio / who may receive demo links:** [public-portfolio-access.md](./public-portfolio-access.md) (controlled access, no privileged credentials, preflight before sharing).
+
 ## Data and environment
 
 - A public demo must **not** use real customer or pupil data.
@@ -68,3 +70,7 @@ Guards reduce risk on marked demo tenants; they do **not** replace:
 - **Foundation:** `Organization.isDemo`, pure policy in `lib/demo/demo-policy.ts`, and route helper `lib/demo/demo-route-guard.ts`.
 - **Shipped batches:** P0 destructive routes, then control-plane tenant admin (settings, feature flags, licensing writes, user create/update) as listed above.
 - **Operations:** seed/reset runbook [public-demo-seed-reset.md](./public-demo-seed-reset.md); dry-run helper `pnpm demo:reset:dry-run`; read-only **`pnpm demo:readiness`** and **`pnpm demo:features:check`** (see runbook and [public-demo-feature-showcase.md](./public-demo-feature-showcase.md)) before sharing controlled demo access.
+
+## See also
+
+- [public-portfolio-access.md](./public-portfolio-access.md) — controlled portfolio access, pre-share steps, and demo tier guidance.
