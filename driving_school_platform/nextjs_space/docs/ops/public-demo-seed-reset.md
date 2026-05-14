@@ -57,6 +57,8 @@ Future seed/reset work should be able to prepare a **full showcase** demo org (o
 
 Dry-run tooling today: see `scripts/reset-demo-organization.ts` and `pnpm demo:reset:dry-run` in `package.json`.
 
+**Obsolete demo user rows (transitional):** to drop a **small, explicit** list of old persona emails (e.g. temporary Gmail) from a **demo** org after migrating to canonical `@meengine.io` accounts, operators may use **`pnpm demo:personas:cleanup`** per [client-demo-runbook.md](./client-demo-runbook.md#cleanup-old-demo-personas). That is a **targeted** cleanup only—it does **not** replace a future full destructive reset of the demo tenant.
+
 ---
 
 ## Readiness check

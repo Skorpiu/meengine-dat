@@ -240,7 +240,30 @@ pnpm demo:client-ready
 
 Omit the three `DEMO_*_EMAIL` variables to skip strict persona verification (you will see warnings if domains, features, or users look incomplete).
 
-On **Windows PowerShell**, set env vars per command or use `cmd /c` with the same variable assignments; the important part is **both** apply gates where documented (`DEMO_BOOTSTRAP_APPLY=true` **and** `--apply`, etc.).
+### Cleanup old demo personas
+
+Remove **explicitly listed** user emails from the **demo** organization only (for example temporary Gmail accounts after switching to `@meengine.io` aliases). The script **refuses** `@meengine.io` addresses and **PLATFORM_ADMIN** users. It does **not** remove `OrganizationFeature`, `EntitlementGrant`, or billing rows. If foreign keys still reference a user (lessons, audit logs, payments, etc.), the script **stops** with a clear message—resolve data manually first.
+
+Use only for addresses you **know** are obsolete. After apply, run **`pnpm demo:personas:check`** and **`pnpm demo:client-ready`**.
+
+**Dry-run:**
+
+```bash
+DEMO_ORGANIZATION_ID=<demo-org-id> \
+DEMO_PERSONA_CLEANUP_EMAILS=<old-email-1>,<old-email-2>,<old-email-3> \
+pnpm demo:personas:cleanup
+```
+
+**Apply** (requires both `DEMO_PERSONA_CLEANUP_APPLY=true` and `--apply`):
+
+```bash
+DEMO_ORGANIZATION_ID=<demo-org-id> \
+DEMO_PERSONA_CLEANUP_EMAILS=<old-email-1>,<old-email-2>,<old-email-3> \
+DEMO_PERSONA_CLEANUP_APPLY=true \
+pnpm demo:personas:cleanup -- --apply
+```
+
+On **Windows PowerShell**, set env vars per command or use `cmd /c` with the same variable assignments; for **apply**, both `DEMO_PERSONA_CLEANUP_APPLY=true` and `--apply` are required (same pattern as other demo scripts).
 
 ---
 
