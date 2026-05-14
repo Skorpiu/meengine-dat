@@ -37,6 +37,7 @@ More detail: [docs/architecture.md](./docs/architecture.md). Ops entry points: [
 - **`platform.meengine.io`** — platform / operator host (not marketed as a public self-serve product front today).
 - **Demo access is controlled**: credentials and links are shared **privately**, not embedded in README or public snippets. There are **no public privileged credentials** (no demo **PLATFORM_ADMIN**, **SUPER_ADMIN**, or similar).
 - **Public demo rules** follow [driving_school_platform/nextjs_space/docs/ops/public-demo-policy.md](./driving_school_platform/nextjs_space/docs/ops/public-demo-policy.md) and [driving_school_platform/nextjs_space/docs/ops/public-portfolio-access.md](./driving_school_platform/nextjs_space/docs/ops/public-portfolio-access.md).
+- **Client demo runbook** — [driving_school_platform/nextjs_space/docs/ops/client-demo-runbook.md](./driving_school_platform/nextjs_space/docs/ops/client-demo-runbook.md).
 
 ---
 

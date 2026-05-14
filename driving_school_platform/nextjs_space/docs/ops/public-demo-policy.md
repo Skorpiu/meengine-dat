@@ -4,6 +4,8 @@ Operational expectations for any **public** or **portfolio** exposure of the dri
 
 **Portfolio / who may receive demo links:** [public-portfolio-access.md](./public-portfolio-access.md) (controlled access, no privileged credentials, preflight before sharing).
 
+**Client / recruiter demo (one doc):** [client-demo-runbook.md](./client-demo-runbook.md).
+
 ## Data and environment
 
 - A public demo must **not** use real customer or pupil data.
