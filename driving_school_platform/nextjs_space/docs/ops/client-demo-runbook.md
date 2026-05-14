@@ -25,7 +25,10 @@ By default, demo organizations stay **read-mostly**: mutating admin APIs remain 
 
 For a **controlled** walkthrough where you want to show **one-off creates** without opening full admin or control-plane:
 
-1. Set **`DEMO_WRITE_SANDBOX_ENABLED=true`** in the deployment environment (case-insensitive, trimmed). **If unset or not exactly `true`, writes stay blocked** — same as today.
+1. Set **`DEMO_WRITE_SANDBOX_ENABLED=true`** (case-insensitive, trimmed). **If unset or not exactly `true`, writes stay blocked** — same as today.
+   - **Production / `demo.meengine.io` (Vercel):** configure **`DEMO_WRITE_SANDBOX_ENABLED`** under the Vercel project → **Settings** → **Environment Variables** → **Production**, set the value to `true`, then **redeploy** so the deployment serves the new env.
+   - **Local testing:** use `.env.local` in `driving_school_platform/nextjs_space` or an **inline** env for a single command (see [environment-variables.md](./environment-variables.md#demo-write-sandbox-enabled)).
+   - **Do not** rely on a developer’s local `.env` / `.env.local` for production; production must be set explicitly on Vercel (or your host’s env UI).
 2. With the flag on, a demo org may create **at most one row per category** (quota is enforced by counting existing rows; **seed data counts** — if the seed already includes e.g. a theory lesson, another theory create returns a stable quota error until a future reset clears data):
    - **One** theory lesson (`THEORY`)
    - **One** driving lesson (`DRIVING`)

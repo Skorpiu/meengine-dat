@@ -108,6 +108,26 @@ These are used by **scripts**, **Playwright**, or **tenant defaults** and are **
 | `CI`                                                                       | Set by GitLab; consumed by Playwright config.                                                                                                                                                                                                                                                                                                                                                                            |
 | `PLAYWRIGHT_BASE_URL`, `BASE_URL`                                          | Playwright base URL (`playwright.config.ts`).                                                                                                                                                                                                                                                                                                                                                                            |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `INSTRUCTOR_EMAIL`, `INSTRUCTOR_PASSWORD` | E2E tests that call `login()`.                                                                                                                                                                                                                                                                                                                                                                                           |
+| `DEMO_WRITE_SANDBOX_ENABLED`                                               | Optional. When exactly `true` (trimmed, case-insensitive), enables **limited** lesson/vehicle creates for **`isDemo` orgs only** — see subsection below and [client-demo-runbook.md](./client-demo-runbook.md#controlled-demo-write-sandbox).                                                                                                                                                                            |
+
+<a id="demo-write-sandbox-enabled"></a>
+
+### `DEMO_WRITE_SANDBOX_ENABLED` (optional — demo write sandbox)
+
+- **Optional.** Not part of `lib/env.ts` / `env-check`. If unset or not exactly `true` (case-insensitive, trimmed), the app keeps the default **read-mostly** behaviour for demo orgs.
+- **Default:** disabled unless explicitly set to `true`.
+- **Effect:** When `true`, enables the **controlled write sandbox** for organizations with `Organization.isDemo = true` only: limited creates (lessons / vehicles) by quota as documented in [client-demo-runbook.md](./client-demo-runbook.md#controlled-demo-write-sandbox).
+- **Use:** Turn on **intentionally** for controlled client/recruiter demos; do not treat it as a general “enable all writes” switch.
+
+**Where to set**
+
+- **Production** (e.g. `demo.meengine.io` on Vercel): Project → **Settings** → **Environment Variables** → **Production**; set `DEMO_WRITE_SANDBOX_ENABLED=true` and **redeploy** so serverless functions pick up the value.
+- **Local dev:** `.env.local` or an inline env prefix on the command (e.g. `DEMO_WRITE_SANDBOX_ENABLED=true pnpm dev`). Do **not** assume values from a developer’s `.env.local` exist in production.
+
+**Security / scope**
+
+- Does **not** affect non-demo organizations.
+- Does **not** unlock user management, settings, licensing, feature-flag writes, billing, cleanup, or platform onboarding — those remain blocked for demo orgs as in [public-demo-policy.md](./public-demo-policy.md).
 
 ---
 
