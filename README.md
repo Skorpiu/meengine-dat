@@ -69,6 +69,8 @@ pnpm install
 pnpm dev
 ```
 
+**GitLab CI** runs the same full gate as below (`check` job in `.gitlab-ci.yml`).
+
 From a fresh clone, install the app package and run the full gate:
 
 ```bash

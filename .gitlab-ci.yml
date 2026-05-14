@@ -5,8 +5,7 @@ default:
     - dat
 
 stages:
-  - test
-  - build
+  - check
 
 variables:
   # Prisma needs these env vars to exist for `prisma generate` during install.
@@ -26,20 +25,13 @@ cache:
 before_script:
   - corepack enable
   - corepack prepare pnpm@10.24.0 --activate
-  - cd driving_school_platform/nextjs_space
   - pnpm -v
   - export PNPM_HOME="$CI_PROJECT_DIR/.pnpm"
   - export PATH="$PNPM_HOME:$PATH"
-  - pnpm config set store-dir .pnpm-store
-  - pnpm install --frozen-lockfile
+  - pnpm config set store-dir "$CI_PROJECT_DIR/driving_school_platform/nextjs_space/.pnpm-store"
+  - pnpm -C driving_school_platform/nextjs_space install --frozen-lockfile
 
-unit_tests:
-  stage: test
+check:
+  stage: check
   script:
-    - pnpm run test:run
-
-build:
-  stage: build
-  script:
-    - pnpm run build
-  needs: ["unit_tests"]
+    - pnpm -C driving_school_platform/nextjs_space check
