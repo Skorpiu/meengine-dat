@@ -52,6 +52,8 @@ When a real reset is implemented (future batch—not this document’s script al
 3. **Environment** — Run destructive resets only in **demo** or **staging** environments, or under explicit operator control on production **only** if policy allows and backups exist.
 4. **Mechanism** — Prefer a **script or protected job** referenced in this runbook—not a **public HTTP endpoint** for reset.
 
+Future seed/reset work should be able to prepare a **full showcase** demo org (operator-set `OrganizationFeature` / `EntitlementGrant` per [public-demo-feature-showcase.md](./public-demo-feature-showcase.md)) **without** embedding credentials in git—same private distribution rules as today.
+
 Dry-run tooling today: see `scripts/reset-demo-organization.ts` and `pnpm demo:reset:dry-run` in `package.json`.
 
 ---
@@ -62,10 +64,13 @@ Before sharing **controlled** or **portfolio** demo access to a tenant:
 
 1. Set `DEMO_ORGANIZATION_ID` to the target organization CUID (same variable as the reset dry-run script).
 2. Run **`pnpm demo:readiness`** from `driving_school_platform/nextjs_space` (with `DATABASE_URL` available, e.g. via `.env.local`).
+3. Run **`pnpm demo:features:check`** for the same `DEMO_ORGANIZATION_ID` to verify operator-prepared feature rows and entitlement grant windows (read-only; see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md)).
 
 The readiness script is **read-only**: it does not modify the database. It prints **aggregate counts only** (no emails, password hashes, tokens, or connection strings). It **fails** if the organization is missing, is not marked `isDemo`, or has **PLATFORM_ADMIN** users tied to that organization (operator accounts must not be scoped to a public demo org).
 
-Use it as a **preflight** gate alongside [public-demo-policy.md](./public-demo-policy.md) and manual smoke checks.
+The feature showcase script is also **read-only**; it lists **feature keys and enabled flags** plus **grant window counts** only—no grant ids, no secrets.
+
+Use these as **preflight** gates alongside [public-demo-policy.md](./public-demo-policy.md) and manual smoke checks.
 
 ---
 
