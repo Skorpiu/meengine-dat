@@ -1,8 +1,15 @@
-* text=auto
-*.ts text eol=lf
-*.tsx text eol=lf
-*.js text eol=lf
-*.prisma text eol=lf
-*.tsbuildinfo
-# Keep husky hooks with LF (avoid Git Bash / Windows CRLF pain)
-driving_school_platform/nextjs_space/.husky/* text eol=lf
+* text=auto eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.zip binary
+
+*.tsbuildinfo -text
