@@ -34,6 +34,40 @@ When the product supports multiple demo experiences cleanly:
 
 ---
 
+## Preparing the first Full Showcase demo
+
+Use this flow when you need a **real, operator-prepared** demo tenant for a client or portfolio review (fictional data only; no public reset endpoint; no credentials in git).
+
+1. **DNS / hosting** — Point the public demo hostname (for example `demo.meengine.io`) at your Vercel project per [vercel-deployment.md](./vercel-deployment.md) and your DNS provider. Align preview and production hostnames with how tenant routing resolves `OrganizationDomain.host` in the app.
+
+2. **Bootstrap the demo organization (dry-run)** — From `driving_school_platform/nextjs_space`, with `DATABASE_URL` available (for example via `.env.local`):
+
+   ```bash
+   DEMO_ORGANIZATION_NAME="DAT Demo — Full Showcase" DEMO_ORGANIZATION_DOMAIN=demo.meengine.io pnpm demo:org:bootstrap
+   ```
+
+   Review the printed plan. The script is **dry-run by default**; it does not create users, change billing, or configure feature rows.
+
+3. **Apply bootstrap** — Only when the plan is correct, apply with **both** the env flag and the CLI flag:
+
+   ```bash
+   DEMO_ORGANIZATION_NAME="DAT Demo — Full Showcase" DEMO_ORGANIZATION_DOMAIN=demo.meengine.io DEMO_BOOTSTRAP_APPLY=true pnpm demo:org:bootstrap -- --apply
+   ```
+
+4. **List demo organizations (read-only)** — Confirm the tenant and copy the CUID without opening Supabase:
+
+   ```bash
+   pnpm demo:orgs:list
+   ```
+
+5. **Configure showcase features** — Use the id from the list output as `DEMO_ORGANIZATION_ID` with `pnpm demo:showcase:configure` (dry-run first, then apply per [public-demo-feature-showcase.md](./public-demo-feature-showcase.md#configuring-full-showcase-features)).
+
+6. **Preflight** — Run `pnpm demo:readiness` and `pnpm demo:features:check` with the same `DEMO_ORGANIZATION_ID` (see [public-demo-seed-reset.md](./public-demo-seed-reset.md#readiness-check) and [public-demo-feature-showcase.md](./public-demo-feature-showcase.md)).
+
+7. **Sign-in smoke** — Complete a **manual** login on `https://demo.meengine.io` (or your chosen host) using credentials from your **private** channel only; do not publish passwords or hashes.
+
+---
+
 ## Before sharing demo access
 
 1. Ensure **Full Showcase** `OrganizationFeature` keys are prepared **by an operator** when the story needs licensed UI (`pnpm demo:showcase:configure` — dry-run first; see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md#configuring-full-showcase-features)).

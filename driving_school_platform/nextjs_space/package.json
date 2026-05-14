@@ -27,6 +27,8 @@
     "demo:features:check": "tsx scripts/check-demo-feature-showcase.ts",
     "demo:showcase:configure": "tsx scripts/configure-demo-showcase.ts",
     "demo:reset:dry-run": "tsx scripts/reset-demo-organization.ts",
+    "demo:orgs:list": "tsx scripts/list-demo-organizations.ts",
+    "demo:org:bootstrap": "tsx scripts/bootstrap-demo-organization.ts",
     "predev": "pnpm -s env:check",
     "check": "pnpm -s lint && pnpm -s typecheck && pnpm -s test:run && pnpm -s build",
     "fix": "prettier --write . && eslint --fix .",
