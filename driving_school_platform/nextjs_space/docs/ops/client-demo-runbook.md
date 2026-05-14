@@ -71,6 +71,7 @@ Complete on an **operator** machine with `DATABASE_URL` (and related env) availa
 - [ ] **Configure showcase profile** — `pnpm demo:showcase:configure` with `DEMO_SHOWCASE_PROFILE=full-showcase` (dry-run then apply).
 - [ ] **Readiness** — `pnpm demo:readiness` passes for that org id ([public-demo-seed-reset.md](./public-demo-seed-reset.md#readiness-check)).
 - [ ] **Feature check** — `pnpm demo:features:check` passes ([public-demo-feature-showcase.md](./public-demo-feature-showcase.md)).
+- [ ] **Private demo personas** — dry-run then apply `pnpm demo:personas:configure`; then `pnpm demo:personas:check` with the same three emails ([Configure private demo personas](#configure-private-demo-personas)).
 - [ ] **Manual login** — each persona signs in on `https://demo.meengine.io` using **private** credentials.
 - [ ] **Destructive actions** — confirm blocked actions return safe errors (demo guards; see [public-demo-policy.md](./public-demo-policy.md#implemented-guards)).
 - [ ] **No privileged leaks** — confirm no **PLATFORM_ADMIN**, production DB URLs, or service keys appear in slides, screen shares, or shared notes.
@@ -145,6 +146,47 @@ DEMO_ORGANIZATION_ID=<demo-org-id> pnpm demo:features:check
 DEMO_ORGANIZATION_ID=<demo-org-id> pnpm demo:reset:dry-run
 ```
 
+### Configure private demo personas
+
+Create or update the three **private** demo users (Demo School Admin → internal `SUPER_ADMIN`, Instructor, Student) on the **demo** organization only. **Never** commit these environment values to git; prefer a temporary shell, a local ignored env file, or your secret manager. **Do not** paste credentials into README, docs tickets, or AI prompts. Share credentials **only** through private channels for the controlled demo session. Use **“Demo School Admin”** wording externally.
+
+**Dry-run** (no writes; passwords are never printed):
+
+```bash
+DEMO_ORGANIZATION_ID=<demo-org-id> \
+DEMO_SCHOOL_ADMIN_EMAIL=<private-demo-admin-email> \
+DEMO_SCHOOL_ADMIN_PASSWORD=<private-demo-admin-password> \
+DEMO_INSTRUCTOR_EMAIL=<private-demo-instructor-email> \
+DEMO_INSTRUCTOR_PASSWORD=<private-demo-instructor-password> \
+DEMO_STUDENT_EMAIL=<private-demo-student-email> \
+DEMO_STUDENT_PASSWORD=<private-demo-student-password> \
+pnpm demo:personas:configure
+```
+
+**Apply** (requires both `DEMO_PERSONAS_APPLY=true` and `--apply`):
+
+```bash
+DEMO_ORGANIZATION_ID=<demo-org-id> \
+DEMO_SCHOOL_ADMIN_EMAIL=<private-demo-admin-email> \
+DEMO_SCHOOL_ADMIN_PASSWORD=<private-demo-admin-password> \
+DEMO_INSTRUCTOR_EMAIL=<private-demo-instructor-email> \
+DEMO_INSTRUCTOR_PASSWORD=<private-demo-instructor-password> \
+DEMO_STUDENT_EMAIL=<private-demo-student-email> \
+DEMO_STUDENT_PASSWORD=<private-demo-student-password> \
+DEMO_PERSONAS_APPLY=true \
+pnpm demo:personas:configure -- --apply
+```
+
+**Persona check** (read-only; supply **all three** emails to enforce presence, or omit all three for role counts only):
+
+```bash
+DEMO_ORGANIZATION_ID=<demo-org-id> \
+DEMO_SCHOOL_ADMIN_EMAIL=<private-demo-admin-email> \
+DEMO_INSTRUCTOR_EMAIL=<private-demo-instructor-email> \
+DEMO_STUDENT_EMAIL=<private-demo-student-email> \
+pnpm demo:personas:check
+```
+
 On **Windows PowerShell**, set env vars per command or use `cmd /c` with the same variable assignments; the important part is **both** apply gates where documented (`DEMO_BOOTSTRAP_APPLY=true` **and** `--apply`, etc.).
 
 ---
@@ -191,13 +233,13 @@ Unless the session is a **scoped technical review** with written agreement:
 
 ## Troubleshooting
 
-| Symptom                            | Likely cause                                             | What to do                                                                                                                                                                                      |
-| ---------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `demo.meengine.io` does not load   | DNS, Vercel project domain, or wrong deployment          | Fix DNS / Vercel; confirm `OrganizationDomain.host` matches.                                                                                                                                    |
-| Login fails                        | Wrong host, wrong user, or credential typo               | Confirm user exists for **demo** org; re-issue creds privately.                                                                                                                                 |
-| Expected UI / module missing       | Feature rows or profile mismatch                         | Run `pnpm demo:features:check`; re-run `pnpm demo:showcase:configure` (dry-run then apply) per [public-demo-feature-showcase.md](./public-demo-feature-showcase.md).                            |
-| Org id unknown                     | Bootstrap not applied or wrong DB                        | Run `pnpm demo:orgs:list`; confirm `DATABASE_URL` targets the intended environment.                                                                                                             |
-| Destructive action **not** blocked | Wrong org (`isDemo` false), guard gap, or non-demo stack | **Stop** the demo narrative; verify `Organization.isDemo` and demo guards ([public-demo-policy.md](./public-demo-policy.md)); escalate internally—do not present as “safe demo” until resolved. |
+| Symptom                            | Likely cause                                             | What to do                                                                                                                                                                                                                                                                                     |
+| ---------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `demo.meengine.io` does not load   | DNS, Vercel project domain, or wrong deployment          | Fix DNS / Vercel; confirm `OrganizationDomain.host` matches.                                                                                                                                                                                                                                   |
+| Persona / login issue              | User missing, wrong org, or password policy              | Run `pnpm demo:personas:check` with all three emails; re-run `pnpm demo:personas:configure` (dry-run then apply). Passwords must meet app rules (see validation / signup). If apply fails on role switch, the user may have blocking related rows—use a clean demo user or clear dependencies. |
+| Expected UI / module missing       | Feature rows or profile mismatch                         | Run `pnpm demo:features:check`; re-run `pnpm demo:showcase:configure` (dry-run then apply) per [public-demo-feature-showcase.md](./public-demo-feature-showcase.md).                                                                                                                           |
+| Org id unknown                     | Bootstrap not applied or wrong DB                        | Run `pnpm demo:orgs:list`; confirm `DATABASE_URL` targets the intended environment.                                                                                                                                                                                                            |
+| Destructive action **not** blocked | Wrong org (`isDemo` false), guard gap, or non-demo stack | **Stop** the demo narrative; verify `Organization.isDemo` and demo guards ([public-demo-policy.md](./public-demo-policy.md)); escalate internally—do not present as “safe demo” until resolved.                                                                                                |
 
 ---
 

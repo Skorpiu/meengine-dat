@@ -16,6 +16,7 @@ For **seed personas, reset policy, dry-run reset validation, and read-only readi
 
 ## Credentials
 
+- **Demo personas** are **private operational accounts** for controlled sessions; credentials must **not** be documented in git, issues, or public prompts—prepare them with **`pnpm demo:personas:configure`** / **`pnpm demo:personas:check`** per [client-demo-runbook.md](./client-demo-runbook.md#configure-private-demo-personas).
 - **Never** publish **PLATFORM_ADMIN** credentials in README, marketing, tickets, or the product UI.
 - **Never** publish real **SUPER_ADMIN** (or other high-privilege) passwords; use a private secret process and rotation.
 
