@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { decideDemoRouteMutation } from "@/lib/demo/demo-route-guard";
+import { decideDemoVehicleCreate } from "@/lib/demo/demo-write-sandbox-route-guard";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
 import type { Prisma } from "@prisma/client";
 import { VehicleStatus } from "@prisma/client";
@@ -209,14 +210,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const demoDecision = await decideDemoRouteMutation({
+    const sandboxDecision = await decideDemoVehicleCreate({
       organizationId: orgId,
-      category: "vehicle_management",
     });
-    if (!demoDecision.allowed) {
+    if (!sandboxDecision.allowed) {
       return NextResponse.json(
-        { error: demoDecision.message, code: demoDecision.reason },
-        { status: demoDecision.status },
+        { error: sandboxDecision.message, code: sandboxDecision.code },
+        { status: sandboxDecision.status },
       );
     }
 

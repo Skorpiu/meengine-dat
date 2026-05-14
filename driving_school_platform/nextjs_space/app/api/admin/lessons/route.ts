@@ -28,7 +28,7 @@ import { lessonCreationSchema } from "@/lib/validation";
 import { startOfDay, addDays } from "date-fns";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
-import { decideDemoRouteMutation } from "@/lib/demo/demo-route-guard";
+import { decideDemoLessonCreate } from "@/lib/demo/demo-write-sandbox-route-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -280,19 +280,28 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return errorResponse(tenantGuard.error, tenantGuard.status);
   }
 
-  const demoDecision = await decideDemoRouteMutation({
+  const body = await request.json();
+
+  const rawLessonType =
+    typeof body?.lessonType === "string" ? body.lessonType : "";
+  let pendingCreates = 1;
+  if (rawLessonType === "EXAM" || rawLessonType === "THEORY_EXAM") {
+    const ids = body?.studentIds;
+    pendingCreates = Array.isArray(ids) ? ids.length : 0;
+  }
+
+  const sandboxDecision = await decideDemoLessonCreate({
     organizationId: orgId,
-    category: "lesson_management",
+    lessonType: rawLessonType,
+    pendingCreates,
   });
-  if (!demoDecision.allowed) {
+  if (!sandboxDecision.allowed) {
     return NextResponse.json(
-      { error: demoDecision.message, code: demoDecision.reason },
-      { status: demoDecision.status },
+      { error: sandboxDecision.message, code: sandboxDecision.code },
+      { status: sandboxDecision.status },
     );
   }
 
-  // Parse and validate request body
-  const body = await request.json();
   const validation = validateRequest(lessonCreationSchema, body);
 
   if (!validation.success) {

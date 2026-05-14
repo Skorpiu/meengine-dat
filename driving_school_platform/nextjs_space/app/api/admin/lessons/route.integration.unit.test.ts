@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // -----------------------------
 // Hoisted mocks (Vitest-safe)
@@ -8,13 +8,14 @@ const h = vi.hoisted(() => {
   const categoryFindFirstMock = vi.fn();
   const studentFindFirstMock = vi.fn();
   const lessonCreateMock = vi.fn();
+  const lessonCountMock = vi.fn();
   const organizationFindUniqueMock = vi.fn();
 
   const prismaMock = {
     instructor: { findFirst: instructorFindFirstMock },
     category: { findFirst: categoryFindFirstMock },
     student: { findFirst: studentFindFirstMock },
-    lesson: { create: lessonCreateMock },
+    lesson: { create: lessonCreateMock, count: lessonCountMock },
     organization: { findUnique: organizationFindUniqueMock },
   };
 
@@ -24,6 +25,7 @@ const h = vi.hoisted(() => {
     categoryFindFirstMock,
     studentFindFirstMock,
     lessonCreateMock,
+    lessonCountMock,
     organizationFindUniqueMock,
   };
 });
@@ -70,8 +72,10 @@ const UUID_D = "44444444-4444-4444-4444-444444444444";
 
 beforeEach(() => {
   vi.resetAllMocks();
+  delete process.env.DEMO_WRITE_SANDBOX_ENABLED;
 
   h.organizationFindUniqueMock.mockResolvedValue({ isDemo: false });
+  h.lessonCountMock.mockResolvedValue(0);
 
   h.instructorFindFirstMock.mockResolvedValue({
     id: "inst-db-1",
@@ -91,6 +95,10 @@ beforeEach(() => {
   h.lessonCreateMock.mockImplementation(async ({ data }: any) => {
     return { id: `lesson-${Math.random().toString(16).slice(2)}`, ...data };
   });
+});
+
+afterEach(() => {
+  delete process.env.DEMO_WRITE_SANDBOX_ENABLED;
 });
 
 describe("POST /api/admin/lessons (handler integration)", () => {
@@ -230,6 +238,83 @@ describe("POST /api/admin/lessons (handler integration)", () => {
     const body: any = await res.json();
 
     expect(body.error).toMatch(/Maximum/i);
+    expect(h.lessonCreateMock).not.toHaveBeenCalled();
+  });
+
+  it("demo org + sandbox disabled blocks POST with demo_restricted_action", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org-demo",
+    });
+    h.organizationFindUniqueMock.mockResolvedValue({ isDemo: true });
+
+    const payload = {
+      lessonType: "THEORY",
+      instructorId: UUID_A,
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
+    };
+
+    const res = await POST(reqJson(payload) as any);
+
+    expect(res.status).toBe(403);
+    const body: any = await res.json();
+    expect(body.code).toBe("demo_restricted_action");
+    expect(body.error).toBe(
+      "This action is restricted in the public demo environment.",
+    );
+    expect(h.lessonCreateMock).not.toHaveBeenCalled();
+  });
+
+  it("demo org + sandbox enabled + quota available allows THEORY create", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org-demo",
+    });
+    h.organizationFindUniqueMock.mockResolvedValue({ isDemo: true });
+    process.env.DEMO_WRITE_SANDBOX_ENABLED = "true";
+    h.lessonCountMock.mockResolvedValue(0);
+
+    const payload = {
+      lessonType: "THEORY",
+      instructorId: UUID_A,
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
+    };
+
+    const res = await POST(reqJson(payload) as any);
+
+    expect(res.status).toBe(201);
+    expect(h.lessonCreateMock).toHaveBeenCalled();
+  });
+
+  it("demo org + sandbox enabled + quota used returns demo_write_quota_exceeded", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org-demo",
+    });
+    h.organizationFindUniqueMock.mockResolvedValue({ isDemo: true });
+    process.env.DEMO_WRITE_SANDBOX_ENABLED = "true";
+    h.lessonCountMock.mockResolvedValue(1);
+
+    const payload = {
+      lessonType: "THEORY",
+      instructorId: UUID_A,
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
+    };
+
+    const res = await POST(reqJson(payload) as any);
+
+    expect(res.status).toBe(403);
+    const body: any = await res.json();
+    expect(body.code).toBe("demo_write_quota_exceeded");
     expect(h.lessonCreateMock).not.toHaveBeenCalled();
   });
 });
