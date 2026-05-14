@@ -4,6 +4,8 @@ Policy for presenting DAT as a **product / portfolio** asset: controlled access,
 
 This doc complements [public-demo-policy.md](./public-demo-policy.md) (data, guards, credentials). Read both before sharing any demo URL.
 
+For a **single end-to-end operator flow** (checklists, commands, meeting day), use **[client-demo-runbook.md](./client-demo-runbook.md)**.
+
 ---
 
 ## Public portfolio access policy
@@ -87,6 +89,7 @@ Use this flow when you need a **real, operator-prepared** demo tenant for a clie
 
 ## Related
 
+- [client-demo-runbook.md](./client-demo-runbook.md)
 - [public-demo-policy.md](./public-demo-policy.md)
 - [dat-production-readiness-gaps.md](./dat-production-readiness-gaps.md)
 - [release-checklist.md](./release-checklist.md)
