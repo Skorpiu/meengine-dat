@@ -57,6 +57,7 @@ More detail: [docs/architecture.md](./docs/architecture.md). Ops entry points: [
 - **Tenant / platform separation** — hostname and responsibility split documented in [driving_school_platform/nextjs_space/docs/ops/production-host-split.md](./driving_school_platform/nextjs_space/docs/ops/production-host-split.md).
 - **Demo hardening** — policy, seed/reset runbook, `demo:readiness`, `demo:features:check`, dry-run reset tooling (links in [release-checklist.md](./driving_school_platform/nextjs_space/docs/ops/release-checklist.md)).
 - **Supabase Data API policy** — RLS and internal-table posture: [driving_school_platform/nextjs_space/docs/ops/supabase-data-api-policy.md](./driving_school_platform/nextjs_space/docs/ops/supabase-data-api-policy.md).
+- **Engineering excellence audit** — initial DAT-specific review: [driving_school_platform/nextjs_space/docs/engineering/engineering-excellence-audit.md](./driving_school_platform/nextjs_space/docs/engineering/engineering-excellence-audit.md).
 
 ---
 
