@@ -25,6 +25,7 @@
     "smoke:health": "tsx scripts/smoke-health.ts",
     "demo:readiness": "tsx scripts/check-demo-readiness.ts",
     "demo:features:check": "tsx scripts/check-demo-feature-showcase.ts",
+    "demo:showcase:configure": "tsx scripts/configure-demo-showcase.ts",
     "demo:reset:dry-run": "tsx scripts/reset-demo-organization.ts",
     "predev": "pnpm -s env:check",
     "check": "pnpm -s lint && pnpm -s typecheck && pnpm -s test:run && pnpm -s build",

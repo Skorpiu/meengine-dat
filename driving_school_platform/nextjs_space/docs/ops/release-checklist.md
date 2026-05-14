@@ -2,24 +2,24 @@
 
 Practical path for shipping DAT safely. Details live in linked ops docs—do **not** commit secrets, real database URLs, Supabase keys, or runner tokens.
 
-| Topic                                   | Doc                                                                                                  |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Local gate, health JSON                 | [deployment-readiness.md](./deployment-readiness.md)                                                 |
-| Manual smoke (post-deploy)              | [smoke-test-checklist.md](./smoke-test-checklist.md)                                                 |
-| First hosted deploy smoke               | [first-deploy-smoke.md](./first-deploy-smoke.md)                                                     |
-| Production smoke baseline note          | [production-smoke-baseline.md](./production-smoke-baseline.md)                                       |
-| Public demo / portfolio gaps            | [dat-production-readiness-gaps.md](./dat-production-readiness-gaps.md)                               |
-| Public demo policy (credentials / data) | [public-demo-policy.md](./public-demo-policy.md)                                                     |
-| Public portfolio / demo access policy   | [public-portfolio-access.md](./public-portfolio-access.md)                                           |
-| Demo seed / reset runbook               | [public-demo-seed-reset.md](./public-demo-seed-reset.md)                                             |
-| Demo feature showcase (policy + check)  | [public-demo-feature-showcase.md](./public-demo-feature-showcase.md); `pnpm demo:features:check`     |
-| Demo readiness (read-only preflight)    | `pnpm demo:readiness` — see [public-demo-seed-reset.md](./public-demo-seed-reset.md#readiness-check) |
-| Env vars by surface                     | [environment-variables.md](./environment-variables.md)                                               |
-| Vercel project settings                 | [vercel-deployment.md](./vercel-deployment.md)                                                       |
-| Prisma + Supabase migrations            | [supabase-prisma-migrations.md](./supabase-prisma-migrations.md)                                     |
-| Supabase Data API + RLS policy          | [supabase-data-api-policy.md](./supabase-data-api-policy.md)                                         |
-| Supabase Data API grants audit          | [supabase-data-api-grants.md](./supabase-data-api-grants.md)                                         |
-| Local GitLab Runner (optional)          | [gitlab-runner-docker.md](./gitlab-runner-docker.md)                                                 |
+| Topic                                   | Doc                                                                                                                                                       |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local gate, health JSON                 | [deployment-readiness.md](./deployment-readiness.md)                                                                                                      |
+| Manual smoke (post-deploy)              | [smoke-test-checklist.md](./smoke-test-checklist.md)                                                                                                      |
+| First hosted deploy smoke               | [first-deploy-smoke.md](./first-deploy-smoke.md)                                                                                                          |
+| Production smoke baseline note          | [production-smoke-baseline.md](./production-smoke-baseline.md)                                                                                            |
+| Public demo / portfolio gaps            | [dat-production-readiness-gaps.md](./dat-production-readiness-gaps.md)                                                                                    |
+| Public demo policy (credentials / data) | [public-demo-policy.md](./public-demo-policy.md)                                                                                                          |
+| Public portfolio / demo access policy   | [public-portfolio-access.md](./public-portfolio-access.md)                                                                                                |
+| Demo seed / reset runbook               | [public-demo-seed-reset.md](./public-demo-seed-reset.md)                                                                                                  |
+| Demo feature showcase (policy + check)  | [public-demo-feature-showcase.md](./public-demo-feature-showcase.md); `pnpm demo:features:check`; operator prep: `pnpm demo:showcase:configure` (see doc) |
+| Demo readiness (read-only preflight)    | `pnpm demo:readiness` — see [public-demo-seed-reset.md](./public-demo-seed-reset.md#readiness-check)                                                      |
+| Env vars by surface                     | [environment-variables.md](./environment-variables.md)                                                                                                    |
+| Vercel project settings                 | [vercel-deployment.md](./vercel-deployment.md)                                                                                                            |
+| Prisma + Supabase migrations            | [supabase-prisma-migrations.md](./supabase-prisma-migrations.md)                                                                                          |
+| Supabase Data API + RLS policy          | [supabase-data-api-policy.md](./supabase-data-api-policy.md)                                                                                              |
+| Supabase Data API grants audit          | [supabase-data-api-grants.md](./supabase-data-api-grants.md)                                                                                              |
+| Local GitLab Runner (optional)          | [gitlab-runner-docker.md](./gitlab-runner-docker.md)                                                                                                      |
 
 ---
 
@@ -31,7 +31,7 @@ Practical path for shipping DAT safely. Details live in linked ops docs—do **n
 - **Vercel env configured:** production (and preview, if used) variables set per [vercel-deployment.md](./vercel-deployment.md) and [environment-variables.md](./environment-variables.md)—never from git.
 - **Migrations reviewed and committed:** `prisma/migrations` matches what you expect to apply; see [supabase-prisma-migrations.md](./supabase-prisma-migrations.md).
 - **Supabase Security Advisor:** no **critical** “RLS disabled” findings for internal `public` tables that DAT intentionally hardens (see [supabase-data-api-policy.md](./supabase-data-api-policy.md)); do **not** add blanket permissive `anon` / `authenticated` policies on internal tables by default.
-- **Public demo / portfolio (if applicable):** follow [public-portfolio-access.md](./public-portfolio-access.md) before sharing any demo URL privately; then confirm the demo tenant is marked `Organization.isDemo = true`; run **`pnpm demo:readiness`** and **`pnpm demo:features:check`** (read-only; see [public-demo-seed-reset.md](./public-demo-seed-reset.md#readiness-check) and [public-demo-feature-showcase.md](./public-demo-feature-showcase.md)); confirm Supabase Security Advisor has no **critical** RLS-disabled internal-table findings per [supabase-data-api-policy.md](./supabase-data-api-policy.md); ensure refresh/reset follows the seed runbook (no public reset endpoint; no privileged credentials in git).
+- **Public demo / portfolio (if applicable):** follow [public-portfolio-access.md](./public-portfolio-access.md) before sharing any demo URL privately; then confirm the demo tenant is marked `Organization.isDemo = true`; **Full Showcase** licensed UI should be prepared with the **operator** script `pnpm demo:showcase:configure` (not by public demo users—see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md#configuring-full-showcase-features)); run **`pnpm demo:readiness`** and **`pnpm demo:features:check`** (read-only; see [public-demo-seed-reset.md](./public-demo-seed-reset.md#readiness-check) and [public-demo-feature-showcase.md](./public-demo-feature-showcase.md)); confirm Supabase Security Advisor has no **critical** RLS-disabled internal-table findings per [supabase-data-api-policy.md](./supabase-data-api-policy.md); ensure refresh/reset follows the seed runbook (no public reset endpoint; no privileged credentials in git).
 
 ---
 

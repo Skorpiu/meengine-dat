@@ -37,11 +37,50 @@ This complements **[public-demo-policy.md](./public-demo-policy.md)** (guards, c
 
 ---
 
+## Configuring Full Showcase features
+
+Use the **operator-only** script `scripts/configure-demo-showcase.ts` (`pnpm demo:showcase:configure`) to prepare **`OrganizationFeature`** rows for a single demo tenant. This keeps **licensing and org feature-flag APIs** off the path for demo visitors: they should **not** receive credentials or UI that can mutate entitlements or feature flags; **`Organization.isDemo`** and existing **demo guards** remain the enforcement layer.
+
+**Environment**
+
+- **`DEMO_ORGANIZATION_ID`** — CUID of the target organization (required).
+- **`DEMO_SHOWCASE_FEATURE_KEYS`** — comma-separated list of feature keys to enable (required, non-empty after parsing). Example: `vehicles,reports,advanced-scheduling` or `VEHICLE_MANAGEMENT,ADVANCED_REPORTING`. Keys are stored as provided (trimmed); align with your product’s `featureKey` strings (see `lib/config/license-features.ts` where applicable).
+
+**Dry-run by default**
+
+- Without explicit apply confirmations, the script **prints a plan only** and exits successfully after: `Dry run only. No data was changed.`
+- The script **refuses** organizations that are missing or with **`isDemo !== true`** (same safety posture as other demo scripts).
+
+**Applying changes (two confirmations)**
+
+Both must be present for any database write:
+
+1. **CLI:** `--apply` (with pnpm, pass arguments after `--`, e.g. `pnpm demo:showcase:configure -- --apply`).
+2. **Env:** `DEMO_SHOWCASE_APPLY=true`
+
+If either is missing, behaviour stays **dry-run** (plan printed, no writes).
+
+**Examples (no secrets)**
+
+```bash
+DEMO_ORGANIZATION_ID=<demo-org-id> DEMO_SHOWCASE_FEATURE_KEYS=vehicles pnpm demo:showcase:configure
+```
+
+```bash
+DEMO_ORGANIZATION_ID=<demo-org-id> DEMO_SHOWCASE_FEATURE_KEYS=vehicles DEMO_SHOWCASE_APPLY=true pnpm demo:showcase:configure -- --apply
+```
+
+(Replace `vehicles` with real `featureKey` values your deployment expects, e.g. from `lib/config/license-features.ts`.)
+
+The script does **not** print emails, passwords, or tokens. It only touches **`organization_features`** for the given org and keys (no users, credentials, **`billing_events`**, or **`EntitlementGrant`** in this flow unless you extend it elsewhere).
+
+---
+
 ## Operator checklist (high level)
 
 1. Mark the tenant **`isDemo = true`** (after migration).
 2. Set **organization features** and/or **entitlement grants** (and any license activation your runbook allows **outside** the public demo UI) so the UI reflects the story you want.
-3. Run **`pnpm demo:readiness`** and **`pnpm demo:features:check`** against `DEMO_ORGANIZATION_ID` before opening access.
+3. Run **`pnpm demo:showcase:configure`** (dry-run, then apply with dual confirmation if needed), then **`pnpm demo:readiness`** and **`pnpm demo:features:check`** against `DEMO_ORGANIZATION_ID` before opening access.
 4. Issue **non–platform-admin**, **non–public-super-admin** credentials only through **private** channels ([public-demo-seed-reset.md](./public-demo-seed-reset.md)).
 
 ---
@@ -51,3 +90,4 @@ This complements **[public-demo-policy.md](./public-demo-policy.md)** (guards, c
 - [public-demo-policy.md](./public-demo-policy.md) — guards and credential rules.
 - [public-demo-seed-reset.md](./public-demo-seed-reset.md) — personas, reset strategy, readiness check.
 - `scripts/check-demo-feature-showcase.ts` — read-only `pnpm demo:features:check`.
+- `scripts/configure-demo-showcase.ts` — operator `pnpm demo:showcase:configure` (dry-run by default; apply requires `--apply` and `DEMO_SHOWCASE_APPLY=true`).
