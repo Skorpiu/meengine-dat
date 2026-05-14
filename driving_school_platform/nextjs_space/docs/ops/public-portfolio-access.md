@@ -4,7 +4,7 @@ Policy for presenting DAT as a **product / portfolio** asset: controlled access,
 
 This doc complements [public-demo-policy.md](./public-demo-policy.md) (data, guards, credentials). Read both before sharing any demo URL.
 
-For a **single end-to-end operator flow** (checklists, commands, meeting day), use **[client-demo-runbook.md](./client-demo-runbook.md)**.
+For a **single end-to-end operator flow** (checklists, commands, meeting day), use **[client-demo-runbook.md](./client-demo-runbook.md)**. Private demo users are created with **`pnpm demo:personas:configure`** / verified with **`pnpm demo:personas:check`** (never commit those env values)—see the runbook’s **Configure private demo personas** section.
 
 ---
 
