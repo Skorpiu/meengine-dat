@@ -19,6 +19,30 @@ Use this runbook when you need to **prepare**, **validate**, and **execute** a l
 
 ---
 
+## Controlled demo write sandbox
+
+By default, demo organizations stay **read-mostly**: mutating admin APIs remain blocked as in [public-demo-policy.md](./public-demo-policy.md).
+
+For a **controlled** walkthrough where you want to show **one-off creates** without opening full admin or control-plane:
+
+1. Set **`DEMO_WRITE_SANDBOX_ENABLED=true`** in the deployment environment (case-insensitive, trimmed). **If unset or not exactly `true`, writes stay blocked** — same as today.
+2. With the flag on, a demo org may create **at most one row per category** (quota is enforced by counting existing rows; **seed data counts** — if the seed already includes e.g. a theory lesson, another theory create returns a stable quota error until a future reset clears data):
+   - **One** theory lesson (`THEORY`)
+   - **One** driving lesson (`DRIVING`)
+   - **One** exam bucket total across **`EXAM` and `THEORY_EXAM`** (combined count; a request that would create more than one remaining “slot” of rows is rejected)
+   - **One** vehicle
+
+**Still blocked** (unchanged): deletes, lesson/vehicle updates, user management, settings, feature flags, licensing writes, billing, cleanup, platform onboarding.
+
+**Operator choice before a meeting:** decide explicitly between **read-mostly demo** (default, safest) and **sandbox-enabled demo** (limited creates, env must be intentional). This mechanism **does not replace** a future automated demo reset (e.g. 24h) — see [public-demo-seed-reset.md](./public-demo-seed-reset.md).
+
+**Stable errors when blocked:**
+
+- Sandbox off or action not allowed: `403` with `code: "demo_restricted_action"` and message _This action is restricted in the public demo environment._
+- Quota already used: `403` with `code: "demo_write_quota_exceeded"` and message _This demo sandbox quota has already been used._
+
+---
+
 ## Domains
 
 | Host                       | Role                                                                                                                                                                                    |

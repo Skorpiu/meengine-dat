@@ -2,6 +2,8 @@
 
 Operational expectations for any **public** or **portfolio** exposure of the driving-school app. This doc is **not** a substitute for access control in code; additional endpoint guards land in focused batches.
 
+**Controlled demo write sandbox** is **optional** and **disabled by default** (`DEMO_WRITE_SANDBOX_ENABLED` must be exactly `true` when trimmed, case-insensitive, to allow the limited creates described in [client-demo-runbook.md](./client-demo-runbook.md#controlled-demo-write-sandbox)).
+
 **Portfolio / who may receive demo links:** [public-portfolio-access.md](./public-portfolio-access.md) (controlled access, no privileged credentials, preflight before sharing).
 
 **Client / recruiter demo (one doc):** [client-demo-runbook.md](./client-demo-runbook.md).
@@ -23,6 +25,7 @@ For **seed personas, reset policy, dry-run reset validation, and read-only readi
 ## Behaviour of a demo tenant
 
 - Demo organizations should be **read-mostly**: browsing and light profile/preferences changes may be acceptable; **destructive or admin mutations** must be blocked by **demo guards** (`decideDemoMutation` in `lib/demo/demo-policy.ts`, applied via `decideDemoRouteMutation` in `lib/demo/demo-route-guard.ts`).
+- **Optional controlled write sandbox:** when `DEMO_WRITE_SANDBOX_ENABLED=true`, demo orgs may perform **limited** creates only (`POST` lesson create and `POST` vehicle create with per-category quotas — see [client-demo-runbook.md](./client-demo-runbook.md#controlled-demo-write-sandbox)). **Default is off**; all other demo restrictions apply unchanged.
 - Demo data must be **fictional** and **safe to reset** (scripts or seed refresh), not copies of production.
 
 For **showing licensed / premium UI in demo without visitor control plane** (operator-prepared features, no public toggling), see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md).
@@ -33,11 +36,15 @@ Mutating admin paths below enforce `Organization.isDemo` via `decideDemoRouteMut
 
 `{ "error": "This action is restricted in the public demo environment.", "code": "demo_restricted_action" }`
 
+**Optional write sandbox:** `POST /api/admin/lessons` and `POST /api/admin/vehicles` use a separate quota check when `DEMO_WRITE_SANDBOX_ENABLED=true`; when quota is exhausted, responses are **403** with:
+
+`{ "error": "This demo sandbox quota has already been used.", "code": "demo_write_quota_exceeded" }`
+
 **Tenant SUPER_ADMIN (session organization)**
 
 - **User management:** `DELETE /api/users/delete`; `POST /api/users/create`; `PUT /api/users/update`
-- **Vehicle management (writes/deletes):** `POST`, `PUT`, `DELETE` on `/api/admin/vehicles` (not `GET`)
-- **Lesson management (writes/deletes):** `POST` on `/api/admin/lessons`; `PUT` and `DELETE` on `/api/admin/lessons/[id]` (not lesson `GET`)
+- **Vehicle management (writes/deletes):** `PUT`, `DELETE` on `/api/admin/vehicles` (not `GET`). **`POST`** is allowed for demo orgs **only** when `DEMO_WRITE_SANDBOX_ENABLED=true` and vehicle quota remains (max one vehicle per demo org for this phase); otherwise same stable `403` as other demo blocks.
+- **Lesson management (writes/deletes):** `PUT` and `DELETE` on `/api/admin/lessons/[id]` (not lesson `GET`). **`POST`** on `/api/admin/lessons` uses the same optional sandbox when enabled; otherwise blocked like other demo mutations.
 - **Cleanup:** `POST /api/admin/cleanup`
 - **Settings (writes/deletes):** `POST`, `PUT`, `DELETE` on `/api/admin/settings` (not `GET`)
 - **Feature flags (writes/deletes):** `POST`, `PUT`, `DELETE` on `/api/admin/feature-flags` (not `GET`)
