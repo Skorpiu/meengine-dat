@@ -29,7 +29,7 @@ When the product supports multiple demo experiences cleanly:
 ## Initial recommended phase
 
 - **Start with one Full Showcase organization** prepared **by an operator** (including `OrganizationFeature` rows via `pnpm demo:showcase:configure` where applicable — see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md#configuring-full-showcase-features)), not by public demo users. Prefer **Full Showcase Demo only** when you need to show depth: one carefully seeded demo tenant, aligned with [public-demo-feature-showcase.md](./public-demo-feature-showcase.md).
-- Treat **Basic Demo**, **Premium Demo**, and additional **Full** variants as a **later evolution** (multiple tiered orgs or scripted tours) once automation and governance catch up—see the tier table under **Recommended future demo structure** above.
+- **Basic / Premium / Full** now have **operator tier profiles** in code (`DEMO_SHOWCASE_PROFILE` — see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md#demo-tier-profiles)) for repeatable configuration. **Separate demo organizations or domains per tier** (and scripted multi-tenant tours) remain **follow-up** work once isolation, reset, and governance are ready—see the tier table under **Recommended future demo structure** above.
 - **No public self-service registration** for demos unless explicitly designed, reviewed, and operated (abuse, data retention, and legal expectations must be intentional).
 
 ---
