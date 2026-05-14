@@ -31,6 +31,7 @@
     "demo:org:bootstrap": "tsx scripts/bootstrap-demo-organization.ts",
     "demo:personas:configure": "tsx scripts/configure-demo-personas.ts",
     "demo:personas:check": "tsx scripts/check-demo-personas.ts",
+    "demo:personas:cleanup": "tsx scripts/cleanup-demo-personas.ts",
     "demo:client-ready": "tsx scripts/check-client-demo-ready.ts",
     "predev": "pnpm -s env:check",
     "check": "pnpm -s lint && pnpm -s typecheck && pnpm -s test:run && pnpm -s build",
