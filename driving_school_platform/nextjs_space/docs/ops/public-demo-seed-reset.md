@@ -52,7 +52,7 @@ When a real reset is implemented (future batch—not this document’s script al
 3. **Environment** — Run destructive resets only in **demo** or **staging** environments, or under explicit operator control on production **only** if policy allows and backups exist.
 4. **Mechanism** — Prefer a **script or protected job** referenced in this runbook—not a **public HTTP endpoint** for reset.
 
-Future seed/reset work should be able to prepare a **full showcase** demo org (operator-set `OrganizationFeature` / `EntitlementGrant` per [public-demo-feature-showcase.md](./public-demo-feature-showcase.md)) **without** embedding credentials in git—same private distribution rules as today.
+Future seed/reset work should be able to prepare a **full showcase** demo org (operator-set `OrganizationFeature` / `EntitlementGrant` per [public-demo-feature-showcase.md](./public-demo-feature-showcase.md)) **without** embedding credentials in git—same private distribution rules as today. When that automation lands, it should **call or stay aligned** with the operator showcase configuration flow (`pnpm demo:showcase:configure` — see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md#configuring-full-showcase-features)) so feature rows stay **operator-controlled**, not demo-user-controlled.
 
 Dry-run tooling today: see `scripts/reset-demo-organization.ts` and `pnpm demo:reset:dry-run` in `package.json`.
 

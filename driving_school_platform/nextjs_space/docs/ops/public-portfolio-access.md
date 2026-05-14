@@ -28,17 +28,19 @@ When the product supports multiple demo experiences cleanly:
 
 ## Initial recommended phase
 
-- Prefer **Full Showcase Demo only** when you need to show depth: one carefully seeded demo organization, aligned with [public-demo-feature-showcase.md](./public-demo-feature-showcase.md).
+- **Start with one Full Showcase organization** prepared **by an operator** (including `OrganizationFeature` rows via `pnpm demo:showcase:configure` where applicable — see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md#configuring-full-showcase-features)), not by public demo users. Prefer **Full Showcase Demo only** when you need to show depth: one carefully seeded demo tenant, aligned with [public-demo-feature-showcase.md](./public-demo-feature-showcase.md).
+- Treat **Basic Demo**, **Premium Demo**, and additional **Full** variants as a **later evolution** (multiple tiered orgs or scripted tours) once automation and governance catch up—see the tier table under **Recommended future demo structure** above.
 - **No public self-service registration** for demos unless explicitly designed, reviewed, and operated (abuse, data retention, and legal expectations must be intentional).
 
 ---
 
 ## Before sharing demo access
 
-1. Run **`pnpm demo:readiness`** (read-only preflight; see [public-demo-seed-reset.md](./public-demo-seed-reset.md#readiness-check)).
-2. Run **`pnpm demo:features:check`** (showcase policy alignment; see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md)).
-3. In **Supabase**, confirm **Security Advisor** has **no critical** “RLS disabled” findings on internal `public` tables that DAT intentionally hardens ([supabase-data-api-policy.md](./supabase-data-api-policy.md)).
-4. Confirm the demo organization is marked **`Organization.isDemo = true`** and that reset/seed expectations match [public-demo-seed-reset.md](./public-demo-seed-reset.md).
+1. Ensure **Full Showcase** `OrganizationFeature` keys are prepared **by an operator** when the story needs licensed UI (`pnpm demo:showcase:configure` — dry-run first; see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md#configuring-full-showcase-features)).
+2. Run **`pnpm demo:readiness`** (read-only preflight; see [public-demo-seed-reset.md](./public-demo-seed-reset.md#readiness-check)).
+3. Run **`pnpm demo:features:check`** (showcase policy alignment; see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md)).
+4. In **Supabase**, confirm **Security Advisor** has **no critical** “RLS disabled” findings on internal `public` tables that DAT intentionally hardens ([supabase-data-api-policy.md](./supabase-data-api-policy.md)).
+5. Confirm the demo organization is marked **`Organization.isDemo = true`** and that reset/seed expectations match [public-demo-seed-reset.md](./public-demo-seed-reset.md).
 
 ---
 
