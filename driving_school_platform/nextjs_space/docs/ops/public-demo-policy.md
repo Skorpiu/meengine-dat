@@ -20,6 +20,8 @@ For **seed personas, reset policy, dry-run reset validation, and read-only readi
 - Demo organizations should be **read-mostly**: browsing and light profile/preferences changes may be acceptable; **destructive or admin mutations** must be blocked by **demo guards** (`decideDemoMutation` in `lib/demo/demo-policy.ts`, applied via `decideDemoRouteMutation` in `lib/demo/demo-route-guard.ts`).
 - Demo data must be **fictional** and **safe to reset** (scripts or seed refresh), not copies of production.
 
+For **showing licensed / premium UI in demo without visitor control plane** (operator-prepared features, no public toggling), see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md).
+
 ## Implemented guards
 
 Mutating admin paths below enforce `Organization.isDemo` via `decideDemoRouteMutation`. When blocked, responses are **403** with stable JSON:
@@ -65,4 +67,4 @@ Guards reduce risk on marked demo tenants; they do **not** replace:
 
 - **Foundation:** `Organization.isDemo`, pure policy in `lib/demo/demo-policy.ts`, and route helper `lib/demo/demo-route-guard.ts`.
 - **Shipped batches:** P0 destructive routes, then control-plane tenant admin (settings, feature flags, licensing writes, user create/update) as listed above.
-- **Operations:** seed/reset runbook [public-demo-seed-reset.md](./public-demo-seed-reset.md); dry-run helper `pnpm demo:reset:dry-run`; read-only preflight **`pnpm demo:readiness`** (see runbook _Readiness check_) before sharing controlled demo access.
+- **Operations:** seed/reset runbook [public-demo-seed-reset.md](./public-demo-seed-reset.md); dry-run helper `pnpm demo:reset:dry-run`; read-only **`pnpm demo:readiness`** and **`pnpm demo:features:check`** (see runbook and [public-demo-feature-showcase.md](./public-demo-feature-showcase.md)) before sharing controlled demo access.

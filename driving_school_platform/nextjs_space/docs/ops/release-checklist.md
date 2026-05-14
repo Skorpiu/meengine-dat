@@ -11,6 +11,7 @@ Practical path for shipping DAT safely. Details live in linked ops docs—do **n
 | Public demo / portfolio gaps            | [dat-production-readiness-gaps.md](./dat-production-readiness-gaps.md)                               |
 | Public demo policy (credentials / data) | [public-demo-policy.md](./public-demo-policy.md)                                                     |
 | Demo seed / reset runbook               | [public-demo-seed-reset.md](./public-demo-seed-reset.md)                                             |
+| Demo feature showcase (policy + check)  | [public-demo-feature-showcase.md](./public-demo-feature-showcase.md); `pnpm demo:features:check`     |
 | Demo readiness (read-only preflight)    | `pnpm demo:readiness` — see [public-demo-seed-reset.md](./public-demo-seed-reset.md#readiness-check) |
 | Env vars by surface                     | [environment-variables.md](./environment-variables.md)                                               |
 | Vercel project settings                 | [vercel-deployment.md](./vercel-deployment.md)                                                       |
@@ -29,7 +30,7 @@ Practical path for shipping DAT safely. Details live in linked ops docs—do **n
 - **Vercel env configured:** production (and preview, if used) variables set per [vercel-deployment.md](./vercel-deployment.md) and [environment-variables.md](./environment-variables.md)—never from git.
 - **Migrations reviewed and committed:** `prisma/migrations` matches what you expect to apply; see [supabase-prisma-migrations.md](./supabase-prisma-migrations.md).
 - **Supabase Security Advisor:** no **critical** “RLS disabled” findings for internal `public` tables that DAT intentionally hardens (see [supabase-data-api-policy.md](./supabase-data-api-policy.md)); do **not** add blanket permissive `anon` / `authenticated` policies on internal tables by default.
-- **Public demo (if applicable):** before sharing broad demo access, confirm the demo tenant is marked `Organization.isDemo = true`, run **`pnpm demo:readiness`** (read-only; see [public-demo-seed-reset.md](./public-demo-seed-reset.md)), and ensure refresh/reset follows that runbook (no public reset endpoint; no privileged credentials in git).
+- **Public demo (if applicable):** before sharing broad demo access, confirm the demo tenant is marked `Organization.isDemo = true`; run **`pnpm demo:readiness`** and **`pnpm demo:features:check`** (read-only; see [public-demo-seed-reset.md](./public-demo-seed-reset.md#readiness-check) and [public-demo-feature-showcase.md](./public-demo-feature-showcase.md)); ensure refresh/reset follows the seed runbook (no public reset endpoint; no privileged credentials in git).
 
 ---
 
