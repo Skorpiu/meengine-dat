@@ -19,6 +19,7 @@ For **seed personas, reset policy, dry-run reset validation, and read-only readi
 ## Credentials
 
 - **Demo personas** are **private operational accounts** for controlled sessions; credentials must **not** be documented in git, issues, or public prompts—prepare them with **`pnpm demo:personas:configure`** / **`pnpm demo:personas:check`** per [client-demo-runbook.md](./client-demo-runbook.md#configure-private-demo-personas).
+- **Public signup** is **disabled for demo organizations** (`Organization.isDemo = true`): `POST /api/signup` returns **403** with `{ "error": "Public signup is disabled for demo organizations.", "code": "demo_signup_disabled" }`. Demo access uses **private personas**, not open registration on the demo host.
 - **Never** publish **PLATFORM_ADMIN** credentials in README, marketing, tickets, or the product UI.
 - **Never** publish real **SUPER_ADMIN** (or other high-privilege) passwords; use a private secret process and rotation.
 
@@ -51,6 +52,14 @@ Mutating admin paths below enforce `Organization.isDemo` via `decideDemoRouteMut
 - **Licensing / entitlements (tenant admin writes):** `POST /api/admin/license/activate`; `POST /api/admin/license/features` (`GET` remains allowed)
 
 **GET** `/api/admin/lessons` remains read-only for demo orgs: automatic `cleanupOldLessons` inside that handler is **skipped** when `Organization.isDemo` is true (no 403 on read).
+
+**Public signup**
+
+- **`POST /api/signup`** — when the resolved tenant organization has **`Organization.isDemo = true`**, public registration is refused with **403** and stable JSON:
+
+`{ "error": "Public signup is disabled for demo organizations.", "code": "demo_signup_disabled" }`
+
+Non-demo tenant organizations keep existing tenant-scoped signup behavior (subject to separate production hardening: rate limits, email verification, captcha / invite-only—see engineering audit and production readiness gaps).
 
 **Not covered in this batch (follow-up)**
 
