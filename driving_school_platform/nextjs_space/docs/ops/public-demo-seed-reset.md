@@ -20,6 +20,7 @@ Do **not** commit secrets, production URLs with embedded credentials, or real cu
 
 ### Transitional setup (until a separate stack exists)
 
+- **Before** relying on seed-only or reset tooling, ensure the demo tenant and hostname exist in the database in a controlled way: use **`pnpm demo:org:bootstrap`** (dry-run by default; apply requires `DEMO_BOOTSTRAP_APPLY=true` and `--apply`) together with `DEMO_ORGANIZATION_NAME` and `DEMO_ORGANIZATION_DOMAIN`, then **`pnpm demo:orgs:list`** to read the organization id without opening Supabase. See [public-portfolio-access.md](./public-portfolio-access.md#preparing-the-first-full-showcase-demo) for the full portfolio prep flow.
 - Mark one tenant with **`Organization.isDemo = true`** (after the migration is applied).
 - Keep data **fictional**; rely on **demo guards** for mutating admin APIs.
 - **Do not** publish demo passwords in this repository; distribute credentials only through private, auditable channels until there is a safe onboarding flow.

@@ -26,6 +26,7 @@ Practical path for shipping DAT safely. Details live in linked ops docs—do **n
 ## Preconditions
 
 - **Branch / tree clean:** you are releasing from the intended branch (often `main`) with no unintended uncommitted changes; merge request reviewed as per team process.
+- **Demo organization bootstrap / listing (when sharing controlled demo access):** use `pnpm demo:org:bootstrap` and `pnpm demo:orgs:list` so the demo tenant and `OrganizationDomain.host` are prepared and the demo org id is obtained **without** opening Supabase ad hoc; then follow [public-portfolio-access.md](./public-portfolio-access.md#preparing-the-first-full-showcase-demo) before handing any demo URL to a reviewer.
 - **Local gate:** `pnpm -C driving_school_platform/nextjs_space check` passes on the commit you intend to deploy.
 - **GitLab pipeline green:** pipeline for that commit succeeded (see `.gitlab-ci.yml` and optional [gitlab-runner-docker.md](./gitlab-runner-docker.md) if you use a project runner).
 - **Vercel env configured:** production (and preview, if used) variables set per [vercel-deployment.md](./vercel-deployment.md) and [environment-variables.md](./environment-variables.md)—never from git.
