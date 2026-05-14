@@ -6,6 +6,8 @@ This doc complements [public-demo-policy.md](./public-demo-policy.md) (data, gua
 
 For a **single end-to-end operator flow** (checklists, commands, meeting day), use **[client-demo-runbook.md](./client-demo-runbook.md)**. Private demo users are created with **`pnpm demo:personas:configure`** / verified with **`pnpm demo:personas:check`** (never commit those env values)—see the runbook’s **Configure private demo personas** section. Before a client session, run **`pnpm demo:client-ready`** (read-only aggregate smoke; same runbook).
 
+**`demo.meengine.io`** must be added to the **Vercel** project and pointed from **Cloudflare** DNS per the runbook before you share controlled demo access—host routing is separate from `OrganizationDomain` in the database.
+
 ---
 
 ## Public portfolio access policy
