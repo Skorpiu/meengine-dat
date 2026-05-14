@@ -72,6 +72,7 @@ Complete on an **operator** machine with `DATABASE_URL` (and related env) availa
 - [ ] **Readiness** — `pnpm demo:readiness` passes for that org id ([public-demo-seed-reset.md](./public-demo-seed-reset.md#readiness-check)).
 - [ ] **Feature check** — `pnpm demo:features:check` passes ([public-demo-feature-showcase.md](./public-demo-feature-showcase.md)).
 - [ ] **Private demo personas** — dry-run then apply `pnpm demo:personas:configure`; then `pnpm demo:personas:check` with the same three emails ([Configure private demo personas](#configure-private-demo-personas)).
+- [ ] **Client demo readiness smoke** — read-only aggregate gate (domains, features, grants, optional persona verification); run `pnpm demo:client-ready` with the same three **email** env vars as for persona check ([Client demo readiness smoke](#client-demo-readiness-smoke)).
 - [ ] **Manual login** — each persona signs in on `https://demo.meengine.io` using **private** credentials.
 - [ ] **Destructive actions** — confirm blocked actions return safe errors (demo guards; see [public-demo-policy.md](./public-demo-policy.md#implemented-guards)).
 - [ ] **No privileged leaks** — confirm no **PLATFORM_ADMIN**, production DB URLs, or service keys appear in slides, screen shares, or shared notes.
@@ -187,12 +188,27 @@ DEMO_STUDENT_EMAIL=<private-demo-student-email> \
 pnpm demo:personas:check
 ```
 
+### Client demo readiness smoke
+
+Single **read-only** command that aggregates org/demo checks, `PLATFORM_ADMIN` absence, domain hosts, user counts by role, `OrganizationFeature` keys, entitlement grant window counts, and (when all three persona emails are set) the same persona rules as `demo:personas:check`. It does **not** print passwords, hashes, or tokens. It does **not** replace a **manual** login on `https://demo.meengine.io` before the meeting.
+
+```bash
+DEMO_ORGANIZATION_ID=<demo-org-id> \
+DEMO_SCHOOL_ADMIN_EMAIL=<private-demo-admin-email> \
+DEMO_INSTRUCTOR_EMAIL=<private-demo-instructor-email> \
+DEMO_STUDENT_EMAIL=<private-demo-student-email> \
+pnpm demo:client-ready
+```
+
+Omit the three `DEMO_*_EMAIL` variables to skip strict persona verification (you will see warnings if domains, features, or users look incomplete).
+
 On **Windows PowerShell**, set env vars per command or use `cmd /c` with the same variable assignments; the important part is **both** apply gates where documented (`DEMO_BOOTSTRAP_APPLY=true` **and** `--apply`, etc.).
 
 ---
 
 ## Before leaving for the meeting
 
+- [ ] **Client demo readiness smoke** — `pnpm demo:client-ready` with persona emails set ([Client demo readiness smoke](#client-demo-readiness-smoke)); expect **PASS** before travel.
 - [ ] Open `https://demo.meengine.io` and confirm TLS and tenant resolution.
 - [ ] **Demo School Admin** — login works; admin paths you need are reachable.
 - [ ] **Demo Instructor** — login works; instructor home loads.
@@ -233,13 +249,14 @@ Unless the session is a **scoped technical review** with written agreement:
 
 ## Troubleshooting
 
-| Symptom                            | Likely cause                                             | What to do                                                                                                                                                                                                                                                                                     |
-| ---------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `demo.meengine.io` does not load   | DNS, Vercel project domain, or wrong deployment          | Fix DNS / Vercel; confirm `OrganizationDomain.host` matches.                                                                                                                                                                                                                                   |
-| Persona / login issue              | User missing, wrong org, or password policy              | Run `pnpm demo:personas:check` with all three emails; re-run `pnpm demo:personas:configure` (dry-run then apply). Passwords must meet app rules (see validation / signup). If apply fails on role switch, the user may have blocking related rows—use a clean demo user or clear dependencies. |
-| Expected UI / module missing       | Feature rows or profile mismatch                         | Run `pnpm demo:features:check`; re-run `pnpm demo:showcase:configure` (dry-run then apply) per [public-demo-feature-showcase.md](./public-demo-feature-showcase.md).                                                                                                                           |
-| Org id unknown                     | Bootstrap not applied or wrong DB                        | Run `pnpm demo:orgs:list`; confirm `DATABASE_URL` targets the intended environment.                                                                                                                                                                                                            |
-| Destructive action **not** blocked | Wrong org (`isDemo` false), guard gap, or non-demo stack | **Stop** the demo narrative; verify `Organization.isDemo` and demo guards ([public-demo-policy.md](./public-demo-policy.md)); escalate internally—do not present as “safe demo” until resolved.                                                                                                |
+| Symptom                                      | Likely cause                                             | What to do                                                                                                                                                                                                                                                                                     |
+| -------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `demo:client-ready` reports FAIL on personas | Misconfigured users or wrong roles                       | Run `pnpm demo:personas:check`; fix with `pnpm demo:personas:configure` (dry-run then apply).                                                                                                                                                                                                  |
+| `demo.meengine.io` does not load             | DNS, Vercel project domain, or wrong deployment          | Fix DNS / Vercel; confirm `OrganizationDomain.host` matches.                                                                                                                                                                                                                                   |
+| Persona / login issue                        | User missing, wrong org, or password policy              | Run `pnpm demo:personas:check` with all three emails; re-run `pnpm demo:personas:configure` (dry-run then apply). Passwords must meet app rules (see validation / signup). If apply fails on role switch, the user may have blocking related rows—use a clean demo user or clear dependencies. |
+| Expected UI / module missing                 | Feature rows or profile mismatch                         | Run `pnpm demo:features:check`; re-run `pnpm demo:showcase:configure` (dry-run then apply) per [public-demo-feature-showcase.md](./public-demo-feature-showcase.md).                                                                                                                           |
+| Org id unknown                               | Bootstrap not applied or wrong DB                        | Run `pnpm demo:orgs:list`; confirm `DATABASE_URL` targets the intended environment.                                                                                                                                                                                                            |
+| Destructive action **not** blocked           | Wrong org (`isDemo` false), guard gap, or non-demo stack | **Stop** the demo narrative; verify `Organization.isDemo` and demo guards ([public-demo-policy.md](./public-demo-policy.md)); escalate internally—do not present as “safe demo” until resolved.                                                                                                |
 
 ---
 
