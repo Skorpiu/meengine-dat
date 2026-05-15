@@ -60,7 +60,7 @@ More detail: [docs/architecture.md](./docs/architecture.md). Ops entry points: [
 - **Supabase Data API policy** — RLS and internal-table posture: [driving_school_platform/nextjs_space/docs/ops/supabase-data-api-policy.md](./driving_school_platform/nextjs_space/docs/ops/supabase-data-api-policy.md).
 - **Engineering excellence audit** — initial DAT-specific review: [driving_school_platform/nextjs_space/docs/engineering/engineering-excellence-audit.md](./driving_school_platform/nextjs_space/docs/engineering/engineering-excellence-audit.md).
 - **Route handler consistency audit** — API route patterns and refactor backlog (docs only): [driving_school_platform/nextjs_space/docs/engineering/route-handler-consistency-audit.md](./driving_school_platform/nextjs_space/docs/engineering/route-handler-consistency-audit.md).
-- **Lessons route refactor plan** — incremental lessons API extraction roadmap (planning only): [driving_school_platform/nextjs_space/docs/engineering/lessons-route-refactor-plan.md](./driving_school_platform/nextjs_space/docs/engineering/lessons-route-refactor-plan.md).
+- **Lessons route refactor plan** — incremental lessons API extraction roadmap: [lessons-route-refactor-plan.md](./driving_school_platform/nextjs_space/docs/engineering/lessons-route-refactor-plan.md). DTO minimization audit (batch 6, docs only): [lesson-dto-minimization-audit.md](./driving_school_platform/nextjs_space/docs/engineering/lesson-dto-minimization-audit.md).
 
 ---
 

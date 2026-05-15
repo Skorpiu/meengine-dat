@@ -1,6 +1,6 @@
 # Lessons Route Refactor Plan
 
-**Status:** Batches 1–5 **done**. Batch 6 (optional DTO minimization) pending.  
+**Status:** Batches 1–5 **done**. Batch 6 — **audit created** ([lesson-dto-minimization-audit.md](./lesson-dto-minimization-audit.md)); implementation pending.  
 **Branch context:** `lessons-route-alignment-planning` (plan); batches 1–4 on feature branches (`lessons-query-module` … `lessons-update-delete-service`)  
 **Related audits:** [route-handler-consistency-audit.md](./route-handler-consistency-audit.md) (RHC-001, RHC-006, RHC-008), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-002)
 
@@ -187,15 +187,16 @@ Small PRs; each must keep behavior unless noted and extend tests.
 | **Tests**      | `instructor/lessons/route.integration.unit.test.ts`, `student/lessons/route.integration.unit.test.ts`.                                                                                                     |
 | **Acceptance** | Parity with admin calendar validation rules; valid requests preserve `{ lessons }` shape.                                                                                                                  |
 
-### Batch 6 (optional): `lessons-pagination-dto-minimization`
+### Batch 6 (optional): `lessons-pagination-dto-minimization` — **Audit created / implementation pending**
 
-|                  |                                                                                              |
-| ---------------- | -------------------------------------------------------------------------------------------- |
-| **Objective**    | Add `take`/cursor inside calendar window or trim nested `user` fields after UI field audit.  |
-| **Likely files** | Query module + mapper + possible UI coordination (out of API-only batch if UI needs change). |
-| **Risks**        | Breaking ScheduleMap or admin dashboard; needs load data.                                    |
-| **Tests**        | Load/limit tests; contract documentation update.                                             |
-| **Acceptance**   | Documented limits; no perf regression on default demo org.                                   |
+|                  |                                                                                                                               |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Objective**    | Trim nested payloads after UI field audit; optional `take`/cursor inside 90-day window.                                       |
+| **Audit**        | [lesson-dto-minimization-audit.md](./lesson-dto-minimization-audit.md) — UI inventory, proposed DTOs, findings LD-001–LD-009. |
+| **Likely files** | `lesson-queries.ts`, `lesson-mappers.ts`, contract tests; possible `lessons-management-client` envelope fix (LD-002).         |
+| **Risks**        | `passwordHash` exposure today (LD-001); EXAMS view / Lesson model mismatch (LD-003); ScheduleMap contract.                    |
+| **Tests**        | Contract/snapshot tests per endpoint; assert no secrets in JSON; load tests if pagination added.                              |
+| **Acceptance**   | Documented DTOs; calendar GET payloads match UI needs; no `passwordHash` in lesson list responses.                            |
 
 ---
 
