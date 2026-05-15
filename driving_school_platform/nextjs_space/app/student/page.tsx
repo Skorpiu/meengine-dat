@@ -10,6 +10,7 @@ import {
 } from "@/components/schedule/schedule-map";
 import { Calendar, TrendingUp, Award, CheckCircle } from "lucide-react";
 import { CategoryProgressSelector } from "@/components/student/category-progress-selector";
+import { LESSON_NESTED_USER_RELATION } from "@/lib/users/user-public-select";
 
 export const dynamic = "force-dynamic";
 
@@ -27,10 +28,8 @@ export default async function StudentDashboard() {
   const student = await prisma.student.findFirst({
     where: { userId: session.user.id, organizationId: orgId },
     include: {
-      user: true,
       category: true,
       transmissionType: true,
-      preferredInstructor: { include: { user: true } },
       lessonCounters: { include: { category: true } },
     },
   });
@@ -80,7 +79,7 @@ export default async function StudentDashboard() {
       },
     },
     include: {
-      instructor: { include: { user: true } },
+      instructor: LESSON_NESTED_USER_RELATION,
       vehicle: true,
       category: true,
     },

@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navigation/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InstructorDashboardClient } from "@/components/instructor/instructor-dashboard-client";
 import type { Lesson as ScheduleLesson } from "@/components/schedule/schedule-map";
+import { LESSON_LIST_INCLUDE } from "@/lib/lessons/lesson-queries";
 import { Calendar, Clock, Star, TrendingUp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +25,6 @@ export default async function InstructorDashboard() {
   const instructorRaw = await prisma.instructor.findFirst({
     where: { userId: session.user.id, organizationId: orgId },
     include: {
-      user: true,
       qualifiedCategories: true,
       qualifiedTransmissionTypes: true,
     },
@@ -102,12 +102,7 @@ export default async function InstructorDashboard() {
         lte: thirtyDaysFromNow,
       },
     },
-    include: {
-      student: { include: { user: true } },
-      instructor: { include: { user: true } },
-      vehicle: true,
-      category: true,
-    },
+    include: LESSON_LIST_INCLUDE,
     orderBy: [{ lessonDate: "asc" }, { startTime: "asc" }],
   });
 
