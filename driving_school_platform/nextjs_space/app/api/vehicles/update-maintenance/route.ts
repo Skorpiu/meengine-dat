@@ -3,6 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
+import {
+  assertVehicleTenantHost,
+  rejectDemoVehicleManagementMutation,
+  vehicleFeatureAccessErrorResponse,
+} from "@/lib/vehicles/vehicle-route-access";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,58 +17,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if Vehicle Management feature is enabled (also validates tenant by Host)
     const featureCheck = await checkFeatureAccess(
       "VEHICLE_MANAGEMENT",
       request,
     );
 
     if (!featureCheck.allowed) {
-      if (featureCheck.error === "Wrong organization for this domain") {
-        return NextResponse.json(
-          { error: "Organization does not match this domain" },
-          { status: 403 },
-        );
-      }
-
-      if (featureCheck.error === "No organization found") {
-        return NextResponse.json(
-          { error: "No organization found" },
-          { status: 400 },
-        );
-      }
-
-      if (
-        featureCheck.error === "Unauthorized" ||
-        featureCheck.error === "User not found"
-      ) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-
-      if (featureCheck.error === "Internal server error") {
-        return NextResponse.json(
-          { error: "Internal server error" },
-          { status: 500 },
-        );
-      }
-
-      // Feature not enabled
-      return NextResponse.json(
-        {
-          error:
-            "Vehicle Management feature is not enabled. Please upgrade to unlock this feature.",
-          requiresUpgrade: true,
-        },
-        { status: 403 },
-      );
+      return vehicleFeatureAccessErrorResponse(featureCheck, "vehicle_aux");
     }
 
     const orgId = featureCheck.organizationId;
-    if (!orgId)
+    if (!orgId) {
       return NextResponse.json(
         { error: "No organization found" },
         { status: 400 },
       );
+    }
+
+    const tenantBlocked = await assertVehicleTenantHost(request, orgId);
+    if (tenantBlocked) return tenantBlocked;
+
+    const demoBlocked = await rejectDemoVehicleManagementMutation(orgId);
+    if (demoBlocked) return demoBlocked;
 
     let body: unknown;
     try {

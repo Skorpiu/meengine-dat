@@ -5,6 +5,10 @@ import { db } from "@/lib/db";
 import { decideDemoRouteMutation } from "@/lib/demo/demo-route-guard";
 import { decideDemoVehicleCreate } from "@/lib/demo/demo-write-sandbox-route-guard";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
+import {
+  assertVehicleTenantHost,
+  vehicleFeatureAccessErrorResponse,
+} from "@/lib/vehicles/vehicle-route-access";
 import type { Prisma } from "@prisma/client";
 import { VehicleStatus } from "@prisma/client";
 
@@ -40,15 +44,7 @@ export async function GET(request: NextRequest) {
       request,
     );
     if (!featureCheck.allowed) {
-      return NextResponse.json(
-        {
-          error: "Vehicles feature not enabled",
-          message:
-            "Vehicle Management feature is not enabled. Please upgrade to unlock this feature.",
-          requiresUpgrade: true,
-        },
-        { status: 403 },
-      );
+      return vehicleFeatureAccessErrorResponse(featureCheck, "admin_get");
     }
 
     // Get query parameters
@@ -63,6 +59,9 @@ export async function GET(request: NextRequest) {
         { status: 400 },
       );
     }
+
+    const tenantBlocked = await assertVehicleTenantHost(request, orgId);
+    if (tenantBlocked) return tenantBlocked;
 
     // Build where clause (scoped to org)
     const where: Prisma.VehicleWhereInput = { organizationId: orgId };
@@ -192,14 +191,7 @@ export async function POST(request: NextRequest) {
       request,
     );
     if (!featureCheck.allowed) {
-      return NextResponse.json(
-        {
-          error:
-            "Vehicle Management feature is not enabled. Please upgrade to unlock this feature.",
-          requiresUpgrade: true,
-        },
-        { status: 403 },
-      );
+      return vehicleFeatureAccessErrorResponse(featureCheck, "admin_mutate");
     }
 
     const orgId = featureCheck.organizationId;
@@ -209,6 +201,9 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
+
+    const tenantBlocked = await assertVehicleTenantHost(request, orgId);
+    if (tenantBlocked) return tenantBlocked;
 
     const sandboxDecision = await decideDemoVehicleCreate({
       organizationId: orgId,
@@ -330,14 +325,7 @@ export async function PUT(request: NextRequest) {
       request,
     );
     if (!featureCheck.allowed) {
-      return NextResponse.json(
-        {
-          error:
-            "Vehicle Management feature is not enabled. Please upgrade to unlock this feature.",
-          requiresUpgrade: true,
-        },
-        { status: 403 },
-      );
+      return vehicleFeatureAccessErrorResponse(featureCheck, "admin_mutate");
     }
 
     const orgId = featureCheck.organizationId;
@@ -347,6 +335,9 @@ export async function PUT(request: NextRequest) {
         { status: 400 },
       );
     }
+
+    const tenantBlocked = await assertVehicleTenantHost(request, orgId);
+    if (tenantBlocked) return tenantBlocked;
 
     const demoDecision = await decideDemoRouteMutation({
       organizationId: orgId,
@@ -502,14 +493,7 @@ export async function DELETE(request: NextRequest) {
       request,
     );
     if (!featureCheck.allowed) {
-      return NextResponse.json(
-        {
-          error:
-            "Vehicle Management feature is not enabled. Please upgrade to unlock this feature.",
-          requiresUpgrade: true,
-        },
-        { status: 403 },
-      );
+      return vehicleFeatureAccessErrorResponse(featureCheck, "admin_mutate");
     }
 
     const orgId = featureCheck.organizationId;
@@ -519,6 +503,9 @@ export async function DELETE(request: NextRequest) {
         { status: 400 },
       );
     }
+
+    const tenantBlocked = await assertVehicleTenantHost(request, orgId);
+    if (tenantBlocked) return tenantBlocked;
 
     const demoDecision = await decideDemoRouteMutation({
       organizationId: orgId,
