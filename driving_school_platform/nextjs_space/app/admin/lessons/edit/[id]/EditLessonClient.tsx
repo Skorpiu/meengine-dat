@@ -18,6 +18,7 @@ import toast from "react-hot-toast";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { lessonFormEditCardClass } from "@/components/lessons/lesson-form-styles";
 
 async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
   const contentType = response.headers.get("content-type") || "";
@@ -200,15 +201,15 @@ export function EditLessonClient({
         </Link>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Edit Lesson</CardTitle>
+      <Card className={lessonFormEditCardClass}>
+        <CardHeader className="border-b border-gray-100 bg-gray-50/50 px-6 py-5">
+          <CardTitle className="text-xl">Edit Lesson</CardTitle>
           <CardDescription>
             Update the lesson details below. Changes will be saved when you
             submit.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 py-6">
           <LessonForm
             mode="edit"
             initialLesson={lesson}
