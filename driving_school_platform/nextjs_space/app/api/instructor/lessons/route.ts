@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { errorResponse, verifyAuth, withErrorHandling } from "@/lib/api-utils";
 import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from "@/lib/constants";
-import { startOfDay, addDays } from "date-fns";
+import { addDays } from "date-fns";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import { validateLessonCalendarRange } from "@/lib/lessons/calendar-range";
 import { getInstructorCalendarLessons } from "@/lib/lessons/lesson-queries";
 import { mapInstructorLessonsResponse } from "@/lib/lessons/lesson-mappers";
 
@@ -30,21 +31,11 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
 
-  if (!from || !to) {
-    return errorResponse(
-      'Missing "from" and/or "to" query params',
-      HTTP_STATUS.BAD_REQUEST,
-    );
-  }
-
-  // Implement robust day range filtering: lessonDate >= startOfDay(from) AND lessonDate < startOfDay(to) + 1 day
-  const fromDate = startOfDay(new Date(from));
-  const toDate = addDays(startOfDay(new Date(to)), 1);
-
-  if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
-    return errorResponse(
-      'Invalid "from" or "to" date',
-      HTTP_STATUS.BAD_REQUEST,
+  const range = validateLessonCalendarRange({ from, to });
+  if (!range.ok) {
+    return NextResponse.json(
+      { error: range.message, code: range.code },
+      { status: HTTP_STATUS.BAD_REQUEST },
     );
   }
 
@@ -59,8 +50,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const lessons = await getInstructorCalendarLessons({
     organizationId: orgId,
     instructorId: instructor.id,
-    fromDate,
-    toDateExclusive: toDate,
+    fromDate: range.from,
+    toDateExclusive: addDays(range.to, 1),
   });
 
   return NextResponse.json(mapInstructorLessonsResponse(lessons), {
