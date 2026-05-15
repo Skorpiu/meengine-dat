@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, Car, FileText, Clock, RefreshCw } from "lucide-react";
 import { FeatureGate } from "@/components/license/feature-gate";
 import { useToast } from "@/hooks/use-toast";
+import { parseAdminDashboardLessonsPayload } from "@/lib/lessons/admin-dashboard-lessons-response";
 
 async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
   const contentType = response.headers.get("content-type") || "";
@@ -22,14 +23,6 @@ async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
   } catch {
     return null;
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function asArray<T>(value: unknown): T[] {
-  return Array.isArray(value) ? (value as T[]) : [];
 }
 
 type LessonView = "CODE" | "DRIVING" | "EXAMS";
@@ -62,12 +55,6 @@ type LessonListItem = {
   } | null;
 };
 
-type LessonsResponse = {
-  recent?: LessonListItem[];
-  current?: LessonListItem[];
-  upcoming?: LessonListItem[];
-};
-
 export function LessonsManagementClient() {
   const [selectedView, setSelectedView] = useState<LessonView>("DRIVING");
   const [recentLessons, setRecentLessons] = useState<LessonListItem[]>([]);
@@ -97,13 +84,12 @@ export function LessonsManagementClient() {
       const raw = await tryReadJson<unknown>(response);
       if (!raw) throw new Error("Failed to parse lessons response");
 
-      const data: LessonsResponse = isRecord(raw)
-        ? (raw as LessonsResponse)
-        : {};
+      const { recent, current, upcoming } =
+        parseAdminDashboardLessonsPayload<LessonListItem>(raw);
 
-      setRecentLessons(asArray<LessonListItem>(data.recent));
-      setCurrentLessons(asArray<LessonListItem>(data.current));
-      setUpcomingLessons(asArray<LessonListItem>(data.upcoming));
+      setRecentLessons(recent);
+      setCurrentLessons(current);
+      setUpcomingLessons(upcoming);
       setLastRefresh(new Date());
     } catch (error) {
       console.error("Error fetching lessons:", error);
