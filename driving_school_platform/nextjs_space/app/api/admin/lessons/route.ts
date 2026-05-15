@@ -24,10 +24,11 @@ import {
   VALIDATION_RULES,
 } from "@/lib/constants";
 import { lessonCreationSchema } from "@/lib/validation";
-import { startOfDay, addDays } from "date-fns";
+import { addDays } from "date-fns";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 import { decideDemoLessonCreate } from "@/lib/demo/demo-write-sandbox-route-guard";
+import { validateLessonCalendarRange } from "@/lib/lessons/calendar-range";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,9 +61,17 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   // Calendar mode → used by ScheduleMap (day / week / month)
   if (from && to) {
-    // Implement robust day range filtering: lessonDate >= startOfDay(from) AND lessonDate < startOfDay(to) + 1 day
-    const fromDate = startOfDay(new Date(from));
-    const toDate = addDays(startOfDay(new Date(to)), 1);
+    const range = validateLessonCalendarRange({ from, to });
+    if (!range.ok) {
+      return NextResponse.json(
+        { error: range.message, code: range.code },
+        { status: HTTP_STATUS.BAD_REQUEST },
+      );
+    }
+
+    // lessonDate >= startOfDay(from) AND lessonDate < startOfDay(to) + 1 day
+    const fromDate = range.from;
+    const toDate = addDays(range.to, 1);
 
     // If you want to limit organization in the future, here's the place:
     // where: { lessonDate: { gte: fromDate, lt: toDate }, organizationId: user.organizationId }

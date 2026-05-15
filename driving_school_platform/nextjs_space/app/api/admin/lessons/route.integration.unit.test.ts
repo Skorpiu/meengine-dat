@@ -162,6 +162,67 @@ describe("GET /api/admin/lessons (read-only)", () => {
     const body: any = await res.json();
     expect(body.lessons).toEqual([{ id: "cal-1" }]);
   });
+
+  it("calendar invalid from returns 400 invalid_calendar_range", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
+
+    const res = await GET(
+      reqGet(
+        "http://localhost/api/admin/lessons?from=not-a-date&to=2026-01-08",
+      ) as any,
+    );
+
+    expect(res.status).toBe(400);
+    const body: any = await res.json();
+    expect(body.code).toBe("invalid_calendar_range");
+    expect(body.error).toBe("Invalid lesson calendar date range.");
+    expect(h.lessonFindManyMock).not.toHaveBeenCalled();
+  });
+
+  it("calendar to <= from returns 400 invalid_calendar_range", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
+
+    const res = await GET(
+      reqGet(
+        "http://localhost/api/admin/lessons?from=2026-01-20&to=2026-01-10",
+      ) as any,
+    );
+
+    expect(res.status).toBe(400);
+    const body: any = await res.json();
+    expect(body.code).toBe("invalid_calendar_range");
+    expect(h.lessonFindManyMock).not.toHaveBeenCalled();
+  });
+
+  it("calendar range over 90 days returns 400 calendar_range_too_large", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
+
+    const res = await GET(
+      reqGet(
+        "http://localhost/api/admin/lessons?from=2026-01-01&to=2026-05-01",
+      ) as any,
+    );
+
+    expect(res.status).toBe(400);
+    const body: any = await res.json();
+    expect(body.code).toBe("calendar_range_too_large");
+    expect(body.error).toBe(
+      "Lesson calendar date range cannot exceed 90 days.",
+    );
+    expect(h.lessonFindManyMock).not.toHaveBeenCalled();
+  });
 });
 
 describe("POST /api/admin/lessons (handler integration)", () => {
