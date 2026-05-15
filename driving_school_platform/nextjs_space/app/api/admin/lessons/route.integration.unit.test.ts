@@ -60,6 +60,7 @@ vi.mock("@/lib/api-utils", async () => {
 import { POST, GET } from "./route";
 import { verifyAuth } from "@/lib/api-utils";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
+import { expectLessonIncludeSanitizesNestedUsers } from "@/lib/lessons/lesson-include-safety";
 
 const verifyAuthMock = verifyAuth as unknown as ReturnType<typeof vi.fn>;
 const checkFeatureAccessMock = checkFeatureAccess as unknown as ReturnType<
@@ -140,6 +141,9 @@ describe("GET /api/admin/lessons (read-only)", () => {
       current: [],
       upcoming: [],
     });
+    for (const call of h.lessonFindManyMock.mock.calls) {
+      expectLessonIncludeSanitizesNestedUsers(call[0]?.include);
+    }
   });
 
   it("calendar from/to uses findMany once, returns lessons, and does not delete", async () => {
@@ -161,6 +165,8 @@ describe("GET /api/admin/lessons (read-only)", () => {
     expect(h.lessonFindManyMock).toHaveBeenCalledTimes(1);
     const body: any = await res.json();
     expect(body.lessons).toEqual([{ id: "cal-1" }]);
+    const findManyArg = h.lessonFindManyMock.mock.calls[0]?.[0];
+    expectLessonIncludeSanitizesNestedUsers(findManyArg?.include);
   });
 
   it("calendar invalid from returns 400 invalid_calendar_range", async () => {

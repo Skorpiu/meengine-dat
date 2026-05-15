@@ -5,6 +5,7 @@ import {
   mapLessonListItem,
   type LessonListItem,
 } from "./lesson-mappers";
+import { expectLessonJsonHasNoNestedPasswordHash } from "./lesson-include-safety";
 
 function sampleLesson(id: string): LessonListItem {
   return {
@@ -39,6 +40,7 @@ describe("lesson-mappers", () => {
     expect(body).toEqual({ lessons: [lesson] });
     expect(body.lessons[0]?.student?.user).toBeDefined();
     expect(body.lessons[0]?.category?.name).toBe("B");
+    expectLessonJsonHasNoNestedPasswordHash(body);
   });
 
   it("mapAdminDashboardLessonsResponse keeps recent/current/upcoming", () => {

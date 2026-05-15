@@ -194,7 +194,7 @@ Small PRs; each must keep behavior unless noted and extend tests.
 | **Objective**    | Trim nested payloads after UI field audit; optional `take`/cursor inside 90-day window.                                       |
 | **Audit**        | [lesson-dto-minimization-audit.md](./lesson-dto-minimization-audit.md) — UI inventory, proposed DTOs, findings LD-001–LD-009. |
 | **Likely files** | `lesson-queries.ts`, `lesson-mappers.ts`, contract tests; possible `lessons-management-client` envelope fix (LD-002).         |
-| **Risks**        | `passwordHash` exposure today (LD-001); EXAMS view / Lesson model mismatch (LD-003); ScheduleMap contract.                    |
+| **Risks**        | LD-001 **addressed** (nested user select). EXAMS view / Lesson model mismatch (LD-003); ScheduleMap contract.                 |
 | **Tests**        | Contract/snapshot tests per endpoint; assert no secrets in JSON; load tests if pagination added.                              |
 | **Acceptance**   | Documented DTOs; calendar GET payloads match UI needs; no `passwordHash` in lesson list responses.                            |
 

@@ -20,6 +20,7 @@ import {
   deleteAdminLesson,
   updateAdminLesson,
 } from "@/lib/lessons/lesson-update-delete-service";
+import { LESSON_DETAIL_INCLUDE } from "@/lib/lessons/lesson-queries";
 
 type OrgScopedUser = {
   id: string;
@@ -65,12 +66,7 @@ export const GET = withErrorHandling(
 
     const lesson = await prisma.lesson.findFirst({
       where: { id, organizationId: orgId },
-      include: {
-        student: { include: { user: true } },
-        instructor: { include: { user: true } },
-        vehicle: true,
-        category: true,
-      },
+      include: LESSON_DETAIL_INCLUDE,
     });
 
     if (!lesson) {

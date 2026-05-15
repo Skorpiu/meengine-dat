@@ -49,9 +49,13 @@ vi.mock("@/lib/api-utils", async () => {
   };
 });
 
-import { PUT, DELETE } from "./route";
+import { GET, PUT, DELETE } from "./route";
 import { verifyAuth } from "@/lib/api-utils";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import {
+  expectLessonIncludeSanitizesNestedUsers,
+  expectLessonJsonHasNoNestedPasswordHash,
+} from "@/lib/lessons/lesson-include-safety";
 
 const verifyAuthMock = verifyAuth as unknown as ReturnType<typeof vi.fn>;
 const guardTenantMock = guardTenantAuthenticatedRoute as unknown as ReturnType<
@@ -85,6 +89,37 @@ beforeEach(() => {
   h.lessonDeleteManyMock.mockResolvedValue({ count: 1 });
 });
 
+describe("GET /api/admin/lessons/[id]", () => {
+  it("uses sanitized nested user include and omits passwordHash from JSON", async () => {
+    h.lessonFindFirstMock.mockResolvedValue({
+      id: LESSON_ID,
+      lessonDate: new Date("2030-06-01T00:00:00.000Z"),
+      endTime: "23:59",
+      instructor: {
+        userId: UUID_A,
+        user: { id: UUID_A, firstName: "Ian", lastName: "Instructor" },
+      },
+      student: {
+        user: { id: "stu-user", firstName: "Sam", lastName: "Student" },
+      },
+    });
+
+    const res = await GET(
+      new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`) as any,
+      { params: { id: LESSON_ID } } as any,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expectLessonIncludeSanitizesNestedUsers(
+      h.lessonFindFirstMock.mock.calls[0]?.[0]?.include,
+    );
+    expectLessonJsonHasNoNestedPasswordHash(body);
+    expect(body.data.instructor.user.firstName).toBe("Ian");
+  });
+});
+
 describe("PUT /api/admin/lessons/[id]", () => {
   it("updates a lesson on happy path", async () => {
     const res = await PUT(
@@ -105,6 +140,10 @@ describe("PUT /api/admin/lessons/[id]", () => {
     expect(body.success).toBe(true);
     expect(body.data.message).toBe("Lesson updated successfully");
     expect(h.lessonUpdateMock).toHaveBeenCalled();
+    expectLessonIncludeSanitizesNestedUsers(
+      h.lessonUpdateMock.mock.calls[0]?.[0]?.include,
+    );
+    expectLessonJsonHasNoNestedPasswordHash(body);
   });
 
   it("returns 404 when lesson not found", async () => {
