@@ -13,6 +13,7 @@ import {
 } from "@/components/lessons/LessonForm";
 import { lessonFormDialogContentWideClass } from "@/components/lessons/lesson-form-styles";
 import toast from "react-hot-toast";
+import type { LessonBookingSuccessMeta } from "@/components/lessons/lesson-booking-meta";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -47,7 +48,7 @@ async function safeReadJson(response: Response): Promise<unknown> {
 interface BookExamDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess: (meta?: LessonBookingSuccessMeta) => void | Promise<void>;
   instructorUserId: string;
 }
 
@@ -76,8 +77,8 @@ export function BookExamDialog({
       }
 
       toast.success("Exam created successfully");
-      onSuccess();
       onOpenChange(false);
+      await onSuccess({ lessonDate: payload.lessonDate });
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to create exam");
     }

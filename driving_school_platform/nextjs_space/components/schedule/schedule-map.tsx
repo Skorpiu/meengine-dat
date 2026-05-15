@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -116,12 +116,19 @@ export interface Lesson {
   };
 }
 
+export type ScheduleMapRefetch = () => Promise<void>;
+
 interface ScheduleMapProps {
   lessons: Lesson[];
   showPrintButton?: boolean;
   userRole?: "admin" | "instructor" | "student";
-  onLessonsUpdate?: () => void;
-  refreshKey?: number; // Used to trigger re-fetch after updates
+  /** Called after delete or other in-map mutations; should refetch calendar data. */
+  onLessonsUpdate?: () => void | Promise<void>;
+  /** Parent can call this to refetch immediately after booking (e.g. lesson create). */
+  onRegisterRefetch?: (refetch: ScheduleMapRefetch) => void;
+  refreshKey?: number;
+  /** When set (e.g. after booking), moves the calendar to that lesson date before refetch. */
+  focusLessonDate?: string | null;
 }
 
 // Updated role logic - Admin and Instructor share same scheduling logic, only print is admin-exclusive
@@ -130,7 +137,9 @@ export function ScheduleMap({
   showPrintButton = false,
   userRole = "student",
   onLessonsUpdate,
+  onRegisterRefetch,
   refreshKey = 0,
+  focusLessonDate = null,
 }: ScheduleMapProps) {
   const [viewType, setViewType] = useState<ViewType>("day");
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -153,89 +162,94 @@ export function ScheduleMap({
 
   const hours = Array.from({ length: 14 }, (_, i) => i + 7); // 7h to 20h
 
-  // Fixed data persistence - Fetch lessons from API with AbortController cleanup
+  const fetchLessons = useCallback(async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    setIsLoadingLessons(true);
+
+    try {
+      let fromDate: Date;
+      let toDate: Date;
+
+      if (viewType === "day") {
+        fromDate = currentDate;
+        toDate = currentDate;
+      } else if (viewType === "week") {
+        fromDate = startOfWeek(currentDate, { weekStartsOn: 1 });
+        toDate = endOfWeek(currentDate, { weekStartsOn: 1 });
+      } else {
+        fromDate = startOfMonth(currentDate);
+        toDate = endOfMonth(currentDate);
+      }
+
+      const fromStr = format(fromDate, "yyyy-MM-dd");
+      const toStr = format(toDate, "yyyy-MM-dd");
+
+      const response = await fetch(
+        `/api/${userRole}/lessons?from=${fromStr}&to=${toStr}&t=${Date.now()}`,
+        {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache" },
+          signal: controller.signal,
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch lessons");
+      }
+
+      const data = await safeReadJson(response);
+      const payloadObj = isRecord(data) ? data : {};
+      const dataObj = isRecord(payloadObj.data) ? payloadObj.data : {};
+      const fetchedLessons = safeGetArray(
+        dataObj.lessons ?? payloadObj.lessons,
+      );
+
+      const processedLessons: Lesson[] = (fetchedLessons as unknown[]).map(
+        (lesson) => {
+          const l = isRecord(lesson) ? lesson : {};
+          return {
+            ...l,
+            lessonDate: new Date(String(l.lessonDate ?? "")),
+          } as Lesson;
+        },
+      );
+
+      setLessons(processedLessons);
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name !== "AbortError") {
+        console.error("Error fetching lessons:", error);
+      }
+    } finally {
+      setIsLoadingLessons(false);
+    }
+  }, [viewType, currentDate, userRole]);
+
   useEffect(() => {
-    const fetchLessons = async () => {
-      // Abort previous request if exists
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
+    if (!focusLessonDate) return;
+    const focused = new Date(focusLessonDate);
+    if (!Number.isNaN(focused.getTime())) {
+      setCurrentDate(focused);
+    }
+  }, [focusLessonDate]);
 
-      // Create new AbortController
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
-
-      setIsLoadingLessons(true);
-
-      try {
-        // Calculate date range based on view type
-        let fromDate: Date;
-        let toDate: Date;
-
-        if (viewType === "day") {
-          fromDate = currentDate;
-          toDate = currentDate;
-        } else if (viewType === "week") {
-          fromDate = startOfWeek(currentDate, { weekStartsOn: 1 });
-          toDate = endOfWeek(currentDate, { weekStartsOn: 1 });
-        } else {
-          fromDate = startOfMonth(currentDate);
-          toDate = endOfMonth(currentDate);
-        }
-
-        const fromStr = format(fromDate, "yyyy-MM-dd");
-        const toStr = format(toDate, "yyyy-MM-dd");
-
-        const response = await fetch(
-          `/api/${userRole}/lessons?from=${fromStr}&to=${toStr}`,
-          {
-            cache: "no-store",
-            signal: controller.signal,
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch lessons");
-        }
-
-        const data = await safeReadJson(response);
-        const payloadObj = isRecord(data) ? data : {};
-        const dataObj = isRecord(payloadObj.data) ? payloadObj.data : {};
-        const fetchedLessons = safeGetArray(
-          dataObj.lessons ?? payloadObj.lessons,
-        );
-
-        // Convert lessonDate strings to Date objects
-        const processedLessons: Lesson[] = (fetchedLessons as unknown[]).map(
-          (lesson) => {
-            const l = isRecord(lesson) ? lesson : {};
-            return {
-              ...l,
-              lessonDate: new Date(String(l.lessonDate ?? "")),
-            } as Lesson;
-          },
-        );
-
-        setLessons(processedLessons);
-      } catch (error: unknown) {
-        if (error instanceof Error && error.name !== "AbortError") {
-          console.error("Error fetching lessons:", error);
-          // Keep showing initial lessons on error
-        }
-      } finally {
-        setIsLoadingLessons(false);
-      }
-    };
-
-    fetchLessons();
-
-    // Cleanup function to abort fetch on unmount or dependency change
+  useEffect(() => {
+    void fetchLessons();
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
-  }, [viewType, currentDate, userRole, refreshKey]); // Re-fetch on viewType, currentDate, or refreshKey change
+  }, [fetchLessons, refreshKey]);
+
+  useEffect(() => {
+    onRegisterRefetch?.(fetchLessons);
+  }, [fetchLessons, onRegisterRefetch]);
 
   // Update current time every minute for the time indicator (Lisbon GMT/UTC)
   useEffect(() => {
@@ -374,9 +388,10 @@ export function ScheduleMap({
         description: "Lesson deleted successfully",
       });
 
-      // Refresh lessons list
       if (onLessonsUpdate) {
-        onLessonsUpdate();
+        await onLessonsUpdate();
+      } else {
+        await fetchLessons();
       }
     } catch (error) {
       console.error("Error deleting lesson:", error);

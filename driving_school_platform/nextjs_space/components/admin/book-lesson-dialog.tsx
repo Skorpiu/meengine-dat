@@ -13,6 +13,7 @@ import {
 } from "@/components/lessons/LessonForm";
 import { lessonFormDialogContentClass } from "@/components/lessons/lesson-form-styles";
 import toast from "react-hot-toast";
+import type { LessonBookingSuccessMeta } from "@/components/lessons/lesson-booking-meta";
 
 async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
   const contentType = response.headers.get("content-type") || "";
@@ -27,7 +28,7 @@ async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
 interface BookLessonDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess: (meta?: LessonBookingSuccessMeta) => void | Promise<void>;
 }
 
 export function BookLessonDialog({
@@ -72,7 +73,7 @@ export function BookLessonDialog({
       if (response.ok) {
         toast.success(data?.message || "Lesson booked successfully!");
         onOpenChange(false);
-        onSuccess();
+        await onSuccess({ lessonDate: payload.lessonDate });
       } else {
         toast.error(data?.error || "Failed to book lesson");
       }

@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   ScheduleMap,
   type Lesson as ScheduleLesson,
+  type ScheduleMapRefetch,
 } from "@/components/schedule/schedule-map";
 import { BookLessonDialog } from "./book-lesson-dialog";
 import { BookExamDialog } from "./book-exam-dialog";
 import { useRouter } from "next/navigation";
+import type { LessonBookingSuccessMeta } from "@/components/lessons/lesson-booking-meta";
 
 interface AdminDashboardClientProps {
   lessons: ScheduleLesson[];
@@ -21,15 +23,30 @@ export function AdminDashboardClient({
   const [bookLessonOpen, setBookLessonOpen] = useState(false);
   const [bookExamOpen, setBookExamOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [focusLessonDate, setFocusLessonDate] = useState<string | null>(null);
+  const scheduleRefetchRef = useRef<ScheduleMapRefetch | null>(null);
 
-  const handleSuccess = () => {
-    setBookLessonOpen(false);
-    setBookExamOpen(false);
+  const registerScheduleRefetch = useCallback((refetch: ScheduleMapRefetch) => {
+    scheduleRefetchRef.current = refetch;
+  }, []);
 
-    // force server refresh + re-fetch in ScheduleMap
+  const refreshSchedule = useCallback(async () => {
     setRefreshKey((k) => k + 1);
+    await scheduleRefetchRef.current?.();
     router.refresh();
-  };
+  }, [router]);
+
+  const handleLessonBooked = useCallback(
+    async (meta?: LessonBookingSuccessMeta) => {
+      setBookLessonOpen(false);
+      setBookExamOpen(false);
+      if (meta?.lessonDate) {
+        setFocusLessonDate(meta.lessonDate);
+      }
+      await refreshSchedule();
+    },
+    [refreshSchedule],
+  );
 
   return (
     <>
@@ -49,21 +66,23 @@ export function AdminDashboardClient({
           lessons={initialLessons}
           showPrintButton={true}
           userRole="admin"
-          onLessonsUpdate={handleSuccess}
+          onLessonsUpdate={refreshSchedule}
+          onRegisterRefetch={registerScheduleRefetch}
           refreshKey={refreshKey}
+          focusLessonDate={focusLessonDate}
         />
       </div>
 
       <BookLessonDialog
         open={bookLessonOpen}
         onOpenChange={setBookLessonOpen}
-        onSuccess={handleSuccess}
+        onSuccess={handleLessonBooked}
       />
 
       <BookExamDialog
         open={bookExamOpen}
         onOpenChange={setBookExamOpen}
-        onSuccess={handleSuccess}
+        onSuccess={handleLessonBooked}
       />
     </>
   );
