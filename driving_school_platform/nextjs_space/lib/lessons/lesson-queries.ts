@@ -4,13 +4,17 @@
  */
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
+import { LESSON_NESTED_USER_RELATION } from "@/lib/users/user-public-select";
 
 export const LESSON_LIST_INCLUDE = {
-  student: { include: { user: true } },
-  instructor: { include: { user: true } },
+  student: LESSON_NESTED_USER_RELATION,
+  instructor: LESSON_NESTED_USER_RELATION,
   vehicle: true,
   category: true,
 } satisfies Prisma.LessonInclude;
+
+/** Same graph as list/calendar — use for GET/PUT lesson-by-id responses. */
+export const LESSON_DETAIL_INCLUDE = LESSON_LIST_INCLUDE;
 
 const CALENDAR_ORDER_BY: Prisma.LessonOrderByWithRelationInput[] = [
   { lessonDate: "asc" },
