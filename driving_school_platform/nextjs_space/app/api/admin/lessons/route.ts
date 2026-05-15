@@ -34,6 +34,10 @@ import {
   getAdminDashboardLessons,
   type AdminDashboardView,
 } from "@/lib/lessons/lesson-queries";
+import {
+  mapAdminDashboardLessonsResponse,
+  mapLessonCalendarResponse,
+} from "@/lib/lessons/lesson-mappers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -81,14 +85,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       toDateExclusive: addDays(range.to, 1),
     });
 
-    // IMPORTANT: Simple format for the ScheduleMap with Cache-Control header
-    return NextResponse.json(
-      { lessons },
-      {
-        status: 200,
-        headers: { "Cache-Control": "no-store" },
-      },
-    );
+    return NextResponse.json(mapLessonCalendarResponse(lessons), {
+      status: 200,
+      headers: { "Cache-Control": "no-store" },
+    });
   }
 
   const view = getQueryParam(
@@ -104,7 +104,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     time,
   });
 
-  return successResponse({ recent, current, upcoming });
+  return successResponse(
+    mapAdminDashboardLessonsResponse({ recent, current, upcoming }),
+  );
 });
 
 /**

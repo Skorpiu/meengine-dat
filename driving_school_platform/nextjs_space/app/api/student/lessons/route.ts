@@ -5,6 +5,7 @@ import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from "@/lib/constants";
 import { startOfDay, addDays } from "date-fns";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 import { getStudentCalendarLessons } from "@/lib/lessons/lesson-queries";
+import { mapStudentLessonsResponse } from "@/lib/lessons/lesson-mappers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,8 +63,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     toDateExclusive: toDate,
   });
 
-  return NextResponse.json(
-    { lessons },
-    { status: 200, headers: { "Cache-Control": "no-store" } },
-  );
+  return NextResponse.json(mapStudentLessonsResponse(lessons), {
+    status: 200,
+    headers: { "Cache-Control": "no-store" },
+  });
 });
