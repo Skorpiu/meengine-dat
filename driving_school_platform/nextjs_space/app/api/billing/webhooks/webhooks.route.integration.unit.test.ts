@@ -61,9 +61,10 @@ describe("Billing Webhooks boundary (skeleton)", () => {
   });
 
   it("returns 400 and does not persist/apply when provider parseWebhook throws", async () => {
+    const rawProviderMessage = "Invalid subscription field: foo";
     const spy = vi
       .spyOn(sibsBillingProvider, "parseWebhook")
-      .mockRejectedValueOnce(new Error("Invalid subscription field: foo"));
+      .mockRejectedValueOnce(new Error(rawProviderMessage));
 
     const res = await POST(
       jsonReq({
@@ -86,9 +87,11 @@ describe("Billing Webhooks boundary (skeleton)", () => {
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body).toEqual({
-      error: "Provider webhook parse failed",
-      detail: "Invalid provider webhook payload",
+      error: "Billing webhook could not be processed.",
+      code: "billing_webhook_parse_failed",
     });
+    expect(body).not.toHaveProperty("detail");
+    expect(JSON.stringify(body)).not.toContain(rawProviderMessage);
 
     expect(spy).toHaveBeenCalledTimes(1);
     expect(h.recordBillingEventWithOutcomeMock).not.toHaveBeenCalled();
@@ -105,7 +108,11 @@ describe("Billing Webhooks boundary (skeleton)", () => {
 
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.error).toBe("Unsupported provider");
+    expect(body).toEqual({
+      error: "Unsupported provider",
+      code: "billing_webhook_unsupported_provider",
+    });
+    expect(body).not.toHaveProperty("detail");
     expect(h.recordBillingEventWithOutcomeMock).not.toHaveBeenCalled();
   });
 
@@ -225,5 +232,32 @@ describe("Billing Webhooks boundary (skeleton)", () => {
     expect(h.processPersistedBillingEventLifecycleMock).toHaveBeenCalledWith(
       "be_fail",
     );
+    expect(JSON.stringify(body)).not.toContain("apply failed");
+    expect(body).not.toHaveProperty("detail");
+  });
+
+  it("returns sanitized 500 when persistence throws unexpectedly", async () => {
+    const internalMessage = "Unique constraint failed on billing_events";
+    h.recordBillingEventWithOutcomeMock.mockRejectedValue(
+      new Error(internalMessage),
+    );
+
+    const res = await POST(
+      jsonReq({
+        providerEventId: "evt_db_fail",
+        eventType: "PAYMENT_SUCCEEDED",
+        payload: { ok: true },
+      }) as any,
+      { params: { provider: "sibs" } } as any,
+    );
+
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body).toEqual({
+      error: "Billing webhook could not be processed.",
+      code: "billing_webhook_processing_failed",
+    });
+    expect(JSON.stringify(body)).not.toContain(internalMessage);
+    expect(body).not.toHaveProperty("detail");
   });
 });
