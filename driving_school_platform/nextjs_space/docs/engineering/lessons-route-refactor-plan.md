@@ -1,7 +1,7 @@
 # Lessons Route Refactor Plan
 
-**Status:** Batch 1 (`lessons-query-module`) **done** on branch `lessons-query-module`. Batches 2–6 pending.  
-**Branch context:** `lessons-route-alignment-planning` (plan); `lessons-query-module` (batch 1)  
+**Status:** Batches 1–2 **done** (`lessons-query-module`, `lessons-dto-mappers`). Batches 3–6 pending.  
+**Branch context:** `lessons-route-alignment-planning` (plan); `lessons-query-module` (batch 1); `lessons-dto-mappers` (batch 2)  
 **Related audits:** [route-handler-consistency-audit.md](./route-handler-consistency-audit.md) (RHC-001, RHC-006, RHC-008), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-002)
 
 ---
@@ -147,15 +147,15 @@ Small PRs; each must keep behavior unless noted and extend tests.
 | **Tests**      | Existing `app/api/admin/lessons/route.integration.unit.test.ts` unchanged and passing.                                                                                                                                 |
 | **Acceptance** | GET responses unchanged; `pnpm check` green.                                                                                                                                                                           |
 
-### Batch 2: `lessons-dto-mappers`
+### Batch 2: `lessons-dto-mappers` — **Done**
 
-|                  |                                                                                                                             |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **Objective**    | Centralize Prisma `include` definition and optional field shaping (e.g. nested `user` exposure) in `lib/lessons/mappers/*`. |
-| **Likely files** | `lib/lessons/queries/includes.ts`, `lib/lessons/mappers/lesson-list-item.ts`; routes call mapper after query.               |
-| **Risks**        | Accidental field drop/add visible to UI; ScheduleMap depends on calendar payload shape.                                     |
-| **Tests**        | Snapshot or explicit key assertions on mapped objects; one calendar + one dashboard test.                                   |
-| **Acceptance**   | Response JSON unchanged for existing integration tests; includes defined in one place.                                      |
+|                |                                                                                                                                                                                                                                               |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Objective**  | Centralize response-body mapping for GET lesson lists without changing public JSON.                                                                                                                                                           |
+| **Shipped**    | `lib/lessons/lesson-mappers.ts` (`mapLessonListItem`, `mapLessonCalendarResponse`, `mapAdminDashboardLessonsResponse`, role aliases). Admin/instructor/student GET routes call mappers; `LESSON_LIST_INCLUDE` remains in `lesson-queries.ts`. |
+| **Risks**      | Accidental field drop/add visible to UI; ScheduleMap depends on calendar payload shape.                                                                                                                                                       |
+| **Tests**      | `lib/lessons/lesson-mappers.unit.test.ts`; existing admin lessons route integration tests.                                                                                                                                                    |
+| **Acceptance** | Response JSON unchanged; `pnpm check` green. Field minimization deferred to a later batch.                                                                                                                                                    |
 
 ### Batch 3: `lessons-create-service`
 
