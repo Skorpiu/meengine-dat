@@ -4,6 +4,7 @@ import { errorResponse, verifyAuth, withErrorHandling } from "@/lib/api-utils";
 import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from "@/lib/constants";
 import { startOfDay, addDays } from "date-fns";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import { getInstructorCalendarLessons } from "@/lib/lessons/lesson-queries";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -54,19 +55,11 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return errorResponse("Instructor profile not found", HTTP_STATUS.NOT_FOUND);
   }
 
-  const lessons = await prisma.lesson.findMany({
-    where: {
-      organizationId: orgId,
-      instructorId: instructor.id,
-      lessonDate: { gte: fromDate, lt: toDate },
-    },
-    include: {
-      student: { include: { user: true } },
-      instructor: { include: { user: true } },
-      vehicle: true,
-      category: true,
-    },
-    orderBy: [{ lessonDate: "asc" }, { startTime: "asc" }],
+  const lessons = await getInstructorCalendarLessons({
+    organizationId: orgId,
+    instructorId: instructor.id,
+    fromDate,
+    toDateExclusive: toDate,
   });
 
   return NextResponse.json(

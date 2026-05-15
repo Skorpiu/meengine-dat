@@ -1,7 +1,7 @@
 # Lessons Route Refactor Plan
 
-**Status:** Planning only — no functional refactor in the batch that created this document.  
-**Branch context:** `lessons-route-alignment-planning`  
+**Status:** Batch 1 (`lessons-query-module`) **done** on branch `lessons-query-module`. Batches 2–6 pending.  
+**Branch context:** `lessons-route-alignment-planning` (plan); `lessons-query-module` (batch 1)  
 **Related audits:** [route-handler-consistency-audit.md](./route-handler-consistency-audit.md) (RHC-001, RHC-006, RHC-008), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-002)
 
 ---
@@ -137,15 +137,15 @@ lib/lessons/
 
 Small PRs; each must keep behavior unless noted and extend tests.
 
-### Batch 1: `lessons-query-module`
+### Batch 1: `lessons-query-module` — **Done**
 
-|                  |                                                                                                                                                                                                   |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Objective**    | Extract read-only Prisma queries (dashboard slices, admin calendar, instructor/student calendar) into `lib/lessons/queries/*` without changing JSON responses.                                    |
-| **Likely files** | `lib/lessons/queries/admin-dashboard.ts`, `admin-calendar.ts`, `role-calendar.ts`; slim `app/api/admin/lessons/route.ts` GET branches; `instructor/lessons/route.ts`, `student/lessons/route.ts`. |
-| **Risks**        | Subtle `where` clause drift (EXAMS view, instructor/student filters, `take: 50`).                                                                                                                 |
-| **Tests**        | Extend `route.integration.unit.test.ts` assertions on `findMany` args; add unit tests with mocked Prisma at query module boundary.                                                                |
-| **Acceptance**   | GET responses byte-identical for fixture scenarios; `pnpm check` green; no new dependencies.                                                                                                      |
+|                |                                                                                                                                                                                                                        |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Objective**  | Extract read-only Prisma queries (dashboard slices, admin calendar, instructor/student calendar) without changing JSON responses.                                                                                      |
+| **Shipped**    | `lib/lessons/lesson-queries.ts` (`getAdminCalendarLessons`, `getAdminDashboardLessons`, `getInstructorCalendarLessons`, `getStudentCalendarLessons`, `LESSON_LIST_INCLUDE`). GET handlers call module; POST unchanged. |
+| **Risks**      | Subtle `where` clause drift (EXAMS view, instructor/student filters, `take: 50`).                                                                                                                                      |
+| **Tests**      | Existing `app/api/admin/lessons/route.integration.unit.test.ts` unchanged and passing.                                                                                                                                 |
+| **Acceptance** | GET responses unchanged; `pnpm check` green.                                                                                                                                                                           |
 
 ### Batch 2: `lessons-dto-mappers`
 
