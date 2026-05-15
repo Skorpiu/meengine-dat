@@ -29,6 +29,11 @@ import { checkFeatureAccess } from "@/lib/middleware/feature-check";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 import { decideDemoLessonCreate } from "@/lib/demo/demo-write-sandbox-route-guard";
 import { validateLessonCalendarRange } from "@/lib/lessons/calendar-range";
+import {
+  getAdminCalendarLessons,
+  getAdminDashboardLessons,
+  type AdminDashboardView,
+} from "@/lib/lessons/lesson-queries";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -70,28 +75,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }
 
     // lessonDate >= startOfDay(from) AND lessonDate < startOfDay(to) + 1 day
-    const fromDate = range.from;
-    const toDate = addDays(range.to, 1);
-
-    // If you want to limit organization in the future, here's the place:
-    // where: { lessonDate: { gte: fromDate, lt: toDate }, organizationId: user.organizationId }
-
-    const lessons = await prisma.lesson.findMany({
-      where: {
-        organizationId: orgId,
-        lessonDate: {
-          gte: fromDate,
-          lt: toDate,
-        },
-        // Later we can filter by organizationId: user.organizationId
-      },
-      include: {
-        student: { include: { user: true } },
-        instructor: { include: { user: true } },
-        vehicle: true,
-        category: true,
-      },
-      orderBy: [{ lessonDate: "asc" }, { startTime: "asc" }],
+    const lessons = await getAdminCalendarLessons({
+      organizationId: orgId,
+      fromDate: range.from,
+      toDateExclusive: addDays(range.to, 1),
     });
 
     // IMPORTANT: Simple format for the ScheduleMap with Cache-Control header
@@ -104,149 +91,20 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     );
   }
 
-  const view = getQueryParam(searchParams, "view", "DRIVING");
-  const { yesterday, today, tomorrow, currentTime } = getTimeRanges();
+  const view = getQueryParam(
+    searchParams,
+    "view",
+    "DRIVING",
+  ) as AdminDashboardView;
+  const time = getTimeRanges();
 
-  if (view === "EXAMS") {
-    // Note: Exams are stored as lessons with lessonType = 'EXAM'
-    // Fetch exams from lessons table
-    const [recentExams, currentExams, upcomingExams] = await Promise.all([
-      prisma.lesson.findMany({
-        where: {
-          organizationId: orgId,
-          lessonType: "EXAM",
-          OR: [
-            {
-              lessonDate: yesterday,
-            },
-            {
-              lessonDate: today,
-              startTime: { lt: currentTime },
-            },
-          ],
-        },
-        include: {
-          student: { include: { user: true } },
-          instructor: { include: { user: true } },
-          vehicle: true,
-          category: true,
-        },
-        orderBy: [{ lessonDate: "desc" }, { startTime: "desc" }],
-        take: 50, // Limit to recent 50
-      }),
-      // Current exams: happening right now (started but not yet ended)
-      prisma.lesson.findMany({
-        where: {
-          organizationId: orgId,
-          lessonType: "EXAM",
-          lessonDate: today,
-          startTime: { lte: currentTime },
-          endTime: { gt: currentTime },
-        },
-        include: {
-          student: { include: { user: true } },
-          instructor: { include: { user: true } },
-          vehicle: true,
-          category: true,
-        },
-        orderBy: [{ startTime: "asc" }],
-      }),
-      prisma.lesson.findMany({
-        where: {
-          organizationId: orgId,
-          lessonType: "EXAM",
-          OR: [
-            { lessonDate: today, startTime: { gte: currentTime } },
-            { lessonDate: { gt: today, lte: tomorrow } },
-          ],
-        },
-        include: {
-          student: { include: { user: true } },
-          instructor: { include: { user: true } },
-          vehicle: true,
-          category: true,
-        },
-        orderBy: [{ lessonDate: "asc" }, { startTime: "asc" }],
-        take: 50, // Limit to next 50
-      }),
-    ]);
-
-    return successResponse({
-      recent: recentExams,
-      current: currentExams,
-      upcoming: upcomingExams,
-    });
-  }
-
-  // Fetch lessons (DRIVING or THEORY)
-  const lessonType = view === "CODE" ? "THEORY" : "DRIVING";
-
-  const [recentLessons, currentLessons, upcomingLessons] = await Promise.all([
-    prisma.lesson.findMany({
-      where: {
-        organizationId: orgId,
-        lessonType,
-        OR: [
-          {
-            lessonDate: yesterday,
-          },
-          {
-            lessonDate: today,
-            startTime: { lt: currentTime },
-          },
-        ],
-      },
-      include: {
-        student: { include: { user: true } },
-        instructor: { include: { user: true } },
-        vehicle: true,
-        category: true,
-      },
-      orderBy: [{ lessonDate: "desc" }, { startTime: "desc" }],
-      take: 50, // Limit to recent 50
-    }),
-    // Current lessons: happening right now (started but not yet ended)
-    prisma.lesson.findMany({
-      where: {
-        organizationId: orgId,
-        lessonType,
-        lessonDate: today,
-        startTime: { lte: currentTime },
-        endTime: { gt: currentTime },
-      },
-      include: {
-        student: { include: { user: true } },
-        instructor: { include: { user: true } },
-        vehicle: true,
-        category: true,
-      },
-      orderBy: [{ startTime: "asc" }],
-    }),
-    prisma.lesson.findMany({
-      where: {
-        organizationId: orgId,
-        lessonType,
-        OR: [
-          { lessonDate: today, startTime: { gte: currentTime } },
-          { lessonDate: { gt: today, lte: tomorrow } },
-        ],
-      },
-      include: {
-        student: { include: { user: true } },
-        instructor: { include: { user: true } },
-        vehicle: true,
-        category: true,
-      },
-      orderBy: [{ lessonDate: "asc" }, { startTime: "asc" }],
-      take: 50, // Limit to next 50
-    }),
-  ]);
-
-  return successResponse({
-    recent: recentLessons,
-    current: currentLessons,
-    upcoming: upcomingLessons,
+  const { recent, current, upcoming } = await getAdminDashboardLessons({
+    organizationId: orgId,
+    view,
+    time,
   });
+
+  return successResponse({ recent, current, upcoming });
 });
 
 /**
