@@ -1,7 +1,7 @@
 # Lessons Route Refactor Plan
 
-**Status:** Batches 1–2 **done** (`lessons-query-module`, `lessons-dto-mappers`). Batches 3–6 pending.  
-**Branch context:** `lessons-route-alignment-planning` (plan); `lessons-query-module` (batch 1); `lessons-dto-mappers` (batch 2)  
+**Status:** Batches 1–3 **done** (`lessons-query-module`, `lessons-dto-mappers`, `lessons-create-service`). Batches 4–6 pending.  
+**Branch context:** `lessons-route-alignment-planning` (plan); `lessons-query-module` (batch 1); `lessons-dto-mappers` (batch 2); `lessons-create-service` (batch 3)  
 **Related audits:** [route-handler-consistency-audit.md](./route-handler-consistency-audit.md) (RHC-001, RHC-006, RHC-008), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-002)
 
 ---
@@ -157,15 +157,15 @@ Small PRs; each must keep behavior unless noted and extend tests.
 | **Tests**      | `lib/lessons/lesson-mappers.unit.test.ts`; existing admin lessons route integration tests.                                                                                                                                                    |
 | **Acceptance** | Response JSON unchanged; `pnpm check` green. Field minimization deferred to a later batch.                                                                                                                                                    |
 
-### Batch 3: `lessons-create-service`
+### Batch 3: `lessons-create-service` — **Done**
 
-|                  |                                                                                                                                                          |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Objective**    | Move POST `/api/admin/lessons` orchestration to `lib/lessons/services/create-lesson.ts` (types, category resolution, multi-student exams, vehicle gate). |
-| **Likely files** | `lib/lessons/services/create-lesson.ts`, `lib/lessons/mutations/create.ts`, `app/api/admin/lessons/route.ts` POST handler.                               |
-| **Risks**        | Sandbox `pendingCreates` counting; instructor ID override; partial failure on `Promise.all` exam creates.                                                |
-| **Tests**        | Preserve all POST cases in `route.integration.unit.test.ts`; add pure unit tests for category selection and exam limits.                                 |
-| **Acceptance**   | POST status codes and bodies unchanged; demo sandbox tests still pass.                                                                                   |
+|                |                                                                                                                                                                       |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Objective**  | Move POST Prisma orchestration out of the admin lessons route.                                                                                                        |
+| **Shipped**    | `lib/lessons/lesson-create-service.ts` (`createAdminLesson`). Route keeps auth, tenant, sandbox, Zod validation, vehicle **feature** gate, `successResponse` mapping. |
+| **Risks**      | Sandbox `pendingCreates` counting; instructor ID override; partial failure on `Promise.all` exam creates.                                                             |
+| **Tests**      | `route.integration.unit.test.ts` POST cases; `lesson-create-service.unit.test.ts` (exam cap, duration).                                                               |
+| **Acceptance** | POST status codes and bodies unchanged; demo sandbox tests still pass.                                                                                                |
 
 ### Batch 4: `lessons-update-delete-service`
 

@@ -5,7 +5,6 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import {
   successResponse,
   errorResponse,
@@ -16,13 +15,7 @@ import {
   getTimeRanges,
   calculateDuration,
 } from "@/lib/api-utils";
-import {
-  HTTP_STATUS,
-  API_MESSAGES,
-  USER_ROLES,
-  LESSON_STATUS,
-  VALIDATION_RULES,
-} from "@/lib/constants";
+import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from "@/lib/constants";
 import { lessonCreationSchema } from "@/lib/validation";
 import { addDays } from "date-fns";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
@@ -38,6 +31,7 @@ import {
   mapAdminDashboardLessonsResponse,
   mapLessonCalendarResponse,
 } from "@/lib/lessons/lesson-mappers";
+import { createAdminLesson } from "@/lib/lessons/lesson-create-service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -162,23 +156,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return validation.error;
   }
 
-  const {
-    lessonType,
-    studentId,
-    studentIds,
-    vehicleId,
-    lessonDate,
-    startTime,
-    endTime,
-  } = validation.data;
-  let { instructorId } = validation.data;
+  const { instructorId: payloadInstructorId, ...validated } = validation.data;
+  const instructorId =
+    user.role === USER_ROLES.INSTRUCTOR ? user.id : payloadInstructorId;
 
-  // Security: If user is INSTRUCTOR, force instructorId to be their own ID
-  if (user.role === USER_ROLES.INSTRUCTOR) {
-    instructorId = user.id;
-  }
+  const { vehicleId, startTime, endTime } = validated;
 
-  // Defense-in-depth: block vehicle usage if feature is disabled
   if (vehicleId) {
     const featureCheck = await checkFeatureAccess(
       "VEHICLE_MANAGEMENT",
@@ -195,206 +178,38 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         { status: 403 },
       );
     }
-    const vehicle = await prisma.vehicle.findFirst({
-      where: { id: vehicleId, organizationId: orgId },
-      select: { id: true },
-    });
-    if (!vehicle) {
-      return errorResponse("Vehicle not found", HTTP_STATUS.NOT_FOUND);
-    }
   }
 
-  // Calculate duration
   const durationMinutes = calculateDuration(startTime, endTime);
 
-  if (durationMinutes <= 0) {
-    return errorResponse(
-      "End time must be after start time",
-      HTTP_STATUS.BAD_REQUEST,
-    );
-  }
-
-  // Get instructor and verify qualified categories
-  const instructor = await prisma.instructor.findFirst({
-    where: { userId: instructorId, organizationId: orgId },
-    include: { qualifiedCategories: true },
+  const result = await createAdminLesson({
+    organizationId: orgId,
+    payload: { ...validated, instructorId },
+    durationMinutes,
   });
 
-  if (!instructor) {
-    return errorResponse("Instructor not found", HTTP_STATUS.NOT_FOUND);
+  if (!result.ok) {
+    return errorResponse(result.error, result.status);
   }
 
-  // Determine categoryId based on lesson type
-  let categoryId: number;
+  const { data } = result;
 
-  if (lessonType === "THEORY") {
-    // For THEORY lessons (code classes), use the instructor's first category if available
-    // Otherwise, use a default category (B - Car, the most common)
-    if (instructor.qualifiedCategories.length > 0) {
-      categoryId = instructor.qualifiedCategories[0].id;
-    } else {
-      // Get the default "B" category as fallback
-      const defaultCategory = await prisma.category.findFirst({
-        where: { name: "B" },
-      });
-
-      if (!defaultCategory) {
-        // If no B category exists, get any active category
-        const anyCategory = await prisma.category.findFirst({
-          where: { isActive: true },
-        });
-
-        if (!anyCategory) {
-          return errorResponse(
-            "No active categories found in the system",
-            HTTP_STATUS.INTERNAL_SERVER_ERROR,
-          );
-        }
-
-        categoryId = anyCategory.id;
-      } else {
-        categoryId = defaultCategory.id;
-      }
-    }
-  } else {
-    // For DRIVING and EXAM lessons, instructor must have qualified categories
-    if (instructor.qualifiedCategories.length === 0) {
-      return errorResponse(
-        "Instructor has no qualified categories for driving lessons. Please assign categories to this instructor first.",
-        HTTP_STATUS.BAD_REQUEST,
-      );
-    }
-
-    categoryId = instructor.qualifiedCategories[0].id;
-  }
-
-  // Handle EXAM and THEORY_EXAM types (can have multiple students)
-  if (lessonType === "EXAM" || lessonType === "THEORY_EXAM") {
-    if (!studentIds || studentIds.length === 0) {
-      return errorResponse(
-        `At least one student is required for ${lessonType === "THEORY_EXAM" ? "a theory exam" : "an exam"}`,
-        HTTP_STATUS.BAD_REQUEST,
-      );
-    }
-
-    // THEORY_EXAM has no limit on students, EXAM has a limit
-    if (
-      lessonType === "EXAM" &&
-      studentIds.length > VALIDATION_RULES.MAX_STUDENTS_PER_EXAM
-    ) {
-      return errorResponse(
-        `Maximum ${VALIDATION_RULES.MAX_STUDENTS_PER_EXAM} students per exam`,
-        HTTP_STATUS.BAD_REQUEST,
-      );
-    }
-
-    // Create lessons for each student
-    const lessons = await Promise.all(
-      studentIds.map(async (sid) => {
-        const student = await prisma.student.findFirst({
-          where: { userId: sid, organizationId: orgId },
-        });
-
-        if (!student) {
-          throw new Error(`Student ${sid} not found`);
-        }
-
-        return prisma.lesson.create({
-          data: {
-            organizationId: orgId,
-            studentId: student.id,
-            instructorId: instructor.id,
-            vehicleId: vehicleId || null,
-            lessonDate: new Date(lessonDate),
-            startTime,
-            endTime,
-            durationMinutes,
-            lessonType,
-            categoryId,
-            status: LESSON_STATUS.SCHEDULED,
-          },
-        });
-      }),
-    );
-
+  if (data.kind === "exam") {
     return successResponse(
-      {
-        message: `${lessonType === "THEORY_EXAM" ? "Theory exam" : "Exam"} booked successfully for ${lessons.length} student(s)`,
-        lessons,
-      },
+      { message: data.message, lessons: data.lessons },
       HTTP_STATUS.CREATED,
     );
   }
 
-  // Handle THEORY or DRIVING type (single student)
-  // THEORY lessons can be group classes (no specific student required)
-  // DRIVING lessons require a specific student
-
-  if (lessonType === "THEORY" && !studentId) {
-    // For THEORY lessons (group classes) without a specific student
-    // Create a generic "group class" lesson entry without a student reference
-    const lesson = await prisma.lesson.create({
-      data: {
-        organizationId: orgId,
-        studentId: null, // No specific student for group classes
-        instructorId: instructor.id,
-        vehicleId: null, // Theory lessons don't require vehicles
-        lessonDate: new Date(lessonDate),
-        startTime,
-        endTime,
-        durationMinutes,
-        lessonType,
-        categoryId,
-        status: LESSON_STATUS.SCHEDULED,
-      },
-    });
-
+  if (data.kind === "theory_group") {
     return successResponse(
-      {
-        message: "Theory group class created successfully",
-        lesson,
-      },
+      { message: data.message, lesson: data.lesson },
       HTTP_STATUS.CREATED,
     );
   }
-
-  if (!studentId) {
-    return errorResponse(
-      "Student is required for driving lessons",
-      HTTP_STATUS.BAD_REQUEST,
-    );
-  }
-
-  const student = await prisma.student.findFirst({
-    where: { userId: studentId, organizationId: orgId },
-  });
-
-  if (!student) {
-    return errorResponse("Student not found", HTTP_STATUS.NOT_FOUND);
-  }
-
-  // Create the lesson
-  const lesson = await prisma.lesson.create({
-    data: {
-      organizationId: orgId,
-      studentId: student.id,
-      instructorId: instructor.id,
-      vehicleId: vehicleId || null,
-      lessonDate: new Date(lessonDate),
-      startTime,
-      endTime,
-      durationMinutes,
-      lessonType,
-      categoryId,
-      status: LESSON_STATUS.SCHEDULED,
-    },
-  });
 
   return successResponse(
-    {
-      message: "Lesson booked successfully",
-      lesson,
-    },
+    { message: data.message, lesson: data.lesson },
     HTTP_STATUS.CREATED,
   );
 });
