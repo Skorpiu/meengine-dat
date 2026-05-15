@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { decideDemoRouteMutation } from "@/lib/demo/demo-route-guard";
-import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import {
+  assertUserTenantHost,
+  rejectDemoUserManagementMutation,
+} from "@/lib/users/user-route-access";
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -21,23 +23,14 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
-    if (!tenantGuard.allowed) {
-      return NextResponse.json(
-        { error: tenantGuard.error },
-        { status: tenantGuard.status },
-      );
+    const tenantDenied = await assertUserTenantHost(request, orgId);
+    if (tenantDenied) {
+      return tenantDenied;
     }
 
-    const demoDecision = await decideDemoRouteMutation({
-      organizationId: orgId,
-      category: "user_management",
-    });
-    if (!demoDecision.allowed) {
-      return NextResponse.json(
-        { error: demoDecision.message, code: demoDecision.reason },
-        { status: demoDecision.status },
-      );
+    const demoDenied = await rejectDemoUserManagementMutation(orgId);
+    if (demoDenied) {
+      return demoDenied;
     }
 
     const { searchParams } = new URL(request.url);
