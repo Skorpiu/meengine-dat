@@ -96,6 +96,8 @@ The following are intentionally **not** part of minimal release validation for D
 - **Billing portal** / billing management UI
 - **i18n** (internationalization)
 
+When billing webhooks are exposed (staging or production), **HTTP error responses must not include raw provider messages, stack traces, signature details, or other internal `detail` fields** — only stable `error` + `code` shapes (`lib/billing/webhook-http.ts`). Real PSP **signature verification** remains out of scope until a live provider is integrated.
+
 Any **public demo** must follow [public-demo-policy.md](./public-demo-policy.md): no public privileged credentials; fictional / resettable data; read-mostly demo tenants until guards are wired. Seed and reset expectations: [public-demo-seed-reset.md](./public-demo-seed-reset.md) (`pnpm demo:reset:dry-run` for org validation only).
 
 See also **Not integrated in this baseline** in [deployment-readiness.md](./deployment-readiness.md). For **public demo / portfolio** gaps after smoke (data isolation, credential policy, messaging), see [dat-production-readiness-gaps.md](./dat-production-readiness-gaps.md).
