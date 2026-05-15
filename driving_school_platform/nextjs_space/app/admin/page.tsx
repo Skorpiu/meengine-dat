@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminDashboardClient } from "@/components/admin/admin-dashboard-client";
 import type { Lesson as ScheduleLesson } from "@/components/schedule/schedule-map";
 import { getDrivingSchoolName } from "@/lib/config/features";
+import { LESSON_LIST_INCLUDE } from "@/lib/lessons/lesson-queries";
 import { Users, Car, Calendar, TrendingUp, CheckCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -62,12 +63,7 @@ export default async function AdminDashboard() {
         lte: thirtyDaysFromNow,
       },
     },
-    include: {
-      student: { include: { user: true } },
-      instructor: { include: { user: true } },
-      vehicle: true,
-      category: true,
-    },
+    include: LESSON_LIST_INCLUDE,
     orderBy: [{ lessonDate: "asc" }, { startTime: "asc" }],
   });
 

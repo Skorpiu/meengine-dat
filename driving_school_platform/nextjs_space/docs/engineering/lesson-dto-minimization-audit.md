@@ -87,6 +87,8 @@ This document inventories **current lesson list/calendar HTTP payloads**, **Pris
 
 Admin / instructor / student **dashboard** pages load the first 30 days via **server-side** `prisma.lesson.findMany` and **manually project** a `ScheduleMap` `Lesson` shape (subset of fields). `ScheduleMap` then **re-fetches** via role calendar APIs when the view/date changes.
 
+**SSR nested user sanitization (`lesson-ssr-user-select-sanitization`):** dashboard `findMany` calls use `LESSON_LIST_INCLUDE` (admin/instructor) or `LESSON_NESTED_USER_RELATION` on `instructor` only (student). No `user: true` on lesson reads; unused `user` / `preferredInstructor` includes removed from student profile SSR query.
+
 ---
 
 ## Current include
@@ -95,8 +97,8 @@ Defined in `lib/lessons/lesson-queries.ts`:
 
 ```ts
 export const LESSON_LIST_INCLUDE = {
-  student: { include: { user: true } },
-  instructor: { include: { user: true } },
+  student: LESSON_NESTED_USER_RELATION,
+  instructor: LESSON_NESTED_USER_RELATION,
   vehicle: true,
   category: true,
 } satisfies Prisma.LessonInclude;
@@ -278,7 +280,7 @@ Optional parallel track: row `take`/cursor inside 90-day window (EEA-002) — in
 | LD-004 | **P2**   | Calendar/list payloads carry **~30+ unused Lesson scalars** per row (payment, mileage, feedback arrays, etc.).                                                                                            | Prisma `Lesson` model vs ScheduleMap usage                                                                    | Remove in step 7 after contract tests.                                                                                 |
 | LD-005 | **P2**   | **Student** and **Instructor** full profile rows shipped on every lesson item.                                                                                                                            | `LESSON_LIST_INCLUDE`                                                                                         | Replace with nested `user` select (step 3–4).                                                                          |
 | LD-006 | **P2**   | **Vehicle** and **Category** full rows shipped; UI needs 3–4 fields.                                                                                                                                      | ScheduleMap, lessons-management-client                                                                        | Select-only in Prisma (step 3).                                                                                        |
-| LD-007 | **P3**   | SSR dashboards already project a **minimal ScheduleMap shape**; API calendar responses are **much larger** than SSR seed data.                                                                            | `app/admin/page.tsx`, `app/instructor/page.tsx`, `app/student/page.tsx`                                       | Align API calendar DTO with SSR projection for consistency.                                                            |
+| LD-007 | **P3**   | SSR dashboards project a **minimal ScheduleMap shape**; nested `user` on lesson SSR reads **sanitized** (`lesson-ssr-user-select-sanitization`). API calendar responses still larger than SSR seed data.  | `app/admin/page.tsx`, `app/instructor/page.tsx`, `app/student/page.tsx`, `LESSON_LIST_INCLUDE`                | Align API calendar DTO with SSR projection for consistency.                                                            |
 | LD-008 | **P3**   | `ScheduleMap` uses `...lesson` spread — hidden dependency on unknown API keys.                                                                                                                            | `schedule-map.tsx` L209–216                                                                                   | Narrow type after calendar-dto batch.                                                                                  |
 | LD-009 | **P3**   | `[id]` GET uses duplicate inline `include` instead of shared constant.                                                                                                                                    | `app/api/admin/lessons/[id]/route.ts`                                                                         | Consolidate when implementing detail DTO.                                                                              |
 
