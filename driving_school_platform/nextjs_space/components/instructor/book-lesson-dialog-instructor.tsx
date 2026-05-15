@@ -11,6 +11,7 @@ import {
   LessonForm,
   type LessonFormPayload,
 } from "@/components/lessons/LessonForm";
+import { lessonFormDialogContentClass } from "@/components/lessons/lesson-form-styles";
 import toast from "react-hot-toast";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -111,7 +112,7 @@ export function BookLessonDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className={lessonFormDialogContentClass}>
         <DialogHeader>
           <DialogTitle>Book Lesson</DialogTitle>
           <DialogDescription>

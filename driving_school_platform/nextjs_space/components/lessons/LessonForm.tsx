@@ -18,6 +18,21 @@ import { useLicense } from "@/hooks/use-license";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Lock, Search, X } from "lucide-react";
 import type { LessonType } from "@prisma/client";
+import { cn } from "@/lib/utils";
+import {
+  lessonFormActionsClass,
+  lessonFormFieldClass,
+  lessonFormFieldGroupClass,
+  lessonFormLabelClass,
+  lessonFormRootClass,
+  lessonFormSearchInputClass,
+  lessonFormSelectContentClass,
+  lessonFormSelectTriggerClass,
+  lessonFormStudentLabelClass,
+  lessonFormStudentPanelClass,
+  lessonFormStudentRowClass,
+  lessonFormTimeGridClass,
+} from "@/components/lessons/lesson-form-styles";
 
 /**
  * User role types for permission-based rendering
@@ -466,10 +481,12 @@ export function LessonForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className={lessonFormRootClass}>
       {/* Lesson Type */}
-      <div className="space-y-2">
-        <Label htmlFor="lessonType">Lesson Type *</Label>
+      <div className={lessonFormFieldGroupClass}>
+        <Label htmlFor="lessonType" className={lessonFormLabelClass}>
+          Lesson Type *
+        </Label>
         <Select
           value={lessonType}
           onValueChange={(v) => {
@@ -477,10 +494,10 @@ export function LessonForm({
           }}
           disabled={mode === "edit"} // Don't allow changing lesson type in edit mode
         >
-          <SelectTrigger>
+          <SelectTrigger className={lessonFormSelectTriggerClass}>
             <SelectValue placeholder="Select lesson type" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className={lessonFormSelectContentClass}>
             {filteredLessonTypeOptions.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
@@ -492,16 +509,18 @@ export function LessonForm({
 
       {/* Instructor Selection (Admin only) */}
       {userRole === "SUPER_ADMIN" && (
-        <div className="space-y-2">
-          <Label htmlFor="instructor">Instructor *</Label>
+        <div className={lessonFormFieldGroupClass}>
+          <Label htmlFor="instructor" className={lessonFormLabelClass}>
+            Instructor *
+          </Label>
           <Select
             value={instructorId || undefined}
             onValueChange={setInstructorId}
           >
-            <SelectTrigger>
+            <SelectTrigger className={lessonFormSelectTriggerClass}>
               <SelectValue placeholder="Select instructor" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className={lessonFormSelectContentClass}>
               {instructors.length === 0 ? (
                 <SelectItem value="loading-instructors" disabled>
                   Loading instructors...
@@ -520,8 +539,8 @@ export function LessonForm({
 
       {/* Student Selection - Multi-select for EXAM and THEORY_EXAM */}
       {lessonType && isMultiStudentType && (
-        <div className="space-y-2">
-          <Label>
+        <div className={lessonFormFieldGroupClass}>
+          <Label className={lessonFormLabelClass}>
             Students * {lessonType === "EXAM" && "(Max 2)"}
             {lessonType === "THEORY_EXAM" && "(Unlimited)"}
           </Label>
@@ -534,7 +553,7 @@ export function LessonForm({
               placeholder="Search by name or student number..."
               value={studentSearchTerm}
               onChange={(e) => setStudentSearchTerm(e.target.value)}
-              className="pl-10 pr-8"
+              className={cn(lessonFormFieldClass, lessonFormSearchInputClass)}
             />
             {studentSearchTerm && (
               <button
@@ -548,7 +567,7 @@ export function LessonForm({
           </div>
 
           {/* Student List with Checkboxes */}
-          <div className="border rounded-lg p-3 max-h-64 overflow-y-auto space-y-2">
+          <div className={lessonFormStudentPanelClass}>
             {filteredStudents.length === 0 ? (
               <div className="text-sm text-gray-500">
                 {students.length === 0
@@ -557,7 +576,7 @@ export function LessonForm({
               </div>
             ) : (
               filteredStudents.map((student) => (
-                <div key={student.id} className="flex items-center space-x-2">
+                <div key={student.id} className={lessonFormStudentRowClass}>
                   <Checkbox
                     id={`student-${student.id}`}
                     checked={selectedStudents.includes(student.id)}
@@ -565,7 +584,7 @@ export function LessonForm({
                   />
                   <label
                     htmlFor={`student-${student.id}`}
-                    className="text-sm cursor-pointer flex-1"
+                    className={lessonFormStudentLabelClass}
                   >
                     {getStudentDisplayName(student)}
                   </label>
@@ -584,8 +603,10 @@ export function LessonForm({
 
       {/* Student Selection - DRIVING requires exactly 1 student */}
       {lessonType === "DRIVING" && (
-        <div className="space-y-2">
-          <Label htmlFor="student">Student *</Label>
+        <div className={lessonFormFieldGroupClass}>
+          <Label htmlFor="student" className={lessonFormLabelClass}>
+            Student *
+          </Label>
 
           {/* Search Input */}
           <div className="relative mb-2">
@@ -595,7 +616,7 @@ export function LessonForm({
               placeholder="Search by name or student number."
               value={studentSearchTerm}
               onChange={(e) => setStudentSearchTerm(e.target.value)}
-              className="pl-10 pr-8"
+              className={cn(lessonFormFieldClass, lessonFormSearchInputClass)}
             />
             {studentSearchTerm && (
               <button
@@ -609,10 +630,10 @@ export function LessonForm({
           </div>
 
           <Select value={studentId || undefined} onValueChange={setStudentId}>
-            <SelectTrigger>
+            <SelectTrigger className={lessonFormSelectTriggerClass}>
               <SelectValue placeholder="Select student" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className={lessonFormSelectContentClass}>
               {filteredStudents.length === 0 ? (
                 <SelectItem value="loading-students" disabled>
                   {students.length === 0
@@ -634,15 +655,15 @@ export function LessonForm({
       {/* Vehicle Selection (for Driving lessons and Exams) */}
       {(lessonType === "DRIVING" || lessonType === "EXAM") &&
         isVehicleFeatureEnabled && (
-          <div className="space-y-2">
-            <Label htmlFor="vehicle">
+          <div className={lessonFormFieldGroupClass}>
+            <Label htmlFor="vehicle" className={lessonFormLabelClass}>
               Vehicle {lessonType === "DRIVING" ? "*" : "(Optional)"}
             </Label>
             <Select value={vehicleId || undefined} onValueChange={setVehicleId}>
-              <SelectTrigger>
+              <SelectTrigger className={lessonFormSelectTriggerClass}>
                 <SelectValue placeholder="Select vehicle" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className={lessonFormSelectContentClass}>
                 {vehicles.length === 0 ? (
                   <SelectItem value="loading-vehicles" disabled>
                     {mode === "edit"
@@ -666,7 +687,7 @@ export function LessonForm({
       {(lessonType === "DRIVING" || lessonType === "EXAM") &&
         !isVehicleFeatureEnabled &&
         !licenseLoading && (
-          <Alert>
+          <Alert className="rounded-xl border-gray-200 bg-gray-50/80 shadow-sm">
             <Lock className="h-4 w-4" />
             <AlertTitle>Premium Feature</AlertTitle>
             <AlertDescription>
@@ -678,8 +699,10 @@ export function LessonForm({
         )}
 
       {/* Lesson Date */}
-      <div className="space-y-2">
-        <Label htmlFor="lessonDate">Date *</Label>
+      <div className={lessonFormFieldGroupClass}>
+        <Label htmlFor="lessonDate" className={lessonFormLabelClass}>
+          Date *
+        </Label>
         <Input
           id="lessonDate"
           type="date"
@@ -690,30 +713,37 @@ export function LessonForm({
               ? new Date().toISOString().split("T")[0]
               : undefined
           }
+          className={cn(lessonFormFieldClass, "[color-scheme:light]")}
           required
         />
       </div>
 
       {/* Start and End Time */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="startTime">Start Time *</Label>
+      <div className={lessonFormTimeGridClass}>
+        <div className={lessonFormFieldGroupClass}>
+          <Label htmlFor="startTime" className={lessonFormLabelClass}>
+            Start Time *
+          </Label>
           <Input
             id="startTime"
             type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
+            className={cn(lessonFormFieldClass, "[color-scheme:light]")}
             required
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="endTime">End Time *</Label>
+        <div className={lessonFormFieldGroupClass}>
+          <Label htmlFor="endTime" className={lessonFormLabelClass}>
+            End Time *
+          </Label>
           <Input
             id="endTime"
             type="time"
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
+            className={cn(lessonFormFieldClass, "[color-scheme:light]")}
             required
           />
         </div>
@@ -721,13 +751,15 @@ export function LessonForm({
 
       {/* Status (Edit mode only) */}
       {mode === "edit" && (
-        <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
+        <div className={lessonFormFieldGroupClass}>
+          <Label htmlFor="status" className={lessonFormLabelClass}>
+            Status
+          </Label>
           <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger>
+            <SelectTrigger className={lessonFormSelectTriggerClass}>
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className={lessonFormSelectContentClass}>
               <SelectItem value="SCHEDULED">Scheduled</SelectItem>
               <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
               <SelectItem value="COMPLETED">Completed</SelectItem>
@@ -739,18 +771,23 @@ export function LessonForm({
       )}
 
       {/* Form Actions */}
-      <div className="flex justify-end gap-2 pt-4">
+      <div className={lessonFormActionsClass}>
         {onCancel && (
           <Button
             type="button"
             variant="outline"
+            className="h-11 w-full sm:w-auto"
             onClick={onCancel}
             disabled={isLoading}
           >
             Cancel
           </Button>
         )}
-        <Button type="submit" disabled={isLoading}>
+        <Button
+          type="submit"
+          className="h-11 w-full sm:w-auto"
+          disabled={isLoading}
+        >
           {isLoading
             ? mode === "edit"
               ? "Updating..."
