@@ -81,6 +81,22 @@ describe("Admin Users API (tenant scoping)", () => {
     expect(h.findManyMock).not.toHaveBeenCalled();
   });
 
+  it("does not select passwordHash in findMany", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "u1", role: "SUPER_ADMIN" },
+    });
+
+    h.findUniqueMock.mockResolvedValue({ organizationId: "orgA" });
+    guardTenantAuthenticatedRouteMock.mockResolvedValue({ allowed: true });
+
+    await GET(new Request("http://localhost/api/admin/users") as any);
+
+    const arg = h.findManyMock.mock.calls[0]?.[0];
+    expect(arg.select).toBeDefined();
+    expect(arg.select).not.toHaveProperty("passwordHash");
+    expect(JSON.stringify(arg.select)).not.toContain("passwordHash");
+  });
+
   it("scopes findMany by organizationId", async () => {
     getServerSessionMock.mockResolvedValue({
       user: { id: "u1", role: "SUPER_ADMIN" },

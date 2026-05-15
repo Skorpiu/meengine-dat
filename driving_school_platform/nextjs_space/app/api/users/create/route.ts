@@ -4,9 +4,12 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
-import { decideDemoRouteMutation } from "@/lib/demo/demo-route-guard";
 import type { UserRole } from "@prisma/client";
+import {
+  assertUserTenantHost,
+  rejectDemoUserManagementMutation,
+  rejectForbiddenTenantUserRole,
+} from "@/lib/users/user-route-access";
 
 type CreateUserBody = {
   firstName?: string;
@@ -45,23 +48,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
-    if (!tenantGuard.allowed) {
-      return NextResponse.json(
-        { error: tenantGuard.error },
-        { status: tenantGuard.status },
-      );
+    const tenantDenied = await assertUserTenantHost(request, orgId);
+    if (tenantDenied) {
+      return tenantDenied;
     }
 
-    const demoDecision = await decideDemoRouteMutation({
-      organizationId: orgId,
-      category: "user_management",
-    });
-    if (!demoDecision.allowed) {
-      return NextResponse.json(
-        { error: demoDecision.message, code: demoDecision.reason },
-        { status: demoDecision.status },
-      );
+    const demoDenied = await rejectDemoUserManagementMutation(orgId);
+    if (demoDenied) {
+      return demoDenied;
     }
 
     let body: unknown;
@@ -95,6 +89,11 @@ export async function POST(request: NextRequest) {
         { error: "Missing required fields" },
         { status: 400 },
       );
+    }
+
+    const forbiddenRole = rejectForbiddenTenantUserRole(role);
+    if (forbiddenRole) {
+      return forbiddenRole;
     }
 
     // Check if user already exists

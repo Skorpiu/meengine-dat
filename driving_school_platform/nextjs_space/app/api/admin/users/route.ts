@@ -2,16 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 import type { Prisma, UserRole } from "@prisma/client";
+import {
+  assertUserTenantHost,
+  isTenantAssignableUserRole,
+  USER_LIST_SELECT,
+} from "@/lib/users/user-route-access";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const USER_ROLES = ["STUDENT", "INSTRUCTOR", "SUPER_ADMIN"] as const;
-
-const isUserRole = (value: string): value is UserRole =>
-  (USER_ROLES as readonly string[]).includes(value);
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,23 +42,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
-    if (!tenantGuard.allowed) {
-      return NextResponse.json(
-        { error: tenantGuard.error },
-        { status: tenantGuard.status },
-      );
+    const tenantDenied = await assertUserTenantHost(request, orgId);
+    if (tenantDenied) {
+      return tenantDenied;
     }
 
     const { searchParams } = new URL(request.url);
     const roleParam = searchParams.get("role");
 
-    if (roleParam && !isUserRole(roleParam)) {
+    if (roleParam && !isTenantAssignableUserRole(roleParam)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
 
     const role: UserRole | null =
-      roleParam && isUserRole(roleParam) ? roleParam : null;
+      roleParam && isTenantAssignableUserRole(roleParam) ? roleParam : null;
 
     const where: Prisma.UserWhereInput = {
       organizationId: orgId,
@@ -76,19 +72,7 @@ export async function GET(request: NextRequest) {
 
     const users = await prisma.user.findMany({
       where,
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        isApproved: true,
-        student: {
-          select: {
-            studentNumber: true,
-          },
-        },
-      },
+      select: USER_LIST_SELECT,
       orderBy: { createdAt: "desc" },
     });
 
