@@ -4,7 +4,10 @@
  */
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
+import { EXAM_DASHBOARD_LESSON_TYPES } from "@/lib/lessons/lesson-display";
 import { LESSON_NESTED_USER_RELATION } from "@/lib/users/user-public-select";
+
+export { EXAM_DASHBOARD_LESSON_TYPES };
 
 export const LESSON_LIST_INCLUDE = {
   student: LESSON_NESTED_USER_RELATION,
@@ -61,7 +64,7 @@ export async function getAdminDashboardLessons(input: {
       prisma.lesson.findMany({
         where: {
           organizationId,
-          lessonType: "EXAM",
+          lessonType: { in: [...EXAM_DASHBOARD_LESSON_TYPES] },
           OR: [
             { lessonDate: yesterday },
             { lessonDate: today, startTime: { lt: currentTime } },
@@ -74,7 +77,7 @@ export async function getAdminDashboardLessons(input: {
       prisma.lesson.findMany({
         where: {
           organizationId,
-          lessonType: "EXAM",
+          lessonType: { in: [...EXAM_DASHBOARD_LESSON_TYPES] },
           lessonDate: today,
           startTime: { lte: currentTime },
           endTime: { gt: currentTime },
@@ -85,7 +88,7 @@ export async function getAdminDashboardLessons(input: {
       prisma.lesson.findMany({
         where: {
           organizationId,
-          lessonType: "EXAM",
+          lessonType: { in: [...EXAM_DASHBOARD_LESSON_TYPES] },
           OR: [
             { lessonDate: today, startTime: { gte: currentTime } },
             { lessonDate: { gt: today, lte: tomorrow } },

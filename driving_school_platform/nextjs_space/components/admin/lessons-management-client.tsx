@@ -14,6 +14,14 @@ import { BookOpen, Car, FileText, Clock, RefreshCw } from "lucide-react";
 import { FeatureGate } from "@/components/license/feature-gate";
 import { useToast } from "@/hooks/use-toast";
 import { parseAdminDashboardLessonsPayload } from "@/lib/lessons/admin-dashboard-lessons-response";
+import {
+  getExamLessonTypeLabel,
+  getLessonDateLabel,
+  getLessonInstructorName,
+  getLessonLocationLabel,
+  getLessonParticipantName,
+  getLessonVehicleLabel,
+} from "@/lib/lessons/lesson-display";
 
 async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
   const contentType = response.headers.get("content-type") || "";
@@ -27,12 +35,16 @@ async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
 
 type LessonView = "CODE" | "DRIVING" | "EXAMS";
 
+/** Dashboard list row — same Lesson graph as GET /api/admin/lessons (LESSON_LIST_INCLUDE). */
 type LessonListItem = {
   id: string | number;
-  lessonDate?: string | null;
-  examDate?: string | null;
+  lessonDate?: string | Date | null;
   startTime?: string | null;
+  endTime?: string | null;
   status?: string | null;
+  lessonType?: string | null;
+  pickupLocation?: string | null;
+  dropoffLocation?: string | null;
 
   category?: { name?: string | null } | null;
   vehicle?: {
@@ -45,12 +57,6 @@ type LessonListItem = {
     user?: { firstName?: string | null; lastName?: string | null } | null;
   } | null;
   instructor?: {
-    user?: { firstName?: string | null; lastName?: string | null } | null;
-  } | null;
-
-  examType?: string | null;
-  examLocation?: string | null;
-  examiner?: {
     user?: { firstName?: string | null; lastName?: string | null } | null;
   } | null;
 };
@@ -147,8 +153,11 @@ export function LessonsManagementClient() {
   }, [fetchLessons]);
 
   const renderLesson = (lesson: LessonListItem) => {
-    const isExam = selectedView === "EXAMS";
-    const dateValue = lesson.lessonDate || lesson.examDate || "";
+    const isExamsTab = selectedView === "EXAMS";
+    const studentName = getLessonParticipantName(lesson.student);
+    const instructorName = getLessonInstructorName(lesson.instructor);
+    const locationLabel = getLessonLocationLabel(lesson);
+    const vehicleLabel = getLessonVehicleLabel(lesson.vehicle);
 
     return (
       <div
@@ -158,10 +167,7 @@ export function LessonsManagementClient() {
         <div className="flex items-center space-x-4">
           <div className="text-center min-w-[80px]">
             <div className="text-sm font-medium">
-              {new Date(dateValue).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              })}
+              {getLessonDateLabel(lesson.lessonDate)}
             </div>
             <div className="text-xs text-gray-500">{lesson.startTime}</div>
           </div>
@@ -175,40 +181,43 @@ export function LessonsManagementClient() {
             }`}
           />
           <div>
-            {isExam ? (
+            {isExamsTab ? (
               <>
                 <div className="font-medium">
-                  {lesson.examType} Exam - {lesson.category?.name}
+                  {getExamLessonTypeLabel(lesson.lessonType)}
+                  {lesson.category?.name ? ` — ${lesson.category.name}` : ""}
                 </div>
-                <div className="text-sm text-gray-600">
-                  Location: {lesson.examLocation}
-                </div>
-                {lesson.examiner && (
-                  <div className="text-sm text-gray-500">
-                    Examiner: {lesson.examiner.user?.firstName}{" "}
-                    {lesson.examiner.user?.lastName}
+                {studentName ? (
+                  <div className="text-sm text-gray-600">{studentName}</div>
+                ) : null}
+                {instructorName ? (
+                  <div className="text-sm text-gray-600">
+                    Instructor: {instructorName}
                   </div>
-                )}
-                {lesson.vehicle && (
+                ) : null}
+                {locationLabel ? (
                   <div className="text-sm text-gray-500">
-                    Vehicle: {lesson.vehicle.registrationNumber}
+                    Location: {locationLabel}
                   </div>
-                )}
+                ) : null}
+                {vehicleLabel ? (
+                  <div className="text-sm text-gray-500">
+                    Vehicle: {vehicleLabel}
+                  </div>
+                ) : null}
               </>
             ) : (
               <>
-                <div className="font-medium">
-                  {lesson.student?.user?.firstName}{" "}
-                  {lesson.student?.user?.lastName}
-                </div>
-                <div className="text-sm text-gray-600">
-                  with {lesson.instructor?.user?.firstName}{" "}
-                  {lesson.instructor?.user?.lastName}
-                </div>
+                <div className="font-medium">{studentName}</div>
+                {instructorName ? (
+                  <div className="text-sm text-gray-600">
+                    with {instructorName}
+                  </div>
+                ) : null}
                 <div className="text-sm text-gray-500">
-                  {selectedView === "DRIVING" && lesson.vehicle && (
-                    <>Vehicle: {lesson.vehicle.registrationNumber} • </>
-                  )}
+                  {selectedView === "DRIVING" && vehicleLabel ? (
+                    <>Vehicle: {vehicleLabel} • </>
+                  ) : null}
                   {lesson.category?.name}
                 </div>
               </>
