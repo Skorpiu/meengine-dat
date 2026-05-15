@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   ScheduleMap,
   type Lesson as ScheduleLesson,
+  type ScheduleMapRefetch,
 } from "@/components/schedule/schedule-map";
 import { BookLessonDialog } from "@/components/instructor/book-lesson-dialog-instructor";
 import { BookExamDialog } from "@/components/instructor/book-exam-dialog-instructor";
 import { useRouter } from "next/navigation";
+import type { LessonBookingSuccessMeta } from "@/components/lessons/lesson-booking-meta";
 
 interface InstructorDashboardClientProps {
   lessons: ScheduleLesson[];
@@ -22,19 +24,31 @@ export function InstructorDashboardClient({
   const router = useRouter();
   const [bookLessonOpen, setBookLessonOpen] = useState(false);
   const [bookExamOpen, setBookExamOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [focusLessonDate, setFocusLessonDate] = useState<string | null>(null);
+  const scheduleRefetchRef = useRef<ScheduleMapRefetch | null>(null);
 
-  const handleSuccess = () => {
-    // Close the dialogs
-    setBookLessonOpen(false);
-    setBookExamOpen(false);
+  const registerScheduleRefetch = useCallback((refetch: ScheduleMapRefetch) => {
+    scheduleRefetchRef.current = refetch;
+  }, []);
 
-    // Trigger a hard refresh to reload all data
-    setTimeout(() => {
-      router.refresh();
-      // Force a full page reload to ensure all data is updated
-      window.location.reload();
-    }, 100);
-  };
+  const refreshSchedule = useCallback(async () => {
+    setRefreshKey((k) => k + 1);
+    await scheduleRefetchRef.current?.();
+    router.refresh();
+  }, [router]);
+
+  const handleLessonBooked = useCallback(
+    async (meta?: LessonBookingSuccessMeta) => {
+      setBookLessonOpen(false);
+      setBookExamOpen(false);
+      if (meta?.lessonDate) {
+        setFocusLessonDate(meta.lessonDate);
+      }
+      await refreshSchedule();
+    },
+    [refreshSchedule],
+  );
 
   return (
     <>
@@ -54,21 +68,24 @@ export function InstructorDashboardClient({
           lessons={initialLessons}
           showPrintButton={false}
           userRole="instructor"
-          onLessonsUpdate={handleSuccess}
+          onLessonsUpdate={refreshSchedule}
+          onRegisterRefetch={registerScheduleRefetch}
+          refreshKey={refreshKey}
+          focusLessonDate={focusLessonDate}
         />
       </div>
 
       <BookLessonDialog
         open={bookLessonOpen}
         onOpenChange={setBookLessonOpen}
-        onSuccess={handleSuccess}
+        onSuccess={handleLessonBooked}
         instructorUserId={instructorUserId}
       />
 
       <BookExamDialog
         open={bookExamOpen}
         onOpenChange={setBookExamOpen}
-        onSuccess={handleSuccess}
+        onSuccess={handleLessonBooked}
         instructorUserId={instructorUserId}
       />
     </>
