@@ -51,7 +51,7 @@ Mutating admin paths below enforce `Organization.isDemo` via `decideDemoRouteMut
 - **Feature flags (writes/deletes):** `POST`, `PUT`, `DELETE` on `/api/admin/feature-flags` (not `GET`)
 - **Licensing / entitlements (tenant admin writes):** `POST /api/admin/license/activate`; `POST /api/admin/license/features` (`GET` remains allowed)
 
-**GET** `/api/admin/lessons` remains read-only for demo orgs: automatic `cleanupOldLessons` inside that handler is **skipped** when `Organization.isDemo` is true (no 403 on read).
+**GET** `/api/admin/lessons` is **read-only** (no automatic cleanup on any org). Operators remove stale lessons via **POST** `/api/admin/cleanup` (demo-guarded), not via the list/calendar read endpoint.
 
 **Public signup**
 
@@ -63,7 +63,7 @@ Non-demo tenant organizations keep existing tenant-scoped signup behavior (subje
 
 **Not covered in this batch (follow-up)**
 
-- **`POST /api/billing/webhooks/[provider]`** — skeleton inbound webhook; events may carry `organizationId` but there is no single clear “target org” for a stable demo guard without per-event policy; treat as follow-up if demo tenants must never persist billing side-effects from webhooks.
+- **`POST /api/billing/webhooks/[provider]`** — skeleton inbound webhook; events may carry `organizationId` but there is no single clear "target org" for a stable demo guard without per-event policy; treat as follow-up if demo tenants must never persist billing side-effects from webhooks.
 - **`POST /api/platform/organizations`** — platform onboarding creates **new** organizations; no existing `organizationId` to evaluate for `isDemo` in the same request. Optional future: block or flag demo onboarding separately; not required for tenant demo read-mostly.
 
 ## Still not a full public demo

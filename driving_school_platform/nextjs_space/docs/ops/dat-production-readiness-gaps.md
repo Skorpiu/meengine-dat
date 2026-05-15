@@ -18,6 +18,7 @@ Do **not** put credentials, customer emails, URLs with embedded secrets, or bill
 - **Public portfolio messaging** — root README and [public-portfolio-access.md](./public-portfolio-access.md) set honest expectations (no embedded credentials, no live billing claims).
 - **Demo tier profiles (operator)** — `lib/demo/demo-tier-profiles.ts` plus `DEMO_SHOWCASE_PROFILE` on **`pnpm demo:showcase:configure`** give repeatable **basic / premium / full-showcase** key sets without auto-creating orgs ([public-demo-feature-showcase.md](./public-demo-feature-showcase.md)).
 - **Public signup vs demo tenants** — `POST /api/signup` returns **403** with `code: demo_signup_disabled` when the resolved organization has **`isDemo: true`**; controlled demos rely on **private personas**, not open registration ([public-demo-policy.md](./public-demo-policy.md), [client-demo-runbook.md](./client-demo-runbook.md)). **Still open** for production self-serve: edge **rate limits**, **captcha** / invite-only, **email verification** (see engineering audit / P1 checklist).
+- **Admin lessons GET** — **`GET /api/admin/lessons` is read-only** (no automatic lesson cleanup on read). **Operational cleanup** remains **POST** `/api/admin/cleanup` (explicit, tenant-scoped, demo-guarded).
 
 ---
 

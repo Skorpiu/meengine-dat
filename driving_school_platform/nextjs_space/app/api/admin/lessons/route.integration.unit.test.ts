@@ -9,13 +9,20 @@ const h = vi.hoisted(() => {
   const studentFindFirstMock = vi.fn();
   const lessonCreateMock = vi.fn();
   const lessonCountMock = vi.fn();
+  const lessonFindManyMock = vi.fn();
+  const lessonDeleteManyMock = vi.fn();
   const organizationFindUniqueMock = vi.fn();
 
   const prismaMock = {
     instructor: { findFirst: instructorFindFirstMock },
     category: { findFirst: categoryFindFirstMock },
     student: { findFirst: studentFindFirstMock },
-    lesson: { create: lessonCreateMock, count: lessonCountMock },
+    lesson: {
+      create: lessonCreateMock,
+      count: lessonCountMock,
+      findMany: lessonFindManyMock,
+      deleteMany: lessonDeleteManyMock,
+    },
     organization: { findUnique: organizationFindUniqueMock },
   };
 
@@ -26,6 +33,8 @@ const h = vi.hoisted(() => {
     studentFindFirstMock,
     lessonCreateMock,
     lessonCountMock,
+    lessonFindManyMock,
+    lessonDeleteManyMock,
     organizationFindUniqueMock,
   };
 });
@@ -48,7 +57,7 @@ vi.mock("@/lib/api-utils", async () => {
 });
 
 // IMPORTANT: import AFTER mocks
-import { POST } from "./route";
+import { POST, GET } from "./route";
 import { verifyAuth } from "@/lib/api-utils";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
 
@@ -63,6 +72,10 @@ function reqJson(payload: any): Request {
     headers: { "content-type": "application/json" },
     body: JSON.stringify(payload),
   });
+}
+
+function reqGet(url: string): Request {
+  return new Request(url, { method: "GET" });
 }
 
 const UUID_A = "11111111-1111-1111-1111-111111111111";
@@ -95,10 +108,60 @@ beforeEach(() => {
   h.lessonCreateMock.mockImplementation(async ({ data }: any) => {
     return { id: `lesson-${Math.random().toString(16).slice(2)}`, ...data };
   });
+
+  h.lessonFindManyMock.mockResolvedValue([]);
 });
 
 afterEach(() => {
   delete process.env.DEMO_WRITE_SANDBOX_ENABLED;
+});
+
+describe("GET /api/admin/lessons (read-only)", () => {
+  it("does not call lesson.deleteMany and loads dashboard slices via findMany", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
+
+    const res = await GET(
+      reqGet("http://localhost/api/admin/lessons?view=DRIVING") as any,
+    );
+
+    expect(res.status).toBe(200);
+    expect(h.lessonDeleteManyMock).not.toHaveBeenCalled();
+    expect(h.lessonFindManyMock).toHaveBeenCalled();
+    expect(h.lessonFindManyMock.mock.calls.length).toBe(3);
+
+    const body: any = await res.json();
+    expect(body.success).toBe(true);
+    expect(body.data).toMatchObject({
+      recent: [],
+      current: [],
+      upcoming: [],
+    });
+  });
+
+  it("calendar from/to uses findMany once, returns lessons, and does not delete", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
+    h.lessonFindManyMock.mockResolvedValueOnce([{ id: "cal-1" }]);
+
+    const res = await GET(
+      reqGet(
+        "http://localhost/api/admin/lessons?from=2026-01-01&to=2026-01-08",
+      ) as any,
+    );
+
+    expect(res.status).toBe(200);
+    expect(h.lessonDeleteManyMock).not.toHaveBeenCalled();
+    expect(h.lessonFindManyMock).toHaveBeenCalledTimes(1);
+    const body: any = await res.json();
+    expect(body.lessons).toEqual([{ id: "cal-1" }]);
+  });
 });
 
 describe("POST /api/admin/lessons (handler integration)", () => {

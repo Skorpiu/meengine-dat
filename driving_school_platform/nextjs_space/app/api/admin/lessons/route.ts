@@ -6,7 +6,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { cleanupOldLessons } from "@/lib/cleanup";
 import {
   successResponse,
   errorResponse,
@@ -53,20 +52,6 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const tenantGuard = await guardTenantAuthenticatedRoute(request, orgId);
   if (!tenantGuard.allowed) {
     return errorResponse(tenantGuard.error, tenantGuard.status);
-  }
-
-  const orgRow = await prisma.organization.findUnique({
-    where: { id: orgId },
-    select: { isDemo: true },
-  });
-
-  if (!orgRow?.isDemo) {
-    try {
-      await cleanupOldLessons(orgId);
-    } catch (error) {
-      // Log error but don't fail the request
-      console.error("Failed to cleanup old lessons:", error);
-    }
   }
 
   const { searchParams } = new URL(request.url);
