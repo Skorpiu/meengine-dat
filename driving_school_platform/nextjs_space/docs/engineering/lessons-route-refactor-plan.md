@@ -1,6 +1,6 @@
 # Lessons Route Refactor Plan
 
-**Status:** Batches 1–4 **done**. Batches 5–6 pending.  
+**Status:** Batches 1–5 **done**. Batch 6 (optional DTO minimization) pending.  
 **Branch context:** `lessons-route-alignment-planning` (plan); batches 1–4 on feature branches (`lessons-query-module` … `lessons-update-delete-service`)  
 **Related audits:** [route-handler-consistency-audit.md](./route-handler-consistency-audit.md) (RHC-001, RHC-006, RHC-008), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-002)
 
@@ -51,16 +51,16 @@ This document prepares **incremental, behavior-preserving** refactors of DAT les
 
 ### `app/api/instructor/lessons/route.ts` (~76 lines)
 
-| Aspect             | Detail                                                                                                                                                                    |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Methods**        | `GET` only                                                                                                                                                                |
-| **Auth**           | `verifyAuth(INSTRUCTOR)` + `withErrorHandling`                                                                                                                            |
-| **Tenant scoping** | `guardTenantAuthenticatedRoute`; `organizationId` + `instructorId` from profile lookup (`instructor.findFirst` by `userId`).                                              |
-| **Demo behavior**  | None on read (acceptable for portfolio demo calendars).                                                                                                                   |
-| **Validation**     | Requires `from` and `to`; manual `startOfDay` / `addDays`; NaN check. **Does not** use `validateLessonCalendarRange` (no 90-day cap, different error messages) — RHC-008. |
-| **Query patterns** | Single `findMany` with same heavy `include` as admin calendar.                                                                                                            |
-| **Response shape** | `{ lessons }` + `Cache-Control: no-store`.                                                                                                                                |
-| **Known risks**    | Duplicated date parsing vs admin/student; unbounded range if client sends wide `from`/`to`.                                                                               |
+| Aspect             | Detail                                                                                                                         |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Methods**        | `GET` only                                                                                                                     |
+| **Auth**           | `verifyAuth(INSTRUCTOR)` + `withErrorHandling`                                                                                 |
+| **Tenant scoping** | `guardTenantAuthenticatedRoute`; `organizationId` + `instructorId` from profile lookup (`instructor.findFirst` by `userId`).   |
+| **Demo behavior**  | None on read (acceptable for portfolio demo calendars).                                                                        |
+| **Validation**     | `validateLessonCalendarRange` (90-day cap, stable `invalid_calendar_range` / `calendar_range_too_large`) — aligned with admin. |
+| **Query patterns** | Single `findMany` with same heavy `include` as admin calendar.                                                                 |
+| **Response shape** | `{ lessons }` + `Cache-Control: no-store`.                                                                                     |
+| **Known risks**    | Duplicated date parsing vs admin/student; unbounded range if client sends wide `from`/`to`.                                    |
 
 ### `app/api/student/lessons/route.ts` (~76 lines)
 
@@ -70,7 +70,7 @@ This document prepares **incremental, behavior-preserving** refactors of DAT les
 | **Auth**           | `verifyAuth(STUDENT)` + `withErrorHandling`                                          |
 | **Tenant scoping** | `guardTenantAuthenticatedRoute`; `organizationId` + `studentId` from profile lookup. |
 | **Demo behavior**  | None on read.                                                                        |
-| **Validation**     | Same manual date parsing as instructor route (RHC-008).                              |
+| **Validation**     | `validateLessonCalendarRange` (same as admin/instructor).                            |
 | **Query patterns** | Same `include` tree as instructor calendar read.                                     |
 | **Response shape** | `{ lessons }` + `Cache-Control: no-store`.                                           |
 | **Known risks**    | Same duplication and range-cap gap as instructor route.                              |
@@ -177,15 +177,15 @@ Small PRs; each must keep behavior unless noted and extend tests.
 | **Tests**      | `[id]/route.integration.unit.test.ts`; `lesson-update-delete-service.unit.test.ts`.                                                                                                                                                      |
 | **Acceptance** | Behavior match manual matrix; demo 403 unchanged.                                                                                                                                                                                        |
 
-### Batch 5: `instructor-student-lessons-read-alignment`
+### Batch 5: `calendar-range-shared-reads` — **Done**
 
-|                  |                                                                                                                                                                                                         |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Objective**    | Share `validateLessonCalendarRange` (or thin wrapper) on instructor/student GET; align error codes/messages with admin **only if product approves** — default: add 90-day cap with same codes as admin. |
-| **Likely files** | `lib/lessons/policies/calendar-query.ts`, both role routes.                                                                                                                                             |
-| **Risks**        | **Behavior change** if clients relied on >90-day ranges — document in PR, gate behind changelog.                                                                                                        |
-| **Tests**        | New integration tests for invalid/too-large range; existing calendar clients smoke-tested.                                                                                                              |
-| **Acceptance**   | Parity with admin calendar validation rules; shared query function used.                                                                                                                                |
+|                |                                                                                                                                                                                                            |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Objective**  | Share `validateLessonCalendarRange` on instructor/student GET with admin parity (90-day cap, stable error codes).                                                                                          |
+| **Shipped**    | `app/api/instructor/lessons/route.ts`, `app/api/student/lessons/route.ts`; integration tests for valid/invalid/too-large ranges.                                                                           |
+| **Risks**      | Clients requesting **>90-day** windows now receive **400** `calendar_range_too_large` (previously unbounded). Missing/invalid dates use `invalid_calendar_range` (not legacy “Missing query params” text). |
+| **Tests**      | `instructor/lessons/route.integration.unit.test.ts`, `student/lessons/route.integration.unit.test.ts`.                                                                                                     |
+| **Acceptance** | Parity with admin calendar validation rules; valid requests preserve `{ lessons }` shape.                                                                                                                  |
 
 ### Batch 6 (optional): `lessons-pagination-dto-minimization`
 
