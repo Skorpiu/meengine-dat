@@ -10,6 +10,8 @@ const h = vi.hoisted(() => {
   const vehicleFindManyMock = vi.fn();
   const vehicleFindFirstMock = vi.fn();
   const vehicleCreateMock = vi.fn();
+  const vehicleUpdateMock = vi.fn();
+  const vehicleDeleteManyMock = vi.fn();
   const vehicleCountMock = vi.fn();
   const lessonFindManyMock = vi.fn();
   const examFindManyMock = vi.fn();
@@ -20,6 +22,8 @@ const h = vi.hoisted(() => {
       findMany: vehicleFindManyMock,
       findFirst: vehicleFindFirstMock,
       create: vehicleCreateMock,
+      update: vehicleUpdateMock,
+      deleteMany: vehicleDeleteManyMock,
       count: vehicleCountMock,
     },
     lesson: { findMany: lessonFindManyMock },
@@ -34,6 +38,8 @@ const h = vi.hoisted(() => {
     vehicleFindManyMock,
     vehicleFindFirstMock,
     vehicleCreateMock,
+    vehicleUpdateMock,
+    vehicleDeleteManyMock,
     vehicleCountMock,
     lessonFindManyMock,
     examFindManyMock,
@@ -53,13 +59,21 @@ vi.mock("@/lib/middleware/feature-check", () => ({
   checkFeatureAccess: h.checkFeatureAccessMock,
 }));
 
+vi.mock("@/lib/tenant", () => ({
+  guardTenantAuthenticatedRoute: vi.fn(),
+}));
+
 vi.mock("@/lib/db", () => ({
   db: h.dbMock,
   prisma: h.dbMock,
 }));
 
 // IMPORTANT: import AFTER mocks
-import { GET, POST } from "./route";
+import { GET, POST, PUT, DELETE } from "./route";
+import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+
+const guardTenantAuthenticatedRouteMock =
+  guardTenantAuthenticatedRoute as unknown as ReturnType<typeof vi.fn>;
 
 function req(url = "http://localhost/api/admin/vehicles"): Request {
   return new Request(url, { method: "GET" });
@@ -87,6 +101,8 @@ beforeEach(() => {
     allowed: true,
     organizationId: "org1",
   });
+
+  guardTenantAuthenticatedRouteMock.mockResolvedValue({ allowed: true });
 });
 
 afterEach(() => {
@@ -184,6 +200,21 @@ describe("GET /api/admin/vehicles (handler integration)", () => {
     const body: any = await res.json();
     expect(body.vehicles[0].status).toBe("MAINTENANCE");
   });
+
+  it("returns 403 when tenant host does not match session org", async () => {
+    h.getServerSessionMock.mockResolvedValue({
+      user: { id: "u1", role: "SUPER_ADMIN" },
+    });
+    guardTenantAuthenticatedRouteMock.mockResolvedValue({
+      allowed: false,
+      status: 403,
+      error: "Organization does not match this domain",
+    });
+
+    const res = await GET(req() as any);
+    expect(res.status).toBe(403);
+    expect(h.vehicleFindManyMock).not.toHaveBeenCalled();
+  });
 });
 
 function postReq(body: Record<string, unknown>): Request {
@@ -255,5 +286,64 @@ describe("POST /api/admin/vehicles (handler integration)", () => {
     const body: any = await res.json();
     expect(body.code).toBe("demo_write_quota_exceeded");
     expect(h.vehicleCreateMock).not.toHaveBeenCalled();
+  });
+});
+
+function putReq(body: Record<string, unknown>): Request {
+  return new Request("http://localhost/api/admin/vehicles", {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+function deleteReq(vehicleId: number): Request {
+  return new Request(
+    `http://localhost/api/admin/vehicles?vehicleId=${vehicleId}`,
+    { method: "DELETE" },
+  );
+}
+
+describe("PUT /api/admin/vehicles (handler integration)", () => {
+  it("demo org blocks PUT with demo_restricted_action", async () => {
+    h.getServerSessionMock.mockResolvedValue({
+      user: { id: "u1", role: "SUPER_ADMIN" },
+    });
+    h.checkFeatureAccessMock.mockResolvedValue({
+      allowed: true,
+      organizationId: "org-demo",
+    });
+    h.organizationFindUniqueMock.mockResolvedValue({ isDemo: true });
+
+    const res = await PUT(
+      putReq({
+        vehicleId: 1,
+        registrationNumber: "X",
+        transmissionTypeId: 1,
+      }) as any,
+    );
+    expect(res.status).toBe(403);
+    const body: any = await res.json();
+    expect(body.code).toBe("demo_restricted_action");
+    expect(h.vehicleUpdateMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("DELETE /api/admin/vehicles (handler integration)", () => {
+  it("demo org blocks DELETE with demo_restricted_action", async () => {
+    h.getServerSessionMock.mockResolvedValue({
+      user: { id: "u1", role: "SUPER_ADMIN" },
+    });
+    h.checkFeatureAccessMock.mockResolvedValue({
+      allowed: true,
+      organizationId: "org-demo",
+    });
+    h.organizationFindUniqueMock.mockResolvedValue({ isDemo: true });
+
+    const res = await DELETE(deleteReq(1) as any);
+    expect(res.status).toBe(403);
+    const body: any = await res.json();
+    expect(body.code).toBe("demo_restricted_action");
+    expect(h.vehicleDeleteManyMock).not.toHaveBeenCalled();
   });
 });
