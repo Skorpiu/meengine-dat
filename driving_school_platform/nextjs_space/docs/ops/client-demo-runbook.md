@@ -163,6 +163,7 @@ Complete on an **operator** machine with `DATABASE_URL` (and related env) availa
 - [ ] **Readiness** — `pnpm demo:readiness` passes for that org id ([public-demo-seed-reset.md](./public-demo-seed-reset.md#readiness-check)).
 - [ ] **Feature check** — `pnpm demo:features:check` passes ([public-demo-feature-showcase.md](./public-demo-feature-showcase.md)).
 - [ ] **Private demo personas** — dry-run then apply `pnpm demo:personas:configure`; then `pnpm demo:personas:check` with the same three emails ([Configure private demo personas](#configure-private-demo-personas)).
+- [ ] **Practical lesson demo** (if showing DRIVING create) — `pnpm demo:practical:configure` dry-run then apply ([Prepare practical lesson demo](#prepare-practical-lesson-demo)).
 - [ ] **Client demo readiness smoke** — read-only aggregate gate (domains, features, grants, optional persona verification); run `pnpm demo:client-ready` with the same three **email** env vars as for persona check ([Client demo readiness smoke](#client-demo-readiness-smoke)).
 - [ ] **Manual login** — each persona signs in on `https://demo.meengine.io` using **private** credentials.
 - [ ] **Destructive actions** — confirm blocked actions return safe errors (demo guards; see [public-demo-policy.md](./public-demo-policy.md#implemented-guards)).
@@ -278,6 +279,33 @@ DEMO_INSTRUCTOR_EMAIL=<private-demo-instructor-email> \
 DEMO_STUDENT_EMAIL=<private-demo-student-email> \
 pnpm demo:personas:check
 ```
+
+### Prepare practical lesson demo
+
+`demo:personas:configure` creates the Demo Instructor profile but does **not** link **qualified driving categories**. Practical (`DRIVING`) lesson creation fails until the instructor has at least one row in `_InstructorCategories` (same rule as production — this script only fixes **demo** orgs).
+
+Run **before** demonstrating creation of a practical driving lesson. Does **not** create users, change passwords, or alter billing/features/licensing/settings.
+
+**Dry-run:**
+
+```bash
+DEMO_ORGANIZATION_ID=<demo-org-id> \
+DEMO_INSTRUCTOR_EMAIL=demo.instructor@meengine.io \
+pnpm demo:practical:configure
+```
+
+**Apply** (requires both `DEMO_PRACTICAL_READINESS_APPLY=true` and `--apply`):
+
+```bash
+DEMO_ORGANIZATION_ID=<demo-org-id> \
+DEMO_INSTRUCTOR_EMAIL=demo.instructor@meengine.io \
+DEMO_PRACTICAL_READINESS_APPLY=true \
+pnpm demo:practical:configure -- --apply
+```
+
+Optional: `DEMO_DRIVING_CATEGORY_CODE=B` (matches `Category.name`) or `DEMO_DRIVING_CATEGORY_NAME=Car`. Default target is active category **B** when present.
+
+Then run **`pnpm demo:client-ready`** (warning clears once the instructor is qualified).
 
 ### Client demo readiness smoke
 

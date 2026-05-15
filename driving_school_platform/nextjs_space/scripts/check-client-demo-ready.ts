@@ -12,6 +12,7 @@
 
 import { loadEnvConfig } from "@next/env";
 import { PrismaClient, type UserRole } from "@prisma/client";
+import { instructorNeedsPracticalCategoryLink } from "../lib/demo/demo-practical-readiness";
 
 loadEnvConfig(process.cwd());
 
@@ -140,6 +141,44 @@ async function evaluatePersonas(
   return out;
 }
 
+async function practicalLessonReadinessNeedsWarning(
+  prisma: PrismaClient,
+  orgId: string,
+  instructorEmail?: string,
+): Promise<boolean> {
+  if (instructorEmail) {
+    const user = await prisma.user.findUnique({
+      where: { email: normalizeEmail(instructorEmail) },
+      select: { id: true, organizationId: true, role: true },
+    });
+    if (
+      user &&
+      user.organizationId === orgId &&
+      user.role === INSTRUCTOR_ROLE
+    ) {
+      const instructor = await prisma.instructor.findUnique({
+        where: { userId: user.id },
+        include: { qualifiedCategories: { select: { id: true } } },
+      });
+      return instructorNeedsPracticalCategoryLink(
+        instructor?.qualifiedCategories.length ?? 0,
+      );
+    }
+  }
+
+  const instructors = await prisma.instructor.findMany({
+    where: { organizationId: orgId },
+    include: { qualifiedCategories: { select: { id: true } } },
+  });
+  if (instructors.length === 0) {
+    return false;
+  }
+  const anyQualified = instructors.some(
+    (i) => i.qualifiedCategories.length > 0,
+  );
+  return !anyQualified;
+}
+
 async function main(): Promise<number> {
   const orgId = process.env.DEMO_ORGANIZATION_ID?.trim();
   if (!orgId) {
@@ -261,6 +300,17 @@ async function main(): Promise<number> {
     if (emailSetCount === 0 && userTotal === 0) {
       warnings.push(
         "No users in this organization; persona emails were not set — configure users before the demo.",
+      );
+    }
+
+    const practicalWarning = await practicalLessonReadinessNeedsWarning(
+      prisma,
+      orgId,
+      instE,
+    );
+    if (practicalWarning) {
+      warnings.push(
+        "Demo instructor may not be ready for practical driving lesson creation — run pnpm demo:practical:configure (dry-run then apply) before demonstrating DRIVING lessons.",
       );
     }
 

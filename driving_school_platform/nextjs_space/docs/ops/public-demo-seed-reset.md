@@ -61,6 +61,8 @@ Dry-run tooling today: see `scripts/reset-demo-organization.ts` and `pnpm demo:r
 
 **Controlled demo write sandbox:** rows created when `DEMO_WRITE_SANDBOX_ENABLED=true` (see [client-demo-runbook.md](./client-demo-runbook.md#controlled-demo-write-sandbox)) should eventually be removed by the same **scoped demo-org reset** flow once implemented; until then, operators should assume seed plus sandbox creates can fill quotas without a public reset endpoint.
 
+**Practical lesson readiness:** future seed/reset automation for demo orgs should **preserve or recreate** instructor **qualified category** links (and optional vehicle `categoryId` alignment) needed for `DRIVING` lesson creation — see **`pnpm demo:practical:configure`** in [client-demo-runbook.md](./client-demo-runbook.md#prepare-practical-lesson-demo). `demo:personas:configure` alone does not set `_InstructorCategories`.
+
 ### Operational sandbox reset (initial)
 
 **`pnpm demo:sandbox:reset`** (`scripts/reset-demo-sandbox.ts`) is an **operator-only** script: it deletes **lessons** and **vehicles** for the org identified by `DEMO_ORGANIZATION_ID` when that org is marked **`isDemo`**. It is **dry-run by default**; apply requires **`--apply`** and **`DEMO_SANDBOX_RESET_APPLY=true`**. It does **not** remove personas, domains, features, entitlements, or billing configuration. Because there is still **no** `createdByDemoSandbox` marker, it currently removes **all** lessons and vehicles for that demo org (including seed rows) — treat seed as **re-creatable** or document a follow-up.
