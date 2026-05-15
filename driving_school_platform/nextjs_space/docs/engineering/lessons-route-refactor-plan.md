@@ -1,7 +1,7 @@
 # Lessons Route Refactor Plan
 
-**Status:** Batches 1–3 **done** (`lessons-query-module`, `lessons-dto-mappers`, `lessons-create-service`). Batches 4–6 pending.  
-**Branch context:** `lessons-route-alignment-planning` (plan); `lessons-query-module` (batch 1); `lessons-dto-mappers` (batch 2); `lessons-create-service` (batch 3)  
+**Status:** Batches 1–4 **done**. Batches 5–6 pending.  
+**Branch context:** `lessons-route-alignment-planning` (plan); batches 1–4 on feature branches (`lessons-query-module` … `lessons-update-delete-service`)  
 **Related audits:** [route-handler-consistency-audit.md](./route-handler-consistency-audit.md) (RHC-001, RHC-006, RHC-008), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-002)
 
 ---
@@ -167,15 +167,15 @@ Small PRs; each must keep behavior unless noted and extend tests.
 | **Tests**      | `route.integration.unit.test.ts` POST cases; `lesson-create-service.unit.test.ts` (exam cap, duration).                                                               |
 | **Acceptance** | POST status codes and bodies unchanged; demo sandbox tests still pass.                                                                                                |
 
-### Batch 4: `lessons-update-delete-service`
+### Batch 4: `lessons-update-delete-service` — **Done**
 
-|                  |                                                                                                                                              |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Objective**    | Extract PUT/DELETE from `[id]/route.ts` into services + mutations; share `isPastLesson` / instructor ownership policies.                     |
-| **Likely files** | `lib/lessons/services/update-lesson.ts`, `delete-lesson.ts`, `lib/lessons/policies/lesson-access.ts`, `app/api/admin/lessons/[id]/route.ts`. |
-| **Risks**        | `update` vs `updateMany` org scoping; vehicle feature check ordering.                                                                        |
-| **Tests**        | **New** `app/api/admin/lessons/[id]/route.integration.unit.test.ts` (demo block, instructor forbidden, past lesson, happy path).             |
-| **Acceptance**   | Behavior match manual matrix; demo 403 unchanged.                                                                                            |
+|                |                                                                                                                                                                                                                                          |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Objective**  | Extract PUT/DELETE from `[id]/route.ts` into services; share access policies.                                                                                                                                                            |
+| **Shipped**    | `lib/lessons/lesson-update-delete-service.ts`, `lib/lessons/lesson-access.ts`; `[id]/route.integration.unit.test.ts`. Route keeps auth/tenant/demo/vehicle feature gate. GET unchanged (uses `lesson-access` for instructor check only). |
+| **Risks**      | `update` vs `updateMany` org scoping; vehicle feature check ordering.                                                                                                                                                                    |
+| **Tests**      | `[id]/route.integration.unit.test.ts`; `lesson-update-delete-service.unit.test.ts`.                                                                                                                                                      |
+| **Acceptance** | Behavior match manual matrix; demo 403 unchanged.                                                                                                                                                                                        |
 
 ### Batch 5: `instructor-student-lessons-read-alignment`
 

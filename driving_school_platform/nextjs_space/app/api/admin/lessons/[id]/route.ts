@@ -15,49 +15,27 @@ import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from "@/lib/constants";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
 import { decideDemoRouteMutation } from "@/lib/demo/demo-route-guard";
+import { assertInstructorCanMutateLesson } from "@/lib/lessons/lesson-access";
+import {
+  deleteAdminLesson,
+  updateAdminLesson,
+} from "@/lib/lessons/lesson-update-delete-service";
 
-type RoleUser = {
-  role?: string | null;
-};
-
-type OrgScopedUser = RoleUser & {
+type OrgScopedUser = {
   id: string;
+  role?: string | null;
   organizationId?: string | null;
 };
 
-type LessonWithInstructorUserId = {
-  instructor?: { userId?: string | null } | null;
-};
-
-type LessonWithEndTime = {
-  lessonDate?: string | Date | null;
-  endTime?: string | null;
-};
-
-function isInstructor(user: RoleUser) {
-  return user?.role === USER_ROLES.INSTRUCTOR;
-}
-
-function assertInstructorOwnsLesson(
+function instructorForbiddenResponse(
   user: OrgScopedUser,
-  lesson: LessonWithInstructorUserId,
+  lesson: { instructor?: { userId?: string | null } | null },
 ) {
-  if (!isInstructor(user)) return null;
-  if (!lesson?.instructor?.userId)
-    return errorResponse("Forbidden", HTTP_STATUS.FORBIDDEN);
-  if (lesson.instructor.userId !== user.id)
-    return errorResponse("Forbidden", HTTP_STATUS.FORBIDDEN);
+  const access = assertInstructorCanMutateLesson(user, lesson);
+  if (!access.allowed) {
+    return errorResponse(access.error, access.status);
+  }
   return null;
-}
-
-function isPastLesson(lesson: LessonWithEndTime) {
-  if (!lesson?.lessonDate || !lesson?.endTime) return false;
-
-  const d = new Date(lesson.lessonDate);
-  const [h, m] = String(lesson.endTime).split(":").map(Number);
-  d.setHours(h || 0, m || 0, 0, 0);
-
-  return d.getTime() < Date.now();
 }
 
 /**
@@ -73,10 +51,7 @@ export const GET = withErrorHandling(
       return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
     }
 
-    const orgId = (user as OrgScopedUser).organizationId as
-      | string
-      | null
-      | undefined;
+    const orgId = (user as OrgScopedUser).organizationId;
     if (!orgId) {
       return errorResponse("No organization found", HTTP_STATUS.BAD_REQUEST);
     }
@@ -92,7 +67,7 @@ export const GET = withErrorHandling(
       where: { id, organizationId: orgId },
       include: {
         student: { include: { user: true } },
-        instructor: { include: { user: true } }, // includes instructor.userId too
+        instructor: { include: { user: true } },
         vehicle: true,
         category: true,
       },
@@ -102,7 +77,7 @@ export const GET = withErrorHandling(
       return errorResponse("Lesson not found", HTTP_STATUS.NOT_FOUND);
     }
 
-    const forbidden = assertInstructorOwnsLesson(user, lesson);
+    const forbidden = instructorForbiddenResponse(user, lesson);
     if (forbidden) return forbidden;
 
     return successResponse(lesson);
@@ -122,10 +97,7 @@ export const PUT = withErrorHandling(
       return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
     }
 
-    const orgId = (user as OrgScopedUser).organizationId as
-      | string
-      | null
-      | undefined;
+    const orgId = (user as OrgScopedUser).organizationId;
     if (!orgId) {
       return errorResponse("No organization found", HTTP_STATUS.BAD_REQUEST);
     }
@@ -143,28 +115,6 @@ export const PUT = withErrorHandling(
       return NextResponse.json(
         { error: demoDecision.message, code: demoDecision.reason },
         { status: demoDecision.status },
-      );
-    }
-
-    const { id } = params;
-
-    // Permission check (must exist + ownership if instructor)
-    const existingLesson = await prisma.lesson.findFirst({
-      where: { id, organizationId: orgId },
-      include: { instructor: true },
-    });
-
-    if (!existingLesson) {
-      return errorResponse("Lesson not found", HTTP_STATUS.NOT_FOUND);
-    }
-
-    const forbidden = assertInstructorOwnsLesson(user, existingLesson);
-    if (forbidden) return forbidden;
-
-    if (isPastLesson(existingLesson)) {
-      return errorResponse(
-        "Cannot modify a lesson that already ended",
-        HTTP_STATUS.BAD_REQUEST,
       );
     }
 
@@ -182,55 +132,22 @@ export const PUT = withErrorHandling(
           HTTP_STATUS.FORBIDDEN,
         );
       }
-
-      const vehicle = await prisma.vehicle.findFirst({
-        where: { id: vehicleId, organizationId: orgId },
-        select: { id: true },
-      });
-
-      if (!vehicle) {
-        return errorResponse("Vehicle not found", HTTP_STATUS.NOT_FOUND);
-      }
     }
 
-    // Calculate duration if times are provided
-    let durationMinutes: number | undefined;
-    if (startTime && endTime) {
-      const [startHour, startMin] = startTime.split(":").map(Number);
-      const [endHour, endMin] = endTime.split(":").map(Number);
-      const startInMinutes = startHour * 60 + startMin;
-      const endInMinutes = endHour * 60 + endMin;
-      durationMinutes = endInMinutes - startInMinutes;
-
-      if (durationMinutes <= 0) {
-        return errorResponse(
-          "End time must be after start time",
-          HTTP_STATUS.BAD_REQUEST,
-        );
-      }
-    }
-
-    const lesson = await prisma.lesson.update({
-      where: { id },
-      data: {
-        ...(lessonDate && { lessonDate: new Date(lessonDate) }),
-        ...(startTime && { startTime }),
-        ...(endTime && { endTime }),
-        ...(durationMinutes && { durationMinutes }),
-        ...(status && { status }),
-        ...(vehicleId !== undefined && { vehicleId: vehicleId || null }),
-      },
-      include: {
-        student: { include: { user: true } },
-        instructor: { include: { user: true } },
-        vehicle: true,
-        category: true,
-      },
+    const result = await updateAdminLesson({
+      organizationId: orgId,
+      lessonId: params.id,
+      actor: { id: user.id, role: user.role },
+      payload: { lessonDate, startTime, endTime, status, vehicleId },
     });
+
+    if (!result.ok) {
+      return errorResponse(result.error, result.status);
+    }
 
     return successResponse({
       message: "Lesson updated successfully",
-      lesson,
+      lesson: result.lesson,
     });
   },
 );
@@ -248,10 +165,7 @@ export const DELETE = withErrorHandling(
       return errorResponse(API_MESSAGES.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
     }
 
-    const orgId = (user as OrgScopedUser).organizationId as
-      | string
-      | null
-      | undefined;
+    const orgId = (user as OrgScopedUser).organizationId;
     if (!orgId) {
       return errorResponse("No organization found", HTTP_STATUS.BAD_REQUEST);
     }
@@ -272,28 +186,15 @@ export const DELETE = withErrorHandling(
       );
     }
 
-    const { id } = params;
-
-    const lesson = await prisma.lesson.findFirst({
-      where: { id, organizationId: orgId },
-      include: { instructor: true },
+    const result = await deleteAdminLesson({
+      organizationId: orgId,
+      lessonId: params.id,
+      actor: { id: user.id, role: user.role },
     });
 
-    if (!lesson) {
-      return errorResponse("Lesson not found", HTTP_STATUS.NOT_FOUND);
+    if (!result.ok) {
+      return errorResponse(result.error, result.status);
     }
-
-    const forbidden = assertInstructorOwnsLesson(user, lesson);
-    if (forbidden) return forbidden;
-
-    if (isPastLesson(lesson)) {
-      return errorResponse(
-        "Cannot delete a lesson that already ended",
-        HTTP_STATUS.BAD_REQUEST,
-      );
-    }
-
-    await prisma.lesson.deleteMany({ where: { id, organizationId: orgId } });
 
     return successResponse({
       message: "Lesson deleted successfully",

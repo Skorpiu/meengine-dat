@@ -1,0 +1,157 @@
+/**
+ * Admin lesson update/delete orchestration (Prisma only).
+ * Callers handle HTTP auth, tenant, demo guards, and vehicle feature gates.
+ */
+import { prisma } from "@/lib/db";
+import { HTTP_STATUS } from "@/lib/constants";
+import type { LessonStatus } from "@prisma/client";
+import {
+  assertInstructorCanMutateLesson,
+  isPastLesson,
+} from "@/lib/lessons/lesson-access";
+import { LESSON_LIST_INCLUDE } from "@/lib/lessons/lesson-queries";
+
+export type UpdateAdminLessonPayload = {
+  lessonDate?: string;
+  startTime?: string;
+  endTime?: string;
+  status?: string;
+  vehicleId?: number | null;
+};
+
+type LessonMutationActor = {
+  id: string;
+  role?: string | null;
+};
+
+export type UpdateAdminLessonResult =
+  | {
+      ok: true;
+      lesson: Awaited<ReturnType<typeof prisma.lesson.update>>;
+    }
+  | { ok: false; error: string; status: number };
+
+export type DeleteAdminLessonResult =
+  | { ok: true }
+  | { ok: false; error: string; status: number };
+
+export async function updateAdminLesson(input: {
+  organizationId: string;
+  lessonId: string;
+  actor: LessonMutationActor;
+  payload: UpdateAdminLessonPayload;
+}): Promise<UpdateAdminLessonResult> {
+  const { organizationId: orgId, lessonId: id, actor, payload } = input;
+  const { lessonDate, startTime, endTime, status, vehicleId } = payload;
+
+  const existingLesson = await prisma.lesson.findFirst({
+    where: { id, organizationId: orgId },
+    include: { instructor: true },
+  });
+
+  if (!existingLesson) {
+    return {
+      ok: false,
+      error: "Lesson not found",
+      status: HTTP_STATUS.NOT_FOUND,
+    };
+  }
+
+  const access = assertInstructorCanMutateLesson(actor, existingLesson);
+  if (!access.allowed) {
+    return { ok: false, error: access.error, status: access.status };
+  }
+
+  if (isPastLesson(existingLesson)) {
+    return {
+      ok: false,
+      error: "Cannot modify a lesson that already ended",
+      status: HTTP_STATUS.BAD_REQUEST,
+    };
+  }
+
+  if (vehicleId) {
+    const vehicle = await prisma.vehicle.findFirst({
+      where: { id: vehicleId, organizationId: orgId },
+      select: { id: true },
+    });
+
+    if (!vehicle) {
+      return {
+        ok: false,
+        error: "Vehicle not found",
+        status: HTTP_STATUS.NOT_FOUND,
+      };
+    }
+  }
+
+  let durationMinutes: number | undefined;
+  if (startTime && endTime) {
+    const [startHour, startMin] = startTime.split(":").map(Number);
+    const [endHour, endMin] = endTime.split(":").map(Number);
+    const startInMinutes = startHour * 60 + startMin;
+    const endInMinutes = endHour * 60 + endMin;
+    durationMinutes = endInMinutes - startInMinutes;
+
+    if (durationMinutes <= 0) {
+      return {
+        ok: false,
+        error: "End time must be after start time",
+        status: HTTP_STATUS.BAD_REQUEST,
+      };
+    }
+  }
+
+  const lesson = await prisma.lesson.update({
+    where: { id },
+    data: {
+      ...(lessonDate && { lessonDate: new Date(lessonDate) }),
+      ...(startTime && { startTime }),
+      ...(endTime && { endTime }),
+      ...(durationMinutes && { durationMinutes }),
+      ...(status && { status: status as LessonStatus }),
+      ...(vehicleId !== undefined && { vehicleId: vehicleId || null }),
+    },
+    include: LESSON_LIST_INCLUDE,
+  });
+
+  return { ok: true, lesson };
+}
+
+export async function deleteAdminLesson(input: {
+  organizationId: string;
+  lessonId: string;
+  actor: LessonMutationActor;
+}): Promise<DeleteAdminLessonResult> {
+  const { organizationId: orgId, lessonId: id, actor } = input;
+
+  const lesson = await prisma.lesson.findFirst({
+    where: { id, organizationId: orgId },
+    include: { instructor: true },
+  });
+
+  if (!lesson) {
+    return {
+      ok: false,
+      error: "Lesson not found",
+      status: HTTP_STATUS.NOT_FOUND,
+    };
+  }
+
+  const access = assertInstructorCanMutateLesson(actor, lesson);
+  if (!access.allowed) {
+    return { ok: false, error: access.error, status: access.status };
+  }
+
+  if (isPastLesson(lesson)) {
+    return {
+      ok: false,
+      error: "Cannot delete a lesson that already ended",
+      status: HTTP_STATUS.BAD_REQUEST,
+    };
+  }
+
+  await prisma.lesson.deleteMany({ where: { id, organizationId: orgId } });
+
+  return { ok: true };
+}
