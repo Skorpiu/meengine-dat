@@ -46,7 +46,18 @@ Use these **labels** when planning seeds or operator briefings—**without** emb
 
 ## Reset strategy
 
-When a real reset is implemented (future batch—not this document’s script alone):
+**Available today**
+
+- **Manual sandbox reset** — `pnpm demo:sandbox:reset` (dry-run by default; apply requires `--apply` and `DEMO_SANDBOX_RESET_APPLY=true`). See [client-demo-runbook.md](./client-demo-runbook.md#reset-demo-sandbox-after-a-meeting).
+- **Daily Vercel Cron reset** — `GET /api/cron/demo-sandbox-reset` at `0 3 * * *` (03:00 UTC); requires `CRON_SECRET` and `DEMO_ORGANIZATION_ID` in Vercel Production. See [client-demo-runbook.md](./client-demo-runbook.md#automatic-daily-demo-sandbox-reset).
+
+**Future improvements** (not required for the current controlled Full Showcase demo):
+
+- **`createdByDemoSandbox`** (or equivalent) so reset removes only sandbox-created lessons/vehicles, not seed rows.
+- **Separated demo database** (and optionally separated deployment) for strongest isolation from production tenants.
+- **Seed baseline / full org rebuild** — repeatable fictional baseline plus destructive org wipe beyond lessons/vehicles only.
+
+When a fuller destructive reset is implemented (beyond sandbox scope):
 
 1. **Scope** — Delete or recreate data **only** for the **demo** organization (`organizationId` = demo org). **Never** touch non-demo organizations.
 2. **Confirmation** — Require an explicit operator confirmation step (flag, typed org name, or protected CI input)—no silent deletes.
