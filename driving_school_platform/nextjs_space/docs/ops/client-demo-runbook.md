@@ -53,7 +53,7 @@ For a **controlled** walkthrough where you want to show **one-off creates** with
 
 ## Reset demo sandbox after a meeting
 
-After a **controlled** session with `DEMO_WRITE_SANDBOX_ENABLED=true`, operators can clear **lessons and vehicles** for the demo org with a **local script** (no public HTTP endpoint, no scheduler in this batch).
+After a **controlled** session with `DEMO_WRITE_SANDBOX_ENABLED=true`, operators can clear **lessons and vehicles** for the demo org with a **local script** or rely on the **daily Vercel Cron** reset (see [Automatic daily demo sandbox reset](#automatic-daily-demo-sandbox-reset)).
 
 **Dry-run** (prints counts only; requires `DATABASE_URL` and `DEMO_ORGANIZATION_ID`):
 
@@ -73,6 +73,32 @@ DEMO_ORGANIZATION_ID=<demo-org-id> DEMO_SANDBOX_RESET_APPLY=true pnpm demo:sandb
 - Does **not** remove demo personas, users, `OrganizationDomain`, `OrganizationFeature`, `EntitlementGrant`, settings, feature flags, licensing keys, or billing tables.
 - Because there is **no** `createdByDemoSandbox` marker yet, the script deletes **all** lessons and **all** vehicles scoped to that demo org — seed data must be **re-runnable** or kept minimal until a finer-grained follow-up exists.
 - After apply, run **`pnpm demo:client-ready`** (read-only smoke) before the next external demo.
+
+---
+
+## Automatic daily demo sandbox reset
+
+Production can reset the demo org’s **lessons and vehicles** automatically once per day via **Vercel Cron**:
+
+| Item              | Detail                                                                                                                                                                                             |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Endpoint**      | `GET /api/cron/demo-sandbox-reset` (configured in `vercel.json`)                                                                                                                                   |
+| **Schedule**      | `0 3 * * *` (03:00 UTC daily). On **Vercel Hobby**, cron may run **within** that hour, not necessarily at the exact minute.                                                                        |
+| **Auth**          | `Authorization: Bearer <CRON_SECRET>` — Vercel sends this when `CRON_SECRET` is set on the project.                                                                                                |
+| **Target org**    | **`DEMO_ORGANIZATION_ID`** env only — the endpoint does **not** accept `organizationId` via query or body.                                                                                         |
+| **Scope**         | Same as manual reset: deletes **all** lessons and vehicles for the demo org (`isDemo` required). Does **not** delete personas, `OrganizationDomain`, features, entitlements, settings, or billing. |
+| **Separate flag** | **`DEMO_WRITE_SANDBOX_ENABLED`** controls limited creates during a session; it is **not** required for cron reset.                                                                                 |
+
+**Vercel Production variables (no real values in git):**
+
+- `CRON_SECRET` — long random secret; must match what Vercel attaches to cron invocations.
+- `DEMO_ORGANIZATION_ID` — CUID of the demo organization.
+
+Confirm the job appears under **Vercel → Project → Settings → Cron Jobs** after deploy.
+
+**Manual reset** remains available: `pnpm demo:sandbox:reset` (dry-run by default; apply needs `--apply` and `DEMO_SANDBOX_RESET_APPLY=true`).
+
+Before an **important** client or recruiter meeting, still run **`pnpm demo:client-ready`** (and manual sandbox reset if you need a clean slate before the nightly cron).
 
 ---
 
