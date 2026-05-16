@@ -10,6 +10,42 @@ Use this runbook when you need to **prepare**, **validate**, and **execute** a l
 
 ---
 
+## Current validated demo status
+
+**DAT Demo — Full Showcase** is **operational** for controlled client and recruiter demos.
+
+- **`demo.meengine.io`** is configured on **Vercel** and **Cloudflare** (DNS + TLS).
+- **Vercel Cron** runs a **daily sandbox reset** (`GET /api/cron/demo-sandbox-reset`, schedule `0 3 * * *`, protected by `CRON_SECRET`).
+- **Controlled write sandbox** is **enabled intentionally** on Vercel Production (`DEMO_WRITE_SANDBOX_ENABLED=true`) for limited creates during walkthroughs.
+- **Private personas** are configured (Demo School Admin, Demo Instructor, Demo Student) — credentials shared **only** through private channels; **never** in git or public docs.
+- **Manual reset** and **automatic reset** are both available (`pnpm demo:sandbox:reset` and daily cron).
+
+### Validated demo checklist
+
+Use this as a regression guide before or after a major demo-environment change (no credentials in this list):
+
+- [ ] **Vehicle creation** — first create allowed; second blocked by quota (`demo_write_quota_exceeded`).
+- [ ] **Theory lesson** — create allowed; appears **immediately** on Schedule Map without changing tab; **green** card.
+- [ ] **Driving lesson** — create allowed; appears **immediately** on Schedule Map; **blue** card.
+- [ ] **Theoretical exam** — create allowed; appears **immediately** on Schedule Map; **yellow** card.
+- [ ] **Practical exam** — create allowed (with vehicle when required); appears **immediately** on Schedule Map; **orange** card.
+- [ ] **Second creation** of each quota type (vehicle, theory lesson, driving lesson, theoretical exam, practical exam) is **blocked**.
+- [ ] **Demo Instructor** — sees assigned lessons; **no** tenant admin tabs.
+- [ ] **Demo signup** — public registration disabled for the demo org (`demo_signup_disabled` on `POST /api/signup`).
+
+### Known remaining follow-ups
+
+These are **not** blockers for the current Full Showcase controlled demo; track them as product/ops evolution:
+
+- **Basic / Premium / Full** as **separate demo organizations** (or domains per tier) — future work; today use **one** Full Showcase org.
+- **Dedicated demo database / deployment** — future ideal for strongest isolation from production tenants.
+- **`createdByDemoSandbox` marker** — future improvement so reset deletes only sandbox-created rows, not seed rows.
+- **Broader DTO minimization** — see [lesson-dto-minimization-audit.md](../engineering/lesson-dto-minimization-audit.md); lesson API batches are partial.
+- **Full billing provider / checkout / portal** — not integrated; demos must not imply live commerce.
+- **Platform Admin UI** — operator infrastructure only; **not** part of the public or client demo narrative.
+
+---
+
 ## Recommended initial demo model
 
 - **Start with one Full Showcase demo** tenant: broadest **curator-controlled** surface for depth, aligned with [public-demo-feature-showcase.md](./public-demo-feature-showcase.md).

@@ -8,6 +8,8 @@ For a **single end-to-end operator flow** (checklists, commands, meeting day), u
 
 **`demo.meengine.io`** must be added to the **Vercel** project and pointed from **Cloudflare** DNS per the runbook before you share controlled demo access—host routing is separate from `OrganizationDomain` in the database.
 
+**Current state:** the **initial Full Showcase controlled demo** (`DAT Demo — Full Showcase`, `demo.meengine.io`) is **operational** for private client/recruiter sessions. Access remains **controlled** (private personas, no public credential bundles). **Do not publish** demo emails, passwords, `CRON_SECRET`, or other secrets in git, README, or marketing. **Basic / Premium / Full** as separate demo orgs or domains remains **future** evolution — see [client-demo-runbook.md](./client-demo-runbook.md#known-remaining-follow-ups).
+
 ---
 
 ## Public portfolio access policy
@@ -32,7 +34,7 @@ When the product supports multiple demo experiences cleanly:
 
 ## Initial recommended phase
 
-- **Start with one Full Showcase organization** prepared **by an operator** (including `OrganizationFeature` rows via `pnpm demo:showcase:configure` where applicable — see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md#configuring-full-showcase-features)), not by public demo users. Prefer **Full Showcase Demo only** when you need to show depth: one carefully seeded demo tenant, aligned with [public-demo-feature-showcase.md](./public-demo-feature-showcase.md).
+- **Start with one Full Showcase organization** prepared **by an operator** (including `OrganizationFeature` rows via `pnpm demo:showcase:configure` where applicable — see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md#configuring-full-showcase-features)), not by public demo users. Prefer **Full Showcase Demo only** when you need to show depth: one carefully seeded demo tenant, aligned with [public-demo-feature-showcase.md](./public-demo-feature-showcase.md). This model is **live** for controlled sessions on `demo.meengine.io` — see [client-demo-runbook.md](./client-demo-runbook.md#current-validated-demo-status).
 - **Basic / Premium / Full** now have **operator tier profiles** in code (`DEMO_SHOWCASE_PROFILE` — see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md#demo-tier-profiles)) for repeatable configuration. **Separate demo organizations or domains per tier** (and scripted multi-tenant tours) remain **follow-up** work once isolation, reset, and governance are ready—see the tier table under **Recommended future demo structure** above.
 - **No public self-service registration** for demos unless explicitly designed, reviewed, and operated (abuse, data retention, and legal expectations must be intentional).
 

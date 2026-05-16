@@ -8,6 +8,8 @@ Operational expectations for any **public** or **portfolio** exposure of the dri
 
 **Client / recruiter demo (one doc):** [client-demo-runbook.md](./client-demo-runbook.md).
 
+**Validated controlled demo (Full Showcase):** the **controlled demo write sandbox** (limited lesson/vehicle creates when `DEMO_WRITE_SANDBOX_ENABLED=true`) and **daily sandbox reset** (Vercel Cron → `GET /api/cron/demo-sandbox-reset`, Bearer `CRON_SECRET`) are **implemented** for the operator-prepared Full Showcase tenant. The demo remains **protected** by **private personas**, **`Organization.isDemo`**, and **demo guards** — not an anonymous open sandbox. See [client-demo-runbook.md](./client-demo-runbook.md#current-validated-demo-status).
+
 ## Data and environment
 
 - A public demo must **not** use real customer or pupil data.
