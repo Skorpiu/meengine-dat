@@ -14,6 +14,7 @@ import {
 import { lessonFormDialogContentWideClass } from "@/components/lessons/lesson-form-styles";
 import toast from "react-hot-toast";
 import type { LessonBookingSuccessMeta } from "@/components/lessons/lesson-booking-meta";
+import { buildAdminLessonCreateRequestBody } from "@/lib/lessons/lesson-create-request-body";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -63,7 +64,11 @@ export function BookExamDialog({
       const res = await fetch("/api/admin/lessons", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(
+          buildAdminLessonCreateRequestBody(payload, {
+            instructorId: instructorUserId,
+          }),
+        ),
       });
 
       if (!res.ok) {
@@ -99,6 +104,7 @@ export function BookExamDialog({
           userRole="INSTRUCTOR"
           instructorUserId={instructorUserId}
           allowedLessonTypes={["EXAM", "THEORY_EXAM"]}
+          submitButtonText="Book Exam"
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
         />

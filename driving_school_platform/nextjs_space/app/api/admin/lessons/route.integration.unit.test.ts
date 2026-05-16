@@ -12,11 +12,13 @@ const h = vi.hoisted(() => {
   const lessonFindManyMock = vi.fn();
   const lessonDeleteManyMock = vi.fn();
   const organizationFindUniqueMock = vi.fn();
+  const vehicleFindFirstMock = vi.fn();
 
   const prismaMock = {
     instructor: { findFirst: instructorFindFirstMock },
     category: { findFirst: categoryFindFirstMock },
     student: { findFirst: studentFindFirstMock },
+    vehicle: { findFirst: vehicleFindFirstMock },
     lesson: {
       create: lessonCreateMock,
       count: lessonCountMock,
@@ -36,6 +38,7 @@ const h = vi.hoisted(() => {
     lessonFindManyMock,
     lessonDeleteManyMock,
     organizationFindUniqueMock,
+    vehicleFindFirstMock,
   };
 });
 
@@ -111,6 +114,7 @@ beforeEach(() => {
   });
 
   h.lessonFindManyMock.mockResolvedValue([]);
+  h.vehicleFindFirstMock.mockResolvedValue({ id: 7 });
 });
 
 afterEach(() => {
@@ -344,6 +348,58 @@ describe("POST /api/admin/lessons (handler integration)", () => {
     expect(h.instructorFindFirstMock).toHaveBeenCalledTimes(1);
     const callArg = h.instructorFindFirstMock.mock.calls[0]?.[0];
     expect(callArg?.where?.userId).toBe(instructorUserId);
+  });
+
+  it("creates EXAM with vehicleId as positive integer (201)", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
+    checkFeatureAccessMock.mockResolvedValue({ allowed: true });
+
+    const payload = {
+      lessonType: "EXAM",
+      instructorId: UUID_A,
+      studentIds: [UUID_B],
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
+      vehicleId: 7,
+    };
+
+    const res = await POST(reqJson(payload) as any);
+
+    expect(res.status).toBe(201);
+    const body: any = await res.json();
+    expect(body.success).toBe(true);
+    expect(h.lessonCreateMock).toHaveBeenCalled();
+    expect(checkFeatureAccessMock).toHaveBeenCalled();
+  });
+
+  it("returns 400 when EXAM payload has vehicleId as string (validation)", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
+
+    const payload = {
+      lessonType: "EXAM",
+      instructorId: UUID_A,
+      studentIds: [UUID_B],
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
+      vehicleId: "7",
+    };
+
+    const res = await POST(reqJson(payload) as any);
+
+    expect(res.status).toBe(400);
+    const body: any = await res.json();
+    expect(body.error).toBe("Validation failed");
+    expect(h.lessonCreateMock).not.toHaveBeenCalled();
   });
 
   it("returns 400 when EXAM exceeds MAX_STUDENTS_PER_EXAM", async () => {
