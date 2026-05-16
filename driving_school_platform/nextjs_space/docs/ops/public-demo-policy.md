@@ -26,7 +26,7 @@ For **seed personas, reset policy, dry-run reset validation, and read-only readi
 ## Behaviour of a demo tenant
 
 - Demo organizations should be **read-mostly**: browsing and light profile/preferences changes may be acceptable; **destructive or admin mutations** must be blocked by **demo guards** (`decideDemoMutation` in `lib/demo/demo-policy.ts`, applied via `decideDemoRouteMutation` in `lib/demo/demo-route-guard.ts`).
-- **Optional controlled write sandbox:** when `DEMO_WRITE_SANDBOX_ENABLED=true`, demo orgs may perform **limited** creates only (`POST` lesson create and `POST` vehicle create with per-category quotas — see [client-demo-runbook.md](./client-demo-runbook.md#controlled-demo-write-sandbox)). **Default is off**; all other demo restrictions apply unchanged.
+- **Optional controlled write sandbox:** when `DEMO_WRITE_SANDBOX_ENABLED=true`, demo orgs may perform **limited** creates only (`POST` lesson create and `POST` vehicle create with per-category quotas: one theory lesson, one driving lesson, one theoretical exam, one practical exam, one vehicle — see [client-demo-runbook.md](./client-demo-runbook.md#controlled-demo-write-sandbox)). **Default is off**; all other demo restrictions apply unchanged.
 - Demo data must be **fictional** and **safe to reset** (scripts or seed refresh), not copies of production.
 
 For **showing licensed / premium UI in demo without visitor control plane** (operator-prepared features, no public toggling), see [public-demo-feature-showcase.md](./public-demo-feature-showcase.md).

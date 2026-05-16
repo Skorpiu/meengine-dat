@@ -6,7 +6,8 @@
 export type DemoWriteSandboxCategory =
   | "lesson_theory"
   | "lesson_driving"
-  | "lesson_exam"
+  | "lesson_theory_exam"
+  | "lesson_practical_exam"
   | "vehicle";
 
 export type DemoWriteSandboxDecision =

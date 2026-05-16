@@ -123,6 +123,111 @@ describe("decideDemoLessonCreate", () => {
     expect(result).toEqual({ allowed: true });
     expect(h.lessonCountMock).not.toHaveBeenCalled();
   });
+
+  it("allows THEORY_EXAM when count 0", async () => {
+    h.organizationFindUniqueMock.mockResolvedValue({ isDemo: true });
+    process.env.DEMO_WRITE_SANDBOX_ENABLED = "true";
+    h.lessonCountMock.mockResolvedValue(0);
+
+    const result = await decideDemoLessonCreate({
+      organizationId: "org-demo",
+      lessonType: "THEORY_EXAM",
+    });
+
+    expect(result).toEqual({ allowed: true });
+    expect(h.lessonCountMock).toHaveBeenCalledWith({
+      where: {
+        organizationId: "org-demo",
+        lessonType: "THEORY_EXAM",
+      },
+    });
+  });
+
+  it("allows EXAM when count 0 even if THEORY_EXAM already exists", async () => {
+    h.organizationFindUniqueMock.mockResolvedValue({ isDemo: true });
+    process.env.DEMO_WRITE_SANDBOX_ENABLED = "true";
+    h.lessonCountMock.mockResolvedValue(0);
+
+    const result = await decideDemoLessonCreate({
+      organizationId: "org-demo",
+      lessonType: "EXAM",
+    });
+
+    expect(result).toEqual({ allowed: true });
+    expect(h.lessonCountMock).toHaveBeenCalledWith({
+      where: {
+        organizationId: "org-demo",
+        lessonType: "EXAM",
+      },
+    });
+  });
+
+  it("blocks second THEORY_EXAM when quota used", async () => {
+    h.organizationFindUniqueMock.mockResolvedValue({ isDemo: true });
+    process.env.DEMO_WRITE_SANDBOX_ENABLED = "true";
+    h.lessonCountMock.mockResolvedValue(1);
+
+    const result = await decideDemoLessonCreate({
+      organizationId: "org-demo",
+      lessonType: "THEORY_EXAM",
+    });
+
+    expect(result).toEqual({
+      allowed: false,
+      status: 403,
+      code: "demo_write_quota_exceeded",
+      message: QUOTA,
+    });
+    expect(h.lessonCountMock).toHaveBeenCalledWith({
+      where: {
+        organizationId: "org-demo",
+        lessonType: "THEORY_EXAM",
+      },
+    });
+  });
+
+  it("blocks second EXAM when quota used", async () => {
+    h.organizationFindUniqueMock.mockResolvedValue({ isDemo: true });
+    process.env.DEMO_WRITE_SANDBOX_ENABLED = "true";
+    h.lessonCountMock.mockResolvedValue(1);
+
+    const result = await decideDemoLessonCreate({
+      organizationId: "org-demo",
+      lessonType: "EXAM",
+    });
+
+    expect(result).toEqual({
+      allowed: false,
+      status: 403,
+      code: "demo_write_quota_exceeded",
+      message: QUOTA,
+    });
+    expect(h.lessonCountMock).toHaveBeenCalledWith({
+      where: {
+        organizationId: "org-demo",
+        lessonType: "EXAM",
+      },
+    });
+  });
+
+  it("blocks EXAM when pendingCreates exceeds quota", async () => {
+    h.organizationFindUniqueMock.mockResolvedValue({ isDemo: true });
+    process.env.DEMO_WRITE_SANDBOX_ENABLED = "true";
+    h.lessonCountMock.mockResolvedValue(0);
+
+    const result = await decideDemoLessonCreate({
+      organizationId: "org-demo",
+      lessonType: "EXAM",
+      pendingCreates: 2,
+    });
+
+    expect(result).toEqual({
+      allowed: false,
+      status: 403,
+      code: "demo_write_quota_exceeded",
+      message: QUOTA,
+    });
+  });
 });
 
 describe("decideDemoVehicleCreate", () => {

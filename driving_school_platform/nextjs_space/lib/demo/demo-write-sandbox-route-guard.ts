@@ -42,12 +42,8 @@ function lessonTypeToCategory(
 ): DemoWriteSandboxCategory | null {
   if (lessonType === LESSON_TYPES.THEORY) return "lesson_theory";
   if (lessonType === LESSON_TYPES.DRIVING) return "lesson_driving";
-  if (
-    lessonType === LESSON_TYPES.EXAM ||
-    lessonType === LESSON_TYPES.THEORY_EXAM
-  ) {
-    return "lesson_exam";
-  }
+  if (lessonType === LESSON_TYPES.THEORY_EXAM) return "lesson_theory_exam";
+  if (lessonType === LESSON_TYPES.EXAM) return "lesson_practical_exam";
   return null;
 }
 
@@ -94,11 +90,18 @@ export async function decideDemoLessonCreate(input: {
         lessonType: LESSON_TYPES.DRIVING,
       },
     });
+  } else if (category === "lesson_theory_exam") {
+    currentCount = await prisma.lesson.count({
+      where: {
+        organizationId: input.organizationId,
+        lessonType: LESSON_TYPES.THEORY_EXAM,
+      },
+    });
   } else {
     currentCount = await prisma.lesson.count({
       where: {
         organizationId: input.organizationId,
-        lessonType: { in: [LESSON_TYPES.EXAM, LESSON_TYPES.THEORY_EXAM] },
+        lessonType: LESSON_TYPES.EXAM,
       },
     });
   }
