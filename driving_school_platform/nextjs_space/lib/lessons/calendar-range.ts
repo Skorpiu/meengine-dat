@@ -51,7 +51,7 @@ export function validateLessonCalendarRange(input: {
   const from = startOfDay(fromRaw);
   const to = startOfDay(toRaw);
 
-  if (to.getTime() <= from.getTime()) {
+  if (to.getTime() < from.getTime()) {
     return {
       ok: false,
       code: "invalid_calendar_range",

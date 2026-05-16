@@ -52,6 +52,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import {
+  getScheduleMapChipLines,
+  getScheduleMapLessonColorClasses,
+} from "@/lib/schedule/schedule-map-card";
 
 type ViewType = "day" | "week" | "month";
 
@@ -116,7 +120,13 @@ export interface Lesson {
   };
 }
 
-export type ScheduleMapRefetch = () => Promise<void>;
+export type ScheduleMapRefetchOptions = {
+  focusDate?: Date | string;
+};
+
+export type ScheduleMapRefetch = (
+  options?: ScheduleMapRefetchOptions,
+) => Promise<void>;
 
 interface ScheduleMapProps {
   lessons: Lesson[];
@@ -129,6 +139,25 @@ interface ScheduleMapProps {
   refreshKey?: number;
   /** When set (e.g. after booking), moves the calendar to that lesson date before refetch. */
   focusLessonDate?: string | null;
+}
+
+function ScheduleLessonChipBody({
+  lesson,
+  preferInstructor = false,
+}: {
+  lesson: Lesson;
+  preferInstructor?: boolean;
+}) {
+  const lines = getScheduleMapChipLines(lesson, { preferInstructor });
+  return (
+    <div className="min-h-0 space-y-0.5 overflow-hidden">
+      {lines.map((line) => (
+        <div key={line} className="truncate leading-tight">
+          {line}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 // Updated role logic - Admin and Instructor share same scheduling logic, only print is admin-exclusive
@@ -162,73 +191,87 @@ export function ScheduleMap({
 
   const hours = Array.from({ length: 14 }, (_, i) => i + 7); // 7h to 20h
 
-  const fetchLessons = useCallback(async () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    setIsLoadingLessons(true);
-
-    try {
-      let fromDate: Date;
-      let toDate: Date;
-
-      if (viewType === "day") {
-        fromDate = currentDate;
-        toDate = currentDate;
-      } else if (viewType === "week") {
-        fromDate = startOfWeek(currentDate, { weekStartsOn: 1 });
-        toDate = endOfWeek(currentDate, { weekStartsOn: 1 });
-      } else {
-        fromDate = startOfMonth(currentDate);
-        toDate = endOfMonth(currentDate);
+  const fetchLessons = useCallback(
+    async (options?: ScheduleMapRefetchOptions) => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
 
-      const fromStr = format(fromDate, "yyyy-MM-dd");
-      const toStr = format(toDate, "yyyy-MM-dd");
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
 
-      const response = await fetch(
-        `/api/${userRole}/lessons?from=${fromStr}&to=${toStr}&t=${Date.now()}`,
-        {
-          cache: "no-store",
-          headers: { "Cache-Control": "no-cache" },
-          signal: controller.signal,
-        },
-      );
+      setIsLoadingLessons(true);
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch lessons");
+      try {
+        let rangeAnchor = currentDate;
+        if (options?.focusDate) {
+          const parsed =
+            options.focusDate instanceof Date
+              ? options.focusDate
+              : new Date(options.focusDate);
+          if (!Number.isNaN(parsed.getTime())) {
+            rangeAnchor = parsed;
+          }
+        }
+
+        let fromDate: Date;
+        let toDate: Date;
+
+        if (viewType === "day") {
+          fromDate = rangeAnchor;
+          toDate = rangeAnchor;
+        } else if (viewType === "week") {
+          fromDate = startOfWeek(rangeAnchor, { weekStartsOn: 1 });
+          toDate = endOfWeek(rangeAnchor, { weekStartsOn: 1 });
+        } else {
+          fromDate = startOfMonth(rangeAnchor);
+          toDate = endOfMonth(rangeAnchor);
+        }
+
+        const fromStr = format(fromDate, "yyyy-MM-dd");
+        const toStr = format(toDate, "yyyy-MM-dd");
+
+        const response = await fetch(
+          `/api/${userRole}/lessons?from=${fromStr}&to=${toStr}&t=${Date.now()}`,
+          {
+            cache: "no-store",
+            headers: { "Cache-Control": "no-cache" },
+            signal: controller.signal,
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch lessons");
+        }
+
+        const data = await safeReadJson(response);
+        const payloadObj = isRecord(data) ? data : {};
+        const dataObj = isRecord(payloadObj.data) ? payloadObj.data : {};
+        const fetchedLessons = safeGetArray(
+          dataObj.lessons ?? payloadObj.lessons,
+        );
+
+        const processedLessons: Lesson[] = (fetchedLessons as unknown[]).map(
+          (lesson) => {
+            const l = isRecord(lesson) ? lesson : {};
+            return {
+              ...l,
+              lessonDate: new Date(String(l.lessonDate ?? "")),
+            } as Lesson;
+          },
+        );
+
+        setLessons(processedLessons);
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name !== "AbortError") {
+          console.error("Error fetching lessons:", error);
+        }
+      } finally {
+        setIsLoadingLessons(false);
       }
-
-      const data = await safeReadJson(response);
-      const payloadObj = isRecord(data) ? data : {};
-      const dataObj = isRecord(payloadObj.data) ? payloadObj.data : {};
-      const fetchedLessons = safeGetArray(
-        dataObj.lessons ?? payloadObj.lessons,
-      );
-
-      const processedLessons: Lesson[] = (fetchedLessons as unknown[]).map(
-        (lesson) => {
-          const l = isRecord(lesson) ? lesson : {};
-          return {
-            ...l,
-            lessonDate: new Date(String(l.lessonDate ?? "")),
-          } as Lesson;
-        },
-      );
-
-      setLessons(processedLessons);
-    } catch (error: unknown) {
-      if (error instanceof Error && error.name !== "AbortError") {
-        console.error("Error fetching lessons:", error);
-      }
-    } finally {
-      setIsLoadingLessons(false);
-    }
-  }, [viewType, currentDate, userRole]);
+    },
+    [viewType, currentDate, userRole],
+  );
 
   useEffect(() => {
     if (!focusLessonDate) return;
@@ -540,23 +583,11 @@ export function ScheduleMap({
     }
   };
 
-  const getLessonColor = (lesson: Lesson) => {
-    // Status-based colors take precedence
-    if (lesson.status === "COMPLETED")
-      return "bg-green-100 border-green-300 text-green-800";
-    if (lesson.status === "CANCELLED")
-      return "bg-red-100 border-red-300 text-red-800";
-
-    // Lesson type colors (as per requirements)
-    if (lesson.lessonType === "THEORY")
-      return "bg-green-50 border-green-300 text-green-800"; // Soft green for Code Class
-    if (lesson.lessonType === "DRIVING")
-      return "bg-blue-50 border-blue-300 text-blue-800"; // Soft blue for Driving Class
-    if (lesson.lessonType === "EXAM")
-      return "bg-orange-100 border-orange-400 text-orange-900"; // Orange for Exam
-
-    return "bg-gray-100 border-gray-300 text-gray-800";
-  };
+  const getLessonColor = (lesson: Lesson) =>
+    getScheduleMapLessonColorClasses({
+      lessonType: lesson.lessonType,
+      status: lesson.status,
+    });
 
   const dates = getDateRange();
 
@@ -645,7 +676,10 @@ export function ScheduleMap({
                     )}
                     {!isLoadingInstructors &&
                       instructors.map((instructor) => (
-                        <SelectItem key={instructor.id} value={instructor.id}>
+                        <SelectItem
+                          key={instructor.id}
+                          value={instructor.userId}
+                        >
                           {instructor.name}
                         </SelectItem>
                       ))}
@@ -713,8 +747,8 @@ export function ScheduleMap({
         </CardHeader>
 
         <CardContent>
-          <div className="overflow-x-auto">
-            <div className="min-w-full relative">
+          <div className="overflow-x-auto max-w-full">
+            <div className="min-w-0 w-full relative">
               {viewType === "month" ? (
                 // Month view - Calendar grid
                 <div className="grid grid-cols-7 gap-1">
@@ -756,10 +790,10 @@ export function ScheduleMap({
                           {dayLessons.slice(0, 3).map((lesson) => (
                             <div
                               key={lesson.id}
-                              className={`relative text-xs p-1 rounded border ${getLessonColor(lesson)} transition-all duration-200 cursor-pointer ${
+                              className={`relative text-xs p-1 rounded border overflow-hidden ${getLessonColor(lesson)} transition-shadow duration-200 cursor-pointer ${
                                 selectedLesson === lesson.id
-                                  ? "z-50 scale-105 shadow-lg"
-                                  : "hover:shadow-md"
+                                  ? "z-50 shadow-md"
+                                  : "hover:shadow-sm"
                               }`}
                               title={`${lesson.startTime} - ${lesson.student?.user.firstName || ""} ${lesson.student?.user.lastName || ""}`}
                               onClick={(e) => {
@@ -911,10 +945,10 @@ export function ScheduleMap({
                           {dayLessons.map((lesson) => (
                             <div
                               key={lesson.id}
-                              className={`relative text-xs p-1 rounded border ${getLessonColor(lesson)} transition-all duration-200 cursor-pointer ${
+                              className={`relative text-xs p-1 rounded border overflow-hidden ${getLessonColor(lesson)} transition-shadow duration-200 cursor-pointer ${
                                 selectedLesson === lesson.id
-                                  ? "z-50 scale-105 shadow-lg"
-                                  : "hover:shadow-md"
+                                  ? "z-50 shadow-md"
+                                  : "hover:shadow-sm"
                               }`}
                               title={`${lesson.startTime} - ${lesson.student?.user.firstName || ""} ${lesson.student?.user.lastName || ""}`}
                               onClick={(e) => {
@@ -1093,31 +1127,32 @@ export function ScheduleMap({
                           </div>
 
                           {/* Lessons container with absolute positioning */}
-                          <div className="absolute inset-0 top-12 overflow-visible">
+                          <div className="absolute inset-0 top-12 overflow-hidden">
                             {dayLessons.map((lesson) => {
                               const position = calculateLessonPosition(
                                 lesson,
                                 dayLessons,
                               );
                               const isExpanded = selectedLesson === lesson.id;
+                              const preferInstructor = userRole === "student";
 
                               return (
                                 <div
                                   key={lesson.id}
-                                  className={`absolute rounded border cursor-pointer transition-all duration-200 ${getLessonColor(lesson)} ${
+                                  className={`absolute rounded border cursor-pointer transition-shadow duration-200 ${getLessonColor(lesson)} ${
                                     isExpanded
-                                      ? "z-50 shadow-2xl border-2 scale-105"
-                                      : "hover:shadow-lg"
+                                      ? "z-50 shadow-lg border-2"
+                                      : "hover:shadow-md overflow-hidden"
                                   }`}
                                   style={{
                                     top: `${position.top}rem`,
                                     height: isExpanded
                                       ? "auto"
-                                      : `${position.height}rem`,
-                                    minHeight: `${position.height}rem`,
+                                      : `${Math.max(position.height, 2)}rem`,
+                                    minHeight: `${Math.max(position.height, 2)}rem`,
                                     maxHeight: isExpanded
-                                      ? "400px"
-                                      : `${position.height}rem`,
+                                      ? "12rem"
+                                      : `${Math.max(position.height, 2)}rem`,
                                     left: `${position.left}%`,
                                     width: `calc(${position.width}% - 4px)`,
                                   }}
@@ -1128,23 +1163,17 @@ export function ScheduleMap({
                                     );
                                   }}
                                 >
-                                  {/* Day view - Fixed font-size, Google Calendar style with scrollbar */}
                                   {viewType === "day" && !isExpanded && (
-                                    // Collapsed state - Only time and instructor name (fixed font-size)
-                                    <div className="p-2 text-xs">
-                                      <div className="font-semibold text-xs">
-                                        {lesson.startTime}
-                                      </div>
-                                      <div className="truncate text-xs">
-                                        {lesson.instructor?.user.firstName}{" "}
-                                        {lesson.instructor?.user.lastName}
-                                      </div>
+                                    <div className="h-full min-h-0 p-1 text-[10px]">
+                                      <ScheduleLessonChipBody
+                                        lesson={lesson}
+                                        preferInstructor={preferInstructor}
+                                      />
                                     </div>
                                   )}
 
                                   {viewType === "day" && isExpanded && (
-                                    // Expanded state with right-side scrollbar and Edit/Remove buttons in top-right
-                                    <div className="relative p-2 max-h-[400px] overflow-y-auto">
+                                    <div className="relative p-2 max-h-48 overflow-y-auto overflow-x-hidden">
                                       {/* Edit/Remove buttons - Top-right corner, icon-only */}
                                       {(userRole === "admin" ||
                                         userRole === "instructor") && (
@@ -1395,16 +1424,20 @@ export function ScheduleMap({
           {/* Legend */}
           <div className="mt-4 flex flex-wrap gap-4 text-xs print:hidden">
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded bg-blue-100 border-blue-300"></div>
+              <div className="w-4 h-4 rounded bg-blue-50 border border-blue-300"></div>
               <span>Driving Lesson</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded bg-green-100 border-green-300"></div>
+              <div className="w-4 h-4 rounded bg-green-50 border border-green-300"></div>
               <span>Theory Lesson</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded bg-orange-100 border-orange-400"></div>
-              <span>Exam</span>
+              <div className="w-4 h-4 rounded bg-yellow-50 border border-yellow-400"></div>
+              <span>Theoretical Exam</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 rounded bg-orange-100 border border-orange-400"></div>
+              <span>Practical Exam</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 rounded bg-green-100 border-green-300"></div>

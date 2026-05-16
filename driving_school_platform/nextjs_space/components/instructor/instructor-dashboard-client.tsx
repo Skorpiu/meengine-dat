@@ -9,7 +9,6 @@ import {
 } from "@/components/schedule/schedule-map";
 import { BookLessonDialog } from "@/components/instructor/book-lesson-dialog-instructor";
 import { BookExamDialog } from "@/components/instructor/book-exam-dialog-instructor";
-import { useRouter } from "next/navigation";
 import type { LessonBookingSuccessMeta } from "@/components/lessons/lesson-booking-meta";
 
 interface InstructorDashboardClientProps {
@@ -21,7 +20,6 @@ export function InstructorDashboardClient({
   lessons: initialLessons,
   instructorUserId,
 }: InstructorDashboardClientProps) {
-  const router = useRouter();
   const [bookLessonOpen, setBookLessonOpen] = useState(false);
   const [bookExamOpen, setBookExamOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -32,20 +30,24 @@ export function InstructorDashboardClient({
     scheduleRefetchRef.current = refetch;
   }, []);
 
-  const refreshSchedule = useCallback(async () => {
-    setRefreshKey((k) => k + 1);
-    await scheduleRefetchRef.current?.();
-    router.refresh();
-  }, [router]);
+  const refreshSchedule = useCallback(
+    async (meta?: LessonBookingSuccessMeta) => {
+      if (meta?.lessonDate) {
+        setFocusLessonDate(meta.lessonDate);
+      }
+      setRefreshKey((k) => k + 1);
+      await scheduleRefetchRef.current?.(
+        meta?.lessonDate ? { focusDate: meta.lessonDate } : undefined,
+      );
+    },
+    [],
+  );
 
   const handleLessonBooked = useCallback(
     async (meta?: LessonBookingSuccessMeta) => {
       setBookLessonOpen(false);
       setBookExamOpen(false);
-      if (meta?.lessonDate) {
-        setFocusLessonDate(meta.lessonDate);
-      }
-      await refreshSchedule();
+      await refreshSchedule(meta);
     },
     [refreshSchedule],
   );
