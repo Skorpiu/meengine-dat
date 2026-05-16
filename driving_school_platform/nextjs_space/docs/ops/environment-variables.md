@@ -109,6 +109,9 @@ These are used by **scripts**, **Playwright**, or **tenant defaults** and are **
 | `PLAYWRIGHT_BASE_URL`, `BASE_URL`                                          | Playwright base URL (`playwright.config.ts`).                                                                                                                                                                                                                                                                                                                                                                            |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `INSTRUCTOR_EMAIL`, `INSTRUCTOR_PASSWORD` | E2E tests that call `login()`.                                                                                                                                                                                                                                                                                                                                                                                           |
 | `DEMO_WRITE_SANDBOX_ENABLED`                                               | Optional. When exactly `true` (trimmed, case-insensitive), enables **limited** lesson/vehicle creates for **`isDemo` orgs only** — see subsection below and [client-demo-runbook.md](./client-demo-runbook.md#controlled-demo-write-sandbox).                                                                                                                                                                            |
+| `CRON_SECRET`                                                              | Optional locally. **Required in Vercel Production** for the daily demo sandbox cron (`GET /api/cron/demo-sandbox-reset`). Vercel sends `Authorization: Bearer <CRON_SECRET>` on cron invocations. Never commit a real value.                                                                                                                                                                                             |
+| `DEMO_ORGANIZATION_ID`                                                     | Demo org CUID for operator scripts (`pnpm demo:sandbox:reset`, `pnpm demo:readiness`, etc.) and for **cron** reset (env-only; not accepted from HTTP query/body on the cron route).                                                                                                                                                                                                                                      |
+| `DEMO_SANDBOX_RESET_APPLY`                                                 | Operator script only: must be `true` together with `--apply` for `pnpm demo:sandbox:reset` to write. Not used by the cron endpoint (cron always applies).                                                                                                                                                                                                                                                                |
 
 <a id="demo-write-sandbox-enabled"></a>
 
@@ -128,6 +131,16 @@ These are used by **scripts**, **Playwright**, or **tenant defaults** and are **
 
 - Does **not** affect non-demo organizations.
 - Does **not** unlock user management, settings, licensing, feature-flag writes, billing, cleanup, or platform onboarding — those remain blocked for demo orgs as in [public-demo-policy.md](./public-demo-policy.md).
+
+<a id="cron-secret-demo-sandbox"></a>
+
+### `CRON_SECRET` and `DEMO_ORGANIZATION_ID` (demo cron / operator scripts)
+
+- **`CRON_SECRET`** — long random value in **Vercel Production** only (for typical hosted demo). Used by Vercel Cron to authorize `GET /api/cron/demo-sandbox-reset`. If missing at runtime, the route returns **503** with a safe JSON error (no stack traces).
+- **`DEMO_ORGANIZATION_ID`** — CUID of the organization marked `isDemo`. Used by operator scripts and by the cron route (read from env only). If missing on the cron route, returns **500** with a safe JSON error.
+- **Scope of cron reset:** deletes **lessons** and **vehicles** for that org only; does not remove users, personas, domains, features, entitlements, settings, or billing.
+- **Schedule:** `0 3 * * *` (03:00 UTC) in `vercel.json`; Hobby plans may run within the hour window.
+- See [client-demo-runbook.md](./client-demo-runbook.md#automatic-daily-demo-sandbox-reset).
 
 ---
 

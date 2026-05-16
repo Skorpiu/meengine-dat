@@ -20,7 +20,12 @@
  */
 
 import { loadEnvConfig } from "@next/env";
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+
+import {
+  DemoSandboxResetError,
+  resetDemoSandbox,
+} from "../lib/demo/demo-sandbox-reset";
 
 loadEnvConfig(process.cwd());
 
@@ -61,33 +66,31 @@ async function main(): Promise<number> {
 
   const prisma = new PrismaClient();
   try {
-    const org = await prisma.organization.findUnique({
-      where: { id: orgId },
-      select: { id: true, name: true, isDemo: true },
-    });
-
-    if (!org) {
-      console.error(`No organization found with id "${orgId}".`);
-      return 1;
-    }
-
-    if (!org.isDemo) {
-      console.error("Refusing to reset sandbox for a non-demo organization.");
-      return 1;
-    }
-
     const apply = wantsApply();
     const mode = apply ? "APPLY" : "DRY-RUN";
 
-    const lessonCount = await prisma.lesson.count({
-      where: { organizationId: orgId },
-    });
-    const vehicleCount = await prisma.vehicle.count({
-      where: { organizationId: orgId },
-    });
+    let result;
+    try {
+      result = await resetDemoSandbox({
+        organizationId: orgId,
+        apply,
+        prisma,
+      });
+    } catch (e: unknown) {
+      if (e instanceof DemoSandboxResetError) {
+        console.error(e.message);
+        return 1;
+      }
+      console.error(
+        e instanceof Error ? e.message : "Unknown error during reset.",
+      );
+      return 1;
+    }
 
     console.log("Reset demo sandbox (lessons + vehicles only)");
-    console.log(`Organization: ${org.name} (${org.id})`);
+    console.log(
+      `Organization: ${result.organizationName} (${result.organizationId})`,
+    );
     console.log(`Mode:         ${mode}`);
     console.log("");
     console.log("Planned scope (this phase, no per-row sandbox marker):");
@@ -102,8 +105,8 @@ async function main(): Promise<number> {
     );
     console.log("");
     console.log("Counts:");
-    console.log(`  lessons:  ${lessonCount}`);
-    console.log(`  vehicles: ${vehicleCount}`);
+    console.log(`  lessons:  ${result.plannedLessons}`);
+    console.log(`  vehicles: ${result.plannedVehicles}`);
     console.log("");
 
     if (!apply) {
@@ -112,49 +115,9 @@ async function main(): Promise<number> {
       return 0;
     }
 
-    let deletedLessons = 0;
-    let deletedVehicles = 0;
-
-    try {
-      await prisma.$transaction(
-        async (tx) => {
-          const lr = await tx.lesson.deleteMany({
-            where: { organizationId: orgId },
-          });
-          deletedLessons = lr.count;
-
-          const vr = await tx.vehicle.deleteMany({
-            where: { organizationId: orgId },
-          });
-          deletedVehicles = vr.count;
-        },
-        {
-          maxWait: 10_000,
-          timeout: 120_000,
-        },
-      );
-    } catch (e: unknown) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        console.error(
-          "Database refused the delete (foreign key or constraint).",
-        );
-        console.error(
-          `Prisma code: ${e.code}. Review tenant-scoped relations not covered by this script and open a follow-up.`,
-        );
-      } else {
-        console.error(
-          e instanceof Error ? e.message : "Unknown error during transaction.",
-        );
-      }
-      console.error(
-        "No partial apply: transaction was rolled back. Fix dependencies or extend the script after schema review.",
-      );
-      return 1;
-    }
-
     console.log("Apply completed.");
-    console.log(`  deleted lessons:  ${deletedLessons}`);
-    console.log(`  deleted vehicles: ${deletedVehicles}`);
+    console.log(`  deleted lessons:  ${result.deletedLessons}`);
+    console.log(`  deleted vehicles: ${result.deletedVehicles}`);
     return 0;
   } finally {
     await prisma.$disconnect();

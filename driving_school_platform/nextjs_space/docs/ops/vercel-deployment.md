@@ -58,6 +58,15 @@ Set per **Production** / **Preview** / **Development** as appropriate. Values co
 
 Additional keys validated in `lib/env.ts` (for example server-side `SUPABASE_URL`) are documented in **[environment-variables.md](./environment-variables.md)**.
 
+### Demo sandbox cron (production demo host)
+
+| Variable               | Notes                                                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `CRON_SECRET`          | Authorizes Vercel Cron calls to `GET /api/cron/demo-sandbox-reset`. Generate a long random value; never commit it. |
+| `DEMO_ORGANIZATION_ID` | Demo org CUID; cron uses this env only (not query/body).                                                           |
+
+Cron schedule is defined in **`vercel.json`** (`0 3 * * *`, 03:00 UTC). On Hobby, execution may fall anywhere within that hour. See [client-demo-runbook.md](./client-demo-runbook.md#automatic-daily-demo-sandbox-reset).
+
 ---
 
 ## Prisma and deploy cautions
