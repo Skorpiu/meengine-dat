@@ -72,17 +72,18 @@ describe("validateLessonCalendarRange", () => {
     });
   });
 
-  it("rejects when to is on or before from", () => {
+  it("accepts a single-day range (Schedule Map day view)", () => {
     const sameDay = validateLessonCalendarRange({
       from: "2026-01-15",
       to: "2026-01-15",
     });
-    expect(sameDay).toEqual({
-      ok: false,
-      code: "invalid_calendar_range",
-      message: "Invalid lesson calendar date range.",
-    });
+    expect(sameDay.ok).toBe(true);
+    if (sameDay.ok) {
+      expect(sameDay.from.getTime()).toBe(sameDay.to.getTime());
+    }
+  });
 
+  it("rejects when to is before from", () => {
     const reversed = validateLessonCalendarRange({
       from: "2026-01-20",
       to: "2026-01-10",
