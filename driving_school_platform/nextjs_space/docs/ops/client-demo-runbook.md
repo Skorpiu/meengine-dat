@@ -31,10 +31,14 @@ For a **controlled** walkthrough where you want to show **one-off creates** with
    - **Local testing:** use `.env.local` in `driving_school_platform/nextjs_space` or an **inline** env for a single command (see [environment-variables.md](./environment-variables.md#demo-write-sandbox-enabled)).
    - **Do not** rely on a developer’s local `.env` / `.env.local` for production; production must be set explicitly on Vercel (or your host’s env UI).
 2. With the flag on, a demo org may create **at most one row per category** (quota is enforced by counting existing rows; **seed data counts** — if the seed already includes e.g. a theory lesson, another theory create returns a stable quota error until a future reset clears data):
+
    - **One** theory lesson (`THEORY`)
    - **One** driving lesson (`DRIVING`)
-   - **One** exam bucket total across **`EXAM` and `THEORY_EXAM`** (combined count; a request that would create more than one remaining “slot” of rows is rejected)
+   - **One** theoretical exam (`THEORY_EXAM`) — counted separately from practical exams
+   - **One** practical exam (`EXAM`) — counted separately from theoretical exams
    - **One** vehicle
+
+   A multi-student exam request that would create more than one row when `maxCount` is 1 still returns a stable quota error (`pendingCreates` check).
 
 **Still blocked** (unchanged): deletes, lesson/vehicle updates, user management, settings, feature flags, licensing writes, billing, cleanup, platform onboarding.
 

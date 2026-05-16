@@ -112,11 +112,31 @@ describe("decideDemoWriteSandbox", () => {
       decideDemoWriteSandbox({
         isDemoOrganization: true,
         sandboxEnabled: true,
-        category: "lesson_exam",
+        category: "lesson_theory_exam",
         currentCount: 0,
         maxCount: 1,
         pendingCreates: 2,
       }),
     ).toEqual({ allowed: false, reason: "demo_write_quota_exceeded" });
+  });
+
+  it("treats theory exam and practical exam as separate quota categories", () => {
+    expect(
+      decideDemoWriteSandbox({
+        isDemoOrganization: true,
+        sandboxEnabled: true,
+        category: "lesson_theory_exam",
+        currentCount: 1,
+      }),
+    ).toEqual({ allowed: false, reason: "demo_write_quota_exceeded" });
+
+    expect(
+      decideDemoWriteSandbox({
+        isDemoOrganization: true,
+        sandboxEnabled: true,
+        category: "lesson_practical_exam",
+        currentCount: 0,
+      }),
+    ).toEqual({ allowed: true });
   });
 });
