@@ -14,6 +14,7 @@ import {
 import { lessonFormDialogContentClass } from "@/components/lessons/lesson-form-styles";
 import toast from "react-hot-toast";
 import type { LessonBookingSuccessMeta } from "@/components/lessons/lesson-booking-meta";
+import { buildAdminLessonCreateRequestBody } from "@/lib/lessons/lesson-create-request-body";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -62,35 +63,14 @@ export function BookLessonDialog({
 }: BookLessonDialogProps) {
   const handleSubmit = async (payload: LessonFormPayload) => {
     try {
-      const requestBody: Record<string, unknown> = {
-        lessonType: payload.lessonType,
-        instructorId: instructorUserId,
-        lessonDate: payload.lessonDate,
-        startTime: payload.startTime,
-        endTime: payload.endTime,
-      };
-
-      // Add student data based on lesson type
-      if (payload.studentIds && payload.studentIds.length > 0) {
-        // Multi-student lesson types (EXAM, THEORY_EXAM)
-        requestBody.studentIds = payload.studentIds;
-      } else if (payload.studentId) {
-        // Single student lesson types (DRIVING, THEORY)
-        requestBody.studentId = payload.studentId;
-      }
-
-      // Add vehicle if selected
-      if (payload.vehicleId) {
-        const vehicleId = Number.parseInt(payload.vehicleId, 10);
-        if (Number.isFinite(vehicleId)) {
-          requestBody.vehicleId = vehicleId;
-        }
-      }
-
       const response = await fetch("/api/admin/lessons", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(
+          buildAdminLessonCreateRequestBody(payload, {
+            instructorId: instructorUserId,
+          }),
+        ),
       });
 
       const data = await safeReadJson(response);
