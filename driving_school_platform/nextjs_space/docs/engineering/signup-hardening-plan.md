@@ -2,6 +2,7 @@
 
 **Status:** Phased plan — phase-1 signup controls **implemented**; invite / verification / rate limit / captcha **pending**.  
 **Branch context:** `auth-surface-doc-status` (documentation consolidation).  
+**Invite-only design:** [invite-only-foundation-plan.md](./invite-only-foundation-plan.md) — **planned** (documentation only; implementation pending).  
 **Related audits:** [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-007), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
 
 ---
@@ -10,21 +11,21 @@
 
 Snapshot of the **auth / public signup surface** as implemented in code (not aspirational).
 
-| Control                               | Status          | Notes                                                                                                                                             |
-| ------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Demo signup disabled**              | **Implemented** | `Organization.isDemo` → **403** `demo_signup_disabled` on `POST /api/signup` (always, even if public signup env is on).                           |
-| **Public signup disabled by default** | **Implemented** | Non-demo orgs blocked unless env opt-in; **403** `public_signup_disabled`.                                                                        |
-| **Env explicit opt-in**               | **Implemented** | `PUBLIC_SIGNUP_ENABLED` — only trimmed case-insensitive `"true"` enables; see [`lib/signup/signup-policy.ts`](../../lib/signup/signup-policy.ts). |
-| **Email verification**                | **Pending**     | `isEmailVerified` still set `true` on create; no provider, tokens, or login gate.                                                                 |
-| **Distributed rate limit**            | **Pending**     | Signup not throttled; in-memory `lib/rate-limit.ts` must not be used as production signup defense on serverless.                                  |
-| **Invite-only foundation**            | **Pending**     | B2B provisioning today: School Admin `/api/users/create` (and related admin paths); no invite tokens.                                             |
-| **Captcha / Turnstile**               | **Pending**     | Not on `/auth/register` or signup API.                                                                                                            |
+| Control                               | Status          | Notes                                                                                                                                                                                             |
+| ------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Demo signup disabled**              | **Implemented** | `Organization.isDemo` → **403** `demo_signup_disabled` on `POST /api/signup` (always, even if public signup env is on).                                                                           |
+| **Public signup disabled by default** | **Implemented** | Non-demo orgs blocked unless env opt-in; **403** `public_signup_disabled`.                                                                                                                        |
+| **Env explicit opt-in**               | **Implemented** | `PUBLIC_SIGNUP_ENABLED` — only trimmed case-insensitive `"true"` enables; see [`lib/signup/signup-policy.ts`](../../lib/signup/signup-policy.ts).                                                 |
+| **Email verification**                | **Pending**     | `isEmailVerified` still set `true` on create; no provider, tokens, or login gate.                                                                                                                 |
+| **Distributed rate limit**            | **Pending**     | Signup not throttled; in-memory `lib/rate-limit.ts` must not be used as production signup defense on serverless.                                                                                  |
+| **Invite-only foundation**            | **Planned**     | Technical design in [invite-only-foundation-plan.md](./invite-only-foundation-plan.md); **not implemented**. Today: School Admin `/api/users/create` (and related admin paths); no invite tokens. |
+| **Captcha / Turnstile**               | **Pending**     | Not on `/auth/register` or signup API.                                                                                                                                                            |
 
 ### Production and product guidance
 
 - **Production should keep `PUBLIC_SIGNUP_ENABLED` unset or `false`** until there is an explicit, documented decision to allow self-serve registration (marketing, pilot school, etc.). See [release-checklist.md](../ops/release-checklist.md) and [environment-variables.md](../ops/environment-variables.md#public-signup-enabled).
 - If **`PUBLIC_SIGNUP_ENABLED=true`**, treat it as a **rollout decision**: review invite-only policy, **email verification**, and **distributed rate limiting** before broad exposure—not as a default production posture.
-- For **B2B driving schools**, **invite-only** (or admin-provisioned accounts only) remains the **recommended next implementation step** even when the env flag is off—closes the gap where `/auth/register` is still reachable but API rejects signups.
+- For **B2B driving schools**, **invite-only** (or admin-provisioned accounts only) remains the **recommended next implementation step** even when the env flag is off—closes the gap where `/auth/register` is still reachable but API rejects signups. See [invite-only-foundation-plan.md](./invite-only-foundation-plan.md) for the proposed model, flows, and implementation batches.
 
 ### Auth surface (login vs signup)
 
@@ -203,7 +204,7 @@ Adopt a **phased** path aligned with DAT’s B2B tenant model and serverless hos
 
 **Default recommendation for production:** keep **`PUBLIC_SIGNUP_ENABLED=false`** (unset counts as off). Operationally treat onboarding as **invite-only / admin-provisioned** until phase 2–3 ship, even though `/auth/register` may still exist in the app shell.
 
-**Next recommended batch for B2B:** `signup-invite-only-foundation` (product copy + optional tokens), then email verification and distributed rate limit before any broad public marketing of self-serve signup.
+**Next recommended batch for B2B:** implementation batches in [invite-only-foundation-plan.md](./invite-only-foundation-plan.md) (`invitation-schema-foundation` → … → `invitation-rate-limit-audit`), then email verification and distributed rate limit before any broad public marketing of self-serve signup.
 
 ---
 
@@ -225,22 +226,21 @@ Each batch is a **separate PR** with `pnpm check` green. Batches are ordered; la
 | **Tests**               | `lib/signup/signup-policy.unit.test.ts`; extended `app/api/signup/route.integration.unit.test.ts`                                                                                                                   |
 | **Acceptance criteria** | Met — production defaults to disabled; demo block unchanged; no Prisma migration                                                                                                                                    |
 
-**Next batches (pending):** `signup-invite-only-foundation`, `email-verification-foundation`, `distributed-rate-limit-foundation`, `captcha-turnstile-evaluation`.
+**Next batches (pending):** [invite-only-foundation-plan.md](./invite-only-foundation-plan.md) implementation batches, `email-verification-foundation`, `distributed-rate-limit-foundation`, `captcha-turnstile-evaluation`.
 
 ---
 
-### Batch: `signup-invite-only-foundation`
+### Batch: `signup-invite-only-foundation` — **superseded by invite-only plan**
 
-**Objective:** Formalize **invite-only** provisioning: optional invite tokens or “registration closed” with admin-only create path documented in UI.
+**Objective:** Formalize **invite-only** provisioning with hashed single-use invite tokens and admin UX.
 
-| Area                    | Detail                                                                                                                           |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| **API**                 | Optional `inviteToken` validated against hashed single-use records **or** rely on phase-1 disable + admin APIs only (minimal v1) |
-| **UI**                  | Copy: “Contact your driving school” / link to login                                                                              |
-| **Ops**                 | Runbook: how School Admin adds students/instructors ([release-checklist.md](../ops/release-checklist.md) cross-link)             |
-| **Risks**               | Token leakage; over-engineering before product needs invites vs simple disable                                                   |
-| **Tests**               | Invalid/missing token → 403; valid token → signup succeeds for correct org                                                       |
-| **Acceptance criteria** | Product can run production with zero anonymous signups; admin create path documented; check passes                               |
+**Status:** Design completed in **[invite-only-foundation-plan.md](./invite-only-foundation-plan.md)** (branch `invite-only-foundation-plan`). Implementation is split into seven ordered batches (`invitation-schema-foundation` through `invitation-rate-limit-audit`) — do not implement tokens in signup route without that plan.
+
+| Area                    | Detail                                                                                                                 |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Design doc**          | [invite-only-foundation-plan.md](./invite-only-foundation-plan.md) — `UserInvitation` model, flows, security, APIs, UI |
+| **Interim ops**         | Phase-1 public signup remains off; School Admin uses `/api/users/create` until invitation APIs ship                    |
+| **Acceptance criteria** | See invite-only plan per-batch criteria; production stays on admin create + env gate until batches land                |
 
 ---
 
@@ -320,6 +320,7 @@ Each batch is a **separate PR** with `pnpm check` green. Batches are ordered; la
 
 ## Related documents
 
+- [invite-only-foundation-plan.md](./invite-only-foundation-plan.md) — B2B invite model, schema proposal, flows, security, implementation batches (design only)
 - [engineering-excellence-audit.md](./engineering-excellence-audit.md) — EEA-007 signup / abuse
 - [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md) — P1 security / public forms
 - [release-checklist.md](../ops/release-checklist.md) — pre-release signup decision

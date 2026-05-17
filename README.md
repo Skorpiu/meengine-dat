@@ -63,7 +63,7 @@ More detail: [docs/architecture.md](./docs/architecture.md). Ops entry points: [
 - **Engineering excellence audit** — initial DAT-specific review: [driving_school_platform/nextjs_space/docs/engineering/engineering-excellence-audit.md](./driving_school_platform/nextjs_space/docs/engineering/engineering-excellence-audit.md).
 - **Route handler consistency audit** — API route patterns and refactor backlog (docs only): [driving_school_platform/nextjs_space/docs/engineering/route-handler-consistency-audit.md](./driving_school_platform/nextjs_space/docs/engineering/route-handler-consistency-audit.md).
 - **Lessons route refactor** — substantially complete (`lib/lessons/*`, list/detail DTO selects, contract tests): [lessons-route-refactor-plan.md](./driving_school_platform/nextjs_space/docs/engineering/lessons-route-refactor-plan.md). Findings inventory: [lesson-dto-minimization-audit.md](./driving_school_platform/nextjs_space/docs/engineering/lesson-dto-minimization-audit.md).
-- **Public signup** — disabled by default (`PUBLIC_SIGNUP_ENABLED` opt-in); status and pending hardening: [signup-hardening-plan.md](./driving_school_platform/nextjs_space/docs/engineering/signup-hardening-plan.md).
+- **Public signup** — disabled by default (`PUBLIC_SIGNUP_ENABLED` opt-in); status and pending hardening: [signup-hardening-plan.md](./driving_school_platform/nextjs_space/docs/engineering/signup-hardening-plan.md). **Invite-only (B2B)** — design: [invite-only-foundation-plan.md](./driving_school_platform/nextjs_space/docs/engineering/invite-only-foundation-plan.md) (implementation pending).
 
 ---
 
