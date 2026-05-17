@@ -1,8 +1,20 @@
 # Lesson DTO Minimization Audit
 
-**Branch:** `lesson-dto-minimization-audit`  
-**Status:** Audit only — **no API, Prisma, or UI behavior changes** in this batch.  
-**Related:** [lessons-route-refactor-plan.md](./lessons-route-refactor-plan.md) (batch 6), [route-handler-consistency-audit.md](./route-handler-consistency-audit.md) (RHC-013), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-002)
+**Branch:** `lesson-refactor-status-consolidation` (docs); implementation batches `lesson-list-dto-minimization`, `lesson-detail-dto-minimization`, and alignment batches below.  
+**Status:** **Substantially addressed** — list/detail selects, contract tests, and UI alignment shipped; remaining items are low-priority polish (LD-007–LD-009).  
+**Related:** [lessons-route-refactor-plan.md](./lessons-route-refactor-plan.md), [route-handler-consistency-audit.md](./route-handler-consistency-audit.md) (RHC-013), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-002)
+
+---
+
+## Consolidation summary
+
+| Finding                                                       | Status                                                                                                                                                                                      |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **LD-001** (nested `user` / `passwordHash`)                   | **Addressed** — `LESSON_NESTED_USER_SELECT` on list, detail, and SSR schedule seeds (`lesson-user-select-sanitization`, `lesson-ssr-user-select-sanitization`).                             |
+| **LD-002** (dashboard envelope)                               | **Addressed** — `parseAdminDashboardLessonsPayload` / `lesson-dashboard-response-contract`.                                                                                                 |
+| **LD-003** (EXAMS view)                                       | **Addressed** — `lesson-exams-view-alignment` (query + `lesson-display.ts`).                                                                                                                |
+| **LD-004 / LD-005 / LD-006** (unused scalars / relation trim) | **Addressed for list and detail** — `LESSON_LIST_SELECT`, `LESSON_DETAIL_SELECT`; gated by `lesson-dto-contract-tests`.                                                                     |
+| **LD-007–LD-009**                                             | **Low-priority polish** — SSR still projects ScheduleMap subset in page code; `ScheduleMap` `...lesson` spread; optional shared GET-by-id query helper (detail select already centralized). |
 
 ---
 
@@ -302,12 +314,13 @@ Optional parallel track: row `take`/cursor inside 90-day window (EEA-002) — in
 | LD-006 | **P2**   | **Addressed:** Vehicle trimmed to UI fields on list and detail; category on list only (detail omits category — edit loads options elsewhere).                                                 | `LESSON_LIST_SELECT`, `LESSON_DETAIL_SELECT`                                                 | —                                                                         |
 | LD-007 | **P3**   | **Partially addressed:** SSR schedule seeds use `LESSON_LIST_SELECT` (same as API list/calendar). Pages still **project** a ScheduleMap subset in memory.                                     | `app/admin/page.tsx`, `app/instructor/page.tsx`, `app/student/page.tsx`                      | Optional: return pre-mapped DTO from API only (drop SSR duplicate query). |
 | LD-008 | **P3**   | `ScheduleMap` uses `...lesson` spread — hidden dependency on unknown API keys.                                                                                                                | `schedule-map.tsx` L209–216                                                                  | Narrow type after calendar-dto batch.                                     |
-| LD-009 | **P3**   | `[id]` GET uses duplicate inline `include` instead of shared constant.                                                                                                                        | `app/api/admin/lessons/[id]/route.ts`                                                        | Consolidate when implementing detail DTO.                                 |
+| LD-009 | **P3**   | **Addressed:** `[id]` GET/PUT use `LESSON_DETAIL_SELECT` / `LESSON_DETAIL_ACCESS_SELECT` (no duplicate inline include).                                                                       | `lesson-queries.ts`, `lesson-update-delete-service.ts`                                       | Optional: shared `findLessonById` query helper if route surface grows.    |
 
 ---
 
-## Acceptance (this audit batch)
+## Acceptance
 
 - [x] Document created with API shapes, include inventory, UI field usage, proposed DTOs, risks, and findings.
-- [x] No functional code, API responses, or Prisma schema changes.
-- [x] Cross-docs updated to point at this audit and batch 6 status.
+- [x] LD-001–LD-006 addressed for list/calendar/dashboard/detail surfaces; contract tests in place.
+- [x] Cross-docs updated ([lessons-route-refactor-plan.md](./lessons-route-refactor-plan.md), route/engineering/ops audits).
+- [ ] Optional polish: LD-007–LD-008 (SSR projection / ScheduleMap typing); pagination inside 90-day window if scale demands (EEA-002).

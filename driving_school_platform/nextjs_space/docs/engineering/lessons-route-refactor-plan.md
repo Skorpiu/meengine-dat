@@ -1,8 +1,37 @@
 # Lessons Route Refactor Plan
 
-**Status:** Batches 1–6 **done** ([lesson-dto-minimization-audit.md](./lesson-dto-minimization-audit.md)); list + detail DTO minimization shipped (`LESSON_LIST_SELECT`, `LESSON_DETAIL_SELECT`).  
-**Branch context:** `lessons-route-alignment-planning` (plan); batches 1–4 on feature branches (`lessons-query-module` … `lessons-update-delete-service`)  
-**Related audits:** [route-handler-consistency-audit.md](./route-handler-consistency-audit.md) (RHC-001, RHC-006, RHC-008), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-002)
+**Status:** Refactor line **substantially complete** (batches 1–7 + DTO/security/UI alignment batches).  
+**Branch context:** `lesson-refactor-status-consolidation` (docs); implementation landed across `lessons-query-module` … `lesson-detail-dto-minimization` and related batches.  
+**Related audits:** [lesson-dto-minimization-audit.md](./lesson-dto-minimization-audit.md), [route-handler-consistency-audit.md](./route-handler-consistency-audit.md) (RHC-001, RHC-006, RHC-008, RHC-013), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-002)
+
+---
+
+## Current status
+
+### Completed
+
+| Area                            | Batches / notes                                                                                                                                                                                          |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Query module**                | `lessons-query-module` — `lib/lessons/lesson-queries.ts` (admin calendar/dashboard, instructor/student calendar, shared selects).                                                                        |
+| **DTO mappers**                 | `lessons-dto-mappers` — `lib/lessons/lesson-mappers.ts`.                                                                                                                                                 |
+| **Create service**              | `lessons-create-service` — `lib/lessons/lesson-create-service.ts`.                                                                                                                                       |
+| **Update/delete service**       | `lessons-update-delete-service` — `lesson-update-delete-service.ts`, `lesson-access.ts`; `[id]` integration tests.                                                                                       |
+| **Shared calendar range**       | `calendar-range-shared-reads` — admin/instructor/student GET parity (90-day cap, stable codes).                                                                                                          |
+| **Nested user sanitization**    | `lesson-user-select-sanitization`, `lesson-ssr-user-select-sanitization` — `LESSON_NESTED_USER_SELECT` on list/detail/SSR seeds (LD-001).                                                                |
+| **Dashboard response contract** | `lesson-dashboard-response-contract` — client parses `data.{recent,current,upcoming}` (LD-002).                                                                                                          |
+| **EXAMS view alignment**        | `lesson-exams-view-alignment` — dashboard query + UI use Lesson shape for `EXAM` / `THEORY_EXAM` (LD-003).                                                                                               |
+| **DTO contract tests**          | `lesson-dto-contract-tests` — `lib/lessons/lesson-response-contract.ts` + route/mapper tests.                                                                                                            |
+| **List DTO minimization**       | `lesson-list-dto-minimization` — `LESSON_LIST_SELECT` (LD-004/005/006 for list/calendar/dashboard).                                                                                                      |
+| **Detail DTO minimization**     | `lesson-detail-dto-minimization` — `LESSON_DETAIL_SELECT` / `LESSON_DETAIL_ACCESS_SELECT` (LD-004/005/006 for `[id]`).                                                                                   |
+| **Schedule Map refresh/layout** | `schedule-map-refresh-and-layout-fix` — day-view refetch (`from` === `to`), compact chips, type colors (ops-validated; see [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md)). |
+
+### Pending (optional / scale-driven)
+
+- **Deeper service extraction** — only if a route grows again or new lesson modes add complexity; current handlers are thin over `lib/lessons/*`.
+- **Broader response normalization** — optional API unification of calendar `{ lessons }` vs dashboard `successResponse` (RHC-001); client alignment for dashboard is done; server envelope change is a dedicated migration batch.
+- **E2E coverage** — Playwright exists but is outside `pnpm check`; add CI/staging matrix for lesson booking + Schedule Map if product requires regression beyond integration tests.
+- **Pagination beyond 90-day guardrail** — row `take`/cursor inside the validated window if calendar payloads grow (EEA-002 follow-up).
+- **Future DTO trims** — any further field removal must update `lesson-response-contract` and co-located route tests in the same PR.
 
 ---
 
@@ -92,15 +121,17 @@ This document prepares **incremental, behavior-preserving** refactors of DAT les
 
 ## Problems to solve
 
-1. **Oversized admin collection handler** — GET dashboard + GET calendar + POST create in one file (~540 lines); high cognitive load and merge conflict risk (RHC-006).
-2. **Queries and DTOs in route handlers** — repeated Prisma `include` blocks; no shared mapper; raw Prisma entities returned to clients (RHC-013).
-3. **Inconsistent response shapes** — calendar `{ lessons }` vs dashboard `{ success, data }` vs POST `successResponse` payloads (RHC-001).
-4. **POST create complexity in handler** — lesson types (`DRIVING`, `THEORY`, `EXAM`, `THEORY_EXAM`), multi-student exams, category fallback, vehicle feature gate, duration calculation — all orchestration in route (RHC-006).
-5. **Authorization and domain mixed** — instructor ownership, past-lesson rules, feature flags interleaved with HTTP parsing.
-6. **Duplication across role calendar GETs** — instructor/student routes copy date math and `include` trees; admin calendar diverges only by validation helper (RHC-008).
-7. **Pagination / scale** — dashboard uses `take: 50`; calendar mode within 90 days has no `take` (EEA-002); future cursor/limit needs a single query module.
-8. **Heavy test setup** — admin integration test mocks many Prisma models; will grow unless services are pure and unit-tested separately.
-9. **Missing co-located tests** — `[id]` route has no `*.integration.unit.test.ts` yet.
+> **Note:** Items 1–6 and 8–9 were **addressed** in batches 1–7 and alignment work (see [Current status](#current-status)). Items 3, 7, and 10 remain as **optional** follow-ups.
+
+1. **Oversized admin collection handler** — **addressed** — GET dashboard + GET calendar + POST create in one file (~540 lines); high cognitive load and merge conflict risk (RHC-006).
+2. **Queries and DTOs in route handlers** — **addressed** (`lesson-queries`, `lesson-mappers`, `LESSON_*_SELECT`).
+3. **Inconsistent response shapes** — **partially addressed** (client dashboard unwrap; server envelopes unchanged — optional RHC-001 batch).
+4. **POST create complexity in handler** — **addressed** (`lesson-create-service`).
+5. **Authorization and domain mixed** — **addressed** (`lesson-access`, route-level auth/demo gates).
+6. **Duplication across role calendar GETs** — **addressed** (shared queries, mappers, `validateLessonCalendarRange`).
+7. **Pagination / scale** — dashboard uses `take: 50`; calendar mode within 90 days has no row `take` (**optional** EEA-002 follow-up).
+8. **Heavy test setup** — mitigated by service unit tests; route integration mocks remain (**ongoing** maintenance, not blocking).
+9. **Missing co-located tests** — **addressed** (`[id]/route.integration.unit.test.ts`, instructor/student calendar tests).
 10. **Demo error shape inconsistency** — POST sandbox vs PUT/DELETE `decideDemoRouteMutation` vs `errorResponse` without `code` (RHC-010) — document, do not “fix” without explicit contract batch.
 
 ---
