@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { LESSON_LIST_SELECT } from "./lesson-queries";
+import { LESSON_DETAIL_SELECT, LESSON_LIST_SELECT } from "./lesson-queries";
 import {
   expectLessonSelectSanitizesNestedUsers,
   expectLessonJsonHasNoNestedPasswordHash,
@@ -50,6 +50,43 @@ describe("LESSON_LIST_SELECT", () => {
       id: true,
       name: true,
     });
+  });
+});
+
+describe("LESSON_DETAIL_SELECT", () => {
+  it("uses safe nested user select and edit-form scalars only", () => {
+    expectLessonSelectSanitizesNestedUsers(LESSON_DETAIL_SELECT);
+
+    const keys = Object.keys(LESSON_DETAIL_SELECT).sort();
+    expect(keys).toEqual([
+      "endTime",
+      "id",
+      "instructor",
+      "instructorId",
+      "lessonDate",
+      "lessonType",
+      "startTime",
+      "status",
+      "student",
+      "studentId",
+      "vehicle",
+      "vehicleId",
+    ]);
+
+    const serialized = JSON.stringify(LESSON_DETAIL_SELECT);
+    for (const heavy of [
+      "passwordHash",
+      "lessonPrice",
+      "paymentStatus",
+      "pickupLocation",
+      "category",
+    ]) {
+      expect(serialized).not.toContain(heavy);
+    }
+  });
+
+  it("instructor select includes userId for access checks", () => {
+    expect(LESSON_DETAIL_SELECT.instructor.select?.userId).toBe(true);
   });
 });
 

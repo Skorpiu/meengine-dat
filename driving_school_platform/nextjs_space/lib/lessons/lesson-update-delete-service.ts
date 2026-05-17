@@ -9,7 +9,11 @@ import {
   assertInstructorCanMutateLesson,
   isPastLesson,
 } from "@/lib/lessons/lesson-access";
-import { LESSON_DETAIL_INCLUDE } from "@/lib/lessons/lesson-queries";
+import {
+  LESSON_DETAIL_ACCESS_SELECT,
+  LESSON_DETAIL_SELECT,
+  type LessonDetailItem,
+} from "@/lib/lessons/lesson-queries";
 
 export type UpdateAdminLessonPayload = {
   lessonDate?: string;
@@ -27,7 +31,7 @@ type LessonMutationActor = {
 export type UpdateAdminLessonResult =
   | {
       ok: true;
-      lesson: Awaited<ReturnType<typeof prisma.lesson.update>>;
+      lesson: LessonDetailItem;
     }
   | { ok: false; error: string; status: number };
 
@@ -46,7 +50,7 @@ export async function updateAdminLesson(input: {
 
   const existingLesson = await prisma.lesson.findFirst({
     where: { id, organizationId: orgId },
-    include: { instructor: true },
+    select: LESSON_DETAIL_ACCESS_SELECT,
   });
 
   if (!existingLesson) {
@@ -112,7 +116,7 @@ export async function updateAdminLesson(input: {
       ...(status && { status: status as LessonStatus }),
       ...(vehicleId !== undefined && { vehicleId: vehicleId || null }),
     },
-    include: LESSON_DETAIL_INCLUDE,
+    select: LESSON_DETAIL_SELECT,
   });
 
   return { ok: true, lesson };
@@ -127,7 +131,7 @@ export async function deleteAdminLesson(input: {
 
   const lesson = await prisma.lesson.findFirst({
     where: { id, organizationId: orgId },
-    include: { instructor: true },
+    select: LESSON_DETAIL_ACCESS_SELECT,
   });
 
   if (!lesson) {
