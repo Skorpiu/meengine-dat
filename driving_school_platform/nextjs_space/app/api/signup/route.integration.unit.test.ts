@@ -95,6 +95,8 @@ describe("POST /api/signup (tenant hardening)", () => {
     expect(body.error).toBe(
       "Public signup is disabled for demo organizations.",
     );
+    expect(body).not.toHaveProperty("details");
+    expect(body).not.toHaveProperty("detail");
     expect(h.findUniqueMock).not.toHaveBeenCalled();
     expect(h.transactionMock).not.toHaveBeenCalled();
   });

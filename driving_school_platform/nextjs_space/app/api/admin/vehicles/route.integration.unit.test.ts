@@ -173,6 +173,7 @@ describe("GET /api/admin/vehicles (handler integration)", () => {
     expect(res.status).toBe(200);
 
     const body: any = await res.json();
+    expect(body).not.toHaveProperty("success");
     expect(Array.isArray(body.vehicles)).toBe(true);
     expect(body.vehicles.length).toBe(1);
     expect(body.vehicles[0].status).toBe("AVAILABLE");

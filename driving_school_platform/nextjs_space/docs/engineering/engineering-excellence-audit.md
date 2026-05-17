@@ -6,6 +6,8 @@ This document is an **initial engineering audit** of the Driving Academy Tool (D
 
 It is **not** a refactor plan and does **not** change runtime behavior. Follow-up work should be tracked as separate batches (see [Recommended roadmap](#recommended-roadmap)). Production and demo posture remain aligned with [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md) and linked ops runbooks.
 
+**API response contracts:** A route-level JSON baseline (success/error families, inventory, known inconsistencies) lives in [api-response-contract-baseline.md](./api-response-contract-baseline.md)—documented and covered by focused integration tests; wide normalization is still pending.
+
 ---
 
 ## Current strengths
@@ -175,6 +177,7 @@ It is **not** a refactor plan and does **not** change runtime behavior. Follow-u
 
 ## Related documents
 
+- [api-response-contract-baseline.md](./api-response-contract-baseline.md) — JSON success/error families and route inventory (baseline + contract tests; normalization pending)
 - [route-handler-consistency-audit.md](./route-handler-consistency-audit.md) — per-route inventory of auth, guards, validation, and response patterns (documentation only; refactors tracked separately)
 - [lessons-route-refactor-plan.md](./lessons-route-refactor-plan.md) — incremental lessons API extraction plan (planning only; implementation pending)
 - [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md)
