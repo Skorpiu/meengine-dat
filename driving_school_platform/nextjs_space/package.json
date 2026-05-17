@@ -36,6 +36,8 @@
     "demo:practical:configure": "tsx scripts/configure-demo-practical-readiness.ts",
     "demo:client-ready": "tsx scripts/check-client-demo-ready.ts",
     "predev": "pnpm -s env:check",
+    "test:e2e": "playwright test",
+    "test:e2e:demo": "playwright test e2e/demo-smoke.spec.ts",
     "check": "pnpm -s lint && pnpm -s typecheck && pnpm -s test:run && pnpm -s build",
     "fix": "prettier --write . && eslint --fix .",
     "prepare": "cd ../.. && husky driving_school_platform/nextjs_space/.husky"

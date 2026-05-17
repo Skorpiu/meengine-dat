@@ -1,21 +1,41 @@
-import { defineConfig, devices } from '@playwright/test';
-import dotenv from 'dotenv';
-import path from 'path';
-dotenv.config({ path: path.resolve(__dirname, '.env.playwright') });
+import { defineConfig, devices } from "@playwright/test";
+import dotenv from "dotenv";
+import path from "path";
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config({ path: path.resolve(__dirname, ".env.playwright") });
+
+const e2eBaseUrl =
+  process.env.E2E_BASE_URL ||
+  process.env.PLAYWRIGHT_BASE_URL ||
+  "http://localhost:3000";
+
+function isLocalE2eHost(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === "localhost" || host === "127.0.0.1";
+  } catch {
+    return true;
+  }
+}
+
+const runningDemoSmokeOnly = process.argv.some((arg) =>
+  arg.replace(/\\/g, "/").includes("demo-smoke.spec"),
+);
+const hasDemoSmokeCredentials = Boolean(
+  process.env.E2E_DEMO_SCHOOL_ADMIN_EMAIL &&
+    process.env.E2E_DEMO_SCHOOL_ADMIN_PASSWORD,
+);
+const shouldStartWebServer =
+  isLocalE2eHost(e2eBaseUrl) &&
+  process.env.E2E_SKIP_WEB_SERVER !== "1" &&
+  !(runningDemoSmokeOnly && !hasDemoSmokeCredentials);
 
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: './tests',
+  testDir: ".",
+  testMatch: ["tests/**/*.spec.ts", "e2e/**/*.spec.ts"],
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -25,14 +45,14 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  reporter: "html",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    baseURL: e2eBaseUrl,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: "on-first-retry",
   },
 
   /* Configure projects for major browsers */
@@ -45,8 +65,8 @@ export default defineConfig({
     */
 
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
     },
 
     /*
@@ -77,11 +97,12 @@ export default defineConfig({
     // },
   ],
 
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'pnpm dev',
-    url: process.env.BASE_URL || 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: shouldStartWebServer
+    ? {
+        command: "pnpm dev",
+        url: e2eBaseUrl,
+        reuseExistingServer: !process.env.CI,
+        timeout: 120_000,
+      }
+    : undefined,
 });

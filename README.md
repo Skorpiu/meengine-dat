@@ -55,6 +55,7 @@ More detail: [docs/architecture.md](./docs/architecture.md). Ops entry points: [
 
 - **CI check** — `pnpm -C driving_school_platform/nextjs_space check` is the local gate aligned with pipeline expectations.
 - **Smoke health** — `GET /api/health` and optional scripted checks; see ops smoke docs under `driving_school_platform/nextjs_space/docs/ops/`.
+- **Optional E2E demo smoke** — read-only Playwright check for Demo School Admin (`pnpm test:e2e:demo`); not part of `pnpm check`. See [e2e-smoke.md](./driving_school_platform/nextjs_space/docs/ops/e2e-smoke.md).
 - **Prisma migrations** — committed migrations and deliberate deploy to target DB; see [driving_school_platform/nextjs_space/docs/ops/supabase-prisma-migrations.md](./driving_school_platform/nextjs_space/docs/ops/supabase-prisma-migrations.md).
 - **Tenant / platform separation** — hostname and responsibility split documented in [driving_school_platform/nextjs_space/docs/ops/production-host-split.md](./driving_school_platform/nextjs_space/docs/ops/production-host-split.md).
 - **Demo hardening** — policy, seed/reset runbook, `demo:readiness`, `demo:features:check`, dry-run reset tooling (links in [release-checklist.md](./driving_school_platform/nextjs_space/docs/ops/release-checklist.md)).
