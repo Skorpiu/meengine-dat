@@ -64,6 +64,11 @@ import { POST, GET } from "./route";
 import { verifyAuth } from "@/lib/api-utils";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
 import { expectLessonIncludeSanitizesNestedUsers } from "@/lib/lessons/lesson-include-safety";
+import { sampleLessonListItemFixture } from "@/lib/lessons/lesson-response-contract-fixtures";
+import {
+  expectAdminDashboardLessonsResponseContract,
+  expectLessonCalendarResponseContract,
+} from "@/lib/lessons/lesson-response-contract";
 
 const verifyAuthMock = verifyAuth as unknown as ReturnType<typeof vi.fn>;
 const checkFeatureAccessMock = checkFeatureAccess as unknown as ReturnType<
@@ -217,6 +222,52 @@ describe("GET /api/admin/lessons (read-only)", () => {
     const body: any = await res.json();
     expect(body.code).toBe("invalid_calendar_range");
     expect(h.lessonFindManyMock).not.toHaveBeenCalled();
+  });
+
+  it("calendar DTO contract: lessons array with UI fields and no nested passwordHash", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
+    const fixture = sampleLessonListItemFixture();
+    h.lessonFindManyMock.mockResolvedValueOnce([fixture]);
+
+    const res = await GET(
+      reqGet(
+        "http://localhost/api/admin/lessons?from=2026-01-01&to=2026-01-08",
+      ) as any,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expectLessonCalendarResponseContract(body);
+    expect(body.lessons[0].pickupLocation).toBe("Main garage");
+    expect(body.lessons[0].student.user.firstName).toBe("Sam");
+    expect(body.lessons[0].vehicle.registrationNumber).toBe("AB-12-CD");
+    expect(body.lessons[0].category.name).toBe("B");
+  });
+
+  it("dashboard DTO contract: success envelope slices with UI fields and no nested passwordHash", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
+    const fixture = sampleLessonListItemFixture({ id: "lesson-dash-1" });
+    h.lessonFindManyMock
+      .mockResolvedValueOnce([fixture])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+
+    const res = await GET(
+      reqGet("http://localhost/api/admin/lessons?view=DRIVING") as any,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expectAdminDashboardLessonsResponseContract(body);
+    expect(body.data.recent[0].instructor.user.lastName).toBe("Instructor");
   });
 
   it("calendar range over 90 days returns 400 calendar_range_too_large", async () => {

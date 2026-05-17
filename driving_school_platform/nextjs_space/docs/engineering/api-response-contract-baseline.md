@@ -143,14 +143,15 @@ Suggested merge order when normalizing later: (1) calendar `{ lessons }` family 
 
 ## Contract tests
 
-| Contract                                                     | Test location                                                                                               |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| Dashboard `{ success, data: { recent, current, upcoming } }` | `app/api/admin/lessons/route.integration.unit.test.ts`                                                      |
-| Calendar `{ lessons }`                                       | Same file                                                                                                   |
-| Calendar / demo `{ error, code }`                            | Admin lessons, instructor/student lessons, vehicles, signup integration tests                               |
-| Vehicles GET `{ vehicles }`                                  | `app/api/admin/vehicles/route.integration.unit.test.ts`                                                     |
-| Signup `demo_signup_disabled`                                | `app/api/signup/route.integration.unit.test.ts`                                                             |
-| Billing error `{ error, code }`, no `detail`                 | `app/api/billing/webhooks/webhooks.route.integration.unit.test.ts`, `lib/billing/webhook-http.unit.test.ts` |
+| Contract                                                     | Test location                                                                                                                                                                                                                |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dashboard `{ success, data: { recent, current, upcoming } }` | `app/api/admin/lessons/route.integration.unit.test.ts`                                                                                                                                                                       |
+| Calendar `{ lessons }`                                       | Same file                                                                                                                                                                                                                    |
+| **Lesson DTO (UI fields + no nested `passwordHash`)**        | `lib/lessons/lesson-response-contract.ts`, `lesson-response-contract.unit.test.ts`, admin/instructor/student lessons + `[id]` integration tests — see [lesson-dto-minimization-audit.md](./lesson-dto-minimization-audit.md) |
+| Calendar / demo `{ error, code }`                            | Admin lessons, instructor/student lessons, vehicles, signup integration tests                                                                                                                                                |
+| Vehicles GET `{ vehicles }`                                  | `app/api/admin/vehicles/route.integration.unit.test.ts`                                                                                                                                                                      |
+| Signup `demo_signup_disabled`                                | `app/api/signup/route.integration.unit.test.ts`                                                                                                                                                                              |
+| Billing error `{ error, code }`, no `detail`                 | `app/api/billing/webhooks/webhooks.route.integration.unit.test.ts`, `lib/billing/webhook-http.unit.test.ts`                                                                                                                  |
 
 ---
 

@@ -37,6 +37,8 @@ vi.mock("@/lib/api-utils", async () => {
 import { GET } from "./route";
 import { verifyAuth } from "@/lib/api-utils";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import { sampleLessonListItemFixture } from "@/lib/lessons/lesson-response-contract-fixtures";
+import { expectLessonCalendarResponseContract } from "@/lib/lessons/lesson-response-contract";
 
 const verifyAuthMock = verifyAuth as unknown as ReturnType<typeof vi.fn>;
 const guardTenantMock = guardTenantAuthenticatedRoute as unknown as ReturnType<
@@ -71,6 +73,24 @@ describe("GET /api/instructor/lessons (calendar range)", () => {
     const body = await res.json();
     expect(body.lessons).toEqual([{ id: "lesson-1" }]);
     expect(h.getInstructorCalendarLessonsMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("DTO contract: lessons with ScheduleMap UI fields and no nested passwordHash", async () => {
+    h.getInstructorCalendarLessonsMock.mockResolvedValue([
+      sampleLessonListItemFixture({ id: "lesson-inst-1" }),
+    ]);
+
+    const res = await GET(
+      reqGet(
+        "http://localhost/api/instructor/lessons?from=2026-01-01&to=2026-01-08",
+      ) as any,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expectLessonCalendarResponseContract(body);
+    expect(body.lessons[0].startTime).toBe("10:00");
+    expect(body.lessons[0].lessonType).toBe("DRIVING");
   });
 
   it("returns 400 invalid_calendar_range for invalid from", async () => {
