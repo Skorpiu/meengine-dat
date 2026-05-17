@@ -9,7 +9,7 @@ import {
   assertInstructorCanMutateLesson,
   isPastLesson,
 } from "@/lib/lessons/lesson-access";
-import { LESSON_LIST_INCLUDE } from "@/lib/lessons/lesson-queries";
+import { LESSON_DETAIL_INCLUDE } from "@/lib/lessons/lesson-queries";
 
 export type UpdateAdminLessonPayload = {
   lessonDate?: string;
@@ -112,7 +112,7 @@ export async function updateAdminLesson(input: {
       ...(status && { status: status as LessonStatus }),
       ...(vehicleId !== undefined && { vehicleId: vehicleId || null }),
     },
-    include: LESSON_LIST_INCLUDE,
+    include: LESSON_DETAIL_INCLUDE,
   });
 
   return { ok: true, lesson };

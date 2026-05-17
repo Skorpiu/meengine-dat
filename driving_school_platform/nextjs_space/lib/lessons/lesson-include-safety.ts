@@ -24,6 +24,26 @@ export function expectLessonIncludeSanitizesNestedUsers(
   expect(JSON.stringify(include)).not.toContain("passwordHash");
 }
 
+type NestedUserSelect = {
+  select?: {
+    user?: boolean | { select?: Record<string, unknown> };
+  };
+};
+
+/**
+ * Assert lesson Prisma `select` uses safe nested user select (no `user: true`).
+ */
+export function expectLessonSelectSanitizesNestedUsers(select: unknown): void {
+  const root = select as Record<string, NestedUserSelect>;
+  for (const relation of ["student", "instructor"] as const) {
+    const rel = root[relation]?.select;
+    expect(rel?.user).toBeDefined();
+    expect(rel?.user).not.toBe(true);
+    expect(rel?.user).toEqual({ select: LESSON_NESTED_USER_SELECT });
+  }
+  expect(JSON.stringify(select)).not.toContain("passwordHash");
+}
+
 /** Assert serialized lesson JSON has no nested passwordHash. */
 export function expectLessonJsonHasNoNestedPasswordHash(
   payload: unknown,

@@ -35,7 +35,7 @@ async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
 
 type LessonView = "CODE" | "DRIVING" | "EXAMS";
 
-/** Dashboard list row — same Lesson graph as GET /api/admin/lessons (LESSON_LIST_INCLUDE). */
+/** Dashboard list row — same minimized list DTO as GET /api/admin/lessons (`LESSON_LIST_SELECT`). */
 type LessonListItem = {
   id: string | number;
   lessonDate?: string | Date | null;

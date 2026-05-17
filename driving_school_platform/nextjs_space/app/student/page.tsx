@@ -10,7 +10,7 @@ import {
 } from "@/components/schedule/schedule-map";
 import { Calendar, TrendingUp, Award, CheckCircle } from "lucide-react";
 import { CategoryProgressSelector } from "@/components/student/category-progress-selector";
-import { LESSON_NESTED_USER_RELATION } from "@/lib/users/user-public-select";
+import { LESSON_LIST_SELECT } from "@/lib/lessons/lesson-queries";
 
 export const dynamic = "force-dynamic";
 
@@ -78,11 +78,7 @@ export default async function StudentDashboard() {
         lte: thirtyDaysFromNow,
       },
     },
-    include: {
-      instructor: LESSON_NESTED_USER_RELATION,
-      vehicle: true,
-      category: true,
-    },
+    select: LESSON_LIST_SELECT,
     orderBy: [{ lessonDate: "asc" }, { startTime: "asc" }],
   });
 
