@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const h = vi.hoisted(() => {
   const findUniqueMock = vi.fn();
@@ -40,13 +40,34 @@ const hashMock = (bcrypt as any).hash as ReturnType<typeof vi.fn>;
 const resolveTenantOrganizationIdMock =
   resolveTenantOrganizationId as unknown as ReturnType<typeof vi.fn>;
 
+const studentSignupBody = {
+  firstName: "A",
+  lastName: "B",
+  email: "x@y.com",
+  password: "123",
+  role: "STUDENT",
+};
+
+let previousPublicSignupEnabled: string | undefined;
+
 beforeEach(() => {
   vi.resetAllMocks();
+  previousPublicSignupEnabled = process.env.PUBLIC_SIGNUP_ENABLED;
+  delete process.env.PUBLIC_SIGNUP_ENABLED;
   h.organizationFindUniqueMock.mockResolvedValue({ isDemo: false });
+});
+
+afterEach(() => {
+  if (previousPublicSignupEnabled === undefined) {
+    delete process.env.PUBLIC_SIGNUP_ENABLED;
+  } else {
+    process.env.PUBLIC_SIGNUP_ENABLED = previousPublicSignupEnabled;
+  }
 });
 
 describe("POST /api/signup (tenant hardening)", () => {
   it("returns 403 when role is SUPER_ADMIN", async () => {
+    process.env.PUBLIC_SIGNUP_ENABLED = "true";
     resolveTenantOrganizationIdMock.mockResolvedValue({
       host: "www.meengine.io",
       organizationId: "orgA",
@@ -56,10 +77,7 @@ describe("POST /api/signup (tenant hardening)", () => {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        firstName: "A",
-        lastName: "B",
-        email: "x@y.com",
-        password: "123",
+        ...studentSignupBody,
         role: "SUPER_ADMIN",
       }),
     });
@@ -101,7 +119,72 @@ describe("POST /api/signup (tenant hardening)", () => {
     expect(h.transactionMock).not.toHaveBeenCalled();
   });
 
+  it("returns demo_signup_disabled for demo org even when PUBLIC_SIGNUP_ENABLED is true", async () => {
+    process.env.PUBLIC_SIGNUP_ENABLED = "true";
+    resolveTenantOrganizationIdMock.mockResolvedValue({
+      host: "demo.meengine.io",
+      organizationId: "orgDemo",
+    });
+    h.organizationFindUniqueMock.mockResolvedValue({ isDemo: true });
+
+    const req = new Request("http://localhost/api/signup", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(studentSignupBody),
+    });
+
+    const res = await POST(req as any);
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.code).toBe("demo_signup_disabled");
+    expect(h.findUniqueMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 403 with public_signup_disabled when env is unset", async () => {
+    resolveTenantOrganizationIdMock.mockResolvedValue({
+      host: "www.meengine.io",
+      organizationId: "orgA",
+    });
+
+    const req = new Request("http://localhost/api/signup", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(studentSignupBody),
+    });
+
+    const res = await POST(req as any);
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.code).toBe("public_signup_disabled");
+    expect(body.error).toBe("Public signup is currently disabled.");
+    expect(body).not.toHaveProperty("details");
+    expect(body).not.toHaveProperty("detail");
+    expect(h.findUniqueMock).not.toHaveBeenCalled();
+    expect(h.transactionMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 with public_signup_disabled when env is "false"', async () => {
+    process.env.PUBLIC_SIGNUP_ENABLED = "false";
+    resolveTenantOrganizationIdMock.mockResolvedValue({
+      host: "www.meengine.io",
+      organizationId: "orgA",
+    });
+
+    const req = new Request("http://localhost/api/signup", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(studentSignupBody),
+    });
+
+    const res = await POST(req as any);
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.code).toBe("public_signup_disabled");
+    expect(h.findUniqueMock).not.toHaveBeenCalled();
+  });
+
   it("returns 400 when organization id does not exist in database", async () => {
+    process.env.PUBLIC_SIGNUP_ENABLED = "true";
     resolveTenantOrganizationIdMock.mockResolvedValue({
       host: "www.meengine.io",
       organizationId: "orgMissing",
@@ -111,13 +194,7 @@ describe("POST /api/signup (tenant hardening)", () => {
     const req = new Request("http://localhost/api/signup", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        firstName: "A",
-        lastName: "B",
-        email: "x@y.com",
-        password: "123",
-        role: "STUDENT",
-      }),
+      body: JSON.stringify(studentSignupBody),
     });
 
     const res = await POST(req as any);
@@ -137,11 +214,7 @@ describe("POST /api/signup (tenant hardening)", () => {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        firstName: "A",
-        lastName: "B",
-        email: "x@y.com",
-        password: "123",
-        role: "STUDENT",
+        ...studentSignupBody,
         organizationId: "orgA",
       }),
     });
@@ -161,11 +234,7 @@ describe("POST /api/signup (tenant hardening)", () => {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        firstName: "A",
-        lastName: "B",
-        email: "x@y.com",
-        password: "123",
-        role: "STUDENT",
+        ...studentSignupBody,
         organizationId: "orgB",
       }),
     });
@@ -175,7 +244,8 @@ describe("POST /api/signup (tenant hardening)", () => {
     expect(h.findUniqueMock).not.toHaveBeenCalled();
   });
 
-  it("returns 201 on happy path (tenant org present, non-demo)", async () => {
+  it("returns 201 on happy path (tenant org present, non-demo, PUBLIC_SIGNUP_ENABLED=true)", async () => {
+    process.env.PUBLIC_SIGNUP_ENABLED = "true";
     resolveTenantOrganizationIdMock.mockResolvedValue({
       host: "www.meengine.io",
       organizationId: "orgA",
@@ -199,13 +269,7 @@ describe("POST /api/signup (tenant hardening)", () => {
     const req = new Request("http://localhost/api/signup", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        firstName: "A",
-        lastName: "B",
-        email: "x@y.com",
-        password: "123",
-        role: "STUDENT",
-      }),
+      body: JSON.stringify(studentSignupBody),
     });
 
     const res = await POST(req as any);
@@ -213,5 +277,7 @@ describe("POST /api/signup (tenant hardening)", () => {
 
     const body: any = await res.json();
     expect(body.userId).toBe("u1");
+    expect(body).not.toHaveProperty("details");
+    expect(body).not.toHaveProperty("detail");
   });
 });

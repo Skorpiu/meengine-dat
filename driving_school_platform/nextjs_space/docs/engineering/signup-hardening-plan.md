@@ -1,7 +1,7 @@
 # Signup Hardening Plan
 
-**Status:** Plan only — **no runtime behavior changes** in this batch.  
-**Branch context:** `signup-rate-limit-hardening-plan` (documentation).  
+**Status:** Phased plan — batch **`signup-disable-public-by-default` implemented**; later batches pending.  
+**Branch context:** `signup-disable-public-by-default` (env gate shipped).  
 **Related audits:** [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-007), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
 
 ---
@@ -47,8 +47,9 @@ This plan **does not change application behavior** by itself.
 
 ### Production (non-demo) tenants
 
-- **Public signup remains enabled** for non-demo orgs resolved by tenant host (current product behavior).
-- No env flag today to globally disable public signup on production hosts.
+- **Public signup is disabled by default** for non-demo orgs unless **`PUBLIC_SIGNUP_ENABLED=true`** (trimmed, case-insensitive) in the deployment environment.
+- When disabled, `POST /api/signup` returns **403** with `code: public_signup_disabled` and message _"Public signup is currently disabled."_
+- Policy helper: [`lib/signup/signup-policy.ts`](../../lib/signup/signup-policy.ts).
 
 ### Email verification
 
@@ -162,12 +163,12 @@ This plan **does not change application behavior** by itself.
 
 Adopt a **phased** path aligned with DAT’s B2B tenant model and serverless hosting:
 
-| Phase               | Timeframe                                      | Action                                                                                                                                                                                                      |
-| ------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1 — Short term**  | Before broad public marketing                  | **Invite-only or public signup off by default** via env/config (`SIGNUP_PUBLIC_ENABLED=false` or per-org flag). Keep demo block as-is. Document operator path: admin user creation + private demo personas. |
-| **2 — Medium term** | When self-serve is a product requirement       | **Email verification foundation** — provider integration, `isEmailVerified` semantics, login gate, resend with its own rate limit.                                                                          |
-| **3 — Medium term** | Same release train as (2) or immediately after | **Distributed rate limit** on `POST /api/signup` (and optionally `/api/auth/login`) — never rely on in-memory `rateLimitMap` alone in production.                                                           |
-| **4 — Future**      | If public register stays high-traffic          | **Turnstile** (or equivalent) on register + server-side verification.                                                                                                                                       |
+| Phase               | Timeframe                                      | Action                                                                                                                                                                               |
+| ------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **1 — Short term**  | Before broad public marketing                  | **Shipped:** public signup off by default via **`PUBLIC_SIGNUP_ENABLED`** (only `"true"` enables). Demo block unchanged. Operator path: admin user creation + private demo personas. |
+| **2 — Medium term** | When self-serve is a product requirement       | **Email verification foundation** — provider integration, `isEmailVerified` semantics, login gate, resend with its own rate limit.                                                   |
+| **3 — Medium term** | Same release train as (2) or immediately after | **Distributed rate limit** on `POST /api/signup` (and optionally `/api/auth/login`) — never rely on in-memory `rateLimitMap` alone in production.                                    |
+| **4 — Future**      | If public register stays high-traffic          | **Turnstile** (or equivalent) on register + server-side verification.                                                                                                                |
 
 **Default recommendation for production until phases 2–3 ship:** treat signup as **invite-only operationally** (phase 1), even if the register page still exists behind unlinked URLs — close the gap with config in the first implementation batch.
 
@@ -181,18 +182,19 @@ Each batch is a **separate PR** with `pnpm check` green. Batches are ordered; la
 
 ---
 
-### Batch: `signup-disable-public-by-default`
+### Batch: `signup-disable-public-by-default` — **implemented**
 
-**Objective:** Add a **configuration gate** so operators can disable public signup on production without code deploy semantics beyond env change. Register UI should reflect disabled state (message + no submit).
+**Objective:** Add a **configuration gate** so operators can disable public signup on production without code deploy semantics beyond env change.
 
-| Area                    | Detail                                                                                                                         |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| **Config**              | e.g. `SIGNUP_PUBLIC_ENABLED` (default `false` in production template; `true` in local dev if desired)                          |
-| **API**                 | Early return on `POST /api/signup` with stable `code` (e.g. `signup_disabled`) and **403** or **503** per product choice       |
-| **UI**                  | `/auth/register` — disable form or redirect when public signup off                                                             |
-| **Risks**               | Accidentally disabling signup for paying schools — document env in [environment-variables.md](../ops/environment-variables.md) |
-| **Tests**               | Integration tests: flag off → 403; flag on + non-demo → existing behavior; demo still blocked                                  |
-| **Acceptance criteria** | Production can set env to block all public signup; demo `demo_signup_disabled` unchanged; no Prisma migration; check passes    |
+| Area                    | Detail                                                                                                                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Config**              | **`PUBLIC_SIGNUP_ENABLED`** — only `"true"` (trim/case-insensitive) enables; default disabled ([environment-variables.md](../ops/environment-variables.md))                                                         |
+| **API**                 | `decideSignupAvailability` in [`lib/signup/signup-policy.ts`](../../lib/signup/signup-policy.ts); **403** + `public_signup_disabled` after demo check on [`app/api/signup/route.ts`](../../app/api/signup/route.ts) |
+| **UI**                  | `/auth/register` shows message when API returns `public_signup_disabled` (form remains visible)                                                                                                                     |
+| **Tests**               | `lib/signup/signup-policy.unit.test.ts`; extended `app/api/signup/route.integration.unit.test.ts`                                                                                                                   |
+| **Acceptance criteria** | Met — production defaults to disabled; demo block unchanged; no Prisma migration                                                                                                                                    |
+
+**Next batches (pending):** `signup-invite-only-foundation`, `email-verification-foundation`, `distributed-rate-limit-foundation`, `captcha-turnstile-evaluation`.
 
 ---
 
@@ -275,7 +277,7 @@ Each batch is a **separate PR** with `pnpm check` green. Batches are ordered; la
 ## Operational checklist (before enabling broad public signup)
 
 1. **Decision recorded:** invite-only vs public + verification + rate limit ([release-checklist.md](../ops/release-checklist.md)).
-2. **`SIGNUP_PUBLIC_ENABLED` (or successor)** reviewed for production Vercel env.
+2. **`PUBLIC_SIGNUP_ENABLED`** reviewed for production Vercel env (unset/`false` unless self-serve is intentional).
 3. **Demo orgs** remain `isDemo: true`; signup smoke confirms **403** `demo_signup_disabled`.
 4. **Distributed rate limit** live in staging with realistic thresholds.
 5. **Email verification** live if public signup enabled.

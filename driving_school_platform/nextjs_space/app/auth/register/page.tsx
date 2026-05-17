@@ -246,6 +246,10 @@ export default function RegisterPage() {
           setError(
             "Registration is disabled on the public demo. Use provided demo credentials.",
           );
+        } else if (data.code === "public_signup_disabled") {
+          setError(
+            "Public registration is currently disabled. Please contact your driving school.",
+          );
         } else {
           setError(data.error || "Registration failed");
         }
