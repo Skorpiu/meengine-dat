@@ -1,0 +1,295 @@
+# Signup Hardening Plan
+
+**Status:** Plan only — **no runtime behavior changes** in this batch.  
+**Branch context:** `signup-rate-limit-hardening-plan` (documentation).  
+**Related audits:** [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-007), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
+
+---
+
+## Scope
+
+This document defines a **technical and operational strategy** to harden **public self-serve signup** on DAT before broad public exposure (marketing landing, open registration links, or unauthenticated tenant onboarding at scale).
+
+It covers:
+
+- **Rate limiting** (distributed, not in-memory on serverless)
+- **Invite-only** vs **public signup**
+- **Email verification** (foundation only — no email provider in early batches)
+- **Captcha** (e.g. Cloudflare Turnstile) as a future layer for public forms
+
+**In scope for follow-up implementation batches:** env/config gates, API and UI behavior for the above, observability, and tests.
+
+**Out of scope for all batches listed here:** Prisma schema changes unless a dedicated batch explicitly requires them; billing, demo sandbox policy, user/vehicle/lesson route refactors, i18n expansion, platform onboarding redesign, and full NextAuth rewrite.
+
+This plan **does not change application behavior** by itself.
+
+---
+
+## Current state
+
+### Public signup API and UI
+
+| Item                  | State                                                                                                                                     |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **Endpoint**          | `POST /api/signup` — [`app/api/signup/route.ts`](../../app/api/signup/route.ts)                                                           |
+| **UI**                | [`app/auth/register/page.tsx`](../../app/auth/register/page.tsx) posts to the signup API                                                  |
+| **Roles allowed**     | `STUDENT`, `INSTRUCTOR` (public); `SUPER_ADMIN` rejected with **403**                                                                     |
+| **Tenant binding**    | `resolveTenantOrganizationId(request)` — org from mapped host; localhost may pass `organizationId` in body                                |
+| **Cross-org guard**   | If host maps to org A, body cannot request org B (**403**)                                                                                |
+| **Instructor fields** | License number + expiry required for `INSTRUCTOR`                                                                                         |
+| **Approval**          | `isApproved: true` for students; instructors created with `isApproved: false` (`requiresApproval` in response)                            |
+| **Integration tests** | [`app/api/signup/route.integration.unit.test.ts`](../../app/api/signup/route.integration.unit.test.ts) — scoping, demo block, role guards |
+
+### Demo organizations
+
+- Organizations with **`Organization.isDemo: true`** receive **403** with `code: demo_signup_disabled` and message _"Public signup is disabled for demo organizations."_
+- Controlled demos use **private personas** and operator scripts — not open registration ([public-demo-policy.md](../ops/public-demo-policy.md), [client-demo-runbook.md](../ops/client-demo-runbook.md)).
+
+### Production (non-demo) tenants
+
+- **Public signup remains enabled** for non-demo orgs resolved by tenant host (current product behavior).
+- No env flag today to globally disable public signup on production hosts.
+
+### Email verification
+
+- User rows are created with **`isEmailVerified: true`** unconditionally — verification is **not implemented**.
+- Inline comment in signup route: _"Email verification is not implemented yet; this is tracked as production hardening."_
+- No verification tokens, resend flow, or email provider integration in the codebase.
+
+### Rate limiting
+
+- **`lib/rate-limit.ts`** provides **in-memory** `Map`-based limits (`RATE_LIMITS.AUTH`, `API`, `MUTATION`, etc.).
+- **`withErrorHandling`** in **`lib/api-utils.ts`** can attach rate limits **per route** that opt in.
+- **`POST /api/signup` does not use `withErrorHandling` or `checkRateLimit`** — signup is **unthrottled** at the application layer.
+- In-memory limits are **unsuitable as the primary control on Vercel serverless** (per-instance counters, cold starts, no shared state). Existing `RATE_LIMITS` must **not** be wired to signup as a “production” fix without a distributed store.
+
+### Invite-only / captcha
+
+- **Not implemented.** All non-demo tenants can use the register page if users reach it.
+- **School Admin** can create users via admin APIs (`/api/users/create`, etc.) — this is the de facto B2B provisioning path today.
+- **Captcha / Turnstile:** not present on register or signup API.
+
+### Auth surface (context)
+
+- Login uses NextAuth credentials ([`app/api/auth/[...nextauth]/route.ts`](../../app/api/auth/[...nextauth]/route.ts)); signup creates users with `passwordHash` (bcrypt cost 12) compatible with that flow.
+- Signup is **separate** from NextAuth — successful registration does not automatically establish a session (client must log in).
+
+---
+
+## Risks
+
+| Risk                                 | Description                                                                     | DAT impact                                                                                                                                                       |
+| ------------------------------------ | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Spam accounts**                    | Automated POSTs create users, student/instructor profiles, and lesson counters. | DB growth, support noise, polluted org rosters.                                                                                                                  |
+| **Email enumeration**                | Distinct responses for “user exists” vs success.                                | `POST /api/signup` returns **409** _"User with this email already exists"_ — reveals registered emails globally (unique email across tenants in current schema). |
+| **Tenant signup abuse**              | Attacker targets a school’s vanity domain with bulk registrations.              | Reputation damage; instructor approval queue flooding.                                                                                                           |
+| **Database load**                    | Each signup runs a transaction (user + profile + optional `lessonCounter`).     | Connection pool pressure under attack; Supabase costs.                                                                                                           |
+| **Unverified accounts**              | Users log in immediately with `isEmailVerified: true` without owning the inbox. | Wrong contact data, account takeover if password is weak, compliance gaps.                                                                                       |
+| **No distributed throttling**        | Serverless has no shared in-process limiter.                                    | Bursts bypass any future per-route memory limiter; need edge or Redis-class store.                                                                               |
+| **Credential stuffing adjacency**    | Register + login on same host.                                                  | Abuse of weak passwords on new accounts; complements need for verification and limits.                                                                           |
+| **SUPER_ADMIN / platform confusion** | Public signup blocked for `SUPER_ADMIN`; platform onboarding is separate.       | Lower risk on signup route; platform host discipline remains operator-only ([production-host-split.md](../ops/production-host-split.md)).                        |
+
+---
+
+## Options
+
+### A) Invite-only signup
+
+**Model:** Schools provision students and instructors via **School Admin** (existing user APIs) or an explicit **invite token** flow (future). Public `/auth/register` hidden or returns a static “contact your school” message.
+
+| Pros                                                                         | Cons                                                 |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Best fit for **B2B driving schools** (known roster, admin-driven onboarding) | No self-serve growth without later batch             |
+| Shrinks abuse surface immediately                                            | Schools must operationalize admin workflows          |
+| Aligns with current demo posture (personas, no public signup on demo)        | Product/marketing must not promise open registration |
+
+**DAT fit:** Strong for **short-term production** and portfolio demos where access is already private.
+
+---
+
+### B) Public signup with email verification
+
+**Model:** Keep `POST /api/signup` but set `isEmailVerified: false` until the user completes a time-limited token link (or OTP). Block or limit session/login until verified.
+
+| Pros                                                 | Cons                                                                                  |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Enables self-serve while reducing throwaway accounts | Requires **email provider** (Resend, SendGrid, SES, etc.), templates, bounce handling |
+| Industry-standard expectation for SaaS               | Resend limits, token storage, expiry, and “already verified” UX                       |
+| Can combine with rate limit + captcha                | **Not in first implementation batch** per product constraint                          |
+
+**DAT fit:** **Medium-term** after provider choice and ops runbook (secrets in Vercel, no PII in logs).
+
+---
+
+### C) Public signup with managed rate limit
+
+**Model:** Enforce limits at **edge** (Vercel Firewall / WAF), **Upstash Redis**, **Vercel KV**, or **DB-backed** counters — keyed by IP + optional fingerprint + `organizationId` / host.
+
+| Pros                                             | Cons                                                       |
+| ------------------------------------------------ | ---------------------------------------------------------- |
+| Works on serverless; shared state                | Extra service cost and configuration                       |
+| Can tier limits (signup stricter than read APIs) | IP shared NAT (schools, mobile) — need sensible thresholds |
+| Complements verification and captcha             | Does not stop targeted low-volume abuse alone              |
+
+**DAT fit:** **Medium-term** mandatory layer if public signup stays on; **do not** ship signup-only protection as in-memory `lib/rate-limit.ts` on Vercel.
+
+**Candidates (evaluation in implementation batch):**
+
+| Store                     | Notes                                                                 |
+| ------------------------- | --------------------------------------------------------------------- |
+| **Upstash Redis**         | Common with Vercel; sliding window / token bucket libraries available |
+| **Vercel KV**             | Same ecosystem; confirm region and pricing                            |
+| **Postgres counters**     | No new vendor; higher write load and cleanup job for windows          |
+| **Edge / CDN rate limit** | First line of defense; coarse (IP/host)                               |
+
+---
+
+### D) Captcha / Cloudflare Turnstile
+
+**Model:** Client widget on register page; server verifies token on `POST /api/signup` before any DB work.
+
+| Pros                                                  | Cons                                                      |
+| ----------------------------------------------------- | --------------------------------------------------------- |
+| Strong against bots on public forms                   | UX friction; accessibility considerations                 |
+| Turnstile is privacy-friendlier than legacy reCAPTCHA | Site keys in env; server secret verification              |
+| Works with rate limits (defense in depth)             | Does not replace email verification for account ownership |
+
+**DAT fit:** **Future** batch if public signup remains after invite-only is relaxed.
+
+---
+
+## Recommendation
+
+Adopt a **phased** path aligned with DAT’s B2B tenant model and serverless hosting:
+
+| Phase               | Timeframe                                      | Action                                                                                                                                                                                                      |
+| ------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1 — Short term**  | Before broad public marketing                  | **Invite-only or public signup off by default** via env/config (`SIGNUP_PUBLIC_ENABLED=false` or per-org flag). Keep demo block as-is. Document operator path: admin user creation + private demo personas. |
+| **2 — Medium term** | When self-serve is a product requirement       | **Email verification foundation** — provider integration, `isEmailVerified` semantics, login gate, resend with its own rate limit.                                                                          |
+| **3 — Medium term** | Same release train as (2) or immediately after | **Distributed rate limit** on `POST /api/signup` (and optionally `/api/auth/login`) — never rely on in-memory `rateLimitMap` alone in production.                                                           |
+| **4 — Future**      | If public register stays high-traffic          | **Turnstile** (or equivalent) on register + server-side verification.                                                                                                                                       |
+
+**Default recommendation for production until phases 2–3 ship:** treat signup as **invite-only operationally** (phase 1), even if the register page still exists behind unlinked URLs — close the gap with config in the first implementation batch.
+
+**Do not implement in this documentation batch:** email provider, captcha, distributed limiter, or Prisma changes.
+
+---
+
+## Proposed implementation batches
+
+Each batch is a **separate PR** with `pnpm check` green. Batches are ordered; later batches may depend on earlier ones.
+
+---
+
+### Batch: `signup-disable-public-by-default`
+
+**Objective:** Add a **configuration gate** so operators can disable public signup on production without code deploy semantics beyond env change. Register UI should reflect disabled state (message + no submit).
+
+| Area                    | Detail                                                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Config**              | e.g. `SIGNUP_PUBLIC_ENABLED` (default `false` in production template; `true` in local dev if desired)                          |
+| **API**                 | Early return on `POST /api/signup` with stable `code` (e.g. `signup_disabled`) and **403** or **503** per product choice       |
+| **UI**                  | `/auth/register` — disable form or redirect when public signup off                                                             |
+| **Risks**               | Accidentally disabling signup for paying schools — document env in [environment-variables.md](../ops/environment-variables.md) |
+| **Tests**               | Integration tests: flag off → 403; flag on + non-demo → existing behavior; demo still blocked                                  |
+| **Acceptance criteria** | Production can set env to block all public signup; demo `demo_signup_disabled` unchanged; no Prisma migration; check passes    |
+
+---
+
+### Batch: `signup-invite-only-foundation`
+
+**Objective:** Formalize **invite-only** provisioning: optional invite tokens or “registration closed” with admin-only create path documented in UI.
+
+| Area                    | Detail                                                                                                                           |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **API**                 | Optional `inviteToken` validated against hashed single-use records **or** rely on phase-1 disable + admin APIs only (minimal v1) |
+| **UI**                  | Copy: “Contact your driving school” / link to login                                                                              |
+| **Ops**                 | Runbook: how School Admin adds students/instructors ([release-checklist.md](../ops/release-checklist.md) cross-link)             |
+| **Risks**               | Token leakage; over-engineering before product needs invites vs simple disable                                                   |
+| **Tests**               | Invalid/missing token → 403; valid token → signup succeeds for correct org                                                       |
+| **Acceptance criteria** | Product can run production with zero anonymous signups; admin create path documented; check passes                               |
+
+---
+
+### Batch: `email-verification-foundation`
+
+**Objective:** Real verification lifecycle without claiming a specific vendor in this plan — implementation picks provider in batch PR.
+
+| Area                    | Detail                                                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Data**                | Verification token table or signed JWT strategy; `isEmailVerified` set **false** on signup                                     |
+| **Email**               | Send verification link; resend endpoint with strict rate limit                                                                 |
+| **Auth**                | NextAuth credentials callback rejects or limits unverified users (policy decision documented)                                  |
+| **Signup**              | Stop setting `isEmailVerified: true` in [`app/api/signup/route.ts`](../../app/api/signup/route.ts)                             |
+| **Risks**               | Provider outages; email in logs; GDPR retention on tokens                                                                      |
+| **Tests**               | Signup → unverified cannot fully use app; verify link → verified; expired token → 400                                          |
+| **Acceptance criteria** | New users require verification before full access; secrets only in env; enumeration response reviewed (generic message option) |
+
+---
+
+### Batch: `distributed-rate-limit-foundation`
+
+**Objective:** Shared rate limiting for **`POST /api/signup`** (and optionally login), using Upstash/KV/DB — **not** `lib/rate-limit.ts` Map as source of truth.
+
+| Area                    | Detail                                                                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Keys**                | `signup:{orgId or host}:{ip}` plus global IP cap                                                                                |
+| **Limits**              | Stricter than `RATE_LIMITS.API` (e.g. 3–5 signups / hour / IP / org — tune with ops)                                            |
+| **Response**            | **429** with `Retry-After`, stable `code: rate_limit_exceeded`                                                                  |
+| **Fallback**            | If Redis unavailable: fail closed (503) vs fail open — **recommend fail closed** for signup                                     |
+| **Risks**               | Shared IP false positives; cost at scale                                                                                        |
+| **Tests**               | Mock limiter store; exceed threshold → 429; under threshold → pass through                                                      |
+| **Acceptance criteria** | Limit survives across serverless instances in staging load test; signup route does not import in-memory limiter for enforcement |
+
+---
+
+### Batch: `captcha-turnstile-evaluation`
+
+**Objective:** Evaluate and optionally integrate **Cloudflare Turnstile** on public register + server verify.
+
+| Area                    | Detail                                                                                         |
+| ----------------------- | ---------------------------------------------------------------------------------------------- |
+| **Client**              | Turnstile widget on register page                                                              |
+| **Server**              | Verify siteverify API before signup transaction                                                |
+| **Config**              | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`                                                   |
+| **Risks**               | False negatives; CSP/script allowances                                                         |
+| **Tests**               | Missing/invalid token → 400; valid mock in integration tests                                   |
+| **Acceptance criteria** | Documented decision: ship Turnstile or defer; if shipped, bot traffic drops in staging metrics |
+
+---
+
+## Non-goals
+
+- **Billing** — checkout, PSP webhooks, portal ([release-checklist.md](../ops/release-checklist.md))
+- **Platform expansion** — `/api/platform/organizations` onboarding flows
+- **Full auth rewrite** — replacing NextAuth or credentials model
+- **Prisma schema changes** in documentation-only batch; schema changes only when an implementation batch requires them (e.g. verification tokens)
+- **Demo sandbox** — quotas, cron reset, `isDemo` policy (already handled separately)
+- **User / vehicle / lesson route refactors** — see [lessons-route-refactor-plan.md](./lessons-route-refactor-plan.md)
+- **i18n** — new copy batches deferred unless product requests
+- **In-memory rate limit as production signup defense** — explicit anti-pattern for this plan
+- **Implementing email provider or captcha in the plan-only batch** that created this document
+
+---
+
+## Operational checklist (before enabling broad public signup)
+
+1. **Decision recorded:** invite-only vs public + verification + rate limit ([release-checklist.md](../ops/release-checklist.md)).
+2. **`SIGNUP_PUBLIC_ENABLED` (or successor)** reviewed for production Vercel env.
+3. **Demo orgs** remain `isDemo: true`; signup smoke confirms **403** `demo_signup_disabled`.
+4. **Distributed rate limit** live in staging with realistic thresholds.
+5. **Email verification** live if public signup enabled.
+6. **Monitoring:** alert on signup 4xx/5xx rate, 429 rate, signup transaction duration.
+7. **Enumeration policy:** consider generic error for duplicate email (product/legal review).
+8. **No secrets** in git; provider keys in Vercel only ([environment-variables.md](../ops/environment-variables.md)).
+
+---
+
+## Related documents
+
+- [engineering-excellence-audit.md](./engineering-excellence-audit.md) — EEA-007 signup / abuse
+- [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md) — P1 security / public forms
+- [release-checklist.md](../ops/release-checklist.md) — pre-release signup decision
+- [public-demo-policy.md](../ops/public-demo-policy.md) — demo signup disabled
+- [production-host-split.md](../ops/production-host-split.md) — tenant vs platform hosts
+- [environment-variables.md](../ops/environment-variables.md) — future signup flags and provider keys
