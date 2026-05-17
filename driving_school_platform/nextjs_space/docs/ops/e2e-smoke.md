@@ -68,6 +68,19 @@ pnpm -C driving_school_platform/nextjs_space test:e2e:demo
 | `pnpm test:e2e`      | All Playwright specs (`tests/` + `e2e/`).   |
 | `pnpm test:e2e:demo` | Demo smoke only (`e2e/demo-smoke.spec.ts`). |
 
+## Validated run
+
+The demo smoke was **manually validated** against the hosted Full Showcase tenant:
+
+| Field           | Value                                                                                                                                           |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Target**      | `https://demo.meengine.io` (`E2E_BASE_URL`)                                                                                                     |
+| **Command**     | `pnpm -C driving_school_platform/nextjs_space test:e2e:demo`                                                                                    |
+| **Credentials** | `E2E_DEMO_SCHOOL_ADMIN_EMAIL` and `E2E_DEMO_SCHOOL_ADMIN_PASSWORD` set locally via env (or ignored `.env.playwright`) — **not** recorded in git |
+| **Result**      | **1 passed** (read-only login → admin dashboard → sign out)                                                                                     |
+
+Re-run after deploys or demo persona changes. Supply credentials only through your secret process; **never** commit emails, passwords, or `.env.playwright` to the repository.
+
 ## What this test does **not** do
 
 - No creates, updates, deletes, or sandbox quota usage.
