@@ -25,6 +25,8 @@ This document inventories **current lesson list/calendar HTTP payloads**, **Pris
 
 **Current mapper posture:** `lib/lessons/lesson-mappers.ts` is intentionally **pass-through** (`mapLessonListItem` returns the full Prisma payload). Minimization must be **contract-tested** before stripping fields.
 
+**Contract tests (pre-minimization):** Lesson list/calendar/detail DTO contracts are frozen in `lib/lessons/lesson-response-contract.ts` (+ fixtures) and exercised by `lesson-response-contract.unit.test.ts`, `lesson-mappers.unit.test.ts`, and lesson route `*.integration.unit.test.ts` files. These assert UI-used fields (ScheduleMap, dashboard, EXAMS) and **no nested `passwordHash`** — update them in the same PR as any payload trim (LD-004+).
+
 ---
 
 ## Current API response shapes

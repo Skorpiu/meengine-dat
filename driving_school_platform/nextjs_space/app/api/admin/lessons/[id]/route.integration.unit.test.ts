@@ -56,6 +56,8 @@ import {
   expectLessonIncludeSanitizesNestedUsers,
   expectLessonJsonHasNoNestedPasswordHash,
 } from "@/lib/lessons/lesson-include-safety";
+import { sampleLessonListItemFixture } from "@/lib/lessons/lesson-response-contract-fixtures";
+import { expectAdminLessonDetailResponseContract } from "@/lib/lessons/lesson-response-contract";
 
 const verifyAuthMock = verifyAuth as unknown as ReturnType<typeof vi.fn>;
 const guardTenantMock = guardTenantAuthenticatedRoute as unknown as ReturnType<
@@ -91,18 +93,17 @@ beforeEach(() => {
 
 describe("GET /api/admin/lessons/[id]", () => {
   it("uses sanitized nested user include and omits passwordHash from JSON", async () => {
-    h.lessonFindFirstMock.mockResolvedValue({
-      id: LESSON_ID,
-      lessonDate: new Date("2030-06-01T00:00:00.000Z"),
-      endTime: "23:59",
-      instructor: {
-        userId: UUID_A,
-        user: { id: UUID_A, firstName: "Ian", lastName: "Instructor" },
-      },
-      student: {
-        user: { id: "stu-user", firstName: "Sam", lastName: "Student" },
-      },
-    });
+    h.lessonFindFirstMock.mockResolvedValue(
+      sampleLessonListItemFixture({
+        id: LESSON_ID,
+        lessonDate: new Date("2030-06-01T00:00:00.000Z"),
+        endTime: "23:59",
+        instructor: {
+          userId: UUID_A,
+          user: { id: UUID_A, firstName: "Ian", lastName: "Instructor" },
+        },
+      }),
+    );
 
     const res = await GET(
       new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`) as any,
@@ -111,12 +112,14 @@ describe("GET /api/admin/lessons/[id]", () => {
 
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.success).toBe(true);
+    expectAdminLessonDetailResponseContract(body);
     expectLessonIncludeSanitizesNestedUsers(
       h.lessonFindFirstMock.mock.calls[0]?.[0]?.include,
     );
     expectLessonJsonHasNoNestedPasswordHash(body);
     expect(body.data.instructor.user.firstName).toBe("Ian");
+    expect(body.data.pickupLocation).toBe("Main garage");
+    expect(body.data.vehicle.registrationNumber).toBe("AB-12-CD");
   });
 });
 

@@ -6,18 +6,12 @@ import {
   type LessonListItem,
 } from "./lesson-mappers";
 import { expectLessonJsonHasNoNestedPasswordHash } from "./lesson-include-safety";
+import { sampleLessonListItemFixture } from "./lesson-response-contract-fixtures";
+import { expectLessonListItemUiContract } from "./lesson-response-contract";
 
 function sampleLesson(id: string): LessonListItem {
   return {
-    id,
-    student: {
-      user: { firstName: "Sam", lastName: "Student" },
-    },
-    instructor: {
-      user: { firstName: "Ian", lastName: "Instructor" },
-    },
-    vehicle: { registrationNumber: "AA-00-BB" },
-    category: { name: "B" },
+    ...sampleLessonListItemFixture({ id }),
   } as unknown as LessonListItem;
 }
 
@@ -27,9 +21,10 @@ describe("lesson-mappers", () => {
     const mapped = mapLessonListItem(lesson);
 
     expect(mapped).toBe(lesson);
+    expectLessonListItemUiContract(mapped as Record<string, unknown>);
     expect(mapped.student?.user?.firstName).toBe("Sam");
     expect(mapped.instructor?.user?.lastName).toBe("Instructor");
-    expect(mapped.vehicle?.registrationNumber).toBe("AA-00-BB");
+    expect(mapped.vehicle?.registrationNumber).toBe("AB-12-CD");
     expect(mapped.category?.name).toBe("B");
   });
 
