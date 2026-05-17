@@ -1,6 +1,6 @@
 # Lessons Route Refactor Plan
 
-**Status:** Batches 1–5 **done**. Batch 6 — audit + incremental fixes ([lesson-dto-minimization-audit.md](./lesson-dto-minimization-audit.md)); LD-001/002/003 addressed; DTO field trim (LD-004+) still open.  
+**Status:** Batches 1–5 **done**. Batch 6 — audit + list DTO phase 1 **done** ([lesson-dto-minimization-audit.md](./lesson-dto-minimization-audit.md)); LD-001–LD-006 addressed for list/calendar; detail/edit minimization still open.  
 **Branch context:** `lessons-route-alignment-planning` (plan); batches 1–4 on feature branches (`lessons-query-module` … `lessons-update-delete-service`)  
 **Related audits:** [route-handler-consistency-audit.md](./route-handler-consistency-audit.md) (RHC-001, RHC-006, RHC-008), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-002)
 
@@ -187,16 +187,18 @@ Small PRs; each must keep behavior unless noted and extend tests.
 | **Tests**      | `instructor/lessons/route.integration.unit.test.ts`, `student/lessons/route.integration.unit.test.ts`.                                                                                                     |
 | **Acceptance** | Parity with admin calendar validation rules; valid requests preserve `{ lessons }` shape.                                                                                                                  |
 
-### Batch 6 (optional): `lessons-pagination-dto-minimization` — **Audit created / implementation pending**
+### Batch 6: `lessons-list-dto-minimization` (phase 1) — **Done**
 
-|                  |                                                                                                                                 |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **Objective**    | Trim nested payloads after UI field audit; optional `take`/cursor inside 90-day window.                                         |
-| **Audit**        | [lesson-dto-minimization-audit.md](./lesson-dto-minimization-audit.md) — UI inventory, proposed DTOs, findings LD-001–LD-009.   |
-| **Likely files** | `lesson-queries.ts`, `lesson-mappers.ts`, contract tests. LD-002 envelope fix **done** (`admin-dashboard-lessons-response.ts`). |
-| **Risks**        | LD-001 **addressed** (nested user select). EXAMS view / Lesson model mismatch (LD-003); ScheduleMap contract.                   |
-| **Tests**        | Contract/snapshot tests per endpoint; assert no secrets in JSON; load tests if pagination added.                                |
-| **Acceptance**   | Documented DTOs; calendar GET payloads match UI needs; no `passwordHash` in lesson list responses.                              |
+|                |                                                                                                                                                        |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Objective**  | Trim list/calendar/dashboard lesson payloads to UI-used fields; keep contract tests green.                                                             |
+| **Shipped**    | `LESSON_LIST_SELECT` in `lesson-queries.ts`; list/calendar query functions + SSR schedule seeds; `LESSON_DETAIL_INCLUDE` unchanged for `[id]` GET/PUT. |
+| **Audit**      | [lesson-dto-minimization-audit.md](./lesson-dto-minimization-audit.md) — LD-004/005/006 **addressed** for list responses.                              |
+| **Risks**      | Clients depending on removed scalars on calendar GET (none known); ScheduleMap contract tests gate regressions.                                        |
+| **Tests**      | `lesson-response-contract.*`, route integration tests, `lesson-queries.unit.test.ts`.                                                                  |
+| **Acceptance** | List/calendar JSON retains UI fields; no `passwordHash`; smaller Prisma reads; `pnpm check` green.                                                     |
+
+**Follow-up (phase 2):** minimize `LESSON_DETAIL_INCLUDE` / edit form payload; optional pagination inside 90-day window.
 
 ---
 

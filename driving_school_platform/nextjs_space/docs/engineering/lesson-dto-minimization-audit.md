@@ -12,7 +12,7 @@ This document inventories **current lesson list/calendar HTTP payloads**, **Pris
 
 **In scope**
 
-- `GET` list/calendar endpoints that return lessons with `LESSON_LIST_INCLUDE`
+- `GET` list/calendar endpoints that return lessons with `LESSON_LIST_SELECT`
 - `GET` / `PUT` / `DELETE` on `app/api/admin/lessons/[id]`
 - UI surfaces that render or mutate lessons from those APIs (or SSR equivalents)
 
@@ -25,7 +25,9 @@ This document inventories **current lesson list/calendar HTTP payloads**, **Pris
 
 **Current mapper posture:** `lib/lessons/lesson-mappers.ts` is intentionally **pass-through** (`mapLessonListItem` returns the full Prisma payload). Minimization must be **contract-tested** before stripping fields.
 
-**Contract tests (pre-minimization):** Lesson list/calendar/detail DTO contracts are frozen in `lib/lessons/lesson-response-contract.ts` (+ fixtures) and exercised by `lesson-response-contract.unit.test.ts`, `lesson-mappers.unit.test.ts`, and lesson route `*.integration.unit.test.ts` files. These assert UI-used fields (ScheduleMap, dashboard, EXAMS) and **no nested `passwordHash`** — update them in the same PR as any payload trim (LD-004+).
+**Contract tests:** Lesson list/calendar/detail DTO contracts are frozen in `lib/lessons/lesson-response-contract.ts` (+ fixtures) and exercised by `lesson-response-contract.unit.test.ts`, `lesson-mappers.unit.test.ts`, and lesson route `*.integration.unit.test.ts` files. These assert UI-used fields (ScheduleMap, dashboard, EXAMS) and **no nested `passwordHash`**. Update them in the same PR as any further payload trim.
+
+**List DTO minimization (phase 1 — `lesson-list-dto-minimization`):** Calendar/dashboard/list GETs and SSR schedule seeds use `LESSON_LIST_SELECT` in `lesson-queries.ts` (minimal lesson scalars + nested relation selects). Detail/edit (`LESSON_DETAIL_INCLUDE`) remains broader until a follow-up batch.
 
 ---
 
@@ -89,7 +91,7 @@ This document inventories **current lesson list/calendar HTTP payloads**, **Pris
 
 Admin / instructor / student **dashboard** pages load the first 30 days via **server-side** `prisma.lesson.findMany` and **manually project** a `ScheduleMap` `Lesson` shape (subset of fields). `ScheduleMap` then **re-fetches** via role calendar APIs when the view/date changes.
 
-**SSR nested user sanitization (`lesson-ssr-user-select-sanitization`):** dashboard `findMany` calls use `LESSON_LIST_INCLUDE` (admin/instructor) or `LESSON_NESTED_USER_RELATION` on `instructor` only (student). No `user: true` on lesson reads; unused `user` / `preferredInstructor` includes removed from student profile SSR query.
+**SSR schedule seed reads:** admin/instructor/student dashboard pages use `LESSON_LIST_SELECT` (aligned with API calendar list queries). No `user: true` on lesson reads.
 
 ---
 
@@ -98,27 +100,41 @@ Admin / instructor / student **dashboard** pages load the first 30 days via **se
 Defined in `lib/lessons/lesson-queries.ts`:
 
 ```ts
-export const LESSON_LIST_INCLUDE = {
-  student: LESSON_NESTED_USER_RELATION,
-  instructor: LESSON_NESTED_USER_RELATION,
-  vehicle: true,
-  category: true,
-} satisfies Prisma.LessonInclude;
+export const LESSON_LIST_SELECT = {
+  id: true,
+  lessonType: true,
+  status: true,
+  lessonDate: true,
+  startTime: true,
+  endTime: true,
+  pickupLocation: true,
+  dropoffLocation: true,
+  student: {
+    select: { id: true, user: { select: LESSON_NESTED_USER_SELECT } },
+  },
+  instructor: {
+    select: { id: true, user: { select: LESSON_NESTED_USER_SELECT } },
+  },
+  vehicle: {
+    select: { id: true, registrationNumber: true, make: true, model: true },
+  },
+  category: { select: { id: true, name: true } },
+} satisfies Prisma.LessonSelect;
 ```
 
 ### What Prisma returns today (per list item)
 
-| Relation            | Loaded fields                                                                                                                                             | Notes                                                                                                            |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| **Lesson (root)**   | All scalar columns on `lessons` (~30+ fields: `durationMinutes`, `paymentStatus`, `lessonPrice`, `skillsPracticed`, `adminNotes`, mileage, ratings, etc.) | Most are **unused** by calendar/list UI                                                                          |
-| **student**         | Full `Student` row                                                                                                                                        | UI uses nested `user` only; student PII fields (emergency contacts, medical URLs, etc.) are dead weight on reads |
-| **student.user**    | **`LESSON_NESTED_USER_SELECT`:** `id`, `firstName`, `lastName` only (`lesson-user-select-sanitization`)                                                   | No `passwordHash` or auth tokens loaded                                                                          |
-| **instructor**      | Full `Instructor` row                                                                                                                                     | UI uses nested `user` only; license numbers, rates, JSON working hours unused on calendar                        |
-| **instructor.user** | **`LESSON_NESTED_USER_SELECT`** (same as student.user)                                                                                                    | No `passwordHash` or auth tokens loaded                                                                          |
-| **vehicle**         | Full `Vehicle` row                                                                                                                                        | UI uses `registrationNumber`, `make`, `model` only                                                               |
-| **category**        | Full `Category` row                                                                                                                                       | UI uses `name` only                                                                                              |
+| Relation            | Loaded fields                                                                                           | Notes                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Lesson (root)**   | `id`, `lessonType`, `status`, `lessonDate`, `startTime`, `endTime`, `pickupLocation`, `dropoffLocation` | Payment, mileage, feedback, and other scalars **omitted** on list/calendar reads (LD-004) |
+| **student**         | `id` + nested `user` only                                                                               | Full `Student` profile row no longer loaded (LD-005)                                      |
+| **student.user**    | **`LESSON_NESTED_USER_SELECT`:** `id`, `firstName`, `lastName`                                          | No `passwordHash`                                                                         |
+| **instructor**      | `id` + nested `user` only                                                                               | Full `Instructor` profile row no longer loaded (LD-005)                                   |
+| **instructor.user** | **`LESSON_NESTED_USER_SELECT`**                                                                         | No `passwordHash`                                                                         |
+| **vehicle**         | `id`, `registrationNumber`, `make`, `model`                                                             | Full `Vehicle` row no longer loaded (LD-006)                                              |
+| **category**        | `id`, `name`                                                                                            | Full `Category` row no longer loaded (LD-006)                                             |
 
-`app/api/admin/lessons/[id]/route.ts` GET uses the same nested graph via inline `include` (should stay in sync with `LESSON_LIST_INCLUDE` when minimizing).
+`app/api/admin/lessons/[id]/route.ts` GET/PUT still uses **`LESSON_DETAIL_INCLUDE`** (broader graph for edit form — not minimized in phase 1).
 
 ---
 
@@ -274,17 +290,17 @@ Optional parallel track: row `take`/cursor inside 90-day window (EEA-002) — in
 
 ## Findings
 
-| ID     | Priority | Finding                                                                                                                                                                                                   | Evidence                                                                                       | Recommended next step                                       |
-| ------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| LD-001 | **P1**   | **Addressed** (`lesson-user-select-sanitization`): nested `student.user` / `instructor.user` use `LESSON_NESTED_USER_SELECT` (`lib/users/user-public-select.ts`) on list/calendar/detail/update includes. | `LESSON_LIST_INCLUDE`, `LESSON_DETAIL_INCLUDE`, `lesson-include-safety` tests                  | —                                                           |
-| LD-002 | **P1**   | **Addressed** (`lesson-dashboard-response-contract`): client reads `data.{recent,current,upcoming}` via `parseAdminDashboardLessonsPayload`; legacy root fallback retained. API unchanged.                | `lib/lessons/admin-dashboard-lessons-response.ts`, `lessons-management-client.tsx`             | —                                                           |
-| LD-003 | **P2**   | **Addressed** (`lesson-exams-view-alignment`): EXAMS tab uses **Lesson** shape (`lessonType`, `lessonDate`, `student`/`instructor`, `pickupLocation`); query includes `EXAM` + `THEORY_EXAM`.             | `lessons-management-client.tsx`, `lib/lessons/lesson-display.ts`, `getAdminDashboardLessons`   | —                                                           |
-| LD-004 | **P2**   | Calendar/list payloads carry **~30+ unused Lesson scalars** per row (payment, mileage, feedback arrays, etc.).                                                                                            | Prisma `Lesson` model vs ScheduleMap usage                                                     | Remove in step 7 after contract tests.                      |
-| LD-005 | **P2**   | **Student** and **Instructor** full profile rows shipped on every lesson item.                                                                                                                            | `LESSON_LIST_INCLUDE`                                                                          | Replace with nested `user` select (step 3–4).               |
-| LD-006 | **P2**   | **Vehicle** and **Category** full rows shipped; UI needs 3–4 fields.                                                                                                                                      | ScheduleMap, lessons-management-client                                                         | Select-only in Prisma (step 3).                             |
-| LD-007 | **P3**   | SSR dashboards project a **minimal ScheduleMap shape**; nested `user` on lesson SSR reads **sanitized** (`lesson-ssr-user-select-sanitization`). API calendar responses still larger than SSR seed data.  | `app/admin/page.tsx`, `app/instructor/page.tsx`, `app/student/page.tsx`, `LESSON_LIST_INCLUDE` | Align API calendar DTO with SSR projection for consistency. |
-| LD-008 | **P3**   | `ScheduleMap` uses `...lesson` spread — hidden dependency on unknown API keys.                                                                                                                            | `schedule-map.tsx` L209–216                                                                    | Narrow type after calendar-dto batch.                       |
-| LD-009 | **P3**   | `[id]` GET uses duplicate inline `include` instead of shared constant.                                                                                                                                    | `app/api/admin/lessons/[id]/route.ts`                                                          | Consolidate when implementing detail DTO.                   |
+| ID     | Priority | Finding                                                                                                                                                                                                   | Evidence                                                                                     | Recommended next step                                                      |
+| ------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| LD-001 | **P1**   | **Addressed** (`lesson-user-select-sanitization`): nested `student.user` / `instructor.user` use `LESSON_NESTED_USER_SELECT` (`lib/users/user-public-select.ts`) on list/calendar/detail/update includes. | `LESSON_LIST_INCLUDE`, `LESSON_DETAIL_INCLUDE`, `lesson-include-safety` tests                | —                                                                          |
+| LD-002 | **P1**   | **Addressed** (`lesson-dashboard-response-contract`): client reads `data.{recent,current,upcoming}` via `parseAdminDashboardLessonsPayload`; legacy root fallback retained. API unchanged.                | `lib/lessons/admin-dashboard-lessons-response.ts`, `lessons-management-client.tsx`           | —                                                                          |
+| LD-003 | **P2**   | **Addressed** (`lesson-exams-view-alignment`): EXAMS tab uses **Lesson** shape (`lessonType`, `lessonDate`, `student`/`instructor`, `pickupLocation`); query includes `EXAM` + `THEORY_EXAM`.             | `lessons-management-client.tsx`, `lib/lessons/lesson-display.ts`, `getAdminDashboardLessons` | —                                                                          |
+| LD-004 | **P2**   | **Addressed (list/calendar):** unused Lesson scalars omitted via `LESSON_LIST_SELECT`.                                                                                                                    | `lesson-queries.ts`, contract tests                                                          | Detail/edit (`LESSON_DETAIL_INCLUDE`) still loads full lesson row.         |
+| LD-005 | **P2**   | **Addressed (list/calendar):** Student/Instructor nested to `id` + `user` select only.                                                                                                                    | `LESSON_LIST_SELECT`                                                                         | Detail/edit still uses `LESSON_NESTED_USER_RELATION` on full profile rows. |
+| LD-006 | **P2**   | **Addressed (list/calendar):** Vehicle/category trimmed to UI fields.                                                                                                                                     | `LESSON_LIST_SELECT`                                                                         | Detail/edit still uses `vehicle: true`, `category: true`.                  |
+| LD-007 | **P3**   | **Partially addressed:** SSR schedule seeds use `LESSON_LIST_SELECT` (same as API list/calendar). Pages still **project** a ScheduleMap subset in memory.                                                 | `app/admin/page.tsx`, `app/instructor/page.tsx`, `app/student/page.tsx`                      | Optional: return pre-mapped DTO from API only (drop SSR duplicate query).  |
+| LD-008 | **P3**   | `ScheduleMap` uses `...lesson` spread — hidden dependency on unknown API keys.                                                                                                                            | `schedule-map.tsx` L209–216                                                                  | Narrow type after calendar-dto batch.                                      |
+| LD-009 | **P3**   | `[id]` GET uses duplicate inline `include` instead of shared constant.                                                                                                                                    | `app/api/admin/lessons/[id]/route.ts`                                                        | Consolidate when implementing detail DTO.                                  |
 
 ---
 

@@ -5,19 +5,62 @@
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { EXAM_DASHBOARD_LESSON_TYPES } from "@/lib/lessons/lesson-display";
-import { LESSON_NESTED_USER_RELATION } from "@/lib/users/user-public-select";
+import {
+  LESSON_NESTED_USER_RELATION,
+  LESSON_NESTED_USER_SELECT,
+} from "@/lib/users/user-public-select";
 
 export { EXAM_DASHBOARD_LESSON_TYPES };
 
-export const LESSON_LIST_INCLUDE = {
+/** Minimal nested selects for list/calendar/dashboard reads (LD-004–LD-006). */
+export const LESSON_LIST_STUDENT_SELECT = {
+  id: true,
+  user: { select: LESSON_NESTED_USER_SELECT },
+} satisfies Prisma.StudentSelect;
+
+export const LESSON_LIST_INSTRUCTOR_SELECT = {
+  id: true,
+  user: { select: LESSON_NESTED_USER_SELECT },
+} satisfies Prisma.InstructorSelect;
+
+export const LESSON_LIST_VEHICLE_SELECT = {
+  id: true,
+  registrationNumber: true,
+  make: true,
+  model: true,
+} satisfies Prisma.VehicleSelect;
+
+export const LESSON_LIST_CATEGORY_SELECT = {
+  id: true,
+  name: true,
+} satisfies Prisma.CategorySelect;
+
+/**
+ * Prisma `select` for admin/instructor/student calendar and admin dashboard lists.
+ * Omits unused Lesson scalars and full Student/Instructor/Vehicle/Category rows.
+ */
+export const LESSON_LIST_SELECT = {
+  id: true,
+  lessonType: true,
+  status: true,
+  lessonDate: true,
+  startTime: true,
+  endTime: true,
+  pickupLocation: true,
+  dropoffLocation: true,
+  student: { select: LESSON_LIST_STUDENT_SELECT },
+  instructor: { select: LESSON_LIST_INSTRUCTOR_SELECT },
+  vehicle: { select: LESSON_LIST_VEHICLE_SELECT },
+  category: { select: LESSON_LIST_CATEGORY_SELECT },
+} satisfies Prisma.LessonSelect;
+
+/** Full relation graph for GET/PUT lesson-by-id (detail/edit — not minimized in this batch). */
+export const LESSON_DETAIL_INCLUDE = {
   student: LESSON_NESTED_USER_RELATION,
   instructor: LESSON_NESTED_USER_RELATION,
   vehicle: true,
   category: true,
 } satisfies Prisma.LessonInclude;
-
-/** Same graph as list/calendar — use for GET/PUT lesson-by-id responses. */
-export const LESSON_DETAIL_INCLUDE = LESSON_LIST_INCLUDE;
 
 const CALENDAR_ORDER_BY: Prisma.LessonOrderByWithRelationInput[] = [
   { lessonDate: "asc" },
@@ -46,7 +89,7 @@ export async function getAdminCalendarLessons(input: {
         lt: input.toDateExclusive,
       },
     },
-    include: LESSON_LIST_INCLUDE,
+    select: LESSON_LIST_SELECT,
     orderBy: CALENDAR_ORDER_BY,
   });
 }
@@ -70,7 +113,7 @@ export async function getAdminDashboardLessons(input: {
             { lessonDate: today, startTime: { lt: currentTime } },
           ],
         },
-        include: LESSON_LIST_INCLUDE,
+        select: LESSON_LIST_SELECT,
         orderBy: [{ lessonDate: "desc" }, { startTime: "desc" }],
         take: 50,
       }),
@@ -82,7 +125,7 @@ export async function getAdminDashboardLessons(input: {
           startTime: { lte: currentTime },
           endTime: { gt: currentTime },
         },
-        include: LESSON_LIST_INCLUDE,
+        select: LESSON_LIST_SELECT,
         orderBy: [{ startTime: "asc" }],
       }),
       prisma.lesson.findMany({
@@ -94,7 +137,7 @@ export async function getAdminDashboardLessons(input: {
             { lessonDate: { gt: today, lte: tomorrow } },
           ],
         },
-        include: LESSON_LIST_INCLUDE,
+        select: LESSON_LIST_SELECT,
         orderBy: [{ lessonDate: "asc" }, { startTime: "asc" }],
         take: 50,
       }),
@@ -114,7 +157,7 @@ export async function getAdminDashboardLessons(input: {
           { lessonDate: today, startTime: { lt: currentTime } },
         ],
       },
-      include: LESSON_LIST_INCLUDE,
+      select: LESSON_LIST_SELECT,
       orderBy: [{ lessonDate: "desc" }, { startTime: "desc" }],
       take: 50,
     }),
@@ -126,7 +169,7 @@ export async function getAdminDashboardLessons(input: {
         startTime: { lte: currentTime },
         endTime: { gt: currentTime },
       },
-      include: LESSON_LIST_INCLUDE,
+      select: LESSON_LIST_SELECT,
       orderBy: [{ startTime: "asc" }],
     }),
     prisma.lesson.findMany({
@@ -138,7 +181,7 @@ export async function getAdminDashboardLessons(input: {
           { lessonDate: { gt: today, lte: tomorrow } },
         ],
       },
-      include: LESSON_LIST_INCLUDE,
+      select: LESSON_LIST_SELECT,
       orderBy: [{ lessonDate: "asc" }, { startTime: "asc" }],
       take: 50,
     }),
@@ -159,7 +202,7 @@ export async function getInstructorCalendarLessons(input: {
       instructorId: input.instructorId,
       lessonDate: { gte: input.fromDate, lt: input.toDateExclusive },
     },
-    include: LESSON_LIST_INCLUDE,
+    select: LESSON_LIST_SELECT,
     orderBy: CALENDAR_ORDER_BY,
   });
 }
@@ -176,7 +219,7 @@ export async function getStudentCalendarLessons(input: {
       studentId: input.studentId,
       lessonDate: { gte: input.fromDate, lt: input.toDateExclusive },
     },
-    include: LESSON_LIST_INCLUDE,
+    select: LESSON_LIST_SELECT,
     orderBy: CALENDAR_ORDER_BY,
   });
 }

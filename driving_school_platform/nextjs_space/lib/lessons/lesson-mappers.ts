@@ -3,10 +3,10 @@
  * No HTTP, auth, or Prisma — callers pass query results from lesson-queries.
  */
 import type { Prisma } from "@prisma/client";
-import { LESSON_LIST_INCLUDE } from "@/lib/lessons/lesson-queries";
+import { LESSON_LIST_SELECT } from "@/lib/lessons/lesson-queries";
 
 export type LessonListItem = Prisma.LessonGetPayload<{
-  include: typeof LESSON_LIST_INCLUDE;
+  select: typeof LESSON_LIST_SELECT;
 }>;
 
 /** Preserves full lesson graph for list/calendar payloads (no field stripping). */

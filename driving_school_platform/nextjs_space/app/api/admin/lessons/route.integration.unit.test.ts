@@ -63,7 +63,8 @@ vi.mock("@/lib/api-utils", async () => {
 import { POST, GET } from "./route";
 import { verifyAuth } from "@/lib/api-utils";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
-import { expectLessonIncludeSanitizesNestedUsers } from "@/lib/lessons/lesson-include-safety";
+import { expectLessonSelectSanitizesNestedUsers } from "@/lib/lessons/lesson-include-safety";
+import { LESSON_LIST_SELECT } from "@/lib/lessons/lesson-queries";
 import { sampleLessonListItemFixture } from "@/lib/lessons/lesson-response-contract-fixtures";
 import {
   expectAdminDashboardLessonsResponseContract,
@@ -157,7 +158,8 @@ describe("GET /api/admin/lessons (read-only)", () => {
       upcoming: [],
     });
     for (const call of h.lessonFindManyMock.mock.calls) {
-      expectLessonIncludeSanitizesNestedUsers(call[0]?.include);
+      expect(call[0]?.select).toEqual(LESSON_LIST_SELECT);
+      expectLessonSelectSanitizesNestedUsers(call[0]?.select);
     }
   });
 
@@ -182,7 +184,8 @@ describe("GET /api/admin/lessons (read-only)", () => {
     expect(body.lessons).toEqual([{ id: "cal-1" }]);
     expect(body).not.toHaveProperty("success");
     const findManyArg = h.lessonFindManyMock.mock.calls[0]?.[0];
-    expectLessonIncludeSanitizesNestedUsers(findManyArg?.include);
+    expect(findManyArg?.select).toEqual(LESSON_LIST_SELECT);
+    expectLessonSelectSanitizesNestedUsers(findManyArg?.select);
   });
 
   it("calendar invalid from returns 400 invalid_calendar_range", async () => {
