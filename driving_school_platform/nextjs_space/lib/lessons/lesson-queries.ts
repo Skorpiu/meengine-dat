@@ -5,10 +5,7 @@
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { EXAM_DASHBOARD_LESSON_TYPES } from "@/lib/lessons/lesson-display";
-import {
-  LESSON_NESTED_USER_RELATION,
-  LESSON_NESTED_USER_SELECT,
-} from "@/lib/users/user-public-select";
+import { LESSON_NESTED_USER_SELECT } from "@/lib/users/user-public-select";
 
 export { EXAM_DASHBOARD_LESSON_TYPES };
 
@@ -54,13 +51,49 @@ export const LESSON_LIST_SELECT = {
   category: { select: LESSON_LIST_CATEGORY_SELECT },
 } satisfies Prisma.LessonSelect;
 
-/** Full relation graph for GET/PUT lesson-by-id (detail/edit — not minimized in this batch). */
-export const LESSON_DETAIL_INCLUDE = {
-  student: LESSON_NESTED_USER_RELATION,
-  instructor: LESSON_NESTED_USER_RELATION,
-  vehicle: true,
-  category: true,
-} satisfies Prisma.LessonInclude;
+/** Nested selects for admin lesson detail GET / PUT response (edit form). */
+export const LESSON_DETAIL_STUDENT_SELECT = {
+  id: true,
+  userId: true,
+  user: { select: LESSON_NESTED_USER_SELECT },
+} satisfies Prisma.StudentSelect;
+
+export const LESSON_DETAIL_INSTRUCTOR_SELECT = {
+  id: true,
+  userId: true,
+  user: { select: LESSON_NESTED_USER_SELECT },
+} satisfies Prisma.InstructorSelect;
+
+/**
+ * Prisma `select` for GET/PUT `/api/admin/lessons/[id]`.
+ * Includes edit-form scalars and nested relations; omits payment, feedback, and full profile rows.
+ */
+export const LESSON_DETAIL_SELECT = {
+  id: true,
+  lessonType: true,
+  status: true,
+  lessonDate: true,
+  startTime: true,
+  endTime: true,
+  vehicleId: true,
+  studentId: true,
+  instructorId: true,
+  student: { select: LESSON_DETAIL_STUDENT_SELECT },
+  instructor: { select: LESSON_DETAIL_INSTRUCTOR_SELECT },
+  vehicle: { select: LESSON_LIST_VEHICLE_SELECT },
+} satisfies Prisma.LessonSelect;
+
+/** Minimal read for instructor access + past-lesson checks on update/delete. */
+export const LESSON_DETAIL_ACCESS_SELECT = {
+  id: true,
+  lessonDate: true,
+  endTime: true,
+  instructor: { select: { userId: true } },
+} satisfies Prisma.LessonSelect;
+
+export type LessonDetailItem = Prisma.LessonGetPayload<{
+  select: typeof LESSON_DETAIL_SELECT;
+}>;
 
 const CALENDAR_ORDER_BY: Prisma.LessonOrderByWithRelationInput[] = [
   { lessonDate: "asc" },

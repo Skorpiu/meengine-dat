@@ -1,6 +1,6 @@
 # Lessons Route Refactor Plan
 
-**Status:** Batches 1–5 **done**. Batch 6 — audit + list DTO phase 1 **done** ([lesson-dto-minimization-audit.md](./lesson-dto-minimization-audit.md)); LD-001–LD-006 addressed for list/calendar; detail/edit minimization still open.  
+**Status:** Batches 1–6 **done** ([lesson-dto-minimization-audit.md](./lesson-dto-minimization-audit.md)); list + detail DTO minimization shipped (`LESSON_LIST_SELECT`, `LESSON_DETAIL_SELECT`).  
 **Branch context:** `lessons-route-alignment-planning` (plan); batches 1–4 on feature branches (`lessons-query-module` … `lessons-update-delete-service`)  
 **Related audits:** [route-handler-consistency-audit.md](./route-handler-consistency-audit.md) (RHC-001, RHC-006, RHC-008), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-002)
 
@@ -189,16 +189,25 @@ Small PRs; each must keep behavior unless noted and extend tests.
 
 ### Batch 6: `lessons-list-dto-minimization` (phase 1) — **Done**
 
-|                |                                                                                                                                                        |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Objective**  | Trim list/calendar/dashboard lesson payloads to UI-used fields; keep contract tests green.                                                             |
-| **Shipped**    | `LESSON_LIST_SELECT` in `lesson-queries.ts`; list/calendar query functions + SSR schedule seeds; `LESSON_DETAIL_INCLUDE` unchanged for `[id]` GET/PUT. |
-| **Audit**      | [lesson-dto-minimization-audit.md](./lesson-dto-minimization-audit.md) — LD-004/005/006 **addressed** for list responses.                              |
-| **Risks**      | Clients depending on removed scalars on calendar GET (none known); ScheduleMap contract tests gate regressions.                                        |
-| **Tests**      | `lesson-response-contract.*`, route integration tests, `lesson-queries.unit.test.ts`.                                                                  |
-| **Acceptance** | List/calendar JSON retains UI fields; no `passwordHash`; smaller Prisma reads; `pnpm check` green.                                                     |
+|                |                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Objective**  | Trim list/calendar/dashboard lesson payloads to UI-used fields; keep contract tests green.                                |
+| **Shipped**    | `LESSON_LIST_SELECT` in `lesson-queries.ts`; list/calendar query functions + SSR schedule seeds.                          |
+| **Audit**      | [lesson-dto-minimization-audit.md](./lesson-dto-minimization-audit.md) — LD-004/005/006 **addressed** for list responses. |
+| **Risks**      | Clients depending on removed scalars on calendar GET (none known); ScheduleMap contract tests gate regressions.           |
+| **Tests**      | `lesson-response-contract.*`, route integration tests, `lesson-queries.unit.test.ts`.                                     |
+| **Acceptance** | List/calendar JSON retains UI fields; no `passwordHash`; smaller Prisma reads; `pnpm check` green.                        |
 
-**Follow-up (phase 2):** minimize `LESSON_DETAIL_INCLUDE` / edit form payload; optional pagination inside 90-day window.
+### Batch 7: `lessons-detail-dto-minimization` (phase 2) — **Done**
+
+|                |                                                                                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Objective**  | Trim `GET`/`PUT` `/api/admin/lessons/[id]` payloads to edit-form fields; keep contract tests green.                                   |
+| **Shipped**    | `LESSON_DETAIL_SELECT`, `LESSON_DETAIL_ACCESS_SELECT`; route + `lesson-update-delete-service`; `expectAdminLessonDetailEditContract`. |
+| **Tests**      | `app/api/admin/lessons/[id]/route.integration.unit.test.ts`, `lesson-queries.unit.test.ts`.                                           |
+| **Acceptance** | Edit form fields present; no nested `passwordHash`; no heavy scalars in detail JSON; `pnpm check` green.                              |
+
+**Follow-up:** optional pagination inside 90-day calendar window; role-specific calendar DTO trims (LD-007+).
 
 ---
 

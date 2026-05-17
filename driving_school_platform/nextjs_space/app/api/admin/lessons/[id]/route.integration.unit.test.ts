@@ -52,12 +52,13 @@ vi.mock("@/lib/api-utils", async () => {
 import { GET, PUT, DELETE } from "./route";
 import { verifyAuth } from "@/lib/api-utils";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import { expectLessonSelectSanitizesNestedUsers } from "@/lib/lessons/lesson-include-safety";
+import { sampleLessonDetailFixture } from "@/lib/lessons/lesson-response-contract-fixtures";
 import {
-  expectLessonIncludeSanitizesNestedUsers,
-  expectLessonJsonHasNoNestedPasswordHash,
-} from "@/lib/lessons/lesson-include-safety";
-import { sampleLessonListItemFixture } from "@/lib/lessons/lesson-response-contract-fixtures";
-import { expectAdminLessonDetailResponseContract } from "@/lib/lessons/lesson-response-contract";
+  expectAdminLessonDetailResponseContract,
+  expectAdminLessonPutResponseContract,
+} from "@/lib/lessons/lesson-response-contract";
+import { LESSON_DETAIL_SELECT } from "@/lib/lessons/lesson-queries";
 
 const verifyAuthMock = verifyAuth as unknown as ReturnType<typeof vi.fn>;
 const guardTenantMock = guardTenantAuthenticatedRoute as unknown as ReturnType<
@@ -92,13 +93,14 @@ beforeEach(() => {
 });
 
 describe("GET /api/admin/lessons/[id]", () => {
-  it("uses sanitized nested user include and omits passwordHash from JSON", async () => {
+  it("uses LESSON_DETAIL_SELECT and returns edit-form fields without passwordHash", async () => {
     h.lessonFindFirstMock.mockResolvedValue(
-      sampleLessonListItemFixture({
+      sampleLessonDetailFixture({
         id: LESSON_ID,
         lessonDate: new Date("2030-06-01T00:00:00.000Z"),
         endTime: "23:59",
         instructor: {
+          id: "instructor-row-1",
           userId: UUID_A,
           user: { id: UUID_A, firstName: "Ian", lastName: "Instructor" },
         },
@@ -113,18 +115,30 @@ describe("GET /api/admin/lessons/[id]", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expectAdminLessonDetailResponseContract(body);
-    expectLessonIncludeSanitizesNestedUsers(
-      h.lessonFindFirstMock.mock.calls[0]?.[0]?.include,
+    expect(h.lessonFindFirstMock.mock.calls[0]?.[0]?.select).toEqual(
+      LESSON_DETAIL_SELECT,
     );
-    expectLessonJsonHasNoNestedPasswordHash(body);
+    expectLessonSelectSanitizesNestedUsers(
+      h.lessonFindFirstMock.mock.calls[0]?.[0]?.select,
+    );
     expect(body.data.instructor.user.firstName).toBe("Ian");
-    expect(body.data.pickupLocation).toBe("Main garage");
+    expect(body.data.vehicleId).toBe(7);
     expect(body.data.vehicle.registrationNumber).toBe("AB-12-CD");
+    expect(body.data).not.toHaveProperty("lessonPrice");
   });
 });
 
 describe("PUT /api/admin/lessons/[id]", () => {
   it("updates a lesson on happy path", async () => {
+    h.lessonUpdateMock.mockResolvedValue(
+      sampleLessonDetailFixture({
+        id: LESSON_ID,
+        startTime: "10:00",
+        endTime: "11:00",
+        status: "SCHEDULED",
+      }),
+    );
+
     const res = await PUT(
       new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`, {
         method: "PUT",
@@ -140,13 +154,15 @@ describe("PUT /api/admin/lessons/[id]", () => {
 
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.success).toBe(true);
-    expect(body.data.message).toBe("Lesson updated successfully");
+    expectAdminLessonPutResponseContract(body);
     expect(h.lessonUpdateMock).toHaveBeenCalled();
-    expectLessonIncludeSanitizesNestedUsers(
-      h.lessonUpdateMock.mock.calls[0]?.[0]?.include,
+    expect(h.lessonUpdateMock.mock.calls[0]?.[0]?.select).toEqual(
+      LESSON_DETAIL_SELECT,
     );
-    expectLessonJsonHasNoNestedPasswordHash(body);
+    expectLessonSelectSanitizesNestedUsers(
+      h.lessonUpdateMock.mock.calls[0]?.[0]?.select,
+    );
+    expect(body.data.lesson.startTime).toBe("10:00");
   });
 
   it("returns 404 when lesson not found", async () => {
