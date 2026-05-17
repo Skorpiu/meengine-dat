@@ -140,6 +140,12 @@ describe("GET /api/admin/lessons (read-only)", () => {
 
     const body: any = await res.json();
     expect(body.success).toBe(true);
+    expect(body).not.toHaveProperty("lessons");
+    expect(Object.keys(body.data).sort()).toEqual([
+      "current",
+      "recent",
+      "upcoming",
+    ]);
     expect(body.data).toMatchObject({
       recent: [],
       current: [],
@@ -169,6 +175,7 @@ describe("GET /api/admin/lessons (read-only)", () => {
     expect(h.lessonFindManyMock).toHaveBeenCalledTimes(1);
     const body: any = await res.json();
     expect(body.lessons).toEqual([{ id: "cal-1" }]);
+    expect(body).not.toHaveProperty("success");
     const findManyArg = h.lessonFindManyMock.mock.calls[0]?.[0];
     expectLessonIncludeSanitizesNestedUsers(findManyArg?.include);
   });
