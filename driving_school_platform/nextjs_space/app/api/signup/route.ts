@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { resolveTenantOrganizationId } from "@/lib/tenant";
+import { decideSignupAvailability } from "@/lib/signup/signup-policy";
 import type { Prisma, UserRole } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -132,11 +133,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (organization.isDemo) {
+    const signupAvailability = decideSignupAvailability({
+      isDemoOrganization: organization.isDemo,
+    });
+    if (!signupAvailability.allowed) {
       return NextResponse.json(
         {
-          error: "Public signup is disabled for demo organizations.",
-          code: "demo_signup_disabled",
+          error: signupAvailability.message,
+          code: signupAvailability.code,
         },
         { status: 403 },
       );
