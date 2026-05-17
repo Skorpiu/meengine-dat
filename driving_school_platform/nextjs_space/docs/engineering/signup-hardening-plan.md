@@ -1,8 +1,38 @@
 # Signup Hardening Plan
 
-**Status:** Phased plan — batch **`signup-disable-public-by-default` implemented**; later batches pending.  
-**Branch context:** `signup-disable-public-by-default` (env gate shipped).  
+**Status:** Phased plan — phase-1 signup controls **implemented**; invite / verification / rate limit / captcha **pending**.  
+**Branch context:** `auth-surface-doc-status` (documentation consolidation).  
 **Related audits:** [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-007), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
+
+---
+
+## Current implementation status
+
+Snapshot of the **auth / public signup surface** as implemented in code (not aspirational).
+
+| Control                               | Status          | Notes                                                                                                                                             |
+| ------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Demo signup disabled**              | **Implemented** | `Organization.isDemo` → **403** `demo_signup_disabled` on `POST /api/signup` (always, even if public signup env is on).                           |
+| **Public signup disabled by default** | **Implemented** | Non-demo orgs blocked unless env opt-in; **403** `public_signup_disabled`.                                                                        |
+| **Env explicit opt-in**               | **Implemented** | `PUBLIC_SIGNUP_ENABLED` — only trimmed case-insensitive `"true"` enables; see [`lib/signup/signup-policy.ts`](../../lib/signup/signup-policy.ts). |
+| **Email verification**                | **Pending**     | `isEmailVerified` still set `true` on create; no provider, tokens, or login gate.                                                                 |
+| **Distributed rate limit**            | **Pending**     | Signup not throttled; in-memory `lib/rate-limit.ts` must not be used as production signup defense on serverless.                                  |
+| **Invite-only foundation**            | **Pending**     | B2B provisioning today: School Admin `/api/users/create` (and related admin paths); no invite tokens.                                             |
+| **Captcha / Turnstile**               | **Pending**     | Not on `/auth/register` or signup API.                                                                                                            |
+
+### Production and product guidance
+
+- **Production should keep `PUBLIC_SIGNUP_ENABLED` unset or `false`** until there is an explicit, documented decision to allow self-serve registration (marketing, pilot school, etc.). See [release-checklist.md](../ops/release-checklist.md) and [environment-variables.md](../ops/environment-variables.md#public-signup-enabled).
+- If **`PUBLIC_SIGNUP_ENABLED=true`**, treat it as a **rollout decision**: review invite-only policy, **email verification**, and **distributed rate limiting** before broad exposure—not as a default production posture.
+- For **B2B driving schools**, **invite-only** (or admin-provisioned accounts only) remains the **recommended next implementation step** even when the env flag is off—closes the gap where `/auth/register` is still reachable but API rejects signups.
+
+### Auth surface (login vs signup)
+
+| Surface         | State                                                                                                                                                                                                                           |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Login**       | NextAuth credentials — [`app/api/auth/[...nextauth]/route.ts`](../../app/api/auth/[...nextauth]/route.ts); `POST /api/auth/login` may use in-memory rate limit via `withErrorHandling` (not a substitute for signup hardening). |
+| **Register UI** | [`app/auth/register/page.tsx`](../../app/auth/register/page.tsx) — still rendered; shows policy messages for `demo_signup_disabled` and `public_signup_disabled`.                                                               |
+| **Signup API**  | [`app/api/signup/route.ts`](../../app/api/signup/route.ts) — tenant-scoped; no session created on success (user must log in).                                                                                                   |
 
 ---
 
@@ -66,8 +96,9 @@ This plan **does not change application behavior** by itself.
 
 ### Invite-only / captcha
 
-- **Not implemented.** All non-demo tenants can use the register page if users reach it.
-- **School Admin** can create users via admin APIs (`/api/users/create`, etc.) — this is the de facto B2B provisioning path today.
+- **Invite-only:** not implemented (no tokens / closed-register flow beyond env gate).
+- **Register page:** may still be linked or discovered; **`POST /api/signup`** enforces demo block and `PUBLIC_SIGNUP_ENABLED` before any user creation.
+- **School Admin** can create users via admin APIs (`/api/users/create`, etc.) — the de facto **B2B provisioning** path today.
 - **Captcha / Turnstile:** not present on register or signup API.
 
 ### Auth surface (context)
@@ -170,9 +201,9 @@ Adopt a **phased** path aligned with DAT’s B2B tenant model and serverless hos
 | **3 — Medium term** | Same release train as (2) or immediately after | **Distributed rate limit** on `POST /api/signup` (and optionally `/api/auth/login`) — never rely on in-memory `rateLimitMap` alone in production.                                    |
 | **4 — Future**      | If public register stays high-traffic          | **Turnstile** (or equivalent) on register + server-side verification.                                                                                                                |
 
-**Default recommendation for production until phases 2–3 ship:** treat signup as **invite-only operationally** (phase 1), even if the register page still exists behind unlinked URLs — close the gap with config in the first implementation batch.
+**Default recommendation for production:** keep **`PUBLIC_SIGNUP_ENABLED=false`** (unset counts as off). Operationally treat onboarding as **invite-only / admin-provisioned** until phase 2–3 ship, even though `/auth/register` may still exist in the app shell.
 
-**Do not implement in this documentation batch:** email provider, captcha, distributed limiter, or Prisma changes.
+**Next recommended batch for B2B:** `signup-invite-only-foundation` (product copy + optional tokens), then email verification and distributed rate limit before any broad public marketing of self-serve signup.
 
 ---
 
