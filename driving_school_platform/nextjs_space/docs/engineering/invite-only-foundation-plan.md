@@ -1,7 +1,7 @@
 # Invite-only Foundation Plan
 
-**Status:** Batches 1–3 **implemented** (schema, token service, admin API); **accept flow / UI / email pending**.  
-**Branch context:** `admin-invitation-api`.  
+**Status:** Batches 1–4 **implemented** (schema, token service, admin API, public accept API + minimal page); **admin UI polish / email pending**.  
+**Branch context:** `invitation-accept-flow`.  
 **Related:** [signup-hardening-plan.md](./signup-hardening-plan.md), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-007), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
 
 ### Implementation status
@@ -11,8 +11,9 @@
 | **`UserInvitation` + `UserInvitationStatus`**                    | **Implemented** — [`prisma/schema.prisma`](../../prisma/schema.prisma); migration [`20260521120000_add_user_invitations`](../../prisma/migrations/20260521120000_add_user_invitations/migration.sql).                                         |
 | **Token service** (`generate` / `hash` / expiry / accept policy) | **Implemented** — [`lib/invitations/invitation-token-service.ts`](../../lib/invitations/invitation-token-service.ts). Raw token exists only at creation/link build time; **DB stores `tokenHash` only**.                                      |
 | **Admin invitation API**                                         | **Implemented** — `GET/POST /api/admin/invitations`, `POST /api/admin/invitations/[id]/revoke`; [`lib/invitations/invitation-service.ts`](../../lib/invitations/invitation-service.ts). **`inviteLink` only on create** (phase 1 copy/paste). |
-| **Accept HTTP / UI / email**                                     | **Pending** — batches 4–7 below.                                                                                                                                                                                                              |
-| **End-user invite acceptance**                                   | **Not available** — no public accept routes; signup unchanged.                                                                                                                                                                                |
+| **Public accept API + minimal page**                             | **Implemented** — `GET/POST /api/invitations/accept`, [`app/invitations/accept/page.tsx`](../../app/invitations/accept/page.tsx); [`lib/invitations/invitation-accept-service.ts`](../../lib/invitations/invitation-accept-service.ts).       |
+| **Admin invitation UI / email provider**                         | **Pending** — batches 5–7 below.                                                                                                                                                                                                              |
+| **End-user invite acceptance**                                   | **Available** via API + minimal page; signup unchanged; instructor placeholder license until admin updates profile.                                                                                                                           |
 | **Pending duplicate per org/email**                              | **Enforced in service** (`pending_invitation_exists`); DB partial unique still optional follow-up.                                                                                                                                            |
 
 ---
@@ -312,14 +313,18 @@ Each batch is a **separate PR** with `pnpm -C driving_school_platform/nextjs_spa
 
 ---
 
-### Batch 4: `invitation-accept-flow`
+### Batch 4: `invitation-accept-flow` — **implemented**
 
-|                         |                                                                                       |
-| ----------------------- | ------------------------------------------------------------------------------------- |
-| **Objective**           | Public GET/POST accept; user + profile transaction; mark `ACCEPTED`.                  |
-| **Risks**               | Race on double accept; enumeration via email errors; host/org mismatch.               |
-| **Tests**               | Accept happy path; expired/revoked/invalid; wrong host; instructor required fields.   |
-| **Acceptance criteria** | Invitee can complete account without admin password handoff; one-time token enforced. |
+|                         |                                                                                                                                                                                                               |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Objective**           | Public GET/POST accept; user + profile transaction; mark `ACCEPTED`.                                                                                                                                          |
+| **Routes**              | [`app/api/invitations/accept/route.ts`](../../app/api/invitations/accept/route.ts)                                                                                                                            |
+| **Page**                | [`app/invitations/accept/page.tsx`](../../app/invitations/accept/page.tsx) (minimal; no i18n)                                                                                                                 |
+| **Service**             | [`lib/invitations/invitation-accept-service.ts`](../../lib/invitations/invitation-accept-service.ts)                                                                                                          |
+| **Risks**               | Race on double accept mitigated via `updateMany` on `PENDING`; `user_already_exists` if email taken.                                                                                                          |
+| **Tests**               | [`invitation-accept-service.unit.test.ts`](../../lib/invitations/invitation-accept-service.unit.test.ts), [`route.integration.unit.test.ts`](../../app/api/invitations/accept/route.integration.unit.test.ts) |
+| **Acceptance criteria** | Met — token-only public flow; org/role/email from invitation; no `tokenHash`/`passwordHash` in responses; bcrypt cost 12; `isEmailVerified: true` placeholder (real verification pending).                    |
+| **Note**                | Instructor accept creates placeholder `instructorLicenseNumber` / expiry — School Admin should update via existing user management.                                                                           |
 
 ---
 
