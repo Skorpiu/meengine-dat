@@ -11,15 +11,15 @@
 
 Snapshot of the **auth / public signup surface** as implemented in code (not aspirational).
 
-| Control                               | Status          | Notes                                                                                                                                                                                             |
-| ------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Demo signup disabled**              | **Implemented** | `Organization.isDemo` → **403** `demo_signup_disabled` on `POST /api/signup` (always, even if public signup env is on).                                                                           |
-| **Public signup disabled by default** | **Implemented** | Non-demo orgs blocked unless env opt-in; **403** `public_signup_disabled`.                                                                                                                        |
-| **Env explicit opt-in**               | **Implemented** | `PUBLIC_SIGNUP_ENABLED` — only trimmed case-insensitive `"true"` enables; see [`lib/signup/signup-policy.ts`](../../lib/signup/signup-policy.ts).                                                 |
-| **Email verification**                | **Pending**     | `isEmailVerified` still set `true` on create; no provider, tokens, or login gate.                                                                                                                 |
-| **Distributed rate limit**            | **Pending**     | Signup not throttled; in-memory `lib/rate-limit.ts` must not be used as production signup defense on serverless.                                                                                  |
-| **Invite-only foundation**            | **Planned**     | Technical design in [invite-only-foundation-plan.md](./invite-only-foundation-plan.md); **not implemented**. Today: School Admin `/api/users/create` (and related admin paths); no invite tokens. |
-| **Captcha / Turnstile**               | **Pending**     | Not on `/auth/register` or signup API.                                                                                                                                                            |
+| Control                               | Status          | Notes                                                                                                                                                                                                  |
+| ------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Demo signup disabled**              | **Implemented** | `Organization.isDemo` → **403** `demo_signup_disabled` on `POST /api/signup` (always, even if public signup env is on).                                                                                |
+| **Public signup disabled by default** | **Implemented** | Non-demo orgs blocked unless env opt-in; **403** `public_signup_disabled`.                                                                                                                             |
+| **Env explicit opt-in**               | **Implemented** | `PUBLIC_SIGNUP_ENABLED` — only trimmed case-insensitive `"true"` enables; see [`lib/signup/signup-policy.ts`](../../lib/signup/signup-policy.ts).                                                      |
+| **Email verification**                | **Pending**     | `isEmailVerified` still set `true` on create; no provider, tokens, or login gate.                                                                                                                      |
+| **Distributed rate limit**            | **Pending**     | Signup not throttled; in-memory `lib/rate-limit.ts` must not be used as production signup defense on serverless.                                                                                       |
+| **Invite-only foundation**            | **Partial**     | Schema: `UserInvitation` + migration ([invite-only-foundation-plan.md](./invite-only-foundation-plan.md) batch 1). **No APIs/UI/tokens yet.** Today: School Admin `/api/users/create`; no invite flow. |
+| **Captcha / Turnstile**               | **Pending**     | Not on `/auth/register` or signup API.                                                                                                                                                                 |
 
 ### Production and product guidance
 
