@@ -1,17 +1,18 @@
 # Invite-only Foundation Plan
 
-**Status:** Batch 1 **implemented** (`invitation-schema-foundation`) — Prisma schema + migration in repo; **no API/UI/token service yet**.  
-**Branch context:** `invitation-schema-foundation`.  
+**Status:** Batches 1–2 **implemented** (schema + token service); **admin API / accept routes / UI pending**.  
+**Branch context:** `invitation-token-service`.  
 **Related:** [signup-hardening-plan.md](./signup-hardening-plan.md), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-007), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
 
-### Implementation status (schema batch)
+### Implementation status
 
-| Layer                                                      | Status                                                                                                                                                                                                |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`UserInvitation` + `UserInvitationStatus`**              | **Implemented** — [`prisma/schema.prisma`](../../prisma/schema.prisma); migration [`20260521120000_add_user_invitations`](../../prisma/migrations/20260521120000_add_user_invitations/migration.sql). |
-| **Token service / admin API / accept flow / UI**           | **Pending** — batches 2–7 below.                                                                                                                                                                      |
-| **Invite creation or acceptance in production**            | **Not available** — no routes; signup and admin user create unchanged.                                                                                                                                |
-| **Partial unique `(organizationId, email)` for `PENDING`** | **Deferred** — enforce in admin API (batch 3) or follow-up SQL migration.                                                                                                                             |
+| Layer                                                            | Status                                                                                                                                                                                                   |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`UserInvitation` + `UserInvitationStatus`**                    | **Implemented** — [`prisma/schema.prisma`](../../prisma/schema.prisma); migration [`20260521120000_add_user_invitations`](../../prisma/migrations/20260521120000_add_user_invitations/migration.sql).    |
+| **Token service** (`generate` / `hash` / expiry / accept policy) | **Implemented** — [`lib/invitations/invitation-token-service.ts`](../../lib/invitations/invitation-token-service.ts). Raw token exists only at creation/link build time; **DB stores `tokenHash` only**. |
+| **Admin API / accept HTTP / UI**                                 | **Pending** — batches 3–7 below.                                                                                                                                                                         |
+| **Invite creation or acceptance in production**                  | **Not available** — no routes; signup and admin user create unchanged.                                                                                                                                   |
+| **Partial unique `(organizationId, email)` for `PENDING`**       | **Deferred** — enforce in admin API (batch 3) or follow-up SQL migration.                                                                                                                                |
 
 ---
 
@@ -148,7 +149,7 @@ model UserInvitation {
 
 | Topic                  | Decision                                                                                                                                                                                                            |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Token storage**      | Store **`tokenHash`** only (e.g. SHA-256 of raw token, or bcrypt if rotation policy requires — prefer fast hash + high entropy token). **Never** persist raw token.                                                 |
+| **Token storage**      | Store **`tokenHash`** only — SHA-256 hex via [`hashInvitationToken`](../../lib/invitations/invitation-token-service.ts) (implemented). **Never** persist raw token.                                                 |
 | **Raw token delivery** | Returned once on create (phase 1 UI copy) or embedded in email link (phase 2). Format: opaque string (≥ 32 bytes from `crypto.randomBytes`, base64url).                                                             |
 | **Unique constraints** | `tokenHash` unique globally. Consider **partial unique** `(organizationId, email)` where `status = PENDING` — prevents duplicate active invites per email per org (DB partial index or app-level check in batch 3). |
 | **Role constraint**    | Enforce in service layer: reject `PLATFORM_ADMIN`, `SUPER_ADMIN` at create API; DB check optional via app validation first.                                                                                         |
@@ -184,7 +185,7 @@ sequenceDiagram
 ### 2. System returns / sends invite link
 
 - **Phase 1:** API returns `inviteUrl` in create response only; admin copies to email/Slack.
-- **Phase 2:** Email provider sends templated link — `https://{tenantHost}/auth/accept-invite?token=...` (exact path in batch 4/5).
+- **Phase 2:** Email provider sends templated link — built with [`buildInvitationAcceptUrl`](../../lib/invitations/invitation-token-service.ts) (`{baseUrl}/invitations/accept?token=...`). Accept page route ships in batch 4/5.
 
 ### 3. Invitee opens link
 
@@ -285,14 +286,14 @@ Each batch is a **separate PR** with `pnpm -C driving_school_platform/nextjs_spa
 
 ---
 
-### Batch 2: `invitation-token-service`
+### Batch 2: `invitation-token-service` — **implemented**
 
-|                         |                                                                                   |
-| ----------------------- | --------------------------------------------------------------------------------- |
-| **Objective**           | `lib/invitations/` — generate token, hash, verify, expiry helper, role allowlist. |
-| **Risks**               | Weak hash algorithm; token length too short.                                      |
-| **Tests**               | Unit tests: hash round-trip, expired pending, invalid role rejected.              |
-| **Acceptance criteria** | Pure functions tested; no HTTP surface.                                           |
+|                         |                                                                                                                                                |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Objective**           | `lib/invitations/invitation-token-service.ts` — generate token, SHA-256 hash, accept URL, expiry helpers, `canAcceptInvitation`.               |
+| **Risks**               | Weak hash algorithm; token length too short.                                                                                                   |
+| **Tests**               | [`invitation-token-service.unit.test.ts`](../../lib/invitations/invitation-token-service.unit.test.ts). Role allowlist remains in batch 3 API. |
+| **Acceptance criteria** | Met — pure functions tested; no HTTP surface; no raw token in schema or persisted code paths.                                                  |
 
 ---
 
