@@ -25,6 +25,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Users, UserPlus, Trash2, CheckCircle, Edit2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { InvitationsManagementClient } from "@/components/admin/invitations-management-client";
 
 async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
   const contentType = response.headers.get("content-type") || "";
@@ -689,6 +690,8 @@ export function UsersManagementClient({
           </div>
         </CardContent>
       </Card>
+
+      <InvitationsManagementClient />
     </>
   );
 }
