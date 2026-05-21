@@ -1,18 +1,19 @@
 # Invite-only Foundation Plan
 
-**Status:** Batches 1–2 **implemented** (schema + token service); **admin API / accept routes / UI pending**.  
-**Branch context:** `invitation-token-service`.  
+**Status:** Batches 1–3 **implemented** (schema, token service, admin API); **accept flow / UI / email pending**.  
+**Branch context:** `admin-invitation-api`.  
 **Related:** [signup-hardening-plan.md](./signup-hardening-plan.md), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-007), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
 
 ### Implementation status
 
-| Layer                                                            | Status                                                                                                                                                                                                   |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`UserInvitation` + `UserInvitationStatus`**                    | **Implemented** — [`prisma/schema.prisma`](../../prisma/schema.prisma); migration [`20260521120000_add_user_invitations`](../../prisma/migrations/20260521120000_add_user_invitations/migration.sql).    |
-| **Token service** (`generate` / `hash` / expiry / accept policy) | **Implemented** — [`lib/invitations/invitation-token-service.ts`](../../lib/invitations/invitation-token-service.ts). Raw token exists only at creation/link build time; **DB stores `tokenHash` only**. |
-| **Admin API / accept HTTP / UI**                                 | **Pending** — batches 3–7 below.                                                                                                                                                                         |
-| **Invite creation or acceptance in production**                  | **Not available** — no routes; signup and admin user create unchanged.                                                                                                                                   |
-| **Partial unique `(organizationId, email)` for `PENDING`**       | **Deferred** — enforce in admin API (batch 3) or follow-up SQL migration.                                                                                                                                |
+| Layer                                                            | Status                                                                                                                                                                                                                                        |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`UserInvitation` + `UserInvitationStatus`**                    | **Implemented** — [`prisma/schema.prisma`](../../prisma/schema.prisma); migration [`20260521120000_add_user_invitations`](../../prisma/migrations/20260521120000_add_user_invitations/migration.sql).                                         |
+| **Token service** (`generate` / `hash` / expiry / accept policy) | **Implemented** — [`lib/invitations/invitation-token-service.ts`](../../lib/invitations/invitation-token-service.ts). Raw token exists only at creation/link build time; **DB stores `tokenHash` only**.                                      |
+| **Admin invitation API**                                         | **Implemented** — `GET/POST /api/admin/invitations`, `POST /api/admin/invitations/[id]/revoke`; [`lib/invitations/invitation-service.ts`](../../lib/invitations/invitation-service.ts). **`inviteLink` only on create** (phase 1 copy/paste). |
+| **Accept HTTP / UI / email**                                     | **Pending** — batches 4–7 below.                                                                                                                                                                                                              |
+| **End-user invite acceptance**                                   | **Not available** — no public accept routes; signup unchanged.                                                                                                                                                                                |
+| **Pending duplicate per org/email**                              | **Enforced in service** (`pending_invitation_exists`); DB partial unique still optional follow-up.                                                                                                                                            |
 
 ---
 
@@ -147,15 +148,15 @@ model UserInvitation {
 
 ### Design notes
 
-| Topic                  | Decision                                                                                                                                                                                                            |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Token storage**      | Store **`tokenHash`** only — SHA-256 hex via [`hashInvitationToken`](../../lib/invitations/invitation-token-service.ts) (implemented). **Never** persist raw token.                                                 |
-| **Raw token delivery** | Returned once on create (phase 1 UI copy) or embedded in email link (phase 2). Format: opaque string (≥ 32 bytes from `crypto.randomBytes`, base64url).                                                             |
-| **Unique constraints** | `tokenHash` unique globally. Consider **partial unique** `(organizationId, email)` where `status = PENDING` — prevents duplicate active invites per email per org (DB partial index or app-level check in batch 3). |
-| **Role constraint**    | Enforce in service layer: reject `PLATFORM_ADMIN`, `SUPER_ADMIN` at create API; DB check optional via app validation first.                                                                                         |
-| **Expiry**             | Cron or lazy expiry on read: if `now > expiresAt` and `PENDING`, treat as `EXPIRED` (update status on access).                                                                                                      |
-| **Cascade**            | `onDelete: Cascade` from organization — invitations die with org (consistent with tenant lifecycle).                                                                                                                |
-| **Audit**              | Reuse existing [`AuditLog`](../../prisma/schema.prisma) for create/revoke/accept with `entityType: "UserInvitation"` (no schema change required for audit table).                                                   |
+| Topic                  | Decision                                                                                                                                                                                                          |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Token storage**      | Store **`tokenHash`** only — SHA-256 hex via [`hashInvitationToken`](../../lib/invitations/invitation-token-service.ts) (implemented). **Never** persist raw token.                                               |
+| **Raw token delivery** | Returned once on create (phase 1 UI copy) or embedded in email link (phase 2). Format: opaque string (≥ 32 bytes from `crypto.randomBytes`, base64url).                                                           |
+| **Unique constraints** | `tokenHash` unique globally. **Pending per org/email** enforced in [`createInvitation`](../../lib/invitations/invitation-service.ts) (`pending_invitation_exists`); optional DB partial unique still a follow-up. |
+| **Role constraint**    | Enforce in service layer: reject `PLATFORM_ADMIN`, `SUPER_ADMIN` at create API; DB check optional via app validation first.                                                                                       |
+| **Expiry**             | Cron or lazy expiry on read: if `now > expiresAt` and `PENDING`, treat as `EXPIRED` (update status on access).                                                                                                    |
+| **Cascade**            | `onDelete: Cascade` from organization — invitations die with org (consistent with tenant lifecycle).                                                                                                              |
+| **Audit**              | Reuse existing [`AuditLog`](../../prisma/schema.prisma) for create/revoke/accept with `entityType: "UserInvitation"` (no schema change required for audit table).                                                 |
 
 ### Coexistence with `User`
 
@@ -297,14 +298,17 @@ Each batch is a **separate PR** with `pnpm -C driving_school_platform/nextjs_spa
 
 ---
 
-### Batch 3: `admin-invitation-api`
+### Batch 3: `admin-invitation-api` — **implemented**
 
-|                         |                                                                                          |
-| ----------------------- | ---------------------------------------------------------------------------------------- |
-| **Objective**           | `POST/GET` admin invitations + revoke; tenant + demo guards; audit log on create/revoke. |
-| **Risks**               | Duplicate pending invites; leaking token in list endpoint.                               |
-| **Tests**               | Integration tests: scoping, demo block, role guard, revoke idempotency.                  |
-| **Acceptance criteria** | School Admin can create/list/revoke; create returns one-time URL; no token in GET list.  |
+|                         |                                                                                                                                                                                            |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Objective**           | `POST/GET` admin invitations + revoke; tenant + demo guards; service-layer pending dedupe.                                                                                                 |
+| **Routes**              | [`app/api/admin/invitations/route.ts`](../../app/api/admin/invitations/route.ts), [`app/api/admin/invitations/[id]/revoke/route.ts`](../../app/api/admin/invitations/[id]/revoke/route.ts) |
+| **Service**             | [`lib/invitations/invitation-service.ts`](../../lib/invitations/invitation-service.ts), [`invitation-dto.ts`](../../lib/invitations/invitation-dto.ts)                                     |
+| **Risks**               | Duplicate pending invites; leaking token in list endpoint.                                                                                                                                 |
+| **Tests**               | [`invitation-service.unit.test.ts`](../../lib/invitations/invitation-service.unit.test.ts), route integration tests under `app/api/admin/invitations/`.                                    |
+| **Acceptance criteria** | Met — SUPER_ADMIN tenant admin only; STUDENT/INSTRUCTOR invites; `inviteLink` on create only; no `tokenHash` in responses; demo block on POST/revoke; audit log deferred.                  |
+| **Follow-up**           | Audit log on create/revoke (optional batch 7); accept endpoint (batch 4).                                                                                                                  |
 
 ---
 
