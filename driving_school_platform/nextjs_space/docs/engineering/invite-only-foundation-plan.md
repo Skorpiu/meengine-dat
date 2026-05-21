@@ -1,8 +1,17 @@
 # Invite-only Foundation Plan
 
-**Status:** Design-only — **no Prisma migration, API, or UI in this batch**.  
-**Branch context:** `invite-only-foundation-plan` (documentation).  
+**Status:** Batch 1 **implemented** (`invitation-schema-foundation`) — Prisma schema + migration in repo; **no API/UI/token service yet**.  
+**Branch context:** `invitation-schema-foundation`.  
 **Related:** [signup-hardening-plan.md](./signup-hardening-plan.md), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-007), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
+
+### Implementation status (schema batch)
+
+| Layer                                                      | Status                                                                                                                                                                                                |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`UserInvitation` + `UserInvitationStatus`**              | **Implemented** — [`prisma/schema.prisma`](../../prisma/schema.prisma); migration [`20260521120000_add_user_invitations`](../../prisma/migrations/20260521120000_add_user_invitations/migration.sql). |
+| **Token service / admin API / accept flow / UI**           | **Pending** — batches 2–7 below.                                                                                                                                                                      |
+| **Invite creation or acceptance in production**            | **Not available** — no routes; signup and admin user create unchanged.                                                                                                                                |
+| **Partial unique `(organizationId, email)` for `PENDING`** | **Deferred** — enforce in admin API (batch 3) or follow-up SQL migration.                                                                                                                             |
 
 ---
 
@@ -10,7 +19,7 @@
 
 This document defines the **technical foundation for organization-scoped user invitations** on DAT (Driving Academy Tool). The goal is to replace or strictly limit **broad public self-serve signup** with a **B2B invite flow** where each driving school provisions students and instructors through its School Admin.
 
-**This batch only designs the model and implementation path.** It does **not** change application behavior, Prisma schema, or runtime code.
+**Batch 1** added the Prisma model and migration only. Later batches add services, APIs, and UI. **Signup, billing, demo, lessons, and vehicles are unchanged** in batch 1.
 
 **In scope (future batches):** invitation records, secure tokens, admin APIs, accept flow, optional manual invite links, audit hooks, and tests.
 
@@ -94,9 +103,9 @@ This document defines the **technical foundation for organization-scoped user in
 
 ---
 
-## Proposed data model
+## Data model
 
-**Proposed Prisma model (not implemented in this batch):**
+**Implemented in Prisma** ([`prisma/schema.prisma`](../../prisma/schema.prisma)):
 
 ```prisma
 enum UserInvitationStatus {
@@ -110,25 +119,27 @@ model UserInvitation {
   id              String               @id @default(cuid())
   organizationId  String
   email           String
-  role            UserRole             // application allowlist: STUDENT | INSTRUCTOR only
+  role            UserRole             // application allowlist: STUDENT | INSTRUCTOR only (service layer)
   tokenHash       String               @unique
   status          UserInvitationStatus @default(PENDING)
   expiresAt       DateTime
   acceptedAt      DateTime?
-  createdByUserId String
+  revokedAt       DateTime?
+  createdByUserId String?
   acceptedUserId  String?
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
 
-  organization    Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdBy       User                 @relation("InvitationsCreated", fields: [createdByUserId], references: [id])
-  acceptedUser    User?                @relation("InvitationsAccepted", fields: [acceptedUserId], references: [id])
+  organization Organization @relation(...)
+  createdBy    User?        @relation("UserInvitationCreatedBy", ...)
+  acceptedUser User?        @relation("UserInvitationAcceptedUser", ...)
 
   @@index([organizationId])
   @@index([organizationId, email])
   @@index([organizationId, status])
   @@index([expiresAt])
-  @@index([status])
+  @@index([createdByUserId])
+  @@index([acceptedUserId])
   @@map("user_invitations")
 }
 ```
@@ -262,14 +273,15 @@ Each batch is a **separate PR** with `pnpm -C driving_school_platform/nextjs_spa
 
 ---
 
-### Batch 1: `invitation-schema-foundation`
+### Batch 1: `invitation-schema-foundation` — **implemented**
 
-|                         |                                                                      |
-| ----------------------- | -------------------------------------------------------------------- |
-| **Objective**           | Add `UserInvitation` (+ enum) to Prisma; migration; generate client. |
-| **Risks**               | Wrong indexes; missing partial unique for pending-per-email.         |
-| **Tests**               | Migration applies on clean DB; Prisma client types compile.          |
-| **Acceptance criteria** | Schema in repo; no runtime routes yet; `check` passes.               |
+|                         |                                                                                                                               |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Objective**           | Add `UserInvitation` (+ enum) to Prisma; migration; generate client.                                                          |
+| **Risks**               | Wrong indexes; missing partial unique for pending-per-email.                                                                  |
+| **Tests**               | Migration applies on clean DB; Prisma client types compile.                                                                   |
+| **Acceptance criteria** | Met — schema + `20260521120000_add_user_invitations` in repo; no runtime routes; `check` passes.                              |
+| **Follow-up**           | Partial unique index for one `PENDING` invite per `(organizationId, email)` — optional SQL migration or app check in batch 3. |
 
 ---
 
