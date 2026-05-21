@@ -1,0 +1,374 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Copy, Link2, MailPlus, RefreshCw, UserX } from "lucide-react";
+import toast from "react-hot-toast";
+import type {
+  CreateInvitationResponse,
+  InvitationApiError,
+  InvitationDto,
+  InvitableRole,
+  ListInvitationsResponse,
+  RevokeInvitationResponse,
+} from "@/lib/invitations/invitation-ui-types";
+import {
+  copyTextToClipboard,
+  formatInvitationDateTime,
+  invitationStatusLabel,
+} from "@/lib/invitations/invitation-ui-utils";
+
+async function tryReadJson<T>(response: Response): Promise<T | null> {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().includes("application/json")) {
+    return null;
+  }
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+function statusBadgeVariant(
+  status: InvitationDto["status"],
+): "default" | "secondary" | "destructive" | "outline" {
+  switch (status) {
+    case "PENDING":
+      return "default";
+    case "ACCEPTED":
+      return "secondary";
+    case "EXPIRED":
+    case "REVOKED":
+      return "destructive";
+    default:
+      return "outline";
+  }
+}
+
+const DEFAULT_EXPIRES_IN_DAYS = 7;
+
+export function InvitationsManagementClient() {
+  const [invitations, setInvitations] = useState<InvitationDto[]>([]);
+  const [listLoading, setListLoading] = useState(true);
+  const [listError, setListError] = useState("");
+
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<InvitableRole>("STUDENT");
+  const [expiresInDays, setExpiresInDays] = useState(
+    String(DEFAULT_EXPIRES_IN_DAYS),
+  );
+  const [createLoading, setCreateLoading] = useState(false);
+
+  const [createdInviteLink, setCreatedInviteLink] = useState<string | null>(
+    null,
+  );
+  const [revokingId, setRevokingId] = useState<string | null>(null);
+
+  const loadInvitations = useCallback(async () => {
+    setListLoading(true);
+    setListError("");
+
+    try {
+      const response = await fetch("/api/admin/invitations");
+      const data = await tryReadJson<
+        ListInvitationsResponse | InvitationApiError
+      >(response);
+
+      if (!response.ok) {
+        const err = data as InvitationApiError | null;
+        setListError(err?.error || "Failed to load invitations");
+        setInvitations([]);
+        return;
+      }
+
+      const list = (data as ListInvitationsResponse)?.invitations ?? [];
+      setInvitations(list);
+    } catch {
+      setListError("Failed to load invitations");
+      setInvitations([]);
+    } finally {
+      setListLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadInvitations();
+  }, [loadInvitations]);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreateLoading(true);
+    setCreatedInviteLink(null);
+
+    const days = Number.parseInt(expiresInDays, 10);
+
+    try {
+      const response = await fetch("/api/admin/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          role,
+          expiresInDays: Number.isFinite(days) ? days : DEFAULT_EXPIRES_IN_DAYS,
+        }),
+      });
+
+      const data = await tryReadJson<
+        CreateInvitationResponse | InvitationApiError
+      >(response);
+
+      if (!response.ok) {
+        const err = data as InvitationApiError | null;
+        toast.error(err?.error || "Failed to create invitation");
+        return;
+      }
+
+      const created = data as CreateInvitationResponse;
+      setCreatedInviteLink(created.inviteLink);
+      setEmail("");
+      toast.success(
+        "Invitation created. Copy the link and share it privately.",
+      );
+      await loadInvitations();
+    } catch {
+      toast.error("An error occurred while creating the invitation");
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!createdInviteLink) {
+      return;
+    }
+    const copied = await copyTextToClipboard(createdInviteLink);
+    if (copied) {
+      toast.success("Invite link copied to clipboard");
+    } else {
+      toast.error("Could not copy link. Select and copy manually.");
+    }
+  };
+
+  const handleRevoke = async (invitation: InvitationDto) => {
+    if (invitation.status !== "PENDING") {
+      return;
+    }
+
+    if (
+      !confirm(
+        `Revoke the pending invitation for ${invitation.email}? This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+
+    setRevokingId(invitation.id);
+
+    try {
+      const response = await fetch(
+        `/api/admin/invitations/${encodeURIComponent(invitation.id)}/revoke`,
+        { method: "POST" },
+      );
+
+      const data = await tryReadJson<
+        RevokeInvitationResponse | InvitationApiError
+      >(response);
+
+      if (!response.ok) {
+        const err = data as InvitationApiError | null;
+        toast.error(err?.error || "Failed to revoke invitation");
+        return;
+      }
+
+      toast.success("Invitation revoked");
+      await loadInvitations();
+    } catch {
+      toast.error("An error occurred while revoking the invitation");
+    } finally {
+      setRevokingId(null);
+    }
+  };
+
+  return (
+    <Card className="mt-8">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <MailPlus className="h-5 w-5" />
+          Invitations
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Invite links are private. Share them only with the intended person.
+          The link is shown once after creation — copy it before leaving this
+          page.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-8">
+        <form
+          onSubmit={handleCreate}
+          className="space-y-4 rounded-lg border p-4"
+        >
+          <h3 className="font-medium text-gray-900">Create invitation</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2 md:col-span-1">
+              <Label htmlFor="invite-email">Email</Label>
+              <Input
+                id="invite-email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="student@example.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Role</Label>
+              <Select
+                value={role}
+                onValueChange={(value) => setRole(value as InvitableRole)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="STUDENT">Student</SelectItem>
+                  <SelectItem value="INSTRUCTOR">Instructor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="invite-expires">Expires in (days)</Label>
+              <Input
+                id="invite-expires"
+                type="number"
+                min={1}
+                max={30}
+                required
+                value={expiresInDays}
+                onChange={(e) => setExpiresInDays(e.target.value)}
+              />
+            </div>
+          </div>
+          <Button type="submit" disabled={createLoading}>
+            {createLoading ? "Creating…" : "Create invitation"}
+          </Button>
+        </form>
+
+        {createdInviteLink && (
+          <Alert className="border-driving-primary/30 bg-blue-50">
+            <Link2 className="h-4 w-4" />
+            <AlertDescription className="space-y-3">
+              <p className="font-medium text-gray-900">
+                Invitation link (shown once)
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input
+                  readOnly
+                  value={createdInviteLink}
+                  className="font-mono text-sm bg-white"
+                  aria-label="Invite link"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCopyLink}
+                  className="shrink-0"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy invite link
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-gray-900">Invitation list</h3>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={loadInvitations}
+              disabled={listLoading}
+            >
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${listLoading ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </Button>
+          </div>
+
+          {listError && (
+            <Alert variant="destructive">
+              <AlertDescription>{listError}</AlertDescription>
+            </Alert>
+          )}
+
+          {listLoading && invitations.length === 0 && !listError && (
+            <p className="text-sm text-muted-foreground">
+              Loading invitations…
+            </p>
+          )}
+
+          {!listLoading && invitations.length === 0 && !listError && (
+            <p className="text-sm text-muted-foreground">
+              No invitations yet. Create one above.
+            </p>
+          )}
+
+          <div className="space-y-3">
+            {invitations.map((invitation) => (
+              <div
+                key={invitation.id}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg"
+              >
+                <div className="space-y-1 min-w-0">
+                  <div className="font-medium truncate">{invitation.email}</div>
+                  <div className="text-sm text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
+                    <span>Role: {invitation.role}</span>
+                    <span>
+                      Expires: {formatInvitationDateTime(invitation.expiresAt)}
+                    </span>
+                    <span>
+                      Created: {formatInvitationDateTime(invitation.createdAt)}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge variant={statusBadgeVariant(invitation.status)}>
+                    {invitationStatusLabel(invitation.status)}
+                  </Badge>
+                  {invitation.status === "PENDING" && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={revokingId === invitation.id}
+                      onClick={() => handleRevoke(invitation)}
+                    >
+                      <UserX className="h-4 w-4 mr-1" />
+                      {revokingId === invitation.id ? "Revoking…" : "Revoke"}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
