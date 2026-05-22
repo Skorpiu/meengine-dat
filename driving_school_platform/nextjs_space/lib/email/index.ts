@@ -29,3 +29,8 @@ export type {
   BuildInvitationEmailInput,
   BuildInvitationEmailResult,
 } from "./templates/invitation-email";
+export { buildPasswordResetEmail } from "./templates/password-reset-email";
+export type {
+  BuildPasswordResetEmailInput,
+  BuildPasswordResetEmailResult,
+} from "./templates/password-reset-email";

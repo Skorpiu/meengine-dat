@@ -1,7 +1,7 @@
 # Email Provider Evaluation
 
-**Status:** Boundary + template + send-on-create + **Postmark provider** (`fetch`, no SDK). **Operational readiness** documented in [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md). Default **noop**; real delivery when `EMAIL_PROVIDER=postmark` and Postmark env are set. Copy-link mandatory. Password reset / email verification **pending**.  
-**Branch context:** `email-provider-postmark-ops-readiness` (DAT_3.5); evaluation content retained below.  
+**Status:** Boundary + template + send-on-create + **Postmark** + **password reset foundation**. Ops: [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md). Reset: [password-reset-flow.md](./password-reset-flow.md). Email verification **pending**.  
+**Branch context:** `password-reset-flow-foundation` (DAT_3.5); evaluation content retained below.  
 **Related:** [invite-only-foundation-plan.md](./invite-only-foundation-plan.md), [signup-hardening-plan.md](./signup-hardening-plan.md), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
 
 ---
@@ -27,7 +27,7 @@ The **`email-provider-boundary`** batch added `lib/email/*` (types, noop provide
 | **Automatic invitation email** | **Attempted on create** via `buildInvitationEmail` + `sendEmail`. Default noop; **Postmark** when `EMAIL_PROVIDER=postmark` + token/from configured. Resend/SMTP pending. Admin always gets `inviteLink` + `emailDelivery`. |
 | **Admin invitation API/UI**    | Implemented — `POST /api/admin/invitations` returns `inviteLink` on create; list never exposes token/hash.                                                                                                                  |
 | **Accept flow**                | Implemented — public GET/POST `/api/invitations/accept`; defense in depth for existing users.                                                                                                                               |
-| **Password reset**             | **Does not exist** — no forgot-password flow, tokens, or reset emails.                                                                                                                                                      |
+| **Password reset**             | **Foundation done** — request/confirm APIs, `PasswordResetToken`, UI `/auth/forgot-password` + `/auth/reset-password`. See [password-reset-flow.md](./password-reset-flow.md). Distributed rate limit pending.              |
 | **Email verification**         | **Does not exist** — accounts created with `isEmailVerified: true` as a placeholder (signup and invite accept). No verification tokens or login gate.                                                                       |
 | **Public signup**              | **Disabled by default** — `PUBLIC_SIGNUP_ENABLED` must be explicitly `true` for non-demo orgs.                                                                                                                              |
 | **Marketing / newsletters**    | Out of scope — not planned in this evaluation.                                                                                                                                                                              |
@@ -224,7 +224,7 @@ lib/email/templates/
 
 ```
 lib/email/templates/
-  password-reset-email.ts    # batch: password-reset-flow-foundation
+  password-reset-email.ts    # done — password-reset-flow-foundation
   verification-email.ts      # batch: email-verification-flow
 ```
 

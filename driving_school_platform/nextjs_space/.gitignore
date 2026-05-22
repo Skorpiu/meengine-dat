@@ -11,3 +11,4 @@ node_modules/
 # Local-only private business/billing data (never commit real values)
 /private/
 /private/*.local.json
+.vercel
