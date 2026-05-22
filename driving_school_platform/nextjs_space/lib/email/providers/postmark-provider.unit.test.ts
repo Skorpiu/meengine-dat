@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createPostmarkEmailProvider,
+  DEFAULT_POSTMARK_API_BASE_URL,
   mapPostmarkHttpStatusToErrorCode,
   readPostmarkConfigFromEnv,
 } from "./postmark-provider";
@@ -70,6 +71,16 @@ describe("postmark provider", () => {
         process.env[key] = value;
       }
     }
+  });
+
+  it("readPostmarkConfigFromEnv uses production API base when POSTMARK_API_BASE_URL is unset", () => {
+    process.env.POSTMARK_SERVER_TOKEN = "tok";
+    process.env.POSTMARK_FROM_EMAIL = "invites@example.test";
+    delete process.env.POSTMARK_API_BASE_URL;
+
+    expect(readPostmarkConfigFromEnv()?.apiBaseUrl).toBe(
+      DEFAULT_POSTMARK_API_BASE_URL,
+    );
   });
 
   it("readPostmarkConfigFromEnv returns null when token or from is missing", () => {

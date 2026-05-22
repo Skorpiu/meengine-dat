@@ -116,34 +116,40 @@ These are used by **scripts**, **Playwright**, or **tenant defaults** and are **
 | `DEMO_ORGANIZATION_ID`                                                     | Demo org CUID for operator scripts (`pnpm demo:sandbox:reset`, `pnpm demo:readiness`, etc.) and for **cron** reset (env-only; not accepted from HTTP query/body on the cron route).                                                                                                                                                                                                                                                               |
 | `DEMO_SANDBOX_RESET_APPLY`                                                 | Operator script only: must be `true` together with `--apply` for `pnpm demo:sandbox:reset` to write. Not used by the cron endpoint (cron always applies).                                                                                                                                                                                                                                                                                         |
 | `PUBLIC_SIGNUP_ENABLED`                                                    | Optional. When exactly `true` (trimmed, case-insensitive), allows `POST /api/signup` for **non-demo** organizations. **Default:** disabled if unset or any other value. Demo orgs remain blocked with `demo_signup_disabled` regardless. Not recommended for broad production until invite-only policy, email verification, and distributed rate limiting are in place — see [signup-hardening-plan.md](../engineering/signup-hardening-plan.md). |
-| `EMAIL_PROVIDER`                                                           | Optional. `noop` (default), `postmark` (implemented), `resend` / `smtp` (not implemented). Not in `env-check`. See [email-provider-evaluation.md](../engineering/email-provider-evaluation.md).                                                                                                                                                                                                                                                   |
-| `POSTMARK_SERVER_TOKEN`                                                    | Required **only when** `EMAIL_PROVIDER=postmark`. Postmark Server API token header (`X-Postmark-Server-Token`). `POSTMARK_API_TEST` is accepted for API validation without real delivery. **Secret** — never commit.                                                                                                                                                                                                                              |
-| `POSTMARK_FROM_EMAIL`                                                      | Required **only when** `EMAIL_PROVIDER=postmark`. Verified sender address (e.g. `invites@yourdomain.com` or `"Name" <invites@yourdomain.com>`).                                                                                                                                                                                                                                                                                                   |
-| `POSTMARK_MESSAGE_STREAM`                                                  | Optional. Defaults to `outbound`. Postmark message stream id.                                                                                                                                                                                                                                                                                                                                                                                     |
-| `POSTMARK_API_BASE_URL`                                                    | Optional. Defaults to `https://api.postmarkapp.com`. Override for tests or proxies; unit tests use a fake host.                                                                                                                                                                                                                                                                                                                                   |
+| `EMAIL_PROVIDER`                                                           | Optional. **`noop` (default)** if unset/empty/`noop`. Set `postmark` for real sends via Postmark. `resend` / `smtp` not implemented. Not in `env-check`. Operator guide: [email-provider-postmark-runbook.md](./email-provider-postmark-runbook.md).                                                                                                                                                                                              |
+| `POSTMARK_SERVER_TOKEN`                                                    | Required **only when** `EMAIL_PROVIDER=postmark`. Postmark server token (`X-Postmark-Server-Token`). Use vendor value `POSTMARK_API_TEST` in Preview for API validation **without real inbox delivery**. **Secret** — never commit; set only in Vercel/env vault.                                                                                                                                                                                 |
+| `POSTMARK_FROM_EMAIL`                                                      | Required **only when** `EMAIL_PROVIDER=postmark`. Must match a **verified** sender signature in Postmark (e.g. `invites@yourdomain.com`). Not needed for local/CI when using noop.                                                                                                                                                                                                                                                                |
+| `POSTMARK_MESSAGE_STREAM`                                                  | Optional when `EMAIL_PROVIDER=postmark`. Defaults to `outbound`.                                                                                                                                                                                                                                                                                                                                                                                  |
+| `POSTMARK_API_BASE_URL`                                                    | Optional. Defaults to `https://api.postmarkapp.com`. **Operators leave unset** in Vercel; used by unit tests with a mock host. Do not point Production at non-Postmark URLs unless you run an approved proxy.                                                                                                                                                                                                                                     |
 
 <a id="email-provider"></a>
 
 ### `EMAIL_PROVIDER` (optional — email boundary only)
 
 - **Optional.** Not part of `lib/env.ts` / `env-check`.
-- **Default:** noop when unset, empty, or `noop` (case-insensitive after trim).
+- **Default:** **noop** when unset, empty, or `noop` (case-insensitive after trim). Local dev, CI, and `pnpm check` need **no** email env vars.
 - **Effect:** Selects the email adapter for `sendEmail()` in `lib/email/*`.
-  - **`noop`** — no network; no inbox delivery.
-  - **`postmark`** — REST send via `lib/email/providers/postmark-provider.ts` (fetch, no SDK). Requires `POSTMARK_SERVER_TOKEN` + `POSTMARK_FROM_EMAIL`; missing vars → `PROVIDER_MISCONFIGURED` (no crash).
+  - **`noop`** — no network; no inbox delivery; `emailDelivery.noop: true` on invite create.
+  - **`postmark`** — REST send via `lib/email/providers/postmark-provider.ts` (fetch, no SDK). Requires `POSTMARK_SERVER_TOKEN` + `POSTMARK_FROM_EMAIL` in that deployment; if either is missing → `emailDelivery.errorCode: PROVIDER_MISCONFIGURED` (app does not crash).
   - **`resend` / `smtp`** — `PROVIDER_NOT_IMPLEMENTED` (no network).
   - **Unknown** — `PROVIDER_UNKNOWN`.
-- **Invitation create:** `POST /api/admin/invitations` attempts delivery after create; response includes `emailDelivery`. Invite create stays **201** if send fails. **Copy-link (`inviteLink`) remains mandatory.**
+- **Invitation create:** `POST /api/admin/invitations` always attempts delivery after a successful create. Response includes `emailDelivery` (status only — no `html`/`text`). HTTP **201** even when email fails. **`inviteLink` is always returned** — copy-link remains the mandatory fallback for admins.
 
 <a id="postmark-email"></a>
 
-### Postmark vars (optional — only when `EMAIL_PROVIDER=postmark`)
+### Postmark vars (only when `EMAIL_PROVIDER=postmark`)
 
-- Not validated by `env-check`. Local dev, CI, and builds run without them.
-- **`POSTMARK_SERVER_TOKEN`** — server token from Postmark; use `POSTMARK_API_TEST` in non-production to exercise the API without delivery.
-- **`POSTMARK_FROM_EMAIL`** — must match a verified sender signature in Postmark.
-- **`POSTMARK_MESSAGE_STREAM`** — optional; default `outbound`.
-- **`POSTMARK_API_BASE_URL`** — optional; default `https://api.postmarkapp.com`.
+Use **[email-provider-postmark-runbook.md](./email-provider-postmark-runbook.md)** for Vercel setup, `POSTMARK_API_TEST`, validation order, and rollback.
+
+| Variable                  | Operator notes                                                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `EMAIL_PROVIDER`          | Must be `postmark` for this adapter.                                                                                     |
+| `POSTMARK_SERVER_TOKEN`   | Required for Postmark sends. `POSTMARK_API_TEST` for safe Preview checks without real delivery.                          |
+| `POSTMARK_FROM_EMAIL`     | Required; must be verified in Postmark before Production.                                                                |
+| `POSTMARK_MESSAGE_STREAM` | Optional; default `outbound`.                                                                                            |
+| `POSTMARK_API_BASE_URL`   | Optional; default `https://api.postmarkapp.com`. **Not required** in normal operations — only tests and special proxies. |
+
+**Not required globally:** unset all of the above → noop everywhere; builds and tests stay green.
 
 <a id="public-signup-enabled"></a>
 
@@ -194,3 +200,4 @@ These are used by **scripts**, **Playwright**, or **tenant defaults** and are **
 - [vercel-deployment.md](./vercel-deployment.md) — Vercel project settings and build-time Prisma notes.
 - [production-host-split.md](./production-host-split.md) — tenant vs platform hosts, `PLATFORM_HOSTS`, OrganizationDomain cautions.
 - [platform-admin-runbook.md](./platform-admin-runbook.md) — create/update PLATFORM_ADMIN with `create-platform-admin.ts` (no demo credentials).
+- [email-provider-postmark-runbook.md](./email-provider-postmark-runbook.md) — enable Postmark on Vercel safely; noop default; copy-link fallback.
