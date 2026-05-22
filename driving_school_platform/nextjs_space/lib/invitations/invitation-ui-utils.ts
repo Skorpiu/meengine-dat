@@ -26,10 +26,16 @@ export function invitationStatusLabel(status: InvitationDto["status"]): string {
   }
 }
 
+export type InvitationApiErrorMessageOptions = {
+  /** Admin create/revoke UI — slightly different copy for operators. */
+  forAdmin?: boolean;
+};
+
 /** User-facing copy for invitation API `code` values (admin + public accept). */
 export function invitationApiErrorMessage(
   code: string | undefined,
   fallback: string,
+  options?: InvitationApiErrorMessageOptions,
 ): string {
   switch (code) {
     case "missing_invitation_token":
@@ -45,7 +51,9 @@ export function invitationApiErrorMessage(
     case "invitation_not_pending":
       return "This invitation is no longer active.";
     case "user_already_exists":
-      return "An account with this email already exists. Try signing in instead.";
+      return options?.forAdmin
+        ? "An account with this email already exists. Ask the user to sign in instead."
+        : "An account with this email already exists. Try signing in instead.";
     case "pending_invitation_exists":
       return "A pending invitation already exists for this email. Revoke it or wait until it expires.";
     case "demo_mutation_disabled":

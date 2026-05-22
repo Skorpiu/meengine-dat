@@ -170,6 +170,32 @@ describe("Admin Invitations API", () => {
     expect(h.createInvitationMock).not.toHaveBeenCalled();
   });
 
+  it("POST returns 409 user_already_exists without inviteLink", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    h.createInvitationMock.mockResolvedValue({
+      ok: false,
+      error: "An account with this email already exists.",
+      code: "user_already_exists",
+      status: 409,
+    });
+
+    const res = await POST(
+      req("POST", "http://school.example.com/api/admin/invitations", {
+        email: "existing@school.test",
+        role: "STUDENT",
+      }) as any,
+    );
+    expect(res.status).toBe(409);
+
+    const json = await res.json();
+    expect(json.code).toBe("user_already_exists");
+    expect(json.error).toBe("An account with this email already exists.");
+    expect(json).not.toHaveProperty("inviteLink");
+    expect(json).not.toHaveProperty("tokenHash");
+  });
+
   it("POST returns service error codes without tokenHash", async () => {
     getServerSessionMock.mockResolvedValue({
       user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },

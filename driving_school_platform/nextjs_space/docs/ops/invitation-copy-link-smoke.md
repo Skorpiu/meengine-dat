@@ -60,16 +60,25 @@ Record: date `____`, environment `____`, org slug `____`, admin operator `____` 
 
 ---
 
-## 5. Duplicate pending (same email)
+## 5. Existing user (post-accept re-invite)
 
-| Step | Action                                                                                                                | Expected                                                                      |
-| ---- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 5.1  | While a **Pending** invite exists for `student-smoke+PLACEHOLDER@example.com`, create another for the **same** email. | Toast/error: pending invitation already exists (`pending_invitation_exists`). |
-| 5.2  | Revoke the pending row, then create again.                                                                            | Create succeeds (new one-time link).                                          |
+| Step | Action                                                                                                    | Expected                                                                                                             |
+| ---- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 5.1  | After §1 or §2 (user already created), try **Create invitation** for the **same** email again (any role). | Toast/error before any link alert: account already exists (`user_already_exists`, HTTP **409**).                     |
+| 5.2  | Confirm no new amber invite-link alert and no new pending row with a fresh link.                          | `POST /api/admin/invitations` body has **no** `inviteLink`; accept flow still blocks same email as defense in depth. |
 
 ---
 
-## 6. Security / data exposure checks
+## 6. Duplicate pending (same email)
+
+| Step | Action                                                                                                                   | Expected                                                                      |
+| ---- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| 6.1  | While a **Pending** invite exists for `student-smoke+PLACEHOLDER@example.com`, create another for the **same** email.    | Toast/error: pending invitation already exists (`pending_invitation_exists`). |
+| 6.2  | Revoke the pending row, then create again (email must still have **no** User — use a throwaway email not used in §1–§2). | Create succeeds (new one-time link).                                          |
+
+---
+
+## 7. Security / data exposure checks
 
 | Check           | Expected                                                                                        |
 | --------------- | ----------------------------------------------------------------------------------------------- |
@@ -80,7 +89,7 @@ Record: date `____`, environment `____`, org slug `____`, admin operator `____` 
 
 ---
 
-## 7. Loading / double-submit (quick)
+## 8. Loading / double-submit (quick)
 
 | Check             | Expected                                                                                 |
 | ----------------- | ---------------------------------------------------------------------------------------- |

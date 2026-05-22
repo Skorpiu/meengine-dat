@@ -140,6 +140,7 @@ export function InvitationsManagementClient() {
           invitationApiErrorMessage(
             err?.code,
             err?.error || "Failed to create invitation",
+            { forAdmin: true },
           ),
         );
         return;
