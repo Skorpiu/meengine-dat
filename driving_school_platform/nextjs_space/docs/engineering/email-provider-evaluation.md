@@ -1,7 +1,7 @@
 # Email Provider Evaluation
 
-**Status:** Evaluation only — **no email sending implemented** in DAT at this time.  
-**Branch context:** `email-provider-evaluation`.  
+**Status:** Provider boundary implemented (`lib/email/*`, default **noop**). **No real outbound email** — no vendor SDK, no send on invitation create, copy-link unchanged.  
+**Branch context:** `email-provider-boundary` (DAT_3.5); evaluation content retained below.  
 **Related:** [invite-only-foundation-plan.md](./invite-only-foundation-plan.md), [signup-hardening-plan.md](./signup-hardening-plan.md), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
 
 ---
@@ -15,7 +15,7 @@ This document evaluates **transactional email provider strategy** for DAT (Drivi
 - **Email verification** (not implemented today; `isEmailVerified` is a placeholder).
 - **Future** operational or billing-adjacent notifications (out of scope for first integration).
 
-It does **not** implement sending, add required env vars, or change application behavior. The goal is a decision-ready technical baseline for the next implementation batches.
+The **`email-provider-boundary`** batch added `lib/email/*` (types, noop provider, `sendEmail()`, redaction helpers, unit tests) without wiring call sites, templates, or real providers. Sending, required env vars, and invitation automation remain **future batches**. Earlier evaluation text below remains the decision baseline for vendor choice.
 
 ---
 
@@ -171,18 +171,31 @@ Qualitative comparison only. **Verify pricing, quotas, and EU data residency on 
 
 ---
 
-## Proposed architecture
+## Architecture
 
-No code in this batch — target layout for implementation:
+### Implemented (`email-provider-boundary`)
 
 ```
 lib/email/
-  email-provider.ts      # interface + factory (noop | resend | postmark | smtp)
-  email-service.ts       # sendEmail(), redaction, metrics hooks
-  templates/
-    invitation-email.ts  # buildSubject/Html/Text(invitation context)
-    password-reset-email.ts   # future
-    verification-email.ts     # future
+  types.ts               # SendEmailInput, SendEmailResult, EmailProvider, …
+  redaction.ts           # log-safe context, URL/token redaction, recipient minimization
+  email-provider.ts      # env normalization, planned provider ids
+  email-service.ts       # sendEmail() — default noop; optional EMAIL_PROVIDER (not in env-check)
+  providers/
+    noop-provider.ts     # no network; explicit noop success result
+  index.ts
+  email-boundary.unit.test.ts
+```
+
+`sendEmail()` reads `process.env.EMAIL_PROVIDER` only inside `email-service.ts` (not `lib/env.ts`). Empty / unset / `noop` → noop success. `resend` | `postmark` | `smtp` → controlled `PROVIDER_NOT_IMPLEMENTED` (no network). Unknown values → `PROVIDER_UNKNOWN` (no network, no crash).
+
+### Planned (later batches)
+
+```
+lib/email/templates/
+  invitation-email.ts        # batch: invitation-email-template
+  password-reset-email.ts    # batch: password-reset-flow-foundation
+  verification-email.ts      # batch: email-verification-flow
 ```
 
 ### Interface (conceptual)
@@ -243,7 +256,7 @@ Aligned with [invite-only-foundation-plan.md](./invite-only-foundation-plan.md) 
 
 | Batch                                    | Objective                                            | Acceptance (summary)                                                                  |
 | ---------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| **1. `email-provider-boundary`**         | Interface, noop provider, `email-service` unit tests | App runs with zero email env; no outbound network by default.                         |
+| **1. `email-provider-boundary`**         | Interface, noop provider, `email-service` unit tests | **Done (DAT_3.5).** App runs with zero email env; no outbound network by default.     |
 | **2. `invitation-email-template`**       | HTML/text template, i18n deferred (EN first)         | Template tests snapshot subject/body structure; no raw token in test fixtures logged. |
 | **3. `invitation-email-send-on-create`** | Wire send after create behind flag                   | Create still returns `inviteLink`; send failure non-fatal; admin toast optional.      |
 | **4. `password-reset-flow-foundation`**  | Reset token + API + email                            | No enumeration; rate limit spec; email via same provider.                             |
