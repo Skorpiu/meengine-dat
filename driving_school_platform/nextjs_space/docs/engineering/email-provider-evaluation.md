@@ -1,7 +1,7 @@
 # Email Provider Evaluation
 
-**Status:** Boundary + template + **send-on-create (noop)** implemented. **No real outbound email** — default `noop`; copy-link remains mandatory fallback.  
-**Branch context:** `invitation-email-send-on-create` (DAT_3.5); evaluation content retained below.  
+**Status:** Boundary + template + send-on-create + **Postmark provider** (`fetch`, no SDK). Default remains **noop**; real delivery when `EMAIL_PROVIDER=postmark` and Postmark env are set. Copy-link mandatory.  
+**Branch context:** `email-provider-postmark` (DAT_3.5); evaluation content retained below.  
 **Related:** [invite-only-foundation-plan.md](./invite-only-foundation-plan.md), [signup-hardening-plan.md](./signup-hardening-plan.md), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
 
 ---
@@ -21,16 +21,16 @@ The **`email-provider-boundary`** batch added `lib/email/*` (types, noop provide
 
 ## Current state
 
-| Area                           | State                                                                                                                                                                                                |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Invite-only onboarding**     | **Operational in copy-link mode** — School Admin creates invitation on `/admin/users`, copies `inviteLink` once, shares privately. Accept at `/invitations/accept`.                                  |
-| **Automatic invitation email** | **Attempted on create** via `buildInvitationEmail` + `sendEmail` (noop by default). No real provider; inbox delivery pending vendor adapter. Admin still gets `inviteLink` + `emailDelivery` status. |
-| **Admin invitation API/UI**    | Implemented — `POST /api/admin/invitations` returns `inviteLink` on create; list never exposes token/hash.                                                                                           |
-| **Accept flow**                | Implemented — public GET/POST `/api/invitations/accept`; defense in depth for existing users.                                                                                                        |
-| **Password reset**             | **Does not exist** — no forgot-password flow, tokens, or reset emails.                                                                                                                               |
-| **Email verification**         | **Does not exist** — accounts created with `isEmailVerified: true` as a placeholder (signup and invite accept). No verification tokens or login gate.                                                |
-| **Public signup**              | **Disabled by default** — `PUBLIC_SIGNUP_ENABLED` must be explicitly `true` for non-demo orgs.                                                                                                       |
-| **Marketing / newsletters**    | Out of scope — not planned in this evaluation.                                                                                                                                                       |
+| Area                           | State                                                                                                                                                                                                                       |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Invite-only onboarding**     | **Operational in copy-link mode** — School Admin creates invitation on `/admin/users`, copies `inviteLink` once, shares privately. Accept at `/invitations/accept`.                                                         |
+| **Automatic invitation email** | **Attempted on create** via `buildInvitationEmail` + `sendEmail`. Default noop; **Postmark** when `EMAIL_PROVIDER=postmark` + token/from configured. Resend/SMTP pending. Admin always gets `inviteLink` + `emailDelivery`. |
+| **Admin invitation API/UI**    | Implemented — `POST /api/admin/invitations` returns `inviteLink` on create; list never exposes token/hash.                                                                                                                  |
+| **Accept flow**                | Implemented — public GET/POST `/api/invitations/accept`; defense in depth for existing users.                                                                                                                               |
+| **Password reset**             | **Does not exist** — no forgot-password flow, tokens, or reset emails.                                                                                                                                                      |
+| **Email verification**         | **Does not exist** — accounts created with `isEmailVerified: true` as a placeholder (signup and invite accept). No verification tokens or login gate.                                                                       |
+| **Public signup**              | **Disabled by default** — `PUBLIC_SIGNUP_ENABLED` must be explicitly `true` for non-demo orgs.                                                                                                                              |
+| **Marketing / newsletters**    | Out of scope — not planned in this evaluation.                                                                                                                                                                              |
 
 ---
 
@@ -182,12 +182,14 @@ lib/email/
   email-provider.ts      # env normalization, planned provider ids
   email-service.ts       # sendEmail() — default noop; optional EMAIL_PROVIDER (not in env-check)
   providers/
-    noop-provider.ts     # no network; explicit noop success result
+    noop-provider.ts        # no network; explicit noop success result
+    postmark-provider.ts    # POST /email via fetch (no SDK)
   index.ts
   email-boundary.unit.test.ts
+  providers/postmark-provider.unit.test.ts
 ```
 
-`sendEmail()` reads `process.env.EMAIL_PROVIDER` only inside `email-service.ts` (not `lib/env.ts`). Empty / unset / `noop` → noop success. `resend` | `postmark` | `smtp` → controlled `PROVIDER_NOT_IMPLEMENTED` (no network). Unknown values → `PROVIDER_UNKNOWN` (no network, no crash).
+`sendEmail()` reads `process.env.EMAIL_PROVIDER` only inside `email-service.ts` (not `lib/env.ts`). Empty / unset / `noop` → noop success. `postmark` → Postmark REST adapter. `resend` | `smtp` → `PROVIDER_NOT_IMPLEMENTED`. Unknown → `PROVIDER_UNKNOWN`. Postmark misconfiguration → `PROVIDER_MISCONFIGURED` (no crash).
 
 ### Implemented (`invitation-email-template`)
 
@@ -206,7 +208,15 @@ lib/email/templates/
 - **`inviteLink`** unchanged; create still **201** if send fails or provider is unsupported.
 - No new env flags; no logging of invite bodies or full links.
 
-**Next:** real provider adapter (`resend` / `postmark` / `smtp`) + optional `EMAIL_FROM` / API keys when ops-ready.
+### Implemented (`email-provider-postmark`)
+
+- **`lib/email/providers/postmark-provider.ts`** — `POST {POSTMARK_API_BASE_URL}/email` with `X-Postmark-Server-Token`.
+- Env (optional globally; required only for Postmark sends): `POSTMARK_SERVER_TOKEN`, `POSTMARK_FROM_EMAIL`, optional `POSTMARK_MESSAGE_STREAM` (default `outbound`), optional `POSTMARK_API_BASE_URL`.
+- HTTP status mapping: 401 → `PROVIDER_AUTH_FAILED`, 422 → `EMAIL_REJECTED`, 429 → `PROVIDER_RATE_LIMITED`, 5xx → `PROVIDER_TEMPORARY_FAILURE`, other → `PROVIDER_SEND_FAILED`.
+- No raw Postmark body/message in API responses; no SDK dependency.
+- `POSTMARK_API_TEST` token supported for validation without real delivery (Postmark documented test token).
+
+**Pending:** Resend adapter, SMTP adapter.
 
 ### Planned (later batches)
 
@@ -235,11 +245,13 @@ interface EmailProvider {
 
 ### Provider implementations
 
-| Implementation                     | When                                                                    |
-| ---------------------------------- | ----------------------------------------------------------------------- |
-| **`noop`**                         | Default — no network; optional structured log without secrets.          |
-| **`dev-log`**                      | Local only — log recipient + subject; never log full invite/reset URLs. |
-| **`resend` / `postmark` / `smtp`** | Production — selected by `EMAIL_PROVIDER`.                              |
+| Implementation        | When                                                                    |
+| --------------------- | ----------------------------------------------------------------------- |
+| **`noop`**            | Default — no network; optional structured log without secrets.          |
+| **`dev-log`**         | Local only — log recipient + subject; never log full invite/reset URLs. |
+| **`noop`**            | Default — no delivery.                                                  |
+| **`postmark`**        | **Implemented** — `EMAIL_PROVIDER=postmark` + Postmark env vars.        |
+| **`resend` / `smtp`** | Pending — `PROVIDER_NOT_IMPLEMENTED`.                                   |
 
 ### Integration points (future)
 
@@ -251,20 +263,18 @@ interface EmailProvider {
 
 ---
 
-## Env vars (future — not added in this batch)
+## Env vars (optional — not in `lib/env.ts`)
 
-Document for planning only; **none are required today**.
+None are required for local dev, CI, or build. See [environment-variables.md](../ops/environment-variables.md).
 
-| Variable                 | Purpose                                                                   |
-| ------------------------ | ------------------------------------------------------------------------- |
-| `EMAIL_PROVIDER`         | `noop` \| `resend` \| `postmark` \| `smtp` (default `noop`)               |
-| `EMAIL_FROM`             | e.g. `Driving Academy <invites@meengine.io>`                              |
-| `EMAIL_REPLY_TO`         | Optional support inbox                                                    |
-| `EMAIL_API_KEY`          | Provider secret (or separate keys per provider)                           |
-| `APP_PUBLIC_URL`         | Base URL for links in templates (may reuse existing app URL config)       |
-| `EMAIL_SEND_INVITATIONS` | Feature flag: send on invite create (default off until staging validated) |
-
-See [environment-variables.md](../ops/environment-variables.md) when vars are introduced in a future batch.
+| Variable                  | When needed                | Purpose                                                       |
+| ------------------------- | -------------------------- | ------------------------------------------------------------- |
+| `EMAIL_PROVIDER`          | Optional                   | `noop` (default), `postmark`, `resend`/`smtp` not implemented |
+| `POSTMARK_SERVER_TOKEN`   | `EMAIL_PROVIDER=postmark`  | Server token; `POSTMARK_API_TEST` for non-delivery API tests  |
+| `POSTMARK_FROM_EMAIL`     | `EMAIL_PROVIDER=postmark`  | Verified sender                                               |
+| `POSTMARK_MESSAGE_STREAM` | Optional                   | Default `outbound`                                            |
+| `POSTMARK_API_BASE_URL`   | Optional                   | Default `https://api.postmarkapp.com`                         |
+| `EMAIL_FROM` / API keys   | Future Resend/SMTP batches | Not used by Postmark adapter today                            |
 
 ---
 

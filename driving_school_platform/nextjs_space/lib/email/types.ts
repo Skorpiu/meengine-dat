@@ -4,7 +4,7 @@
  * No provider SDKs or network calls in this module.
  */
 
-/** Providers with a planned adapter; only `noop` is implemented in DAT_3.5. */
+/** Providers with an adapter in `lib/email/providers/*`. */
 export type EmailProviderId = "noop" | "resend" | "postmark" | "smtp";
 
 export type SendEmailInput = {
@@ -16,7 +16,16 @@ export type SendEmailInput = {
   tags?: string[];
 };
 
-export type EmailErrorCode = "PROVIDER_UNKNOWN" | "PROVIDER_NOT_IMPLEMENTED";
+export type EmailErrorCode =
+  | "PROVIDER_UNKNOWN"
+  | "PROVIDER_NOT_IMPLEMENTED"
+  | "PROVIDER_MISCONFIGURED"
+  | "INVALID_EMAIL_INPUT"
+  | "PROVIDER_AUTH_FAILED"
+  | "EMAIL_REJECTED"
+  | "PROVIDER_RATE_LIMITED"
+  | "PROVIDER_TEMPORARY_FAILURE"
+  | "PROVIDER_SEND_FAILED";
 
 export type SendEmailSuccessResult = {
   ok: true;

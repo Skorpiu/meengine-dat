@@ -16,6 +16,11 @@ export type {
 } from "./types";
 export { noopEmailProvider } from "./providers/noop-provider";
 export {
+  createPostmarkEmailProvider,
+  postmarkEmailProvider,
+  readPostmarkConfigFromEnv,
+} from "./providers/postmark-provider";
+export {
   buildInvitationEmail,
   formatInvitationEmailExpiry,
   invitationEmailRoleLabel,
