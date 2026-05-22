@@ -1,7 +1,7 @@
 # Email Provider Evaluation
 
-**Status:** Boundary + template + send-on-create + **Postmark provider** (`fetch`, no SDK). Default remains **noop**; real delivery when `EMAIL_PROVIDER=postmark` and Postmark env are set. Copy-link mandatory.  
-**Branch context:** `email-provider-postmark` (DAT_3.5); evaluation content retained below.  
+**Status:** Boundary + template + send-on-create + **Postmark provider** (`fetch`, no SDK). **Operational readiness** documented in [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md). Default **noop**; real delivery when `EMAIL_PROVIDER=postmark` and Postmark env are set. Copy-link mandatory. Password reset / email verification **pending**.  
+**Branch context:** `email-provider-postmark-ops-readiness` (DAT_3.5); evaluation content retained below.  
 **Related:** [invite-only-foundation-plan.md](./invite-only-foundation-plan.md), [signup-hardening-plan.md](./signup-hardening-plan.md), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
 
 ---
@@ -216,7 +216,9 @@ lib/email/templates/
 - No raw Postmark body/message in API responses; no SDK dependency.
 - `POSTMARK_API_TEST` token supported for validation without real delivery (Postmark documented test token).
 
-**Pending:** Resend adapter, SMTP adapter.
+**Ops:** [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md) — Vercel env, `POSTMARK_API_TEST`, validation sequence, rollback (`EMAIL_PROVIDER=noop`).
+
+**Pending:** Resend adapter, SMTP adapter, password-reset-flow-foundation, email-verification-flow.
 
 ### Planned (later batches)
 
@@ -267,14 +269,14 @@ interface EmailProvider {
 
 None are required for local dev, CI, or build. See [environment-variables.md](../ops/environment-variables.md).
 
-| Variable                  | When needed                | Purpose                                                       |
-| ------------------------- | -------------------------- | ------------------------------------------------------------- |
-| `EMAIL_PROVIDER`          | Optional                   | `noop` (default), `postmark`, `resend`/`smtp` not implemented |
-| `POSTMARK_SERVER_TOKEN`   | `EMAIL_PROVIDER=postmark`  | Server token; `POSTMARK_API_TEST` for non-delivery API tests  |
-| `POSTMARK_FROM_EMAIL`     | `EMAIL_PROVIDER=postmark`  | Verified sender                                               |
-| `POSTMARK_MESSAGE_STREAM` | Optional                   | Default `outbound`                                            |
-| `POSTMARK_API_BASE_URL`   | Optional                   | Default `https://api.postmarkapp.com`                         |
-| `EMAIL_FROM` / API keys   | Future Resend/SMTP batches | Not used by Postmark adapter today                            |
+| Variable                  | When needed                 | Purpose                                                       |
+| ------------------------- | --------------------------- | ------------------------------------------------------------- |
+| `EMAIL_PROVIDER`          | Optional                    | `noop` (default), `postmark`, `resend`/`smtp` not implemented |
+| `POSTMARK_SERVER_TOKEN`   | `EMAIL_PROVIDER=postmark`   | Server token; `POSTMARK_API_TEST` for non-delivery API tests  |
+| `POSTMARK_FROM_EMAIL`     | `EMAIL_PROVIDER=postmark`   | Verified sender                                               |
+| `POSTMARK_MESSAGE_STREAM` | Optional                    | Default `outbound`                                            |
+| `POSTMARK_API_BASE_URL`   | Optional (tests/proxy only) | Default `https://api.postmarkapp.com`; operators leave unset  |
+| `EMAIL_FROM` / API keys   | Future Resend/SMTP batches  | Not used by Postmark adapter today                            |
 
 ---
 
@@ -282,14 +284,16 @@ None are required for local dev, CI, or build. See [environment-variables.md](..
 
 Aligned with [invite-only-foundation-plan.md](./invite-only-foundation-plan.md) batch 6 and [signup-hardening-plan.md](./signup-hardening-plan.md).
 
-| Batch                                    | Objective                                            | Acceptance (summary)                                                               |
-| ---------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| **1. `email-provider-boundary`**         | Interface, noop provider, `email-service` unit tests | **Done (DAT_3.5).** App runs with zero email env; no outbound network by default.  |
-| **2. `invitation-email-template`**       | HTML/text template, i18n deferred (EN first)         | **Done (DAT_3.5).** Unit tests; fake `test-token` fixture only; no send on create. |
-| **3. `invitation-email-send-on-create`** | Wire send after create                               | **Done (DAT_3.5).** `emailDelivery` on create; noop default; copy-link required.   |
-| **4. `password-reset-flow-foundation`**  | Reset token + API + email                            | No enumeration; rate limit spec; email via same provider.                          |
-| **5. `email-verification-flow`**         | Tokens, verify endpoint, login gate policy           | `isEmailVerified` semantics fixed; resend limited.                                 |
-| **6. `deliverability-domain-checklist`** | Ops doc + release checklist                          | SPF/DKIM/DMARC verified; test sends to Gmail/Outlook/Yahoo.                        |
+| Batch                                           | Objective                                            | Acceptance (summary)                                                                                 |
+| ----------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **1. `email-provider-boundary`**                | Interface, noop provider, `email-service` unit tests | **Done (DAT_3.5).** App runs with zero email env; no outbound network by default.                    |
+| **2. `invitation-email-template`**              | HTML/text template, i18n deferred (EN first)         | **Done (DAT_3.5).** Unit tests; fake `test-token` fixture only; no send on create.                   |
+| **3. `invitation-email-send-on-create`**        | Wire send after create                               | **Done (DAT_3.5).** `emailDelivery` on create; noop default; copy-link required.                     |
+| **3b. `email-provider-postmark`**               | Postmark REST adapter (fetch)                        | **Done (DAT_3.5).** No SDK; controlled errors; no global required env.                               |
+| **3c. `email-provider-postmark-ops-readiness`** | Operator runbook + env docs                          | **Done (DAT_3.5).** [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md). |
+| **4. `password-reset-flow-foundation`**         | Reset token + API + email                            | **Pending.** No enumeration; rate limit spec; email via same provider.                               |
+| **5. `email-verification-flow`**                | Tokens, verify endpoint, login gate policy           | `isEmailVerified` semantics fixed; resend limited.                                                   |
+| **6. `deliverability-domain-checklist`**        | Ops doc + release checklist                          | SPF/DKIM/DMARC verified; test sends to Gmail/Outlook/Yahoo.                                          |
 
 Batch 7 in invite-only plan (`invitation-rate-limit-audit`) remains separate — distributed limits on accept/create, not provider selection.
 
