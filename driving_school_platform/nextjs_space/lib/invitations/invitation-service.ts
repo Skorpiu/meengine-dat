@@ -27,7 +27,12 @@ export type CreateInvitationInput = {
 };
 
 export type CreateInvitationResult =
-  | { ok: true; invitation: InvitationDto; inviteLink: string }
+  | {
+      ok: true;
+      invitation: InvitationDto;
+      inviteLink: string;
+      organizationName: string;
+    }
   | {
       ok: false;
       error: string;
@@ -106,6 +111,12 @@ export async function createInvitation(
     };
   }
 
+  const organization = await prisma.organization.findUnique({
+    where: { id: input.organizationId },
+    select: { name: true },
+  });
+  const organizationName = organization?.name?.trim() || "Your organization";
+
   const rawToken = generateInvitationToken();
   const tokenHash = hashInvitationToken(rawToken);
   const expiresAt = calculateInvitationExpiry(
@@ -134,6 +145,7 @@ export async function createInvitation(
     ok: true,
     invitation: mapInvitationDto(created),
     inviteLink,
+    organizationName,
   };
 }
 

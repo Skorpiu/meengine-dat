@@ -6,6 +6,7 @@ const h = vi.hoisted(() => {
   const createMock = vi.fn();
   const updateMock = vi.fn();
   const userFindUniqueMock = vi.fn();
+  const organizationFindUniqueMock = vi.fn();
 
   return {
     findFirstMock,
@@ -13,9 +14,13 @@ const h = vi.hoisted(() => {
     createMock,
     updateMock,
     userFindUniqueMock,
+    organizationFindUniqueMock,
     prismaMock: {
       user: {
         findUnique: userFindUniqueMock,
+      },
+      organization: {
+        findUnique: organizationFindUniqueMock,
       },
       userInvitation: {
         findFirst: findFirstMock,
@@ -72,6 +77,7 @@ beforeEach(() => {
   h.userFindUniqueMock.mockResolvedValue(null);
   h.findFirstMock.mockResolvedValue(null);
   h.findManyMock.mockResolvedValue([]);
+  h.organizationFindUniqueMock.mockResolvedValue({ name: "Demo School" });
 });
 
 describe("createInvitation", () => {
@@ -179,6 +185,7 @@ describe("createInvitation", () => {
       /^[a-f0-9]{64}$/,
     );
     expect(h.createMock.mock.calls[0][0].data.role).toBe("INSTRUCTOR");
+    expect(result.organizationName).toBe("Demo School");
   });
 });
 

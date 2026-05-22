@@ -1,7 +1,7 @@
 # Email Provider Evaluation
 
-**Status:** Provider boundary + **invitation email template** implemented (`lib/email/*`). **No real outbound email** — no vendor SDK, no `sendEmail()` on invite create, copy-link unchanged.  
-**Branch context:** `invitation-email-template` (DAT_3.5); evaluation content retained below.  
+**Status:** Boundary + template + **send-on-create (noop)** implemented. **No real outbound email** — default `noop`; copy-link remains mandatory fallback.  
+**Branch context:** `invitation-email-send-on-create` (DAT_3.5); evaluation content retained below.  
 **Related:** [invite-only-foundation-plan.md](./invite-only-foundation-plan.md), [signup-hardening-plan.md](./signup-hardening-plan.md), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
 
 ---
@@ -21,16 +21,16 @@ The **`email-provider-boundary`** batch added `lib/email/*` (types, noop provide
 
 ## Current state
 
-| Area                           | State                                                                                                                                                                     |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Invite-only onboarding**     | **Operational in copy-link mode** — School Admin creates invitation on `/admin/users`, copies `inviteLink` once, shares privately. Accept at `/invitations/accept`.       |
-| **Automatic invitation email** | **Not implemented** — no provider, no templates, no send on create. Users who expect an inbox message will not receive one; **this is expected** until batch integration. |
-| **Admin invitation API/UI**    | Implemented — `POST /api/admin/invitations` returns `inviteLink` on create; list never exposes token/hash.                                                                |
-| **Accept flow**                | Implemented — public GET/POST `/api/invitations/accept`; defense in depth for existing users.                                                                             |
-| **Password reset**             | **Does not exist** — no forgot-password flow, tokens, or reset emails.                                                                                                    |
-| **Email verification**         | **Does not exist** — accounts created with `isEmailVerified: true` as a placeholder (signup and invite accept). No verification tokens or login gate.                     |
-| **Public signup**              | **Disabled by default** — `PUBLIC_SIGNUP_ENABLED` must be explicitly `true` for non-demo orgs.                                                                            |
-| **Marketing / newsletters**    | Out of scope — not planned in this evaluation.                                                                                                                            |
+| Area                           | State                                                                                                                                                                                                |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Invite-only onboarding**     | **Operational in copy-link mode** — School Admin creates invitation on `/admin/users`, copies `inviteLink` once, shares privately. Accept at `/invitations/accept`.                                  |
+| **Automatic invitation email** | **Attempted on create** via `buildInvitationEmail` + `sendEmail` (noop by default). No real provider; inbox delivery pending vendor adapter. Admin still gets `inviteLink` + `emailDelivery` status. |
+| **Admin invitation API/UI**    | Implemented — `POST /api/admin/invitations` returns `inviteLink` on create; list never exposes token/hash.                                                                                           |
+| **Accept flow**                | Implemented — public GET/POST `/api/invitations/accept`; defense in depth for existing users.                                                                                                        |
+| **Password reset**             | **Does not exist** — no forgot-password flow, tokens, or reset emails.                                                                                                                               |
+| **Email verification**         | **Does not exist** — accounts created with `isEmailVerified: true` as a placeholder (signup and invite accept). No verification tokens or login gate.                                                |
+| **Public signup**              | **Disabled by default** — `PUBLIC_SIGNUP_ENABLED` must be explicitly `true` for non-demo orgs.                                                                                                       |
+| **Marketing / newsletters**    | Out of scope — not planned in this evaluation.                                                                                                                                                       |
 
 ---
 
@@ -197,9 +197,16 @@ lib/email/templates/
   invitation-email.unit.test.ts
 ```
 
-`buildInvitationEmail()` is provider-neutral: HTML-escapes interpolated fields, keeps the full `inviteLink` in body copy for recipients, does not log or call `sendEmail()`. Role labels: `STUDENT` → Student, `INSTRUCTOR` → Instructor (`InvitableUserRole` from invite policy). Not wired to `createInvitation` or admin UI.
+`buildInvitationEmail()` is provider-neutral: HTML-escapes interpolated fields, keeps the full `inviteLink` in body copy for recipients. Role labels: `STUDENT` → Student, `INSTRUCTOR` → Instructor (`InvitableUserRole` from invite policy).
 
-**Next batch (probable):** `invitation-email-send-on-create` — call `buildInvitationEmail` + `sendEmail` after create behind a flag; copy-link remains required.
+### Implemented (`invitation-email-send-on-create`)
+
+- **`POST /api/admin/invitations`** — after successful `createInvitation`, calls `attemptInvitationEmailDelivery()` (`lib/invitations/invitation-email-delivery.ts`).
+- Response adds **`emailDelivery`** `{ attempted, ok, provider, noop?, errorCode? }` — no `html`/`text`/token/message.
+- **`inviteLink`** unchanged; create still **201** if send fails or provider is unsupported.
+- No new env flags; no logging of invite bodies or full links.
+
+**Next:** real provider adapter (`resend` / `postmark` / `smtp`) + optional `EMAIL_FROM` / API keys when ops-ready.
 
 ### Planned (later batches)
 
@@ -265,14 +272,14 @@ See [environment-variables.md](../ops/environment-variables.md) when vars are in
 
 Aligned with [invite-only-foundation-plan.md](./invite-only-foundation-plan.md) batch 6 and [signup-hardening-plan.md](./signup-hardening-plan.md).
 
-| Batch                                    | Objective                                            | Acceptance (summary)                                                                       |
-| ---------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| **1. `email-provider-boundary`**         | Interface, noop provider, `email-service` unit tests | **Done (DAT_3.5).** App runs with zero email env; no outbound network by default.          |
-| **2. `invitation-email-template`**       | HTML/text template, i18n deferred (EN first)         | **Done (DAT_3.5).** Unit tests; fake `test-token` fixture only; no send on create.         |
-| **3. `invitation-email-send-on-create`** | Wire send after create behind flag                   | **Next.** Create still returns `inviteLink`; send failure non-fatal; admin toast optional. |
-| **4. `password-reset-flow-foundation`**  | Reset token + API + email                            | No enumeration; rate limit spec; email via same provider.                                  |
-| **5. `email-verification-flow`**         | Tokens, verify endpoint, login gate policy           | `isEmailVerified` semantics fixed; resend limited.                                         |
-| **6. `deliverability-domain-checklist`** | Ops doc + release checklist                          | SPF/DKIM/DMARC verified; test sends to Gmail/Outlook/Yahoo.                                |
+| Batch                                    | Objective                                            | Acceptance (summary)                                                               |
+| ---------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **1. `email-provider-boundary`**         | Interface, noop provider, `email-service` unit tests | **Done (DAT_3.5).** App runs with zero email env; no outbound network by default.  |
+| **2. `invitation-email-template`**       | HTML/text template, i18n deferred (EN first)         | **Done (DAT_3.5).** Unit tests; fake `test-token` fixture only; no send on create. |
+| **3. `invitation-email-send-on-create`** | Wire send after create                               | **Done (DAT_3.5).** `emailDelivery` on create; noop default; copy-link required.   |
+| **4. `password-reset-flow-foundation`**  | Reset token + API + email                            | No enumeration; rate limit spec; email via same provider.                          |
+| **5. `email-verification-flow`**         | Tokens, verify endpoint, login gate policy           | `isEmailVerified` semantics fixed; resend limited.                                 |
+| **6. `deliverability-domain-checklist`** | Ops doc + release checklist                          | SPF/DKIM/DMARC verified; test sends to Gmail/Outlook/Yahoo.                        |
 
 Batch 7 in invite-only plan (`invitation-rate-limit-audit`) remains separate — distributed limits on accept/create, not provider selection.
 
