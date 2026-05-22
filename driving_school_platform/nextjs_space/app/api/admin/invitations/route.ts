@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { validateRequest } from "@/lib/api-utils";
+import { attemptInvitationEmailDelivery } from "@/lib/invitations/invitation-email-delivery";
 import {
   createInvitation,
   listInvitations,
@@ -101,10 +102,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const emailDelivery = await attemptInvitationEmailDelivery({
+      inviteLink: result.inviteLink,
+      invitation: result.invitation,
+      organizationName: result.organizationName,
+    });
+
     return NextResponse.json(
       {
         invitation: result.invitation,
         inviteLink: result.inviteLink,
+        emailDelivery,
       },
       { status: 201 },
     );

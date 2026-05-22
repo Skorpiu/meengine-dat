@@ -1,15 +1,28 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const h = vi.hoisted(() => {
   const listInvitationsMock = vi.fn();
   const createInvitationMock = vi.fn();
+  const attemptInvitationEmailDeliveryMock = vi.fn();
+  const sendEmailMock = vi.fn();
+  const buildInvitationEmailMock = vi.fn();
 
-  return { listInvitationsMock, createInvitationMock };
+  return {
+    listInvitationsMock,
+    createInvitationMock,
+    attemptInvitationEmailDeliveryMock,
+    sendEmailMock,
+    buildInvitationEmailMock,
+  };
 });
 
 vi.mock("@/lib/invitations/invitation-service", () => ({
   listInvitations: h.listInvitationsMock,
   createInvitation: h.createInvitationMock,
+}));
+
+vi.mock("@/lib/invitations/invitation-email-delivery", () => ({
+  attemptInvitationEmailDelivery: h.attemptInvitationEmailDeliveryMock,
 }));
 
 vi.mock("next-auth", () => ({
@@ -65,6 +78,9 @@ const invitationDto = {
   acceptedUser: null,
 };
 
+const inviteLink =
+  "https://school.example.com/invitations/accept?token=test-token";
+
 function req(method: string, url: string, payload?: unknown): Request {
   return new Request(url, {
     method,
@@ -79,7 +95,14 @@ beforeEach(() => {
   h.createInvitationMock.mockResolvedValue({
     ok: true,
     invitation: invitationDto,
-    inviteLink: "https://school.example.com/invitations/accept?token=abc",
+    inviteLink,
+    organizationName: "Demo School",
+  });
+  h.attemptInvitationEmailDeliveryMock.mockResolvedValue({
+    attempted: true,
+    ok: true,
+    provider: "noop",
+    noop: true,
   });
   assertUserTenantHostMock.mockResolvedValue(null);
   rejectDemoUserManagementMutationMock.mockResolvedValue(null);
@@ -104,7 +127,7 @@ describe("Admin Invitations API", () => {
     });
   });
 
-  it("POST creates invitation for SUPER_ADMIN", async () => {
+  it("POST creates invitation, returns inviteLink and emailDelivery", async () => {
     getServerSessionMock.mockResolvedValue({
       user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
     });
@@ -118,8 +141,17 @@ describe("Admin Invitations API", () => {
     expect(res.status).toBe(201);
 
     const json = await res.json();
-    expect(json.inviteLink).toContain("/invitations/accept?token=");
+    expect(json.inviteLink).toBe(inviteLink);
     expect(json.invitation).not.toHaveProperty("tokenHash");
+    expect(json.emailDelivery).toEqual({
+      attempted: true,
+      ok: true,
+      provider: "noop",
+      noop: true,
+    });
+    expect(json).not.toHaveProperty("html");
+    expect(json).not.toHaveProperty("text");
+
     expect(h.createInvitationMock).toHaveBeenCalledWith(
       expect.objectContaining({
         organizationId: "org-a",
@@ -129,6 +161,11 @@ describe("Admin Invitations API", () => {
         baseUrl: "http://school.example.com",
       }),
     );
+    expect(h.attemptInvitationEmailDeliveryMock).toHaveBeenCalledWith({
+      inviteLink,
+      invitation: invitationDto,
+      organizationName: "Demo School",
+    });
   });
 
   it("POST blocks demo org mutations", async () => {
@@ -153,6 +190,7 @@ describe("Admin Invitations API", () => {
     );
     expect(res.status).toBe(403);
     expect(h.createInvitationMock).not.toHaveBeenCalled();
+    expect(h.attemptInvitationEmailDeliveryMock).not.toHaveBeenCalled();
   });
 
   it("POST rejects forbidden roles via zod", async () => {
@@ -168,9 +206,10 @@ describe("Admin Invitations API", () => {
     );
     expect(res.status).toBe(400);
     expect(h.createInvitationMock).not.toHaveBeenCalled();
+    expect(h.attemptInvitationEmailDeliveryMock).not.toHaveBeenCalled();
   });
 
-  it("POST returns 409 user_already_exists without inviteLink", async () => {
+  it("POST returns 409 user_already_exists without inviteLink or email attempt", async () => {
     getServerSessionMock.mockResolvedValue({
       user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
     });
@@ -193,10 +232,12 @@ describe("Admin Invitations API", () => {
     expect(json.code).toBe("user_already_exists");
     expect(json.error).toBe("An account with this email already exists.");
     expect(json).not.toHaveProperty("inviteLink");
+    expect(json).not.toHaveProperty("emailDelivery");
     expect(json).not.toHaveProperty("tokenHash");
+    expect(h.attemptInvitationEmailDeliveryMock).not.toHaveBeenCalled();
   });
 
-  it("POST returns service error codes without tokenHash", async () => {
+  it("POST returns service error codes without tokenHash or email attempt", async () => {
     getServerSessionMock.mockResolvedValue({
       user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
     });
@@ -217,5 +258,58 @@ describe("Admin Invitations API", () => {
     const json = await res.json();
     expect(json.code).toBe("pending_invitation_exists");
     expect(json).not.toHaveProperty("tokenHash");
+    expect(json).not.toHaveProperty("emailDelivery");
+    expect(h.attemptInvitationEmailDeliveryMock).not.toHaveBeenCalled();
+  });
+
+  it("POST still returns 201 when email delivery fails", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    h.attemptInvitationEmailDeliveryMock.mockResolvedValue({
+      attempted: true,
+      ok: false,
+      provider: "resend",
+      errorCode: "PROVIDER_NOT_IMPLEMENTED",
+    });
+
+    const res = await POST(
+      req("POST", "http://school.example.com/api/admin/invitations", {
+        email: "student@school.test",
+        role: "STUDENT",
+      }) as any,
+    );
+
+    expect(res.status).toBe(201);
+    const json = await res.json();
+    expect(json.inviteLink).toBe(inviteLink);
+    expect(json.emailDelivery.ok).toBe(false);
+    expect(json.emailDelivery.errorCode).toBe("PROVIDER_NOT_IMPLEMENTED");
+    expect(json).not.toHaveProperty("html");
+    expect(json).not.toHaveProperty("text");
+  });
+
+  it("POST with unknown provider delivery still returns 201", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    h.attemptInvitationEmailDeliveryMock.mockResolvedValue({
+      attempted: true,
+      ok: false,
+      provider: "noop",
+      errorCode: "PROVIDER_UNKNOWN",
+    });
+
+    const res = await POST(
+      req("POST", "http://school.example.com/api/admin/invitations", {
+        email: "student@school.test",
+        role: "STUDENT",
+      }) as any,
+    );
+
+    expect(res.status).toBe(201);
+    const json = await res.json();
+    expect(json.inviteLink).toBe(inviteLink);
+    expect(json.emailDelivery.errorCode).toBe("PROVIDER_UNKNOWN");
   });
 });

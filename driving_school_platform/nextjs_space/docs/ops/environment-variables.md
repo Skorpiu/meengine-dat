@@ -124,8 +124,9 @@ These are used by **scripts**, **Playwright**, or **tenant defaults** and are **
 
 - **Optional.** Not part of `lib/env.ts` / `env-check`.
 - **Default:** noop when unset, empty, or `noop` (case-insensitive after trim).
-- **Effect:** Selects the email adapter id for `sendEmail()` in `lib/email/*`. Only noop performs a successful no-op send today; planned ids return `PROVIDER_NOT_IMPLEMENTED` without network I/O.
-- **Production:** Leave unset. Invitation onboarding remains **copy-link only**; this variable does not enable outbound mail by itself.
+- **Effect:** Selects the email adapter id for `sendEmail()` in `lib/email/*`. Only noop performs a successful no-op send today; planned ids (`resend`, `postmark`, `smtp`) return `PROVIDER_NOT_IMPLEMENTED` without network I/O; unknown values return `PROVIDER_UNKNOWN`.
+- **Invitation create:** `POST /api/admin/invitations` always attempts delivery after create; response includes `emailDelivery` (status only). With unset/`noop`, delivery succeeds as noop — **no message reaches an inbox** until a real provider is implemented.
+- **Production:** Leave unset until a vendor adapter ships. **Copy-link (`inviteLink`) remains mandatory** regardless of `EMAIL_PROVIDER`.
 
 <a id="public-signup-enabled"></a>
 
