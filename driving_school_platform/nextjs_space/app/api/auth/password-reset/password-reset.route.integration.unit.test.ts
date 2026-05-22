@@ -1,0 +1,105 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+const h = vi.hoisted(() => ({
+  requestPasswordResetMock: vi.fn(),
+  confirmPasswordResetMock: vi.fn(),
+}));
+
+vi.mock("@/lib/password-reset/password-reset-service", () => ({
+  requestPasswordReset: h.requestPasswordResetMock,
+  confirmPasswordReset: h.confirmPasswordResetMock,
+  PASSWORD_RESET_GENERIC_SUCCESS_MESSAGE:
+    "If an account exists, reset instructions have been sent.",
+}));
+
+import { POST as requestPost } from "./request/route";
+import { POST as confirmPost } from "./confirm/route";
+
+function req(url: string, payload: unknown): Request {
+  return new Request(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  h.requestPasswordResetMock.mockResolvedValue({
+    message: "If an account exists, reset instructions have been sent.",
+  });
+});
+
+describe("POST /api/auth/password-reset/request", () => {
+  it("returns generic success without resetLink or token", async () => {
+    const res = await requestPost(
+      req("http://school.example.com/api/auth/password-reset/request", {
+        email: "user@school.test",
+      }) as never,
+    );
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.message).toContain("If an account exists");
+    expect(json).not.toHaveProperty("resetLink");
+    expect(json).not.toHaveProperty("token");
+    expect(JSON.stringify(json)).not.toContain("token=");
+  });
+
+  it("passes baseUrl from request origin", async () => {
+    await requestPost(
+      req("https://tenant.example.com/api/auth/password-reset/request", {
+        email: "user@school.test",
+      }) as never,
+    );
+
+    expect(h.requestPasswordResetMock).toHaveBeenCalledWith({
+      email: "user@school.test",
+      baseUrl: "https://tenant.example.com",
+    });
+  });
+});
+
+describe("POST /api/auth/password-reset/confirm", () => {
+  it("returns success without sensitive fields", async () => {
+    h.confirmPasswordResetMock.mockResolvedValue({
+      ok: true,
+      message: "Your password has been reset.",
+    });
+
+    const res = await confirmPost(
+      req("http://school.example.com/api/auth/password-reset/confirm", {
+        token: "test-token",
+        newPassword: "SecurePass1!",
+      }) as never,
+    );
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json).not.toHaveProperty("tokenHash");
+    expect(json).not.toHaveProperty("html");
+  });
+
+  it("returns controlled error for invalid token", async () => {
+    h.confirmPasswordResetMock.mockResolvedValue({
+      ok: false,
+      error: "Invalid or expired reset link",
+      code: "invalid_token",
+      status: 400,
+    });
+
+    const res = await confirmPost(
+      req("http://school.example.com/api/auth/password-reset/confirm", {
+        token: "bad",
+        newPassword: "SecurePass1!",
+      }) as never,
+    );
+
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.code).toBe("invalid_token");
+    expect(json).not.toHaveProperty("tokenHash");
+  });
+});

@@ -84,6 +84,7 @@ model User {
   organization               Organization?   @relation(fields: [organizationId], references: [id])
   createdInvitations         UserInvitation[] @relation("UserInvitationCreatedBy")
   acceptedInvitations        UserInvitation[] @relation("UserInvitationAcceptedUser")
+  passwordResetTokens        PasswordResetToken[]
 
   @@index([email])
   @@index([role])
@@ -639,6 +640,22 @@ model UserInvitation {
   @@index([createdByUserId])
   @@index([acceptedUserId])
   @@map("user_invitations")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }
 
 model OrganizationFeature {
