@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   formatInvitationDateTime,
+  invitationApiErrorMessage,
   invitationStatusLabel,
 } from "./invitation-ui-utils";
 
@@ -20,5 +21,25 @@ describe("invitationStatusLabel", () => {
     expect(invitationStatusLabel("PENDING")).toBe("Pending");
     expect(invitationStatusLabel("ACCEPTED")).toBe("Accepted");
     expect(invitationStatusLabel("REVOKED")).toBe("Revoked");
+  });
+});
+
+describe("invitationApiErrorMessage", () => {
+  it("maps revoked and expired codes", () => {
+    expect(invitationApiErrorMessage("invitation_revoked", "x")).toContain(
+      "revoked",
+    );
+    expect(invitationApiErrorMessage("invitation_expired", "x")).toContain(
+      "expired",
+    );
+    expect(
+      invitationApiErrorMessage("invitation_already_accepted", "x"),
+    ).toContain("already used");
+  });
+
+  it("falls back for unknown codes", () => {
+    expect(invitationApiErrorMessage(undefined, "Server error")).toBe(
+      "Server error",
+    );
   });
 });
