@@ -124,6 +124,44 @@ describe("attemptInvitationEmailDelivery", () => {
       errorCode: "PROVIDER_UNKNOWN",
     });
   });
+
+  it("returns EMAIL_DELIVERY_FAILED when sendEmail throws", async () => {
+    sendEmailSpy.mockRejectedValue(new Error("provider network failure"));
+
+    const delivery = await attemptInvitationEmailDelivery({
+      inviteLink: testInviteLink,
+      invitation,
+      organizationName: "Demo School",
+    });
+
+    expect(delivery).toEqual({
+      attempted: true,
+      ok: false,
+      provider: "noop",
+      errorCode: "EMAIL_DELIVERY_FAILED",
+    });
+    expect(delivery).not.toHaveProperty("message");
+  });
+
+  it("returns EMAIL_DELIVERY_FAILED when buildInvitationEmail throws", async () => {
+    buildInvitationEmailSpy.mockImplementation(() => {
+      throw new Error("template build failure");
+    });
+
+    const delivery = await attemptInvitationEmailDelivery({
+      inviteLink: testInviteLink,
+      invitation,
+      organizationName: "Demo School",
+    });
+
+    expect(delivery).toEqual({
+      attempted: true,
+      ok: false,
+      provider: "noop",
+      errorCode: "EMAIL_DELIVERY_FAILED",
+    });
+    expect(sendEmailSpy).not.toHaveBeenCalled();
+  });
 });
 
 describe("mapSendEmailResultToDelivery", () => {
