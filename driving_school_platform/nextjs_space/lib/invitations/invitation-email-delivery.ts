@@ -4,12 +4,17 @@ import type { SendEmailResult } from "@/lib/email/types";
 import type { InvitationDto, InvitationUserDisplayDto } from "./invitation-dto";
 import type { InvitableUserRole } from "./invitation-policy";
 
+export type InvitationEmailDeliveryErrorCode =
+  | "EMAIL_DELIVERY_FAILED"
+  | "PROVIDER_NOT_IMPLEMENTED"
+  | "PROVIDER_UNKNOWN";
+
 export type InvitationEmailDelivery = {
   attempted: true;
   ok: boolean;
   provider: string;
   noop?: boolean;
-  errorCode?: string;
+  errorCode?: InvitationEmailDeliveryErrorCode;
 };
 
 export type AttemptInvitationEmailDeliveryInput = {
@@ -50,6 +55,15 @@ export function mapSendEmailResultToDelivery(
   };
 }
 
+export function invitationEmailDeliveryFailed(): InvitationEmailDelivery {
+  return {
+    attempted: true,
+    ok: false,
+    provider: "noop",
+    errorCode: "EMAIL_DELIVERY_FAILED",
+  };
+}
+
 /**
  * Build invitation email from template and send via email boundary.
  * Never throws — callers treat delivery as best-effort after invite create.
@@ -57,26 +71,30 @@ export function mapSendEmailResultToDelivery(
 export async function attemptInvitationEmailDelivery(
   input: AttemptInvitationEmailDeliveryInput,
 ): Promise<InvitationEmailDelivery> {
-  const expiresAt = new Date(input.invitation.expiresAt);
-  const role = input.invitation.role as InvitableUserRole;
+  try {
+    const expiresAt = new Date(input.invitation.expiresAt);
+    const role = input.invitation.role as InvitableUserRole;
 
-  const template = buildInvitationEmail({
-    inviteLink: input.inviteLink,
-    organizationName: input.organizationName,
-    role,
-    expiresAt,
-    invitedEmail: input.invitation.email,
-    invitedByName: formatInvitedByName(input.invitation.createdBy),
-    appName: input.appName,
-  });
+    const template = buildInvitationEmail({
+      inviteLink: input.inviteLink,
+      organizationName: input.organizationName,
+      role,
+      expiresAt,
+      invitedEmail: input.invitation.email,
+      invitedByName: formatInvitedByName(input.invitation.createdBy),
+      appName: input.appName,
+    });
 
-  const sendResult = await sendEmail({
-    to: input.invitation.email,
-    subject: template.subject,
-    html: template.html,
-    text: template.text,
-    tags: [...template.tags],
-  });
+    const sendResult = await sendEmail({
+      to: input.invitation.email,
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+      tags: [...template.tags],
+    });
 
-  return mapSendEmailResultToDelivery(sendResult);
+    return mapSendEmailResultToDelivery(sendResult);
+  } catch {
+    return invitationEmailDeliveryFailed();
+  }
 }
