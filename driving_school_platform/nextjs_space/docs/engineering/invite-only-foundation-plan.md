@@ -1,8 +1,8 @@
 # Invite-only Foundation Plan
 
-**Status:** Batches 1–5 **implemented** (full copy-link invite-only path for School Admin); **copy-link manual smoke checklist** available; **email provider remains pending** (+ rate-limit/audit batch 7).  
-**Branch context:** `invitation-copy-link-smoke-polish`.  
-**Related:** [signup-hardening-plan.md](./signup-hardening-plan.md), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-007), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md), [invitation-copy-link-smoke.md](../ops/invitation-copy-link-smoke.md).
+**Status:** Batches 1–5 **implemented** (full copy-link invite-only path for School Admin); **copy-link manual smoke checklist** available; **email provider evaluation** documented — invite flow remains **copy-link until provider integration** (+ rate-limit/audit batch 7).  
+**Branch context:** `email-provider-evaluation`.  
+**Related:** [signup-hardening-plan.md](./signup-hardening-plan.md), [email-provider-evaluation.md](./email-provider-evaluation.md), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-007), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md), [invitation-copy-link-smoke.md](../ops/invitation-copy-link-smoke.md).
 
 ### Implementation status
 
@@ -13,7 +13,7 @@
 | **Admin invitation API**                                         | **Implemented** — `GET/POST /api/admin/invitations`, `POST /api/admin/invitations/[id]/revoke`; [`lib/invitations/invitation-service.ts`](../../lib/invitations/invitation-service.ts). **`inviteLink` only on create** (phase 1 copy/paste). |
 | **Public accept API + minimal page**                             | **Implemented** — `GET/POST /api/invitations/accept`, [`app/invitations/accept/page.tsx`](../../app/invitations/accept/page.tsx); [`lib/invitations/invitation-accept-service.ts`](../../lib/invitations/invitation-accept-service.ts).       |
 | **Admin invitation UI**                                          | **Implemented** — [`components/admin/invitations-management-client.tsx`](../../components/admin/invitations-management-client.tsx) on Admin Users page: create, list, revoke, copy `inviteLink` once (no localStorage).                       |
-| **Email provider**                                               | **Pending** — batch 6 below.                                                                                                                                                                                                                  |
+| **Email provider**                                               | **Evaluation** — [email-provider-evaluation.md](./email-provider-evaluation.md); **send not implemented**; copy-link remains operational until batch 6.                                                                                       |
 | **End-user invite acceptance**                                   | **Available** via API + minimal page; signup unchanged; instructor placeholder license until admin updates profile.                                                                                                                           |
 | **Pending duplicate per org/email**                              | **Enforced in service** (`pending_invitation_exists`); DB partial unique still optional follow-up.                                                                                                                                            |
 | **Existing user on create**                                      | **Blocked before token generation** (`user_already_exists`, 409); same normalized email lookup as accept; no `inviteLink` returned.                                                                                                           |
@@ -345,6 +345,8 @@ Each batch is a **separate PR** with `pnpm -C driving_school_platform/nextjs_spa
 ---
 
 ### Batch 6: `email-provider-integration`
+
+**Prerequisite:** [email-provider-evaluation.md](./email-provider-evaluation.md) — provider choice, boundary design, phased batches.
 
 |                         |                                                                         |
 | ----------------------- | ----------------------------------------------------------------------- |

@@ -2,7 +2,8 @@
 
 **Status:** Phased plan — phase-1 signup controls **implemented**; invite / verification / rate limit / captcha **pending**.  
 **Branch context:** `auth-surface-doc-status` (documentation consolidation).  
-**Invite-only design:** [invite-only-foundation-plan.md](./invite-only-foundation-plan.md) — **planned** (documentation only; implementation pending).  
+**Invite-only design:** [invite-only-foundation-plan.md](./invite-only-foundation-plan.md) — copy-link **implemented**; automatic email **pending**.  
+**Email provider evaluation:** [email-provider-evaluation.md](./email-provider-evaluation.md) — **password reset** and **email verification** depend on future provider integration (not implemented).  
 **Related audits:** [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-007), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
 
 ---
@@ -11,15 +12,15 @@
 
 Snapshot of the **auth / public signup surface** as implemented in code (not aspirational).
 
-| Control                               | Status          | Notes                                                                                                                                             |
-| ------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Demo signup disabled**              | **Implemented** | `Organization.isDemo` → **403** `demo_signup_disabled` on `POST /api/signup` (always, even if public signup env is on).                           |
-| **Public signup disabled by default** | **Implemented** | Non-demo orgs blocked unless env opt-in; **403** `public_signup_disabled`.                                                                        |
-| **Env explicit opt-in**               | **Implemented** | `PUBLIC_SIGNUP_ENABLED` — only trimmed case-insensitive `"true"` enables; see [`lib/signup/signup-policy.ts`](../../lib/signup/signup-policy.ts). |
-| **Email verification**                | **Pending**     | `isEmailVerified` still set `true` on create; no provider, tokens, or login gate.                                                                 |
-| **Distributed rate limit**            | **Pending**     | Signup not throttled; in-memory `lib/rate-limit.ts` must not be used as production signup defense on serverless.                                  |
-| **Invite-only foundation**            | **Partial**     | Copy-link mode: admin UI on `/admin/users`, APIs, public accept page. **Email provider pending.** `inviteLink` only on create.                    |
-| **Captcha / Turnstile**               | **Pending**     | Not on `/auth/register` or signup API.                                                                                                            |
+| Control                               | Status          | Notes                                                                                                                                                                                           |
+| ------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Demo signup disabled**              | **Implemented** | `Organization.isDemo` → **403** `demo_signup_disabled` on `POST /api/signup` (always, even if public signup env is on).                                                                         |
+| **Public signup disabled by default** | **Implemented** | Non-demo orgs blocked unless env opt-in; **403** `public_signup_disabled`.                                                                                                                      |
+| **Env explicit opt-in**               | **Implemented** | `PUBLIC_SIGNUP_ENABLED` — only trimmed case-insensitive `"true"` enables; see [`lib/signup/signup-policy.ts`](../../lib/signup/signup-policy.ts).                                               |
+| **Email verification**                | **Pending**     | `isEmailVerified` still set `true` on create; no provider, tokens, or login gate. Depends on [email-provider-evaluation.md](./email-provider-evaluation.md) implementation batches.             |
+| **Distributed rate limit**            | **Pending**     | Signup not throttled; in-memory `lib/rate-limit.ts` must not be used as production signup defense on serverless.                                                                                |
+| **Invite-only foundation**            | **Partial**     | Copy-link mode: admin UI on `/admin/users`, APIs, public accept page. **Email send pending** — see [email-provider-evaluation.md](./email-provider-evaluation.md). `inviteLink` only on create. |
+| **Captcha / Turnstile**               | **Pending**     | Not on `/auth/register` or signup API.                                                                                                                                                          |
 
 ### Production and product guidance
 
