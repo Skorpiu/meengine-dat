@@ -27,6 +27,7 @@ import type {
 import {
   copyTextToClipboard,
   formatInvitationDateTime,
+  invitationApiErrorMessage,
   invitationStatusLabel,
 } from "@/lib/invitations/invitation-ui-utils";
 
@@ -75,7 +76,10 @@ export function InvitationsManagementClient() {
   const [createdInviteLink, setCreatedInviteLink] = useState<string | null>(
     null,
   );
+  const [linkCopied, setLinkCopied] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
+
+  const formBusy = createLoading || revokingId !== null;
 
   const loadInvitations = useCallback(async () => {
     setListLoading(true);
@@ -132,12 +136,18 @@ export function InvitationsManagementClient() {
 
       if (!response.ok) {
         const err = data as InvitationApiError | null;
-        toast.error(err?.error || "Failed to create invitation");
+        toast.error(
+          invitationApiErrorMessage(
+            err?.code,
+            err?.error || "Failed to create invitation",
+          ),
+        );
         return;
       }
 
       const created = data as CreateInvitationResponse;
       setCreatedInviteLink(created.inviteLink);
+      setLinkCopied(false);
       setEmail("");
       toast.success(
         "Invitation created. Copy the link and share it privately.",
@@ -156,9 +166,11 @@ export function InvitationsManagementClient() {
     }
     const copied = await copyTextToClipboard(createdInviteLink);
     if (copied) {
-      toast.success("Invite link copied to clipboard");
+      setLinkCopied(true);
+      toast.success("Invite link copied — share it only with the invitee");
+      window.setTimeout(() => setLinkCopied(false), 2500);
     } else {
-      toast.error("Could not copy link. Select and copy manually.");
+      toast.error("Could not copy link. Select the field and copy manually.");
     }
   };
 
@@ -210,9 +222,10 @@ export function InvitationsManagementClient() {
           Invitations
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Invite links are private. Share them only with the intended person.
-          The link is shown once after creation — copy it before leaving this
-          page.
+          Invite links are <strong>sensitive</strong> (like a password). Share
+          them only with the intended person. The link is shown once after
+          creation — copy it before leaving this page. The list below never
+          shows links or tokens.
         </p>
       </CardHeader>
       <CardContent className="space-y-8">
@@ -231,6 +244,7 @@ export function InvitationsManagementClient() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="student@example.com"
+                disabled={formBusy}
               />
             </div>
             <div className="space-y-2">
@@ -238,6 +252,7 @@ export function InvitationsManagementClient() {
               <Select
                 value={role}
                 onValueChange={(value) => setRole(value as InvitableRole)}
+                disabled={formBusy}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -258,20 +273,25 @@ export function InvitationsManagementClient() {
                 required
                 value={expiresInDays}
                 onChange={(e) => setExpiresInDays(e.target.value)}
+                disabled={formBusy}
               />
             </div>
           </div>
-          <Button type="submit" disabled={createLoading}>
+          <Button type="submit" disabled={formBusy}>
             {createLoading ? "Creating…" : "Create invitation"}
           </Button>
         </form>
 
         {createdInviteLink && (
-          <Alert className="border-driving-primary/30 bg-blue-50">
-            <Link2 className="h-4 w-4" />
-            <AlertDescription className="space-y-3">
-              <p className="font-medium text-gray-900">
-                Invitation link (shown once)
+          <Alert className="border-amber-300 bg-amber-50">
+            <Link2 className="h-4 w-4 text-amber-800" />
+            <AlertDescription className="space-y-3 text-amber-950">
+              <p className="font-medium">
+                Private invite link — copy now (shown once)
+              </p>
+              <p className="text-sm">
+                Anyone with this URL can create an account. Do not post in chat,
+                tickets, or email threads with broad visibility.
               </p>
               <div className="flex flex-col sm:flex-row gap-2">
                 <Input
@@ -282,12 +302,13 @@ export function InvitationsManagementClient() {
                 />
                 <Button
                   type="button"
-                  variant="outline"
+                  variant={linkCopied ? "default" : "outline"}
                   onClick={handleCopyLink}
                   className="shrink-0"
+                  disabled={formBusy}
                 >
                   <Copy className="h-4 w-4 mr-2" />
-                  Copy invite link
+                  {linkCopied ? "Copied!" : "Copy invite link"}
                 </Button>
               </div>
             </AlertDescription>

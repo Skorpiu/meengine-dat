@@ -1,8 +1,8 @@
 # Invite-only Foundation Plan
 
-**Status:** Batches 1–5 **implemented** (full copy-link invite-only path for School Admin); **email provider + rate-limit/audit batches pending**.  
-**Branch context:** `admin-invitation-ui`.  
-**Related:** [signup-hardening-plan.md](./signup-hardening-plan.md), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-007), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
+**Status:** Batches 1–5 **implemented** (full copy-link invite-only path for School Admin); **copy-link manual smoke checklist** available; **email provider remains pending** (+ rate-limit/audit batch 7).  
+**Branch context:** `invitation-copy-link-smoke-polish`.  
+**Related:** [signup-hardening-plan.md](./signup-hardening-plan.md), [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-007), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md), [invitation-copy-link-smoke.md](../ops/invitation-copy-link-smoke.md).
 
 ### Implementation status
 
@@ -16,6 +16,7 @@
 | **Email provider**                                               | **Pending** — batch 6 below.                                                                                                                                                                                                                  |
 | **End-user invite acceptance**                                   | **Available** via API + minimal page; signup unchanged; instructor placeholder license until admin updates profile.                                                                                                                           |
 | **Pending duplicate per org/email**                              | **Enforced in service** (`pending_invitation_exists`); DB partial unique still optional follow-up.                                                                                                                                            |
+| **Copy-link manual smoke**                                       | **Checklist** — [invitation-copy-link-smoke.md](../ops/invitation-copy-link-smoke.md) (STUDENT/INSTRUCTOR accept, revoke, duplicate pending, no token in list).                                                                               |
 
 ---
 

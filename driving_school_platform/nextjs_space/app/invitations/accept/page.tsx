@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Car, Eye, EyeOff } from "lucide-react";
+import { invitationApiErrorMessage } from "@/lib/invitations/invitation-ui-utils";
 
 type InvitationPreview = {
   email: string;
@@ -22,6 +23,10 @@ type InvitationPreview = {
   organizationName: string;
   expiresAt: string;
 };
+
+type AcceptPreviewResponse =
+  | { invitation: InvitationPreview }
+  | { error?: string; code?: string };
 
 function AcceptInvitationContent() {
   const searchParams = useSearchParams();
@@ -55,15 +60,21 @@ function AcceptInvitationContent() {
       const res = await fetch(
         `/api/invitations/accept?token=${encodeURIComponent(token)}`,
       );
-      const data = await res.json();
+      const data = (await res.json()) as AcceptPreviewResponse;
 
       if (!res.ok) {
-        setLoadError(data.error ?? "This invitation is not valid.");
+        const err = data as { error?: string; code?: string };
+        setLoadError(
+          invitationApiErrorMessage(
+            err.code,
+            err.error ?? "This invitation is not valid.",
+          ),
+        );
         setPreview(null);
         return;
       }
 
-      setPreview(data.invitation);
+      setPreview("invitation" in data ? data.invitation : null);
     } catch {
       setLoadError("Could not load invitation. Please try again.");
     } finally {
@@ -91,10 +102,15 @@ function AcceptInvitationContent() {
           password,
         }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { error?: string; code?: string };
 
       if (!res.ok) {
-        setSubmitError(data.error ?? "Could not accept invitation.");
+        setSubmitError(
+          invitationApiErrorMessage(
+            data.code,
+            data.error ?? "Could not accept invitation.",
+          ),
+        );
         return;
       }
 
@@ -139,7 +155,13 @@ function AcceptInvitationContent() {
           <CardContent className="space-y-4">
             {loadError && (
               <Alert variant="destructive">
-                <AlertDescription>{loadError}</AlertDescription>
+                <AlertDescription>
+                  <p>{loadError}</p>
+                  <p className="mt-2 text-sm">
+                    If you need access, contact your driving school admin for a
+                    new invitation.
+                  </p>
+                </AlertDescription>
               </Alert>
             )}
 
@@ -187,6 +209,7 @@ function AcceptInvitationContent() {
                         required
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
+                        disabled={submitting}
                       />
                     </div>
                     <div className="space-y-2">
@@ -196,6 +219,7 @@ function AcceptInvitationContent() {
                         required
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
+                        disabled={submitting}
                       />
                     </div>
                   </div>
@@ -209,6 +233,7 @@ function AcceptInvitationContent() {
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        disabled={submitting}
                       />
                       <Button
                         type="button"
