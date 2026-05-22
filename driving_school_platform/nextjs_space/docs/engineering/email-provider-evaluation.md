@@ -1,7 +1,7 @@
 # Email Provider Evaluation
 
-**Status:** Provider boundary implemented (`lib/email/*`, default **noop**). **No real outbound email** — no vendor SDK, no send on invitation create, copy-link unchanged.  
-**Branch context:** `email-provider-boundary` (DAT_3.5); evaluation content retained below.  
+**Status:** Provider boundary + **invitation email template** implemented (`lib/email/*`). **No real outbound email** — no vendor SDK, no `sendEmail()` on invite create, copy-link unchanged.  
+**Branch context:** `invitation-email-template` (DAT_3.5); evaluation content retained below.  
 **Related:** [invite-only-foundation-plan.md](./invite-only-foundation-plan.md), [signup-hardening-plan.md](./signup-hardening-plan.md), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
 
 ---
@@ -189,11 +189,22 @@ lib/email/
 
 `sendEmail()` reads `process.env.EMAIL_PROVIDER` only inside `email-service.ts` (not `lib/env.ts`). Empty / unset / `noop` → noop success. `resend` | `postmark` | `smtp` → controlled `PROVIDER_NOT_IMPLEMENTED` (no network). Unknown values → `PROVIDER_UNKNOWN` (no network, no crash).
 
+### Implemented (`invitation-email-template`)
+
+```
+lib/email/templates/
+  invitation-email.ts           # buildInvitationEmail() — subject, html, text, tags
+  invitation-email.unit.test.ts
+```
+
+`buildInvitationEmail()` is provider-neutral: HTML-escapes interpolated fields, keeps the full `inviteLink` in body copy for recipients, does not log or call `sendEmail()`. Role labels: `STUDENT` → Student, `INSTRUCTOR` → Instructor (`InvitableUserRole` from invite policy). Not wired to `createInvitation` or admin UI.
+
+**Next batch (probable):** `invitation-email-send-on-create` — call `buildInvitationEmail` + `sendEmail` after create behind a flag; copy-link remains required.
+
 ### Planned (later batches)
 
 ```
 lib/email/templates/
-  invitation-email.ts        # batch: invitation-email-template
   password-reset-email.ts    # batch: password-reset-flow-foundation
   verification-email.ts      # batch: email-verification-flow
 ```
@@ -254,14 +265,14 @@ See [environment-variables.md](../ops/environment-variables.md) when vars are in
 
 Aligned with [invite-only-foundation-plan.md](./invite-only-foundation-plan.md) batch 6 and [signup-hardening-plan.md](./signup-hardening-plan.md).
 
-| Batch                                    | Objective                                            | Acceptance (summary)                                                                  |
-| ---------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| **1. `email-provider-boundary`**         | Interface, noop provider, `email-service` unit tests | **Done (DAT_3.5).** App runs with zero email env; no outbound network by default.     |
-| **2. `invitation-email-template`**       | HTML/text template, i18n deferred (EN first)         | Template tests snapshot subject/body structure; no raw token in test fixtures logged. |
-| **3. `invitation-email-send-on-create`** | Wire send after create behind flag                   | Create still returns `inviteLink`; send failure non-fatal; admin toast optional.      |
-| **4. `password-reset-flow-foundation`**  | Reset token + API + email                            | No enumeration; rate limit spec; email via same provider.                             |
-| **5. `email-verification-flow`**         | Tokens, verify endpoint, login gate policy           | `isEmailVerified` semantics fixed; resend limited.                                    |
-| **6. `deliverability-domain-checklist`** | Ops doc + release checklist                          | SPF/DKIM/DMARC verified; test sends to Gmail/Outlook/Yahoo.                           |
+| Batch                                    | Objective                                            | Acceptance (summary)                                                                       |
+| ---------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **1. `email-provider-boundary`**         | Interface, noop provider, `email-service` unit tests | **Done (DAT_3.5).** App runs with zero email env; no outbound network by default.          |
+| **2. `invitation-email-template`**       | HTML/text template, i18n deferred (EN first)         | **Done (DAT_3.5).** Unit tests; fake `test-token` fixture only; no send on create.         |
+| **3. `invitation-email-send-on-create`** | Wire send after create behind flag                   | **Next.** Create still returns `inviteLink`; send failure non-fatal; admin toast optional. |
+| **4. `password-reset-flow-foundation`**  | Reset token + API + email                            | No enumeration; rate limit spec; email via same provider.                                  |
+| **5. `email-verification-flow`**         | Tokens, verify endpoint, login gate policy           | `isEmailVerified` semantics fixed; resend limited.                                         |
+| **6. `deliverability-domain-checklist`** | Ops doc + release checklist                          | SPF/DKIM/DMARC verified; test sends to Gmail/Outlook/Yahoo.                                |
 
 Batch 7 in invite-only plan (`invitation-rate-limit-audit`) remains separate — distributed limits on accept/create, not provider selection.
 

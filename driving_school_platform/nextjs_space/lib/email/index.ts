@@ -15,3 +15,12 @@ export type {
   SendEmailSuccessResult,
 } from "./types";
 export { noopEmailProvider } from "./providers/noop-provider";
+export {
+  buildInvitationEmail,
+  formatInvitationEmailExpiry,
+  invitationEmailRoleLabel,
+} from "./templates/invitation-email";
+export type {
+  BuildInvitationEmailInput,
+  BuildInvitationEmailResult,
+} from "./templates/invitation-email";
