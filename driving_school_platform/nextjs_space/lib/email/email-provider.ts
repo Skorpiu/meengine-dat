@@ -1,9 +1,8 @@
 import { noopEmailProvider } from "./providers/noop-provider";
-import type { EmailProvider, EmailProviderId } from "./types";
+import type { EmailProvider } from "./types";
 
-const PLANNED_PROVIDER_IDS: ReadonlySet<string> = new Set([
+const NOT_IMPLEMENTED_PROVIDER_IDS: ReadonlySet<string> = new Set([
   "resend",
-  "postmark",
   "smtp",
 ]);
 
@@ -14,22 +13,20 @@ export function normalizeEmailProviderEnv(
   return trimmed === "" ? undefined : trimmed;
 }
 
-export function isPlannedEmailProviderId(
-  normalized: string,
-): normalized is Exclude<EmailProviderId, "noop"> {
-  return PLANNED_PROVIDER_IDS.has(normalized.toLowerCase());
+export function isNotImplementedEmailProviderId(normalized: string): boolean {
+  return NOT_IMPLEMENTED_PROVIDER_IDS.has(normalized.toLowerCase());
 }
 
-export function resolvePlannedProviderId(
+export function resolveNotImplementedProviderId(
   normalized: string,
-): Exclude<EmailProviderId, "noop"> | null {
+): "resend" | "smtp" | null {
   const id = normalized.toLowerCase();
-  if (id === "resend" || id === "postmark" || id === "smtp") return id;
+  if (id === "resend" || id === "smtp") return id;
   return null;
 }
 
 /**
- * Active adapter for send. Only noop is wired; reads env at call time via caller.
+ * Active noop adapter; reads env at call time via caller.
  */
 export function getNoopEmailProvider(): EmailProvider {
   return noopEmailProvider;

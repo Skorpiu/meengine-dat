@@ -1,13 +1,12 @@
 import { sendEmail } from "@/lib/email/email-service";
 import { buildInvitationEmail } from "@/lib/email/templates/invitation-email";
-import type { SendEmailResult } from "@/lib/email/types";
+import type { EmailErrorCode, SendEmailResult } from "@/lib/email/types";
 import type { InvitationDto, InvitationUserDisplayDto } from "./invitation-dto";
 import type { InvitableUserRole } from "./invitation-policy";
 
 export type InvitationEmailDeliveryErrorCode =
-  | "EMAIL_DELIVERY_FAILED"
-  | "PROVIDER_NOT_IMPLEMENTED"
-  | "PROVIDER_UNKNOWN";
+  | EmailErrorCode
+  | "EMAIL_DELIVERY_FAILED";
 
 export type InvitationEmailDelivery = {
   attempted: true;

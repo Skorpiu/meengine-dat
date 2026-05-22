@@ -69,19 +69,30 @@ describe("email boundary (noop default)", () => {
   });
 });
 
-describe("email boundary (planned / unknown providers)", () => {
-  const originalProvider = process.env.EMAIL_PROVIDER;
+describe("email boundary (not implemented / unknown providers)", () => {
+  const originalEnv: Record<string, string | undefined> = {};
 
-  afterEach(() => {
-    if (originalProvider === undefined) {
-      delete process.env.EMAIL_PROVIDER;
-    } else {
-      process.env.EMAIL_PROVIDER = originalProvider;
-    }
-    vi.restoreAllMocks();
+  beforeEach(() => {
+    originalEnv.EMAIL_PROVIDER = process.env.EMAIL_PROVIDER;
+    originalEnv.POSTMARK_SERVER_TOKEN = process.env.POSTMARK_SERVER_TOKEN;
+    originalEnv.POSTMARK_FROM_EMAIL = process.env.POSTMARK_FROM_EMAIL;
+    delete process.env.POSTMARK_SERVER_TOKEN;
+    delete process.env.POSTMARK_FROM_EMAIL;
   });
 
-  it.each(["resend", "postmark", "smtp", "Resend"])(
+  afterEach(() => {
+    for (const [key, value] of Object.entries(originalEnv)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it.each(["resend", "smtp", "Resend"])(
     "returns PROVIDER_NOT_IMPLEMENTED for %s without network",
     async (provider) => {
       process.env.EMAIL_PROVIDER = provider;
@@ -112,6 +123,76 @@ describe("email boundary (planned / unknown providers)", () => {
       message: "Unknown EMAIL_PROVIDER value; no email was sent.",
     });
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("email boundary (postmark)", () => {
+  const originalEnv: Record<string, string | undefined> = {};
+
+  beforeEach(() => {
+    for (const key of [
+      "EMAIL_PROVIDER",
+      "POSTMARK_SERVER_TOKEN",
+      "POSTMARK_FROM_EMAIL",
+      "POSTMARK_API_BASE_URL",
+    ]) {
+      originalEnv[key] = process.env[key];
+    }
+    process.env.EMAIL_PROVIDER = "postmark";
+    vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    for (const [key, value] of Object.entries(originalEnv)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+    vi.unstubAllGlobals();
+  });
+
+  it("returns PROVIDER_MISCONFIGURED without fetch when Postmark env is incomplete", async () => {
+    delete process.env.POSTMARK_SERVER_TOKEN;
+    delete process.env.POSTMARK_FROM_EMAIL;
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+
+    const result = await sendEmail(sampleInput);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errorCode).toBe("PROVIDER_MISCONFIGURED");
+      expect(result.provider).toBe("postmark");
+    }
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("delegates to Postmark when env is configured", async () => {
+    process.env.POSTMARK_SERVER_TOKEN = "POSTMARK_API_TEST";
+    process.env.POSTMARK_FROM_EMAIL = "invites@example.test";
+    process.env.POSTMARK_API_BASE_URL = "https://postmark.test.local";
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ MessageID: "pm-boundary-1" }),
+      }),
+    );
+
+    const result = await sendEmail(sampleInput);
+
+    expect(result).toEqual({
+      ok: true,
+      provider: "postmark",
+      id: "pm-boundary-1",
+    });
+    expect(fetch).toHaveBeenCalledWith(
+      "https://postmark.test.local/email",
+      expect.any(Object),
+    );
   });
 });
 

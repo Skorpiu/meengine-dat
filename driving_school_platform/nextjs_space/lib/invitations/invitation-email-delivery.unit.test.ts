@@ -92,6 +92,8 @@ describe("attemptInvitationEmailDelivery", () => {
 
   it("maps resend env to PROVIDER_NOT_IMPLEMENTED without throwing", async () => {
     process.env.EMAIL_PROVIDER = "resend";
+    delete process.env.POSTMARK_SERVER_TOKEN;
+    delete process.env.POSTMARK_FROM_EMAIL;
 
     const delivery = await attemptInvitationEmailDelivery({
       inviteLink: testInviteLink,
@@ -106,6 +108,25 @@ describe("attemptInvitationEmailDelivery", () => {
       errorCode: "PROVIDER_NOT_IMPLEMENTED",
     });
     expect(delivery).not.toHaveProperty("message");
+  });
+
+  it("maps postmark misconfiguration to PROVIDER_MISCONFIGURED without throwing", async () => {
+    process.env.EMAIL_PROVIDER = "postmark";
+    delete process.env.POSTMARK_SERVER_TOKEN;
+    delete process.env.POSTMARK_FROM_EMAIL;
+
+    const delivery = await attemptInvitationEmailDelivery({
+      inviteLink: testInviteLink,
+      invitation,
+      organizationName: "Demo School",
+    });
+
+    expect(delivery).toEqual({
+      attempted: true,
+      ok: false,
+      provider: "postmark",
+      errorCode: "PROVIDER_MISCONFIGURED",
+    });
   });
 
   it("maps unknown env to PROVIDER_UNKNOWN", async () => {

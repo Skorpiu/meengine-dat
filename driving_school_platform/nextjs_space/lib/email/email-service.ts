@@ -1,9 +1,10 @@
 import {
   getNoopEmailProvider,
-  isPlannedEmailProviderId,
+  isNotImplementedEmailProviderId,
   normalizeEmailProviderEnv,
-  resolvePlannedProviderId,
+  resolveNotImplementedProviderId,
 } from "./email-provider";
+import { postmarkEmailProvider } from "./providers/postmark-provider";
 import { sanitizeEmailErrorMessage } from "./redaction";
 import type { SendEmailInput, SendEmailResult } from "./types";
 
@@ -26,8 +27,14 @@ export async function sendEmail(
     return getNoopEmailProvider().send(input);
   }
 
-  if (isPlannedEmailProviderId(configured)) {
-    const provider = resolvePlannedProviderId(configured)!;
+  const providerId = configured.toLowerCase();
+
+  if (providerId === "postmark") {
+    return postmarkEmailProvider.send(input);
+  }
+
+  if (isNotImplementedEmailProviderId(configured)) {
+    const provider = resolveNotImplementedProviderId(configured)!;
     return {
       ok: false,
       provider,
