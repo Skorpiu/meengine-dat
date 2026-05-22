@@ -42,4 +42,10 @@ describe("invitationApiErrorMessage", () => {
       "Server error",
     );
   });
+
+  it("maps user_already_exists for admin surface", () => {
+    expect(
+      invitationApiErrorMessage("user_already_exists", "x", { forAdmin: true }),
+    ).toContain("Ask the user to sign in");
+  });
 });

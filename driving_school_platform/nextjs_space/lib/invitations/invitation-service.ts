@@ -31,7 +31,11 @@ export type CreateInvitationResult =
   | {
       ok: false;
       error: string;
-      code: "invalid_role" | "pending_invitation_exists" | "invalid_email";
+      code:
+        | "invalid_role"
+        | "pending_invitation_exists"
+        | "user_already_exists"
+        | "invalid_email";
       status: number;
     };
 
@@ -67,6 +71,20 @@ export async function createInvitation(
       error: "Invalid role for invitation",
       code: "invalid_role",
       status: 400,
+    };
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+
+  if (existingUser) {
+    return {
+      ok: false,
+      error: "An account with this email already exists.",
+      code: "user_already_exists",
+      status: 409,
     };
   }
 

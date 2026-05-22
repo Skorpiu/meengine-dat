@@ -5,13 +5,18 @@ const h = vi.hoisted(() => {
   const findManyMock = vi.fn();
   const createMock = vi.fn();
   const updateMock = vi.fn();
+  const userFindUniqueMock = vi.fn();
 
   return {
     findFirstMock,
     findManyMock,
     createMock,
     updateMock,
+    userFindUniqueMock,
     prismaMock: {
+      user: {
+        findUnique: userFindUniqueMock,
+      },
       userInvitation: {
         findFirst: findFirstMock,
         findMany: findManyMock,
@@ -64,6 +69,7 @@ function sampleRow(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  h.userFindUniqueMock.mockResolvedValue(null);
   h.findFirstMock.mockResolvedValue(null);
   h.findManyMock.mockResolvedValue([]);
 });
@@ -101,6 +107,31 @@ describe("createInvitation", () => {
       code: "invalid_role",
       status: 400,
     });
+    expect(h.createMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks when a user with the same normalized email already exists", async () => {
+    h.userFindUniqueMock.mockResolvedValue({ id: "user-1" });
+
+    const result = await createInvitation({
+      organizationId: "org-a",
+      createdByUserId: "admin-1",
+      email: "  Student@School.TEST ",
+      role: "STUDENT",
+      baseUrl: "https://school.example.com",
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "An account with this email already exists.",
+      code: "user_already_exists",
+      status: 409,
+    });
+    expect(h.userFindUniqueMock).toHaveBeenCalledWith({
+      where: { email: "student@school.test" },
+      select: { id: true },
+    });
+    expect(h.findFirstMock).not.toHaveBeenCalled();
     expect(h.createMock).not.toHaveBeenCalled();
   });
 
