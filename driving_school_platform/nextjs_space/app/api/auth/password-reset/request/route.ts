@@ -4,6 +4,7 @@ import {
   PASSWORD_RESET_GENERIC_SUCCESS_MESSAGE,
   requestPasswordReset,
 } from "@/lib/password-reset/password-reset-service";
+import { getPasswordResetRequestBaseUrl } from "@/lib/password-reset/request-base-url";
 import { passwordResetRequestBodySchema } from "@/lib/password-reset/password-reset-validation";
 
 export const runtime = "nodejs";
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     const result = await requestPasswordReset({
       email: validation.data.email,
-      baseUrl: new URL(request.url).origin,
+      baseUrl: getPasswordResetRequestBaseUrl(request),
     });
 
     return NextResponse.json({

@@ -193,18 +193,53 @@ export async function confirmPasswordReset(
     };
   }
 
-  const passwordHash = await bcrypt.hash(input.newPassword, BCRYPT_COST);
-  const usedAt = new Date();
+  const txResult = await prisma.$transaction(async (tx) => {
+    const consumed = await tx.passwordResetToken.updateMany({
+      where: {
+        tokenHash,
+        usedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      data: { usedAt: new Date() },
+    });
 
-  await prisma.$transaction(async (tx) => {
+    if (consumed.count === 0) {
+      const current = await tx.passwordResetToken.findUnique({
+        where: { tokenHash },
+        select: { usedAt: true, expiresAt: true },
+      });
+
+      if (!current) {
+        return {
+          ok: false as const,
+          error: "Invalid or expired reset link",
+          code: "invalid_token" as const,
+          status: 400,
+        };
+      }
+
+      if (current.usedAt) {
+        return {
+          ok: false as const,
+          error: "This reset link has already been used",
+          code: "token_already_used" as const,
+          status: 400,
+        };
+      }
+
+      return {
+        ok: false as const,
+        error: "This reset link has expired",
+        code: "token_expired" as const,
+        status: 400,
+      };
+    }
+
+    const passwordHash = await bcrypt.hash(input.newPassword, BCRYPT_COST);
+
     await tx.user.update({
       where: { id: record.userId },
       data: { passwordHash },
-    });
-
-    await tx.passwordResetToken.update({
-      where: { id: record.id },
-      data: { usedAt },
     });
 
     await tx.passwordResetToken.updateMany({
@@ -213,9 +248,15 @@ export async function confirmPasswordReset(
         usedAt: null,
         id: { not: record.id },
       },
-      data: { usedAt },
+      data: { usedAt: new Date() },
     });
+
+    return { ok: true as const };
   });
+
+  if (!txResult.ok) {
+    return txResult;
+  }
 
   return {
     ok: true,

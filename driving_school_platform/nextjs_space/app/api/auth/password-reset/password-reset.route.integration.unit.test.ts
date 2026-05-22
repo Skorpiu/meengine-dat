@@ -47,6 +47,22 @@ describe("POST /api/auth/password-reset/request", () => {
     expect(JSON.stringify(json)).not.toContain("token=");
   });
 
+  it("returns generic success when service throws", async () => {
+    h.requestPasswordResetMock.mockRejectedValue(new Error("db down"));
+
+    const res = await requestPost(
+      req("http://school.example.com/api/auth/password-reset/request", {
+        email: "user@school.test",
+      }) as never,
+    );
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.message).toContain("If an account exists");
+    expect(json).not.toHaveProperty("resetLink");
+  });
+
   it("passes baseUrl from request origin", async () => {
     await requestPost(
       req("https://tenant.example.com/api/auth/password-reset/request", {
@@ -80,6 +96,39 @@ describe("POST /api/auth/password-reset/confirm", () => {
     expect(json.success).toBe(true);
     expect(json).not.toHaveProperty("tokenHash");
     expect(json).not.toHaveProperty("html");
+  });
+
+  it("returns controlled errors without userId or tokenHash", async () => {
+    for (const failure of [
+      {
+        ok: false as const,
+        error: "This reset link has expired",
+        code: "token_expired" as const,
+        status: 400,
+      },
+      {
+        ok: false as const,
+        error: "This reset link has already been used",
+        code: "token_already_used" as const,
+        status: 400,
+      },
+    ]) {
+      h.confirmPasswordResetMock.mockResolvedValueOnce(failure);
+
+      const res = await confirmPost(
+        req("http://school.example.com/api/auth/password-reset/confirm", {
+          token: "test-token",
+          newPassword: "SecurePass1!",
+        }) as never,
+      );
+
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.code).toBe(failure.code);
+      expect(json).not.toHaveProperty("tokenHash");
+      expect(json).not.toHaveProperty("userId");
+      expect(JSON.stringify(json)).not.toContain("stack");
+    }
   });
 
   it("returns controlled error for invalid token", async () => {

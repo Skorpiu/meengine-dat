@@ -5,7 +5,6 @@ const h = vi.hoisted(() => {
   const passwordResetUpdateManyMock = vi.fn();
   const passwordResetCreateMock = vi.fn();
   const passwordResetFindUniqueMock = vi.fn();
-  const passwordResetUpdateMock = vi.fn();
   const userUpdateMock = vi.fn();
   const transactionMock = vi.fn();
   const sendEmailMock = vi.fn();
@@ -20,7 +19,6 @@ const h = vi.hoisted(() => {
       updateMany: passwordResetUpdateManyMock,
       create: passwordResetCreateMock,
       findUnique: passwordResetFindUniqueMock,
-      update: passwordResetUpdateMock,
     },
     $transaction: transactionMock,
   };
@@ -30,7 +28,6 @@ const h = vi.hoisted(() => {
     passwordResetUpdateManyMock,
     passwordResetCreateMock,
     passwordResetFindUniqueMock,
-    passwordResetUpdateMock,
     userUpdateMock,
     transactionMock,
     sendEmailMock,
@@ -75,7 +72,6 @@ beforeEach(() => {
   );
   h.passwordResetUpdateManyMock.mockResolvedValue({ count: 0 });
   h.passwordResetCreateMock.mockResolvedValue({ id: "prt-1" });
-  h.passwordResetUpdateMock.mockResolvedValue({});
   h.userUpdateMock.mockResolvedValue({});
 });
 
@@ -229,13 +225,16 @@ describe("confirmPasswordReset", () => {
     }
   });
 
-  it("updates password and marks token used for valid token", async () => {
+  it("updates password and atomically consumes token for valid token", async () => {
     h.passwordResetFindUniqueMock.mockResolvedValue({
       id: "prt-1",
       userId: "u1",
       expiresAt: new Date("2099-01-01T00:00:00.000Z"),
       usedAt: null,
     });
+    h.passwordResetUpdateManyMock
+      .mockResolvedValueOnce({ count: 1 })
+      .mockResolvedValueOnce({ count: 0 });
 
     const result = await confirmPasswordReset({
       token: RAW_TOKEN,
@@ -248,10 +247,41 @@ describe("confirmPasswordReset", () => {
       where: { id: "u1" },
       data: { passwordHash: "hashed-new-password" },
     });
-    expect(h.passwordResetUpdateMock).toHaveBeenCalledWith({
-      where: { id: "prt-1" },
+    expect(h.passwordResetUpdateManyMock).toHaveBeenCalledWith({
+      where: {
+        tokenHash: TOKEN_HASH,
+        usedAt: null,
+        expiresAt: { gt: expect.any(Date) },
+      },
       data: { usedAt: expect.any(Date) },
     });
+  });
+
+  it("rejects second use when atomic consume returns count 0 (race)", async () => {
+    h.passwordResetFindUniqueMock
+      .mockResolvedValueOnce({
+        id: "prt-1",
+        userId: "u1",
+        expiresAt: new Date("2099-01-01T00:00:00.000Z"),
+        usedAt: null,
+      })
+      .mockResolvedValueOnce({
+        usedAt: new Date("2026-05-22T12:00:00.000Z"),
+        expiresAt: new Date("2099-01-01T00:00:00.000Z"),
+      });
+    h.passwordResetUpdateManyMock.mockResolvedValue({ count: 0 });
+
+    const result = await confirmPasswordReset({
+      token: RAW_TOKEN,
+      newPassword: validPassword,
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.code).toBe("token_already_used");
+    }
+    expect(h.userUpdateMock).not.toHaveBeenCalled();
+    expect(h.bcryptHashMock).not.toHaveBeenCalled();
   });
 
   it("looks up token by hash not raw token", async () => {
@@ -261,6 +291,7 @@ describe("confirmPasswordReset", () => {
       expiresAt: new Date("2099-01-01T00:00:00.000Z"),
       usedAt: null,
     });
+    h.passwordResetUpdateManyMock.mockResolvedValue({ count: 1 });
 
     await confirmPasswordReset({
       token: RAW_TOKEN,
