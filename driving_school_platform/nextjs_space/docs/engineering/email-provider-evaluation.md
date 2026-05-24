@@ -1,7 +1,7 @@
 # Email Provider Evaluation
 
-**Status:** Boundary + template + send-on-create + **Postmark** + **password reset foundation**. Ops: [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md). Reset: [password-reset-flow.md](./password-reset-flow.md). Email verification **pending**.  
-**Branch context:** `password-reset-flow-foundation` (DAT_3.5); evaluation content retained below.  
+**Status:** Boundary + template + send-on-create + **Postmark** + **password reset foundation** + **email verification foundation**. Ops: [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md). Reset: [password-reset-flow.md](./password-reset-flow.md). Verification: [email-verification-flow.md](./email-verification-flow.md). Production Postmark real delivery for verification **pending** (same as reset).  
+**Branch context:** `email-verification-flow` (DAT_3.5); evaluation content retained below.  
 **Related:** [invite-only-foundation-plan.md](./invite-only-foundation-plan.md), [signup-hardening-plan.md](./signup-hardening-plan.md), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
 
 ---
@@ -21,16 +21,16 @@ The **`email-provider-boundary`** batch added `lib/email/*` (types, noop provide
 
 ## Current state
 
-| Area                           | State                                                                                                                                                                                                                       |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Invite-only onboarding**     | **Operational in copy-link mode** — School Admin creates invitation on `/admin/users`, copies `inviteLink` once, shares privately. Accept at `/invitations/accept`.                                                         |
-| **Automatic invitation email** | **Attempted on create** via `buildInvitationEmail` + `sendEmail`. Default noop; **Postmark** when `EMAIL_PROVIDER=postmark` + token/from configured. Resend/SMTP pending. Admin always gets `inviteLink` + `emailDelivery`. |
-| **Admin invitation API/UI**    | Implemented — `POST /api/admin/invitations` returns `inviteLink` on create; list never exposes token/hash.                                                                                                                  |
-| **Accept flow**                | Implemented — public GET/POST `/api/invitations/accept`; defense in depth for existing users.                                                                                                                               |
-| **Password reset**             | **Foundation done** — request/confirm APIs, `PasswordResetToken`, UI `/auth/forgot-password` + `/auth/reset-password`. See [password-reset-flow.md](./password-reset-flow.md). Distributed rate limit pending.              |
-| **Email verification**         | **Does not exist** — accounts created with `isEmailVerified: true` as a placeholder (signup and invite accept). No verification tokens or login gate.                                                                       |
-| **Public signup**              | **Disabled by default** — `PUBLIC_SIGNUP_ENABLED` must be explicitly `true` for non-demo orgs.                                                                                                                              |
-| **Marketing / newsletters**    | Out of scope — not planned in this evaluation.                                                                                                                                                                              |
+| Area                           | State                                                                                                                                                                                                                                                                                 |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Invite-only onboarding**     | **Operational in copy-link mode** — School Admin creates invitation on `/admin/users`, copies `inviteLink` once, shares privately. Accept at `/invitations/accept`.                                                                                                                   |
+| **Automatic invitation email** | **Attempted on create** via `buildInvitationEmail` + `sendEmail`. Default noop; **Postmark** when `EMAIL_PROVIDER=postmark` + token/from configured. Resend/SMTP pending. Admin always gets `inviteLink` + `emailDelivery`.                                                           |
+| **Admin invitation API/UI**    | Implemented — `POST /api/admin/invitations` returns `inviteLink` on create; list never exposes token/hash.                                                                                                                                                                            |
+| **Accept flow**                | Implemented — public GET/POST `/api/invitations/accept`; defense in depth for existing users.                                                                                                                                                                                         |
+| **Password reset**             | **Foundation done** — request/confirm APIs, `PasswordResetToken`, UI `/auth/forgot-password` + `/auth/reset-password`. See [password-reset-flow.md](./password-reset-flow.md). Distributed rate limit pending.                                                                        |
+| **Email verification**         | **Foundation done** — request/confirm APIs, `EmailVerificationToken`, UI `/auth/verify-email` + `/auth/resend-verification`. Invite accept sets `emailVerified`. See [email-verification-flow.md](./email-verification-flow.md). Signup placeholder + distributed rate limit pending. |
+| **Public signup**              | **Disabled by default** — `PUBLIC_SIGNUP_ENABLED` must be explicitly `true` for non-demo orgs.                                                                                                                                                                                        |
+| **Marketing / newsletters**    | Out of scope — not planned in this evaluation.                                                                                                                                                                                                                                        |
 
 ---
 
@@ -218,7 +218,7 @@ lib/email/templates/
 
 **Ops:** [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md) — Vercel env, `POSTMARK_API_TEST`, validation sequence, rollback (`EMAIL_PROVIDER=noop`).
 
-**Pending:** Resend adapter, SMTP adapter, password-reset-flow-foundation, email-verification-flow.
+**Pending:** Resend adapter, SMTP adapter, distributed rate limits, production Postmark verification delivery validation, public-signup verification wiring.
 
 ### Planned (later batches)
 
@@ -284,16 +284,16 @@ None are required for local dev, CI, or build. See [environment-variables.md](..
 
 Aligned with [invite-only-foundation-plan.md](./invite-only-foundation-plan.md) batch 6 and [signup-hardening-plan.md](./signup-hardening-plan.md).
 
-| Batch                                           | Objective                                            | Acceptance (summary)                                                                                 |
-| ----------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **1. `email-provider-boundary`**                | Interface, noop provider, `email-service` unit tests | **Done (DAT_3.5).** App runs with zero email env; no outbound network by default.                    |
-| **2. `invitation-email-template`**              | HTML/text template, i18n deferred (EN first)         | **Done (DAT_3.5).** Unit tests; fake `test-token` fixture only; no send on create.                   |
-| **3. `invitation-email-send-on-create`**        | Wire send after create                               | **Done (DAT_3.5).** `emailDelivery` on create; noop default; copy-link required.                     |
-| **3b. `email-provider-postmark`**               | Postmark REST adapter (fetch)                        | **Done (DAT_3.5).** No SDK; controlled errors; no global required env.                               |
-| **3c. `email-provider-postmark-ops-readiness`** | Operator runbook + env docs                          | **Done (DAT_3.5).** [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md). |
-| **4. `password-reset-flow-foundation`**         | Reset token + API + email                            | **Pending.** No enumeration; rate limit spec; email via same provider.                               |
-| **5. `email-verification-flow`**                | Tokens, verify endpoint, login gate policy           | `isEmailVerified` semantics fixed; resend limited.                                                   |
-| **6. `deliverability-domain-checklist`**        | Ops doc + release checklist                          | SPF/DKIM/DMARC verified; test sends to Gmail/Outlook/Yahoo.                                          |
+| Batch                                           | Objective                                            | Acceptance (summary)                                                                                                      |
+| ----------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **1. `email-provider-boundary`**                | Interface, noop provider, `email-service` unit tests | **Done (DAT_3.5).** App runs with zero email env; no outbound network by default.                                         |
+| **2. `invitation-email-template`**              | HTML/text template, i18n deferred (EN first)         | **Done (DAT_3.5).** Unit tests; fake `test-token` fixture only; no send on create.                                        |
+| **3. `invitation-email-send-on-create`**        | Wire send after create                               | **Done (DAT_3.5).** `emailDelivery` on create; noop default; copy-link required.                                          |
+| **3b. `email-provider-postmark`**               | Postmark REST adapter (fetch)                        | **Done (DAT_3.5).** No SDK; controlled errors; no global required env.                                                    |
+| **3c. `email-provider-postmark-ops-readiness`** | Operator runbook + env docs                          | **Done (DAT_3.5).** [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md).                      |
+| **4. `password-reset-flow-foundation`**         | Reset token + API + email                            | **Pending.** No enumeration; rate limit spec; email via same provider.                                                    |
+| **5. `email-verification-flow`**                | Tokens, verify endpoint, login gate policy           | **Foundation done** — see [email-verification-flow.md](./email-verification-flow.md). Rate limit + signup wiring pending. |
+| **6. `deliverability-domain-checklist`**        | Ops doc + release checklist                          | SPF/DKIM/DMARC verified; test sends to Gmail/Outlook/Yahoo.                                                               |
 
 Batch 7 in invite-only plan (`invitation-rate-limit-audit`) remains separate — distributed limits on accept/create, not provider selection.
 

@@ -182,6 +182,10 @@ describe("acceptInvitation", () => {
     });
     expect(h.instructorCreate).not.toHaveBeenCalled();
     expect(h.userCreate.mock.calls[0][0].data.organizationId).toBe("org-a");
+    expect(h.userCreate.mock.calls[0][0].data.isEmailVerified).toBe(true);
+    expect(h.userCreate.mock.calls[0][0].data.emailVerified).toBeInstanceOf(
+      Date,
+    );
   });
 
   it("creates instructor profile for instructor invites", async () => {

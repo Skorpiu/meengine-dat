@@ -34,3 +34,8 @@ export type {
   BuildPasswordResetEmailInput,
   BuildPasswordResetEmailResult,
 } from "./templates/password-reset-email";
+export { buildEmailVerificationEmail } from "./templates/email-verification-email";
+export type {
+  BuildEmailVerificationEmailInput,
+  BuildEmailVerificationEmailResult,
+} from "./templates/email-verification-email";
