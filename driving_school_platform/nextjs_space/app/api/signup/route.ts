@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { resolveTenantOrganizationId } from "@/lib/tenant";
 import { decideSignupAvailability } from "@/lib/signup/signup-policy";
+import { enforceSignupRateLimits } from "@/lib/rate-limit/enforce-auth-rate-limits";
 import type { Prisma, UserRole } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +22,11 @@ function parseOptionalDate(value: unknown): Date | null {
 
 export async function POST(request: NextRequest) {
   try {
+    const rateLimitResponse = await enforceSignupRateLimits(request);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
+
     let rawBody: unknown;
     try {
       rawBody = await request.json();

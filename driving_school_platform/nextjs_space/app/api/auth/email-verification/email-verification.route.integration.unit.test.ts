@@ -12,6 +12,12 @@ vi.mock("@/lib/email-verification/email-verification-service", () => ({
     "If an account exists and needs verification, instructions have been sent.",
 }));
 
+vi.mock("@/lib/rate-limit/enforce-auth-rate-limits", () => ({
+  enforceEmailVerificationRequestRateLimits: vi.fn().mockResolvedValue(null),
+}));
+
+import { NextResponse } from "next/server";
+import { enforceEmailVerificationRequestRateLimits } from "@/lib/rate-limit/enforce-auth-rate-limits";
 import { POST as requestPost } from "./request/route";
 import { POST as confirmPost } from "./confirm/route";
 
@@ -23,8 +29,14 @@ function req(url: string, payload: unknown): Request {
   });
 }
 
+const enforceEmailVerificationRequestRateLimitsMock =
+  enforceEmailVerificationRequestRateLimits as unknown as ReturnType<
+    typeof vi.fn
+  >;
+
 beforeEach(() => {
   vi.resetAllMocks();
+  enforceEmailVerificationRequestRateLimitsMock.mockResolvedValue(null);
   h.requestEmailVerificationMock.mockResolvedValue({
     message:
       "If an account exists and needs verification, instructions have been sent.",
@@ -75,6 +87,30 @@ describe("POST /api/auth/email-verification/request", () => {
       email: "user@school.test",
       baseUrl: "https://tenant.example.com",
     });
+  });
+
+  it("returns 429 when rate limited", async () => {
+    enforceEmailVerificationRequestRateLimitsMock.mockResolvedValueOnce(
+      NextResponse.json(
+        {
+          error: "Too many requests. Please try again later.",
+          code: "rate_limited",
+        },
+        { status: 429 },
+      ),
+    );
+
+    const res = await requestPost(
+      req("http://school.example.com/api/auth/email-verification/request", {
+        email: "user@school.test",
+      }) as never,
+    );
+
+    expect(res.status).toBe(429);
+    const json = await res.json();
+    expect(json.code).toBe("rate_limited");
+    expect(json).not.toHaveProperty("verificationLink");
+    expect(h.requestEmailVerificationMock).not.toHaveBeenCalled();
   });
 });
 

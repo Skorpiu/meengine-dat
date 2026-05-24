@@ -6,6 +6,7 @@ import {
 } from "@/lib/password-reset/password-reset-service";
 import { getPasswordResetRequestBaseUrl } from "@/lib/password-reset/request-base-url";
 import { passwordResetRequestBodySchema } from "@/lib/password-reset/password-reset-validation";
+import { enforcePasswordResetRequestRateLimits } from "@/lib/rate-limit/enforce-auth-rate-limits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,6 +23,14 @@ export async function POST(request: NextRequest) {
     const validation = validateRequest(passwordResetRequestBodySchema, body);
     if (!validation.success) {
       return validation.error;
+    }
+
+    const rateLimitResponse = await enforcePasswordResetRequestRateLimits(
+      request,
+      validation.data.email,
+    );
+    if (rateLimitResponse) {
+      return rateLimitResponse;
     }
 
     const result = await requestPasswordReset({

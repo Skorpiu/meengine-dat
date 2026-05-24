@@ -6,6 +6,7 @@ import {
 } from "@/lib/email-verification/email-verification-service";
 import { getEmailVerificationRequestBaseUrl } from "@/lib/email-verification/request-base-url";
 import { emailVerificationRequestBodySchema } from "@/lib/email-verification/email-verification-validation";
+import { enforceEmailVerificationRequestRateLimits } from "@/lib/rate-limit/enforce-auth-rate-limits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,6 +26,14 @@ export async function POST(request: NextRequest) {
     );
     if (!validation.success) {
       return validation.error;
+    }
+
+    const rateLimitResponse = await enforceEmailVerificationRequestRateLimits(
+      request,
+      validation.data.email,
+    );
+    if (rateLimitResponse) {
+      return rateLimitResponse;
     }
 
     const result = await requestEmailVerification({

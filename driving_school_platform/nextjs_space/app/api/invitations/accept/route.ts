@@ -5,6 +5,7 @@ import {
   getInvitationByToken,
 } from "@/lib/invitations/invitation-accept-service";
 import { acceptInvitationBodySchema } from "@/lib/invitations/invitation-accept-validation";
+import { enforceInvitationAcceptRateLimits } from "@/lib/rate-limit/enforce-auth-rate-limits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +22,14 @@ export async function GET(request: NextRequest) {
         },
         { status: 400 },
       );
+    }
+
+    const rateLimitResponse = await enforceInvitationAcceptRateLimits(
+      request,
+      token,
+    );
+    if (rateLimitResponse) {
+      return rateLimitResponse;
     }
 
     const result = await getInvitationByToken({ token });
@@ -57,6 +66,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { token, firstName, lastName, password } = validation.data;
+
+    const rateLimitResponse = await enforceInvitationAcceptRateLimits(
+      request,
+      token,
+    );
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
 
     const result = await acceptInvitation({
       token,

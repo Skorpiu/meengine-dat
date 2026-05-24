@@ -12,6 +12,12 @@ vi.mock("@/lib/password-reset/password-reset-service", () => ({
     "If an account exists, reset instructions have been sent.",
 }));
 
+vi.mock("@/lib/rate-limit/enforce-auth-rate-limits", () => ({
+  enforcePasswordResetRequestRateLimits: vi.fn().mockResolvedValue(null),
+}));
+
+import { NextResponse } from "next/server";
+import { enforcePasswordResetRequestRateLimits } from "@/lib/rate-limit/enforce-auth-rate-limits";
 import { POST as requestPost } from "./request/route";
 import { POST as confirmPost } from "./confirm/route";
 
@@ -23,8 +29,12 @@ function req(url: string, payload: unknown): Request {
   });
 }
 
+const enforcePasswordResetRequestRateLimitsMock =
+  enforcePasswordResetRequestRateLimits as unknown as ReturnType<typeof vi.fn>;
+
 beforeEach(() => {
   vi.resetAllMocks();
+  enforcePasswordResetRequestRateLimitsMock.mockResolvedValue(null);
   h.requestPasswordResetMock.mockResolvedValue({
     message: "If an account exists, reset instructions have been sent.",
   });
@@ -74,6 +84,32 @@ describe("POST /api/auth/password-reset/request", () => {
       email: "user@school.test",
       baseUrl: "https://tenant.example.com",
     });
+  });
+
+  it("returns 429 when rate limited without revealing account existence", async () => {
+    enforcePasswordResetRequestRateLimitsMock.mockResolvedValueOnce(
+      NextResponse.json(
+        {
+          error: "Too many requests. Please try again later.",
+          code: "rate_limited",
+        },
+        { status: 429 },
+      ),
+    );
+
+    const res = await requestPost(
+      req("http://school.example.com/api/auth/password-reset/request", {
+        email: "user@school.test",
+      }) as never,
+    );
+
+    expect(res.status).toBe(429);
+    const json = await res.json();
+    expect(json.code).toBe("rate_limited");
+    expect(json.error).toContain("Too many requests");
+    expect(json).not.toHaveProperty("success");
+    expect(json).not.toHaveProperty("resetLink");
+    expect(h.requestPasswordResetMock).not.toHaveBeenCalled();
   });
 });
 

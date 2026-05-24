@@ -32,6 +32,10 @@ vi.mock("@/lib/tenant", () => ({
   resolveTenantOrganizationId: vi.fn(),
 }));
 
+vi.mock("@/lib/rate-limit/enforce-auth-rate-limits", () => ({
+  enforceSignupRateLimits: vi.fn().mockResolvedValue(null),
+}));
+
 import bcrypt from "bcryptjs";
 import { resolveTenantOrganizationId } from "@/lib/tenant";
 import { POST } from "./route";
