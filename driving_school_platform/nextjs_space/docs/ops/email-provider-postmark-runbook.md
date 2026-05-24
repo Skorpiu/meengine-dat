@@ -6,7 +6,7 @@ Safe steps to enable **transactional invitation email** via Postmark on DAT (Dri
 
 Do **not** paste server tokens, full `inviteLink` URLs, or email bodies into tickets, chat, git, screenshots, or runbook edits. Use placeholders in examples.
 
-**Related:** [environment-variables.md](./environment-variables.md#postmark-email), [email-provider-evaluation.md](../engineering/email-provider-evaluation.md), [invitation-copy-link-smoke.md](./invitation-copy-link-smoke.md), [release-checklist.md](./release-checklist.md).
+**Related:** [auth-email-security-review.md](../engineering/auth-email-security-review.md), [environment-variables.md](./environment-variables.md#postmark-email), [email-provider-evaluation.md](../engineering/email-provider-evaluation.md), [invitation-copy-link-smoke.md](./invitation-copy-link-smoke.md), [release-checklist.md](./release-checklist.md).
 
 ---
 
@@ -16,7 +16,7 @@ Do **not** paste server tokens, full `inviteLink` URLs, or email bodies into tic
 - Keep **copy-link** as the mandatory fallback: every successful invite create still returns **`inviteLink`**; email failure must **not** block create (**HTTP 201**).
 - Validate configuration and `emailDelivery` status **before** relying on inbox delivery for onboarding.
 
-**Out of scope for this runbook:** password reset, email verification, Resend/SMTP, Postmark webhooks/bounces, marketing mail.
+**Out of scope for step-by-step detail here:** password reset and email verification use the same `sendEmail()` / Postmark vars — see [auth-email-security-review.md](../engineering/auth-email-security-review.md) for cross-flow Preview test runbook. Resend/SMTP, webhooks/bounces, marketing mail remain out of scope.
 
 ---
 

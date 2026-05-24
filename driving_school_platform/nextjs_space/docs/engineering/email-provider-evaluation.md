@@ -1,7 +1,8 @@
 # Email Provider Evaluation
 
-**Status:** Boundary + template + send-on-create + **Postmark** + **password reset foundation** + **email verification foundation**. Ops: [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md). Reset: [password-reset-flow.md](./password-reset-flow.md). Verification: [email-verification-flow.md](./email-verification-flow.md). Production Postmark real delivery for verification **pending** (same as reset).  
-**Branch context:** `email-verification-flow` (DAT_3.5); evaluation content retained below.  
+**Status:** Boundary + Postmark + password reset + email verification **implemented**; Preview real-delivery E2E **validated** for invite/reset/verify; **Production Postmark not enabled**.  
+**Consolidated review:** [auth-email-security-review.md](./auth-email-security-review.md). Ops: [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md). Reset: [password-reset-flow.md](./password-reset-flow.md). Verification: [email-verification-flow.md](./email-verification-flow.md).  
+**Branch context:** `auth-email-security-operational-review` (DAT_3.5); vendor evaluation content retained below.  
 **Related:** [invite-only-foundation-plan.md](./invite-only-foundation-plan.md), [signup-hardening-plan.md](./signup-hardening-plan.md), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
 
 ---
@@ -11,8 +12,8 @@
 This document evaluates **transactional email provider strategy** for DAT (Driving Academy Tool) before any production integration. It covers:
 
 - **Invite-only** invitation delivery (future automation alongside copy-link).
-- **Password reset** (not implemented today).
-- **Email verification** (not implemented today; `isEmailVerified` is a placeholder).
+- **Password reset** — implemented; see [password-reset-flow.md](./password-reset-flow.md).
+- **Email verification** — implemented; see [email-verification-flow.md](./email-verification-flow.md).
 - **Future** operational or billing-adjacent notifications (out of scope for first integration).
 
 The **`email-provider-boundary`** batch added `lib/email/*` (types, noop provider, `sendEmail()`, redaction helpers, unit tests) without wiring call sites, templates, or real providers. Sending, required env vars, and invitation automation remain **future batches**. Earlier evaluation text below remains the decision baseline for vendor choice.
@@ -38,11 +39,11 @@ The **`email-provider-boundary`** batch added `lib/email/*` (types, noop provide
 
 ### Priority 1 (first integrations)
 
-| Use case               | Trigger                               | Content                                        | Notes                                                                                                          |
-| ---------------------- | ------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| **Invitation email**   | Admin creates `UserInvitation`        | Org name, role, expiry, single-use accept link | Must not break copy-link if send fails; link is bearer token.                                                  |
-| **Password reset**     | User requests reset (future)          | Time-limited reset link, no password in email  | High deliverability expectation; generic responses to avoid enumeration.                                       |
-| **Email verification** | Signup or post-invite policy (future) | Verification link or code                      | Depends on product decision on login gate; aligns with [signup-hardening-plan.md](./signup-hardening-plan.md). |
+| Use case               | Trigger                        | Content                                        | Notes                                                                                                   |
+| ---------------------- | ------------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **Invitation email**   | Admin creates `UserInvitation` | Org name, role, expiry, single-use accept link | Must not break copy-link if send fails; link is bearer token.                                           |
+| **Password reset**     | User requests reset            | Time-limited reset link, no password in email  | Done — [password-reset-flow.md](./password-reset-flow.md). Preview E2E validated.                       |
+| **Email verification** | Resend / admin-created users   | Verification link                              | Done — [email-verification-flow.md](./email-verification-flow.md). Invite accept skips separate verify. |
 
 ### Priority 2 (later)
 
