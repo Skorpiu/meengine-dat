@@ -19,7 +19,7 @@ This document consolidates **current state**, **Preview validation**, **environm
 | Public signup       | **Disabled by default** (`PUBLIC_SIGNUP_ENABLED`); demo orgs blocked                            |
 | Production Postmark | **Not enabled** — Preview used for real-delivery validation; revert Preview to noop after tests |
 
-No distributed rate limit, CAPTCHA, or production mail cutover in this review batch.
+**Distributed rate limit (DB-backed)** is implemented in `auth-rate-limit-foundation` — see [auth-rate-limit-foundation.md](./auth-rate-limit-foundation.md). CAPTCHA and production mail cutover remain out of scope.
 
 ---
 
@@ -123,17 +123,17 @@ Do not change Postmark secrets or production env in this review batch — follow
 
 Priority is **P0 = before production mail / abuse exposure**, **P1 = soon after**, **P2 = later**.
 
-| Pri    | Item                                         | Rationale                                                                                                                                                      |
-| ------ | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **P0** | **Production Postmark enablement checklist** | Domain/sender verified, secrets in Production scope only, smoke invite + reset + verify, monitor `emailDelivery` / bounces                                     |
-| **P0** | **Preview default noop**                     | Prevent accidental sends on every PR preview                                                                                                                   |
-| **P1** | **Distributed rate limit**                   | Request endpoints for reset + verification (and eventually invite abuse) — per IP + per email hash; see [signup-hardening-plan.md](./signup-hardening-plan.md) |
-| **P1** | **Session policy after password reset**      | Credentials sessions may remain valid after `passwordHash` change until expiry — optional invalidation / “sign out all devices”                                |
-| **P2** | **Turnstile / CAPTCHA**                      | On forgot-password, resend-verification, and/or public signup when enabled                                                                                     |
-| **P2** | **Unverified-user policy**                   | Today: NextAuth blocks login if `!isEmailVerified`; future: block sensitive actions for admin-created users with `isEmailVerified: false`                      |
-| **P2** | **Public signup + verification**             | When `PUBLIC_SIGNUP_ENABLED=true`, create unverified users + send verification email (remove placeholder)                                                      |
-| **P2** | **Legacy column cleanup**                    | Migration to drop unused `User.*Reset*` / `User.*Verification*` columns after dependency audit                                                                 |
-| **P2** | **Resend/SMTP adapters**                     | Only if Postmark strategy changes — see [email-provider-evaluation.md](./email-provider-evaluation.md)                                                         |
+| Pri    | Item                                         | Rationale                                                                                                                                                |
+| ------ | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **P0** | **Production Postmark enablement checklist** | Domain/sender verified, secrets in Production scope only, smoke invite + reset + verify, monitor `emailDelivery` / bounces                               |
+| **P0** | **Preview default noop**                     | Prevent accidental sends on every PR preview                                                                                                             |
+| **P1** | ~~**Distributed rate limit**~~               | **Done** — [auth-rate-limit-foundation.md](./auth-rate-limit-foundation.md): login, reset/verify request, invitation accept, signup IP; hashed keys only |
+| **P1** | **Session policy after password reset**      | Credentials sessions may remain valid after `passwordHash` change until expiry — optional invalidation / “sign out all devices”                          |
+| **P2** | **Turnstile / CAPTCHA**                      | On forgot-password, resend-verification, and/or public signup when enabled                                                                               |
+| **P2** | **Unverified-user policy**                   | Today: NextAuth blocks login if `!isEmailVerified`; future: block sensitive actions for admin-created users with `isEmailVerified: false`                |
+| **P2** | **Public signup + verification**             | When `PUBLIC_SIGNUP_ENABLED=true`, create unverified users + send verification email (remove placeholder)                                                |
+| **P2** | **Legacy column cleanup**                    | Migration to drop unused `User.*Reset*` / `User.*Verification*` columns after dependency audit                                                           |
+| **P2** | **Resend/SMTP adapters**                     | Only if Postmark strategy changes — see [email-provider-evaluation.md](./email-provider-evaluation.md)                                                   |
 
 ---
 
@@ -202,6 +202,7 @@ Do not paste `inviteLink`, reset/verify URLs, tokens, or email bodies into ticke
 | `password-reset-flow-foundation` + hardening | Reset APIs + atomic consume    |
 | `email-verification-flow`                    | Verification APIs + UI         |
 | **`auth-email-security-operational-review`** | **This document**              |
+| **`auth-rate-limit-foundation`**             | DB-backed fixed-window limits  |
 
 ---
 

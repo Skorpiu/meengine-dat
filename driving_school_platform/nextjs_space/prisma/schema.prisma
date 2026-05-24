@@ -675,6 +675,22 @@ model EmailVerificationToken {
   @@map("email_verification_tokens")
 }
 
+/// Fixed-window counters for distributed auth/email rate limiting (hashed keys only).
+model RateLimitBucket {
+  id          String   @id @default(cuid())
+  action      String
+  keyHash     String
+  windowStart DateTime
+  count       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([action, keyHash, windowStart])
+  @@index([action, windowStart])
+  @@index([windowStart])
+  @@map("rate_limit_buckets")
+}
+
 model OrganizationFeature {
   id             String       @id @default(cuid())
   organizationId String

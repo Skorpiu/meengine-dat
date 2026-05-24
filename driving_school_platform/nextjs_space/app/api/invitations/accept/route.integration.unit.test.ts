@@ -11,6 +11,12 @@ vi.mock("@/lib/invitations/invitation-accept-service", () => ({
   acceptInvitation: h.acceptInvitationMock,
 }));
 
+vi.mock("@/lib/rate-limit/enforce-auth-rate-limits", () => ({
+  enforceInvitationAcceptRateLimits: vi.fn().mockResolvedValue(null),
+}));
+
+import { NextResponse } from "next/server";
+import { enforceInvitationAcceptRateLimits } from "@/lib/rate-limit/enforce-auth-rate-limits";
 import { GET, POST } from "./route";
 
 const preview = {
@@ -28,8 +34,12 @@ function req(method: string, url: string, payload?: unknown): Request {
   });
 }
 
+const enforceInvitationAcceptRateLimitsMock =
+  enforceInvitationAcceptRateLimits as unknown as ReturnType<typeof vi.fn>;
+
 beforeEach(() => {
   vi.resetAllMocks();
+  enforceInvitationAcceptRateLimitsMock.mockResolvedValue(null);
   h.getInvitationByTokenMock.mockResolvedValue({
     ok: true,
     invitation: preview,
@@ -97,6 +107,28 @@ describe("GET /api/invitations/accept", () => {
     const json = await res.json();
     expect(json.code).toBe("invalid_token");
   });
+
+  it("returns 429 when rate limited without tokenHash in body", async () => {
+    enforceInvitationAcceptRateLimitsMock.mockResolvedValueOnce(
+      NextResponse.json(
+        {
+          error: "Too many requests. Please try again later.",
+          code: "rate_limited",
+        },
+        { status: 429 },
+      ),
+    );
+
+    const res = await GET(
+      req("GET", "http://localhost/api/invitations/accept?token=abc") as any,
+    );
+    expect(res.status).toBe(429);
+    const json = await res.json();
+    expect(json.code).toBe("rate_limited");
+    expect(json).not.toHaveProperty("tokenHash");
+    expect(JSON.stringify(json)).not.toContain("abc");
+    expect(h.getInvitationByTokenMock).not.toHaveBeenCalled();
+  });
 });
 
 describe("POST /api/invitations/accept", () => {
@@ -159,5 +191,30 @@ describe("POST /api/invitations/accept", () => {
     const json = await res.json();
     expect(json.code).toBe("user_already_exists");
     expect(json).not.toHaveProperty("passwordHash");
+  });
+
+  it("returns 429 when rate limited on POST", async () => {
+    enforceInvitationAcceptRateLimitsMock.mockResolvedValueOnce(
+      NextResponse.json(
+        {
+          error: "Too many requests. Please try again later.",
+          code: "rate_limited",
+        },
+        { status: 429 },
+      ),
+    );
+
+    const res = await POST(
+      req("POST", "http://localhost/api/invitations/accept", {
+        token: "secret-token",
+        firstName: "Alex",
+        lastName: "Driver",
+        password: "SecurePass1!",
+      }) as any,
+    );
+    expect(res.status).toBe(429);
+    const json = await res.json();
+    expect(json.code).toBe("rate_limited");
+    expect(h.acceptInvitationMock).not.toHaveBeenCalled();
   });
 });
