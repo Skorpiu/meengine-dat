@@ -258,8 +258,9 @@ export async function acceptInvitation(
           firstName,
           lastName,
           organizationId: current.organizationId,
-          // Email verification not implemented; aligned with public signup placeholder.
+          // Invite link sent to this email proves control; skip separate verification.
           isEmailVerified: true,
+          emailVerified: new Date(),
           isApproved: role !== "INSTRUCTOR",
         },
       });
