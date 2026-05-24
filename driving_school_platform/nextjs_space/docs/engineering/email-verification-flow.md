@@ -1,7 +1,7 @@
 # Email verification flow
 
-**Status:** Foundation (DAT_3.5 `email-verification-flow`).  
-**Related:** [password-reset-flow.md](./password-reset-flow.md), [email-provider-evaluation.md](./email-provider-evaluation.md), [invite-only-foundation-plan.md](./invite-only-foundation-plan.md).
+**Status:** Foundation — **Preview E2E validated**; Production Postmark not enabled.  
+**Related:** [auth-email-security-review.md](./auth-email-security-review.md), [password-reset-flow.md](./password-reset-flow.md), [email-provider-evaluation.md](./email-provider-evaluation.md), [invite-only-foundation-plan.md](./invite-only-foundation-plan.md).
 
 ---
 
@@ -99,7 +99,7 @@ Errors: `{ "error": "...", "code": "invalid_token" | "token_expired" | "token_al
 1. **Distributed rate limit** on request (same class as password reset).
 2. **Public signup** — when `PUBLIC_SIGNUP_ENABLED=true`, create user with `isEmailVerified: false` and send verification email (today signup still sets verified placeholder).
 3. **Login / action policy** — optionally block sensitive actions until verified (Credentials already checks `isEmailVerified` in NextAuth).
-4. **Production Postmark** — real delivery validation (ops); foundation works with noop.
+4. **Production Postmark** — enable on Production when ops ready (Preview E2E done; see [auth-email-security-review.md](./auth-email-security-review.md)).
 
 ---
 

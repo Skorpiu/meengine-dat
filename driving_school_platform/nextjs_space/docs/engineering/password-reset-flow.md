@@ -1,21 +1,21 @@
 # Password reset flow
 
-**Status:** Foundation + **hardening review** (DAT_3.5 `password-reset-flow-hardening-review`).  
-**Related:** [email-provider-evaluation.md](./email-provider-evaluation.md), [environment-variables.md](../ops/environment-variables.md), [signup-hardening-plan.md](./signup-hardening-plan.md).
+**Status:** Foundation + hardening — **Preview E2E validated**; Production Postmark not enabled.  
+**Related:** [auth-email-security-review.md](./auth-email-security-review.md), [email-provider-evaluation.md](./email-provider-evaluation.md), [environment-variables.md](../ops/environment-variables.md), [signup-hardening-plan.md](./signup-hardening-plan.md).
 
 ---
 
 ## Scope
 
-| In scope                                        | Out of scope (this batch)                       |
-| ----------------------------------------------- | ----------------------------------------------- |
-| `POST /api/auth/password-reset/request`         | Distributed rate limiting (TODO)                |
-| `POST /api/auth/password-reset/confirm`         | OAuth password reset                            |
-| `PasswordResetToken` Prisma model + migration   | Removing legacy `User.passwordReset*` columns   |
-| `/auth/forgot-password`, `/auth/reset-password` | Email verification flow                         |
-| `buildPasswordResetEmail()` + `sendEmail()`     | Session invalidation after reset                |
-| Login link “Forgot password?”                   | CAPTCHA / abuse automation                      |
-| Atomic token consume on confirm                 | Advanced multi-tenant domain resolver for links |
+| In scope                                        | Out of scope (this batch)                                          |
+| ----------------------------------------------- | ------------------------------------------------------------------ |
+| `POST /api/auth/password-reset/request`         | Distributed rate limiting (TODO)                                   |
+| `POST /api/auth/password-reset/confirm`         | OAuth password reset                                               |
+| `PasswordResetToken` Prisma model + migration   | Removing legacy `User.passwordReset*` columns                      |
+| `/auth/forgot-password`, `/auth/reset-password` | — (see [email-verification-flow.md](./email-verification-flow.md)) |
+| `buildPasswordResetEmail()` + `sendEmail()`     | Session invalidation after reset                                   |
+| Login link “Forgot password?”                   | CAPTCHA / abuse automation                                         |
+| Atomic token consume on confirm                 | Advanced multi-tenant domain resolver for links                    |
 
 ---
 
@@ -155,7 +155,7 @@ app/auth/reset-password/page.tsx
 - [ ] **Distributed rate limit** on request + confirm (per IP and per email hash) — see [signup-hardening-plan.md](./signup-hardening-plan.md).
 - [ ] Optional: invalidate other sessions after password change.
 - [ ] Drop legacy `User.passwordResetToken` / `passwordResetExpiresAt` columns.
-- [ ] Production Postmark for reset mail when ops enables `EMAIL_PROVIDER=postmark` on Production (Preview validation already documented).
+- [ ] Production Postmark for reset mail when ops enables `EMAIL_PROVIDER=postmark` on Production (Preview E2E done — see [auth-email-security-review.md](./auth-email-security-review.md)).
 
 ---
 
@@ -169,4 +169,5 @@ app/auth/reset-password/page.tsx
 | `email-provider-postmark`                  | Done                |
 | `password-reset-flow-foundation`           | Done                |
 | **`password-reset-flow-hardening-review`** | **Done (this doc)** |
-| `email-verification-flow`                  | Pending             |
+| `email-verification-flow`                  | Done                |
+| `auth-email-security-operational-review`   | Done (ops review)   |
