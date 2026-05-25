@@ -1,6 +1,6 @@
 # Auth & email — distributed rate limit foundation
 
-**Status:** DAT_3.5 `auth-rate-limit-foundation` — **implemented** (DB-backed fixed windows).  
+**Status:** DAT_3.5 `auth-rate-limit-foundation` — **implemented**, migration applied, and **operationally validated** (DB-backed fixed windows).  
 **Audience:** engineering + ops.
 
 ---
@@ -58,7 +58,24 @@ Table: `rate_limit_buckets` (`RateLimitBucket` model).
 | `windowStart` | Fixed-window bucket start (UTC)                                      |
 | `count`       | Requests in window                                                   |
 
-**Never stored:** raw email, raw IP, bearer/reset/verification/invite tokens, links.
+**Never stored:** raw email, raw IP, bearer/reset/verification/invite tokens, invite/reset/verification links, or unhashed token material.
+
+Repeated rows for the same `action` in SQL are expected: the limiter buckets by `action` **and** `keyHash` **and** `windowStart`, so the same action can appear multiple times for different hashed emails, IPs, or tokens.
+
+---
+
+## Operational status
+
+- Migration `20260524180000_add_rate_limit_buckets` was applied successfully.
+- `prisma migrate status` confirmed the database schema is up to date.
+- Operational smoke validation confirmed:
+  - login normal OK
+  - password reset request normal OK with `EMAIL_PROVIDER=noop`
+  - email verification request normal OK
+  - `POST /api/auth/password-reset/request` returned **429** on the 6th attempt for the same email-window combination
+- `rate_limit_buckets` was populated with the expected auth/email actions during the smoke run.
+
+The password reset result matches the current policy: `auth.password-reset.request.email` allows **5** requests per **60 minutes**, then blocks with the stable `rate_limited` response.
 
 ---
 
@@ -89,6 +106,8 @@ Fixed-window (not sliding). Minor burst at window boundaries is accepted for sim
 
 `cleanupRateLimitBuckets({ olderThan })` in `lib/rate-limit/cleanup.ts` deletes buckets with `windowStart < olderThan`.
 
+The cleanup helper already has unit coverage; this micro-batch does **not** add a cron or background job.
+
 **Operational cron is not wired in this batch.** Schedule periodic cleanup (e.g. daily, `olderThan = now - 7 days`) via existing admin/cron patterns when ops capacity allows.
 
 ---
@@ -103,7 +122,7 @@ Fixed-window (not sliding). Minor burst at window boundaries is accepted for sim
 | CAPTCHA / Turnstile                                               | **Not implemented** — follow-up                                        |
 | Dedicated Redis/Upstash store                                     | **Deferred** — revisit if Postgres write volume or latency requires it |
 | Dashboards / alerts on 429 rate                                   | **Deferred**                                                           |
-| Cleanup cron                                                      | **Deferred** (function + unit test only)                               |
+| Cleanup cron                                                      | **Deferred** (function + unit test only; operational runbook added)    |
 
 ---
 
@@ -118,4 +137,5 @@ Fixed-window (not sliding). Minor burst at window boundaries is accepted for sim
 ## Related docs
 
 - [auth-email-security-review.md](./auth-email-security-review.md)
+- [auth-rate-limit-runbook.md](../ops/auth-rate-limit-runbook.md)
 - [signup-hardening-plan.md](./signup-hardening-plan.md)
