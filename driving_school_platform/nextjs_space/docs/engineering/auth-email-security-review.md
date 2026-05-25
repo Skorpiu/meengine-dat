@@ -16,10 +16,11 @@ This document consolidates **current state**, **Preview validation**, **environm
 | Transactional email | **`sendEmail()`** boundary — `noop` default, **Postmark** when configured                       |
 | Password reset      | **Implemented** — hash-only tokens, atomic consume, anti-enumeration                            |
 | Email verification  | **Implemented** — same security model; invite accept marks email verified                       |
+| Auth rate limit     | **Implemented + operationally validated** — DB-backed fixed windows, hashed keys only           |
 | Public signup       | **Disabled by default** (`PUBLIC_SIGNUP_ENABLED`); demo orgs blocked                            |
 | Production Postmark | **Not enabled** — Preview used for real-delivery validation; revert Preview to noop after tests |
 
-**Distributed rate limit (DB-backed)** is implemented in `auth-rate-limit-foundation` — see [auth-rate-limit-foundation.md](./auth-rate-limit-foundation.md). CAPTCHA and production mail cutover remain out of scope.
+**Distributed rate limit (DB-backed)** is implemented and operationally validated in `auth-rate-limit-foundation` — see [auth-rate-limit-foundation.md](./auth-rate-limit-foundation.md) and [auth-rate-limit-runbook.md](../ops/auth-rate-limit-runbook.md). CAPTCHA and production mail cutover remain out of scope.
 
 ---
 
@@ -88,6 +89,22 @@ Production has **not** been enabled for Postmark on auth/invite flows in this ph
 
 ---
 
+## Operational validation after rollout
+
+The DB-backed auth/email limiter was also validated operationally after migration apply:
+
+| Check                                                      | Result                                                       |
+| ---------------------------------------------------------- | ------------------------------------------------------------ |
+| Login normal flow                                          | OK                                                           |
+| Password reset request normal flow (`EMAIL_PROVIDER=noop`) | OK                                                           |
+| Email verification request normal flow                     | OK                                                           |
+| Password reset request throttle                            | **429 on 6th attempt** for the same email-window combination |
+| `rate_limit_buckets` contents                              | Expected auth/email actions observed                         |
+
+This matches the current configured email policy for password reset requests: **5 per 60 minutes** for `auth.password-reset.request.email`, then stable `429 rate_limited`.
+
+---
+
 ## Environments
 
 | Environment               | Recommended `EMAIL_PROVIDER` | Notes                                                                                                          |
@@ -128,8 +145,10 @@ Priority is **P0 = before production mail / abuse exposure**, **P1 = soon after*
 | **P0** | **Production Postmark enablement checklist** | Domain/sender verified, secrets in Production scope only, smoke invite + reset + verify, monitor `emailDelivery` / bounces                               |
 | **P0** | **Preview default noop**                     | Prevent accidental sends on every PR preview                                                                                                             |
 | **P1** | ~~**Distributed rate limit**~~               | **Done** — [auth-rate-limit-foundation.md](./auth-rate-limit-foundation.md): login, reset/verify request, invitation accept, signup IP; hashed keys only |
+| **P1** | **Rate-limit cleanup cron**                  | Cleanup helper exists, but scheduled operational cleanup is still manual / pending                                                                       |
 | **P1** | **Session policy after password reset**      | Credentials sessions may remain valid after `passwordHash` change until expiry — optional invalidation / “sign out all devices”                          |
 | **P2** | **Turnstile / CAPTCHA**                      | On forgot-password, resend-verification, and/or public signup when enabled                                                                               |
+| **P2** | **Dashboards / alerts**                      | Add monitoring for unusual `429` rates, bucket growth, and repeated auth/email abuse patterns                                                            |
 | **P2** | **Unverified-user policy**                   | Today: NextAuth blocks login if `!isEmailVerified`; future: block sensitive actions for admin-created users with `isEmailVerified: false`                |
 | **P2** | **Public signup + verification**             | When `PUBLIC_SIGNUP_ENABLED=true`, create unverified users + send verification email (remove placeholder)                                                |
 | **P2** | **Legacy column cleanup**                    | Migration to drop unused `User.*Reset*` / `User.*Verification*` columns after dependency audit                                                           |
