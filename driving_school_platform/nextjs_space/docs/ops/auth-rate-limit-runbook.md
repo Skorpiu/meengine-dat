@@ -123,6 +123,57 @@ Manual cleanup should be the exception, not the default recovery path.
 
 ---
 
+## Automatic cleanup cron
+
+DAT now runs a protected cleanup cron for old rate-limit buckets:
+
+- **Endpoint:** `GET /api/cron/rate-limit-cleanup`
+- **Auth:** `Authorization: Bearer <CRON_SECRET>`
+- **Schedule:** `30 3 * * *` in `vercel.json` (03:30 UTC, after the demo sandbox reset cron)
+- **Retention:** deletes buckets older than **7 days**
+- **Delete rule:** current implementation calls `cleanupRateLimitBuckets({ olderThan })`, which removes rows where `windowStart < olderThan`
+- **Secret reuse:** this cron uses the same `CRON_SECRET` already used for the demo sandbox cron; no new cleanup-specific env var is required
+
+Expected success response:
+
+```json
+{
+  "success": true,
+  "deletedCount": 42
+}
+```
+
+If `CRON_SECRET` is missing, the route returns **503** with a safe JSON error. If the bearer token is missing or invalid, it returns **401**.
+
+### How to validate execution
+
+1. Confirm the cron exists in `vercel.json` and appears in Vercel cron settings after deploy.
+2. Trigger the route manually with the correct bearer token from a safe operator context.
+3. Verify the response includes `success: true` and a reasonable `deletedCount`.
+4. Re-run the recent-buckets query in this runbook to confirm current traffic is still visible.
+5. Optionally confirm old rows decreased with a count query scoped to `windowStart < now() - interval '7 days'`.
+
+### Manual fallback
+
+If cron execution is unavailable, use the same retention boundary manually:
+
+```sql
+select count(*)
+from "rate_limit_buckets"
+where "windowStart" < now() - interval '7 days';
+```
+
+Then, only if the count and boundary are correct:
+
+```sql
+delete from "rate_limit_buckets"
+where "windowStart" < now() - interval '7 days';
+```
+
+Do **not** broaden the delete during an incident unless you explicitly intend to remove active limiter state.
+
+---
+
 ## Emergency cleanup of old buckets
 
 If the table needs immediate reduction and you are deleting **old** data only:
@@ -197,7 +248,7 @@ Current known limitations:
 
 - Requests near the end of one window and start of the next can create a small boundary burst.
 - Counters live in Postgres, so very high-volume abuse may eventually justify a dedicated distributed limiter.
-- Cleanup is manual/operational today; no automatic cron has been wired yet.
+- Cleanup retention is automated via a protected daily cron; emergency/manual cleanup remains available when operators need tighter control.
 - There is no CAPTCHA/Turnstile in front of these routes in this batch.
 
 These are known trade-offs for the current DAT_3.5 implementation and do not indicate a malfunction by themselves.
@@ -208,7 +259,6 @@ These are known trade-offs for the current DAT_3.5 implementation and do not ind
 
 Still pending:
 
-- scheduled cleanup cron/job for old buckets,
 - dashboards / alerts for elevated `429` rates or unusual bucket growth,
 - CAPTCHA / Turnstile if abuse patterns justify it,
 - re-evaluation of dedicated distributed infrastructure if scale or latency demands it.
