@@ -6,7 +6,7 @@ Safe steps to enable **transactional invitation email** via Postmark on DAT (Dri
 
 Do **not** paste server tokens, full `inviteLink` URLs, or email bodies into tickets, chat, git, screenshots, or runbook edits. Use placeholders in examples.
 
-**Related:** [auth-email-security-review.md](../engineering/auth-email-security-review.md), [auth-email-production-readiness-checklist.md](./auth-email-production-readiness-checklist.md), [environment-variables.md](./environment-variables.md#postmark-email), [email-provider-evaluation.md](../engineering/email-provider-evaluation.md), [invitation-copy-link-smoke.md](./invitation-copy-link-smoke.md), [release-checklist.md](./release-checklist.md).
+**Related:** [production-postmark-enablement-plan.md](./production-postmark-enablement-plan.md), [auth-email-security-review.md](../engineering/auth-email-security-review.md), [auth-email-production-readiness-checklist.md](./auth-email-production-readiness-checklist.md), [environment-variables.md](./environment-variables.md#postmark-email), [email-provider-evaluation.md](../engineering/email-provider-evaluation.md), [invitation-copy-link-smoke.md](./invitation-copy-link-smoke.md), [release-checklist.md](./release-checklist.md).
 
 ---
 
@@ -93,6 +93,8 @@ You still need a plausible `POSTMARK_FROM_EMAIL` that Postmark accepts for the t
 5. Do **not** log or screenshot the full `inviteLink` or response body in shared channels.
 
 ### c) Production token — only after domain/sender verified
+
+Use [production-postmark-enablement-plan.md](./production-postmark-enablement-plan.md) for the controlled Production cutover order, smoke tests, go/no-go gates, and rollback sequence. This runbook does **not** mean Production Postmark is already enabled.
 
 Complete [auth-email-production-readiness-checklist.md](./auth-email-production-readiness-checklist.md) before enabling real Production delivery.
 
