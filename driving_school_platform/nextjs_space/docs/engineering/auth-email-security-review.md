@@ -20,7 +20,7 @@ This document consolidates **current state**, **Preview validation**, **environm
 | Public signup       | **Disabled by default** (`PUBLIC_SIGNUP_ENABLED`); demo orgs blocked                                                                   |
 | Production Postmark | **Not enabled** — Preview used for real-delivery validation; Production cutover is documented in the readiness checklist, not executed |
 
-**Distributed rate limit (DB-backed)** is implemented and operationally validated in `auth-rate-limit-foundation` — see [auth-rate-limit-foundation.md](./auth-rate-limit-foundation.md) and [auth-rate-limit-runbook.md](../ops/auth-rate-limit-runbook.md). CAPTCHA and production mail cutover remain out of scope.
+**Distributed rate limit (DB-backed)** is implemented and operationally validated in `auth-rate-limit-foundation`, and old bucket cleanup is now handled by a protected daily cron using the shared `CRON_SECRET` pattern — see [auth-rate-limit-foundation.md](./auth-rate-limit-foundation.md) and [auth-rate-limit-runbook.md](../ops/auth-rate-limit-runbook.md). CAPTCHA and production mail cutover remain out of scope.
 
 ---
 
@@ -145,7 +145,7 @@ Priority is **P0 = before production mail / abuse exposure**, **P1 = soon after*
 | **P0** | **Production Postmark enablement checklist** | Domain/sender verified, secrets in Production scope only, smoke invite + reset + verify, monitor `emailDelivery` / bounces                               |
 | **P0** | **Preview default noop**                     | Prevent accidental sends on every PR preview                                                                                                             |
 | **P1** | ~~**Distributed rate limit**~~               | **Done** — [auth-rate-limit-foundation.md](./auth-rate-limit-foundation.md): login, reset/verify request, invitation accept, signup IP; hashed keys only |
-| **P1** | **Rate-limit cleanup cron**                  | Cleanup helper exists, but scheduled operational cleanup is still manual / pending                                                                       |
+| **P1** | ~~**Rate-limit cleanup cron**~~              | **Done** — protected daily cron cleans buckets older than 7 days; same `CRON_SECRET` pattern as existing project cron                                    |
 | **P1** | **Session policy after password reset**      | Credentials sessions may remain valid after `passwordHash` change until expiry — optional invalidation / “sign out all devices”                          |
 | **P2** | **Turnstile / CAPTCHA**                      | On forgot-password, resend-verification, and/or public signup when enabled                                                                               |
 | **P2** | **Dashboards / alerts**                      | Add monitoring for unusual `429` rates, bucket growth, and repeated auth/email abuse patterns                                                            |

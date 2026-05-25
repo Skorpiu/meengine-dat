@@ -106,9 +106,16 @@ Fixed-window (not sliding). Minor burst at window boundaries is accepted for sim
 
 `cleanupRateLimitBuckets({ olderThan })` in `lib/rate-limit/cleanup.ts` deletes buckets with `windowStart < olderThan`.
 
-The cleanup helper already has unit coverage; this micro-batch does **not** add a cron or background job.
+The cleanup helper has unit coverage, and the operational cron is now wired at `GET /api/cron/rate-limit-cleanup` using the existing Bearer `CRON_SECRET` pattern.
 
-**Operational cron is not wired in this batch.** Schedule periodic cleanup (e.g. daily, `olderThan = now - 7 days`) via existing admin/cron patterns when ops capacity allows.
+Current retention policy:
+
+- daily Vercel Cron via `vercel.json`
+- schedule `30 3 * * *` (03:30 UTC)
+- `olderThan = now - 7 days`
+- delete rule remains `windowStart < olderThan`
+
+This keeps the current **fixed-window** model unchanged while removing stale buckets operationally.
 
 ---
 
@@ -122,7 +129,7 @@ The cleanup helper already has unit coverage; this micro-batch does **not** add 
 | CAPTCHA / Turnstile                                               | **Not implemented** — follow-up                                        |
 | Dedicated Redis/Upstash store                                     | **Deferred** — revisit if Postgres write volume or latency requires it |
 | Dashboards / alerts on 429 rate                                   | **Deferred**                                                           |
-| Cleanup cron                                                      | **Deferred** (function + unit test only; operational runbook added)    |
+| Cleanup cron                                                      | **Implemented** — protected daily cron, 7-day retention                |
 
 ---
 
