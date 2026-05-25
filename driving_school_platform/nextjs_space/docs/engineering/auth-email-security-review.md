@@ -2,7 +2,7 @@
 
 **Status:** DAT_3.5 `auth-email-security-operational-review` (documentation only).  
 **Audience:** engineering + ops.  
-**Detail elsewhere:** [password-reset-flow.md](./password-reset-flow.md), [email-verification-flow.md](./email-verification-flow.md), [email-provider-evaluation.md](./email-provider-evaluation.md), [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md), [auth-email-production-readiness-checklist.md](../ops/auth-email-production-readiness-checklist.md).
+**Detail elsewhere:** [password-reset-flow.md](./password-reset-flow.md), [email-verification-flow.md](./email-verification-flow.md), [email-provider-evaluation.md](./email-provider-evaluation.md), [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md), [auth-email-production-readiness-checklist.md](../ops/auth-email-production-readiness-checklist.md), [production-postmark-enablement-plan.md](../ops/production-postmark-enablement-plan.md).
 
 This document consolidates **current state**, **Preview validation**, **environment policy**, **security properties**, **prioritized backlog**, and a **short test runbook**. It does not replace flow-specific docs.
 
@@ -85,7 +85,7 @@ The following were exercised on **Preview** with **temporary** `EMAIL_PROVIDER=p
 
 **Operator rule:** after each test window, set Preview `EMAIL_PROVIDER` back to **unset** or **`noop`** and redeploy Preview so routine previews do not send real mail.
 
-Production has **not** been enabled for Postmark on auth/invite flows in this phase. The enablement path is now documented in [auth-email-production-readiness-checklist.md](../ops/auth-email-production-readiness-checklist.md) and remains **not executed** in DAT_3.5.
+Production has **not** been enabled for Postmark on auth/invite flows in this phase. The enablement path is now documented in [auth-email-production-readiness-checklist.md](../ops/auth-email-production-readiness-checklist.md) and [production-postmark-enablement-plan.md](../ops/production-postmark-enablement-plan.md), and remains **documented but not executed** in DAT_3.5.
 
 ---
 

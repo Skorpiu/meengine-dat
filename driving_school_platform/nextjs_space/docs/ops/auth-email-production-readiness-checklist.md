@@ -3,9 +3,9 @@
 **Status:** DAT_3.5 `production-readiness-auth-email-checklist` (documentation only).  
 **Audience:** engineering + ops.  
 **Current decision:** **No-Go / not enabled yet** for real Postmark in Production.  
-**Related:** [auth-email-security-review.md](../engineering/auth-email-security-review.md), [email-provider-postmark-runbook.md](./email-provider-postmark-runbook.md), [environment-variables.md](./environment-variables.md#postmark-email), [supabase-prisma-migrations.md](./supabase-prisma-migrations.md), [auth-rate-limit-runbook.md](./auth-rate-limit-runbook.md).
+**Related:** [production-postmark-enablement-plan.md](./production-postmark-enablement-plan.md), [auth-email-security-review.md](../engineering/auth-email-security-review.md), [email-provider-postmark-runbook.md](./email-provider-postmark-runbook.md), [environment-variables.md](./environment-variables.md#postmark-email), [supabase-prisma-migrations.md](./supabase-prisma-migrations.md), [auth-rate-limit-runbook.md](./auth-rate-limit-runbook.md).
 
-This checklist consolidates the **minimum production-readiness gates** for auth/email before enabling **real Postmark delivery in Production** and before broader external exposure. It documents the cutover decision; it does **not** change runtime, migrations, dependencies, or live environment variables by itself.
+This checklist consolidates the **minimum production-readiness gates** for auth/email before enabling **real Postmark delivery in Production** and before broader external exposure. It documents the cutover decision; it does **not** change runtime, migrations, dependencies, or live environment variables by itself. The future step-by-step cutover sequence is documented in [production-postmark-enablement-plan.md](./production-postmark-enablement-plan.md).
 
 ---
 
