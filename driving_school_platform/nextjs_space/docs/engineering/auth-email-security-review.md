@@ -2,7 +2,7 @@
 
 **Status:** DAT_3.5 `auth-email-security-operational-review` (documentation only).  
 **Audience:** engineering + ops.  
-**Detail elsewhere:** [password-reset-flow.md](./password-reset-flow.md), [email-verification-flow.md](./email-verification-flow.md), [email-provider-evaluation.md](./email-provider-evaluation.md), [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md).
+**Detail elsewhere:** [password-reset-flow.md](./password-reset-flow.md), [email-verification-flow.md](./email-verification-flow.md), [email-provider-evaluation.md](./email-provider-evaluation.md), [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md), [auth-email-production-readiness-checklist.md](../ops/auth-email-production-readiness-checklist.md).
 
 This document consolidates **current state**, **Preview validation**, **environment policy**, **security properties**, **prioritized backlog**, and a **short test runbook**. It does not replace flow-specific docs.
 
@@ -10,15 +10,15 @@ This document consolidates **current state**, **Preview validation**, **environm
 
 ## Executive summary
 
-| Area                | State                                                                                           |
-| ------------------- | ----------------------------------------------------------------------------------------------- |
-| Onboarding          | **Invite-only** (copy-link + optional automatic invitation email)                               |
-| Transactional email | **`sendEmail()`** boundary — `noop` default, **Postmark** when configured                       |
-| Password reset      | **Implemented** — hash-only tokens, atomic consume, anti-enumeration                            |
-| Email verification  | **Implemented** — same security model; invite accept marks email verified                       |
-| Auth rate limit     | **Implemented + operationally validated** — DB-backed fixed windows, hashed keys only           |
-| Public signup       | **Disabled by default** (`PUBLIC_SIGNUP_ENABLED`); demo orgs blocked                            |
-| Production Postmark | **Not enabled** — Preview used for real-delivery validation; revert Preview to noop after tests |
+| Area                | State                                                                                                                                  |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Onboarding          | **Invite-only** (copy-link + optional automatic invitation email)                                                                      |
+| Transactional email | **`sendEmail()`** boundary — `noop` default, **Postmark** when configured                                                              |
+| Password reset      | **Implemented** — hash-only tokens, atomic consume, anti-enumeration                                                                   |
+| Email verification  | **Implemented** — same security model; invite accept marks email verified                                                              |
+| Auth rate limit     | **Implemented + operationally validated** — DB-backed fixed windows, hashed keys only                                                  |
+| Public signup       | **Disabled by default** (`PUBLIC_SIGNUP_ENABLED`); demo orgs blocked                                                                   |
+| Production Postmark | **Not enabled** — Preview used for real-delivery validation; Production cutover is documented in the readiness checklist, not executed |
 
 **Distributed rate limit (DB-backed)** is implemented and operationally validated in `auth-rate-limit-foundation` — see [auth-rate-limit-foundation.md](./auth-rate-limit-foundation.md) and [auth-rate-limit-runbook.md](../ops/auth-rate-limit-runbook.md). CAPTCHA and production mail cutover remain out of scope.
 
@@ -85,7 +85,7 @@ The following were exercised on **Preview** with **temporary** `EMAIL_PROVIDER=p
 
 **Operator rule:** after each test window, set Preview `EMAIL_PROVIDER` back to **unset** or **`noop`** and redeploy Preview so routine previews do not send real mail.
 
-Production has **not** been enabled for Postmark on auth/invite flows in this phase.
+Production has **not** been enabled for Postmark on auth/invite flows in this phase. The enablement path is now documented in [auth-email-production-readiness-checklist.md](../ops/auth-email-production-readiness-checklist.md) and remains **not executed** in DAT_3.5.
 
 ---
 
@@ -158,7 +158,9 @@ Priority is **P0 = before production mail / abuse exposure**, **P1 = soon after*
 
 ## Production enablement checklist (summary)
 
-Full steps: [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md), [release-checklist.md](../ops/release-checklist.md).
+This section documents the cutover requirements; it does **not** indicate that Production enablement has happened.
+
+Full steps: [auth-email-production-readiness-checklist.md](../ops/auth-email-production-readiness-checklist.md), [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md), [release-checklist.md](../ops/release-checklist.md).
 
 1. Postmark domain + sender verified (SPF/DKIM).
 2. Production server token only in Vercel **Production** (never in repo).
