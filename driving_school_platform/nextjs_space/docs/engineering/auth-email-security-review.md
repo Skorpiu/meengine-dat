@@ -2,7 +2,7 @@
 
 **Status:** DAT_3.5 `auth-email-security-operational-review` (documentation only).  
 **Audience:** engineering + ops.  
-**Detail elsewhere:** [password-reset-flow.md](./password-reset-flow.md), [email-verification-flow.md](./email-verification-flow.md), [email-provider-evaluation.md](./email-provider-evaluation.md), [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md), [auth-email-production-readiness-checklist.md](../ops/auth-email-production-readiness-checklist.md), [production-postmark-enablement-plan.md](../ops/production-postmark-enablement-plan.md).
+**Detail elsewhere:** [password-reset-flow.md](./password-reset-flow.md), [email-verification-flow.md](./email-verification-flow.md), [email-provider-evaluation.md](./email-provider-evaluation.md), [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md), [auth-email-production-readiness-checklist.md](../ops/auth-email-production-readiness-checklist.md), [production-postmark-enablement-plan.md](../ops/production-postmark-enablement-plan.md), [production-postmark-validation-record.md](../ops/production-postmark-validation-record.md).
 
 This document consolidates **current state**, **Preview validation**, **environment policy**, **security properties**, **prioritized backlog**, and a **short test runbook**. It does not replace flow-specific docs.
 
@@ -10,17 +10,17 @@ This document consolidates **current state**, **Preview validation**, **environm
 
 ## Executive summary
 
-| Area                | State                                                                                                                                  |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Onboarding          | **Invite-only** (copy-link + optional automatic invitation email)                                                                      |
-| Transactional email | **`sendEmail()`** boundary — `noop` default, **Postmark** when configured                                                              |
-| Password reset      | **Implemented** — hash-only tokens, atomic consume, anti-enumeration                                                                   |
-| Email verification  | **Implemented** — same security model; invite accept marks email verified                                                              |
-| Auth rate limit     | **Implemented + operationally validated** — DB-backed fixed windows, hashed keys only                                                  |
-| Public signup       | **Disabled by default** (`PUBLIC_SIGNUP_ENABLED`); demo orgs blocked                                                                   |
-| Production Postmark | **Not enabled** — Preview used for real-delivery validation; Production cutover is documented in the readiness checklist, not executed |
+| Area                | State                                                                                                                                          |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Onboarding          | **Invite-only** (copy-link + optional automatic invitation email)                                                                              |
+| Transactional email | **`sendEmail()`** boundary — `noop` default, **Postmark** when configured                                                                      |
+| Password reset      | **Implemented** — hash-only tokens, atomic consume, anti-enumeration                                                                           |
+| Email verification  | **Implemented** — same security model; invite accept marks email verified                                                                      |
+| Auth rate limit     | **Implemented + operationally validated** — DB-backed fixed windows, hashed keys only                                                          |
+| Public signup       | **Disabled by default** (`PUBLIC_SIGNUP_ENABLED`); demo orgs blocked                                                                           |
+| Production Postmark | **Enabled and validated** for `admin@meengine.io`; external Gmail delivery remains constrained while the Postmark account review is still open |
 
-**Distributed rate limit (DB-backed)** is implemented and operationally validated in `auth-rate-limit-foundation`, and old bucket cleanup is now handled by a protected daily cron using the shared `CRON_SECRET` pattern — see [auth-rate-limit-foundation.md](./auth-rate-limit-foundation.md) and [auth-rate-limit-runbook.md](../ops/auth-rate-limit-runbook.md). CAPTCHA and production mail cutover remain out of scope.
+**Distributed rate limit (DB-backed)** is implemented and operationally validated in `auth-rate-limit-foundation`, and old bucket cleanup is now handled by a protected daily cron using the shared `CRON_SECRET` pattern — see [auth-rate-limit-foundation.md](./auth-rate-limit-foundation.md) and [auth-rate-limit-runbook.md](../ops/auth-rate-limit-runbook.md). CAPTCHA remains out of scope; Production mail cutover is now executed and documented.
 
 ---
 
@@ -85,7 +85,24 @@ The following were exercised on **Preview** with **temporary** `EMAIL_PROVIDER=p
 
 **Operator rule:** after each test window, set Preview `EMAIL_PROVIDER` back to **unset** or **`noop`** and redeploy Preview so routine previews do not send real mail.
 
-Production has **not** been enabled for Postmark on auth/invite flows in this phase. The enablement path is now documented in [auth-email-production-readiness-checklist.md](../ops/auth-email-production-readiness-checklist.md) and [production-postmark-enablement-plan.md](../ops/production-postmark-enablement-plan.md), and remains **documented but not executed** in DAT_3.5.
+Production Postmark has now been enabled and validated for controlled sends to `admin@meengine.io`. The execution record is documented in [production-postmark-validation-record.md](../ops/production-postmark-validation-record.md). External Gmail delivery should still be treated as constrained until Postmark account review is fully cleared.
+
+---
+
+## Validated in Production (DAT_3.5)
+
+The following were validated on **Production** after the real cutover:
+
+| Flow                               | What was validated                                                                 |
+| ---------------------------------- | ---------------------------------------------------------------------------------- |
+| **Invitation delivery**            | Create invite to `admin@meengine.io` → `inviteLink` still present → email received |
+| **Password reset delivery + auth** | Reset mail delivered to `admin@meengine.io` → password changed → login succeeded   |
+| **Postmark Activity**              | `invitation` and `password-reset` showed **Processed** / **Delivered**             |
+
+Observed limitation during Production validation:
+
+- Delivery to `rukahh@gmail.com` was not observed because the Postmark account is still under review / externally limited.
+- `skorpiu.gaming@gmail.com` already exists as a global `PLATFORM_ADMIN` with `organizationId=null`, so tenant invitation remained correctly blocked as an existing account.
 
 ---
 
@@ -107,14 +124,14 @@ This matches the current configured email policy for password reset requests: **
 
 ## Environments
 
-| Environment               | Recommended `EMAIL_PROVIDER` | Notes                                                                                                          |
-| ------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| **Local / CI**            | unset or `noop`              | `pnpm check` needs no Postmark vars                                                                            |
-| **Preview (default)**     | **noop**                     | Safe default; no accidental mail to real users                                                                 |
-| **Preview (test window)** | `postmark` temporarily       | Real or `POSTMARK_API_TEST` per [runbook](../ops/email-provider-postmark-runbook.md); **revert to noop** after |
-| **Production**            | **not enabled yet**          | Enable only after checklist below + domain/sender verified                                                     |
+| Environment               | Recommended `EMAIL_PROVIDER` | Notes                                                                                                               |
+| ------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Local / CI**            | unset or `noop`              | `pnpm check` needs no Postmark vars                                                                                 |
+| **Preview (default)**     | **noop**                     | Safe default; no accidental mail to real users                                                                      |
+| **Preview (test window)** | `postmark` temporarily       | Real or `POSTMARK_API_TEST` per [runbook](../ops/email-provider-postmark-runbook.md); **revert to noop** after      |
+| **Production**            | **postmark**                 | Enabled and validated for `admin@meengine.io`; keep monitoring Activity while external delivery remains constrained |
 
-Do not change Postmark secrets or production env in this review batch — follow [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md) when cutting over.
+This documentation batch does not change Postmark secrets or production env. For the executed Production validation, see [production-postmark-validation-record.md](../ops/production-postmark-validation-record.md).
 
 ---
 
@@ -140,27 +157,30 @@ Do not change Postmark secrets or production env in this review batch — follow
 
 Priority is **P0 = before production mail / abuse exposure**, **P1 = soon after**, **P2 = later**.
 
-| Pri    | Item                                         | Rationale                                                                                                                                                |
-| ------ | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **P0** | **Production Postmark enablement checklist** | Domain/sender verified, secrets in Production scope only, smoke invite + reset + verify, monitor `emailDelivery` / bounces                               |
-| **P0** | **Preview default noop**                     | Prevent accidental sends on every PR preview                                                                                                             |
-| **P1** | ~~**Distributed rate limit**~~               | **Done** — [auth-rate-limit-foundation.md](./auth-rate-limit-foundation.md): login, reset/verify request, invitation accept, signup IP; hashed keys only |
-| **P1** | ~~**Rate-limit cleanup cron**~~              | **Done** — protected daily cron cleans buckets older than 7 days; same `CRON_SECRET` pattern as existing project cron                                    |
-| **P1** | **Session policy after password reset**      | Credentials sessions may remain valid after `passwordHash` change until expiry — optional invalidation / “sign out all devices”                          |
-| **P2** | **Turnstile / CAPTCHA**                      | On forgot-password, resend-verification, and/or public signup when enabled                                                                               |
-| **P2** | **Dashboards / alerts**                      | Add monitoring for unusual `429` rates, bucket growth, and repeated auth/email abuse patterns                                                            |
-| **P2** | **Unverified-user policy**                   | Today: NextAuth blocks login if `!isEmailVerified`; future: block sensitive actions for admin-created users with `isEmailVerified: false`                |
-| **P2** | **Public signup + verification**             | When `PUBLIC_SIGNUP_ENABLED=true`, create unverified users + send verification email (remove placeholder)                                                |
-| **P2** | **Legacy column cleanup**                    | Migration to drop unused `User.*Reset*` / `User.*Verification*` columns after dependency audit                                                           |
-| **P2** | **Resend/SMTP adapters**                     | Only if Postmark strategy changes — see [email-provider-evaluation.md](./email-provider-evaluation.md)                                                   |
+| Pri    | Item                                             | Rationale                                                                                                                                                                     |
+| ------ | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **P0** | ~~**Production Postmark enablement checklist**~~ | **Done** — Production cutover executed and validated for `admin@meengine.io`; see [production-postmark-validation-record.md](../ops/production-postmark-validation-record.md) |
+| **P0** | **Preview default noop**                         | Prevent accidental sends on every PR preview                                                                                                                                  |
+| **P1** | ~~**Distributed rate limit**~~                   | **Done** — [auth-rate-limit-foundation.md](./auth-rate-limit-foundation.md): login, reset/verify request, invitation accept, signup IP; hashed keys only                      |
+| **P1** | ~~**Rate-limit cleanup cron**~~                  | **Done** — protected daily cron cleans buckets older than 7 days; same `CRON_SECRET` pattern as existing project cron                                                         |
+| **P1** | **Postmark account approval follow-through**     | External recipients may remain constrained until Postmark review/approval is fully cleared                                                                                    |
+| **P1** | **Session policy after password reset**          | Credentials sessions may remain valid after `passwordHash` change until expiry — optional invalidation / “sign out all devices”                                               |
+| **P2** | **Turnstile / CAPTCHA**                          | On forgot-password, resend-verification, and/or public signup when enabled                                                                                                    |
+| **P2** | **Dashboards / alerts**                          | Add monitoring for unusual `429` rates, bucket growth, and repeated auth/email abuse patterns                                                                                 |
+| **P2** | **DMARC mailbox handling**                       | Create `dmarc@meengine.io` alias so Google and other DMARC reports land in an intentional mailbox                                                                             |
+| **P2** | **Unverified-user policy**                       | Today: NextAuth blocks login if `!isEmailVerified`; future: block sensitive actions for admin-created users with `isEmailVerified: false`                                     |
+| **P2** | **Public signup + verification**                 | When `PUBLIC_SIGNUP_ENABLED=true`, create unverified users + send verification email (remove placeholder)                                                                     |
+| **P2** | **Legacy column cleanup**                        | Migration to drop unused `User.*Reset*` / `User.*Verification*` columns after dependency audit                                                                                |
+| **P2** | **Resend/SMTP adapters**                         | Only if Postmark strategy changes — see [email-provider-evaluation.md](./email-provider-evaluation.md)                                                                        |
+| **P2** | **Existing global-account invite UX**            | Improve operator/user feedback when a global `PLATFORM_ADMIN` with `organizationId=null` is invited into a tenant and correctly blocked as existing account                   |
 
 ---
 
 ## Production enablement checklist (summary)
 
-This section documents the cutover requirements; it does **not** indicate that Production enablement has happened.
+This section documents the cutover requirements and now has a matching execution record in [production-postmark-validation-record.md](../ops/production-postmark-validation-record.md).
 
-Full steps: [auth-email-production-readiness-checklist.md](../ops/auth-email-production-readiness-checklist.md), [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md), [release-checklist.md](../ops/release-checklist.md).
+Full steps: [auth-email-production-readiness-checklist.md](../ops/auth-email-production-readiness-checklist.md), [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md), [production-postmark-validation-record.md](../ops/production-postmark-validation-record.md), [release-checklist.md](../ops/release-checklist.md).
 
 1. Postmark domain + sender verified (SPF/DKIM).
 2. Production server token only in Vercel **Production** (never in repo).

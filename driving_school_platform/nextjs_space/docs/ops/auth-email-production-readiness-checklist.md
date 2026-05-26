@@ -2,10 +2,10 @@
 
 **Status:** DAT_3.5 `production-readiness-auth-email-checklist` (documentation only).  
 **Audience:** engineering + ops.  
-**Current decision:** **No-Go / not enabled yet** for real Postmark in Production.  
-**Related:** [production-postmark-enablement-plan.md](./production-postmark-enablement-plan.md), [auth-email-security-review.md](../engineering/auth-email-security-review.md), [email-provider-postmark-runbook.md](./email-provider-postmark-runbook.md), [environment-variables.md](./environment-variables.md#postmark-email), [supabase-prisma-migrations.md](./supabase-prisma-migrations.md), [auth-rate-limit-runbook.md](./auth-rate-limit-runbook.md).
+**Current decision:** **Go / enabled and validated** for controlled Production sends to `admin@meengine.io`.  
+**Related:** [production-postmark-validation-record.md](./production-postmark-validation-record.md), [production-postmark-enablement-plan.md](./production-postmark-enablement-plan.md), [auth-email-security-review.md](../engineering/auth-email-security-review.md), [email-provider-postmark-runbook.md](./email-provider-postmark-runbook.md), [environment-variables.md](./environment-variables.md#postmark-email), [supabase-prisma-migrations.md](./supabase-prisma-migrations.md), [auth-rate-limit-runbook.md](./auth-rate-limit-runbook.md).
 
-This checklist consolidates the **minimum production-readiness gates** for auth/email before enabling **real Postmark delivery in Production** and before broader external exposure. It documents the cutover decision; it does **not** change runtime, migrations, dependencies, or live environment variables by itself. The future step-by-step cutover sequence is documented in [production-postmark-enablement-plan.md](./production-postmark-enablement-plan.md).
+This checklist consolidates the **minimum production-readiness gates** for auth/email before enabling **real Postmark delivery in Production** and before broader external exposure. It documents the cutover decision; it does **not** change runtime, migrations, dependencies, or live environment variables by itself. The cutover plan is documented in [production-postmark-enablement-plan.md](./production-postmark-enablement-plan.md), and the executed Production validation is recorded in [production-postmark-validation-record.md](./production-postmark-validation-record.md).
 
 ---
 
@@ -31,11 +31,11 @@ This checklist consolidates the **minimum production-readiness gates** for auth/
 - [x] `rate_limit_buckets` migration/table path was applied and operationally validated.
 - [x] Runbooks exist for auth/email/rate-limit operations.
 - [x] Preview should stay `noop` by default outside controlled test windows.
-- [ ] Real Postmark is enabled in Production.
+- [x] Real Postmark is enabled in Production and validated for controlled sends to `admin@meengine.io`.
 - [x] Public signup remains disabled by default.
 - [x] Demo signup remains blocked.
 
-**Important current state:** Production Postmark enablement is **not executed** in this batch. Preview validation is complete, but Production must remain on the current safe posture until the checklist below is explicitly signed off.
+**Important current state:** Production Postmark enablement has been executed and validated for controlled internal mailbox tests. External Gmail delivery may still be constrained while the Postmark account remains under review. Public signup remains disabled by default.
 
 ---
 
@@ -54,13 +54,13 @@ This checklist consolidates the **minimum production-readiness gates** for auth/
 
 ## Production env vars checklist
 
-- [ ] `EMAIL_PROVIDER` stays unset or `noop` until the enablement decision is explicit; switch to `postmark` only during the approved cutover window.
-- [ ] `POSTMARK_SERVER_TOKEN` is configured in **Vercel Production** and is valid for the intended Postmark server.
-- [ ] `POSTMARK_FROM_EMAIL` is set to **`admin@meengine.io`** or **`no-reply@meengine.io`**, and the selected sender/domain is verified in Postmark.
-- [ ] `POSTMARK_MESSAGE_STREAM` is set to **`outbound`**.
-- [ ] `POSTMARK_API_BASE_URL` is **not** defined in Production.
-- [ ] `DATABASE_URL` is present and non-empty in Production.
-- [ ] `DIRECT_URL` is present and non-empty in Production.
+- [x] `EMAIL_PROVIDER` stayed unset / `noop` until the enablement decision was explicit, and was then switched to `postmark` during the Production cutover.
+- [x] `POSTMARK_SERVER_TOKEN` is configured in **Vercel Production** and is valid for the intended Postmark server.
+- [x] `POSTMARK_FROM_EMAIL` is set to **`admin@meengine.io`**, and the selected sender/domain is verified in Postmark.
+- [x] `POSTMARK_MESSAGE_STREAM` is set to **`outbound`**.
+- [x] `POSTMARK_API_BASE_URL` is **not** defined in Production.
+- [x] `DATABASE_URL` is present and non-empty in Production.
+- [x] `DIRECT_URL` is present and non-empty in Production.
 - [ ] No Production Postmark secret is stored in git, docs, chat, screenshots, or tickets.
 
 ---
@@ -68,13 +68,13 @@ This checklist consolidates the **minimum production-readiness gates** for auth/
 ## Postmark Production checklist
 
 - [ ] Postmark account is approved or otherwise free of blocking restrictions for transactional delivery.
-- [ ] Correct **Server API Token** was chosen for the Production server.
-- [ ] DKIM is verified.
-- [ ] Return-Path is verified.
-- [ ] Sender signature or sending domain is validated for the chosen `POSTMARK_FROM_EMAIL`.
+- [x] Correct **Server API Token** was chosen for the Production server.
+- [x] DKIM is verified.
+- [x] Return-Path is verified.
+- [x] Sender signature or sending domain is validated for the chosen `POSTMARK_FROM_EMAIL`.
 - [ ] Operators understand the account's sending limits, review requirements, suppressions, and any remaining restrictions.
-- [ ] Activity view will be monitored during the first controlled sends after enablement.
-- [ ] Operators know how to distinguish accepted-by-Postmark from actually delivered/opened mail.
+- [x] Activity view was monitored during the first controlled sends after enablement.
+- [x] Operators know how to distinguish accepted-by-Postmark from actually delivered/opened mail.
 
 ---
 
@@ -113,11 +113,11 @@ select
 
 Run only **Production-safe**, **controlled**, **low-volume** checks after enablement:
 
-- [ ] Normal credentials login works for a known good user.
-- [ ] Invitation create still returns `inviteLink` even when email delivery is attempted.
-- [ ] Invitation email sends successfully to a controlled mailbox.
-- [ ] Password reset request works for a controlled mailbox.
-- [ ] Password reset confirm succeeds and login works with the new password.
+- [x] Normal credentials login works for a known good user.
+- [x] Invitation create still returns `inviteLink` even when email delivery is attempted.
+- [x] Invitation email sends successfully to a controlled mailbox.
+- [x] Password reset request works for a controlled mailbox.
+- [x] Password reset confirm succeeds and login works with the new password.
 - [ ] Email verification resend/confirm works for a controlled unverified user.
 - [ ] Rate-limit sanity is checked in a **minimal, non-abusive** way: confirm expected `rate_limit_buckets` activity appears, or run a very small controlled test only.
 
@@ -140,12 +140,12 @@ If initial Production email delivery is not acceptable:
 
 ## Known risks
 
-- Cleanup cron/job for `rate_limit_buckets` is still pending; cleanup remains operational/manual for now.
+- Cleanup cron/job for `rate_limit_buckets` exists, but observability and dashboards remain basic.
 - Existing sessions may remain valid after password reset until normal session expiry.
 - Public signup remains disabled by default; broader self-serve exposure is still intentionally blocked.
 - Future policy for users who are created but not verified still needs a clearer long-term decision.
 - CAPTCHA / Turnstile is not implemented yet.
-- Initial Production Postmark rollout requires close monitoring for deliverability, rejections, suppressions, and account-level restrictions.
+- Production Postmark rollout still requires close monitoring for deliverability, rejections, suppressions, and account-level restrictions while account review is open.
 
 ---
 
@@ -156,11 +156,11 @@ Use this rule for release sign-off:
 - **Go** only if every mandatory checklist item above is complete, Production-safe smoke tests pass, and a monitoring owner is assigned for the first send window.
 - **No-Go** if any env, Postmark, migration, or smoke-test gate is incomplete or if the team is not prepared to rollback immediately.
 
-**Recorded decision for DAT_3.5 at document creation:** **No-Go / not enabled yet**. Real Postmark delivery in Production remains **disabled** until a future explicit cutover.
+**Recorded decision for DAT_3.5 after validation:** **Go / enabled and validated** for controlled Production sends. See [production-postmark-validation-record.md](./production-postmark-validation-record.md). External-recipient delivery should continue to be monitored while the Postmark account review is still open.
 
 ### Sign-off
 
-- Decision: `GO` / `NO-GO`
-- Decision owner: `__________`
-- Date: `__________`
-- Notes: `__________`
+- Decision: `GO`
+- Decision owner: `recorded in validation record`
+- Date: `2026-05-26`
+- Notes: `Production Postmark enabled and validated for admin@meengine.io; public signup remains disabled; external Gmail delivery still constrained while Postmark account review remains open.`

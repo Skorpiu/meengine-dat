@@ -1,12 +1,12 @@
 # Postmark email provider — operator runbook
 
-Safe steps to enable **transactional invitation email** via Postmark on DAT (Driving Academy Tool) **before** placing real secrets in Vercel Production.
+Safe steps to enable **transactional invitation email** via Postmark on DAT (Driving Academy Tool), plus the operator reference for the validated Production posture.
 
 **Code path:** `POST /api/admin/invitations` → `attemptInvitationEmailDelivery()` → `buildInvitationEmail()` + `sendEmail()` → `lib/email/providers/postmark-provider.ts` (REST `POST /email`, no SDK).
 
 Do **not** paste server tokens, full `inviteLink` URLs, or email bodies into tickets, chat, git, screenshots, or runbook edits. Use placeholders in examples.
 
-**Related:** [production-postmark-enablement-plan.md](./production-postmark-enablement-plan.md), [auth-email-security-review.md](../engineering/auth-email-security-review.md), [auth-email-production-readiness-checklist.md](./auth-email-production-readiness-checklist.md), [environment-variables.md](./environment-variables.md#postmark-email), [email-provider-evaluation.md](../engineering/email-provider-evaluation.md), [invitation-copy-link-smoke.md](./invitation-copy-link-smoke.md), [release-checklist.md](./release-checklist.md).
+**Related:** [production-postmark-validation-record.md](./production-postmark-validation-record.md), [production-postmark-enablement-plan.md](./production-postmark-enablement-plan.md), [auth-email-security-review.md](../engineering/auth-email-security-review.md), [auth-email-production-readiness-checklist.md](./auth-email-production-readiness-checklist.md), [environment-variables.md](./environment-variables.md#postmark-email), [email-provider-evaluation.md](../engineering/email-provider-evaluation.md), [invitation-copy-link-smoke.md](./invitation-copy-link-smoke.md), [release-checklist.md](./release-checklist.md).
 
 ---
 
@@ -42,7 +42,7 @@ You still need a plausible `POSTMARK_FROM_EMAIL` that Postmark accepts for the t
 
 ## Recommended Vercel configuration
 
-1. **Production (later, after validation)**
+1. **Production**
 
    - Project → **Settings** → **Environment Variables** → scope **Production** only when ready.
    - `EMAIL_PROVIDER` = `postmark`
@@ -94,7 +94,7 @@ You still need a plausible `POSTMARK_FROM_EMAIL` that Postmark accepts for the t
 
 ### c) Production token — only after domain/sender verified
 
-Use [production-postmark-enablement-plan.md](./production-postmark-enablement-plan.md) for the controlled Production cutover order, smoke tests, go/no-go gates, and rollback sequence. This runbook does **not** mean Production Postmark is already enabled.
+Use [production-postmark-enablement-plan.md](./production-postmark-enablement-plan.md) for the controlled Production cutover order, smoke tests, go/no-go gates, and rollback sequence. The executed Production validation is recorded in [production-postmark-validation-record.md](./production-postmark-validation-record.md).
 
 Complete [auth-email-production-readiness-checklist.md](./auth-email-production-readiness-checklist.md) before enabling real Production delivery.
 
@@ -150,18 +150,19 @@ Copy-link flow is unchanged in all cases.
 - Application logs must not include full `inviteLink`, `html`, `text`, or Postmark tokens (boundary redaction; operators should avoid `console.log` of API responses).
 - Demo orgs may block invitation create (`demo_mutation_disabled`) — test on a non-demo tenant.
 - `POSTMARK_API_BASE_URL` is for **automated tests** and exceptional proxies — production should use the default Postmark API host.
+- External Gmail delivery may remain constrained until the Postmark account review/approval is fully cleared; do not assume that internal-domain validation guarantees immediate external delivery.
 
 ---
 
 ## Troubleshooting (no secrets in tickets)
 
-| Symptom                                 | Check                                                                                                     |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Create 201 but `PROVIDER_MISCONFIGURED` | `POSTMARK_SERVER_TOKEN` and `POSTMARK_FROM_EMAIL` set for that Vercel environment; redeploy after change. |
-| `PROVIDER_AUTH_FAILED`                  | Token typo, wrong server, or revoked token — regenerate in Postmark, update Vercel only.                  |
-| `EMAIL_REJECTED`                        | From address not verified; recipient suppressed; content policy in Postmark activity.                     |
-| No email, `ok: true`                    | Spam folder; Postmark activity stream; test token may not deliver to real inboxes.                        |
-| 500 on create                           | Should not happen for email alone — file a bug; invitation create is designed to survive email failures.  |
+| Symptom                                 | Check                                                                                                                                                              |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Create 201 but `PROVIDER_MISCONFIGURED` | `POSTMARK_SERVER_TOKEN` and `POSTMARK_FROM_EMAIL` set for that Vercel environment; redeploy after change.                                                          |
+| `PROVIDER_AUTH_FAILED`                  | Token typo, wrong server, or revoked token — regenerate in Postmark, update Vercel only.                                                                           |
+| `EMAIL_REJECTED`                        | From address not verified; recipient suppressed; content policy in Postmark activity.                                                                              |
+| No email, `ok: true`                    | Spam folder; Postmark activity stream; test token may not deliver to real inboxes; external Gmail may still be limited while the Postmark account is under review. |
+| 500 on create                           | Should not happen for email alone — file a bug; invitation create is designed to survive email failures.                                                           |
 
 ---
 
@@ -171,3 +172,4 @@ Copy-link flow is unchanged in all cases.
 - [email-provider-evaluation.md](../engineering/email-provider-evaluation.md) — architecture and batch status
 - [api-response-contract-baseline.md](../engineering/api-response-contract-baseline.md) — `emailDelivery` on create
 - [invitation-copy-link-smoke.md](./invitation-copy-link-smoke.md) — manual copy-link validation
+- [production-postmark-validation-record.md](./production-postmark-validation-record.md) — Production validation outcome and current limitations
