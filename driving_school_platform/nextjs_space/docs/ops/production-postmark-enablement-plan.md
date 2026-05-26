@@ -2,17 +2,17 @@
 
 **Status:** DAT_3.5 `production-postmark-enable-preview-to-prod-plan` (documentation only).  
 **Audience:** engineering + ops.  
-**Current decision:** **Not executed**. Production Postmark remains **not enabled** in this batch.  
-**Related:** [auth-email-production-readiness-checklist.md](./auth-email-production-readiness-checklist.md), [email-provider-postmark-runbook.md](./email-provider-postmark-runbook.md), [auth-email-security-review.md](../engineering/auth-email-security-review.md), [release-checklist.md](./release-checklist.md).
+**Current decision:** **Executed and validated**. Production Postmark is enabled for controlled Production sends; see [production-postmark-validation-record.md](./production-postmark-validation-record.md).  
+**Related:** [production-postmark-validation-record.md](./production-postmark-validation-record.md), [auth-email-production-readiness-checklist.md](./auth-email-production-readiness-checklist.md), [email-provider-postmark-runbook.md](./email-provider-postmark-runbook.md), [auth-email-security-review.md](../engineering/auth-email-security-review.md), [release-checklist.md](./release-checklist.md).
 
-This document defines a **controlled future cutover plan** for enabling **real Postmark delivery in Production**. It does **not** execute the cutover, does **not** change runtime behavior, does **not** modify secrets or environment variables, and does **not** reopen public signup.
+This document defines the **controlled cutover plan** that was used for enabling **real Postmark delivery in Production**. The actual execution record now lives in [production-postmark-validation-record.md](./production-postmark-validation-record.md). This document itself still does **not** change runtime behavior, does **not** modify secrets or environment variables, and does **not** reopen public signup.
 
 ---
 
 ## Objective
 
-- Define the operational steps required to enable **real Postmark delivery** in Production at a later approved time.
-- Keep Production on its current safe posture until a human intentionally performs the cutover.
+- Define the operational steps used to enable **real Postmark delivery** in Production in a controlled way.
+- Preserve a reusable rollback-ready reference for future audits, reviews, and follow-up validation.
 - Preserve invite-only onboarding, copy-link fallback, controlled password reset behavior, email verification behavior, and existing rate-limit posture during and after enablement.
 
 ---
@@ -50,7 +50,8 @@ This plan does **not**:
 - Postmark runbook already exists.
 - Auth/email security review already exists.
 - Preview should return to `noop` by default after controlled email tests.
-- Production Postmark is **still not enabled**.
+- Production Postmark has been enabled and validated for controlled sends to `admin@meengine.io`.
+- External Gmail delivery may still be constrained while the Postmark account remains under review.
 - Public signup remains disabled by default.
 - Demo signup remains blocked.
 
@@ -206,7 +207,7 @@ Do **not** proceed, or rollback immediately, if any of the following are true:
 - Messages are rejected, blocked, or misrouted.
 - Tests would send mail to non-controlled real users.
 
-**Recorded decision in this batch:** **No-Go / not executed**. This document prepares the cutover; it does **not** perform it.
+**Recorded decision after cutover:** **Go / executed and validated** for controlled Production sends. See [production-postmark-validation-record.md](./production-postmark-validation-record.md) for the factual validation record and current external-recipient limitation notes.
 
 ---
 
@@ -328,10 +329,10 @@ If Production enablement succeeds and remains enabled:
 
 ## Decision statement
 
-This document is a **future operational enablement plan only**.
+This document remains the **operational enablement plan** used for the Production cutover.
 
-- It **documents** a possible Production cutover.
+- It **documents** the Production cutover procedure.
 - It does **not** change Production runtime behavior.
 - It does **not** modify real secrets.
-- It does **not** execute the cutover.
-- Production Postmark remains **not enabled** as a result of this document alone.
+- The actual cutover execution evidence is recorded in [production-postmark-validation-record.md](./production-postmark-validation-record.md).
+- Production Postmark is **enabled**, but not because this document itself performed the change.
