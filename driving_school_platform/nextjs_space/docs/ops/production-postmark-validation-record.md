@@ -122,7 +122,7 @@ Expected rollback behavior:
 
 ## Follow-ups
 
-- Create `dmarc@meengine.io` to receive DMARC reports cleanly.
+- DMARC report routing: move aggregate DMARC reports off `admin@meengine.io` and into `dmarc@meengine.io` (documented; pending execution). See [dmarc-email-routing-runbook.md](./dmarc-email-routing-runbook.md).
 - Await and confirm full Postmark account approval / review clearance.
 - Evaluate UX for the existing global `PLATFORM_ADMIN` case when that user is invited into a tenant.
 - Consider additional password policy polish in a future auth batch.

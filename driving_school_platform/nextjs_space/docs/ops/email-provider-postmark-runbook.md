@@ -6,13 +6,14 @@ Safe steps to enable **transactional invitation email** via Postmark on DAT (Dri
 
 Do **not** paste server tokens, full `inviteLink` URLs, or email bodies into tickets, chat, git, screenshots, or runbook edits. Use placeholders in examples.
 
-**Related:** [production-postmark-validation-record.md](./production-postmark-validation-record.md), [production-postmark-enablement-plan.md](./production-postmark-enablement-plan.md), [auth-email-security-review.md](../engineering/auth-email-security-review.md), [auth-email-production-readiness-checklist.md](./auth-email-production-readiness-checklist.md), [environment-variables.md](./environment-variables.md#postmark-email), [email-provider-evaluation.md](../engineering/email-provider-evaluation.md), [invitation-copy-link-smoke.md](./invitation-copy-link-smoke.md), [release-checklist.md](./release-checklist.md).
+**Related:** [production-postmark-validation-record.md](./production-postmark-validation-record.md), [production-postmark-enablement-plan.md](./production-postmark-enablement-plan.md), [auth-email-security-review.md](../engineering/auth-email-security-review.md), [auth-email-production-readiness-checklist.md](./auth-email-production-readiness-checklist.md), [environment-variables.md](./environment-variables.md#postmark-email), [email-provider-evaluation.md](../engineering/email-provider-evaluation.md), [dmarc-email-routing-runbook.md](./dmarc-email-routing-runbook.md), [invitation-copy-link-smoke.md](./invitation-copy-link-smoke.md), [release-checklist.md](./release-checklist.md).
 
 ---
 
 ## Objective
 
 - Turn on **real outbound invitation email** in a controlled environment (Preview or Production) using Postmark.
+- Keep `admin@meengine.io` as the operational sender/app mailbox; route **DMARC reports** to `dmarc@meengine.io` (see [dmarc-email-routing-runbook.md](./dmarc-email-routing-runbook.md)).
 - Keep **copy-link** as the mandatory fallback: every successful invite create still returns **`inviteLink`**; email failure must **not** block create (**HTTP 201**).
 - Validate configuration and `emailDelivery` status **before** relying on inbox delivery for onboarding.
 
