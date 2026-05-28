@@ -318,7 +318,7 @@ Before enabling `EMAIL_SEND_INVITATIONS` or auth mail in production:
 - [ ] Subdomain or root domain chosen (e.g. `meengine.io` or `mail.meengine.io`).
 - [ ] SPF record includes provider include/mechanism.
 - [ ] DKIM keys published (provider-generated).
-- [ ] DMARC policy at least `p=none` monitoring, tighten to `quarantine`/`reject` when confident.
+- [ ] DMARC policy at least `p=none` monitoring, tighten to `quarantine`/`reject` when confident. Route aggregate reports via `rua=mailto:dmarc@meengine.io` (keep `admin@meengine.io` for app ops) — see [dmarc-email-routing-runbook.md](../ops/dmarc-email-routing-runbook.md).
 - [ ] `EMAIL_FROM` aligned with verified domain; avoid no-reply without support path if product requires replies.
 - [ ] Test messages to Gmail, Microsoft 365, and one regional provider inbox.
 - [ ] Bounce/complaint webhooks configured (provider dashboard).
