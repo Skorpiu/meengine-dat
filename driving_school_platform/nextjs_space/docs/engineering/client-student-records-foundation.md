@@ -106,11 +106,12 @@ Key points:
 
 - The operational **`Student` ficha** is the import target for learner data — not `User`.
 - Import **does not create** login accounts; `appAccessMode` stays `MANUAL_ONLY` until School Admin sends an invite.
-- Phased rollout: ~~export~~ → ~~student dry-run~~ → ~~student apply~~ → practical lesson dry-run → practical lesson apply.
+- Phased rollout: ~~export~~ → ~~student dry-run~~ → ~~student apply~~ → ~~practical lesson export~~ → practical lesson dry-run → practical lesson apply.
 - **Student export:** `GET /api/admin/students/export` (`format=csv|json`, `SUPER_ADMIN`).
 - **Student import dry-run:** `POST /api/admin/students/import/dry-run` (JSON body, no DB writes).
 - **Student import apply:** `POST /api/admin/students/import/apply` (create-only; same validation as dry-run; all-or-nothing transaction).
-- Templates: `docs/examples/import-export/`; types: `lib/import-export/import-export-contracts.ts`; helpers: `lib/import-export/student-record-export.ts`, `lib/import-export/student-record-import-dry-run.ts`, `lib/import-export/student-record-import-apply.ts`.
+- **Practical lessons export:** `GET /api/admin/practical-lessons/export` (`format=csv|json`, DRIVING only, `SUPER_ADMIN`).
+- Templates: `docs/examples/import-export/`; types: `lib/import-export/import-export-contracts.ts`; helpers: `lib/import-export/student-record-export.ts`, `lib/import-export/student-record-import-dry-run.ts`, `lib/import-export/student-record-import-apply.ts`, `lib/import-export/practical-lesson-export.ts`.
 
 ## Why no separate `StudentRecord` table
 
@@ -464,7 +465,8 @@ Dialog: shows/edits invite email, calls `POST /api/admin/students/[id]/invite`, 
 8. ~~`export-student-records`~~ (done — `GET /api/admin/students/export`)
 9. ~~`import-student-records-dry-run`~~ (done — `POST /api/admin/students/import/dry-run`)
 10. ~~`import-student-records-apply`~~ (done — `POST /api/admin/students/import/apply`)
-11. Import/export remaining (practical lesson export/import)
+11. ~~`export-practical-lessons`~~ (done — `GET /api/admin/practical-lessons/export`)
+12. Import/export remaining (practical lesson import dry-run/apply)
 
 ## References
 
@@ -473,5 +475,5 @@ Dialog: shows/edits invite email, calls `POST /api/admin/students/[id]/invite`, 
 - Migration: `prisma/migrations/20260529150000_lesson_source`
 - Migration: `prisma/migrations/20260529160000_user_invitation_student_id`
 - Helpers: `lib/students/student-school-id.ts`, `lib/students/student-display.ts`, `lib/lessons/practical-lesson-counter.ts`, `lib/lessons/manual-practical-lesson-service.ts`, `lib/students/student-record-invite-service.ts`
-- Import/export: [client-data-import-export-strategy.md](./client-data-import-export-strategy.md), `lib/import-export/import-export-contracts.ts`, `lib/import-export/student-record-export.ts`, `lib/import-export/student-record-import-dry-run.ts`, `lib/import-export/student-record-import-apply.ts`, `app/api/admin/students/export/route.ts`, `app/api/admin/students/import/dry-run/route.ts`, `app/api/admin/students/import/apply/route.ts`, `docs/examples/import-export/`
+- Import/export: [client-data-import-export-strategy.md](./client-data-import-export-strategy.md), `lib/import-export/import-export-contracts.ts`, `lib/import-export/student-record-export.ts`, `lib/import-export/student-record-import-dry-run.ts`, `lib/import-export/student-record-import-apply.ts`, `lib/import-export/practical-lesson-export.ts`, `app/api/admin/students/export/route.ts`, `app/api/admin/students/import/dry-run/route.ts`, `app/api/admin/students/import/apply/route.ts`, `app/api/admin/practical-lessons/export/route.ts`, `docs/examples/import-export/`
 - Lesson selects: `lib/students/student-lesson-select.ts`

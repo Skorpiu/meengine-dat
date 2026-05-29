@@ -237,19 +237,18 @@ Export is **read-only**, tenant-scoped, `SUPER_ADMIN` only (future endpoints).
 
 ### Practical lessons export columns
 
-| Column                  | Source / notes                   |
-| ----------------------- | -------------------------------- |
-| `schoolStudentId`       | Student reference                |
-| `practicalLessonNumber` | Integer                          |
-| `lessonDate`            | ISO date                         |
-| `startTime`             | `HH:mm`                          |
-| `endTime`               | Derived or stored                |
-| `durationMinutes`       | Optional                         |
-| `instructorEmail`       | From linked instructor User      |
-| `instructorId`          | Optional in JSON only            |
-| `lessonSource`          | `SYSTEM` \| `MANUAL` \| `IMPORT` |
-| `status`                | Lesson status                    |
-| `notes`                 | From `adminNotes` when present   |
+| Column                  | Source / notes                          |
+| ----------------------- | --------------------------------------- |
+| `schoolStudentId`       | Student reference                       |
+| `practicalLessonNumber` | Integer (nullable in export when unset) |
+| `lessonDate`            | ISO date                                |
+| `startTime`             | `HH:mm`                                 |
+| `durationMinutes`       | Derived from start/end or stored value  |
+| `instructorEmail`       | From linked instructor User             |
+| `instructorName`        | Instructor User first + last name       |
+| `lessonSource`          | `SYSTEM` \| `MANUAL` \| `IMPORT`        |
+| `status`                | Lesson status                           |
+| `notes`                 | From `adminNotes` when present          |
 
 Import templates may omit export-only fields (`endTime`, `status`, `lessonSource`) — those are set by the import pipeline.
 
@@ -538,6 +537,73 @@ P2002 on `(organizationId, schoolStudentId)` is surfaced as `duplicate_school_st
 
 ---
 
+## Implemented: practical lessons export
+
+**Batch:** `export-practical-lessons` (read-only).
+
+### Endpoint
+
+| Method | Path                                  | Auth          |
+| ------ | ------------------------------------- | ------------- |
+| `GET`  | `/api/admin/practical-lessons/export` | `SUPER_ADMIN` |
+
+Tenant-scoped via session `organizationId` + `assertUserTenantHost`. Query param `organizationId` is **ignored**.
+
+### Query params
+
+| Param             | Values                           | Default |
+| ----------------- | -------------------------------- | ------- |
+| `format`          | `csv` \| `json`                  | `csv`   |
+| `studentId`       | Operational `Student.id` (org)   | —       |
+| `schoolStudentId` | Canonical 5-digit ID (org)       | —       |
+| `source`          | `SYSTEM` \| `MANUAL` \| `IMPORT` | —       |
+| `from`            | ISO date `YYYY-MM-DD`            | —       |
+| `to`              | ISO date `YYYY-MM-DD`            | —       |
+
+Only **`lessonType = DRIVING`** lessons are exported (`SYSTEM`, `MANUAL`, and future `IMPORT` sources).
+
+### CSV response
+
+- `Content-Type: text/csv; charset=utf-8`
+- `Content-Disposition: attachment; filename="practical-lessons-export-YYYY-MM-DD.csv"`
+- Delimiter: **`;`**
+- Headers: `PRACTICAL_LESSON_EXPORT_CSV_HEADERS`
+
+### JSON response
+
+```json
+{
+  "formatVersion": 1,
+  "entity": "practicalLessons",
+  "exportedAt": "2026-05-29T10:00:00.000Z",
+  "rows": [{ "...": "..." }]
+}
+```
+
+### Exported fields (per row)
+
+`schoolStudentId`, `practicalLessonNumber`, `lessonDate` (ISO), `startTime` (`HH:mm`), `durationMinutes`, `instructorEmail`, `instructorName`, `lessonSource`, `status`, `notes` (from `adminNotes` when present).
+
+`durationMinutes` is derived from `startTime`/`endTime` when `endTime` exists; otherwise uses stored `durationMinutes`.
+
+**Excluded:** `passwordHash`, tokens, `organizationId`, internal UUIDs (`Lesson.id`, `Student.id`, `User.id`), `studentNumber`, timestamps.
+
+### Modules
+
+- `app/api/admin/practical-lessons/export/route.ts`
+- `lib/import-export/practical-lesson-export.ts`
+- `lib/lessons/practical-lesson-export-queries.ts`
+
+### Limitations (export batch)
+
+- Export only; no practical lesson import/dry-run/apply.
+- No admin UI.
+- No theory/exam/payment export.
+- No update/merge.
+- No pagination (full filtered result set).
+
+---
+
 ## K. Future phases (implementation batches)
 
 | Batch slug                         | Status   | Deliverable                                                       |
@@ -545,7 +611,7 @@ P2002 on `(organizationId, schoolStudentId)` is surfaced as `duplicate_school_st
 | `export-student-records`           | **Done** | `GET /api/admin/students/export`; CSV + JSON                      |
 | `import-student-records-dry-run`   | **Done** | `POST /api/admin/students/import/dry-run`; no writes              |
 | `import-student-records-apply`     | **Done** | `POST /api/admin/students/import/apply`; create-only; transaction |
-| `export-practical-lessons`         | Planned  | Export DRIVING history per org                                    |
+| `export-practical-lessons`         | **Done** | `GET /api/admin/practical-lessons/export`; CSV + JSON             |
 | `import-practical-lessons-dry-run` | Planned  | Validate history rows against students + instructors              |
 | `import-practical-lessons-apply`   | Planned  | Create `Lesson` rows with `lessonSource = IMPORT`                 |
 
@@ -631,7 +697,9 @@ schoolStudentId;practicalLessonNumber;lessonDate;startTime;durationMinutes;instr
 - `lib/import-export/student-record-export.ts` — export helpers
 - `lib/import-export/student-record-import-dry-run.ts` — import dry-run parse/validate
 - `lib/import-export/student-record-import-apply.ts` — import apply (create-only)
+- `lib/import-export/practical-lesson-export.ts` — practical lesson export helpers
 - `app/api/admin/students/export/route.ts` — export endpoint
 - `app/api/admin/students/import/dry-run/route.ts` — import dry-run endpoint
 - `app/api/admin/students/import/apply/route.ts` — import apply endpoint
+- `app/api/admin/practical-lessons/export/route.ts` — practical lessons export endpoint
 - `docs/examples/import-export/` — templates and sample payloads
