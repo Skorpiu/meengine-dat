@@ -6,6 +6,7 @@ const h = vi.hoisted(() => {
   const studentFindFirstMock = vi.fn();
   const studentFindManyMock = vi.fn();
   const transactionMock = vi.fn();
+  const getNextPracticalLessonNumberMock = vi.fn();
 
   return {
     instructorFindFirstMock,
@@ -13,6 +14,7 @@ const h = vi.hoisted(() => {
     studentFindFirstMock,
     studentFindManyMock,
     transactionMock,
+    getNextPracticalLessonNumberMock,
     prismaMock: {
       instructor: { findFirst: instructorFindFirstMock },
       lesson: { create: lessonCreateMock },
@@ -31,10 +33,23 @@ vi.mock("@/lib/db", () => ({
   prisma: h.prismaMock,
 }));
 
+vi.mock("@/lib/lessons/practical-lesson-counter", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("@/lib/lessons/practical-lesson-counter")
+    >();
+  return {
+    ...actual,
+    getNextPracticalLessonNumber: (...args: unknown[]) =>
+      h.getNextPracticalLessonNumberMock(...args),
+  };
+});
+
 import { createAdminLesson } from "./lesson-create-service";
 
 beforeEach(() => {
   vi.resetAllMocks();
+  h.getNextPracticalLessonNumberMock.mockResolvedValue(1);
   h.instructorFindFirstMock.mockResolvedValue({
     id: "inst-1",
     qualifiedCategories: [{ id: 1 }],
@@ -140,7 +155,113 @@ describe("createAdminLesson", () => {
     });
     expect(h.lessonCreateMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ studentId: studentOperationalId }),
+        data: expect.objectContaining({
+          studentId: studentOperationalId,
+          practicalLessonNumber: 1,
+        }),
+      }),
+    );
+  });
+
+  it("assigns sequential practicalLessonNumber for DRIVING", async () => {
+    h.getNextPracticalLessonNumberMock.mockResolvedValueOnce(4);
+    h.studentFindFirstMock.mockResolvedValueOnce({
+      id: "stu-seq",
+      userId: null,
+    });
+
+    await createAdminLesson({
+      organizationId: "org-1",
+      durationMinutes: 60,
+      payload: {
+        lessonType: "DRIVING",
+        instructorId: "user-inst",
+        studentId: "stu-seq",
+        lessonDate: "2026-01-06",
+        startTime: "10:00",
+        endTime: "11:00",
+      },
+    });
+
+    expect(h.getNextPracticalLessonNumberMock).toHaveBeenCalledWith({
+      organizationId: "org-1",
+      studentId: "stu-seq",
+    });
+    expect(h.lessonCreateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ practicalLessonNumber: 4 }),
+      }),
+    );
+  });
+
+  it("does not assign practicalLessonNumber for THEORY group lesson", async () => {
+    const result = await createAdminLesson({
+      organizationId: "org-1",
+      durationMinutes: 60,
+      payload: {
+        lessonType: "THEORY",
+        instructorId: "user-inst",
+        lessonDate: "2026-01-06",
+        startTime: "10:00",
+        endTime: "11:00",
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(h.getNextPracticalLessonNumberMock).not.toHaveBeenCalled();
+    expect(h.lessonCreateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.not.objectContaining({
+          practicalLessonNumber: expect.anything(),
+        }),
+      }),
+    );
+  });
+
+  it("does not assign practicalLessonNumber for EXAM lessons", async () => {
+    await createAdminLesson({
+      organizationId: "org-1",
+      durationMinutes: 60,
+      payload: {
+        lessonType: "EXAM",
+        instructorId: "user-inst",
+        studentIds: ["stu-a"],
+        lessonDate: "2026-01-06",
+        startTime: "10:00",
+        endTime: "11:00",
+      },
+    });
+
+    expect(h.getNextPracticalLessonNumberMock).not.toHaveBeenCalled();
+    expect(h.lessonCreateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.not.objectContaining({
+          practicalLessonNumber: expect.anything(),
+        }),
+      }),
+    );
+  });
+
+  it("does not assign practicalLessonNumber for THEORY_EXAM lessons", async () => {
+    await createAdminLesson({
+      organizationId: "org-1",
+      durationMinutes: 60,
+      payload: {
+        lessonType: "THEORY_EXAM",
+        instructorId: "user-inst",
+        studentIds: ["stu-a"],
+        lessonDate: "2026-01-06",
+        startTime: "10:00",
+        endTime: "11:00",
+      },
+    });
+
+    expect(h.getNextPracticalLessonNumberMock).not.toHaveBeenCalled();
+    expect(h.lessonCreateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.not.objectContaining({
+          practicalLessonNumber: expect.anything(),
+        }),
       }),
     );
   });

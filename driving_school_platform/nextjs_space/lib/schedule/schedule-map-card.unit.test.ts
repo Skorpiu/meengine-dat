@@ -90,6 +90,17 @@ describe("schedule-map-card", () => {
     expect(lines).toHaveLength(3);
   });
 
+  it("shows practical lesson number on DRIVING chips when assigned", () => {
+    const lines = getScheduleMapChipLines({
+      lessonType: "DRIVING",
+      practicalLessonNumber: 2,
+      startTime: "09:00",
+      student: { firstName: "João", lastName: "Silva" },
+    });
+
+    expect(lines[0]).toBe("Prática #2 · 09:00");
+  });
+
   it("prefers instructor name when requested", () => {
     const lines = getScheduleMapChipLines(
       {

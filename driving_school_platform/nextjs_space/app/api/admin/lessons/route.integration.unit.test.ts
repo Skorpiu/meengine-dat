@@ -11,6 +11,7 @@ const h = vi.hoisted(() => {
   const transactionMock = vi.fn();
   const lessonCreateMock = vi.fn();
   const lessonCountMock = vi.fn();
+  const lessonAggregateMock = vi.fn();
   const lessonFindManyMock = vi.fn();
   const lessonDeleteManyMock = vi.fn();
   const organizationFindUniqueMock = vi.fn();
@@ -24,6 +25,7 @@ const h = vi.hoisted(() => {
     lesson: {
       create: lessonCreateMock,
       count: lessonCountMock,
+      aggregate: lessonAggregateMock,
       findMany: lessonFindManyMock,
       deleteMany: lessonDeleteManyMock,
     },
@@ -40,6 +42,7 @@ const h = vi.hoisted(() => {
     transactionMock,
     lessonCreateMock,
     lessonCountMock,
+    lessonAggregateMock,
     lessonFindManyMock,
     lessonDeleteManyMock,
     organizationFindUniqueMock,
@@ -104,6 +107,9 @@ beforeEach(() => {
 
   h.organizationFindUniqueMock.mockResolvedValue({ isDemo: false });
   h.lessonCountMock.mockResolvedValue(0);
+  h.lessonAggregateMock.mockResolvedValue({
+    _max: { practicalLessonNumber: null },
+  });
 
   h.instructorFindFirstMock.mockResolvedValue({
     id: "inst-db-1",
@@ -563,7 +569,10 @@ describe("POST /api/admin/lessons (handler integration)", () => {
     });
     expect(h.lessonCreateMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ studentId: manualStudentId }),
+        data: expect.objectContaining({
+          studentId: manualStudentId,
+          practicalLessonNumber: 1,
+        }),
       }),
     );
   });

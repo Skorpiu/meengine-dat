@@ -20,6 +20,10 @@ describe("lesson response DTO contract (mapper level)", () => {
     expect(
       (body.lessons[0] as { pickupLocation?: string }).pickupLocation,
     ).toBe("Main garage");
+    expect(
+      (body.lessons[0] as { practicalLessonNumber?: number })
+        .practicalLessonNumber,
+    ).toBe(3);
   });
 
   it("dashboard mapper preserves slice arrays and UI fields", () => {

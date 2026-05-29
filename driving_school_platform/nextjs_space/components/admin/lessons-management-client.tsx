@@ -21,6 +21,7 @@ import {
   getLessonLocationLabel,
   getLessonParticipantName,
   getLessonVehicleLabel,
+  getPracticalLessonNumberLabel,
 } from "@/lib/lessons/lesson-display";
 
 async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
@@ -43,6 +44,7 @@ type LessonListItem = {
   endTime?: string | null;
   status?: string | null;
   lessonType?: string | null;
+  practicalLessonNumber?: number | null;
   pickupLocation?: string | null;
   dropoffLocation?: string | null;
 
@@ -162,6 +164,7 @@ export function LessonsManagementClient() {
     const instructorName = getLessonInstructorName(lesson.instructor);
     const locationLabel = getLessonLocationLabel(lesson);
     const vehicleLabel = getLessonVehicleLabel(lesson.vehicle);
+    const practicalLabel = getPracticalLessonNumberLabel(lesson);
 
     return (
       <div
@@ -212,7 +215,14 @@ export function LessonsManagementClient() {
               </>
             ) : (
               <>
-                <div className="font-medium">{studentName}</div>
+                <div className="font-medium">
+                  {studentName}
+                  {practicalLabel ? (
+                    <span className="ml-2 text-sm font-normal text-blue-700">
+                      {practicalLabel}
+                    </span>
+                  ) : null}
+                </div>
                 {instructorName ? (
                   <div className="text-sm text-gray-600">
                     with {instructorName}

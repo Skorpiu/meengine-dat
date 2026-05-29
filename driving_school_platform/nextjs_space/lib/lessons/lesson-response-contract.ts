@@ -21,6 +21,9 @@ export function expectLessonListItemUiContract(lesson: LessonLike): void {
   if (lesson.dropoffLocation != null) {
     expect(typeof lesson.dropoffLocation).toBe("string");
   }
+  if (lesson.practicalLessonNumber != null) {
+    expect(typeof lesson.practicalLessonNumber).toBe("number");
+  }
 
   const student = lesson.student as LessonLike | undefined;
   if (student) {

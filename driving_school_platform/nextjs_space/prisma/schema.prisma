@@ -347,6 +347,7 @@ model Lesson {
   lessonPrice              Decimal?
   paymentStatus            PaymentStatus     @default(PENDING)
   adminNotes               String?
+  practicalLessonNumber    Int?
   createdAt                DateTime          @default(now())
   updatedAt                DateTime          @updatedAt
   lessonRequests           LessonRequest[]
@@ -371,6 +372,7 @@ model Lesson {
   @@index([instructorId, lessonDate])
   @@index([studentId, lessonDate])
   @@index([lessonType, lessonDate, status])
+  @@index([organizationId, studentId, lessonType, practicalLessonNumber])
   @@map("lessons")
 }
 

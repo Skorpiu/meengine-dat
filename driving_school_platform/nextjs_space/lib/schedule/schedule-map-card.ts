@@ -1,4 +1,7 @@
-import { isExamLessonType } from "@/lib/lessons/lesson-display";
+import {
+  getPracticalLessonNumberLabel,
+  isExamLessonType,
+} from "@/lib/lessons/lesson-display";
 import {
   getStudentDisplayName,
   type StudentDisplaySource,
@@ -19,6 +22,7 @@ export type ScheduleMapCardLesson = {
   startTime: string;
   endTime?: string;
   lessonType: string;
+  practicalLessonNumber?: number | null;
   student?: StudentDisplaySource;
   instructor?: {
     user?: { firstName?: string | null; lastName?: string | null };
@@ -77,7 +81,9 @@ export function getScheduleMapChipLines(
 ): string[] {
   const preferInstructor = options?.preferInstructor ?? false;
   const typeLabel = getScheduleLessonTypeShortLabel(lesson.lessonType);
-  const lines: string[] = [`${typeLabel} · ${lesson.startTime}`];
+  const practicalLabel = getPracticalLessonNumberLabel(lesson);
+  const headlineLabel = practicalLabel ?? typeLabel;
+  const lines: string[] = [`${headlineLabel} · ${lesson.startTime}`];
 
   const person = preferInstructor
     ? formatScheduleParticipantName(lesson.instructor)

@@ -74,3 +74,18 @@ export function getLessonLocationLabel(lesson: {
   const dropoff = lesson.dropoffLocation?.trim();
   return dropoff || null;
 }
+
+/** Display label for assigned practical lesson number (DRIVING only). */
+export function getPracticalLessonNumberLabel(lesson: {
+  lessonType?: string | null;
+  practicalLessonNumber?: number | null;
+}): string | null {
+  if (lesson.lessonType !== LESSON_TYPES.DRIVING) return null;
+  if (
+    lesson.practicalLessonNumber == null ||
+    lesson.practicalLessonNumber <= 0
+  ) {
+    return null;
+  }
+  return `Prática #${lesson.practicalLessonNumber}`;
+}
