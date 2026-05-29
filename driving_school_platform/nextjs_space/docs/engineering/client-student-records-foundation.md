@@ -45,7 +45,7 @@ Future UI/API will manage on `Student`:
 - Contact (`email`, `phoneNumber`)
 - `enrollmentDate` (operational enrollment date; may be set automatically on create)
 
-Not in this batch: create/list APIs, UI, or autonumbering.
+Manual list/create APIs are in the **manual-student-records-api** batch (see below). UI and autonumbering are still future work.
 
 ## `schoolStudentId` rule (A Conquistadora)
 
@@ -86,7 +86,7 @@ Numeric queries of 3–5 digits normalize to canonical 5-digit IDs:
 | 2678  | 26078     |
 | 26078 | 26078     |
 
-Implemented in `normalizeSchoolStudentIdSearchQuery`; not wired to Users tab search yet.
+Implemented in `normalizeSchoolStudentIdSearchQuery`; wired on `GET /api/admin/students?search=`.
 
 ## Invitation policy (future)
 
@@ -117,9 +117,63 @@ Not in DAT_3.6.
 | Legacy `studentIdNumber` / `studentNumber` | Kept unchanged for compatibility                                |
 | Nullable `userId` + `onDelete: SetNull`    | Deleting a user unlinks but preserves the ficha                 |
 
+## Manual student records API foundation
+
+**Auth:** `SUPER_ADMIN` only, tenant-scoped via `assertUserTenantHost` + `session.user.organizationId` (never from request body). `INSTRUCTOR` / `STUDENT` blocked.
+
+### Endpoints
+
+| Method  | Path                       | Purpose                                          |
+| ------- | -------------------------- | ------------------------------------------------ |
+| `GET`   | `/api/admin/students`      | List operational students for current org        |
+| `POST`  | `/api/admin/students`      | Create manual student (`MANUAL_ONLY`, no `User`) |
+| `GET`   | `/api/admin/students/[id]` | Detail                                           |
+| `PATCH` | `/api/admin/students/[id]` | Update operational fields                        |
+
+### Query params (`GET`)
+
+- `search` — name, email, phone, `schoolStudentId`; numeric 3–5 digit shortcuts normalized (e.g. `261` → `26001`)
+- `appAccessMode` — `MANUAL_ONLY` \| `INVITED` \| `APP_USER`
+- `limit` — default 50, max 100
+- `cursor` — optional student `id` for simple pagination
+
+Response shape: `{ success: true, data: { students, nextCursor } }`.
+
+### Create body (`POST`)
+
+Required: `firstName`, `yearSuffix`, `sequenceNumber`. Optional: `lastName`, `email`, `phoneNumber`, `enrollmentDate` (defaults to now).
+
+Server builds `schoolStudentId` with `buildSchoolStudentId(yearSuffix, sequenceNumber)` and stores `schoolStudentIdSource: MANUAL`, `appAccessMode: MANUAL_ONLY`, `userId: null`.
+
+Legacy `studentIdNumber` is **not** set on manual create (remains `null`). The official school identifier is `schoolStudentId` only.
+
+Duplicate `schoolStudentId` in the same organization → `409` (`school_student_id_already_exists`).
+
+### Patch body (`PATCH`)
+
+Partial: `firstName`, `lastName`, `phoneNumber`, `email`, `yearSuffix` + `sequenceNumber` (both required together), `enrollmentDate`.
+
+Does **not** update `userId` or `appAccessMode`.
+
+### Implementation modules
+
+- `lib/students/student-record-dto.ts`
+- `lib/students/student-record-validation.ts`
+- `lib/students/student-record-queries.ts`
+- `app/api/admin/students/route.ts`
+- `app/api/admin/students/[id]/route.ts`
+
+### Limitations (this batch)
+
+- No UI.
+- No autonumbering when `sequenceNumber` is omitted (still required on create).
+- No invitation / User linking.
+- No practical lesson counter or manual lesson history.
+- POST/PATCH use existing demo `user_management` mutation guard.
+
 ## Next batches
 
-1. `manual-student-records-api`
+1. ~~`manual-student-records-api`~~ (done)
 2. `manual-student-records-ui`
 3. `student-record-invitation-linking`
 4. `lessons-student-record-selection`
