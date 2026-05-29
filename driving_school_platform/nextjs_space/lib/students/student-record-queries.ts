@@ -153,6 +153,25 @@ export async function findStudentRecordById(input: {
   return row ? mapStudentRecordDto(row) : null;
 }
 
+export async function findExistingSchoolStudentIdsInOrg(input: {
+  organizationId: string;
+  schoolStudentIds: string[];
+}): Promise<string[]> {
+  if (input.schoolStudentIds.length === 0) {
+    return [];
+  }
+  const rows = await prisma.student.findMany({
+    where: {
+      organizationId: input.organizationId,
+      schoolStudentId: { in: input.schoolStudentIds },
+    },
+    select: { schoolStudentId: true },
+  });
+  return rows
+    .map((row) => row.schoolStudentId)
+    .filter((id): id is string => id != null);
+}
+
 export async function findStudentBySchoolIdInOrg(input: {
   organizationId: string;
   schoolStudentId: string;
