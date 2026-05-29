@@ -23,6 +23,14 @@ Internal tables in **`public`** must **not** be treated as a public HTTP API by 
   - `public.billing_events`
   - `public.entitlement_grants`
   - `public.organization_domains`
+- Migration **`20260529120000_harden_sensitive_auth_tables_rls`** enables RLS and revokes **`anon` / `authenticated`** table grants on:
+
+  - `public.user_invitations`
+  - `public.password_reset_tokens`
+  - `public.email_verification_tokens`
+  - `public.rate_limit_buckets`
+
+  Engineering notes: [supabase-security-hardening.md](../engineering/supabase-security-hardening.md).
 
 With RLS enabled and **no** policies, roles that are subject to RLS and are **not** the table owner/superuser will not get rows through PostgREST unless policies are added later.
 
