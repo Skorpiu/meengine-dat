@@ -8,6 +8,7 @@ import {
   IMPORT_MODES,
   PRACTICAL_LESSON_IMPORT_CSV_HEADERS,
   RECOMMENDED_CSV_DELIMITER,
+  STUDENT_EXPORT_CSV_HEADERS,
   STUDENT_IMPORT_CSV_HEADERS,
 } from "@/lib/import-export/import-export-contracts";
 
@@ -38,6 +39,9 @@ describe("import-export-contracts", () => {
   it("aligns CSV headers with documented templates", () => {
     expect(STUDENT_IMPORT_CSV_HEADERS.join(";")).toBe(
       "schoolStudentId;yearSuffix;sequence;firstName;lastName;phoneNumber;email;enrollmentDate",
+    );
+    expect(STUDENT_EXPORT_CSV_HEADERS.join(";")).toBe(
+      "schoolStudentId;yearSuffix;sequence;firstName;lastName;phoneNumber;email;enrollmentDate;appAccessMode",
     );
     expect(PRACTICAL_LESSON_IMPORT_CSV_HEADERS.join(";")).toBe(
       "schoolStudentId;practicalLessonNumber;lessonDate;startTime;durationMinutes;instructorEmail;notes",

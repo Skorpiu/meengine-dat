@@ -96,7 +96,7 @@ export type PracticalLessonImportRow = {
 export type StudentExportRow = {
   schoolStudentId: string;
   yearSuffix: string;
-  sequence: number;
+  sequence: number | null;
   firstName: string;
   lastName: string | null;
   phoneNumber: string | null;
@@ -120,7 +120,7 @@ export type PracticalLessonExportRow = {
   notes?: string | null;
 };
 
-/** CSV header row strings aligned with docs/examples templates. */
+/** CSV header row strings aligned with docs/examples import templates. */
 export const STUDENT_IMPORT_CSV_HEADERS = [
   "schoolStudentId",
   "yearSuffix",
@@ -130,6 +130,12 @@ export const STUDENT_IMPORT_CSV_HEADERS = [
   "phoneNumber",
   "email",
   "enrollmentDate",
+] as const;
+
+/** CSV header row for student export (includes appAccessMode). */
+export const STUDENT_EXPORT_CSV_HEADERS = [
+  ...STUDENT_IMPORT_CSV_HEADERS,
+  "appAccessMode",
 ] as const;
 
 export const PRACTICAL_LESSON_IMPORT_CSV_HEADERS = [

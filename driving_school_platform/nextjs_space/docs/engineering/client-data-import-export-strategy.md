@@ -4,7 +4,7 @@
 
 Support **migration of driving-school clients** moving from legacy software into DAT, starting with **A Conquistadora** as the first real-world case.
 
-This document defines the **technical strategy and contracts** for phased import/export. It does **not** implement parsers, endpoints, or UI.
+This document defines the **technical strategy and contracts** for phased import/export. Student **export** is implemented (see [Implemented: student records export](#implemented-student-records-export)); import, parsers, and UI remain future work.
 
 Scope for the first implementation waves:
 
@@ -18,7 +18,9 @@ The design must stay **generic enough** for other organizations, but avoid overe
 
 **Related foundation:** [client-student-records-foundation.md](./client-student-records-foundation.md) — operational `Student` model, `schoolStudentId`, manual history, invitation linking.
 
-**Contracts (types only):** `lib/import-export/import-export-contracts.ts`
+**Contracts:** `lib/import-export/import-export-contracts.ts`
+
+**Export helpers:** `lib/import-export/student-record-export.ts`
 
 **Templates & examples:** `docs/examples/import-export/`
 
@@ -253,16 +255,78 @@ Import templates may omit export-only fields (`endTime`, `status`, `lessonSource
 
 ---
 
+## Implemented: student records export
+
+**Batch:** `export-student-records` (read-only).
+
+### Endpoint
+
+| Method | Path                         | Auth          |
+| ------ | ---------------------------- | ------------- |
+| `GET`  | `/api/admin/students/export` | `SUPER_ADMIN` |
+
+Tenant-scoped via session `organizationId` + `assertUserTenantHost`. Query param `organizationId` is **ignored**.
+
+### Query params
+
+| Param           | Values                                      | Default |
+| --------------- | ------------------------------------------- | ------- |
+| `format`        | `csv` \| `json`                             | `csv`   |
+| `search`        | Same semantics as `GET /api/admin/students` | —       |
+| `appAccessMode` | `MANUAL_ONLY` \| `INVITED` \| `APP_USER`    | —       |
+
+### CSV response
+
+- `Content-Type: text/csv; charset=utf-8`
+- `Content-Disposition: attachment; filename="students-export-YYYY-MM-DD.csv"`
+- Delimiter: **`;`** (semicolon)
+- Headers: `STUDENT_EXPORT_CSV_HEADERS` — import columns plus `appAccessMode`
+- UTF-8 without BOM (Excel PT generally opens correctly with semicolon CSV)
+- Rows ordered by `schoolStudentId` asc nulls last, then `createdAt` desc, then `id` asc
+
+### JSON response
+
+```json
+{
+  "formatVersion": 1,
+  "entity": "students",
+  "exportedAt": "2026-05-29T10:00:00.000Z",
+  "rows": [{ "...": "..." }]
+}
+```
+
+### Exported fields (per row)
+
+`schoolStudentId`, `yearSuffix`, `sequence`, `firstName`, `lastName`, `phoneNumber`, `email`, `enrollmentDate` (ISO date), `appAccessMode`.
+
+**Excluded:** `passwordHash`, tokens, `organizationId`, internal UUIDs, `User` relation, `studentNumber`, `studentIdNumber`, timestamps.
+
+### Modules
+
+- `app/api/admin/students/export/route.ts`
+- `lib/import-export/student-record-export.ts`
+- `lib/students/student-record-queries.ts` — `listStudentRecordsForExport`, `STUDENT_RECORD_EXPORT_SELECT`
+
+### Limitations (export batch)
+
+- No import, dry-run, or apply.
+- No practical lesson export.
+- No dedicated admin UI (call API directly or via future UI batch).
+- No update/merge — export is read-only snapshot.
+- No pagination on export (full org result set for current filters).
+
+---
+
 ## K. Future phases (implementation batches)
 
-| Batch slug                         | Deliverable                                           |
-| ---------------------------------- | ----------------------------------------------------- |
-| `export-student-records`           | `GET` export endpoint; CSV + JSON; students only      |
-| `import-student-records-dry-run`   | Upload + validate; `ImportDryRunReport`; no writes    |
-| `import-student-records-apply`     | Apply after clean dry-run; create-only; `MANUAL_ONLY` |
-| `export-practical-lessons`         | Export DRIVING history per org                        |
-| `import-practical-lessons-dry-run` | Validate history rows against students + instructors  |
-| `import-practical-lessons-apply`   | Create `Lesson` rows with `lessonSource = IMPORT`     |
+| Batch slug                         | Status   | Deliverable                                           |
+| ---------------------------------- | -------- | ----------------------------------------------------- |
+| `export-student-records`           | **Done** | `GET /api/admin/students/export`; CSV + JSON          |
+| `import-student-records-dry-run`   | Planned  | Upload + validate; `ImportDryRunReport`; no writes    |
+| `import-student-records-apply`     | Planned  | Apply after clean dry-run; create-only; `MANUAL_ONLY` |
+| `export-practical-lessons`         | Planned  | Export DRIVING history per org                        |
+| `import-practical-lessons-dry-run` | Planned  | Validate history rows against students + instructors  |
+| `import-practical-lessons-apply`   | Planned  | Create `Lesson` rows with `lessonSource = IMPORT`     |
 
 Each batch should:
 
@@ -316,14 +380,19 @@ schoolStudentId;practicalLessonNumber;lessonDate;startTime;durationMinutes;instr
 
 ---
 
-## Limitations (this batch)
+## Limitations (strategy + current implementation)
 
-- No endpoints, UI, parsers, or database changes.
-- No file upload handling.
+**Strategy batch (docs/contracts):**
+
 - Instructor/vehicle/theory/exam/payment import undefined beyond migration order.
 - Update/merge import mode not specified in detail.
-- Within-file duplicate detection for students (same ID twice in one file) — to be added in dry-run implementation.
-- JSON `formatVersion` not enforced until parser exists.
+- Within-file duplicate detection for students — to be added in dry-run implementation.
+
+**Export batch (`export-student-records`):**
+
+- Export only; no import, dry-run, apply, or UI.
+- No practical lesson export.
+- No UTF-8 BOM prefix on CSV.
 
 ---
 
@@ -333,4 +402,6 @@ schoolStudentId;practicalLessonNumber;lessonDate;startTime;durationMinutes;instr
 - `lib/students/student-school-id.ts` — canonical ID rules
 - `lib/students/student-record-validation.ts` — manual create validation
 - `lib/lessons/manual-practical-lesson-validation.ts` — manual history validation
+- `lib/import-export/student-record-export.ts` — export helpers
+- `app/api/admin/students/export/route.ts` — export endpoint
 - `docs/examples/import-export/` — templates and sample payloads

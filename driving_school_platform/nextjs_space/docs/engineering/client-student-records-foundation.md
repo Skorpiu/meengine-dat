@@ -106,8 +106,9 @@ Key points:
 
 - The operational **`Student` ficha** is the import target for learner data — not `User`.
 - Import **does not create** login accounts; `appAccessMode` stays `MANUAL_ONLY` until School Admin sends an invite.
-- Phased rollout: export → student dry-run → student apply → practical lesson dry-run → practical lesson apply.
-- Templates: `docs/examples/import-export/`; types: `lib/import-export/import-export-contracts.ts`.
+- Phased rollout: ~~export~~ → student dry-run → student apply → practical lesson dry-run → practical lesson apply.
+- **Student export implemented:** `GET /api/admin/students/export` (`format=csv|json`, `SUPER_ADMIN`). See strategy doc for details.
+- Templates: `docs/examples/import-export/`; types: `lib/import-export/import-export-contracts.ts`; helpers: `lib/import-export/student-record-export.ts`.
 
 ## Why no separate `StudentRecord` table
 
@@ -458,7 +459,8 @@ Dialog: shows/edits invite email, calls `POST /api/admin/students/[id]/invite`, 
 5. ~~`practical-lesson-counter-foundation`~~ (done)
 6. ~~`practical-lessons-manual-history`~~ (done)
 7. ~~`import-export-strategy`~~ (done — docs + contracts; see [client-data-import-export-strategy.md](./client-data-import-export-strategy.md))
-8. Import/export implementation (export → dry-run → apply per entity)
+8. ~~`export-student-records`~~ (done — `GET /api/admin/students/export`)
+9. Import/export remaining (dry-run → apply per entity; practical lesson export)
 
 ## References
 
@@ -467,5 +469,5 @@ Dialog: shows/edits invite email, calls `POST /api/admin/students/[id]/invite`, 
 - Migration: `prisma/migrations/20260529150000_lesson_source`
 - Migration: `prisma/migrations/20260529160000_user_invitation_student_id`
 - Helpers: `lib/students/student-school-id.ts`, `lib/students/student-display.ts`, `lib/lessons/practical-lesson-counter.ts`, `lib/lessons/manual-practical-lesson-service.ts`, `lib/students/student-record-invite-service.ts`
-- Import/export: [client-data-import-export-strategy.md](./client-data-import-export-strategy.md), `lib/import-export/import-export-contracts.ts`, `docs/examples/import-export/`
+- Import/export: [client-data-import-export-strategy.md](./client-data-import-export-strategy.md), `lib/import-export/import-export-contracts.ts`, `lib/import-export/student-record-export.ts`, `app/api/admin/students/export/route.ts`, `docs/examples/import-export/`
 - Lesson selects: `lib/students/student-lesson-select.ts`
