@@ -348,6 +348,7 @@ model Lesson {
   paymentStatus            PaymentStatus     @default(PENDING)
   adminNotes               String?
   practicalLessonNumber    Int?
+  lessonSource             LessonSource      @default(SYSTEM)
   createdAt                DateTime          @default(now())
   updatedAt                DateTime          @updatedAt
   lessonRequests           LessonRequest[]
@@ -940,6 +941,12 @@ enum LessonStatus {
   COMPLETED
   CANCELLED
   NO_SHOW
+}
+
+enum LessonSource {
+  SYSTEM
+  MANUAL
+  IMPORT
 }
 
 enum PaymentStatus {

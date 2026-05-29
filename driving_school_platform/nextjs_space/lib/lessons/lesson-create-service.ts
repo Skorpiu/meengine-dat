@@ -184,6 +184,7 @@ export async function createAdminLesson(input: {
             lessonType,
             categoryId,
             status: LESSON_STATUS.SCHEDULED,
+            lessonSource: "SYSTEM",
           },
         }),
       ),
@@ -213,6 +214,7 @@ export async function createAdminLesson(input: {
         lessonType,
         categoryId,
         status: LESSON_STATUS.SCHEDULED,
+        lessonSource: "SYSTEM",
       },
     });
 
@@ -267,6 +269,7 @@ export async function createAdminLesson(input: {
       lessonType,
       categoryId,
       status: LESSON_STATUS.SCHEDULED,
+      lessonSource: "SYSTEM",
       ...(practicalLessonNumber != null ? { practicalLessonNumber } : {}),
     },
   });

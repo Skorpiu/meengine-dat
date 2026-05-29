@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Edit2, GraduationCap, RefreshCw, Search } from "lucide-react";
+import { Edit2, GraduationCap, RefreshCw, Search, Car } from "lucide-react";
 import toast from "react-hot-toast";
 import type {
   StudentRecordApiError,
@@ -32,6 +32,7 @@ import {
   previewSchoolStudentId,
   studentRecordApiErrorMessage,
 } from "@/lib/students/student-record-ui-utils";
+import { StudentPracticalHistoryDialog } from "@/components/admin/student-practical-history-dialog";
 
 const LIST_LIMIT = 100;
 
@@ -89,6 +90,9 @@ export function StudentRecordsManager() {
   );
   const [editForm, setEditForm] = useState(emptyForm);
   const [editLoading, setEditLoading] = useState(false);
+  const [historyStudent, setHistoryStudent] = useState<StudentRecordDto | null>(
+    null,
+  );
 
   const createPreviewId = useMemo(
     () =>
@@ -497,6 +501,14 @@ export function StudentRecordsManager() {
                     <Button
                       size="sm"
                       variant="outline"
+                      onClick={() => setHistoryStudent(student)}
+                    >
+                      <Car className="h-4 w-4 mr-1" />
+                      Aulas práticas
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
                       onClick={() => openEdit(student)}
                     >
                       <Edit2 className="h-4 w-4 mr-1" />
@@ -568,6 +580,14 @@ export function StudentRecordsManager() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <StudentPracticalHistoryDialog
+        student={historyStudent}
+        open={historyStudent !== null}
+        onOpenChange={(open) => {
+          if (!open) setHistoryStudent(null);
+        }}
+      />
     </section>
   );
 }

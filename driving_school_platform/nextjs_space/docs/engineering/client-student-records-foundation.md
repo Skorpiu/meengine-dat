@@ -252,7 +252,6 @@ Columns: school ID, name, contact, enrollment date, app access label, edit actio
 
 ### Limitations (this batch)
 
-- No manual lesson history.
 - No invitation/link Student → User.
 - No import/export.
 - Lesson edit form still does not allow changing the assigned student.
@@ -299,10 +298,70 @@ Frontend does **not** recalculate numbers; it displays the field from the API.
 ### Limitations (this batch)
 
 - No broad backfill for historical DRIVING lessons.
-- No manual lesson history UI.
 - No import/export.
 - No special handling for cancellations or rescheduling (numbers are assigned at create and not recomputed).
 - `EXAM` does not receive a practical lesson number even if it represents a practical exam in product language elsewhere.
+
+## Manual practical lesson history
+
+**Goal:** School Admin can register DRIVING lessons already completed outside DAT (legacy software or paper records), so the practical lesson counter and school view reflect real history.
+
+### Data model
+
+- Reuses `Lesson` rows (`lessonType = DRIVING`).
+- `Lesson.lessonSource` enum: `SYSTEM` (default), `MANUAL`, `IMPORT` (reserved).
+- Migration: `prisma/migrations/20260529150000_lesson_source` — existing rows default to `SYSTEM`.
+- Manual entries: `status = COMPLETED`, `lessonSource = MANUAL`, explicit `practicalLessonNumber`, `vehicleId = null`.
+
+### Endpoints (`SUPER_ADMIN` only, tenant-scoped)
+
+| Method | Path                                         | Purpose                                                                                  |
+| ------ | -------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `GET`  | `/api/admin/students/[id]/practical-lessons` | List DRIVING lessons for student (ordered by `practicalLessonNumber`, then `lessonDate`) |
+| `POST` | `/api/admin/students/[id]/practical-lessons` | Create manual history row                                                                |
+
+**POST body:**
+
+| Field                   | Required | Notes                                                                            |
+| ----------------------- | -------- | -------------------------------------------------------------------------------- |
+| `lessonDate`            | yes      | ISO date string                                                                  |
+| `startTime`             | yes      | `HH:mm`                                                                          |
+| `instructorId`          | yes      | Instructor **User.id** (same as lesson create / `/api/admin/instructors/all`)    |
+| `practicalLessonNumber` | yes      | Integer 1–999, set explicitly (does **not** call `getNextPracticalLessonNumber`) |
+| `durationMinutes`       | no       | Default **60**; used to compute `endTime`                                        |
+| `notes`                 | no       | Stored in `adminNotes`                                                           |
+
+**Duplicate rule:** two DRIVING lessons for the same `(organizationId, studentId)` with the same `practicalLessonNumber` → `409` (`practical_lesson_number_already_exists`). Application-level check only (no DB unique constraint in this batch).
+
+**Demo org:** POST uses the same `decideDemoLessonCreate` guard as `/api/admin/lessons` POST.
+
+### Interaction with automatic counter
+
+Manual rows are normal DRIVING lessons with `practicalLessonNumber` set. `getNextPracticalLessonNumber` uses `max(maxAssignedNumber, totalDrivingCount) + 1`, so after manual `#5` the next system-created DRIVING lesson receives `#6`.
+
+System-created lessons set `lessonSource = SYSTEM`.
+
+### UI
+
+- `/admin/users` → **Alunos** section → **Aulas práticas** button per student row.
+- Dialog: list existing history + form to add (date, time, instructor, lesson number, duration, optional notes).
+- Instructors loaded from existing `GET /api/admin/instructors/all`.
+
+### Modules
+
+- `lib/lessons/manual-practical-lesson-validation.ts`
+- `lib/lessons/manual-practical-lesson-service.ts`
+- `lib/students/student-practical-history-ui-utils.ts`
+- `components/admin/student-practical-history-dialog.tsx`
+- `app/api/admin/students/[id]/practical-lessons/route.ts`
+
+### Limitations (this batch)
+
+- Add-only (no edit/delete of manual history).
+- No bulk import/CSV/JSON.
+- No INSTRUCTOR read access to history API.
+- No advanced cancellation/rescheduling rules.
+- Duplicate prevention is not hardened with a partial unique index (race window possible under concurrent POST).
 
 ## Next batches
 
@@ -311,7 +370,7 @@ Frontend does **not** recalculate numbers; it displays the field from the API.
 3. `student-record-invitation-linking`
 4. ~~`lessons-student-record-selection`~~ (done)
 5. ~~`practical-lesson-counter-foundation`~~ (done)
-6. `practical-lessons-manual-history`
+6. ~~`practical-lessons-manual-history`~~ (done)
 7. `import-export-strategy`
 8. Import/export implementation
 
@@ -319,5 +378,6 @@ Frontend does **not** recalculate numbers; it displays the field from the API.
 
 - Migration: `prisma/migrations/20260529130000_student_operational_foundation`
 - Migration: `prisma/migrations/20260529140000_practical_lesson_number`
-- Helpers: `lib/students/student-school-id.ts`, `lib/students/student-display.ts`, `lib/lessons/practical-lesson-counter.ts`
+- Migration: `prisma/migrations/20260529150000_lesson_source`
+- Helpers: `lib/students/student-school-id.ts`, `lib/students/student-display.ts`, `lib/lessons/practical-lesson-counter.ts`, `lib/lessons/manual-practical-lesson-service.ts`
 - Lesson selects: `lib/students/student-lesson-select.ts`
