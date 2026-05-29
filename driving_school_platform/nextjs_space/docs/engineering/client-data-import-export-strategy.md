@@ -309,11 +309,117 @@ Tenant-scoped via session `organizationId` + `assertUserTenantHost`. Query param
 
 ### Limitations (export batch)
 
-- No import, dry-run, or apply.
+- No import apply.
 - No practical lesson export.
 - No dedicated admin UI (call API directly or via future UI batch).
 - No update/merge — export is read-only snapshot.
 - No pagination on export (full org result set for current filters).
+
+---
+
+## Implemented: student records import dry-run
+
+**Batch:** `import-student-records-dry-run` (validate only — **no DB writes**).
+
+### Endpoint
+
+| Method | Path                                 | Auth          |
+| ------ | ------------------------------------ | ------------- |
+| `POST` | `/api/admin/students/import/dry-run` | `SUPER_ADMIN` |
+
+Tenant-scoped via session `organizationId` + `assertUserTenantHost`. Body field `organizationId` is **ignored**.
+
+### Request body
+
+```json
+{
+  "format": "csv",
+  "content": "schoolStudentId;yearSuffix;...\n26001;26;1;João;..."
+}
+```
+
+```json
+{
+  "format": "json",
+  "rows": [
+    {
+      "schoolStudentId": "26001",
+      "yearSuffix": "26",
+      "sequence": 1,
+      "firstName": "João"
+    }
+  ]
+}
+```
+
+JSON also accepts `content` as a string (`{ "rows": [...] }` or a bare array).
+
+**Not supported in this batch:** multipart file upload.
+
+### CSV rules
+
+- Delimiter: **`;`**
+- First non-empty line: header (must match `STUDENT_IMPORT_CSV_HEADERS` exactly)
+- Data rows: `rowNumber` = physical line number (header = line 1)
+- Completely empty lines skipped
+- Basic quoted fields supported (semicolons/newlines inside quotes)
+
+### Validations
+
+| Rule                                                               | Code (examples)               |
+| ------------------------------------------------------------------ | ----------------------------- |
+| Required: `schoolStudentId`, `yearSuffix`, `sequence`, `firstName` | `missing_required_field`      |
+| Canonical 5-digit `schoolStudentId`                                | `invalid_school_student_id`   |
+| `yearSuffix` + `sequence` must match `schoolStudentId`             | `invalid_school_student_id`   |
+| `sequence` 1–999                                                   | `invalid_school_student_id`   |
+| Optional `enrollmentDate` as `YYYY-MM-DD`                          | `invalid_date`                |
+| Optional `email` format                                            | `unsupported_value`           |
+| Duplicate ID in file                                               | `duplicate_school_student_id` |
+| ID already in org                                                  | `duplicate_school_student_id` |
+
+Uses `parseCanonicalSchoolStudentId` and `buildSchoolStudentId` from `lib/students/student-school-id.ts`.
+
+### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "totalRows": 2,
+    "validRows": 1,
+    "invalidRows": 1,
+    "warnings": [],
+    "errors": [
+      {
+        "rowNumber": 3,
+        "field": "...",
+        "code": "...",
+        "message": "...",
+        "rawValue": "..."
+      }
+    ],
+    "preview": [{ "rowNumber": 2, "normalized": { "...": "..." } }]
+  }
+}
+```
+
+Shape aligns with `ImportDryRunReport`. File-level parse errors (e.g. bad header) return `success: true` with errors on row 1 and `totalRows: 0`.
+
+### Modules
+
+- `app/api/admin/students/import/dry-run/route.ts`
+- `lib/import-export/student-record-import-dry-run.ts`
+- `lib/students/student-record-queries.ts` — `findExistingSchoolStudentIdsInOrg`
+
+### Limitations (dry-run batch)
+
+- No `Student` create/update.
+- No `User` creation, invites, or emails.
+- No import apply.
+- No admin UI.
+- No multipart upload.
+- No update/merge for existing students.
+- No practical lesson import/export.
 
 ---
 
@@ -322,7 +428,7 @@ Tenant-scoped via session `organizationId` + `assertUserTenantHost`. Query param
 | Batch slug                         | Status   | Deliverable                                           |
 | ---------------------------------- | -------- | ----------------------------------------------------- |
 | `export-student-records`           | **Done** | `GET /api/admin/students/export`; CSV + JSON          |
-| `import-student-records-dry-run`   | Planned  | Upload + validate; `ImportDryRunReport`; no writes    |
+| `import-student-records-dry-run`   | **Done** | `POST /api/admin/students/import/dry-run`; no writes  |
 | `import-student-records-apply`     | Planned  | Apply after clean dry-run; create-only; `MANUAL_ONLY` |
 | `export-practical-lessons`         | Planned  | Export DRIVING history per org                        |
 | `import-practical-lessons-dry-run` | Planned  | Validate history rows against students + instructors  |
@@ -390,9 +496,14 @@ schoolStudentId;practicalLessonNumber;lessonDate;startTime;durationMinutes;instr
 
 **Export batch (`export-student-records`):**
 
-- Export only; no import, dry-run, apply, or UI.
+- Export only; no import apply.
 - No practical lesson export.
 - No UTF-8 BOM prefix on CSV.
+
+**Dry-run batch (`import-student-records-dry-run`):**
+
+- Validate only; no apply, UI, or multipart upload.
+- No update/merge for existing students.
 
 ---
 
@@ -403,5 +514,7 @@ schoolStudentId;practicalLessonNumber;lessonDate;startTime;durationMinutes;instr
 - `lib/students/student-record-validation.ts` — manual create validation
 - `lib/lessons/manual-practical-lesson-validation.ts` — manual history validation
 - `lib/import-export/student-record-export.ts` — export helpers
+- `lib/import-export/student-record-import-dry-run.ts` — import dry-run parse/validate
 - `app/api/admin/students/export/route.ts` — export endpoint
+- `app/api/admin/students/import/dry-run/route.ts` — import dry-run endpoint
 - `docs/examples/import-export/` — templates and sample payloads
