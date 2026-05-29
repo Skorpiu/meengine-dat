@@ -108,16 +108,15 @@ export type StudentExportRow = {
 /** Practical lesson export row (normalized external representation). */
 export type PracticalLessonExportRow = {
   schoolStudentId: string;
-  practicalLessonNumber: number;
+  practicalLessonNumber: number | null;
   lessonDate: string;
   startTime: string;
-  endTime: string | null;
   durationMinutes: number | null;
   instructorEmail: string | null;
-  instructorId: string | null;
+  instructorName: string | null;
   lessonSource: string;
   status: string;
-  notes?: string | null;
+  notes: string | null;
 };
 
 /** CSV header row strings aligned with docs/examples import templates. */
@@ -145,6 +144,20 @@ export const PRACTICAL_LESSON_IMPORT_CSV_HEADERS = [
   "startTime",
   "durationMinutes",
   "instructorEmail",
+  "notes",
+] as const;
+
+/** CSV header row for practical lesson export. */
+export const PRACTICAL_LESSON_EXPORT_CSV_HEADERS = [
+  "schoolStudentId",
+  "practicalLessonNumber",
+  "lessonDate",
+  "startTime",
+  "durationMinutes",
+  "instructorEmail",
+  "instructorName",
+  "lessonSource",
+  "status",
   "notes",
 ] as const;
 

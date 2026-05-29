@@ -6,6 +6,7 @@ import {
   IMPORT_EXPORT_FORMAT_VERSION,
   IMPORT_EXPORT_PHASES,
   IMPORT_MODES,
+  PRACTICAL_LESSON_EXPORT_CSV_HEADERS,
   PRACTICAL_LESSON_IMPORT_CSV_HEADERS,
   RECOMMENDED_CSV_DELIMITER,
   STUDENT_EXPORT_CSV_HEADERS,
@@ -45,6 +46,9 @@ describe("import-export-contracts", () => {
     );
     expect(PRACTICAL_LESSON_IMPORT_CSV_HEADERS.join(";")).toBe(
       "schoolStudentId;practicalLessonNumber;lessonDate;startTime;durationMinutes;instructorEmail;notes",
+    );
+    expect(PRACTICAL_LESSON_EXPORT_CSV_HEADERS.join(";")).toBe(
+      "schoolStudentId;practicalLessonNumber;lessonDate;startTime;durationMinutes;instructorEmail;instructorName;lessonSource;status;notes",
     );
   });
 
