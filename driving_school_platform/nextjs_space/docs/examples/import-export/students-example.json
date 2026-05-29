@@ -1,0 +1,26 @@
+{
+  "formatVersion": 1,
+  "entity": "students",
+  "rows": [
+    {
+      "schoolStudentId": "26001",
+      "yearSuffix": "26",
+      "sequence": 1,
+      "firstName": "João",
+      "lastName": "Silva",
+      "phoneNumber": "912345678",
+      "email": "joao@example.com",
+      "enrollmentDate": "2026-05-29"
+    },
+    {
+      "schoolStudentId": "26002",
+      "yearSuffix": "26",
+      "sequence": 2,
+      "firstName": "Maria",
+      "lastName": "Santos",
+      "phoneNumber": null,
+      "email": null,
+      "enrollmentDate": "2026-05-29"
+    }
+  ]
+}
