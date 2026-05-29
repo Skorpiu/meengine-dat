@@ -163,9 +163,59 @@ Does **not** update `userId` or `appAccessMode`.
 - `app/api/admin/students/route.ts`
 - `app/api/admin/students/[id]/route.ts`
 
-### Limitations (this batch)
+## Manual student records UI foundation
 
-- No UI.
+**Location:** `/admin/users` — section **Alunos** (`StudentRecordsManager`), below the app-user list and above invitations. Same `SUPER_ADMIN` gate as the users page.
+
+### Create form
+
+| Field             | API field        | Notes                                 |
+| ----------------- | ---------------- | ------------------------------------- |
+| Ano de inscrição  | `yearSuffix`     | Required; 2 digits (e.g. `26`)        |
+| Nº inscrição      | `sequenceNumber` | Required; 1–999                       |
+| Nome              | `firstName`      | Required                              |
+| Apelido           | `lastName`       | Optional                              |
+| Contacto          | `phoneNumber`    | Optional                              |
+| Email             | `email`          | Optional                              |
+| Data de inscrição | `enrollmentDate` | Optional; defaults to today on server |
+
+Live preview uses `buildSchoolStudentId` (e.g. `26` + `1` → `26001`). Submit: `POST /api/admin/students`.
+
+### List & search
+
+`GET /api/admin/students?search=…&limit=100` — search by name, phone, email, canonical ID, or numeric shortcuts (`261` → `26001`). Optional **Carregar mais** when `nextCursor` is returned.
+
+Columns: school ID, name, contact, enrollment date, app access label, edit action.
+
+### Edit dialog
+
+`PATCH /api/admin/students/[id]` — same operational fields; `yearSuffix` and `sequenceNumber` sent together when the ID changes. Does not expose `userId`, `appAccessMode`, or legacy counters.
+
+### Access labels (UI)
+
+| `appAccessMode` | Label            |
+| --------------- | ---------------- |
+| `MANUAL_ONLY`   | Sem acesso à app |
+| `INVITED`       | Convite enviado  |
+| `APP_USER`      | Com acesso à app |
+
+### UI modules
+
+- `components/admin/student-records-manager.tsx`
+- `lib/students/student-record-ui-types.ts`
+- `lib/students/student-record-ui-utils.ts`
+
+### UI limitations
+
+- No invitation/link to existing `Student`.
+- No User creation or email sending from this UI.
+- No autonumbering when enrollment number is empty (still required).
+- No practical lesson counter, manual lesson history, or import/export.
+- Demo org: POST/PATCH show API demo restriction message (unchanged quotas).
+- List uses `limit=100` per request; simple load-more only.
+
+### Limitations (API batch)
+
 - No autonumbering when `sequenceNumber` is omitted (still required on create).
 - No invitation / User linking.
 - No practical lesson counter or manual lesson history.
@@ -174,7 +224,7 @@ Does **not** update `userId` or `appAccessMode`.
 ## Next batches
 
 1. ~~`manual-student-records-api`~~ (done)
-2. `manual-student-records-ui`
+2. ~~`manual-student-records-ui`~~ (done)
 3. `student-record-invitation-linking`
 4. `lessons-student-record-selection`
 5. `practical-lesson-counter-foundation`
