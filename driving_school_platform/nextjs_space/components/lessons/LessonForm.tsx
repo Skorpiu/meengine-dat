@@ -33,6 +33,10 @@ import {
   lessonFormStudentRowClass,
   lessonFormTimeGridClass,
 } from "@/components/lessons/lesson-form-styles";
+import {
+  parseAdminStudentsListResponse,
+  type LessonFormStudentOption,
+} from "@/lib/students/student-lesson-form-options";
 
 /**
  * User role types for permission-based rendering
@@ -74,14 +78,14 @@ interface LessonFormProps {
 }
 
 /**
- * Student interface with studentNumber
+ * Operational student option for lesson form selectors (Student.id).
  */
-interface Student {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  studentNumber: number | null;
+type Student = LessonFormStudentOption;
+
+function resolveInitialStudentId(initialLesson?: Lesson): string {
+  if (!initialLesson) return "";
+  if (initialLesson.studentId) return String(initialLesson.studentId);
+  return initialLesson.student?.id ? String(initialLesson.student.id) : "";
 }
 
 interface InstructorOption {
@@ -160,9 +164,7 @@ export function LessonForm({
 
   // For single student selection (DRIVING)
   const [studentId, setStudentId] = useState<string>(
-    initialLesson?.student?.user?.id
-      ? String(initialLesson.student.user.id)
-      : "",
+    resolveInitialStudentId(initialLesson),
   );
 
   // For multiple student selection (EXAM, THEORY_EXAM)
@@ -224,7 +226,7 @@ export function LessonForm({
   const fetchStudents = useCallback(
     async (signal?: AbortSignal) => {
       try {
-        const response = await fetch("/api/admin/users?role=STUDENT", {
+        const response = await fetch("/api/admin/students?limit=100", {
           credentials: "include",
           signal,
         });
@@ -240,7 +242,7 @@ export function LessonForm({
           data = null;
         }
 
-        setStudents(getArrayProp<Student>(data, "users"));
+        setStudents(parseAdminStudentsListResponse(data));
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError")
           return;
@@ -315,11 +317,7 @@ export function LessonForm({
           : "DRIVING",
       );
       setInstructorId(initialLesson.instructor?.user?.id || "");
-      setStudentId(
-        initialLesson.student?.user?.id
-          ? String(initialLesson.student.user.id)
-          : "",
-      );
+      setStudentId(resolveInitialStudentId(initialLesson));
       setVehicleId(initialLesson.vehicleId?.toString() || "");
       setLessonDate(
         initialLesson.lessonDate
@@ -340,10 +338,15 @@ export function LessonForm({
 
     const searchLower = studentSearchTerm.toLowerCase();
     return students.filter((student) => {
-      const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
-      const studentNumberStr = student.studentNumber?.toString() || "";
+      const fullName = `${student.firstName ?? ""} ${student.lastName ?? ""}`
+        .trim()
+        .toLowerCase();
+      const schoolId = student.schoolStudentId?.toLowerCase() ?? "";
+      const label = student.label.toLowerCase();
       return (
-        fullName.includes(searchLower) || studentNumberStr.includes(searchLower)
+        fullName.includes(searchLower) ||
+        schoolId.includes(searchLower) ||
+        label.includes(searchLower)
       );
     });
   }, [students, studentSearchTerm]);
@@ -471,14 +474,8 @@ export function LessonForm({
     }
   };
 
-  // Get student display name with number
-  const getStudentDisplayName = (student: Student) => {
-    const fullName = `${student.firstName} ${student.lastName}`;
-    if (student.studentNumber) {
-      return `#${student.studentNumber} - ${fullName}`;
-    }
-    return fullName;
-  };
+  // Get student display name with school ID
+  const getStudentDisplayName = (student: Student) => student.label;
 
   return (
     <form onSubmit={handleSubmit} className={lessonFormRootClass}>
@@ -550,7 +547,7 @@ export function LessonForm({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search by name or student number..."
+              placeholder="Search by name or school student ID..."
               value={studentSearchTerm}
               onChange={(e) => setStudentSearchTerm(e.target.value)}
               className={cn(lessonFormFieldClass, lessonFormSearchInputClass)}
@@ -613,7 +610,7 @@ export function LessonForm({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search by name or student number."
+              placeholder="Search by name or school student ID."
               value={studentSearchTerm}
               onChange={(e) => setStudentSearchTerm(e.target.value)}
               className={cn(lessonFormFieldClass, lessonFormSearchInputClass)}

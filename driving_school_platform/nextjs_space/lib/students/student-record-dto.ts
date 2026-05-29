@@ -8,6 +8,24 @@ export const STUDENT_RECORD_USER_SELECT = {
   lastName: true,
 } satisfies Prisma.UserSelect;
 
+/** Nested User fields for lesson-form student list (no email). */
+export const STUDENT_RECORD_LESSON_USER_SELECT = {
+  id: true,
+  firstName: true,
+  lastName: true,
+} satisfies Prisma.UserSelect;
+
+/** Minimal Student select for INSTRUCTOR lesson-form list reads. */
+export const STUDENT_RECORD_LESSON_SELECT = {
+  id: true,
+  userId: true,
+  firstName: true,
+  lastName: true,
+  schoolStudentId: true,
+  appAccessMode: true,
+  user: { select: STUDENT_RECORD_LESSON_USER_SELECT },
+} satisfies Prisma.StudentSelect;
+
 export const STUDENT_RECORD_SELECT = {
   id: true,
   userId: true,
@@ -29,6 +47,44 @@ export const STUDENT_RECORD_SELECT = {
 export type StudentRecordRow = Prisma.StudentGetPayload<{
   select: typeof STUDENT_RECORD_SELECT;
 }>;
+
+export type StudentRecordLessonRow = Prisma.StudentGetPayload<{
+  select: typeof STUDENT_RECORD_LESSON_SELECT;
+}>;
+
+export type StudentRecordLessonDto = {
+  id: string;
+  userId: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  schoolStudentId: string | null;
+  appAccessMode: string;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  } | null;
+};
+
+export function mapStudentRecordLessonDto(
+  row: StudentRecordLessonRow,
+): StudentRecordLessonDto {
+  return {
+    id: row.id,
+    userId: row.userId,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    schoolStudentId: row.schoolStudentId,
+    appAccessMode: row.appAccessMode,
+    user: row.user
+      ? {
+          id: row.user.id,
+          firstName: row.user.firstName,
+          lastName: row.user.lastName,
+        }
+      : null,
+  };
+}
 
 export type StudentRecordDto = {
   id: string;

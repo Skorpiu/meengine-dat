@@ -5,6 +5,10 @@
 import { prisma } from "@/lib/db";
 import { HTTP_STATUS, LESSON_STATUS, VALIDATION_RULES } from "@/lib/constants";
 import type { LessonCreationInput } from "@/lib/validation";
+import {
+  findOperationalStudentInOrg,
+  findOperationalStudentsInOrg,
+} from "@/lib/students/student-lesson-resolve";
 
 export type CreateAdminLessonPayload = LessonCreationInput & {
   instructorId: string;
@@ -144,17 +148,26 @@ export async function createAdminLesson(input: {
       };
     }
 
-    const lessons = await Promise.all(
-      studentIds.map(async (sid) => {
-        const student = await prisma.student.findFirst({
-          where: { userId: sid, organizationId: orgId },
-        });
+    const uniqueStudentIds = [...new Set(studentIds)];
+    const foundStudents = await findOperationalStudentsInOrg({
+      organizationId: orgId,
+      studentIds: uniqueStudentIds,
+    });
 
-        if (!student) {
-          throw new Error(`Student ${sid} not found`);
-        }
+    if (foundStudents.length !== uniqueStudentIds.length) {
+      return {
+        ok: false,
+        error: "Student not found",
+        status: HTTP_STATUS.NOT_FOUND,
+      };
+    }
 
-        return prisma.lesson.create({
+    const studentById = new Map(foundStudents.map((s) => [s.id, s]));
+    const orderedStudents = uniqueStudentIds.map((id) => studentById.get(id)!);
+
+    const lessons = await prisma.$transaction(
+      orderedStudents.map((student) =>
+        prisma.lesson.create({
           data: {
             organizationId: orgId,
             studentId: student.id,
@@ -168,8 +181,8 @@ export async function createAdminLesson(input: {
             categoryId,
             status: LESSON_STATUS.SCHEDULED,
           },
-        });
-      }),
+        }),
+      ),
     );
 
     return {
@@ -217,8 +230,9 @@ export async function createAdminLesson(input: {
     };
   }
 
-  const student = await prisma.student.findFirst({
-    where: { userId: studentId, organizationId: orgId },
+  const student = await findOperationalStudentInOrg({
+    organizationId: orgId,
+    studentId,
   });
 
   if (!student) {

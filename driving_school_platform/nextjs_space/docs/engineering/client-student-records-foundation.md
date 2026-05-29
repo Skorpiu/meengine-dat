@@ -221,12 +221,53 @@ Columns: school ID, name, contact, enrollment date, app access label, edit actio
 - No practical lesson counter or manual lesson history.
 - POST/PATCH use existing demo `user_management` mutation guard.
 
+## Lessons use operational Student records
+
+**Contract:** `studentId` / `studentIds` in lesson create payloads represent **`Student.id`** (operational ficha), not `User.id`.
+
+### Create / update API
+
+- `createAdminLesson` resolves students with `{ id: studentId, organizationId }`.
+- For `EXAM` / `THEORY_EXAM`, all `studentIds` are validated via `findOperationalStudentsInOrg` **before** any `lesson.create`; missing IDs return `404` with no partial creates. Creates run inside `prisma.$transaction`.
+- Manual students (`MANUAL_ONLY`, no linked `User`) can be assigned to DRIVING, EXAM, and THEORY_EXAM lessons.
+- Students from another organization return `404 Student not found`.
+- Lesson update (`PUT /api/admin/lessons/[id]`) does not change the assigned student (unchanged scope).
+
+### Lesson form student list
+
+- `LessonForm` loads options from `GET /api/admin/students?limit=100`.
+- Dropdown/checkbox values are **`Student.id`**.
+- Labels use `getStudentDisplayLabel` (e.g. `26001 — João Silva`, or name-only when no school ID).
+- Includes `APP_USER`, `MANUAL_ONLY`, and `INVITED` records (not filtered to linked User only).
+- **GET** `/api/admin/students` allows `INSTRUCTOR` read access with a **minimal lesson-selection DTO** (no email, phone, enrollment/timestamps); POST/PATCH remain `SUPER_ADMIN` only.
+
+### Display / DTOs
+
+- Lesson list/detail selects include operational student fields (`firstName`, `lastName`, `schoolStudentId`, …).
+- Display helpers (`getStudentDisplayName`, `getLessonParticipantName`) prefer operational fields, then fall back to linked `User`, then `schoolStudentId`, then `"Student"`.
+- No runtime access assumes `lesson.student.user` is always present.
+
+### Modules
+
+- `lib/students/student-lesson-resolve.ts` — tenant-scoped Student lookup for lesson create
+- `lib/students/student-lesson-form-options.ts` — LessonForm option mapping/parsing
+- `lib/students/student-lesson-select.ts` — Prisma select for lesson reads
+- `lib/students/student-display.ts` — shared display helpers
+
+### Limitations (this batch)
+
+- No practical lesson counter.
+- No manual lesson history.
+- No invitation/link Student → User.
+- No import/export.
+- Lesson edit form still does not allow changing the assigned student.
+
 ## Next batches
 
 1. ~~`manual-student-records-api`~~ (done)
 2. ~~`manual-student-records-ui`~~ (done)
 3. `student-record-invitation-linking`
-4. `lessons-student-record-selection`
+4. ~~`lessons-student-record-selection`~~ (done)
 5. `practical-lesson-counter-foundation`
 6. `practical-lessons-manual-history`
 7. `import-export-strategy`
