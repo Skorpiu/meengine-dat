@@ -90,16 +90,16 @@ JSON schema versioning (`formatVersion`) will be introduced when parsers are imp
 
 ## F. Security
 
-| Control                  | Detail                                                                                                                       |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| **Role**                 | `SUPER_ADMIN` only for import/export endpoints (future).                                                                     |
-| **Tenant scope**         | `organizationId` from authenticated session; ignore any tenant field in uploaded files.                                      |
-| **File retention**       | Uploaded files must not persist indefinitely; process in memory or short-lived temp storage, then discard.                   |
-| **Logging**              | Log counts, codes, and row numbers — not full PII payloads (avoid logging entire CSV rows with emails/phones at info level). |
-| **Size limits**          | Max file size and max row count per import (exact limits TBD in implementation; suggest starting around 5 MB / 5 000 rows).  |
-| **Preview before apply** | Apply requires a prior successful dry-run (or re-validation) with zero blocking errors.                                      |
-| **Error responses**      | Generic messages to client; no raw stack traces.                                                                             |
-| **No emails on import**  | Reinforced: import pipeline must not trigger invitation, verification, or notification emails.                               |
+| Control                  | Detail                                                                                                                             |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Role**                 | `SUPER_ADMIN` only for import/export endpoints (future).                                                                           |
+| **Tenant scope**         | `organizationId` from authenticated session; ignore any tenant field in uploaded files.                                            |
+| **File retention**       | Uploaded files must not persist indefinitely; process in memory or short-lived temp storage, then discard.                         |
+| **Logging**              | Log counts, codes, and row numbers — not full PII payloads (avoid logging entire CSV rows with emails/phones at info level).       |
+| **Size limits**          | Max **500 rows** and **2 MB** `content` string per apply request; dry-run uses same row cap when enforced via apply module limits. |
+| **Preview before apply** | Apply requires a prior successful dry-run (or re-validation) with zero blocking errors.                                            |
+| **Error responses**      | Generic messages to client; no raw stack traces.                                                                                   |
+| **No emails on import**  | Reinforced: import pipeline must not trigger invitation, verification, or notification emails.                                     |
 
 ---
 
@@ -423,16 +423,131 @@ Shape aligns with `ImportDryRunReport`. File-level parse errors (e.g. bad header
 
 ---
 
+## Implemented: student records import apply
+
+**Batch:** `import-student-records-apply` (create-only; same validation as dry-run).
+
+### Endpoint
+
+| Method | Path                               | Auth          |
+| ------ | ---------------------------------- | ------------- |
+| `POST` | `/api/admin/students/import/apply` | `SUPER_ADMIN` |
+
+Tenant-scoped via session `organizationId` + `assertUserTenantHost`. Body field `organizationId` is **ignored**.
+
+### Request body
+
+Same shape as dry-run:
+
+```json
+{
+  "format": "csv",
+  "content": "schoolStudentId;yearSuffix;...\n26001;26;1;João;..."
+}
+```
+
+```json
+{
+  "format": "json",
+  "rows": [
+    {
+      "schoolStudentId": "26001",
+      "yearSuffix": "26",
+      "sequence": 1,
+      "firstName": "João"
+    }
+  ]
+}
+```
+
+Optional `"mode": "createOnly"` (only supported value; default behavior is create-only).
+
+**Not supported in this batch:** multipart file upload, update/merge, UI.
+
+### Apply rules
+
+1. Parse payload (CSV or JSON).
+2. Enforce limits: max **500 rows**, max **2 MB** `content` string length.
+3. Run the **same validation** as dry-run (including duplicate lookup in org and within file).
+4. If **any blocking error**: no DB writes; return `applied: false`.
+5. If all rows valid: create `Student` rows in a single **`prisma.$transaction`** (all-or-nothing).
+
+### Fields written (per row)
+
+| Field                     | Value                                  |
+| ------------------------- | -------------------------------------- |
+| `organizationId`          | From session (never from file)         |
+| `userId`                  | `null`                                 |
+| `firstName`, `lastName`   | From file                              |
+| `email`, `phoneNumber`    | From file (email lowercased)           |
+| `schoolStudentId`         | Canonical 5-digit ID                   |
+| `schoolStudentYearSuffix` | From file                              |
+| `schoolStudentSequence`   | From file                              |
+| `schoolStudentIdSource`   | `IMPORT`                               |
+| `appAccessMode`           | `MANUAL_ONLY`                          |
+| `enrollmentDate`          | From file if present; otherwise `null` |
+
+**Not set:** `studentIdNumber`, `studentNumber` (DB autoincrement), `User`, invitations, emails.
+
+### Response
+
+Success with apply result:
+
+```json
+{
+  "success": true,
+  "data": {
+    "applied": true,
+    "createdCount": 3,
+    "skippedCount": 0,
+    "report": { "...": "ImportDryRunReport shape" }
+  }
+}
+```
+
+When validation blocks apply:
+
+```json
+{
+  "success": true,
+  "data": {
+    "applied": false,
+    "createdCount": 0,
+    "skippedCount": 0,
+    "report": { "...": "errors populated" }
+  }
+}
+```
+
+P2002 on `(organizationId, schoolStudentId)` is surfaced as `duplicate_school_student_id` with `applied: false` (race after pre-check).
+
+### Modules
+
+- `app/api/admin/students/import/apply/route.ts`
+- `lib/import-export/student-record-import-apply.ts`
+- Reuses `lib/import-export/student-record-import-dry-run.ts` for parse/validate
+
+### Limitations (apply batch)
+
+- Create-only; no update/merge of existing students.
+- No admin UI.
+- No multipart upload.
+- No `User` creation, invites, or emails.
+- No practical lesson import.
+- No partial import (one bad row blocks all writes).
+
+---
+
 ## K. Future phases (implementation batches)
 
-| Batch slug                         | Status   | Deliverable                                           |
-| ---------------------------------- | -------- | ----------------------------------------------------- |
-| `export-student-records`           | **Done** | `GET /api/admin/students/export`; CSV + JSON          |
-| `import-student-records-dry-run`   | **Done** | `POST /api/admin/students/import/dry-run`; no writes  |
-| `import-student-records-apply`     | Planned  | Apply after clean dry-run; create-only; `MANUAL_ONLY` |
-| `export-practical-lessons`         | Planned  | Export DRIVING history per org                        |
-| `import-practical-lessons-dry-run` | Planned  | Validate history rows against students + instructors  |
-| `import-practical-lessons-apply`   | Planned  | Create `Lesson` rows with `lessonSource = IMPORT`     |
+| Batch slug                         | Status   | Deliverable                                                       |
+| ---------------------------------- | -------- | ----------------------------------------------------------------- |
+| `export-student-records`           | **Done** | `GET /api/admin/students/export`; CSV + JSON                      |
+| `import-student-records-dry-run`   | **Done** | `POST /api/admin/students/import/dry-run`; no writes              |
+| `import-student-records-apply`     | **Done** | `POST /api/admin/students/import/apply`; create-only; transaction |
+| `export-practical-lessons`         | Planned  | Export DRIVING history per org                                    |
+| `import-practical-lessons-dry-run` | Planned  | Validate history rows against students + instructors              |
+| `import-practical-lessons-apply`   | Planned  | Create `Lesson` rows with `lessonSource = IMPORT`                 |
 
 Each batch should:
 
@@ -460,7 +575,7 @@ schoolStudentId;yearSuffix;sequence;firstName;lastName;phoneNumber;email;enrollm
 | `lastName`        | no       |                                                                     |
 | `phoneNumber`     | no       |                                                                     |
 | `email`           | no       | Valid email if present                                              |
-| `enrollmentDate`  | no       | ISO date; default to import date on apply (future)                  |
+| `enrollmentDate`  | no       | ISO date; `null` on apply when absent                               |
 
 **Not in import file:** `organizationId`, `userId`, `appAccessMode` (forced server-side).
 
@@ -515,6 +630,8 @@ schoolStudentId;practicalLessonNumber;lessonDate;startTime;durationMinutes;instr
 - `lib/lessons/manual-practical-lesson-validation.ts` — manual history validation
 - `lib/import-export/student-record-export.ts` — export helpers
 - `lib/import-export/student-record-import-dry-run.ts` — import dry-run parse/validate
+- `lib/import-export/student-record-import-apply.ts` — import apply (create-only)
 - `app/api/admin/students/export/route.ts` — export endpoint
 - `app/api/admin/students/import/dry-run/route.ts` — import dry-run endpoint
+- `app/api/admin/students/import/apply/route.ts` — import apply endpoint
 - `docs/examples/import-export/` — templates and sample payloads
