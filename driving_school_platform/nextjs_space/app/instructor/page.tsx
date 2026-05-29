@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InstructorDashboardClient } from "@/components/instructor/instructor-dashboard-client";
 import type { Lesson as ScheduleLesson } from "@/components/schedule/schedule-map";
 import { LESSON_LIST_SELECT } from "@/lib/lessons/lesson-queries";
+import { mapLessonStudentForScheduleMap } from "@/lib/students/schedule-lesson-student";
 import { Calendar, Clock, Star, TrendingUp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -116,15 +117,7 @@ export default async function InstructorDashboard() {
       lessonType: lesson.lessonType,
       status: lesson.status,
 
-      student: lesson.student
-        ? {
-            user: {
-              id: lesson.student.user.id,
-              firstName: lesson.student.user.firstName,
-              lastName: lesson.student.user.lastName,
-            },
-          }
-        : undefined,
+      student: mapLessonStudentForScheduleMap(lesson.student),
 
       instructor: lesson.instructor
         ? {

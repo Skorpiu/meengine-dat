@@ -239,9 +239,14 @@ export async function POST(request: NextRequest) {
             });
           }
 
-          // Create student profile
+          // Create student profile (operational fields; school ID assigned by admin later)
           const studentData = {
             userId: user.id,
+            firstName,
+            lastName,
+            email: email.toLowerCase(),
+            phoneNumber,
+            appAccessMode: "APP_USER" as const,
             categoryId: category?.id || null,
             transmissionTypeId: transmission?.id || null,
             organizationId: effectiveOrganizationId,

@@ -1,4 +1,8 @@
 import { isExamLessonType } from "@/lib/lessons/lesson-display";
+import {
+  getStudentDisplayName,
+  type StudentDisplaySource,
+} from "@/lib/students/student-display";
 
 /** Tailwind classes for Schedule Map chips by lesson type (status overrides separate). */
 export const SCHEDULE_MAP_LESSON_TYPE_COLOR_CLASSES = {
@@ -15,9 +19,7 @@ export type ScheduleMapCardLesson = {
   startTime: string;
   endTime?: string;
   lessonType: string;
-  student?: {
-    user?: { firstName?: string | null; lastName?: string | null };
-  };
+  student?: StudentDisplaySource;
   instructor?: {
     user?: { firstName?: string | null; lastName?: string | null };
   };
@@ -64,9 +66,8 @@ export function getScheduleMapLessonColorClasses(input: {
 export function formatScheduleParticipantName(
   participant?: ScheduleMapCardLesson["student"],
 ): string {
-  const first = participant?.user?.firstName?.trim() ?? "";
-  const last = participant?.user?.lastName?.trim() ?? "";
-  return [first, last].filter(Boolean).join(" ");
+  if (!participant) return "";
+  return getStudentDisplayName(participant);
 }
 
 /** Compact lines for calendar chips (max 3 lines). */

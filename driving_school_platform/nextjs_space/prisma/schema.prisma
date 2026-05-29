@@ -139,14 +139,23 @@ model Category {
 }
 
 model Student {
-  id                           String             @id @default(cuid())
-  userId                       String             @unique
-  studentIdNumber              String?            @unique
-  studentNumber                Int                @unique @default(autoincrement())
+  id                           String                   @id @default(cuid())
+  userId                       String?                  @unique
+  firstName                    String?
+  lastName                     String?
+  email                        String?
+  phoneNumber                  String?
+  schoolStudentId              String?
+  schoolStudentYearSuffix      String?
+  schoolStudentSequence        Int?
+  schoolStudentIdSource        StudentSchoolIdSource?
+  appAccessMode                StudentAppAccessMode     @default(APP_USER)
+  studentIdNumber              String?                  @unique
+  studentNumber                Int                      @unique @default(autoincrement())
   categoryId                   Int?
-  transmissionTypeId           Int?
+  transmissionTypeId         Int?
   organizationId               String?
-  hasDrivingLicense            Boolean            @default(false)
+  hasDrivingLicense            Boolean                  @default(false)
   existingLicenseNumber        String?
   existingLicenseCategories    String[]
   medicalCertificateUrl        String?
@@ -156,29 +165,33 @@ model Student {
   emergencyContactRelationship String?
   preferredInstructorId        String?
   preferredLessonTime          String?
-  theoryExamPassed             Boolean            @default(false)
-  practicalExamPassed          Boolean            @default(false)
-  enrollmentDate               DateTime           @default(now())
+  theoryExamPassed             Boolean                  @default(false)
+  practicalExamPassed          Boolean                  @default(false)
+  enrollmentDate               DateTime?
   graduationDate               DateTime?
   adminNotes                   String?
   specialRequirements          String?
-  createdAt                    DateTime           @default(now())
-  updatedAt                    DateTime           @updatedAt
+  createdAt                    DateTime                 @default(now())
+  updatedAt                    DateTime                 @updatedAt
   examRegistrations            ExamRegistration[]
   lessonCounters               LessonCounter[]
   lessonRequests               LessonRequest[]
   lessons                      Lesson[]
-  paymentsStudent              Payment[]          @relation("PaymentStudent")
-  category                     Category?          @relation(fields: [categoryId], references: [id])
-  organization                 Organization?      @relation(fields: [organizationId], references: [id])
-  preferredInstructor          Instructor?        @relation("PreferredStudents", fields: [preferredInstructorId], references: [id])
-  transmissionType             TransmissionType?  @relation(fields: [transmissionTypeId], references: [id])
-  user                         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentsStudent              Payment[]                @relation("PaymentStudent")
+  category                     Category?                @relation(fields: [categoryId], references: [id])
+  organization                 Organization?            @relation(fields: [organizationId], references: [id])
+  preferredInstructor          Instructor?              @relation("PreferredStudents", fields: [preferredInstructorId], references: [id])
+  transmissionType             TransmissionType?        @relation(fields: [transmissionTypeId], references: [id])
+  user                         User?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  @@unique([organizationId, schoolStudentId])
   @@index([userId])
   @@index([categoryId])
   @@index([transmissionTypeId])
   @@index([organizationId])
+  @@index([organizationId, schoolStudentId])
+  @@index([organizationId, enrollmentDate])
+  @@index([appAccessMode])
   @@index([studentNumber])
   @@map("students")
 }
@@ -856,6 +869,19 @@ model ConfigurationHistory {
   @@index([changedAt])
   @@index([changedBy])
   @@map("configuration_history")
+}
+
+enum StudentAppAccessMode {
+  MANUAL_ONLY
+  INVITED
+  APP_USER
+}
+
+enum StudentSchoolIdSource {
+  MANUAL
+  IMPORT
+  AUTO
+  LEGACY
 }
 
 enum UserRole {

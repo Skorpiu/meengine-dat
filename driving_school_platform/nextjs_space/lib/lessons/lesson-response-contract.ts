@@ -23,11 +23,20 @@ export function expectLessonListItemUiContract(lesson: LessonLike): void {
   }
 
   const student = lesson.student as LessonLike | undefined;
-  if (student?.user) {
-    const user = student.user as LessonLike;
-    expect(user.firstName).toBeTruthy();
-    expect(user.lastName).toBeTruthy();
-    expect(user.passwordHash).toBeUndefined();
+  if (student) {
+    const hasOperationalName =
+      typeof student.firstName === "string" ||
+      typeof student.lastName === "string";
+    const user = student.user as LessonLike | undefined;
+    if (user) {
+      if (!hasOperationalName) {
+        expect(user.firstName).toBeTruthy();
+        expect(user.lastName).toBeTruthy();
+      }
+      expect(user.passwordHash).toBeUndefined();
+    } else if (!hasOperationalName && student.schoolStudentId) {
+      expect(student.schoolStudentId).toBeTruthy();
+    }
   }
 
   const instructor = lesson.instructor as LessonLike | undefined;
