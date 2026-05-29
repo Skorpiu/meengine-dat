@@ -203,6 +203,8 @@ Conceptual response shape (future API). TypeScript mirror: `ImportDryRunReport` 
 | `duplicate_school_student_id`       | ID already in org (or duplicate within file — future)                |
 | `invalid_date`                      | Not parseable ISO date                                               |
 | `invalid_time`                      | Not `HH:mm`                                                          |
+| `invalid_duration`                  | `durationMinutes` out of allowed range                               |
+| `unknown_student`                   | `schoolStudentId` not found in org                                   |
 | `unknown_instructor`                | Email not found for org instructor                                   |
 | `duplicate_practical_lesson_number` | Same student + lesson number exists                                  |
 | `unsupported_value`                 | Enum/format not accepted; may be warning or error depending on field |
@@ -596,11 +598,94 @@ Only **`lessonType = DRIVING`** lessons are exported (`SYSTEM`, `MANUAL`, and fu
 
 ### Limitations (export batch)
 
-- Export only; no practical lesson import/dry-run/apply.
+- Export only; no practical lesson import apply.
 - No admin UI.
 - No theory/exam/payment export.
 - No update/merge.
 - No pagination (full filtered result set).
+
+---
+
+## Implemented: practical lessons import dry-run
+
+**Batch:** `import-practical-lessons-dry-run` (validate only — **no DB writes**).
+
+### Endpoint
+
+| Method | Path                                          | Auth          |
+| ------ | --------------------------------------------- | ------------- |
+| `POST` | `/api/admin/practical-lessons/import/dry-run` | `SUPER_ADMIN` |
+
+Tenant-scoped via session `organizationId` + `assertUserTenantHost`. Body field `organizationId` is **ignored**.
+
+### Request body
+
+```json
+{
+  "format": "csv",
+  "content": "schoolStudentId;practicalLessonNumber;...\n26001;1;2026-05-29;09:00;60;instrutor@example.com;"
+}
+```
+
+```json
+{
+  "format": "json",
+  "rows": [
+    {
+      "schoolStudentId": "26001",
+      "practicalLessonNumber": 1,
+      "lessonDate": "2026-05-29",
+      "startTime": "09:00",
+      "instructorEmail": "instrutor@example.com"
+    }
+  ]
+}
+```
+
+JSON also accepts `content` as a string (`{ "rows": [...] }` or a bare array).
+
+**Not supported in this batch:** multipart file upload, apply, UI.
+
+### CSV rules
+
+- Delimiter: **`;`**
+- Header: `PRACTICAL_LESSON_IMPORT_CSV_HEADERS` (see practical lesson import contract below)
+- Empty lines skipped
+
+### Validations
+
+| Rule                                                                                               | Code (examples)                     |
+| -------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| Required: `schoolStudentId`, `practicalLessonNumber`, `lessonDate`, `startTime`, `instructorEmail` | `missing_required_field`            |
+| Canonical 5-digit `schoolStudentId`                                                                | `invalid_school_student_id`         |
+| Student exists in org                                                                              | `unknown_student`                   |
+| `practicalLessonNumber` 1–999                                                                      | `unsupported_value`                 |
+| `lessonDate` as `YYYY-MM-DD`                                                                       | `invalid_date`                      |
+| `startTime` as `HH:mm`                                                                             | `invalid_time`                      |
+| `durationMinutes` optional; default **60** in preview; if present 1–600                            | `invalid_duration`                  |
+| `instructorEmail` format                                                                           | `unsupported_value`                 |
+| Instructor User exists in org                                                                      | `unknown_instructor`                |
+| Duplicate `(schoolStudentId, practicalLessonNumber)` in file                                       | `duplicate_practical_lesson_number` |
+| Existing DRIVING lesson same student + number in org                                               | `duplicate_practical_lesson_number` |
+
+### Response
+
+`ImportDryRunReport` shape via `successResponse`. Preview `normalized` rows include resolved `studentId` and `instructorId` (User id) for future apply.
+
+Does **not** create `Student`, `Instructor`, `User`, or `Lesson`.
+
+### Modules
+
+- `app/api/admin/practical-lessons/import/dry-run/route.ts`
+- `lib/import-export/practical-lesson-import-dry-run.ts`
+- `lib/lessons/practical-lesson-import-queries.ts`
+
+### Limitations (dry-run batch)
+
+- No apply, UI, or multipart upload.
+- Does not create Students or Instructors.
+- Does not auto-fix duplicates.
+- Does not update lesson counters.
 
 ---
 
@@ -612,7 +697,7 @@ Only **`lessonType = DRIVING`** lessons are exported (`SYSTEM`, `MANUAL`, and fu
 | `import-student-records-dry-run`   | **Done** | `POST /api/admin/students/import/dry-run`; no writes              |
 | `import-student-records-apply`     | **Done** | `POST /api/admin/students/import/apply`; create-only; transaction |
 | `export-practical-lessons`         | **Done** | `GET /api/admin/practical-lessons/export`; CSV + JSON             |
-| `import-practical-lessons-dry-run` | Planned  | Validate history rows against students + instructors              |
+| `import-practical-lessons-dry-run` | **Done** | `POST /api/admin/practical-lessons/import/dry-run`; no writes     |
 | `import-practical-lessons-apply`   | Planned  | Create `Lesson` rows with `lessonSource = IMPORT`                 |
 
 Each batch should:
@@ -698,8 +783,10 @@ schoolStudentId;practicalLessonNumber;lessonDate;startTime;durationMinutes;instr
 - `lib/import-export/student-record-import-dry-run.ts` — import dry-run parse/validate
 - `lib/import-export/student-record-import-apply.ts` — import apply (create-only)
 - `lib/import-export/practical-lesson-export.ts` — practical lesson export helpers
+- `lib/import-export/practical-lesson-import-dry-run.ts` — practical lesson import dry-run
 - `app/api/admin/students/export/route.ts` — export endpoint
 - `app/api/admin/students/import/dry-run/route.ts` — import dry-run endpoint
 - `app/api/admin/students/import/apply/route.ts` — import apply endpoint
 - `app/api/admin/practical-lessons/export/route.ts` — practical lessons export endpoint
+- `app/api/admin/practical-lessons/import/dry-run/route.ts` — practical lessons import dry-run endpoint
 - `docs/examples/import-export/` — templates and sample payloads
