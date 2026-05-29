@@ -9,6 +9,10 @@ import {
   findOperationalStudentInOrg,
   findOperationalStudentsInOrg,
 } from "@/lib/students/student-lesson-resolve";
+import {
+  getNextPracticalLessonNumber,
+  shouldAssignPracticalLessonNumber,
+} from "@/lib/lessons/practical-lesson-counter";
 
 export type CreateAdminLessonPayload = LessonCreationInput & {
   instructorId: string;
@@ -243,6 +247,13 @@ export async function createAdminLesson(input: {
     };
   }
 
+  const practicalLessonNumber = shouldAssignPracticalLessonNumber(lessonType)
+    ? await getNextPracticalLessonNumber({
+        organizationId: orgId,
+        studentId: student.id,
+      })
+    : null;
+
   const lesson = await prisma.lesson.create({
     data: {
       organizationId: orgId,
@@ -256,6 +267,7 @@ export async function createAdminLesson(input: {
       lessonType,
       categoryId,
       status: LESSON_STATUS.SCHEDULED,
+      ...(practicalLessonNumber != null ? { practicalLessonNumber } : {}),
     },
   });
 

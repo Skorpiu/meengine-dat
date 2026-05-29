@@ -7,6 +7,7 @@ import {
   getLessonLocationLabel,
   getLessonParticipantName,
   getLessonVehicleLabel,
+  getPracticalLessonNumberLabel,
   isExamLessonType,
 } from "./lesson-display";
 import { LESSON_TYPES } from "@/lib/constants";
@@ -83,5 +84,29 @@ describe("lesson-display", () => {
       "Drop only",
     );
     expect(getLessonLocationLabel({})).toBeNull();
+  });
+
+  it("getPracticalLessonNumberLabel shows label for DRIVING with number", () => {
+    expect(
+      getPracticalLessonNumberLabel({
+        lessonType: LESSON_TYPES.DRIVING,
+        practicalLessonNumber: 1,
+      }),
+    ).toBe("Prática #1");
+  });
+
+  it("getPracticalLessonNumberLabel returns null for non-DRIVING or missing number", () => {
+    expect(
+      getPracticalLessonNumberLabel({
+        lessonType: LESSON_TYPES.THEORY,
+        practicalLessonNumber: 1,
+      }),
+    ).toBeNull();
+    expect(
+      getPracticalLessonNumberLabel({
+        lessonType: LESSON_TYPES.DRIVING,
+        practicalLessonNumber: null,
+      }),
+    ).toBeNull();
   });
 });

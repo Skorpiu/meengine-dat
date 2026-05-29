@@ -12,6 +12,7 @@ export function sampleLessonListItemFixture(
     lessonDate: new Date("2026-02-15T00:00:00.000Z"),
     startTime: "10:00",
     endTime: "11:00",
+    practicalLessonNumber: 3,
     pickupLocation: "Main garage",
     dropoffLocation: "Training lot",
     student: {

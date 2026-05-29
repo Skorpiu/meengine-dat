@@ -96,11 +96,7 @@ Implemented in `normalizeSchoolStudentIdSearchQuery`; wired on `GET /api/admin/s
 
 ## Future practical lesson data
 
-Planned on manual/history batches:
-
-- time, date, instructor, lesson number (counter)
-
-Not in DAT_3.6.
+Implemented in **practical-lesson-counter-foundation** (see section below). Manual history and import remain future batches.
 
 ## Why no separate `StudentRecord` table
 
@@ -256,11 +252,57 @@ Columns: school ID, name, contact, enrollment date, app access label, edit actio
 
 ### Limitations (this batch)
 
-- No practical lesson counter.
 - No manual lesson history.
 - No invitation/link Student → User.
 - No import/export.
 - Lesson edit form still does not allow changing the assigned student.
+
+## Practical lesson counter foundation
+
+**Goal:** School Admin and Instructor can see which practical lesson number each student is on when viewing lesson lists and the Schedule Map.
+
+### Data model
+
+- `Lesson.practicalLessonNumber` (`Int?`) — sequential practical lesson number for the operational `Student`.
+- Applies only to `lessonType = DRIVING` in this batch.
+- `null` for THEORY, EXAM, THEORY_EXAM, and other types.
+- Migration: `prisma/migrations/20260529140000_practical_lesson_number` (column only; no backfill).
+
+### Counting rules
+
+| Rule                           | Detail                                                                                                                   |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Counted type                   | `DRIVING` only                                                                                                           |
+| Not counted                    | `THEORY`, `THEORY_EXAM`, `EXAM` (EXAM is treated as exam, not a numbered practical lesson in this batch)                 |
+| Assignment                     | Server-side on `createAdminLesson` when `lessonType = DRIVING` and `studentId` is set                                    |
+| Formula                        | `max(maxAssignedNumber, totalDrivingCount) + 1` per `(organizationId, studentId)`                                        |
+| Legacy rows                    | Existing DRIVING lessons may have `practicalLessonNumber = null`; they still advance the counter via total DRIVING count |
+| Multi-student EXAM/THEORY_EXAM | No `practicalLessonNumber` assigned                                                                                      |
+
+Helpers: `lib/lessons/practical-lesson-counter.ts`
+
+### API / DTO
+
+- `LESSON_LIST_SELECT` and `LESSON_DETAIL_SELECT` include `practicalLessonNumber`.
+- Display helper: `getPracticalLessonNumberLabel` → `"Prática #N"` when `DRIVING` and number present.
+
+### UI (minimal)
+
+| Surface                                    | Behaviour                                           |
+| ------------------------------------------ | --------------------------------------------------- |
+| Schedule Map chips                         | First line shows `Prática #N · HH:MM` when assigned |
+| Admin lessons dashboard (`/admin/lessons`) | Student row shows `Prática #N` badge on DRIVING tab |
+| Instructor calendar                        | Same Schedule Map chip behaviour via shared DTO     |
+
+Frontend does **not** recalculate numbers; it displays the field from the API.
+
+### Limitations (this batch)
+
+- No broad backfill for historical DRIVING lessons.
+- No manual lesson history UI.
+- No import/export.
+- No special handling for cancellations or rescheduling (numbers are assigned at create and not recomputed).
+- `EXAM` does not receive a practical lesson number even if it represents a practical exam in product language elsewhere.
 
 ## Next batches
 
@@ -268,7 +310,7 @@ Columns: school ID, name, contact, enrollment date, app access label, edit actio
 2. ~~`manual-student-records-ui`~~ (done)
 3. `student-record-invitation-linking`
 4. ~~`lessons-student-record-selection`~~ (done)
-5. `practical-lesson-counter-foundation`
+5. ~~`practical-lesson-counter-foundation`~~ (done)
 6. `practical-lessons-manual-history`
 7. `import-export-strategy`
 8. Import/export implementation
@@ -276,5 +318,6 @@ Columns: school ID, name, contact, enrollment date, app access label, edit actio
 ## References
 
 - Migration: `prisma/migrations/20260529130000_student_operational_foundation`
-- Helpers: `lib/students/student-school-id.ts`, `lib/students/student-display.ts`
+- Migration: `prisma/migrations/20260529140000_practical_lesson_number`
+- Helpers: `lib/students/student-school-id.ts`, `lib/students/student-display.ts`, `lib/lessons/practical-lesson-counter.ts`
 - Lesson selects: `lib/students/student-lesson-select.ts`
