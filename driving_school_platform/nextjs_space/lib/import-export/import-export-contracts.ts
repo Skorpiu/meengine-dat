@@ -27,6 +27,8 @@ export const IMPORT_ERROR_CODES = [
   "duplicate_school_student_id",
   "invalid_date",
   "invalid_time",
+  "invalid_duration",
+  "unknown_student",
   "unknown_instructor",
   "duplicate_practical_lesson_number",
   "unsupported_value",
@@ -87,9 +89,15 @@ export type PracticalLessonImportRow = {
   practicalLessonNumber: number;
   lessonDate: string;
   startTime: string;
-  durationMinutes?: number;
+  durationMinutes: number;
   instructorEmail: string;
   notes?: string | null;
+};
+
+/** Dry-run preview row with resolved tenant-scoped ids for future apply. */
+export type PracticalLessonImportDryRunRow = PracticalLessonImportRow & {
+  studentId: string;
+  instructorId: string;
 };
 
 /** Student export row (normalized external representation). */

@@ -26,6 +26,8 @@ describe("import-export-contracts", () => {
       "duplicate_school_student_id",
       "invalid_date",
       "invalid_time",
+      "invalid_duration",
+      "unknown_student",
       "unknown_instructor",
       "duplicate_practical_lesson_number",
       "unsupported_value",
