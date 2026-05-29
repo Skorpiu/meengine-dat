@@ -1,3 +1,6 @@
+import type { InvitationDto } from "@/lib/invitations/invitation-dto";
+import type { InvitationEmailDeliveryDto } from "@/lib/invitations/invitation-ui-types";
+
 export type StudentAppAccessMode = "MANUAL_ONLY" | "INVITED" | "APP_USER";
 
 export type StudentRecordDto = {
@@ -43,4 +46,13 @@ export type StudentRecordApiError = {
   code?: string;
   details?: Record<string, string>;
   statusCode?: number;
+};
+
+export type StudentRecordInviteResponse = {
+  success: true;
+  data: {
+    invitation: InvitationDto;
+    inviteLink: string;
+    emailDelivery: InvitationEmailDeliveryDto;
+  };
 };

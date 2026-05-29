@@ -52,6 +52,27 @@ export function getStudentAppAccessLabel(mode: StudentAppAccessMode): string {
   }
 }
 
+export function canSendStudentRecordInvite(student: {
+  userId: string | null;
+  appAccessMode: StudentAppAccessMode;
+}): boolean {
+  return student.appAccessMode === "MANUAL_ONLY" && student.userId === null;
+}
+
+export function buildStudentRecordInvitePayload(input: {
+  studentEmail: string | null | undefined;
+  inviteEmail: string;
+}): { email?: string } | { error: string } {
+  const trimmed = input.inviteEmail.trim();
+  if (trimmed) {
+    return { email: trimmed };
+  }
+  if (input.studentEmail?.trim()) {
+    return {};
+  }
+  return { error: "missing_email" };
+}
+
 export function previewSchoolStudentId(
   yearSuffix: string,
   sequenceNumberRaw: string,
@@ -87,6 +108,18 @@ export function studentRecordApiErrorMessage(
       return (
         fallback || "Esta ação não está disponível no ambiente de demonstração."
       );
+    case "missing_email":
+      return "Indique um email para enviar o convite.";
+    case "student_already_linked":
+      return "Esta ficha já está ligada a uma conta.";
+    case "student_not_found":
+      return "Ficha de aluno não encontrada.";
+    case "student_not_invitable":
+      return "Esta ficha já tem acesso à app.";
+    case "pending_invitation_exists":
+      return "Já existe um convite pendente para este email.";
+    case "user_already_exists":
+      return "Já existe uma conta com este email.";
     default:
       return fallback;
   }

@@ -187,6 +187,38 @@ describe("createInvitation", () => {
     expect(h.createMock.mock.calls[0][0].data.role).toBe("INSTRUCTOR");
     expect(result.organizationName).toBe("Demo School");
   });
+
+  it("uses transactional client when tx is provided", async () => {
+    const txUserFindUnique = vi.fn().mockResolvedValue(null);
+    const txFindFirst = vi.fn().mockResolvedValue(null);
+    const txOrgFindUnique = vi.fn().mockResolvedValue({ name: "Tx School" });
+    const txCreate = vi.fn().mockResolvedValue(sampleRow());
+
+    const tx = {
+      user: { findUnique: txUserFindUnique },
+      organization: { findUnique: txOrgFindUnique },
+      userInvitation: { findFirst: txFindFirst, create: txCreate },
+    };
+
+    const result = await createInvitation({
+      organizationId: "org-a",
+      createdByUserId: "admin-1",
+      email: "student@school.test",
+      role: "STUDENT",
+      baseUrl: "https://school.example.com",
+      tx: tx as never,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(txUserFindUnique).toHaveBeenCalled();
+    expect(txFindFirst).toHaveBeenCalled();
+    expect(txOrgFindUnique).toHaveBeenCalled();
+    expect(txCreate).toHaveBeenCalled();
+    expect(h.userFindUniqueMock).not.toHaveBeenCalled();
+    expect(h.findFirstMock).not.toHaveBeenCalled();
+    expect(h.organizationFindUniqueMock).not.toHaveBeenCalled();
+    expect(h.createMock).not.toHaveBeenCalled();
+  });
 });
 
 describe("mapInvitationDto", () => {
