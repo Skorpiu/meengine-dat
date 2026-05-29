@@ -158,6 +158,7 @@ describe("createAdminLesson", () => {
         data: expect.objectContaining({
           studentId: studentOperationalId,
           practicalLessonNumber: 1,
+          lessonSource: "SYSTEM",
         }),
       }),
     );
@@ -190,6 +191,34 @@ describe("createAdminLesson", () => {
     expect(h.lessonCreateMock).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ practicalLessonNumber: 4 }),
+      }),
+    );
+  });
+
+  it("assigns sequential practicalLessonNumber for DRIVING after manual history", async () => {
+    h.getNextPracticalLessonNumberMock.mockResolvedValueOnce(6);
+    h.studentFindFirstMock.mockResolvedValueOnce({
+      id: "stu-seq",
+      userId: null,
+    });
+
+    await createAdminLesson({
+      organizationId: "org-1",
+      durationMinutes: 60,
+      payload: {
+        lessonType: "DRIVING",
+        instructorId: "user-inst",
+        studentId: "stu-seq",
+        lessonDate: "2026-01-06",
+        startTime: "10:00",
+        endTime: "11:00",
+      },
+    });
+
+    expect(h.getNextPracticalLessonNumberMock).toHaveBeenCalled();
+    expect(h.lessonCreateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ practicalLessonNumber: 6 }),
       }),
     );
   });

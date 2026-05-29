@@ -71,6 +71,15 @@ describe("practical-lesson-counter", () => {
         getNextPracticalLessonNumber(scope, db as never),
       ).resolves.toBe(4);
     });
+
+    it("returns 6 when manual history has practical lesson #5", async () => {
+      countMock.mockResolvedValue(1);
+      aggregateMock.mockResolvedValue({ _max: { practicalLessonNumber: 5 } });
+
+      await expect(
+        getNextPracticalLessonNumber(scope, db as never),
+      ).resolves.toBe(6);
+    });
   });
 
   describe("countExistingPracticalLessonsForStudent", () => {
