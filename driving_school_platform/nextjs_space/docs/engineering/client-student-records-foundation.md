@@ -96,7 +96,18 @@ Implemented in `normalizeSchoolStudentIdSearchQuery`; wired on `GET /api/admin/s
 
 ## Future practical lesson data
 
-Implemented in **practical-lesson-counter-foundation** (see section below). Manual history and import remain future batches.
+Implemented in **practical-lesson-counter-foundation** (see section below). Manual history is implemented; bulk import/export is documented separately (see **Import/export strategy** below).
+
+## Import/export strategy
+
+Bulk migration from legacy software is documented in [client-data-import-export-strategy.md](./client-data-import-export-strategy.md).
+
+Key points:
+
+- The operational **`Student` ficha** is the import target for learner data — not `User`.
+- Import **does not create** login accounts; `appAccessMode` stays `MANUAL_ONLY` until School Admin sends an invite.
+- Phased rollout: export → student dry-run → student apply → practical lesson dry-run → practical lesson apply.
+- Templates: `docs/examples/import-export/`; types: `lib/import-export/import-export-contracts.ts`.
 
 ## Why no separate `StudentRecord` table
 
@@ -248,7 +259,7 @@ Columns: school ID, name, contact, enrollment date, app access label, edit actio
 
 ### Limitations (this batch)
 
-- No import/export.
+- No import/export endpoints (strategy documented separately).
 - Lesson edit form still does not allow changing the assigned student.
 
 ## Practical lesson counter foundation
@@ -293,7 +304,7 @@ Frontend does **not** recalculate numbers; it displays the field from the API.
 ### Limitations (this batch)
 
 - No broad backfill for historical DRIVING lessons.
-- No import/export.
+- No import/export endpoints (strategy documented separately).
 - No special handling for cancellations or rescheduling (numbers are assigned at create and not recomputed).
 - `EXAM` does not receive a practical lesson number even if it represents a practical exam in product language elsewhere.
 
@@ -353,7 +364,7 @@ System-created lessons set `lessonSource = SYSTEM`.
 ### Limitations (this batch)
 
 - Add-only (no edit/delete of manual history).
-- No bulk import/CSV/JSON.
+- No bulk import/CSV/JSON endpoints (strategy and contracts only — see import/export strategy doc).
 - No INSTRUCTOR read access to history API.
 - No advanced cancellation/rescheduling rules.
 - Duplicate prevention is not hardened with a partial unique index (race window possible under concurrent POST).
@@ -434,7 +445,7 @@ Dialog: shows/edits invite email, calls `POST /api/admin/students/[id]/invite`, 
 ### Limitations (this batch)
 
 - No bulk invite.
-- No import/export.
+- No import/export endpoints (strategy documented separately).
 - No advanced invite editing or re-send UX beyond generic invitations list.
 - No change to Postmark provider, RLS, or generic invitation refactor.
 
@@ -446,8 +457,8 @@ Dialog: shows/edits invite email, calls `POST /api/admin/students/[id]/invite`, 
 4. ~~`lessons-student-record-selection`~~ (done)
 5. ~~`practical-lesson-counter-foundation`~~ (done)
 6. ~~`practical-lessons-manual-history`~~ (done)
-7. `import-export-strategy`
-8. Import/export implementation
+7. ~~`import-export-strategy`~~ (done — docs + contracts; see [client-data-import-export-strategy.md](./client-data-import-export-strategy.md))
+8. Import/export implementation (export → dry-run → apply per entity)
 
 ## References
 
@@ -456,4 +467,5 @@ Dialog: shows/edits invite email, calls `POST /api/admin/students/[id]/invite`, 
 - Migration: `prisma/migrations/20260529150000_lesson_source`
 - Migration: `prisma/migrations/20260529160000_user_invitation_student_id`
 - Helpers: `lib/students/student-school-id.ts`, `lib/students/student-display.ts`, `lib/lessons/practical-lesson-counter.ts`, `lib/lessons/manual-practical-lesson-service.ts`, `lib/students/student-record-invite-service.ts`
+- Import/export: [client-data-import-export-strategy.md](./client-data-import-export-strategy.md), `lib/import-export/import-export-contracts.ts`, `docs/examples/import-export/`
 - Lesson selects: `lib/students/student-lesson-select.ts`
