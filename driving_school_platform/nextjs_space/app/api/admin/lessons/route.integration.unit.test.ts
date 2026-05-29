@@ -7,6 +7,8 @@ const h = vi.hoisted(() => {
   const instructorFindFirstMock = vi.fn();
   const categoryFindFirstMock = vi.fn();
   const studentFindFirstMock = vi.fn();
+  const studentFindManyMock = vi.fn();
+  const transactionMock = vi.fn();
   const lessonCreateMock = vi.fn();
   const lessonCountMock = vi.fn();
   const lessonFindManyMock = vi.fn();
@@ -17,7 +19,7 @@ const h = vi.hoisted(() => {
   const prismaMock = {
     instructor: { findFirst: instructorFindFirstMock },
     category: { findFirst: categoryFindFirstMock },
-    student: { findFirst: studentFindFirstMock },
+    student: { findFirst: studentFindFirstMock, findMany: studentFindManyMock },
     vehicle: { findFirst: vehicleFindFirstMock },
     lesson: {
       create: lessonCreateMock,
@@ -26,6 +28,7 @@ const h = vi.hoisted(() => {
       deleteMany: lessonDeleteManyMock,
     },
     organization: { findUnique: organizationFindUniqueMock },
+    $transaction: transactionMock,
   };
 
   return {
@@ -33,6 +36,8 @@ const h = vi.hoisted(() => {
     instructorFindFirstMock,
     categoryFindFirstMock,
     studentFindFirstMock,
+    studentFindManyMock,
+    transactionMock,
     lessonCreateMock,
     lessonCountMock,
     lessonFindManyMock,
@@ -108,11 +113,28 @@ beforeEach(() => {
   h.categoryFindFirstMock.mockResolvedValue({ id: 1, name: "B" });
 
   h.studentFindFirstMock.mockImplementation(async ({ where }: any) => {
-    if (!where?.userId) return null;
-    return {
-      id: `student-db-${where.userId.slice(0, 8)}`,
-      userId: where.userId,
-    };
+    if (where?.id && where?.organizationId === "org1") {
+      return {
+        id: where.id,
+        userId: null,
+      };
+    }
+    return null;
+  });
+
+  h.studentFindManyMock.mockImplementation(async ({ where }: any) => {
+    const ids = where?.id?.in as string[] | undefined;
+    if (where?.organizationId === "org1" && ids) {
+      return ids.map((id) => ({ id }));
+    }
+    return [];
+  });
+
+  h.transactionMock.mockImplementation(async (ops: unknown) => {
+    if (Array.isArray(ops)) {
+      return Promise.all(ops);
+    }
+    return ops;
   });
 
   h.lessonCreateMock.mockImplementation(async ({ data }: any) => {
@@ -246,7 +268,7 @@ describe("GET /api/admin/lessons (read-only)", () => {
     const body = await res.json();
     expectLessonCalendarResponseContract(body);
     expect(body.lessons[0].pickupLocation).toBe("Main garage");
-    expect(body.lessons[0].student.user.firstName).toBe("Sam");
+    expect(body.lessons[0].student.firstName).toBe("Sam");
     expect(body.lessons[0].vehicle.registrationNumber).toBe("AB-12-CD");
     expect(body.lessons[0].category.name).toBe("B");
   });
@@ -354,7 +376,8 @@ describe("POST /api/admin/lessons (handler integration)", () => {
     expect(body.success).toBe(true);
     expect(body.data?.lessons?.length).toBe(2);
 
-    expect(h.studentFindFirstMock).toHaveBeenCalledTimes(2);
+    expect(h.studentFindManyMock).toHaveBeenCalledTimes(1);
+    expect(h.transactionMock).toHaveBeenCalledTimes(1);
     expect(h.lessonCreateMock).toHaveBeenCalledTimes(2);
 
     expect(checkFeatureAccessMock).not.toHaveBeenCalled();
@@ -485,6 +508,88 @@ describe("POST /api/admin/lessons (handler integration)", () => {
     const body: any = await res.json();
 
     expect(body.error).toMatch(/Maximum/i);
+    expect(h.lessonCreateMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 404 when EXAM studentIds include invalid student (no partial create)", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
+    h.studentFindManyMock.mockResolvedValueOnce([{ id: UUID_B }]);
+
+    const payload = {
+      lessonType: "EXAM",
+      instructorId: UUID_A,
+      studentIds: [UUID_B, UUID_C],
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
+    };
+
+    const res = await POST(reqJson(payload) as any);
+
+    expect(res.status).toBe(404);
+    const body: any = await res.json();
+    expect(body.error).toBe("Student not found");
+    expect(h.transactionMock).not.toHaveBeenCalled();
+    expect(h.lessonCreateMock).not.toHaveBeenCalled();
+  });
+
+  it("creates DRIVING for MANUAL_ONLY student operational id (201)", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
+
+    const manualStudentId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+    const payload = {
+      lessonType: "DRIVING",
+      instructorId: UUID_A,
+      studentId: manualStudentId,
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
+    };
+
+    const res = await POST(reqJson(payload) as any);
+
+    expect(res.status).toBe(201);
+    expect(h.studentFindFirstMock).toHaveBeenCalledWith({
+      where: { id: manualStudentId, organizationId: "org1" },
+      select: { id: true },
+    });
+    expect(h.lessonCreateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ studentId: manualStudentId }),
+      }),
+    );
+  });
+
+  it("returns 404 when studentId is not in the organization", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
+    h.studentFindFirstMock.mockResolvedValueOnce(null);
+
+    const payload = {
+      lessonType: "DRIVING",
+      instructorId: UUID_A,
+      studentId: UUID_B,
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
+    };
+
+    const res = await POST(reqJson(payload) as any);
+
+    expect(res.status).toBe(404);
+    const body: any = await res.json();
+    expect(body.error).toBe("Student not found");
     expect(h.lessonCreateMock).not.toHaveBeenCalled();
   });
 

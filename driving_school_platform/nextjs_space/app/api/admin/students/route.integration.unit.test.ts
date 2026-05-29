@@ -50,7 +50,10 @@ import {
   assertUserTenantHost,
   rejectDemoUserManagementMutation,
 } from "@/lib/users/user-route-access";
-import { STUDENT_RECORD_SELECT } from "@/lib/students/student-record-dto";
+import {
+  STUDENT_RECORD_LESSON_SELECT,
+  STUDENT_RECORD_SELECT,
+} from "@/lib/students/student-record-dto";
 
 const getServerSessionMock = getServerSession as unknown as ReturnType<
   typeof vi.fn
@@ -97,9 +100,38 @@ beforeEach(() => {
 });
 
 describe("GET /api/admin/students", () => {
-  it("returns 401 for INSTRUCTOR", async () => {
+  it("allows INSTRUCTOR to list operational students with minimal lesson DTO", async () => {
     getServerSessionMock.mockResolvedValue({
       user: { id: "u1", role: "INSTRUCTOR", organizationId: "org-a" },
+    });
+    h.findManyMock.mockResolvedValue([manualStudentRow]);
+
+    const res = await GET(
+      req("GET", "http://school.example.com/api/admin/students") as any,
+    );
+    expect(res.status).toBe(200);
+    expect(h.findManyMock).toHaveBeenCalled();
+
+    const arg = h.findManyMock.mock.calls[0]?.[0];
+    expect(arg.select).toEqual(STUDENT_RECORD_LESSON_SELECT);
+
+    const body = await res.json();
+    const student = body.data.students[0];
+    expect(student.id).toBe("stu-1");
+    expect(student.schoolStudentId).toBe("26001");
+    expect(student).not.toHaveProperty("email");
+    expect(student).not.toHaveProperty("phoneNumber");
+    expect(student).not.toHaveProperty("enrollmentDate");
+    expect(student).not.toHaveProperty("createdAt");
+    expect(student).not.toHaveProperty("updatedAt");
+    if (student.user) {
+      expect(student.user).not.toHaveProperty("email");
+    }
+  });
+
+  it("returns 401 for STUDENT role", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "u1", role: "STUDENT", organizationId: "org-a" },
     });
 
     const res = await GET(
@@ -107,6 +139,29 @@ describe("GET /api/admin/students", () => {
     );
     expect(res.status).toBe(401);
     expect(h.findManyMock).not.toHaveBeenCalled();
+  });
+
+  it("returns full admin DTO for SUPER_ADMIN", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    h.findManyMock.mockResolvedValue([manualStudentRow]);
+
+    const res = await GET(
+      req("GET", "http://school.example.com/api/admin/students") as any,
+    );
+    expect(res.status).toBe(200);
+
+    const arg = h.findManyMock.mock.calls[0]?.[0];
+    expect(arg.select).toEqual(STUDENT_RECORD_SELECT);
+
+    const body = await res.json();
+    const student = body.data.students[0];
+    expect(student.email).toBe("joao@school.test");
+    expect(student.phoneNumber).toBe("+351900000000");
+    expect(student.enrollmentDate).toBeTruthy();
+    expect(student.createdAt).toBeTruthy();
+    expect(student.updatedAt).toBeTruthy();
   });
 
   it("scopes list by organizationId", async () => {

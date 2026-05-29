@@ -1,4 +1,8 @@
 import { LESSON_TYPES } from "@/lib/constants";
+import {
+  getStudentDisplayName,
+  type StudentDisplaySource,
+} from "@/lib/students/student-display";
 
 /** Lesson types shown on the admin dashboard EXAMS tab (matches API filter). */
 export const EXAM_DASHBOARD_LESSON_TYPES = [
@@ -9,6 +13,8 @@ export const EXAM_DASHBOARD_LESSON_TYPES = [
 type NestedUserName = {
   user?: { firstName?: string | null; lastName?: string | null } | null;
 } | null;
+
+type LessonStudentParticipant = StudentDisplaySource | NestedUserName | null;
 
 export function isExamLessonType(lessonType?: string | null): boolean {
   return (
@@ -22,10 +28,10 @@ export function getExamLessonTypeLabel(lessonType?: string | null): string {
   return "Exam";
 }
 
-export function getLessonParticipantName(participant?: NestedUserName): string {
-  const first = participant?.user?.firstName?.trim() ?? "";
-  const last = participant?.user?.lastName?.trim() ?? "";
-  return [first, last].filter(Boolean).join(" ");
+export function getLessonParticipantName(
+  participant?: LessonStudentParticipant,
+): string {
+  return getStudentDisplayName(participant ?? undefined);
 }
 
 export function getLessonInstructorName(instructor?: NestedUserName): string {

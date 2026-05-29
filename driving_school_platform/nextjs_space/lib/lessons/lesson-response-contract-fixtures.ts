@@ -15,6 +15,10 @@ export function sampleLessonListItemFixture(
     pickupLocation: "Main garage",
     dropoffLocation: "Training lot",
     student: {
+      id: "student-row-1",
+      firstName: "Sam",
+      lastName: "Student",
+      schoolStudentId: "26001",
       user: { firstName: "Sam", lastName: "Student" },
     },
     instructor: {
@@ -50,6 +54,9 @@ export function sampleLessonDetailFixture(
     student: {
       id: "student-row-1",
       userId: UUID_B,
+      firstName: "Sam",
+      lastName: "Student",
+      schoolStudentId: "26001",
       user: { id: UUID_B, firstName: "Sam", lastName: "Student" },
     },
     instructor: {

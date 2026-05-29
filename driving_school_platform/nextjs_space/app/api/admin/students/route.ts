@@ -29,14 +29,28 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-async function requireSuperAdminTenant(
+async function requireStudentRecordsAccess(
   request: NextRequest,
+  options: { write: boolean },
 ): Promise<
-  { ok: true; organizationId: string } | { ok: false; response: NextResponse }
+  | { ok: true; organizationId: string; role: string }
+  | { ok: false; response: NextResponse }
 > {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.id || session.user.role !== "SUPER_ADMIN") {
+  if (!session?.user?.id) {
+    return {
+      ok: false,
+      response: errorResponse("Unauthorized", HTTP_STATUS.UNAUTHORIZED),
+    };
+  }
+
+  const role = session.user.role;
+  const allowedRead =
+    role === "SUPER_ADMIN" || (!options.write && role === "INSTRUCTOR");
+  const allowedWrite = role === "SUPER_ADMIN";
+
+  if (options.write ? !allowedWrite : !allowedRead) {
     return {
       ok: false,
       response: errorResponse("Unauthorized", HTTP_STATUS.UNAUTHORIZED),
@@ -56,12 +70,20 @@ async function requireSuperAdminTenant(
     return { ok: false, response: tenantDenied };
   }
 
-  return { ok: true, organizationId: orgId };
+  return { ok: true, organizationId: orgId, role };
+}
+
+async function requireSuperAdminTenant(
+  request: NextRequest,
+): Promise<
+  { ok: true; organizationId: string } | { ok: false; response: NextResponse }
+> {
+  return requireStudentRecordsAccess(request, { write: true });
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const auth = await requireSuperAdminTenant(request);
+    const auth = await requireStudentRecordsAccess(request, { write: false });
     if (!auth.ok) return auth.response;
 
     const { searchParams } = new URL(request.url);
@@ -86,6 +108,7 @@ export async function GET(request: NextRequest) {
       appAccessMode,
       limit,
       cursor,
+      variant: auth.role === "INSTRUCTOR" ? "lesson" : "admin",
     });
 
     return successResponse({

@@ -40,7 +40,17 @@ describe("lesson-display", () => {
     };
     expect(getLessonParticipantName(nested)).toBe("Ada Lovelace");
     expect(getLessonInstructorName(nested)).toBe("Ada Lovelace");
-    expect(getLessonParticipantName(null)).toBe("");
+    expect(getLessonParticipantName(null)).toBe("Student");
+  });
+
+  it("uses operational student fields when user is absent", () => {
+    expect(
+      getLessonParticipantName({
+        firstName: "João",
+        lastName: "Silva",
+        schoolStudentId: "26001",
+      }),
+    ).toBe("João Silva");
   });
 
   it("getLessonVehicleLabel prefers registration number", () => {

@@ -1,14 +1,17 @@
-
 /**
  * Comprehensive TypeScript type definitions
  * @module lib/types
  */
 
-export type UserRole = "STUDENT" | "INSTRUCTOR" | "SUPER_ADMIN" | "PLATFORM_ADMIN"
+export type UserRole =
+  | "STUDENT"
+  | "INSTRUCTOR"
+  | "SUPER_ADMIN"
+  | "PLATFORM_ADMIN";
 
-export type LessonStatus = string
-export type LessonType = string
-export type VehicleStatus = string
+export type LessonStatus = string;
+export type LessonType = string;
+export type VehicleStatus = string;
 
 /**
  * Base User Interface
@@ -100,11 +103,15 @@ export interface Lesson {
 }
 
 /**
- * Student with User relation
+ * Student with optional linked User (operational record first).
  */
 export interface StudentWithUser {
   id: string;
-  user: User;
+  userId?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  schoolStudentId?: string | null;
+  user?: User | null;
   category?: Category | null;
   transmissionType?: TransmissionType | null;
 }
@@ -182,8 +189,8 @@ export interface Exam {
   examDate: Date;
   startTime: string;
   endTime: string;
-  examType: 'THEORY' | 'PRACTICAL';
-  status: 'SCHEDULED' | 'IN_PROGRESS' | 'PASSED' | 'FAILED' | 'CANCELLED';
+  examType: "THEORY" | "PRACTICAL";
+  status: "SCHEDULED" | "IN_PROGRESS" | "PASSED" | "FAILED" | "CANCELLED";
   score: number | null;
   maxScore: number | null;
   feedback: string | null;
@@ -325,7 +332,7 @@ export interface LoadingStates {
  * Filter and Sort Types
  */
 export interface LessonFilters {
-  view?: 'DRIVING' | 'CODE' | 'EXAMS';
+  view?: "DRIVING" | "CODE" | "EXAMS";
   instructorId?: string;
   studentId?: string;
   status?: LessonStatus;
@@ -335,7 +342,7 @@ export interface LessonFilters {
 
 export interface UserFilters {
   role?: UserRole;
-  status?: 'active' | 'inactive';
+  status?: "active" | "inactive";
   isApproved?: boolean;
   search?: string;
 }
@@ -355,7 +362,7 @@ export interface CalendarEvent {
   title: string;
   start: Date;
   end: Date;
-  type: 'lesson' | 'exam';
+  type: "lesson" | "exam";
   status: string;
   instructor?: string;
   student?: string;

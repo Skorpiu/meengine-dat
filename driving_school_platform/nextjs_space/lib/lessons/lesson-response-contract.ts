@@ -24,6 +24,7 @@ export function expectLessonListItemUiContract(lesson: LessonLike): void {
 
   const student = lesson.student as LessonLike | undefined;
   if (student) {
+    expect(student.id).toBeTruthy();
     const hasOperationalName =
       typeof student.firstName === "string" ||
       typeof student.lastName === "string";
@@ -122,9 +123,9 @@ export function expectAdminLessonDetailEditContract(lesson: LessonLike): void {
 
   const student = lesson.student as LessonLike | undefined;
   if (student) {
+    expect(student.id).toBeTruthy();
     if (student.user) {
       const user = student.user as LessonLike;
-      expect(user.id).toBeTruthy();
       expect(user.passwordHash).toBeUndefined();
     }
   }

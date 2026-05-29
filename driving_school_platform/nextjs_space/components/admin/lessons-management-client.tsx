@@ -54,6 +54,10 @@ type LessonListItem = {
   } | null;
 
   student?: {
+    id?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    schoolStudentId?: string | null;
     user?: { firstName?: string | null; lastName?: string | null } | null;
   } | null;
   instructor?: {

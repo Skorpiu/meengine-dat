@@ -4,8 +4,11 @@ import { Prisma as PrismaNamespace } from "@prisma/client";
 import { normalizeSchoolStudentIdSearchQuery } from "@/lib/students/student-school-id";
 import {
   mapStudentRecordDto,
+  mapStudentRecordLessonDto,
+  STUDENT_RECORD_LESSON_SELECT,
   STUDENT_RECORD_SELECT,
   type StudentRecordDto,
+  type StudentRecordLessonDto,
 } from "@/lib/students/student-record-dto";
 import type { StudentAppAccessModeParam } from "@/lib/students/student-record-validation";
 
@@ -60,19 +63,28 @@ export function buildStudentRecordListWhere(input: {
   return where;
 }
 
+export type StudentRecordListVariant = "admin" | "lesson";
+
 export async function listStudentRecords(input: {
   organizationId: string;
   search?: string;
   appAccessMode?: StudentAppAccessModeParam;
   limit?: number;
   cursor?: string;
-}): Promise<{ students: StudentRecordDto[]; nextCursor: string | null }> {
+  variant?: StudentRecordListVariant;
+}): Promise<{
+  students: StudentRecordDto[] | StudentRecordLessonDto[];
+  nextCursor: string | null;
+}> {
   const limit = clampStudentListLimit(input.limit);
   const where = buildStudentRecordListWhere(input);
+  const variant = input.variant ?? "admin";
+  const select =
+    variant === "lesson" ? STUDENT_RECORD_LESSON_SELECT : STUDENT_RECORD_SELECT;
 
   const rows = await prisma.student.findMany({
     where,
-    select: STUDENT_RECORD_SELECT,
+    select,
     orderBy: LIST_ORDER_BY,
     take: limit + 1,
     ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
@@ -82,8 +94,19 @@ export async function listStudentRecords(input: {
   const page = hasMore ? rows.slice(0, limit) : rows;
   const nextCursor = hasMore ? (page[page.length - 1]?.id ?? null) : null;
 
+  if (variant === "lesson") {
+    return {
+      students: (page as Parameters<typeof mapStudentRecordLessonDto>[0][]).map(
+        mapStudentRecordLessonDto,
+      ),
+      nextCursor,
+    };
+  }
+
   return {
-    students: page.map(mapStudentRecordDto),
+    students: (page as Parameters<typeof mapStudentRecordDto>[0][]).map(
+      mapStudentRecordDto,
+    ),
     nextCursor,
   };
 }
