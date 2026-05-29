@@ -96,3 +96,42 @@ export function buildExistingPracticalLessonKeySet(
     rows.map((row) => `${row.studentId}:${row.practicalLessonNumber}`),
   );
 }
+
+/** Resolved instructor row for apply (category lookup + Lesson FK). */
+export type InstructorRecordByUserId = {
+  /** Instructor User.id (API / import preview contract). */
+  instructorUserId: string;
+  /** Instructor row id stored in `Lesson.instructorId` (Prisma FK). */
+  instructorRecordId: string;
+};
+
+/**
+ * Maps instructor User.id → Instructor record (tenant-scoped).
+ * Lesson.instructorId references Instructor.id, not User.id — same as
+ * manual practical history and lesson-create-service.
+ */
+export async function findInstructorRecordsByUserIdsInOrg(input: {
+  organizationId: string;
+  userIds: string[];
+}): Promise<Map<string, InstructorRecordByUserId>> {
+  if (input.userIds.length === 0) {
+    return new Map();
+  }
+
+  const rows = await prisma.instructor.findMany({
+    where: {
+      organizationId: input.organizationId,
+      userId: { in: input.userIds },
+    },
+    select: { id: true, userId: true },
+  });
+
+  const map = new Map<string, InstructorRecordByUserId>();
+  for (const row of rows) {
+    map.set(row.userId, {
+      instructorUserId: row.userId,
+      instructorRecordId: row.id,
+    });
+  }
+  return map;
+}

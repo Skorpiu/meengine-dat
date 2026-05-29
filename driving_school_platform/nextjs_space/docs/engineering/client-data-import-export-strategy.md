@@ -689,16 +689,141 @@ Does **not** create `Student`, `Instructor`, `User`, or `Lesson`.
 
 ---
 
+## Implemented: practical lessons import apply
+
+**Batch:** `import-practical-lessons-apply` (create-only; same validation as dry-run).
+
+### Endpoint
+
+| Method | Path                                        | Auth          |
+| ------ | ------------------------------------------- | ------------- |
+| `POST` | `/api/admin/practical-lessons/import/apply` | `SUPER_ADMIN` |
+
+Tenant-scoped via session `organizationId` + `assertUserTenantHost`. Body field `organizationId` is **ignored**.
+
+### Request body
+
+Same shape as dry-run:
+
+```json
+{
+  "format": "csv",
+  "content": "schoolStudentId;practicalLessonNumber;...\n26001;1;2026-05-29;09:00;60;instrutor@example.com;"
+}
+```
+
+```json
+{
+  "format": "json",
+  "rows": [
+    {
+      "schoolStudentId": "26001",
+      "practicalLessonNumber": 1,
+      "lessonDate": "2026-05-29",
+      "startTime": "09:00",
+      "instructorEmail": "instrutor@example.com"
+    }
+  ]
+}
+```
+
+Optional `"mode": "createOnly"` (only supported value; default behavior is create-only).
+
+**Not supported in this batch:** multipart file upload, update/merge, UI.
+
+### Apply rules
+
+1. Parse payload (CSV or JSON).
+2. Enforce limits: max **500 rows**, max **2 MB** `content` string length.
+3. Run the **same validation** as dry-run (including duplicate lookup in org and within file).
+4. If **any blocking error**: no DB writes; return `applied: false`.
+5. If all rows valid: create `Lesson` rows in a single **`prisma.$transaction`** (all-or-nothing).
+
+### Fields written (per row)
+
+| Field                   | Value                                                                                                                             |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `organizationId`        | From session (never from file)                                                                                                    |
+| `lessonType`            | `DRIVING`                                                                                                                         |
+| `status`                | `COMPLETED`                                                                                                                       |
+| `lessonSource`          | `IMPORT`                                                                                                                          |
+| `studentId`             | Resolved from `schoolStudentId` (must exist)                                                                                      |
+| `instructorId`          | **Instructor row id** (`Instructor.id` FK) — resolved from `instructorEmail` via User lookup, same as manual POST / lesson create |
+| `practicalLessonNumber` | From file (does **not** call `getNextPracticalLessonNumber`)                                                                      |
+| `lessonDate`            | From file                                                                                                                         |
+| `startTime` / `endTime` | From file; `endTime = startTime + durationMinutes`                                                                                |
+| `durationMinutes`       | From file; default **60** when absent                                                                                             |
+| `adminNotes`            | From file `notes` (export round-trip via `adminNotes` → `notes`)                                                                  |
+| `categoryId`            | First qualified category of instructor, else category **B** fallback                                                              |
+| `vehicleId`             | `null`                                                                                                                            |
+| `completedAt`           | Same calendar date as `lessonDate`                                                                                                |
+
+**Not set / not created:** `User`, `Student`, `Instructor`, invitations, emails, lesson counter updates.
+
+**Instructor identifier contract:** import preview / dry-run `normalized.instructorId` is the instructor **User.id** (resolved from email). The persisted `Lesson.instructorId` is the **Instructor row id** (`Instructor.id`), matching manual practical history (`POST /api/admin/students/[id]/practical-lessons`) and `/api/admin/lessons` create. API payloads use User.id; Prisma FK stores Instructor.id.
+
+### Response
+
+Success with apply result:
+
+```json
+{
+  "success": true,
+  "data": {
+    "applied": true,
+    "createdCount": 3,
+    "skippedCount": 0,
+    "report": { "...": "ImportDryRunReport shape" }
+  }
+}
+```
+
+When validation blocks apply:
+
+```json
+{
+  "success": true,
+  "data": {
+    "applied": false,
+    "createdCount": 0,
+    "skippedCount": 0,
+    "report": { "...": "errors populated" }
+  }
+}
+```
+
+P2002 on `practicalLessonNumber` (if a unique constraint exists) is surfaced as `duplicate_practical_lesson_number` with `applied: false` (race after pre-check).
+
+### Modules
+
+- `app/api/admin/practical-lessons/import/apply/route.ts`
+- `lib/import-export/practical-lesson-import-apply.ts`
+- Reuses `lib/import-export/practical-lesson-import-dry-run.ts` for parse/validate
+- Reuses `lib/lessons/practical-lesson-import-queries.ts` for tenant lookups
+
+### Limitations (apply batch)
+
+- Create-only; no update/merge of existing lessons.
+- No admin UI.
+- No multipart upload.
+- No `Student`, `Instructor`, or `User` creation; no invites or emails.
+- No edit/delete of imported history.
+- No lesson counter recalculation.
+- No partial import (one bad row blocks all writes).
+- No advanced duplicate/concurrency hardening beyond pre-check + transaction rollback.
+
+---
+
 ## K. Future phases (implementation batches)
 
-| Batch slug                         | Status   | Deliverable                                                       |
-| ---------------------------------- | -------- | ----------------------------------------------------------------- |
-| `export-student-records`           | **Done** | `GET /api/admin/students/export`; CSV + JSON                      |
-| `import-student-records-dry-run`   | **Done** | `POST /api/admin/students/import/dry-run`; no writes              |
-| `import-student-records-apply`     | **Done** | `POST /api/admin/students/import/apply`; create-only; transaction |
-| `export-practical-lessons`         | **Done** | `GET /api/admin/practical-lessons/export`; CSV + JSON             |
-| `import-practical-lessons-dry-run` | **Done** | `POST /api/admin/practical-lessons/import/dry-run`; no writes     |
-| `import-practical-lessons-apply`   | Planned  | Create `Lesson` rows with `lessonSource = IMPORT`                 |
+| Batch slug                         | Status   | Deliverable                                                                |
+| ---------------------------------- | -------- | -------------------------------------------------------------------------- |
+| `export-student-records`           | **Done** | `GET /api/admin/students/export`; CSV + JSON                               |
+| `import-student-records-dry-run`   | **Done** | `POST /api/admin/students/import/dry-run`; no writes                       |
+| `import-student-records-apply`     | **Done** | `POST /api/admin/students/import/apply`; create-only; transaction          |
+| `export-practical-lessons`         | **Done** | `GET /api/admin/practical-lessons/export`; CSV + JSON                      |
+| `import-practical-lessons-dry-run` | **Done** | `POST /api/admin/practical-lessons/import/dry-run`; no writes              |
+| `import-practical-lessons-apply`   | **Done** | `POST /api/admin/practical-lessons/import/apply`; create-only; transaction |
 
 Each batch should:
 
@@ -784,9 +909,11 @@ schoolStudentId;practicalLessonNumber;lessonDate;startTime;durationMinutes;instr
 - `lib/import-export/student-record-import-apply.ts` — import apply (create-only)
 - `lib/import-export/practical-lesson-export.ts` — practical lesson export helpers
 - `lib/import-export/practical-lesson-import-dry-run.ts` — practical lesson import dry-run
+- `lib/import-export/practical-lesson-import-apply.ts` — practical lesson import apply (create-only)
 - `app/api/admin/students/export/route.ts` — export endpoint
 - `app/api/admin/students/import/dry-run/route.ts` — import dry-run endpoint
 - `app/api/admin/students/import/apply/route.ts` — import apply endpoint
 - `app/api/admin/practical-lessons/export/route.ts` — practical lessons export endpoint
 - `app/api/admin/practical-lessons/import/dry-run/route.ts` — practical lessons import dry-run endpoint
+- `app/api/admin/practical-lessons/import/apply/route.ts` — practical lessons import apply endpoint
 - `docs/examples/import-export/` — templates and sample payloads
