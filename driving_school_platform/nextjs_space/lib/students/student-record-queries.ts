@@ -65,6 +65,34 @@ export function buildStudentRecordListWhere(input: {
 
 export type StudentRecordListVariant = "admin" | "lesson";
 
+export const STUDENT_RECORD_EXPORT_SELECT = {
+  schoolStudentId: true,
+  schoolStudentYearSuffix: true,
+  schoolStudentSequence: true,
+  firstName: true,
+  lastName: true,
+  phoneNumber: true,
+  email: true,
+  enrollmentDate: true,
+  appAccessMode: true,
+} satisfies Prisma.StudentSelect;
+
+export type StudentRecordExportSourceRow = Prisma.StudentGetPayload<{
+  select: typeof STUDENT_RECORD_EXPORT_SELECT;
+}>;
+
+export async function listStudentRecordsForExport(input: {
+  organizationId: string;
+  search?: string;
+  appAccessMode?: StudentAppAccessModeParam;
+}): Promise<StudentRecordExportSourceRow[]> {
+  return prisma.student.findMany({
+    where: buildStudentRecordListWhere(input),
+    select: STUDENT_RECORD_EXPORT_SELECT,
+    orderBy: LIST_ORDER_BY,
+  });
+}
+
 export async function listStudentRecords(input: {
   organizationId: string;
   search?: string;
