@@ -14,7 +14,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Edit2, GraduationCap, RefreshCw, Search, Car } from "lucide-react";
+import {
+  Edit2,
+  GraduationCap,
+  MailPlus,
+  RefreshCw,
+  Search,
+  Car,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import type {
   StudentRecordApiError,
@@ -25,6 +32,7 @@ import type {
 import {
   buildManualStudentCreatePayload,
   buildManualStudentPatchPayload,
+  canSendStudentRecordInvite,
   formatEnrollmentDateInputValue,
   formatStudentRecordDate,
   getStudentAppAccessLabel,
@@ -33,6 +41,7 @@ import {
   studentRecordApiErrorMessage,
 } from "@/lib/students/student-record-ui-utils";
 import { StudentPracticalHistoryDialog } from "@/components/admin/student-practical-history-dialog";
+import { StudentRecordInviteDialog } from "@/components/admin/student-record-invite-dialog";
 
 const LIST_LIMIT = 100;
 
@@ -91,6 +100,9 @@ export function StudentRecordsManager() {
   const [editForm, setEditForm] = useState(emptyForm);
   const [editLoading, setEditLoading] = useState(false);
   const [historyStudent, setHistoryStudent] = useState<StudentRecordDto | null>(
+    null,
+  );
+  const [inviteStudent, setInviteStudent] = useState<StudentRecordDto | null>(
     null,
   );
 
@@ -498,6 +510,16 @@ export function StudentRecordsManager() {
                     <Badge variant="outline">
                       {getStudentAppAccessLabel(student.appAccessMode)}
                     </Badge>
+                    {canSendStudentRecordInvite(student) ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setInviteStudent(student)}
+                      >
+                        <MailPlus className="h-4 w-4 mr-1" />
+                        Enviar convite
+                      </Button>
+                    ) : null}
                     <Button
                       size="sm"
                       variant="outline"
@@ -587,6 +609,15 @@ export function StudentRecordsManager() {
         onOpenChange={(open) => {
           if (!open) setHistoryStudent(null);
         }}
+      />
+
+      <StudentRecordInviteDialog
+        student={inviteStudent}
+        open={inviteStudent !== null}
+        onOpenChange={(open) => {
+          if (!open) setInviteStudent(null);
+        }}
+        onSuccess={() => loadStudents({ search: appliedSearch })}
       />
     </section>
   );

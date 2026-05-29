@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
 import {
   INVITATION_LIST_INCLUDE,
   mapInvitationDto,
@@ -24,6 +25,8 @@ export type CreateInvitationInput = {
   role: InvitableUserRole;
   baseUrl: string;
   expiresInDays?: number;
+  studentId?: string;
+  tx?: Prisma.TransactionClient;
 };
 
 export type CreateInvitationResult =
@@ -60,6 +63,7 @@ export type RevokeInvitationResult =
 export async function createInvitation(
   input: CreateInvitationInput,
 ): Promise<CreateInvitationResult> {
+  const db = input.tx ?? prisma;
   const email = normalizeInvitationEmail(input.email);
   if (!email) {
     return {
@@ -79,7 +83,7 @@ export async function createInvitation(
     };
   }
 
-  const existingUser = await prisma.user.findUnique({
+  const existingUser = await db.user.findUnique({
     where: { email },
     select: { id: true },
   });
@@ -93,7 +97,7 @@ export async function createInvitation(
     };
   }
 
-  const existingPending = await prisma.userInvitation.findFirst({
+  const existingPending = await db.userInvitation.findFirst({
     where: {
       organizationId: input.organizationId,
       email,
@@ -111,7 +115,7 @@ export async function createInvitation(
     };
   }
 
-  const organization = await prisma.organization.findUnique({
+  const organization = await db.organization.findUnique({
     where: { id: input.organizationId },
     select: { name: true },
   });
@@ -123,7 +127,7 @@ export async function createInvitation(
     input.expiresInDays ?? DEFAULT_INVITATION_EXPIRY_DAYS,
   );
 
-  const created = await prisma.userInvitation.create({
+  const created = await db.userInvitation.create({
     data: {
       organizationId: input.organizationId,
       email,
@@ -132,6 +136,7 @@ export async function createInvitation(
       status: "PENDING",
       expiresAt,
       createdByUserId: input.createdByUserId,
+      ...(input.studentId ? { studentId: input.studentId } : {}),
     },
     include: INVITATION_LIST_INCLUDE,
   });

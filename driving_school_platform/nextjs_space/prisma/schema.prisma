@@ -183,6 +183,7 @@ model Student {
   preferredInstructor          Instructor?              @relation("PreferredStudents", fields: [preferredInstructorId], references: [id])
   transmissionType             TransmissionType?        @relation(fields: [transmissionTypeId], references: [id])
   user                         User?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userInvitations              UserInvitation[]
 
   @@unique([organizationId, schoolStudentId])
   @@index([userId])
@@ -643,19 +644,23 @@ model UserInvitation {
   revokedAt       DateTime?
   createdByUserId String?
   acceptedUserId  String?
+  studentId       String?
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdBy    User?        @relation("UserInvitationCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
   acceptedUser User?        @relation("UserInvitationAcceptedUser", fields: [acceptedUserId], references: [id], onDelete: SetNull)
+  student      Student?     @relation(fields: [studentId], references: [id], onDelete: SetNull)
 
   @@index([organizationId])
   @@index([organizationId, email])
   @@index([organizationId, status])
+  @@index([organizationId, studentId])
   @@index([expiresAt])
   @@index([createdByUserId])
   @@index([acceptedUserId])
+  @@index([studentId])
   @@map("user_invitations")
 }
 

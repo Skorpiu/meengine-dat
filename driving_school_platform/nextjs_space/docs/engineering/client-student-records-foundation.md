@@ -23,7 +23,7 @@ Every `Student` row required a linked `User`. Contact and display data lived onl
 Rules:
 
 - A `Student` **may exist without** a `User`.
-- A `Student` **may later** be linked to a `User` via invitation (future batch).
+- A `Student` **may later** be linked to a `User` via invitation (see **Student record invitation linking** below).
 - We **keep** the Prisma model name `Student` and table `students` (no `StudentRecord` table in this batch).
 
 ## `appAccessMode`
@@ -31,7 +31,7 @@ Rules:
 | Value         | Meaning                                             |
 | ------------- | --------------------------------------------------- |
 | `MANUAL_ONLY` | School-managed record; no app access                |
-| `INVITED`     | Invite sent / pending link to `User` (future flows) |
+| `INVITED`     | Invite sent / pending link to `User`                |
 | `APP_USER`    | Linked app account (signup or future invite accept) |
 
 Existing rows with `userId` were backfilled to `APP_USER` in migration `20260529130000_student_operational_foundation`.
@@ -88,11 +88,11 @@ Numeric queries of 3–5 digits normalize to canonical 5-digit IDs:
 
 Implemented in `normalizeSchoolStudentIdSearchQuery`; wired on `GET /api/admin/students?search=`.
 
-## Invitation policy (future)
+## Invitation policy
 
 - **School Admin** completes the operational `Student` record.
 - **Invited learner** only manages login/account details.
-- Invite accept should link an existing `Student` to a new or existing `User` without duplicating the ficha.
+- Invite accept links an existing `Student` to a new `User` when `UserInvitation.studentId` is set (see **Student record invitation linking**).
 
 ## Future practical lesson data
 
@@ -203,18 +203,14 @@ Columns: school ID, name, contact, enrollment date, app access label, edit actio
 
 ### UI limitations
 
-- No invitation/link to existing `Student`.
-- No User creation or email sending from this UI.
 - No autonumbering when enrollment number is empty (still required).
-- No practical lesson counter, manual lesson history, or import/export.
-- Demo org: POST/PATCH show API demo restriction message (unchanged quotas).
+- No practical lesson counter editing from this section (history dialog only).
+- Demo org: POST/PATCH/invite show API demo restriction message (unchanged quotas).
 - List uses `limit=100` per request; simple load-more only.
 
 ### Limitations (API batch)
 
 - No autonumbering when `sequenceNumber` is omitted (still required on create).
-- No invitation / User linking.
-- No practical lesson counter or manual lesson history.
 - POST/PATCH use existing demo `user_management` mutation guard.
 
 ## Lessons use operational Student records
@@ -252,7 +248,6 @@ Columns: school ID, name, contact, enrollment date, app access label, edit actio
 
 ### Limitations (this batch)
 
-- No invitation/link Student → User.
 - No import/export.
 - Lesson edit form still does not allow changing the assigned student.
 
@@ -363,11 +358,91 @@ System-created lessons set `lessonSource = SYSTEM`.
 - No advanced cancellation/rescheduling rules.
 - Duplicate prevention is not hardened with a partial unique index (race window possible under concurrent POST).
 
+## Student record invitation linking
+
+**Goal:** School Admin sends an invite from an existing operational `Student` ficha so the learner creates a `User` account that links to that record — without duplicating the ficha.
+
+### Roles
+
+| Actor               | Responsibility                                                                |
+| ------------------- | ----------------------------------------------------------------------------- |
+| **School Admin**    | Owns the operational ficha; sends invite; data stays on `Student`             |
+| **Invited learner** | Creates login only (name/password on accept); does not fill operational ficha |
+
+### Data model
+
+- `UserInvitation.studentId` (`String?`) — optional link to existing `Student`.
+- Migration: `prisma/migrations/20260529160000_user_invitation_student_id` (additive; no backfill).
+- Index: `@@index([organizationId, studentId])`.
+- Existing invitations without `studentId` behave unchanged.
+
+### Endpoint
+
+| Method | Path                              | Purpose                                    |
+| ------ | --------------------------------- | ------------------------------------------ |
+| `POST` | `/api/admin/students/[id]/invite` | Invite from existing manual student record |
+
+**Auth:** `SUPER_ADMIN` only, tenant-scoped. Demo org uses existing `user_management` mutation guard.
+
+**Body:** `{ email?: string }`
+
+- Email from body if provided; otherwise `Student.email`.
+- Normalized lowercase/trim.
+- `400` (`missing_email`) when no email available.
+- Blocks when `Student.userId` is set, `appAccessMode = APP_USER`, user exists with email, or pending invitation exists for that email in the org.
+
+**On success:**
+
+- Creates `UserInvitation` with `role: STUDENT`, `studentId` set.
+- Updates `Student.email` (if needed) and `appAccessMode = INVITED`.
+- Does **not** create `User` or a new `Student`.
+- Response: `{ success: true, data: { invitation, inviteLink, emailDelivery } }` (compatible invitation DTO + copy-link fallback).
+
+### Accept behaviour
+
+When `invitation.studentId` is set:
+
+1. Validate `Student` belongs to invitation `organizationId`.
+2. Validate `Student.userId` is still `null` — else `409` (`student_already_linked`).
+3. Create `User` (email verified via invite, as today).
+4. Link: `Student.userId = user.id`, `appAccessMode = APP_USER`, `Student.email = user.email`.
+5. Preserve operational `firstName`/`lastName` when already set; fill from accept form only when empty.
+6. **Do not** call `student.create`.
+
+When `studentId` is null: previous accept flow (creates new `Student` row).
+
+### UI
+
+`/admin/users` → **Alunos** section:
+
+| `appAccessMode` + `userId` | UI                                 |
+| -------------------------- | ---------------------------------- |
+| `MANUAL_ONLY`, no `userId` | **Enviar convite** button + dialog |
+| `INVITED`                  | Badge **Convite enviado**          |
+| `APP_USER`                 | Badge **Com acesso à app**         |
+
+Dialog: shows/edits invite email, calls `POST /api/admin/students/[id]/invite`, shows `emailDelivery` and copy-link fallback.
+
+### Modules
+
+- `lib/students/student-record-invite-service.ts`
+- `lib/students/student-record-invite-validation.ts`
+- `app/api/admin/students/[id]/invite/route.ts`
+- `components/admin/student-record-invite-dialog.tsx`
+- `lib/invitations/invitation-accept-service.ts` (linked-student accept path)
+
+### Limitations (this batch)
+
+- No bulk invite.
+- No import/export.
+- No advanced invite editing or re-send UX beyond generic invitations list.
+- No change to Postmark provider, RLS, or generic invitation refactor.
+
 ## Next batches
 
 1. ~~`manual-student-records-api`~~ (done)
 2. ~~`manual-student-records-ui`~~ (done)
-3. `student-record-invitation-linking`
+3. ~~`student-record-invitation-linking`~~ (done)
 4. ~~`lessons-student-record-selection`~~ (done)
 5. ~~`practical-lesson-counter-foundation`~~ (done)
 6. ~~`practical-lessons-manual-history`~~ (done)
@@ -379,5 +454,6 @@ System-created lessons set `lessonSource = SYSTEM`.
 - Migration: `prisma/migrations/20260529130000_student_operational_foundation`
 - Migration: `prisma/migrations/20260529140000_practical_lesson_number`
 - Migration: `prisma/migrations/20260529150000_lesson_source`
-- Helpers: `lib/students/student-school-id.ts`, `lib/students/student-display.ts`, `lib/lessons/practical-lesson-counter.ts`, `lib/lessons/manual-practical-lesson-service.ts`
+- Migration: `prisma/migrations/20260529160000_user_invitation_student_id`
+- Helpers: `lib/students/student-school-id.ts`, `lib/students/student-display.ts`, `lib/lessons/practical-lesson-counter.ts`, `lib/lessons/manual-practical-lesson-service.ts`, `lib/students/student-record-invite-service.ts`
 - Lesson selects: `lib/students/student-lesson-select.ts`

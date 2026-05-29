@@ -28,7 +28,9 @@ export type InvitationAcceptErrorCode =
   | "invitation_already_accepted"
   | "invitation_not_pending"
   | "user_already_exists"
-  | "invalid_invitation_role";
+  | "invalid_invitation_role"
+  | "student_already_linked"
+  | "student_record_not_found";
 
 export type InvitationAcceptFailure = {
   ok: false;
@@ -129,6 +131,9 @@ function validateInvitationForAccept(
       invalid_token: "Invalid invitation",
       user_already_exists: "Unable to accept this invitation",
       invalid_invitation_role: "This invitation cannot be accepted",
+      student_already_linked:
+        "This student record is already linked to an account.",
+      student_record_not_found: "This invitation is no longer valid",
     };
     const code = acceptBlockCode(decision.reason);
     const status =
@@ -266,12 +271,46 @@ export async function acceptInvitation(
       });
 
       if (role === "STUDENT") {
-        await tx.student.create({
-          data: {
-            userId: user.id,
-            organizationId: current.organizationId,
-          },
-        });
+        if (current.studentId) {
+          const linkedStudent = await tx.student.findFirst({
+            where: {
+              id: current.studentId,
+              organizationId: current.organizationId,
+            },
+            select: {
+              id: true,
+              userId: true,
+              firstName: true,
+              lastName: true,
+            },
+          });
+
+          if (!linkedStudent) {
+            throw new Error("INVITATION_ACCEPT_student_record_not_found");
+          }
+
+          if (linkedStudent.userId) {
+            throw new Error("INVITATION_ACCEPT_student_already_linked");
+          }
+
+          await tx.student.update({
+            where: { id: linkedStudent.id },
+            data: {
+              userId: user.id,
+              appAccessMode: "APP_USER",
+              email,
+              ...(linkedStudent.firstName?.trim() ? {} : { firstName }),
+              ...(linkedStudent.lastName?.trim() ? {} : { lastName }),
+            },
+          });
+        } else {
+          await tx.student.create({
+            data: {
+              userId: user.id,
+              organizationId: current.organizationId,
+            },
+          });
+        }
       } else {
         const licenseExpiry = new Date();
         licenseExpiry.setFullYear(
@@ -345,9 +384,13 @@ export async function acceptInvitation(
           invalid_token: "Invalid invitation",
           user_already_exists: "An account with this email already exists",
           invalid_invitation_role: "This invitation cannot be accepted",
+          student_already_linked:
+            "This student record is already linked to an account.",
+          student_record_not_found: "This invitation is no longer valid",
         };
         const status =
-          code === "invitation_already_accepted"
+          code === "invitation_already_accepted" ||
+          code === "student_already_linked"
             ? 409
             : code === "invitation_expired" || code === "invitation_revoked"
               ? 410
