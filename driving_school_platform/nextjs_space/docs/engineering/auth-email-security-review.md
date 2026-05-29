@@ -157,22 +157,23 @@ This documentation batch does not change Postmark secrets or production env. For
 
 Priority is **P0 = before production mail / abuse exposure**, **P1 = soon after**, **P2 = later**.
 
-| Pri    | Item                                             | Rationale                                                                                                                                                                                                                |
-| ------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **P0** | ~~**Production Postmark enablement checklist**~~ | **Done** — Production cutover executed and validated for `admin@meengine.io`; see [production-postmark-validation-record.md](../ops/production-postmark-validation-record.md)                                            |
-| **P0** | **Preview default noop**                         | Prevent accidental sends on every PR preview                                                                                                                                                                             |
-| **P1** | ~~**Distributed rate limit**~~                   | **Done** — [auth-rate-limit-foundation.md](./auth-rate-limit-foundation.md): login, reset/verify request, invitation accept, signup IP; hashed keys only                                                                 |
-| **P1** | ~~**Rate-limit cleanup cron**~~                  | **Done** — protected daily cron cleans buckets older than 7 days; same `CRON_SECRET` pattern as existing project cron                                                                                                    |
-| **P1** | **Postmark account approval follow-through**     | External recipients may remain constrained until Postmark review/approval is fully cleared                                                                                                                               |
-| **P1** | **Session policy after password reset**          | Credentials sessions may remain valid after `passwordHash` change until expiry — optional invalidation / “sign out all devices”                                                                                          |
-| **P2** | **Turnstile / CAPTCHA**                          | On forgot-password, resend-verification, and/or public signup when enabled                                                                                                                                               |
-| **P2** | **Dashboards / alerts**                          | Add monitoring for unusual `429` rates, bucket growth, and repeated auth/email abuse patterns                                                                                                                            |
-| **P2** | **DMARC mailbox handling**                       | **Documented; pending execution** — route DMARC aggregate reports to `dmarc@meengine.io` (keep `admin@meengine.io` for app ops / Postmark). See [dmarc-email-routing-runbook.md](../ops/dmarc-email-routing-runbook.md). |
-| **P2** | **Unverified-user policy**                       | Today: NextAuth blocks login if `!isEmailVerified`; future: block sensitive actions for admin-created users with `isEmailVerified: false`                                                                                |
-| **P2** | **Public signup + verification**                 | When `PUBLIC_SIGNUP_ENABLED=true`, create unverified users + send verification email (remove placeholder)                                                                                                                |
-| **P2** | **Legacy column cleanup**                        | Migration to drop unused `User.*Reset*` / `User.*Verification*` columns after dependency audit                                                                                                                           |
-| **P2** | **Resend/SMTP adapters**                         | Only if Postmark strategy changes — see [email-provider-evaluation.md](./email-provider-evaluation.md)                                                                                                                   |
-| **P2** | **Existing global-account invite UX**            | Improve operator/user feedback when a global `PLATFORM_ADMIN` with `organizationId=null` is invited into a tenant and correctly blocked as existing account                                                              |
+| Pri    | Item                                                | Rationale                                                                                                                                                                                                                |
+| ------ | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **P0** | ~~**Production Postmark enablement checklist**~~    | **Done** — Production cutover executed and validated for `admin@meengine.io`; see [production-postmark-validation-record.md](../ops/production-postmark-validation-record.md)                                            |
+| **P0** | **Preview default noop**                            | Prevent accidental sends on every PR preview                                                                                                                                                                             |
+| **P1** | ~~**Distributed rate limit**~~                      | **Done** — [auth-rate-limit-foundation.md](./auth-rate-limit-foundation.md): login, reset/verify request, invitation accept, signup IP; hashed keys only                                                                 |
+| **P1** | ~~**Rate-limit cleanup cron**~~                     | **Done** — protected daily cron cleans buckets older than 7 days; same `CRON_SECRET` pattern as existing project cron                                                                                                    |
+| **P1** | ~~**Supabase sensitive auth table RLS hardening**~~ | **Done** — RLS + `REVOKE` for `user_invitations`, `password_reset_tokens`, `email_verification_tokens`, `rate_limit_buckets`; see [supabase-security-hardening.md](./supabase-security-hardening.md)                     |
+| **P1** | **Postmark account approval follow-through**        | External recipients may remain constrained until Postmark review/approval is fully cleared                                                                                                                               |
+| **P1** | **Session policy after password reset**             | Credentials sessions may remain valid after `passwordHash` change until expiry — optional invalidation / “sign out all devices”                                                                                          |
+| **P2** | **Turnstile / CAPTCHA**                             | On forgot-password, resend-verification, and/or public signup when enabled                                                                                                                                               |
+| **P2** | **Dashboards / alerts**                             | Add monitoring for unusual `429` rates, bucket growth, and repeated auth/email abuse patterns                                                                                                                            |
+| **P2** | **DMARC mailbox handling**                          | **Documented; pending execution** — route DMARC aggregate reports to `dmarc@meengine.io` (keep `admin@meengine.io` for app ops / Postmark). See [dmarc-email-routing-runbook.md](../ops/dmarc-email-routing-runbook.md). |
+| **P2** | **Unverified-user policy**                          | Today: NextAuth blocks login if `!isEmailVerified`; future: block sensitive actions for admin-created users with `isEmailVerified: false`                                                                                |
+| **P2** | **Public signup + verification**                    | When `PUBLIC_SIGNUP_ENABLED=true`, create unverified users + send verification email (remove placeholder)                                                                                                                |
+| **P2** | **Legacy column cleanup**                           | Migration to drop unused `User.*Reset*` / `User.*Verification*` columns after dependency audit                                                                                                                           |
+| **P2** | **Resend/SMTP adapters**                            | Only if Postmark strategy changes — see [email-provider-evaluation.md](./email-provider-evaluation.md)                                                                                                                   |
+| **P2** | **Existing global-account invite UX**               | Improve operator/user feedback when a global `PLATFORM_ADMIN` with `organizationId=null` is invited into a tenant and correctly blocked as existing account                                                              |
 
 ---
 
@@ -236,14 +237,15 @@ Do not paste `inviteLink`, reset/verify URLs, tokens, or email bodies into ticke
 
 ## Related DAT_3.5 batches
 
-| Batch                                        | Outcome                        |
-| -------------------------------------------- | ------------------------------ |
-| `email-provider-boundary`                    | `sendEmail()`, noop, redaction |
-| `email-provider-postmark`                    | Postmark adapter               |
-| `password-reset-flow-foundation` + hardening | Reset APIs + atomic consume    |
-| `email-verification-flow`                    | Verification APIs + UI         |
-| **`auth-email-security-operational-review`** | **This document**              |
-| **`auth-rate-limit-foundation`**             | DB-backed fixed-window limits  |
+| Batch                                        | Outcome                                                                                                                    |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `email-provider-boundary`                    | `sendEmail()`, noop, redaction                                                                                             |
+| `email-provider-postmark`                    | Postmark adapter                                                                                                           |
+| `password-reset-flow-foundation` + hardening | Reset APIs + atomic consume                                                                                                |
+| `email-verification-flow`                    | Verification APIs + UI                                                                                                     |
+| **`auth-email-security-operational-review`** | **This document**                                                                                                          |
+| **`auth-rate-limit-foundation`**             | DB-backed fixed-window limits                                                                                              |
+| **`supabase-sensitive-table-rls-hardening`** | RLS + grant hardening on auth/token/rate-limit tables — [supabase-security-hardening.md](./supabase-security-hardening.md) |
 
 ---
 
