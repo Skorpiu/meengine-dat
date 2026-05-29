@@ -56,6 +56,8 @@ import {
   getScheduleMapChipLines,
   getScheduleMapLessonColorClasses,
 } from "@/lib/schedule/schedule-map-card";
+import { getStudentDisplayName } from "@/lib/students/student-display";
+import type { ScheduleMapStudentPayload } from "@/lib/students/schedule-lesson-student";
 
 type ViewType = "day" | "week" | "month";
 
@@ -96,13 +98,7 @@ export interface Lesson {
   endTime: string;
   lessonType: string;
   status: string;
-  student?: {
-    user: {
-      id: string;
-      firstName: string;
-      lastName: string;
-    };
-  };
+  student?: ScheduleMapStudentPayload;
   instructor?: {
     user: {
       id: string;
@@ -795,7 +791,7 @@ export function ScheduleMap({
                                   ? "z-50 shadow-md"
                                   : "hover:shadow-sm"
                               }`}
-                              title={`${lesson.startTime} - ${lesson.student?.user.firstName || ""} ${lesson.student?.user.lastName || ""}`}
+                              title={`${lesson.startTime} - ${getStudentDisplayName(lesson.student)}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedLesson(
@@ -819,8 +815,7 @@ export function ScheduleMap({
                                         <span className="font-medium">
                                           Student:
                                         </span>{" "}
-                                        {lesson.student.user.firstName}{" "}
-                                        {lesson.student.user.lastName}
+                                        {getStudentDisplayName(lesson.student)}
                                       </div>
                                     )}
                                     {lesson.instructor && (
@@ -950,7 +945,7 @@ export function ScheduleMap({
                                   ? "z-50 shadow-md"
                                   : "hover:shadow-sm"
                               }`}
-                              title={`${lesson.startTime} - ${lesson.student?.user.firstName || ""} ${lesson.student?.user.lastName || ""}`}
+                              title={`${lesson.startTime} - ${getStudentDisplayName(lesson.student)}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedLesson(
@@ -964,7 +959,9 @@ export function ScheduleMap({
                                 {lesson.startTime}
                               </div>
                               <div className="truncate text-[10px]">
-                                {lesson.student?.user.firstName || "N/A"}
+                                {lesson.student
+                                  ? getStudentDisplayName(lesson.student)
+                                  : "N/A"}
                               </div>
 
                               {/* Expanded click card for week view */}
@@ -979,8 +976,7 @@ export function ScheduleMap({
                                         <span className="font-medium">
                                           Student:
                                         </span>{" "}
-                                        {lesson.student.user.firstName}{" "}
-                                        {lesson.student.user.lastName}
+                                        {getStudentDisplayName(lesson.student)}
                                       </div>
                                     )}
                                     {lesson.instructor && (
@@ -1222,8 +1218,9 @@ export function ScheduleMap({
                                             <span className="font-medium">
                                               Student:
                                             </span>{" "}
-                                            {lesson.student.user.firstName}{" "}
-                                            {lesson.student.user.lastName}
+                                            {getStudentDisplayName(
+                                              lesson.student,
+                                            )}
                                           </div>
                                         )}
                                         {lesson.instructor && (
@@ -1340,8 +1337,9 @@ export function ScheduleMap({
                                               <span className="font-medium">
                                                 Student:
                                               </span>{" "}
-                                              {lesson.student.user.firstName}{" "}
-                                              {lesson.student.user.lastName}
+                                              {getStudentDisplayName(
+                                                lesson.student,
+                                              )}
                                             </div>
                                           )}
                                           {lesson.instructor && (

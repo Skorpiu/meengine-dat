@@ -6,13 +6,13 @@ import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { EXAM_DASHBOARD_LESSON_TYPES } from "@/lib/lessons/lesson-display";
 import { LESSON_NESTED_USER_SELECT } from "@/lib/users/user-public-select";
+import { STUDENT_LESSON_OPERATIONAL_SELECT } from "@/lib/students/student-lesson-select";
 
 export { EXAM_DASHBOARD_LESSON_TYPES };
 
 /** Minimal nested selects for list/calendar/dashboard reads (LD-004–LD-006). */
 export const LESSON_LIST_STUDENT_SELECT = {
-  id: true,
-  user: { select: LESSON_NESTED_USER_SELECT },
+  ...STUDENT_LESSON_OPERATIONAL_SELECT,
 } satisfies Prisma.StudentSelect;
 
 export const LESSON_LIST_INSTRUCTOR_SELECT = {
@@ -53,9 +53,7 @@ export const LESSON_LIST_SELECT = {
 
 /** Nested selects for admin lesson detail GET / PUT response (edit form). */
 export const LESSON_DETAIL_STUDENT_SELECT = {
-  id: true,
-  userId: true,
-  user: { select: LESSON_NESTED_USER_SELECT },
+  ...STUDENT_LESSON_OPERATIONAL_SELECT,
 } satisfies Prisma.StudentSelect;
 
 export const LESSON_DETAIL_INSTRUCTOR_SELECT = {

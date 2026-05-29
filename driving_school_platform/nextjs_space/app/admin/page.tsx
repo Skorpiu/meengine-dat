@@ -8,6 +8,7 @@ import { AdminDashboardClient } from "@/components/admin/admin-dashboard-client"
 import type { Lesson as ScheduleLesson } from "@/components/schedule/schedule-map";
 import { getDrivingSchoolName } from "@/lib/config/features";
 import { LESSON_LIST_SELECT } from "@/lib/lessons/lesson-queries";
+import { mapLessonStudentForScheduleMap } from "@/lib/students/schedule-lesson-student";
 import { Users, Car, Calendar, TrendingUp, CheckCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -78,15 +79,7 @@ export default async function AdminDashboard() {
       lessonType: lesson.lessonType,
       status: lesson.status,
 
-      student: lesson.student
-        ? {
-            user: {
-              id: lesson.student.user.id,
-              firstName: lesson.student.user.firstName,
-              lastName: lesson.student.user.lastName,
-            },
-          }
-        : undefined,
+      student: mapLessonStudentForScheduleMap(lesson.student),
 
       instructor: lesson.instructor
         ? {
