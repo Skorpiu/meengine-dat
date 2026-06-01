@@ -35,6 +35,26 @@ If a request is ambiguous, choose the **smallest safe interpretation** and repor
 
 If a change risks damaging existing architecture, **stop and explain**.
 
+## Contradictory Architect Protocol
+
+Do not blindly implement external advice (from ChatGPT, Cursor suggestions, audits, tools, or generic best practices).
+
+Before agreeing:
+
+- **Inspect the actual repo** (files, existing contracts, current-state memory) before recommending or implementing.
+- Classify each recommendation point-by-point as **ACCEPT / ADAPT / DEFER / REJECT**:
+  - **ACCEPT**: correct and safe to apply now.
+  - **ADAPT**: useful but must be changed to fit DAT.
+  - **DEFER**: valid but belongs to a future batch.
+  - **REJECT**: wrong, stale, unsafe, or not worth doing.
+- Prefer **surgical batches** and minimal diffs.
+- Explicitly report **out-of-scope temptations** instead of implementing them.
+- Preserve roles: **ChatGPT is architect/reviewer/QA lead**; **Cursor is executor**.
+
+Analysis-only requests:
+
+- Do **not** create or edit files when the user asked for analysis-only output.
+
 ### Architecture-first (non-trivial work)
 
 1. Read project memory (paths above) and relevant ops runbooks.

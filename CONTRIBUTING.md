@@ -28,6 +28,21 @@ You can contribute by:
 - Write clear commit messages
 - Add comments where logic is complex
 
+## Conventional Commits
+
+Use **Conventional Commits** for commit messages:
+
+- `feat:`
+- `fix:`
+- `docs:`
+- `refactor:`
+- `test:`
+- `chore:`
+- `ci:`
+- `build:`
+
+Example: `docs: add cursor operating model`
+
 ## Pull Request guidelines
 
 - Describe the problem being solved

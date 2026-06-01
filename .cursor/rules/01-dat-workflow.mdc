@@ -14,6 +14,13 @@ Implementation rules:
 - If >3 files will be changed, pause and summarize the plan first.
 
 After changes (run from repo root):
+- Canonical validation command (required before merge):
+  - `pnpm -C driving_school_platform/nextjs_space check`
+- Build/check is not optional before merge.
+- Never declare a batch complete with `check` failing.
+- If validation fails, report the failing command and a concise output summary.
+
+Supplementary per-area commands (when a full check is not required yet):
 - pnpm -C driving_school_platform/nextjs_space lint
 - pnpm -C driving_school_platform/nextjs_space typecheck
 - pnpm -C driving_school_platform/nextjs_space test:run

@@ -1,0 +1,63 @@
+---
+description: Database and tenant-safety rules (Prisma, API, scripts)
+globs:
+  - "driving_school_platform/nextjs_space/prisma/schema.prisma"
+  - "driving_school_platform/nextjs_space/app/api/**/*.ts"
+  - "driving_school_platform/nextjs_space/lib/**/*.ts"
+  - "driving_school_platform/nextjs_space/scripts/**/*.ts"
+alwaysApply: false
+---
+
+# Database & Tenant Safety
+
+## Tenant scoping
+
+- Tenant operational data must be scoped by **organizationId** or reached only through a **tenant-validated parent entity**.
+- Never trust `organizationId` from request body or query. Tenant scope must come from authenticated session and host guard.
+
+## Critical tenant entities
+
+Treat these as tenant-critical for scoping, authorization, and review:
+
+- Student
+- Lesson
+- Instructor
+- Vehicle
+- Payment
+- Notification
+- Exam
+- ExamRegistration
+- LessonRequest
+- Category
+- TransmissionType
+- Organization
+
+## RLS is defense-in-depth
+
+- RLS is **defense-in-depth** and does not replace application-level tenant guards.
+- Do not weaken application-level guards under the assumption “RLS will catch it”.
+
+## Sensitive/internal tables (RLS/grants gate)
+
+Sensitive/internal tables must not receive new grants or policies without explicit architectural approval:
+
+- `user_invitations`
+- `password_reset_tokens`
+- `email_verification_tokens`
+- `rate_limit_buckets`
+- `billing_events`
+- `entitlement_grants`
+- `organization_domains`
+- audit/config/system tables
+
+If a batch proposes changes here: **stop** and request explicit approval.
+
+## Prisma schema and migrations (decision gates)
+
+- Prisma schema changes require explicit user approval before proceeding.
+- Migrations require explicit user approval before proceeding.
+
+## Cross-tenant/global queries
+
+- Never suggest cross-tenant/global operational queries unless the role is `PLATFORM_ADMIN` and the route is explicitly platform-scoped.
+

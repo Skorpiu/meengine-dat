@@ -61,6 +61,24 @@ git status --short
 
 **Notes:**
 
+- Commit messages follow **Conventional Commits**:
+  - `feat:`
+  - `fix:`
+  - `docs:`
+  - `refactor:`
+  - `test:`
+  - `chore:`
+  - `ci:`
+  - `build:`
+
+Examples:
+
+- `docs: add cursor operating model`
+- `feat: add safe student record delete action`
+- `fix: prevent duplicate practical lesson numbers`
+- `refactor: clarify instructor id boundaries`
+- `test: cover student import duplicate handling`
+
 - Use ZIP when reviewer asks for code validation.
 - ZIP must **not** be committed.
 - Do not merge before review if reviewer requested ZIP.
