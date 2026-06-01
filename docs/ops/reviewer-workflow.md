@@ -29,6 +29,29 @@ Before Cursor implements **non-trivial** changes, the executor must **plan first
 
 ---
 
+## External advice review protocol (ACCEPT / ADAPT / DEFER / REJECT)
+
+Any recommendation coming from AI (ChatGPT/Cursor), audits, tools, or external sources must be reviewed against the **actual repository state** and classified point-by-point:
+
+- **ACCEPT**: correct and safe to apply now.
+- **ADAPT**: useful but must be changed to fit DAT (contracts, constraints, conventions).
+- **DEFER**: valid, but belongs to a future batch (or needs prerequisites).
+- **REJECT**: wrong, stale, unsafe, or not worth doing.
+
+Applies to:
+
+- external advice
+- audits
+- Cursor suggestions
+- broad refactor proposals
+- AI-generated recommendations
+
+If a recommendation is good practice but not appropriate right now, explicitly state:
+
+> “This is good practice, but not for this batch.”
+
+---
+
 ## Memory maintenance policy
 
 Update operational memory when state changes **durably** (closed batch, migration, domain/product/security decision, command or QA workflow change, new P1–P3 To-Do, clarified contract, recurring risk).
