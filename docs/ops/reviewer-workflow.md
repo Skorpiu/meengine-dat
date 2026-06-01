@@ -1,0 +1,206 @@
+# DAT Reviewer Workflow
+
+How **Cursor**, the **reviewer/architect**, and the **user** collaborate on DAT batches: scope, safety, validation, and merge readiness.
+
+---
+
+## Roles
+
+| Role | Responsibility |
+| ---- | -------------- |
+| **Cursor** | Executor in repo — inspect, implement small diffs, run check, report |
+| **Reviewer / architect** | Validates architecture, safety, scope, merge readiness |
+| **User** | Runs commands, pastes outputs, performs manual QA |
+
+---
+
+## Architecture-first protocol
+
+Before Cursor implements **non-trivial** changes, the executor must **plan first** (reviewer validates the same discipline):
+
+1. Read project memory: [system-design.md](../architecture/system-design.md), [current-state.md](../architecture/current-state.md), [roadmap-todo.md](../architecture/roadmap-todo.md), relevant ops runbooks.
+2. Restate **goal and scope**.
+3. **Classify the batch:** docs-only, UI-only, API/runtime, migration/schema, security/auth/billing/demo, import/export, tenant/authorization.
+4. **Identify risks** before editing: tenant isolation, data loss, schema/runtime mismatch, auth regression, demo/public behavior, email/invitation, import/apply destructiveness, tests/manual QA.
+5. List **likely files**, **tests**, and **manual QA**.
+6. Implement the **smallest safe** change only after the above.
+
+**Rules:** Plan first, code second. Stop and report before editing if data loss or auth/tenant/security/billing/demo impact is possible. Stop if scope expands. No broad drive-by refactors.
+
+---
+
+## Memory maintenance policy
+
+Update operational memory when state changes **durably** (closed batch, migration, domain/product/security decision, command or QA workflow change, new P1–P3 To-Do, clarified contract, recurring risk).
+
+Do **not** update for trivial chat or duplicate notes.
+
+| Target | Use for |
+| ------ | ------- |
+| `current-state.md` | Closed work, validated QA |
+| `system-design.md` | Durable domain/architecture rules |
+| `roadmap-todo.md` | Backlog |
+| `command-batteries.md` | Commands |
+| `preview-qa-runbook.md` | Preview/demo/QA |
+| `reviewer-workflow.md` | This workflow |
+| `architect-mode.mdc` | Agent rules |
+
+Every Cursor **final report** must include: **“Memory docs update needed: yes/no”** and which files, if any. If the batch itself changes architecture/workflow/state, update memory in the **same docs-only batch** or schedule an explicit follow-up before merge.
+
+---
+
+## Batch workflow
+
+1. Define **batch goal**.
+2. Confirm **scope**.
+3. Cursor **inspects** codebase.
+4. Cursor **proposes or implements** small change.
+5. Cursor runs **canonical check**.
+6. Cursor **reports:**
+   - files changed
+   - migrations
+   - dependencies
+   - tests
+   - runtime behavior
+   - limitations
+   - manual test recommendations
+   - **memory docs update needed (yes/no)** and which files
+7. User **pastes output**.
+8. **Reviewer validates**.
+9. If needed, reviewer asks for **ZIP / diff / manual tests**.
+10. **Only then** merge.
+
+---
+
+## Strict rules
+
+- **No merge** if check fails.
+- **No push** if check fails after merge.
+- **No hidden broad refactor.**
+- **No opportunistic cleanup** in unrelated areas.
+- **No production migration** without explicit command.
+- **No secrets** in outputs.
+- **No changing** demo / auth / email / billing / security policies inside unrelated product batches.
+- If **ambiguity** appears, **stop and report**.
+
+---
+
+## How to ask Cursor for major changes
+
+Start prompts with:
+
+> Read @docs/architecture/system-design.md, @docs/architecture/current-state.md and @docs/architecture/roadmap-todo.md first. Use Plan Mode. Before editing, identify the scope, risks, files likely to change, tests needed and manual QA needed. Do not implement until the plan is clear.
+
+For Preview QA or deploy: also reference @docs/ops/command-batteries.md and @docs/ops/preview-qa-runbook.md.
+
+---
+
+## What good Cursor reports include
+
+- **Root cause**, not only summary.
+- **Files changed.**
+- **Why** the change is minimal.
+- **What was intentionally not changed.**
+- **Commands run.**
+- **Exact result** of `pnpm -C driving_school_platform/nextjs_space check`.
+- **Manual test checklist** when UI/API behavior changed.
+
+---
+
+## When to create ZIP
+
+Create a `DAT-<sha>.zip` ([command-batteries.md](./command-batteries.md)) when:
+
+- Reviewer **asks**.
+- **Runtime code** changed substantially.
+- **Migrations** changed.
+- **Security / auth / billing / tenant / demo** behavior changed.
+- **Manual code inspection** is needed before merge.
+
+ZIP must **not** be committed. Do not merge before review if reviewer requested ZIP.
+
+---
+
+## Before reviewing code (reading order)
+
+1. [system-design.md](../architecture/system-design.md)
+2. [current-state.md](../architecture/current-state.md)
+3. [roadmap-todo.md](../architecture/roadmap-todo.md)
+
+---
+
+## Batch intake checklist
+
+| Question | Pass criteria |
+| -------- | ------------- |
+| **Goal** | One sentence matches PR / batch description |
+| **Scope** | No unrelated refactors, renames, formatting sweeps |
+| **Files** | No surprise `.env`, Vercel, migration files |
+| **Tenancy** | No `organizationId` from body/query/file |
+| **Auth** | No casual weakening of signup, rate limits, RLS, tokens |
+| **Demo** | Unchanged unless batch owns it |
+| **Migrations** | Only if requested; SQL reviewed |
+| **Secrets** | None in diff or docs |
+| **Check** | `pnpm -C driving_school_platform/nextjs_space check` green |
+
+---
+
+## Domain red flags (block or escalate)
+
+- Client-supplied **tenant ID** for writes.
+- **Lesson.studentId** or invitation accept uses **User.id** instead of **Student.id**.
+- **Lesson.instructorId** stores **User.id**.
+- **Student import** creates User or sends email.
+- Exposes **passwordHash**, **tokenHash**, raw tokens, raw provider errors.
+- **Cleanup/mutation on GET** lesson lists.
+- **Import apply** on public demo without sandbox controls.
+- **DAT_3.7 UX** batch with undeclared auth/billing/demo changes.
+- **Destructive** Prisma/SQL without operator approval.
+
+---
+
+## Student / lesson / import review points
+
+- Manual students: optional `userId`; import default `MANUAL_ONLY`.
+- Practical numbers: **DRIVING** only; counter respects **MANUAL** / **IMPORT**.
+- Dry-run = **zero-write**; apply = **all-or-nothing**, create-only (baseline).
+- Export: `;` CSV, `YYYY-MM-DD` dates, no sensitive fields.
+- Invitation from ficha links existing Student; accept → no duplicate Student.
+
+---
+
+## Approve when
+
+- Check and required **Preview QA** passed.
+- Scope matches roadmap or explicit request.
+- Behavior change documented (before/after for operators).
+- Migrations: **migrate status** noted for target env.
+- No open P0 security/tenancy issues.
+
+---
+
+## Request changes when
+
+- Missing tests for non-trivial tenancy/import logic.
+- Undocumented auth/demo/import contract changes.
+- UX batch secretly changes API shapes.
+- Public contract changed but docs not updated.
+
+---
+
+## Agent-specific rules
+
+- **Docs-only batches:** no runtime, schema, dependencies, or tests (unless formatting only).
+- No drive-by refactors.
+- Uncertain host/DB target → **stop and report**.
+- Align with `.cursor/rules/architect-mode.mdc` and `01-dat-workflow.mdc`.
+
+---
+
+## Related
+
+- [preview-qa-runbook.md](./preview-qa-runbook.md)
+- [command-batteries.md](./command-batteries.md)
+- `.cursor/rules/architect-mode.mdc`
+- `.cursor/rules/02-dat-guardrails.mdc`
+- `driving_school_platform/nextjs_space/docs/engineering/engineering-excellence-audit.md`

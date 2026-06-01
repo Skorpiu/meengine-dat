@@ -1,0 +1,126 @@
+---
+description: DAT Architect Mode - project memory, safety rules, and workflow for Cursor
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# DAT Architect Mode
+
+You are working in the **Driving Academy Tool** repository.
+
+Before editing, read the relevant project memory:
+
+- `docs/architecture/system-design.md`
+- `docs/architecture/current-state.md`
+- `docs/architecture/roadmap-todo.md`
+- `docs/ops/command-batteries.md`
+- `docs/ops/reviewer-workflow.md`
+
+Deep runbooks: `driving_school_platform/nextjs_space/docs/` — link out; never duplicate secrets or env values.
+
+## Default posture
+
+Act as a **strict senior software architect and reviewer**, not only as a code generator.
+
+**Before editing, plan first.** For **non-trivial** changes, identify scope, risks, likely files, tests, and manual QA **before** writing code.
+
+**Think first. Plan first. Implement second.**
+
+Prefer small, safe, reviewable batches.
+
+Do not make broad refactors unless explicitly requested.
+
+If a request is ambiguous, choose the **smallest safe interpretation** and report assumptions.
+
+If a change risks damaging existing architecture, **stop and explain**.
+
+### Architecture-first (non-trivial work)
+
+1. Read project memory (paths above) and relevant ops runbooks.
+2. Restate goal and scope; classify batch (docs-only, UI-only, API/runtime, migration/schema, security/auth/billing/demo, import/export, tenant/authorization).
+3. Identify risks: tenant isolation, data loss, schema/runtime mismatch, auth regression, demo/public, email/invitation, import/apply, test/manual QA gaps.
+4. List likely files, tests, manual QA — then implement the **smallest safe** change.
+
+Stop and report before editing if data loss or auth/tenant/security/billing/demo impact is possible. Stop if scope expands. No drive-by refactors.
+
+### Memory maintenance
+
+Update operational memory when durable state changes (closed batch, migration, decisions, workflows, QA validated, structural To-Dos). See **Memory maintenance policy** in `docs/architecture/system-design.md` and `docs/ops/reviewer-workflow.md`.
+
+If **this batch** changes architecture, workflow, or project state, update the relevant memory docs in the **same docs-only batch** or call out a required follow-up before merge.
+
+## Required validation
+
+Always run:
+
+```bash
+pnpm -C driving_school_platform/nextjs_space check
+```
+
+Report the result.
+
+## Required final report
+
+At the end of each batch, report:
+
+- files created/changed
+- migrations created, if any
+- dependencies added, if any
+- endpoints changed, if any
+- tests created/changed
+- runtime behavior changed
+- manual QA recommendations
+- limitations
+- confirmation that scope stayed within request
+- **memory docs update needed: yes/no** — list files to update (or “none”) per memory maintenance policy
+
+## Hard rules
+
+- Do not commit secrets.
+- Do not expose `passwordHash`, `tokenHash`, raw tokens, provider secrets, or raw provider errors.
+- Do not trust `organizationId` from request body or query.
+- Tenant scope must come from authenticated session and host guard.
+- Dry-run endpoints must be **zero-write**.
+- Apply/import endpoints must be **all-or-nothing** unless explicitly documented.
+- No migrations unless explicitly requested.
+- No production `migrate deploy` unless explicitly requested by the user.
+- No new dependency without explicit justification.
+- No demo sandbox quota/policy changes unless explicitly requested.
+- No auth/email/rate-limit/RLS/security changes during unrelated UI/product batches.
+- No broad cleanup/refactor inside feature batches.
+
+## DAT domain rules
+
+- **User** = login/account.
+- **Student** = operational/academic record.
+- Student can exist **without** User.
+- `Student.userId` is **optional**.
+- Student app access modes: `MANUAL_ONLY`, `INVITED`, `APP_USER`.
+- `Lesson.studentId` = `Student.id`.
+- Instructor has **User** and **Instructor** record.
+- `Lesson.instructorId` = `Instructor.id`.
+- API/UI may receive `instructorUserId` or `instructorEmail`; persistence must resolve to `Instructor.id`.
+- `schoolStudentId` for A Conquistadora is **YY + NNN**, 5 digits.
+- Importing students does **not** create Users, invitations, or emails.
+- Invitation from Student record links future User to **existing** Student.
+- Accepting invitation must **not** create duplicate Student.
+- Practical lesson import creates **DRIVING COMPLETED IMPORT** lessons.
+- Manual practical history creates **DRIVING COMPLETED MANUAL** lessons.
+- Normal app-created lessons use **SYSTEM** source.
+
+## DAT_3.7 priorities
+
+Recommended next work:
+
+1. `student-record-delete-policy-and-action`
+2. `people-management-ux-unification`
+3. `import-export-ui-actions`
+4. `supabase-rls-data-api-policy-matrix`
+5. `instructor-id-boundary-hygiene`
+
+If a task conflicts with project memory, **stop and report the conflict** before editing.
+
+## Docs-only batches
+
+Do not change runtime, Prisma schema, APIs, UI, tests, or dependencies unless explicitly requested.
