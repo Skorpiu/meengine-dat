@@ -29,6 +29,19 @@ Before Cursor implements **non-trivial** changes, the executor must **plan first
 
 ---
 
+## Sensitive batch reviewer expectations
+
+For batches classified as **sensitive** (see [cursor-operating-model.md](./cursor-operating-model.md) — Sensitive Batch Gate), the reviewer must verify:
+
+- **Classification** — sensitive batch classification is correct for the diff and stated scope.
+- **Approval gate** — Cursor stopped after the plan when required; implementation began only after explicit approval: `APPROVED TO IMPLEMENT: <batch-name>`.
+- **Validation depth** — extra validation matches the risk category (Validation Matrix), not only the generic `check`.
+- **Memory updates** — proposed or applied memory changes are not too broad, premature, or misleading (Memory Update Protocol).
+
+**Reject merge readiness** if a sensitive batch skipped the approval gate or implemented without the explicit approval phrase.
+
+---
+
 ## External advice review protocol (ACCEPT / ADAPT / DEFER / REJECT)
 
 Any recommendation coming from AI (ChatGPT/Cursor), audits, tools, or external sources must be reviewed against the **actual repository state** and classified point-by-point:

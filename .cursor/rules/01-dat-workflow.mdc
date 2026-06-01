@@ -6,6 +6,11 @@ description: How to work in this repo
 Before coding:
 1) Restate the goal in 1 sentence.
 2) List the files you intend to change and why.
+3) Classify batch risk before implementation (see `docs/ops/cursor-operating-model.md`).
+
+Sensitive batches (schema, migrations, RLS/grants, auth, billing, demo, rate-limit, tenant isolation, destructive actions, import/apply, invitations, payments, operational history):
+- Stop after the plan unless the user gives: `APPROVED TO IMPLEMENT: <batch-name>`
+- Do not treat vague approval as implementation permission.
 
 Implementation rules:
 - Prefer minimal, safe diffs.
@@ -14,7 +19,8 @@ Implementation rules:
 - If >3 files will be changed, pause and summarize the plan first.
 
 After changes (run from repo root):
-- Canonical validation command (required before merge):
+- Validation must match the batch risk category (Validation Matrix in `docs/ops/cursor-operating-model.md`), not only the generic check.
+- Canonical final validation command (required before merge):
   - `pnpm -C driving_school_platform/nextjs_space check`
 - Build/check is not optional before merge.
 - Never declare a batch complete with `check` failing.

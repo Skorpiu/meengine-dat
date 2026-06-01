@@ -55,6 +55,24 @@ Analysis-only requests:
 
 - Do **not** create or edit files when the user asked for analysis-only output.
 
+If a recommendation would create scope creep, classify it as **DEFER** and say:
+
+> “This is good practice, but not for this batch.”
+
+### Sensitive batches (implementation gate)
+
+A **sensitive batch** touches or may affect: Prisma schema, migrations, RLS/grants, auth, billing, demo, rate-limit, tenant isolation, destructive actions, import/apply, password reset, email verification, invitations, payments, or operational history.
+
+- Classify batch risk **before** implementation.
+- For sensitive batches, **stop after the plan** unless the user gives explicit approval:
+
+  `APPROVED TO IMPLEMENT: <batch-name>`
+
+- Do **not** interpret vague approval (“go ahead”, “looks good”, “proceed”) as permission to implement sensitive changes.
+- Without the approval phrase, only analyze, inspect, plan, and report — no create/edit/delete/stage/commit/implementation.
+
+See `docs/ops/cursor-operating-model.md` (Sensitive Batch Gate, Validation Matrix).
+
 ### Architecture-first (non-trivial work)
 
 1. Read project memory (paths above) and relevant ops runbooks.
@@ -67,6 +85,8 @@ Stop and report before editing if data loss or auth/tenant/security/billing/demo
 ### Memory maintenance
 
 Update operational memory when durable state changes (closed batch, migration, decisions, workflows, QA validated, structural To-Dos). See **Memory maintenance policy** in `docs/architecture/system-design.md` and `docs/ops/reviewer-workflow.md`.
+
+Follow the **Memory Update Protocol** in `docs/ops/cursor-operating-model.md`: do not update memory broadly or prematurely; propose structured updates before applying when they are not explicitly part of the batch.
 
 If **this batch** changes architecture, workflow, or project state, update the relevant memory docs in the **same docs-only batch** or call out a required follow-up before merge.
 
