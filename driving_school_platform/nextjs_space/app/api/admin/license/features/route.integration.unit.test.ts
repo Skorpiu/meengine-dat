@@ -88,34 +88,41 @@ beforeEach(() => {
 
 describe("Admin License Features API (contracts)", () => {
   it("GET returns entitlements + minimal metadata and does not return rich catalog", async () => {
-    h.grantFindManyMock.mockResolvedValue([
-      {
-        featureKey: "VEHICLE_MANAGEMENT",
-        startsAt: new Date("2026-05-01T00:00:00.000Z"),
-        expiresAt: new Date("2026-06-01T00:00:00.000Z"),
-      },
-      {
-        featureKey: "NOT_A_REAL_KEY",
-        startsAt: new Date("2026-05-01T00:00:00.000Z"),
-        expiresAt: null,
-      },
-    ]);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-01T12:00:00.000Z"));
 
-    const res = await GET(
-      jsonReq("GET", "http://localhost/api/admin/license/features") as any,
-    );
-    expect(res.status).toBe(200);
+    try {
+      h.grantFindManyMock.mockResolvedValue([
+        {
+          featureKey: "VEHICLE_MANAGEMENT",
+          startsAt: new Date("2026-05-01T00:00:00.000Z"),
+          expiresAt: new Date("2026-06-01T00:00:00.000Z"),
+        },
+        {
+          featureKey: "NOT_A_REAL_KEY",
+          startsAt: new Date("2026-05-01T00:00:00.000Z"),
+          expiresAt: null,
+        },
+      ]);
 
-    const body = await res.json();
-    expect(body.organizationId).toBe("orgA");
-    expect(body.organizationName).toBe("Org A");
-    expect(body.subscriptionTier).toBe("PREMIUM");
+      const res = await GET(
+        jsonReq("GET", "http://localhost/api/admin/license/features") as any,
+      );
+      expect(res.status).toBe(200);
 
-    expect(Array.isArray(body.enabledFeatureKeys)).toBe(true);
-    expect(body.enabledFeatureKeys).toEqual(["VEHICLE_MANAGEMENT"]);
+      const body = await res.json();
+      expect(body.organizationId).toBe("orgA");
+      expect(body.organizationName).toBe("Org A");
+      expect(body.subscriptionTier).toBe("PREMIUM");
 
-    // Boundary rule: no rich catalog from API
-    expect("features" in body).toBe(false);
+      expect(Array.isArray(body.enabledFeatureKeys)).toBe(true);
+      expect(body.enabledFeatureKeys).toEqual(["VEHICLE_MANAGEMENT"]);
+
+      // Boundary rule: no rich catalog from API
+      expect("features" in body).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("GET includes manual OrganizationFeature entitlements", async () => {
