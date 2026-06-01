@@ -16,6 +16,8 @@ pnpm -C driving_school_platform/nextjs_space check
 
 Runs lint, typecheck, test:run, and build. Use before commit, ZIP, merge, push, and Preview deploy. Same expectation as GitLab CI.
 
+**Sensitive batches:** classify risk and stop after the plan; do not implement until the user approves with `APPROVED TO IMPLEMENT: <batch-name>`. See [cursor-operating-model.md](./cursor-operating-model.md).
+
 ---
 
 ## Start branch
