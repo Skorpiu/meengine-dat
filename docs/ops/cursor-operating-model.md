@@ -62,8 +62,11 @@ Cursor may provide **structured decision recommendations** after analysis, but m
   - Cursor must **report the decision** in the final report.
 
 - **D3 — Low-risk autonomous execution**
-  - Cursor may implement directly only when the user **explicitly asks for implementation** and the batch is **docs-only**, **copy-only**, or **low-risk test-only**.
+  - Cursor may implement directly only when the user **explicitly asks for implementation** and the batch is **docs-only**, **copy-only outside sensitive/admin runtime surfaces**, or **low-risk test-only**.
   - Still requires validation and evidence pack where applicable.
+  - **D3 must not be used for** admin runtime UI, tenant-critical surfaces, auth-adjacent screens, invitations/app-access screens, billing, demo, import/apply, data deletion, or operational-history surfaces.
+  - Admin UI copy/layout changes may still be low risk, but they are **not automatically D3** when they sit near sensitive workflows.
+  - For **approved runtime UI batches**, Cursor may implement after explicit approval, but must still use **Final Evidence Pack** and **Implementation Conformance Matrix**. Internal low-risk implementation choices inside that approved scope may be **D2**.
 
 - **D4 — Human approval required**
   - Cursor may recommend but must not decide or implement without explicit approval for:
@@ -107,6 +110,7 @@ When Cursor provides a recommendation, it must use this structure:
 - For **sensitive batches**, Cursor remains **D1** unless the user provides the exact approval phrase required by the Sensitive Batch Gate:
   - `APPROVED TO IMPLEMENT: <batch-name>`
 - If confidence is **Low**, Cursor must recommend more inspection or a smaller spike instead of implementation.
+- Do **not** classify runtime **admin** UI (including copy/layout on people/users/invitations-adjacent screens) as **D3** just because the diff looks small — require explicit approval and the evidence pack; use **D2** only for internal choices inside an already approved scope.
 
 ## Smallest Safe Slice Protocol
 
@@ -177,6 +181,13 @@ Escalation triggers:
 - Any change to guards/authorization checks
 - Any change to API payload shapes/contracts
 - Any new/removed routes (including route splits/renames)
+
+Decision levels (calibration example — `people-management-information-architecture-v1`):
+- **Analysis:** D1 (recommendation only; no implementation without approval).
+- **Implementation:** requires explicit approval (`APPROVED TO IMPLEMENT: people-management-information-architecture-v1`).
+- **Internal choices** inside approved scope (exact helper text, component naming): D2.
+- **Not D3** autonomous — touches admin people/users/invitations-adjacent surfaces even when changes are copy/layout-only.
+- **D4 / Sensitive Gate** if the slice changes invitation behavior, routes, guards, API payloads, auth, import/export, or permissions.
 
 ## Decision gates (stop-before-proceeding)
 

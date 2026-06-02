@@ -14,7 +14,8 @@ Decision level rules:
 
 - **D0/D1**: recommendation only; do not implement without explicit approval.
 - **D2**: Cursor may choose low-risk details within an already approved scope, but must report the decision in the final report.
-- **D3**: Cursor may implement only for docs-only / copy-only / low-risk test-only batches when the user explicitly asked for implementation.
+- **D3**: Cursor may implement only for docs-only, copy-only **outside sensitive/admin runtime surfaces**, or low-risk test-only batches when the user explicitly asked for implementation.
+- Before assigning **D3**, check whether the batch touches runtime **admin** UI or sensitive-adjacent surfaces (people/users/invitations, auth, billing, demo, import/apply, destructive data, operational history). If yes, do **not** use D3 autonomous execution; require explicit approval and the evidence pack; use **D2** only for internal choices inside an approved scope.
 - **D4**: human approval required before any implementation.
 
 Sensitive batches (schema, migrations, RLS/grants, auth, billing, demo, rate-limit, tenant isolation, destructive actions, import/apply, invitations, payments, operational history):

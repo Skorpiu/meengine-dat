@@ -78,6 +78,9 @@ Rules:
 - Cursor must separate **recommendation** from **authorization** (recommended decision vs approved decision).
 - Cursor must not implement **sensitive decisions** unless approval gates are satisfied (Sensitive Batch Gate).
 - If the user asks “what would you do?”, Cursor must answer with a **structured recommendation**, not hidden implementation.
+- Do **not** label runtime **admin** UI batches as **D3** just because changes are copy/layout.
+- If the UI is admin, tenant-critical, auth-adjacent, invitation-adjacent, billing, demo, import/apply, or destructive-data adjacent, keep implementation gated by **explicit approval** and the **Final Evidence Pack** / **Implementation Conformance Matrix** where applicable.
+- After approval, use **D2** only for small internal choices inside the approved scope (helper text, naming, section order within the fence).
 
 ### Sensitive batches (implementation gate)
 
