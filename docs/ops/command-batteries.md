@@ -1,14 +1,67 @@
 # DAT Command Batteries
 
-Copy-paste command sets for branch workflow, validation, migrations, Vercel Preview, and local development. Commands below use **bash** unless noted.
+Copy-paste command sets for branch workflow, validation, migrations, Vercel Preview, and local development.
 
 **Never paste real secrets** (`DATABASE_URL`, `NEXTAUTH_SECRET`, `CRON_SECRET`, Postmark keys, persona passwords) into docs, tickets, or chat.
 
-On **Windows**, use Git Bash or WSL for blocks that use `source`, `unset`, and `export`. Adjust `cd` paths if your clone is not under `~/Downloads/Projects/driving-academy-tool`.
+On **Windows**, run every block in **Git Bash** (recommended) or **WSL bash**. Adjust `cd` paths if your clone is not under `~/Downloads/Projects/driving-academy-tool`.
+
+See [cursor-operating-model.md](./cursor-operating-model.md) — **Git Bash Command Discipline Protocol**.
+
+---
+
+## Shell convention
+
+- DAT command batteries assume **Git Bash**.
+- Use **Bash syntax only**.
+- Do **not** provide PowerShell syntax unless explicitly requested.
+- All command batteries should start with:
+
+  `Assumed shell: Git Bash`
+
+- Use simple, **copy-paste-safe** command blocks (single-line commits where possible; see operating model).
+
+### Git Bash examples
+
+Assumed shell: Git Bash
+
+```bash
+git add \
+  file1 \
+  file2
+```
+
+Assumed shell: Git Bash
+
+```bash
+rm -f DAT-*.zip
+
+SHA=$(git rev-parse --short HEAD)
+git archive --format=zip --output "DAT-${SHA}.zip" HEAD
+```
+
+### Do not use in Git Bash
+
+- PowerShell backtick line continuations
+- `Remove-Item`
+- `$sha = git rev-parse --short HEAD`
+- `git archive --format=zip --output "DAT-$sha.zip" HEAD`
+
+Additional rules (all batteries in this doc):
+
+| Rule | Detail |
+| ---- | ------ |
+| **Fence language** | ` ```bash ` only (not `powershell`). |
+| **No doc paths as commands** | Never paste `docs/...` or `@docs/...` as shell commands. |
+| **ZIP guard** | Confirm `SHA` is non-empty before archive; never commit `DAT-.zip` or `DAT-*.zip`. |
+
+**PowerShell is out of scope** unless a separate runbook explicitly labels a Windows-only exception (for example some paths in `driving_school_platform/nextjs_space/docs/ops/`).
 
 ---
 
 ## Canonical check
+
+Assumed shell: Git Bash
 
 ```bash
 pnpm -C driving_school_platform/nextjs_space check
@@ -36,6 +89,8 @@ Runs lint, typecheck, test:run, and build. Use before commit, ZIP, merge, push, 
 
 Run before a **final report** on runtime/API/UI/data-sensitive batches (paste outputs into the report):
 
+Assumed shell: Git Bash
+
 ```bash
 git status --short
 git --no-pager diff --stat
@@ -62,6 +117,8 @@ See [cursor-operating-model.md](./cursor-operating-model.md) (Final Evidence Pac
 
 ## Start branch
 
+Assumed shell: Git Bash
+
 ```bash
 cd ~/Downloads/Projects/driving-academy-tool
 
@@ -85,6 +142,8 @@ git switch -c <branch-name>
 
 ## Commit + ZIP for validation
 
+Assumed shell: Git Bash
+
 ```bash
 git status --short
 
@@ -96,13 +155,14 @@ git commit -m "<commit message>"
 rm -f DAT-*.zip
 
 SHA=$(git rev-parse --short HEAD)
-git archive --format=zip --output "DAT-${SHA}.zip" HEAD
+test -n "$SHA" && git archive --format=zip --output "DAT-${SHA}.zip" HEAD || echo "SHA missing — fix before archive"
 
 git status --short
 ```
 
 **Notes:**
 
+- If `SHA` is empty, stop — do not create `DAT-.zip`.
 - Commit messages follow **Conventional Commits**:
   - `feat:`
   - `fix:`
@@ -129,6 +189,8 @@ Examples:
 
 ## Amend after micro-fix + ZIP
 
+Assumed shell: Git Bash
+
 ```bash
 git status --short
 
@@ -140,7 +202,7 @@ git commit --amend --no-edit
 rm -f DAT-*.zip
 
 SHA=$(git rev-parse --short HEAD)
-git archive --format=zip --output "DAT-${SHA}.zip" HEAD
+test -n "$SHA" && git archive --format=zip --output "DAT-${SHA}.zip" HEAD || echo "SHA missing — fix before archive"
 
 git status --short
 ```
@@ -152,6 +214,8 @@ git status --short
 **Default DAT workflow:** Rui runs this battery manually after Cursor validates the batch and provides a filled-in version (paths, branch name, commit message). Cursor must **not** execute these commands by default. See [cursor-operating-model.md](./cursor-operating-model.md) — Human-Controlled Merge Protocol.
 
 Template (replace `<paths>`, `<type>`, `<message>`, and `<branch-name>`):
+
+Assumed shell: Git Bash
 
 ```bash
 cd ~/Downloads/Projects/driving-academy-tool
@@ -176,7 +240,7 @@ git push
 git branch -d <branch-name>
 
 SHA=$(git rev-parse --short HEAD)
-git archive --format=zip --output "DAT-${SHA}.zip" HEAD
+test -n "$SHA" && git archive --format=zip --output "DAT-${SHA}.zip" HEAD || echo "SHA missing — fix before archive"
 ```
 
 **Rules:**
@@ -193,6 +257,8 @@ git archive --format=zip --output "DAT-${SHA}.zip" HEAD
 ## Merge approved batch
 
 Legacy shorthand (prefer **Human-controlled close/merge battery** above for full staging/evidence/ZIP flow):
+
+Assumed shell: Git Bash
 
 ```bash
 git status --short
@@ -222,6 +288,8 @@ git branch -d <branch-name>
 
 ## Migration battery
 
+Assumed shell: Git Bash
+
 ```bash
 cd ~/Downloads/Projects/driving-academy-tool
 
@@ -241,6 +309,8 @@ test -n "$DIRECT_URL" && echo "DIRECT_URL ok" || echo "DIRECT_URL missing"
 ```
 
 Then:
+
+Assumed shell: Git Bash
 
 ```bash
 pnpm -C driving_school_platform/nextjs_space exec prisma migrate status
@@ -263,6 +333,8 @@ Local dev often uses `.env.local`; for this battery, ensure `DATABASE_URL` / `DI
 
 ## Vercel Preview deploy
 
+Assumed shell: Git Bash
+
 ```bash
 cd ~/Downloads/Projects/driving-academy-tool
 
@@ -277,6 +349,8 @@ pnpm dlx vercel deploy --target=preview --logs
 
 Save host without `https://`:
 
+Assumed shell: Git Bash
+
 ```bash
 export PREVIEW_HOST="<preview-host>.vercel.app"
 ```
@@ -287,6 +361,8 @@ Map `PREVIEW_HOST` to the QA tenant via `organization_domains` before broad vali
 
 ## List preview deployments
 
+Assumed shell: Git Bash
+
 ```bash
 pnpm dlx vercel list --environment preview
 ```
@@ -294,6 +370,8 @@ pnpm dlx vercel list --environment preview
 ---
 
 ## Remove preview deployment later
+
+Assumed shell: Git Bash
 
 ```bash
 pnpm dlx vercel remove <DEPLOYMENT_URL>
@@ -313,11 +391,15 @@ pnpm dlx vercel remove <DEPLOYMENT_URL>
 
 ## Supplementary: install and env
 
+Assumed shell: Git Bash
+
 ```bash
 pnpm -C driving_school_platform/nextjs_space install
 ```
 
 Local secrets: copy `.env.example` → `.env.local` in `driving_school_platform/nextjs_space` (not committed).
+
+Assumed shell: Git Bash
 
 ```bash
 pnpm -C driving_school_platform/nextjs_space env:check
@@ -328,6 +410,8 @@ pnpm -C driving_school_platform/nextjs_space env:check
 ## Supplementary: fast pre-push loop
 
 When a full build is not required yet:
+
+Assumed shell: Git Bash
 
 ```bash
 pnpm -C driving_school_platform/nextjs_space lint
@@ -341,9 +425,13 @@ Add `build` or full `check` before merge when touching routing, env, Prisma, or 
 
 ## Supplementary: dev server and format
 
+Assumed shell: Git Bash
+
 ```bash
 pnpm -C driving_school_platform/nextjs_space dev
 ```
+
+Assumed shell: Git Bash
 
 ```bash
 pnpm -C driving_school_platform/nextjs_space fix
@@ -354,6 +442,8 @@ Use `fix` in dedicated formatting batches only.
 ---
 
 ## Supplementary: health smoke
+
+Assumed shell: Git Bash
 
 ```bash
 cd driving_school_platform/nextjs_space
@@ -382,6 +472,8 @@ Run from `driving_school_platform/nextjs_space`. See [client-demo-runbook.md](..
 | `pnpm demo:showcase:configure` | Full Showcase license flags |
 | `pnpm demo:sandbox:reset` | Reset demo sandbox (destructive — demo org only) |
 | `pnpm demo:reset:dry-run` | Validate org for reset without applying |
+
+Assumed shell: Git Bash
 
 ```bash
 pnpm -C driving_school_platform/nextjs_space test:e2e

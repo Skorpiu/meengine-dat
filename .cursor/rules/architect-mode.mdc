@@ -155,6 +155,20 @@ Follow the **Memory Update Protocol** in `docs/ops/cursor-operating-model.md`: d
 
 If **this batch** changes architecture, workflow, or project state, update the relevant memory docs in the **same docs-only batch** or call out a required follow-up before merge.
 
+## Terminal and command discipline (Git Bash)
+
+For DAT, assume **Rui runs commands in Git Bash**. See `docs/ops/cursor-operating-model.md` — **Git Bash Command Discipline Protocol** and `docs/ops/command-batteries.md` — **Shell convention**.
+
+- Provide **Git Bash command batteries only** by default.
+- **Every command battery** must state: `Assumed shell: Git Bash` (immediately before the fenced block).
+- **Never mix** PowerShell, CMD, and Bash syntax in the same battery.
+- Do **not** use PowerShell commands unless Rui **explicitly** asks for PowerShell.
+- Emit **`bash`** fenced blocks only; copy batteries from `command-batteries.md` when possible.
+- Never present `docs/...` or `@docs/...` paths as shell commands to execute.
+- ZIP: `rm -f DAT-*.zip`, then `SHA=$(git rev-parse --short HEAD)` with non-empty check, then `git archive` → `DAT-${SHA}.zip` — never `DAT-.zip`; never commit ZIP artifacts.
+- When running bash-only steps on Windows on Rui’s behalf, use Git Bash or `bash -lc '…'` — do not silently use PowerShell for migration/ZIP/git-archive batteries.
+- **Close/merge batteries:** use **Bash syntax only**; prefer **simple one-line Conventional Commit** messages (e.g. `git commit -m "docs: …"`); include `Assumed shell: Git Bash`; follow Human-controlled merge rules below.
+
 ## Required validation
 
 Always run:
@@ -200,9 +214,10 @@ For **runtime / API / UI / sensitive** batches, final reports must also include 
 See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol** and `docs/ops/command-batteries.md` — Human-controlled close/merge battery.
 
 - Do **not** run merge/push/branch-delete/archive commands by default.
-- At batch close, provide Rui with the **manual close/merge command battery** instead of executing it.
+- At batch close, provide Rui with the **manual close/merge command battery** (**Git Bash**, copy-paste-safe) instead of executing it.
+- The battery must start with **`Assumed shell: Git Bash`** and use **one-line** Conventional Commit messages unless Rui explicitly needs otherwise.
 - **Merge/push remains a human control point** — Rui merges when the batch is ready.
-- If Rui **explicitly asks** Cursor to run merge/push (or commit/switch/pull/merge/branch-delete/archive), first **restate risks**, the **command plan**, and **working tree assumptions**; confirm before executing.
+- If Rui **explicitly asks** Cursor to run merge/push (or commit/switch/pull/merge/branch-delete/archive), first **restate risks**, the **command plan**, and **working tree assumptions**; confirm before executing; still use Git Bash syntax unless Rui asked for PowerShell.
 
 ## Hard rules
 

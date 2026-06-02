@@ -290,6 +290,81 @@ pnpm -C driving_school_platform/nextjs_space check
 
 If the check fails, do not declare the batch complete. Report the failing command and a concise output summary.
 
+## Git Bash Command Discipline Protocol
+
+DAT terminal **command batteries** for **Rui** and Cursor **copy-paste blocks** default to **Git Bash** on Windows (plain **bash** on macOS/Linux). This prevents mixed-shell failures (PowerShell interpreting bash blocks, doc paths executed as commands, empty `SHA` producing invalid `DAT-.zip` archives).
+
+Canonical templates: [command-batteries.md](./command-batteries.md). Cursor rules: `.cursor/rules/architect-mode.mdc`, `.cursor/rules/01-dat-workflow.mdc`.
+
+### Rules
+
+- **Default shell:** all DAT terminal command batteries for Rui use **Git Bash** syntax.
+- **Battery header (required):** every command battery Cursor provides must include this line immediately before the fenced block:
+
+  `Assumed shell: Git Bash`
+
+- **No PowerShell unless asked:** do not use PowerShell syntax unless Rui **explicitly** asks for PowerShell for that step (label any exception clearly).
+- **No mixed syntax:** do not mix shell syntaxes in the same command battery (no PowerShell + bash in one block).
+- **If unsure:** if Cursor is unsure which shell Rui is using, **ask** — or **default to Git Bash** for DAT.
+- **Copy-paste safety:** prefer simple, copy-paste-safe command blocks; use `bash` fences only for executable steps.
+- **Commits:** commit messages should usually be **single-line Conventional Commits** (e.g. `git commit -m "docs: enforce Git Bash command discipline"`). Avoid complex inline heredocs, nested command substitutions, or multi-line commit constructs unless necessary.
+- **Multi-line commands:** if a multi-line command is needed, **explain it briefly** outside the block and keep the block **shell-specific** (Git Bash only). Use backslash `\` line continuations in bash when splitting lines — not PowerShell backticks.
+
+### Do not use (PowerShell)
+
+Unless Rui explicitly requests PowerShell:
+
+- `Remove-Item` (use `rm -f`)
+- `$sha = ...` or other PowerShell variable assignment (use `SHA=$(git rev-parse --short HEAD)`)
+- Backtick `` ` `` line continuations (use `\` at end of line in Git Bash)
+- `$env:VAR`, `Set-Location`, `Get-ChildItem`, and other PowerShell-only cmdlets in DAT batteries
+
+### Use instead (Git Bash)
+
+| Need | Git Bash |
+| ---- | -------- |
+| Remove old ZIPs | `rm -f DAT-*.zip` |
+| Short SHA for archive | `SHA=$(git rev-parse --short HEAD)` |
+| Split long command across lines | trailing `\` then newline |
+| Commit | `git commit -m "type: single-line message"` |
+
+### Cursor agent behavior
+
+- Prefer batteries from [command-batteries.md](./command-batteries.md) over ad-hoc shell.
+- Emit **Git Bash** syntax in docs and chat even when Cursor’s integrated terminal may be PowerShell on Windows.
+- When bash semantics matter (`source`, `unset`, `export`, `SHA=$(...)`, `git archive`), run in **Git Bash** or a single `bash -lc '…'` wrapper — do not silently run migration/ZIP/git-archive batteries with PowerShell-only syntax.
+
+### Forbidden / high-risk patterns
+
+- **Executing documentation paths** as shell commands (e.g. `docs/ops/command-batteries.md`, `@docs/...` on their own line).
+- **Prose inside shell blocks** without `#` comment prefix.
+- **Invalid ZIP names** — never `DAT-.zip`; set `SHA=$(git rev-parse --short HEAD)`, confirm non-empty, then archive.
+- **Blind `git add -A`** when only specific paths changed (see Human-Controlled Merge Protocol).
+- **Committing** generated `DAT-*.zip` or `.diff` review artifacts.
+
+### ZIP archive discipline (Git Bash)
+
+Every ZIP battery must start with `Assumed shell: Git Bash`, then:
+
+```bash
+rm -f DAT-*.zip
+SHA=$(git rev-parse --short HEAD)
+test -n "$SHA" && git archive --format=zip --output "DAT-${SHA}.zip" HEAD || echo "SHA missing — fix before archive"
+```
+
+Reject merge-readiness instructions that omit `SHA=$(...)` or use PowerShell string expansion.
+
+### Reviewer and merge batteries
+
+When providing the **Human-controlled close/merge battery**, Cursor must:
+
+- Include **`Assumed shell: Git Bash`** before the block.
+- Fill placeholders from the actual diff (paths, branch, **single-line** Conventional Commit message).
+- Keep the block **Git Bash only** (no mixed syntax).
+- Point Rui to Git Bash on Windows for execution.
+
+See [reviewer-workflow.md](./reviewer-workflow.md) — Git Bash command discipline reviewer expectations.
+
 ## Final Evidence Pack
 
 For every **runtime / API / UI / data-sensitive** batch, Cursor final reports must include:
@@ -445,6 +520,7 @@ Merge and push remain **human-controlled actions**. Cursor prepares merge-readin
 
 When a batch appears merge-ready, Cursor must provide Rui with a complete manual battery that includes:
 
+- **`Assumed shell: Git Bash`** before the command block (see [Git Bash Command Discipline Protocol](#git-bash-command-discipline-protocol));
 - expected `git status` before staging;
 - `git add` paths (specific paths — not blind `git add -A` unless justified);
 - staged diff check (`git status --short`, `git diff --cached --stat`);
@@ -455,7 +531,7 @@ When a batch appears merge-ready, Cursor must provide Rui with a complete manual
 - `pnpm -C driving_school_platform/nextjs_space check`;
 - `git push`;
 - branch delete (`git branch -d <branch-name>`);
-- ZIP archive command (`git archive` → `DAT-<sha>.zip`).
+- ZIP archive command (`git archive` → `DAT-<sha>.zip`) using **Git Bash** syntax only (see [Git Bash Command Discipline Protocol](#git-bash-command-discipline-protocol)).
 
 Use the template in [command-batteries.md](./command-batteries.md) — Human-controlled close/merge battery.
 
@@ -842,6 +918,7 @@ Every automation run must use this structure:
 | [Sensitive Batch Gate](#sensitive-batch-gate) | Blocks autonomous implementation on sensitive topics (#3). |
 | [Final Evidence Pack](#final-evidence-pack) / [Implementation Conformance Matrix](#implementation-conformance-matrix) | Required for any future PR-only automation output. |
 | [Improvement Discovery and Backlog Triage Protocol](#improvement-discovery-and-backlog-triage-protocol) | Use when automations surface new risks; do not auto-add to roadmap. |
+| [Git Bash Command Discipline Protocol](#git-bash-command-discipline-protocol) | Git Bash default; every battery states `Assumed shell: Git Bash`; no mixed PowerShell/bash. |
 
 ## Operational memory policy
 
