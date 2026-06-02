@@ -24,7 +24,9 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 ### people-management-ux-unification
 
-- Make **Alunos** and **Instrutores** the main management entities.
+- **Done (v1 slice):** `people-management-information-architecture-v1` — PT IA on `/admin/users` (Pessoas nav, Alunos primary, Contas da app, helper copy; same route/API/invitation behavior).
+- **Remaining:**
+- Make **Alunos** and **Instrutores** the main management entities (instructor fichas / route split not in v1).
 - Rebrand/reduce **All Users** → **Contas da App** / **Acessos**.
 - Move invitations/app access into student/instructor record.
 - Avoid exposing Student vs User as competing tables.
