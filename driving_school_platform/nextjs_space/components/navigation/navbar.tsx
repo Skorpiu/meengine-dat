@@ -52,7 +52,7 @@ export function Navbar({ currentPage }: NavbarProps) {
       case "SUPER_ADMIN":
         const adminItems = [
           ...baseItems,
-          { label: "Users", href: "/admin/users", icon: Users },
+          { label: "Pessoas", href: "/admin/users", icon: Users },
         ];
 
         // Only show Vehicles tab if VEHICLE_MANAGEMENT feature is enabled

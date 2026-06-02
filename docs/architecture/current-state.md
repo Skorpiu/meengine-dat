@@ -98,6 +98,8 @@ pnpm exec prisma migrate status
 
 **Product feedback:** “Alunos → Fichas Registadas” is more natural than “All Users” as the primary mental model.
 
+**IA v1 (done):** `people-management-information-architecture-v1` — Admin nav **Pessoas** (`/admin/users` unchanged); page prioritizes **Alunos / Fichas registadas**; flat login list labeled **Contas da app**; helper copy for ficha vs conta; invitations unchanged (de-emphasized wrapper only). Route split, invitation-on-record, and import/export UI remain deferred.
+
 **Agreed direction (DAT_3.7):**
 
 - **Alunos** and **Instrutores** should be the primary management entities.
@@ -113,8 +115,8 @@ pnpm exec prisma migrate status
 
 **DAT_3.7** — UX and operational polish (see [roadmap-todo.md](./roadmap-todo.md)):
 
-1. `student-record-delete-policy-and-action`
-2. `people-management-ux-unification`
+1. `student-record-delete-policy-and-action` (v1 done)
+2. `people-management-ux-unification` (IA v1 done; invitations-on-record + route split remain)
 3. `import-export-ui-actions`
 4. Instructor / person management polish
 5. `supabase-rls-data-api-policy-matrix`

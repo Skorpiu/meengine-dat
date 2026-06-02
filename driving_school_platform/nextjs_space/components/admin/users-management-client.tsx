@@ -522,49 +522,77 @@ export function UsersManagementClient({
       >
         {isLoading
           ? isEdit
-            ? "Updating..."
-            : "Creating..."
+            ? "A guardar..."
+            : "A criar..."
           : isEdit
-            ? "Update User"
-            : "Create User"}
+            ? "Guardar conta"
+            : "Criar conta"}
       </Button>
+    </div>
+  );
+
+  const instructorAccounts = users.filter((u) => u.role === "INSTRUCTOR");
+  const studentAccounts = users.filter((u) => u.role === "STUDENT");
+
+  const renderAccountRow = (user: User) => (
+    <div
+      key={user.id}
+      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+    >
+      <div className="flex items-center space-x-4">
+        <div className="w-12 h-12 rounded-full bg-driving-primary text-white flex items-center justify-center font-medium">
+          {user.firstName?.[0]}
+          {user.lastName?.[0]}
+        </div>
+        <div>
+          <div className="font-medium">
+            {user.firstName} {user.lastName}
+          </div>
+          <div className="text-sm text-gray-600">{user.email}</div>
+          <div className="text-sm text-gray-500">
+            {user.phoneNumber || "Sem telefone"} •{" "}
+            {user.address || "Sem morada"}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center space-x-3">
+        <Badge variant={user.role === "INSTRUCTOR" ? "default" : "secondary"}>
+          {user.role === "INSTRUCTOR" ? "Instrutor" : "Aluno"}
+        </Badge>
+
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => openEditDialog(user)}
+          aria-label="Editar conta"
+        >
+          <Edit2 className="w-4 h-4" />
+        </Button>
+
+        <Button
+          size="sm"
+          variant="destructive"
+          onClick={() => handleDeleteUser(user.id)}
+          aria-label="Remover conta"
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
     </div>
   );
 
   return (
     <>
       {/* Header */}
-      <div className="mb-8 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Users Management</h1>
-          <p className="text-gray-600 mt-2">
-            Create, manage, and monitor student and instructor accounts.
-          </p>
-        </div>
-
-        <Dialog
-          open={isCreateDialogOpen}
-          onOpenChange={(open) => {
-            setIsCreateDialogOpen(open);
-            if (!open) resetForm();
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button className="bg-driving-primary hover:bg-driving-primary/90">
-              <UserPlus className="w-4 h-4 mr-2" />
-              Add User
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Create New User</DialogTitle>
-              <DialogDescription>
-                Add a new student or instructor to the system.
-              </DialogDescription>
-            </DialogHeader>
-            {renderUserForm(false)}
-          </DialogContent>
-        </Dialog>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Pessoas</h1>
+        <p className="text-gray-600 mt-2 max-w-3xl">
+          Gerir fichas operacionais da escola e contas de acesso à app. As{" "}
+          <strong>fichas</strong> (Alunos / Fichas registadas) podem existir com
+          ou sem conta na app; as <strong>contas da app</strong> são credenciais
+          de login para alunos ou instrutores.
+        </p>
       </div>
 
       {/* Edit Dialog */}
@@ -580,21 +608,24 @@ export function UsersManagementClient({
       >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
+            <DialogTitle>Editar conta da app</DialogTitle>
             <DialogDescription>
-              Update user information and settings.
+              Atualizar dados da conta de acesso (login).
             </DialogDescription>
           </DialogHeader>
           {renderUserForm(true)}
         </DialogContent>
       </Dialog>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      {/* Primary: operational student records */}
+      <StudentRecordsManager />
+
+      {/* Summary stats for app accounts */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
         <Card className="hover-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Students
+              Contas de aluno
             </CardTitle>
             <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
@@ -608,7 +639,7 @@ export function UsersManagementClient({
         <Card className="hover-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Instructors
+              Contas de instrutor
             </CardTitle>
             <Users className="h-4 w-4 text-green-600" />
           </CardHeader>
@@ -621,7 +652,9 @@ export function UsersManagementClient({
 
         <Card className="hover-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total contas da app
+            </CardTitle>
             <CheckCircle className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
@@ -632,69 +665,84 @@ export function UsersManagementClient({
         </Card>
       </div>
 
-      {/* Users List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Users</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {users.map((user) => (
-              <div
-                key={user.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 rounded-full bg-driving-primary text-white flex items-center justify-center font-medium">
-                    {user.firstName?.[0]}
-                    {user.lastName?.[0]}
-                  </div>
-                  <div>
-                    <div className="font-medium">
-                      {user.firstName} {user.lastName}
-                    </div>
-                    <div className="text-sm text-gray-600">{user.email}</div>
-                    <div className="text-sm text-gray-500">
-                      {user.phoneNumber || "No phone"} •{" "}
-                      {user.address || "No address"}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <Badge
-                    variant={
-                      user.role === "INSTRUCTOR" ? "default" : "secondary"
-                    }
-                  >
-                    {user.role.toLowerCase()}
-                  </Badge>
-
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => openEditDialog(user)}
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDeleteUser(user.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+      {/* Secondary: app login accounts */}
+      <Card className="border-gray-200 bg-gray-50/40">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <CardTitle className="text-lg text-gray-800">
+              Contas da app
+            </CardTitle>
+            <p className="text-sm text-gray-600 font-normal max-w-2xl">
+              Credenciais de login na aplicação. Uma ficha de aluno pode existir
+              sem conta; criar conta aqui não substitui a ficha em Alunos acima.
+            </p>
           </div>
+          <Dialog
+            open={isCreateDialogOpen}
+            onOpenChange={(open) => {
+              setIsCreateDialogOpen(open);
+              if (!open) resetForm();
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button className="bg-driving-primary hover:bg-driving-primary/90 shrink-0">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Nova conta
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Nova conta da app</DialogTitle>
+                <DialogDescription>
+                  Criar credenciais de login para aluno ou instrutor (não cria
+                  ficha operacional automaticamente).
+                </DialogDescription>
+              </DialogHeader>
+              {renderUserForm(false)}
+            </DialogContent>
+          </Dialog>
+        </CardHeader>
+        <CardContent className="space-y-8">
+          {users.length === 0 ? (
+            <p className="text-sm text-gray-500">Nenhuma conta da app.</p>
+          ) : (
+            <>
+              {instructorAccounts.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-gray-700">
+                    Instrutores
+                  </h3>
+                  <div className="space-y-4">
+                    {instructorAccounts.map(renderAccountRow)}
+                  </div>
+                </div>
+              )}
+              {studentAccounts.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-gray-700">
+                    Alunos (com conta na app)
+                  </h3>
+                  <div className="space-y-4">
+                    {studentAccounts.map(renderAccountRow)}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
 
-      <StudentRecordsManager />
-
-      <InvitationsManagementClient />
+      <section
+        className="mt-10 pt-8 border-t border-gray-200"
+        aria-label="Convites para acesso à app"
+      >
+        <p className="text-sm text-gray-500 mb-4 max-w-3xl">
+          Convites permitem criar acesso à app por email. O fluxo e as regras de
+          convite mantêm-se iguais; use esta secção quando precisar de enviar um
+          convite sem criar conta manualmente.
+        </p>
+        <InvitationsManagementClient />
+      </section>
     </>
   );
 }
