@@ -418,6 +418,7 @@ Before writing the final report, Cursor must answer the following **explicitly**
 - Did I list staged and unstaged changes correctly?
 - Did I document deviations from the approved plan?
 - Did I propose memory updates only when appropriate?
+- Did I report out-of-scope discoveries under **Deferred recommendations** without expanding scope?
 
 ## Memory Update Protocol
 
@@ -446,6 +447,75 @@ Additional rules:
   - future To-Dos;
   - known limitations;
   - deferred ideas.
+
+## Improvement Discovery and Backlog Triage Protocol
+
+Cursor may suggest improvements when it discovers **real** risks, bugs, UX gaps, technical debt, performance concerns, documentation gaps, or workflow issues during inspection, planning, or implementation.
+
+Cursor must **not**:
+
+- implement discovered improvements unless explicitly approved;
+- expand the current batch scope to fix them;
+- update `roadmap-todo.md` or `current-state.md` with speculative ideas;
+- treat every observation as a To-Do.
+
+### Categories (required)
+
+| Category | Use for |
+| -------- | ------- |
+| **BUG** | Incorrect behavior vs stated contract or obvious defect |
+| **RISK** | Latent failure, operational hazard, or likely future incident |
+| **TECH_DEBT** | Maintainability, duplication, brittle patterns, missing tests |
+| **UX** | Operator/student/instructor confusion, IA, copy, workflow friction |
+| **PERF** | Latency, INP, query/load concerns with evidence |
+| **DX_CI** | Developer experience, CI, tooling, local workflow |
+| **DOCS** | Missing, stale, or misleading documentation |
+| **SECURITY** | Auth, tenancy, secrets, exposure, abuse surface |
+| **DATA_INTEGRITY** | Wrong persistence, ID boundaries, import/export semantics |
+
+### Priorities (required)
+
+| Priority | Definition |
+| -------- | ---------- |
+| **P0** | Critical security, data-loss, cross-tenant, auth, or billing risk |
+| **P1** | User/client/demo blocker or high-value product gap |
+| **P2** | Important hardening or quality improvement |
+| **P3** | Polish or nice-to-have |
+
+### Required output format
+
+For each improvement, Cursor must use this structure:
+
+- **Improvement found:**
+- **Category:** BUG / RISK / TECH_DEBT / UX / PERF / DX_CI / DOCS / SECURITY / DATA_INTEGRITY
+- **Priority:** P0 / P1 / P2 / P3 (or **needs confirmation** if evidence is weak)
+- **Evidence:** file path(s), grep, diff, test, or reproducible observation — not speculation alone
+- **Why it matters:**
+- **Recommended action:**
+- **Recommended batch name:**
+- **Smallest safe slice:** (apply [Smallest Safe Slice Protocol](#smallest-safe-slice-protocol) before naming the batch)
+- **In scope:**
+- **Out of scope:**
+- **Decision level:** D0 / D1 / D2 / D3 / D4
+- **Approval required:** Yes / No (and exact approval phrase if gated)
+- **Memory update proposed:** yes/no
+- **Exact wording proposed, if any:**
+
+If evidence is weak, mark the item **needs confirmation** instead of adding it to roadmap or treating it as accepted backlog.
+
+### Rules
+
+- Improvements discovered **during** a batch must be reported under **Deferred recommendations** unless they are in the **approved scope** of that batch.
+- **P0 / P1** risks may interrupt the batch only when they affect **safety**, **data integrity**, **tenant isolation**, **auth**, **billing**, or **production/demo correctness** — and only after stopping to report; do not silently fix out of scope.
+- **P2 / P3** items should usually be proposed as follow-ups for `roadmap-todo.md`, not implemented in the current batch.
+- Before proposing a batch for an improvement, apply the **Smallest Safe Slice Protocol**.
+- When recommending priority or order among improvements, use the **Decision Recommendation Protocol**.
+- Before editing `current-state.md` or `roadmap-todo.md`, follow the **Memory Update Protocol** — propose structured wording; do not apply speculative updates.
+
+### Where to report
+
+- **In-batch final reports:** include a **Deferred recommendations** subsection listing out-of-scope improvements using the required output format above.
+- **Analysis-only or plan-first work:** list improvements separately from the current scope; do not mix them into “what I implemented.”
 
 ## Operational memory policy
 
