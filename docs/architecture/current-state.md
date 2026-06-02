@@ -98,14 +98,14 @@ pnpm exec prisma migrate status
 
 **Product feedback:** “Alunos → Fichas Registadas” is more natural than “All Users” as the primary mental model.
 
-**IA v1 (done):** `people-management-information-architecture-v1` — Admin nav **Pessoas** (`/admin/users` unchanged); page prioritizes **Alunos / Fichas registadas**; flat login list labeled **Contas da app**; helper copy for ficha vs conta; invitations unchanged (de-emphasized wrapper only). Route split, invitation-on-record, and import/export UI remain deferred.
+**IA v1 (done):** `people-management-information-architecture-v1` — Admin nav **Pessoas** (`/admin/users` unchanged); page prioritizes **Alunos / Fichas registadas**; flat login list labeled **Contas da app**; helper copy for ficha vs conta; invitations unchanged (de-emphasized wrapper only). Route split, invitation-on-record, and student import UI remain deferred. Student records **export** UI (CSV/JSON) is implemented (`import-export-ui-students-export-v1`).
 
 **Agreed direction (DAT_3.7):**
 
 - **Alunos** and **Instrutores** should be the primary management entities.
 - **All Users** → downgrade/rename to **Contas da App** / **Acessos**.
 - **Invitation / app access** should live **inside** the student or instructor person record.
-- **Import/export** should be UI buttons (Importar/Exportar), not raw API URLs.
+- **Import/export** should be UI buttons, not raw API URLs. **Student export** (CSV/JSON) is available on Fichas registadas; import and practical-lessons import/export UI remain deferred.
 
 **Delete/removal (implemented):** School Admin (`SUPER_ADMIN`) may hard-delete a `MANUAL_ONLY` student ficha with no linked User, invitations, lessons of any `LessonSource`, lesson counters, lesson requests, exam registrations, or payments. Blocked deletes return stable **409** codes. Demo org uses the existing user-management mutation guard. Soft-delete/archive remains deferred.
 
@@ -139,15 +139,15 @@ Documented and in use (docs/rules only; no runtime change):
 - Cursor Automations operating model
 - Cursor Automations prompt templates (v1)
 - External database architecture audit triage (backlog items created; no implementation from triage alone)
+- `import-export-ui-students-export-v1` — Student records export UI (CSV/JSON) on Fichas registadas (`StudentRecordsManager`); reuses `GET /api/admin/students/export`; English labels for new export controls; `search` query aligned with applied list search; validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
-1. `import-export-ui-students-export-v1` — export UI on Fichas registadas; APIs exist
-2. `tenant-required-operational-organization-id-audit` — docs-only; no schema in audit slice
-3. `people-management-ux-unification` — **remaining:** invitations-on-record, instructor/route split, instructor parity (IA v1 nav/labels already shipped)
-4. `import-export-ui-actions` — broader slices (import dry-run UI, practical lessons import/export UI)
-5. `supabase-rls-data-api-policy-matrix` — classification/docs first
-6. `audit-log-tenant-context-foundation` — planning only
-7. `product-ui-language-baseline-english-v1` or explicit i18n path — reconcile PT IA exception with English baseline
+1. `tenant-required-operational-organization-id-audit` — docs-only; no schema in audit slice
+2. `people-management-ux-unification` — **remaining:** invitations-on-record, instructor/route split, instructor parity (IA v1 nav/labels already shipped)
+3. `import-export-ui-actions` — remaining slices (students import dry-run UI, apply UI, practical lessons import/export UI)
+4. `supabase-rls-data-api-policy-matrix` — classification/docs first
+5. `audit-log-tenant-context-foundation` — planning only
+6. `product-ui-language-baseline-english-v1` or explicit i18n path — reconcile PT IA exception with English baseline
 
 Engineering excellence audit items (non-blocking refactors) remain tracked separately in roadmap P2+.
