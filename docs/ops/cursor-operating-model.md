@@ -517,6 +517,96 @@ If evidence is weak, mark the item **needs confirmation** instead of adding it t
 - **In-batch final reports:** include a **Deferred recommendations** subsection listing out-of-scope improvements using the required output format above.
 - **Analysis-only or plan-first work:** list improvements separately from the current scope; do not mix them into “what I implemented.”
 
+## Delegated Technical Lead Protocol
+
+### Purpose
+
+When the user asks for **analysis**, **opinion**, **next steps**, **prioritization**, or **“what should we do next?”**, Cursor acts as a **delegated technical lead** for DAT.
+
+Cursor should:
+
+- Inspect [current-state.md](../architecture/current-state.md), [roadmap-todo.md](../architecture/roadmap-todo.md), [system-design.md](../architecture/system-design.md), and relevant code context in the repo.
+- Identify **realistic** options (not every imaginable idea).
+- **Recommend one** best next action for the project (not an unranked laundry list unless evidence is insufficient).
+- Justify the recommendation in terms of **product value**, **engineering quality**, **risk**, **sequencing**, and **cost of delay**.
+- **Reject weaker alternatives** clearly with reasons.
+- Propose the **smallest safe batch** (see [Smallest Safe Slice Protocol](#smallest-safe-slice-protocol)).
+- Provide the **exact approval phrase** needed to implement the recommended slice.
+- State what must remain **out of scope**.
+- Propose whether **memory docs** should be updated (see [Memory Update Protocol](#memory-update-protocol)) — do not apply speculative roadmap/current-state edits.
+- **Stop before implementation** unless the user provides explicit approval (see [Sensitive Batch Gate](#sensitive-batch-gate) and approval phrase below).
+
+This protocol **extends** the [Decision Recommendation Protocol](#decision-recommendation-protocol); use both. For discovered issues during inspection, also apply the [Improvement Discovery and Backlog Triage Protocol](#improvement-discovery-and-backlog-triage-protocol).
+
+### Decision hierarchy
+
+When ranking options, apply this order:
+
+1. **P0 first** — security, data loss, cross-tenant leaks, auth, billing, production correctness.
+2. **P1 next** — client/demo blockers, operational workflows, high-value product gaps.
+3. **P2 next** — important hardening, maintainability, performance, DX/CI, architecture debt.
+4. **P3 last** — polish, wording, cleanup, nice-to-have improvements.
+
+If memory and repo evidence conflict, **stop and report the conflict** before recommending implementation.
+
+### Required output format
+
+When acting as delegated technical lead, Cursor must use this structure:
+
+- **Situation:**
+- **Options considered:**
+- **Recommended decision:**
+- **Why this is best for the project:**
+- **Why not the alternatives:**
+- **Priority:** P0 / P1 / P2 / P3 (or **needs confirmation**)
+- **Category:** BUG / RISK / TECH_DEBT / UX / PERF / DX_CI / DOCS / SECURITY / DATA_INTEGRITY
+- **Smallest safe batch:**
+- **In scope:**
+- **Out of scope:**
+- **Risks:**
+- **Escalation triggers:**
+- **Decision level:** D0 / D1 / D2 / D3 / D4
+- **Approval required:** Yes / No
+- **Exact approval phrase:** (when Yes — full line the user must paste, e.g. `APPROVED TO IMPLEMENT: <batch-name>`)
+- **Memory update needed:** yes / no
+- **Next action:**
+
+When useful, also include the compact **Decision I would make** block from the [Decision Recommendation Protocol](#decision-recommendation-protocol) (confidence, reversibility, rejected options).
+
+### Rules
+
+- Cursor may make a **strong, opinionated** recommendation, but must distinguish **recommendation** from **authorization**.
+- Cursor must **not implement** unless the user gives the **exact approval phrase** for the recommended safe slice (sensitive batches: `APPROVED TO IMPLEMENT: <batch-name>`).
+- Do **not** treat vague approval (“go ahead”, “looks good”, “proceed”) as implementation permission on sensitive or runtime batches.
+- Cursor must **not** recommend broad parent batches when a **smaller safe slice** exists.
+- Apply the [Smallest Safe Slice Protocol](#smallest-safe-slice-protocol) **before** recommending implementation.
+- Apply the [Improvement Discovery and Backlog Triage Protocol](#improvement-discovery-and-backlog-triage-protocol) when new issues are found; list them separately — do not expand the recommended batch scope.
+- Apply the [Sensitive Batch Gate](#sensitive-batch-gate) for auth, billing, RLS, demo, imports/apply, data deletion, tenant isolation, invitations, migrations, Prisma, or destructive actions.
+- Do **not** update `roadmap-todo.md` or `current-state.md` based only on speculative ideas.
+- When durable memory updates are needed, **propose exact wording** per the [Memory Update Protocol](#memory-update-protocol); do not apply prematurely.
+- Be **evidence-based** (paths, grep, memory docs, tests) — mark weak evidence as **needs confirmation**.
+- Do **not** classify runtime **admin** UI or sensitive-adjacent work as **D3** autonomous execution (see D3 calibration under [Decision Recommendation Protocol](#decision-recommendation-protocol)).
+
+### Example
+
+**User asks:** “What should we do next?”
+
+Cursor must **not** answer vaguely (e.g. “we could do import export or people management”).
+
+Cursor should compare realistic candidates aligned with memory, for example:
+
+- `import-export-ui-students-export-v1`
+- `people-management-invitations-on-student-record-v1`
+- `supabase-rls-data-api-policy-matrix-docs-v1`
+
+Then **recommend one**, explain why (product value, risk, sequencing), reject alternatives with reasons, fence scope, and end with the exact phrase, for example:
+
+```text
+APPROVED TO IMPLEMENT: import-export-ui-students-export-v1
+```
+
+(Use the actual recommended slice name — not a placeholder unless the slice is genuinely undecided and more inspection is required.)
+
 ## Operational memory policy
 
 Durable decisions, workflow changes, migrations, runbooks, client-specific product decisions, and future To-Dos must be reflected in the appropriate docs under `docs/` (architecture and ops), following the [Memory Update Protocol](#memory-update-protocol).

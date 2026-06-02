@@ -3,6 +3,18 @@ description: How to work in this repo
 ---
 # Workflow
 
+## What to do next (before a new batch)
+
+If the user asks **what to do next** (or for prioritization / opinion on the next batch), apply the **Delegated Technical Lead Protocol** in `docs/ops/cursor-operating-model.md` **before** planning or coding:
+
+- Check recommendations against `docs/architecture/roadmap-todo.md` and `docs/architecture/current-state.md`.
+- Prioritize using **P0 → P1 → P2 → P3** (see protocol decision hierarchy).
+- Recommend the **smallest safe slice**, not a broad parent batch.
+- Include **scope fences** (in scope / out of scope / escalation triggers).
+- Provide the **exact approval phrase** for the recommended slice when implementation is gated.
+
+Do not start implementation from a “what next?” answer unless the user has given explicit approval for that slice.
+
 Before coding:
 1) Restate the goal in 1 sentence.
 2) List the files you intend to change and why.
