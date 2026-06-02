@@ -7,10 +7,19 @@ Before coding:
 1) Restate the goal in 1 sentence.
 2) List the files you intend to change and why.
 3) Classify batch risk before implementation (see `docs/ops/cursor-operating-model.md`).
+4) If multiple viable options exist, include a **Decision I would make** section using the **Decision Recommendation Protocol** (and mark the decision level D0/D1/D2/D3/D4).
+
+Decision level rules:
+
+- **D0/D1**: recommendation only; do not implement without explicit approval.
+- **D2**: Cursor may choose low-risk details within an already approved scope, but must report the decision in the final report.
+- **D3**: Cursor may implement only for docs-only / copy-only / low-risk test-only batches when the user explicitly asked for implementation.
+- **D4**: human approval required before any implementation.
 
 Sensitive batches (schema, migrations, RLS/grants, auth, billing, demo, rate-limit, tenant isolation, destructive actions, import/apply, invitations, payments, operational history):
 - Stop after the plan unless the user gives: `APPROVED TO IMPLEMENT: <batch-name>`
 - Do not treat vague approval as implementation permission.
+ - D4 decisions remain blocked until explicit approval is provided.
 
 Implementation rules:
 - Prefer minimal, safe diffs.

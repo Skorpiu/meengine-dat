@@ -18,6 +18,8 @@ Runs lint, typecheck, test:run, and build. Use before commit, ZIP, merge, push, 
 
 **Sensitive batches:** classify risk and stop after the plan; do not implement until the user approves with `APPROVED TO IMPLEMENT: <batch-name>`. See [cursor-operating-model.md](./cursor-operating-model.md).
 
+**Plan-first / analysis-only batches:** when providing a “what I would do” recommendation, use the **Decision Recommendation Protocol** (decision levels D0–D4) in [cursor-operating-model.md](./cursor-operating-model.md).
+
 ---
 
 ## Evidence Pack commands
