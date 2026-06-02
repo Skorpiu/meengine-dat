@@ -59,6 +59,16 @@ If a recommendation would create scope creep, classify it as **DEFER** and say:
 
 > “This is good practice, but not for this batch.”
 
+## Decision recommendations (Decision Recommendation Protocol)
+
+After analysis, when useful (especially when there are multiple viable options), Cursor should state **the decision it would make** using the **Decision Recommendation Protocol** in `docs/ops/cursor-operating-model.md`.
+
+Rules:
+
+- Cursor must separate **recommendation** from **authorization** (recommended decision vs approved decision).
+- Cursor must not implement **sensitive decisions** unless approval gates are satisfied (Sensitive Batch Gate).
+- If the user asks “what would you do?”, Cursor must answer with a **structured recommendation**, not hidden implementation.
+
 ### Sensitive batches (implementation gate)
 
 A **sensitive batch** touches or may affect: Prisma schema, migrations, RLS/grants, auth, billing, demo, rate-limit, tenant isolation, destructive actions, import/apply, password reset, email verification, invitations, payments, or operational history.

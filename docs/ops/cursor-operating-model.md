@@ -43,6 +43,71 @@ Include the phrase when applicable:
 
 > “This is good practice, but not for this batch.”
 
+## Decision Recommendation Protocol
+
+Cursor may provide **structured decision recommendations** after analysis, but must **not bypass approval gates**. This protocol exists to let Cursor say “what I would do” while keeping **authorization** with the human.
+
+### Decision levels
+
+- **D0 — No decision**
+  - Cursor only analyzes and does not recommend a decision.
+
+- **D1 — Recommendation only**
+  - Cursor may state the decision it would make, with rationale, risks, confidence, and approval needs.
+  - **No implementation** without explicit approval.
+
+- **D2 — Scoped decision**
+  - Cursor may choose between **low-risk implementation details** inside an already approved scope.
+  - Examples: helper names, small file organization, wording of non-critical messages, test naming.
+  - Cursor must **report the decision** in the final report.
+
+- **D3 — Low-risk autonomous execution**
+  - Cursor may implement directly only when the user **explicitly asks for implementation** and the batch is **docs-only**, **copy-only**, or **low-risk test-only**.
+  - Still requires validation and evidence pack where applicable.
+
+- **D4 — Human approval required**
+  - Cursor may recommend but must not decide or implement without explicit approval for:
+    - Prisma schema
+    - migrations
+    - RLS/grants
+    - auth
+    - billing
+    - demo behavior
+    - rate-limit
+    - tenant isolation
+    - data deletion / destructive actions
+    - import/apply flows
+    - payments
+    - operational history
+    - provider integrations
+    - environment/config changes
+
+### Required format (Decision Recommendation)
+
+When Cursor provides a recommendation, it must use this structure:
+
+- **Decision I would make:**
+- **Decision level:** D0 / D1 / D2 / D3 / D4
+- **Confidence:** High / Medium / Low
+- **Why:**
+- **Alternatives considered:**
+- **Rejected options:**
+- **Risks:**
+- **Reversibility:** Easy / Medium / Hard / Dangerous
+- **Approval required:** Yes / No
+- **Next action:**
+
+### Rules
+
+- Cursor must separate **recommended decision** from **approved decision**.
+  - Recommendations answer: “what would I do?”
+  - Approved decisions answer: “what am I authorized to do next?”
+- Cursor must not phrase recommendations as if they are already authorized (avoid “I will” / “I’m going to implement” when approval is required).
+- Cursor must explicitly say when **human approval is required**.
+- For **sensitive batches**, Cursor remains **D1** unless the user provides the exact approval phrase required by the Sensitive Batch Gate:
+  - `APPROVED TO IMPLEMENT: <batch-name>`
+- If confidence is **Low**, Cursor must recommend more inspection or a smaller spike instead of implementation.
+
 ## Decision gates (stop-before-proceeding)
 
 - **Prisma schema changes** require explicit user approval.

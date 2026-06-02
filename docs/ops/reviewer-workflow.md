@@ -40,6 +40,15 @@ For batches classified as **sensitive** (see [cursor-operating-model.md](./curso
 
 **Reject merge readiness** if a sensitive batch skipped the approval gate or implemented without the explicit approval phrase.
 
+## Decision recommendation reviewer expectations
+
+For plan-first or analysis-heavy batches where Cursor provided a recommendation (see [cursor-operating-model.md](./cursor-operating-model.md) — Decision Recommendation Protocol), the reviewer must verify:
+
+- **Recommendation vs authorization separation** — Cursor clearly separated “recommended decision” from “approved decision”.
+- **Decision level correctness** — the chosen decision level (D0/D1/D2/D3/D4) matches the actual risk category and scope.
+- **D4 enforcement** — reject merge readiness if Cursor implemented a **D4** decision without explicit approval.
+- **Low-confidence handling** — treat **Low** confidence recommendations as requiring more analysis or a smaller spike (do not accept implementation based on low-confidence recommendations).
+
 ### Final evidence and critical claims
 
 **Reject merge readiness** when:
