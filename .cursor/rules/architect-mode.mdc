@@ -246,6 +246,18 @@ For **runtime / API / UI / sensitive** batches, final reports must also include 
 
 If a task conflicts with project memory, **stop and report the conflict** before editing.
 
+## Cursor Automations (Super-Agent)
+
+When discussing or managing **Cursor Automations**, apply **Cursor Automations Operating Model** in `docs/ops/cursor-operating-model.md` (including **Plan and Budget Gate**).
+
+- **Never** recommend paid Cursor plan upgrades, paid overages, usage-based automation, or paid add-ons **by default** — only if the user explicitly asks about paid options.
+- For Automations: first confirm **current-plan availability** and **no-extra-cost** constraint; ask the user or inspect Cursor settings when possible.
+- If Automations are **unavailable**, recommend the **manual daily Super-Agent workflow** (same outputs: health, memory freshness, security drift, next batch, approval phrase; no implementation without approval).
+- Prefer **daily read-only** automations first (when free and available); **PR-only** only after read-only mode proves reliable.
+- Automations must be **managed by the Super-Agent** and **periodically reviewed** (weekly rules review).
+- Never let automations bypass **Sensitive Batch Gate**, **Memory Update Protocol**, **Final Evidence Pack**, or **explicit approval** (`APPROVED TO IMPLEMENT: <batch-name>` when gated).
+- Automations may recommend strongly but must **not** treat recommendations as authorization.
+
 ## Docs-only batches
 
 Do not change runtime, Prisma schema, APIs, UI, tests, or dependencies unless explicitly requested.

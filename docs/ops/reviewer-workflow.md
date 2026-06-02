@@ -109,6 +109,26 @@ For broad, ambiguous, or cross-cutting proposed work, the reviewer must verify C
 - Out-of-scope fences were violated (scope drift) without explicit reviewer/user approval.
 - An escalation trigger occurred but the batch did not stop/reclassify (D4 / Sensitive Gate) and follow the gate requirements.
 
+## Cursor Automations reviewer expectations
+
+When reviewing **Cursor Automations** proposals, configuration, or outputs (see [cursor-operating-model.md](./cursor-operating-model.md) — **Cursor Automations Operating Model**), the reviewer must verify:
+
+- **Unsafe autonomy** — reject automations that can **merge**, **deploy to production**, **run migrations**, or automatically change **auth**, **billing**, **RLS/grants**, **demo**, **import/apply**, or **delete** behavior without human gates.
+- **Read-only default** — daily automations are **read-only** unless explicitly approved as **PR-only** for a named, fenced batch.
+- **Recommendation vs authorization** — automation output does not imply `APPROVED TO IMPLEMENT` or merge readiness; approval phrases come from the human only.
+- **Memory hygiene** — automations do not edit `roadmap-todo.md` or `current-state.md` without Memory Update Protocol and explicit approval.
+- **Sensitive areas** — drift reviews and health summaries that touch sensitive topics stop at analysis unless the exact approval phrase is present.
+- **PR-only future** — if an automation opens a PR, the PR must include **Final Evidence Pack** and **Implementation Conformance Matrix**.
+- **Plan and budget** — proposals do not assume paid features, plan upgrades, overages, or extra budget without **explicit user approval**; verify a **manual daily Super-Agent fallback** exists when Automations are unavailable (see **Plan and Budget Gate** in operating model).
+
+**Reject** automation designs or runs when:
+
+- They assume **paid** Cursor features, plan upgrades, usage-based automation charges, or add-ons **without explicit budget approval**.
+- They bypass **Sensitive Batch Gate**, **Delegated Technical Lead Protocol**, or **Memory Update Protocol**.
+- They perform writes (commits, memory edits, schema/runtime changes) outside an explicitly approved PR-only scope.
+- They conflate “recommended next batch” with “authorized to implement.”
+- No **manual fallback** is documented when Automations are not available on the current plan.
+
 ## Improvement discovery reviewer expectations
 
 When Cursor reports discoveries during a batch (see [cursor-operating-model.md](./cursor-operating-model.md) — Improvement Discovery and Backlog Triage Protocol), the reviewer must verify:
