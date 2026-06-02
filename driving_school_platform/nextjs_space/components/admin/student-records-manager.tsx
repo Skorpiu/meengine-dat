@@ -21,7 +21,18 @@ import {
   RefreshCw,
   Search,
   Car,
+  Trash2,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import toast from "react-hot-toast";
 import type {
   StudentRecordApiError,
@@ -33,6 +44,7 @@ import {
   buildManualStudentCreatePayload,
   buildManualStudentPatchPayload,
   canSendStudentRecordInvite,
+  canShowStudentRecordDeleteAction,
   formatEnrollmentDateInputValue,
   formatStudentRecordDate,
   getStudentAppAccessLabel,
@@ -105,6 +117,10 @@ export function StudentRecordsManager() {
   const [inviteStudent, setInviteStudent] = useState<StudentRecordDto | null>(
     null,
   );
+  const [deleteStudent, setDeleteStudent] = useState<StudentRecordDto | null>(
+    null,
+  );
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const createPreviewId = useMemo(
     () =>
@@ -244,6 +260,41 @@ export function StudentRecordsManager() {
   const closeEdit = () => {
     setEditingStudent(null);
     setEditForm(emptyForm());
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteStudent) return;
+
+    setDeleteLoading(true);
+    try {
+      const response = await fetch(`/api/admin/students/${deleteStudent.id}`, {
+        method: "DELETE",
+      });
+      const data = await tryReadJson<{ code?: string; error?: string }>(
+        response,
+      );
+
+      if (!response.ok) {
+        toast.error(
+          studentRecordApiErrorMessage(
+            data?.code,
+            data?.error || "Não foi possível remover a ficha.",
+          ),
+        );
+        return;
+      }
+
+      toast.success("Ficha de aluno removida com sucesso.");
+      setDeleteStudent(null);
+      setStudents((prev) => prev.filter((s) => s.id !== deleteStudent.id));
+      if (editingStudent?.id === deleteStudent.id) {
+        closeEdit();
+      }
+    } catch {
+      toast.error("Ocorreu um erro ao remover a ficha.");
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const handleEdit = async (e: React.FormEvent) => {
@@ -536,6 +587,17 @@ export function StudentRecordsManager() {
                       <Edit2 className="h-4 w-4 mr-1" />
                       Editar
                     </Button>
+                    {canShowStudentRecordDeleteAction(student) ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => setDeleteStudent(student)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Remover ficha
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
               ))}
@@ -619,6 +681,39 @@ export function StudentRecordsManager() {
         }}
         onSuccess={() => loadStudents({ search: appliedSearch })}
       />
+
+      <AlertDialog
+        open={deleteStudent !== null}
+        onOpenChange={(open) => {
+          if (!open && !deleteLoading) setDeleteStudent(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover ficha de aluno</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteStudent
+                ? `Tem a certeza que pretende remover a ficha ${deleteStudent.schoolStudentId ?? ""} (${getStudentRecordDisplayName(deleteStudent)})? Esta ação é irreversível e só é permitida para fichas manuais sem histórico operacional.`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteLoading}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteLoading}
+              className="bg-red-600 hover:bg-red-700"
+              onClick={(e) => {
+                e.preventDefault();
+                void handleDeleteConfirm();
+              }}
+            >
+              {deleteLoading ? "A remover…" : "Remover"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }

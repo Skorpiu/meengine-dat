@@ -105,13 +105,7 @@ pnpm exec prisma migrate status
 - **Invitation / app access** should live **inside** the student or instructor person record.
 - **Import/export** should be UI buttons (Importar/Exportar), not raw API URLs.
 
-**Gap:** Fichas Registadas currently lack **delete/removal** for mistaken manual records.
-
-**Delete/removal policy (to implement):**
-
-- **Hard delete** only if: no lessons, no invitation, no linked User, no operational history.
-- Otherwise: archive / soft-delete / block with clear explanation.
-- **Never** destroy operational history accidentally.
+**Delete/removal (implemented):** School Admin (`SUPER_ADMIN`) may hard-delete a `MANUAL_ONLY` student ficha with no linked User, invitations, lessons of any `LessonSource`, lesson counters, lesson requests, exam registrations, or payments. Blocked deletes return stable **409** codes. Demo org uses the existing user-management mutation guard. Soft-delete/archive remains deferred.
 
 ---
 

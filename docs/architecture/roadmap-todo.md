@@ -19,13 +19,8 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 ### student-record-delete-policy-and-action
 
-- Users → Alunos / Fichas Registadas lacks delete/removal.
-- School Admin should remove a **manual** student record created by mistake.
-- Define safe policy:
-  - Hard delete only if no lessons, no invitations, no linked User, no operational history.
-  - Otherwise archive/soft-delete/block with explanation.
-- Add clear UI confirmation.
-- Not a simple button-only change — policy + API + tests.
+- Done (v1): guarded hard delete + Admin UI “Remover ficha” + API `DELETE /api/admin/students/[id]` + tests.
+- Follow-up (deferred): soft-delete/archive for fichas with operational history.
 
 ### people-management-ux-unification
 
