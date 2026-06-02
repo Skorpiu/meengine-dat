@@ -779,7 +779,7 @@ Every automation run must use this structure:
 - Any automation touching **sensitive areas** (see [Sensitive Batch Gate](#sensitive-batch-gate)) must **stop at analysis** unless the exact approval phrase is provided in the same thread/run context.
 - Automations are **managed by the Super-Agent** and reviewed on the **weekly** rules-review cadence (automation #5 above).
 - If **high-load** or **model-switch interruptions** are known to affect reliability, report them in the automation output under **Limitations**.
-- Automation prompts and runbooks should live under `docs/ops/` (or a clearly named ops document) when implemented — not scattered in unreviewed personal settings.
+- Automation prompts and runbooks live in [cursor-automations-prompts.md](./cursor-automations-prompts.md) (v1 templates) — not scattered in unreviewed personal settings.
 
 ### Relationship to existing protocols
 
