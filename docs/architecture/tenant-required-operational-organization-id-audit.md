@@ -193,7 +193,7 @@ Record results in Preview QA notes when run; not required to close this audit do
 | **0** | — | Run SQL counts above on Preview; repeat before Production | Operator |
 | **1** | `tenant-operational-organization-id-backfill-v1` | Extend backfill for `Student`/`Instructor`; document multi-org rules; optional read-only report script | `APPROVED TO IMPLEMENT: …` + no NOT NULL yet |
 | **2** | `tenant-operational-organization-id-not-null-migrations` | Per-table NOT NULL after zero NULL rows verified | Explicit migration approval + `migrate deploy` operator command |
-| **3** | `supabase-rls-data-api-policy-matrix` | Explicit RLS policies on tenant tables | D4 |
+| **3** | `supabase-rls-data-api-policy-matrix` | **Done (v1)** — classification matrix only; see [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md). Explicit RLS **SQL** on tenant tables → `supabase-rls-tenant-policies-v1` (D4) |
 | **4** | Product | Revisit global uniques (`Vehicle.registrationNumber`, `SystemSetting.settingKey`) for multi-client | Product decision |
 
 **Do not combine phase 2 with feature batches.**

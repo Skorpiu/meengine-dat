@@ -69,9 +69,9 @@ Parent batch — always slice before implementing.
 
 ### supabase-rls-data-api-policy-matrix
 
-- Classify tables: service-only/internal, auth/security, business/client-facing, reference, audit/billing/system.
-- `rls_enabled_no_policy` INFO warnings are **not** automatically P0 — RLS with no policies is deny-by-default.
-- Still document **explicit policy per table** and deliberate future grants.
+- **Done (v1 slice):** docs-only classification matrix — [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md). All 31 Prisma tables classified; 7 with RLS in migrations; 0 intended anon/authenticated Data API access today; `rls_enabled_no_policy` documented as intentional for service-only tables. **No** SQL policies, grants, or migrations in this slice.
+- **Next gated slice (recommended):** `supabase-rls-class-b-hardening-v1` — enable RLS + `REVOKE ALL FROM anon, authenticated` on remaining internal tables flagged by Security Advisor (D4 / RLS gate).
+- **Deferred:** tenant-scoped RLS policies (`supabase-rls-tenant-policies-v1`) after org-id backfill/NOT NULL; dedicated `api` schema review.
 
 ### tenant-required-operational-organization-id-audit
 

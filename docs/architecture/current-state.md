@@ -122,6 +122,7 @@ Documented and in use (docs/rules only; no runtime change):
 - **Cursor Automations operating model** — same operating model doc (**Plan and Budget Gate**; read-only default)
 - **Cursor Automations prompt templates (v1)** — [cursor-automations-prompts.md](../ops/cursor-automations-prompts.md)
 - **External database architecture audit triage** — critique classified into roadmap items (`tenant-required-operational-organization-id-audit`, `audit-log-tenant-context-foundation`, `lesson-student-nullability-policy-review`); triage itself is **docs-only**, no schema changes from triage alone
+- **Git Bash command discipline** — [command-batteries.md](../ops/command-batteries.md), [cursor-operating-model.md](../ops/cursor-operating-model.md): Git Bash/bash batteries by default (`Assumed shell: Git Bash`); no PowerShell mixing; single-line Conventional Commit messages; guarded `DAT-*.zip` generation (`cursor-git-bash-command-discipline`)
 
 **Daily guidance (no extra Cursor cost):** **Daily Manual Super-Agent Check** is the default workflow ([cursor-automations-prompts.md](../ops/cursor-automations-prompts.md)). Use **Cursor Automations** only if available in the **current plan at no extra cost** (`cursor-automations-super-agent-scheduled-support` in roadmap).
 
@@ -141,14 +142,16 @@ Documented and in use (docs/rules only; no runtime change):
 - External database architecture audit triage (backlog items created; no implementation from triage alone)
 - `import-export-ui-students-export-v1` — Student records export UI (CSV/JSON) on Fichas registadas (`StudentRecordsManager`); reuses `GET /api/admin/students/export`; English labels for new export controls; `search` query aligned with applied list search; validated via `pnpm check`.
 - `tenant-required-operational-organization-id-audit` — Docs-only classification of nullable `organizationId` on operational models; unique-constraint notes; backfill/migration phased plan. Report: [tenant-required-operational-organization-id-audit.md](./tenant-required-operational-organization-id-audit.md).
+- `supabase-rls-data-api-policy-matrix` — Docs-only RLS/Data API classification matrix for all Prisma tables; `rls_enabled_no_policy` intentional for service-only; RLS policy SQL deferred. Report: [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md).
+- `cursor-git-bash-command-discipline` — Ops command batteries and Cursor rules require Git Bash/bash syntax by default (`Assumed shell: Git Bash`); no PowerShell mixing; single-line Conventional Commit commands; guarded `DAT-*.zip` generation. See [command-batteries.md](../ops/command-batteries.md), [cursor-operating-model.md](../ops/cursor-operating-model.md).
 
 ### Likely next (smallest safe slices)
 
-1. `supabase-rls-data-api-policy-matrix` — classification/docs first (RLS policy SQL deferred)
-2. `people-management-ux-unification` — **remaining:** invitations-on-record, instructor/route split, instructor parity (IA v1 nav/labels already shipped)
-3. `import-export-ui-actions` — remaining slices (students import dry-run UI, apply UI, practical lessons import/export UI)
-4. `tenant-operational-organization-id-backfill-v1` — extend backfill script + operator NULL counts; **no NOT NULL migration** in v1 (gated separately)
-5. `audit-log-tenant-context-foundation` — planning only
-6. `product-ui-language-baseline-english-v1` or explicit i18n path — reconcile PT IA exception with English baseline
+1. `people-management-ux-unification` — **remaining:** invitations-on-record, instructor/route split, instructor parity (IA v1 nav/labels already shipped)
+2. `import-export-ui-actions` — remaining slices (students import dry-run UI, apply UI, practical lessons import/export UI)
+3. `tenant-operational-organization-id-backfill-v1` — extend backfill script + operator NULL counts; **no NOT NULL migration** in v1 (gated separately)
+4. `audit-log-tenant-context-foundation` — planning only
+5. `product-ui-language-baseline-english-v1` or explicit i18n path — reconcile PT IA exception with English baseline
+6. `supabase-rls-class-b-hardening-v1` — optional follow-up: RLS + REVOKE on remaining internal tables (D4 / RLS gate)
 
 Engineering excellence audit items (non-blocking refactors) remain tracked separately in roadmap P2+.
