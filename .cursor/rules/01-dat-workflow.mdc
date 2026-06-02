@@ -83,19 +83,31 @@ Output:
 - Attach Critical Claim Evidence for any security, tenancy, deletion, import/apply, or mitigation claims.
 - Final report must state whether the implemented batch matched the **recommended safe slice** or drifted (and why), including whether any escalation trigger was hit.
 
+## Terminal commands (Git Bash default)
+
+- **Rui runs** operational commands in **Git Bash** on Windows (see `docs/ops/command-batteries.md` — **Shell convention** and **Git Bash Command Discipline Protocol** in `docs/ops/cursor-operating-model.md`).
+- **Command batteries must state:** `Assumed shell: Git Bash` (before each fenced block).
+- Use **Bash line continuations** with trailing `\` (not PowerShell backticks).
+- Use **Bash variable syntax**, e.g. `SHA=$(git rev-parse --short HEAD)` (not `$sha = …`).
+- Do **not** use PowerShell syntax unless explicitly requested.
+- Cursor **outputs** `bash`-fenced copy-paste blocks only; never mix PowerShell, CMD, and Bash in one battery.
+- Do not tell Rui to execute markdown/doc file paths as shell commands.
+- Evidence Pack and validation commands must match `command-batteries.md`.
+- Before `git archive`, confirm `SHA` is non-empty; never produce or commit `DAT-.zip`.
+
 ## Human-controlled close/merge (after validation)
 
 See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol** and `docs/ops/command-batteries.md` — Human-controlled close/merge battery.
 
-- After a batch is validated, Cursor should **stop** and provide the **manual close/merge battery** — do not run commit/merge/push by default.
-- **Rui runs** the merge/push commands manually.
-- The battery must include:
+- After validation, close/merge batteries remain **human-controlled** — Cursor does **not** run commit/merge/push by default.
+- **Rui runs** merge/push manually in **Git Bash**; batteries must be **copy-paste-safe** (simple blocks, one-line commits).
+- The battery must start with **`Assumed shell: Git Bash`** and include:
   - expected `git status` before staging;
-  - `git add` paths (specific to the batch);
+  - `git add` paths (specific to the batch; use `\` continuations if listing many paths);
   - staged diff check;
-  - **Conventional Commits** commit message;
+  - **single-line Conventional Commits** message, e.g. `git commit -m "type: message"`;
   - `git switch main`, `git pull --ff-only`, `git merge --no-ff <branch-name>`;
   - `pnpm -C driving_school_platform/nextjs_space check`;
   - `git push`;
   - `git branch -d <branch-name>`;
-  - ZIP archive command (`DAT-<sha>.zip`).
+  - ZIP: `rm -f DAT-*.zip`, `SHA=$(git rev-parse --short HEAD)`, `git archive` → `DAT-${SHA}.zip` (Bash only; no PowerShell).

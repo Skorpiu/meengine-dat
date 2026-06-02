@@ -157,6 +157,32 @@ For **destructive / data-sensitive** batches, verify the stated mitigation (e.g.
 
 Do not approve merge readiness based on prose summary alone.
 
+## Git Bash command discipline reviewer expectations
+
+When Cursor provides command batteries or runs terminal steps (see [cursor-operating-model.md](./cursor-operating-model.md) — **Git Bash Command Discipline Protocol** and [command-batteries.md](./command-batteries.md) — **Shell convention**), the reviewer must verify:
+
+- **Assumed shell line** — every command battery states `Assumed shell: Git Bash` immediately before the fenced block.
+- **No mixed syntax** — batteries do not mix PowerShell, CMD, and Git Bash in the same block.
+- **Close/merge copy-paste safety** — close/merge batteries are copy-paste-safe for **Git Bash** (simple blocks; prefer single-line Conventional Commit messages).
+- **ZIP / archive** — use `SHA=$(git rev-parse --short HEAD)` (bash command substitution), not PowerShell variables (e.g. `$sha = git rev-parse --short HEAD` or `"DAT-$sha.zip"`).
+- **Delete commands** — use `rm -f` (e.g. `rm -f DAT-*.zip`), not `Remove-Item`.
+- **Multi-line `git add`** — use bash backslash line continuations (`\` at end of line), not PowerShell backtick continuations.
+- **Bash fences** — executable blocks use `bash` syntax from [command-batteries.md](./command-batteries.md); no PowerShell/cmd unless explicitly labeled exception.
+- **No doc-path commands** — nothing tries to “run” `docs/...`, `@docs/...`, or markdown file paths as shell commands.
+- **ZIP naming** — no `DAT-.zip`; confirm non-empty `SHA` before `git archive`; do not commit `DAT-*.zip`.
+- **Agent execution** — if Cursor ran shell commands, they were bash-compatible or explicitly wrapped for bash; migration/ZIP/git-archive steps were not silently run with PowerShell-only syntax.
+
+**Reject merge readiness** when:
+
+- Command batteries **mix PowerShell, CMD, and Git Bash** syntax.
+- A battery is **missing** `Assumed shell: Git Bash`.
+- Close/merge commands are **not** copy-paste-safe for Git Bash (heredocs, mixed shells, or complex PowerShell-only constructs without justification).
+- ZIP/archive uses **PowerShell variable syntax** instead of `SHA=$(git rev-parse --short HEAD)`.
+- Delete steps use **`Remove-Item`** instead of `rm -f`.
+- Multi-line `git add` uses **PowerShell backticks** instead of bash `\` continuations.
+- Prose or documentation paths appear inside executable shell blocks without `#` comment prefixes.
+- The manual battery contradicts [command-batteries.md](./command-batteries.md) or the operating model Git Bash protocol.
+
 ## Human-controlled merge reviewer expectations
 
 When Cursor closes a batch (see [cursor-operating-model.md](./cursor-operating-model.md) — **Human-Controlled Merge Protocol**), the reviewer must verify:
@@ -172,6 +198,7 @@ When Cursor closes a batch (see [cursor-operating-model.md](./cursor-operating-m
 - Cursor executed merge/push without explicit user request.
 - The manual battery is missing, incomplete, or uses blind `git add -A` without justification when only specific paths changed.
 - The battery references files or a branch that do not match the evidence pack.
+- The battery violates **Git Bash command discipline** (PowerShell syntax, doc paths as commands, or invalid ZIP steps) — see Git Bash command discipline reviewer expectations above.
 
 ### Plan-to-implementation conformance (Implementation Conformance Matrix)
 
@@ -326,6 +353,7 @@ ZIP must **not** be committed. Do not merge before review if reviewer requested 
 | **Migrations** | Only if requested; SQL reviewed |
 | **Secrets** | None in diff or docs |
 | **Check** | `pnpm -C driving_school_platform/nextjs_space check` green |
+| **Shell discipline** | Every battery has `Assumed shell: Git Bash`; no mixed PowerShell/CMD/bash; `rm -f` not `Remove-Item`; `SHA=$(...)` not PowerShell `$sha`; `\` not backticks for `git add`; close/merge copy-paste-safe |
 
 ---
 
