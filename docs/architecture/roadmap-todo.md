@@ -24,25 +24,40 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 ### people-management-ux-unification
 
-- **Done (v1 slice):** `people-management-information-architecture-v1` — PT IA on `/admin/users` (Pessoas nav, Alunos primary, Contas da app, helper copy; same route/API/invitation behavior).
-- **Remaining:**
-- Make **Alunos** and **Instrutores** the main management entities (instructor fichas / route split not in v1).
-- Rebrand/reduce **All Users** → **Contas da App** / **Acessos**.
-- Move invitations/app access into student/instructor record.
-- Avoid exposing Student vs User as competing tables.
-- Natural flows:
-  - Nova ficha de aluno
-  - Novo instrutor
-  - Criar/enviar acesso à app as optional step
+- **Done (v1 slice):** `people-management-information-architecture-v1` — PT IA on `/admin/users` (Pessoas nav, Alunos primary, **Contas da app** section label, helper copy; same route/API/invitation behavior). **Not pending:** primary Alunos/Fichas hierarchy or Contas da app labeling from v1.
+- **Remaining (deferred):**
+- Make **Instrutores** a first-class management entity (instructor fichas; **route split** not in v1).
+- Move **invitations / app access** into student or instructor person record (invitations-on-record).
+- Avoid exposing Student vs User as competing tables in admin flows.
+- Natural flows (product direction; English UI baseline for new copy unless batch approves exception):
+  - New student ficha
+  - New instructor
+  - Create/send app access as optional step on the person record
 
 ### import-export-ui-actions
 
-- Importar/Exportar on Alunos / Fichas Registadas.
+Parent batch — always slice before implementing.
+
+- **Next slice (recommended):** `import-export-ui-students-export-v1`
+  - Export buttons (CSV/JSON) for student records on Fichas registadas.
+  - Reuse existing students export API (no new export contract in this slice).
+  - **English UI labels** for new controls.
+  - **Out of scope for this slice:** import, dry-run, apply, practical lessons UI.
+- **Deferred slices (parent):**
 - Importar/Exportar on Aulas Práticas / history.
-- CSV and JSON exports.
-- Dry-run preview UI before apply.
+- Students import dry-run preview UI and apply UI.
+- Dry-run preview UI before apply (imports).
 - Row-level validation errors in UI.
 - No raw API URLs for School Admin.
+
+### product-ui-language-baseline-english-v1
+
+- Audit and reconcile **hardcoded Portuguese** admin UI labels introduced by approved `people-management-information-architecture-v1` (temporary exception).
+- Preserve **English product UI baseline** for new work; prepare strings for future i18n rather than adding scattered PT literals.
+- **Smallest safe v1 slice:** inventory PT/EN strings on `/admin/users` (and related admin people surfaces touched by IA v1) + documented migration plan to English or locale resources.
+- **Out of scope for v1 unless separately approved:** full i18n framework, repo-wide copy sweep, or changing runtime behavior/API contracts.
+
+---
 
 ---
 
