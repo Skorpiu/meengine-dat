@@ -144,6 +144,81 @@ pnpm -C driving_school_platform/nextjs_space check
 
 If the check fails, do not declare the batch complete. Report the failing command and a concise output summary.
 
+## Final Evidence Pack
+
+For every **runtime / API / UI / data-sensitive** batch, Cursor final reports must include:
+
+- `git status --short`
+- `git --no-pager diff --stat`
+- `git --no-pager diff --cached --stat`
+- `git --no-pager diff --name-only`
+- `git --no-pager diff --cached --name-only`
+- exact validation command and result
+- files changed grouped by:
+  - runtime/API
+  - UI
+  - tests
+  - docs/memory
+  - config/rules
+- explicit confirmation that forbidden areas were **not** touched:
+  - Prisma schema
+  - migrations
+  - package.json
+  - pnpm-lock.yaml
+  - auth
+  - billing
+  - demo policy
+  - RLS/grants
+  - env files
+
+**Staging vs working tree:**
+
+- If changes are **unstaged**, use `git diff` (and `git diff --stat` / `git diff --name-only`).
+- If changes are **staged**, use `git diff --cached` (and matching `--stat` / `--name-only`).
+- If unsure, provide **both**.
+- A patch/diff with **0 bytes** is not valid evidence.
+- Do **not** claim implementation is complete unless the evidence pack reflects the **actual** working tree and staging state.
+
+Untracked files (`??` in `git status --short`) do not appear in plain `git diff`; list them explicitly and include their paths in the files-changed summary.
+
+## Critical Claim Evidence Protocol
+
+For any **critical claim** in a final report, Cursor must provide **direct evidence** — not narrative alone.
+
+Examples of critical claims:
+
+- “row lock implemented”
+- “tenant isolation enforced”
+- “RLS/grants unchanged”
+- “no Prisma schema changes”
+- “demo guard reused”
+- “dry-run is zero-write”
+- “apply is all-or-nothing”
+- “provider raw errors are sanitized”
+- “rate-limit enforced”
+- “no cross-tenant access”
+
+Required structure for each critical claim:
+
+- **Claim:**
+- **Evidence:**
+  - file path(s)
+  - relevant grep/search command
+  - relevant diff/test reference
+- **Test coverage:**
+- **Remaining limitation, if any:**
+
+Example:
+
+- **Claim:** row lock implemented.
+- **Evidence:**
+  - `git grep -nE "FOR UPDATE|queryRaw|lockStudentRowForUpdate" -- driving_school_platform/nextjs_space/lib/students/student-record-delete.ts`
+  - unit test asserts `$queryRaw` runs before `findFirst` and `delete`
+- **Test coverage:**
+  - `student-record-delete.unit.test.ts`
+- **Remaining limitation:**
+  - test asserts call order; manual diff review confirms the SQL contains `FOR UPDATE`.
+
 ## Memory Update Protocol
 
 Rules:
