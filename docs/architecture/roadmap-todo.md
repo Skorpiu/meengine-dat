@@ -54,6 +54,17 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 - `rls_enabled_no_policy` INFO warnings are **not** automatically P0 — RLS with no policies is deny-by-default.
 - Still document **explicit policy per table** and deliberate future grants.
 
+### tenant-required-operational-organization-id-audit
+
+**Source:** external database/architecture critique triage (`external-database-architecture-audit-triage`); **docs-only backlog** — no schema changes in this item.
+
+- Read-only audit of operational models with nullable `organizationId` (confirmed in schema: `Student`, `Instructor`, `Vehicle`, `Lesson`, `Exam`; also review `LessonRequest` and related tenant-reachable models).
+- Classify legitimate global/platform exceptions (e.g. `User.organizationId` for cross-role accounts, `BillingEvent`, global `SystemSetting` / `FeatureFlag`).
+- Check whether real rows exist with `organizationId` NULL in target environments (Preview/Production as applicable).
+- Identify unique/index constraints affected by nullable tenant scope (e.g. `Student` `@@unique([organizationId, schoolStudentId])`).
+- Propose phased backfill and migration plan; implementation gated separately (`APPROVED TO IMPLEMENT: …` + migration approval).
+- **Smallest safe v1 slice:** audit report + classification only; no Prisma/migration/RLS changes in the audit batch itself.
+
 ### billing webhook hardening
 
 - No raw provider errors in HTTP `detail` for clients.
@@ -74,6 +85,26 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 ---
 
 ## P2 / Engineering excellence
+
+### audit-log-tenant-context-foundation
+
+**Source:** external database/architecture critique triage; **planning only** — no schema changes in this item. Also **Security and data policy** (tenant-scoped audit queries).
+
+- Plan adding `organizationId` to `AuditLog` for tenant-scoped audit queries (model currently has `userId` / `userEmail` / `userRole` only; no tenant column).
+- Allow nullable `organizationId` for platform/global events (consistent with `ConfigurationHistory`, `BillingEvent`).
+- Index `organizationId` and `(organizationId, createdAt)` in a future migration batch.
+- `AuditLog` is a sensitive/internal table per `database.mdc` — RLS/grants and migration require explicit approval.
+- **Smallest safe v1 slice:** design doc + write-path contract (how org is resolved on audit insert); no migration in planning batch.
+
+### lesson-student-nullability-policy-review
+
+**Source:** external database/architecture critique triage; **policy review only** — no schema changes in this item.
+
+- Clarify `Lesson.studentId` nullability policy in architecture docs and validation contracts.
+- Allow NULL only for group **THEORY** lessons if that remains the business rule (already reflected in `lessonCreationSchema` superRefine).
+- Require `Student.id` for **DRIVING**, **EXAM**, and **THEORY_EXAM** at application level (enforce consistently across create/update/import paths).
+- Consider DB-level check constraint later if worthwhile after audit of existing rows.
+- **Smallest safe v1 slice:** document policy + grep validation/API gaps; defer migration/check constraint.
 
 ### instructor-id-boundary-hygiene
 
@@ -105,6 +136,19 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 ### Prisma/Prettier polish
 
 - `prisma format` / formatting review in dedicated batch only.
+
+---
+
+## P3 / DX
+
+### cursor-rules-performance-split
+
+**Source:** external architecture critique triage; **defer implementation** until Cursor performance/context noise is a confirmed problem.
+
+- Do **not** narrow `architect-mode.mdc` `globs: ["**/*"]` prematurely while `alwaysApply: true` is required for global safety protocols.
+- If Cursor performance or context noise becomes a real issue, split a lean `alwaysApply` core from scoped detailed rules (e.g. keep protocols in core; move domain/deep runbooks to scoped rules like `database.mdc`).
+- Preserve global behavior protocols (Sensitive Batch Gate, memory paths, validation requirements).
+- **Smallest safe v1 slice:** measure/confirm problem first; no rule file changes until justified.
 
 ---
 
