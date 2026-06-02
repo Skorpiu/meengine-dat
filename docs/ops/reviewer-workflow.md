@@ -46,6 +46,8 @@ For plan-first or analysis-heavy batches where Cursor provided a recommendation 
 
 - **Recommendation vs authorization separation** — Cursor clearly separated “recommended decision” from “approved decision”.
 - **Decision level correctness** — the chosen decision level (D0/D1/D2/D3/D4) matches the actual risk category and scope.
+- **D3 calibration** — reject a **D3** classification when the batch touches **admin runtime UI** or **sensitive-adjacent surfaces** (people/users/invitations, auth, billing, demo, import/apply, destructive data, operational history) unless the reason is explicitly justified and harmless (rare; default is not D3).
+- **D2 vs D3 vs gate** — verify **D2** is used only for internal choices inside an already approved scope; verify **D3** is not used to bypass the **Sensitive Batch Gate** or skip explicit approval on runtime admin UI.
 - **D4 enforcement** — reject merge readiness if Cursor implemented a **D4** decision without explicit approval.
 - **Low-confidence handling** — treat **Low** confidence recommendations as requiring more analysis or a smaller spike (do not accept implementation based on low-confidence recommendations).
 
