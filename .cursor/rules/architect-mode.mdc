@@ -247,14 +247,15 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - Cursor Super-Agent protocols, Automations operating model, and prompt templates (docs in `docs/ops/`)
 - External database architecture audit triage (roadmap items only; no schema from triage)
 - `import-export-ui-students-export-v1` (slice of `import-export-ui-actions` — export CSV/JSON on Fichas registadas; English labels for new controls)
+- `tenant-required-operational-organization-id-audit` — docs-only; report at `docs/architecture/tenant-required-operational-organization-id-audit.md`
 
 **Current recommended next:**
 
-1. `tenant-required-operational-organization-id-audit` (audit + classification only)
+1. `supabase-rls-data-api-policy-matrix` (classification/docs before policy SQL)
 
 **P1 security/data follow-up (docs-first slices):**
 
-2. `supabase-rls-data-api-policy-matrix` (classification/docs before policy SQL)
+2. `tenant-operational-organization-id-backfill-v1` (extend backfill + NULL counts; no NOT NULL migration in v1)
 
 **Then (slice parent batches; do not implement broad names directly):**
 
