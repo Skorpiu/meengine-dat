@@ -28,6 +28,8 @@ Runs lint, typecheck, test:run, and build. Use before commit, ZIP, merge, push, 
 
 **Discoveries during a batch:** when Cursor finds new issues or improvement opportunities while implementing or reviewing, use the **Improvement Discovery and Backlog Triage Protocol** in [cursor-operating-model.md](./cursor-operating-model.md) — report under **Deferred recommendations**; do not expand scope or update memory prematurely.
 
+**Cursor Automations / scheduled agents:** read **Cursor Automations Operating Model** in [cursor-operating-model.md](./cursor-operating-model.md) — confirm **Plan and Budget Gate** (no extra cost on current plan); if unavailable, use **manual daily Super-Agent** fallback; start read-only, Super-Agent managed, no auto-merge/deploy/migrations/sensitive writes.
+
 ---
 
 ## Evidence Pack commands

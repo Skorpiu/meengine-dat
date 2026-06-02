@@ -694,6 +694,103 @@ When processing a user suggestion, Cursor must use this structure:
 
 Cursor must **not** immediately edit UI or roadmap. Cursor triages: APIs already exist (`import-export-ui-actions` backend done); gap is UI; recommend slice `import-export-ui-students-import-dry-run-v1` **after** export v1; **Add to To-Do:** only if not already covered; **Proposed roadmap wording** only if a new bullet is needed.
 
+## Cursor Automations Operating Model
+
+Cursor Automations may be used for DAT **only** under the **Super-Agent** operating model: scheduled or event-triggered agents are **owned, configured, and periodically reviewed** by the Cursor Super-Agent (not ad-hoc personal automations that bypass DAT gates).
+
+When Automations are unavailable or not included in the current plan at no extra cost, use the **manual daily Super-Agent fallback** below — same outputs, same gates.
+
+### Plan and Budget Gate
+
+**Rules:**
+
+- Use Cursor Automations **only** if they are available in the **current Cursor plan at no additional cost** (included in Cursor Pro or otherwise free — not paid add-ons, overages, or usage-based automation charges).
+- Do **not** recommend upgrading plans, enabling paid overages, usage-based automation, or paid add-ons **unless the user explicitly asks**.
+- Before configuring Automations, Cursor must ask the user to **confirm availability** in the current plan, or **inspect Cursor UI/settings** if possible in context.
+- If Automations are **not** available, use the **manual daily Super-Agent prompt** (see **Manual fallback** below) — do not block operational guidance on paid features.
+- This operating model remains the **target/future plan** for when Automations are free and available; it must **not** create cost pressure or imply a budget for plan upgrades.
+
+**Manual fallback:**
+
+- Run a **daily manual Super-Agent check** in Cursor (same cadence intent as scheduled automations).
+- Use the same scope and [Automation output format](#automation-output-format) as the read-only automations below.
+- Required coverage in each run:
+  - project health (`current-state.md`, `roadmap-todo.md`, recent git history when available);
+  - stale `current-state` / `roadmap-todo` vs recently completed work;
+  - security-sensitive drift (auth, billing, RLS, demo, import/apply, data deletion, tenant isolation, Prisma/migrations);
+  - next recommended batch ([Delegated Technical Lead Protocol](#delegated-technical-lead-protocol));
+  - exact approval phrase when implementation is recommended;
+  - **no implementation** unless the user provides explicit approval (including `APPROVED TO IMPLEMENT: <batch-name>` when gated).
+
+Label manual runs in the output (e.g. **Automation name:** `Manual daily Super-Agent check`).
+
+### Initial automation posture
+
+Progression must be deliberate:
+
+1. **Start read-only** — analysis and reports only; no repo writes.
+2. **Then PR-only** (future) — open pull requests when explicitly approved; still no direct merge.
+3. **Never automatic:**
+   - merge;
+   - production deploy;
+   - migrations (`prisma migrate deploy`, `migrate dev`, `migrate reset`);
+   - auth, billing, RLS/grants, demo policy, import/apply, or data-deletion behavior changes;
+   - writes to `roadmap-todo.md` or `current-state.md` without [Memory Update Protocol](#memory-update-protocol) and explicit approval.
+
+All automation outputs must **distinguish recommendation from authorization** (same bar as [Delegated Technical Lead Protocol](#delegated-technical-lead-protocol) and [Sensitive Batch Gate](#sensitive-batch-gate)).
+
+### Recommended initial cadence
+
+- **Daily** — DAT is worked on daily and there is urgency toward **Production v1** (client target around **August**). Daily read-only **Automations** (when [Plan and Budget Gate](#plan-and-budget-gate) allows) or the **manual Super-Agent fallback** support operational guidance without expanding autonomous write scope.
+
+### Initial safe automations (read-only v1)
+
+| # | Automation | Behavior |
+| - | ---------- | -------- |
+| 1 | **Daily DAT Project Health Summary** | Reads `current-state.md`, `roadmap-todo.md`, and recent git history when available; reports stale docs, failed assumptions, top risks, and next recommended batch. **No file edits.** |
+| 2 | **Daily Next Batch Recommendation** | Applies [Delegated Technical Lead Protocol](#delegated-technical-lead-protocol); compares top **3** options; recommends **one** smallest safe slice; provides exact approval phrase. **No implementation.** |
+| 3 | **Daily Security-Sensitive Drift Review** | Checks whether new TODOs, roadmap items, or diffs mention auth, billing, RLS, demo, import/apply, data deletion, tenant isolation, Prisma/migrations; reports risk classification. **No code changes.** |
+| 4 | **Daily Roadmap/Memory Freshness Check** | Compares `current-state.md` and `roadmap-todo.md` against recently completed batches; proposes **exact wording only** for memory updates. **No edits without approval.** |
+| 5 | **Weekly Automation Rules Review** | Reviews the automations themselves (prompts, triggers, scope) and proposes updates if project workflow changed. **No automatic changes.** |
+
+Later (only after read-only mode proves reliable): evaluate **PR-only** automations for approved, fenced batches — still subject to [Final Evidence Pack](#final-evidence-pack) and [Implementation Conformance Matrix](#implementation-conformance-matrix).
+
+### Automation output format
+
+Every automation run must use this structure:
+
+- **Automation name:**
+- **Trigger/cadence:**
+- **Inputs inspected:**
+- **Findings:**
+- **Risks:**
+- **Recommended next action:**
+- **Approval phrase, if implementation is recommended:** (e.g. `APPROVED TO IMPLEMENT: <batch-name>` — never implied as already granted)
+- **Memory update proposed:** yes/no
+- **Exact memory wording, if any:** (propose only; do not apply without approval)
+- **Files changed:** `none`, unless explicitly **PR-only** and approved for that run
+- **Confidence:** High / Medium / Low
+- **Limitations:**
+
+### Rules
+
+- Automations may **recommend strongly** but must **not authorize themselves** (no “approved to implement” unless the human pasted the phrase).
+- If an automation opens a PR in the future, the PR description must include **Final Evidence Pack** and **Implementation Conformance Matrix** per this document.
+- Any automation touching **sensitive areas** (see [Sensitive Batch Gate](#sensitive-batch-gate)) must **stop at analysis** unless the exact approval phrase is provided in the same thread/run context.
+- Automations are **managed by the Super-Agent** and reviewed on the **weekly** rules-review cadence (automation #5 above).
+- If **high-load** or **model-switch interruptions** are known to affect reliability, report them in the automation output under **Limitations**.
+- Automation prompts and runbooks should live under `docs/ops/` (or a clearly named ops document) when implemented — not scattered in unreviewed personal settings.
+
+### Relationship to existing protocols
+
+| Protocol | Automation use |
+| -------- | -------------- |
+| [Delegated Technical Lead Protocol](#delegated-technical-lead-protocol) | Required for daily next-batch recommendation (#2). |
+| [Memory Update Protocol](#memory-update-protocol) | Required before any memory doc edit; automations propose wording only (#4). |
+| [Sensitive Batch Gate](#sensitive-batch-gate) | Blocks autonomous implementation on sensitive topics (#3). |
+| [Final Evidence Pack](#final-evidence-pack) / [Implementation Conformance Matrix](#implementation-conformance-matrix) | Required for any future PR-only automation output. |
+| [Improvement Discovery and Backlog Triage Protocol](#improvement-discovery-and-backlog-triage-protocol) | Use when automations surface new risks; do not auto-add to roadmap. |
+
 ## Operational memory policy
 
 Durable decisions, workflow changes, migrations, runbooks, client-specific product decisions, and future To-Dos must be reflected in the appropriate docs under `docs/` (architecture and ops), following the [Memory Update Protocol](#memory-update-protocol).

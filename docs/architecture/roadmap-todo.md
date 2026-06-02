@@ -59,6 +59,18 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 - No raw provider errors in HTTP `detail` for clients.
 - Sanitize external/provider errors before production reliance.
 
+### cursor-automations-super-agent-scheduled-support
+
+**Priority:** **P1** if Automations are **available at no extra cost** in the current Cursor plan **and** useful for **August Production v1** daily operational guidance; otherwise **P2** or **deferred** (manual fallback still applies).
+
+- **Budget guard:** only if available in the **current Cursor plan at no extra cost** — no paid plan upgrades, overages, usage-based automation, or paid add-ons unless the user explicitly approves budget.
+- **Fallback:** if Automations are not available, run the same **daily project-health / next-batch recommendation** prompt **manually** in Cursor (Super-Agent; see **Manual fallback** in [cursor-operating-model.md](../ops/cursor-operating-model.md) — Cursor Automations Operating Model).
+- Set up **daily read-only** automations (when budget gate passes) for: project health summary, next-batch recommendation ([Delegated Technical Lead Protocol](../ops/cursor-operating-model.md)), roadmap/`current-state` freshness, and security-sensitive drift review.
+- Keep automations **managed by the Cursor Super-Agent**; **weekly** review of automation prompts/rules themselves.
+- **Avoid:** automatic merges, migrations, production deploys, and autonomous auth/billing/RLS/demo/import/apply/data-deletion changes.
+- **Later:** evaluate **PR-only** automations only after read-only mode proves reliable (still no auto-merge).
+- Operating model: [cursor-operating-model.md](../ops/cursor-operating-model.md) — **Cursor Automations Operating Model** (including **Plan and Budget Gate**).
+
 ---
 
 ## P2 / Engineering excellence
