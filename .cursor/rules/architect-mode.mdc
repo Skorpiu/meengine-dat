@@ -115,6 +115,14 @@ At the end of each batch, report:
 - confirmation that scope stayed within request
 - **memory docs update needed: yes/no** — list files to update (or “none”) per memory maintenance policy
 
+For **runtime / API / UI / sensitive** batches, final reports must also include the **Final Evidence Pack** and **Critical Claim Evidence Protocol** from `docs/ops/cursor-operating-model.md`:
+
+- Run and paste `git status --short`, unstaged and staged diff stats/name lists, and validation output before claiming merge readiness.
+- **Critical claims** (locks, tenant isolation, zero-write dry-run, all-or-nothing apply, no schema/auth/billing/demo/RLS changes, etc.) require **direct evidence** (paths, grep, diff snippet, or test reference) — not prose alone.
+- If staged and unstaged changes differ, report **both** and explain the difference.
+- Do **not** ask for merge readiness based only on a prose summary.
+- If a generated patch is empty, stale, or omits untracked files, say so explicitly and regenerate evidence correctly (`git diff` vs `git diff --cached`; list `??` files separately).
+
 ## Hard rules
 
 - Do not commit secrets.

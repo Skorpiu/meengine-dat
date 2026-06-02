@@ -20,6 +20,29 @@ Runs lint, typecheck, test:run, and build. Use before commit, ZIP, merge, push, 
 
 ---
 
+## Evidence Pack commands
+
+Run before a **final report** on runtime/API/UI/data-sensitive batches (paste outputs into the report):
+
+```bash
+git status --short
+git --no-pager diff --stat
+git --no-pager diff --cached --stat
+git --no-pager diff --name-only
+git --no-pager diff --cached --name-only
+```
+
+**Notes:**
+
+- Use `git diff --cached` for **staged** patches; use `git diff` for **unstaged** patches.
+- When in doubt, provide **both**.
+- Untracked files (`??`) are not listed by plain `git diff` — list them from `git status --short` explicitly.
+- Do **not** commit generated `.diff` or `.zip` artifacts (e.g. `DAT-*.zip`).
+
+See [cursor-operating-model.md](./cursor-operating-model.md) (Final Evidence Pack, Critical Claim Evidence Protocol).
+
+---
+
 ## Start branch
 
 ```bash

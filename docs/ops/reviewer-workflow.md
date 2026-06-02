@@ -40,6 +40,19 @@ For batches classified as **sensitive** (see [cursor-operating-model.md](./curso
 
 **Reject merge readiness** if a sensitive batch skipped the approval gate or implemented without the explicit approval phrase.
 
+### Final evidence and critical claims
+
+**Reject merge readiness** when:
+
+- The **Final Evidence Pack** is missing (see [cursor-operating-model.md](./cursor-operating-model.md) — Final Evidence Pack).
+- The provided patch is **empty**, **stale**, or does not match `git status --short` (including untracked `??` files not shown by plain `git diff`).
+- **Staged vs unstaged** outputs disagree and the report does not explain both.
+- A **critical claim** lacks direct evidence (grep, diff hunk, test name) per Critical Claim Evidence Protocol.
+
+For **destructive / data-sensitive** batches, verify the stated mitigation (e.g. row lock, cascade guard, tenant scope) appears in the **diff** and is covered by **tests** — not only in the narrative.
+
+Do not approve merge readiness based on prose summary alone.
+
 ---
 
 ## External advice review protocol (ACCEPT / ADAPT / DEFER / REJECT)
@@ -101,6 +114,8 @@ Every Cursor **final report** must include: **“Memory docs update needed: yes/
    - limitations
    - manual test recommendations
    - **memory docs update needed (yes/no)** and which files
+   - **Final Evidence Pack** (git status + staged/unstaged diffs) for runtime/API/UI/sensitive batches
+   - **Critical Claim Evidence** for security, tenancy, deletion, import/apply, or mitigation claims
 7. User **pastes output**.
 8. **Reviewer validates**.
 9. If needed, reviewer asks for **ZIP / diff / manual tests**.
@@ -140,6 +155,8 @@ For Preview QA or deploy: also reference @docs/ops/command-batteries.md and @doc
 - **Commands run.**
 - **Exact result** of `pnpm -C driving_school_platform/nextjs_space check`.
 - **Manual test checklist** when UI/API behavior changed.
+- **Final Evidence Pack** (`git status --short`, unstaged and staged diff stats/names) when the batch touches runtime/API/UI or sensitive areas.
+- **Critical Claim Evidence** (claim + paths/grep/diff/test) for locks, tenancy, dry-run/apply semantics, and “unchanged” security/schema/demo assertions.
 
 ---
 
