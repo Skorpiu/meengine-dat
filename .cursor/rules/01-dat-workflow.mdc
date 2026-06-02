@@ -3,6 +3,14 @@ description: How to work in this repo
 ---
 # Workflow
 
+## Language and user suggestions
+
+- **Chat with Rui:** Portuguese (Portugal) by default.
+- **Product UI and engineering artifacts:** **English baseline** (code, APIs, branches, commits, tests, technical docs, internal comments, default UI copy).
+- **Translation work:** handle via **i18n / locale resources**, not ad-hoc hardcoded Portuguese labels in components (unless explicitly approved as temporary).
+- **User suggestions:** triage with **User Suggestion Intake Protocol** in `docs/ops/cursor-operating-model.md` before entering current scope or `roadmap-todo.md`.
+- See also **Communication and Project Language Protocol** in the same doc.
+
 ## What to do next (before a new batch)
 
 If the user asks **what to do next** (or for prioritization / opinion on the next batch), apply the **Delegated Technical Lead Protocol** in `docs/ops/cursor-operating-model.md` **before** planning or coding:

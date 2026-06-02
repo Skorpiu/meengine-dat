@@ -59,6 +59,26 @@ When Cursor acted as **delegated technical lead** (analysis, prioritization, “
 - The recommendation **pretends to be authorization** (“we will implement X” without user approval phrase).
 - **Weak evidence** is presented as confirmed backlog or P0/P1 fact.
 
+## Communication, language, and user suggestion reviewer expectations
+
+When Cursor discussed work with Rui or processed **user-suggested improvements** (see [cursor-operating-model.md](./cursor-operating-model.md) — Communication and Project Language Protocol, User Suggestion Intake Protocol), the reviewer must verify:
+
+- **No untriaged implementation** — Cursor did **not** implement a user suggestion without triage, classification, and explicit approval when required.
+- **Roadmap hygiene** — updates to `roadmap-todo.md` from user suggestions include **evidence**, **priority**, and **exact proposed wording**; no speculative bullets without triage.
+- **Memory protocol** — `current-state.md` / `roadmap-todo.md` were not edited prematurely; Memory Update Protocol was followed.
+- **Recommendation vs authorization** — “good idea” was not treated as “approved to implement now.”
+- **Engineering language** — code, identifiers, branches, commits, APIs, and technical docs remain **English**.
+- **Product UI baseline** — new UI copy defaults to **English**; aligns with future i18n, not scattered Portuguese literals.
+- **Chat vs artifacts** — Portuguese chat with Rui does not justify Portuguese identifiers, API field names, or hardcoded Portuguese UI labels.
+- **i18n path** — prefer translation resources over component literals when localization is needed.
+
+**Reject** when:
+
+- A user suggestion appears in the diff without a triage record or approved scope.
+- Roadmap gained vague items (“improve UX”) without category, priority, or slice name.
+- **New hardcoded Portuguese UI labels** appear unless explicitly approved for the batch or delivered via an **i18n translation resource**.
+- UI language changes **conflict with the English product baseline** without documented exception or i18n plan.
+
 ## Decision recommendation reviewer expectations
 
 For plan-first or analysis-heavy batches where Cursor provided a recommendation (see [cursor-operating-model.md](./cursor-operating-model.md) — Decision Recommendation Protocol), the reviewer must verify:
