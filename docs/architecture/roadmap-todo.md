@@ -38,17 +38,21 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 Parent batch — always slice before implementing.
 
-- **Next slice (recommended):** `import-export-ui-students-export-v1`
-  - Export buttons (CSV/JSON) for student records on Fichas registadas.
-  - Reuse existing students export API (no new export contract in this slice).
-  - **English UI labels** for new controls.
-  - **Out of scope for this slice:** import, dry-run, apply, practical lessons UI.
+- **Done (v1 slice):** `import-export-ui-students-export-v1`
+  - Export CSV/JSON on Fichas registadas (`/admin/users` → Alunos).
+  - Reuses `GET /api/admin/students/export` (no API contract change).
+  - English UI labels for new export controls.
+  - Validated via `pnpm check`.
+- **Next slice (recommended):** `import-export-ui-students-import-dry-run-v1`
+  - Students import dry-run preview UI only (no apply in the same slice unless separately approved).
+  - Reuse existing dry-run API; zero-write UI.
+  - **Out of scope until separately sliced:** apply UI, practical lessons import/export UI, row-level validation UX polish.
 - **Deferred slices (parent):**
-- Importar/Exportar on Aulas Práticas / history.
-- Students import dry-run preview UI and apply UI.
-- Dry-run preview UI before apply (imports).
-- Row-level validation errors in UI.
-- No raw API URLs for School Admin.
+  - Importar/Exportar on Aulas Práticas / history.
+  - Students import apply UI.
+  - Dry-run preview UI before apply (other imports).
+  - Row-level validation errors in UI.
+  - No raw API URLs for School Admin.
 
 ### product-ui-language-baseline-english-v1
 

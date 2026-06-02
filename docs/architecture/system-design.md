@@ -232,7 +232,7 @@ Do **not** generalize this format to all future clients without an explicit prod
 - **CSV:** semicolon (`;`) separator.
 - **Dates:** `YYYY-MM-DD`.
 - **Times:** `HH:mm` (parsers may normalize `9:00` → `09:00` where implemented).
-- **Import/export UI** is pending; target **DAT_3.7** (`import-export-ui-actions`).
+- **Student records export UI** is implemented (`import-export-ui-students-export-v1`): CSV/JSON via `GET /api/admin/students/export` on Fichas registadas. **Import UI** and **practical lessons import/export UI** remain pending under **DAT_3.7** (`import-export-ui-actions`).
 
 Deep contracts: `driving_school_platform/nextjs_space/docs/engineering/client-data-import-export-strategy.md`.
 
