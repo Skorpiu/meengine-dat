@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
+  ChevronDown,
+  Download,
   Edit2,
   GraduationCap,
   MailPlus,
@@ -23,6 +25,12 @@ import {
   Car,
   Trash2,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,6 +62,10 @@ import {
 } from "@/lib/students/student-record-ui-utils";
 import { StudentPracticalHistoryDialog } from "@/components/admin/student-practical-history-dialog";
 import { StudentRecordInviteDialog } from "@/components/admin/student-record-invite-dialog";
+import {
+  fetchStudentRecordsExport,
+  type StudentRecordsExportFormat,
+} from "@/lib/students/student-records-export-client";
 
 const LIST_LIMIT = 100;
 
@@ -121,6 +133,8 @@ export function StudentRecordsManager() {
     null,
   );
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [exportingFormat, setExportingFormat] =
+    useState<StudentRecordsExportFormat | null>(null);
 
   const createPreviewId = useMemo(
     () =>
@@ -208,6 +222,20 @@ export function StudentRecordsManager() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setAppliedSearch(searchInput.trim());
+  };
+
+  const handleExport = async (format: StudentRecordsExportFormat) => {
+    setExportingFormat(format);
+    try {
+      const result = await fetchStudentRecordsExport(format, appliedSearch);
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+      toast.success(`Download started (${result.filename}).`);
+    } finally {
+      setExportingFormat(null);
+    }
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -494,29 +522,68 @@ export function StudentRecordsManager() {
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="text-lg">Fichas registadas</CardTitle>
-          <form onSubmit={handleSearch} className="flex w-full sm:w-auto gap-2">
-            <Input
-              placeholder="Nome, contacto, email ou ID (ex. 261)"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="sm:min-w-[280px]"
-            />
-            <Button type="submit" variant="outline" disabled={listLoading}>
-              <Search className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              disabled={listLoading}
-              onClick={() => loadStudents({ search: appliedSearch })}
-              title="Atualizar"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          </form>
+        <CardHeader className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="text-lg">Fichas registadas</CardTitle>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2 w-full sm:w-auto">
+              <form
+                onSubmit={handleSearch}
+                className="flex w-full sm:w-auto gap-2"
+              >
+                <Input
+                  placeholder="Nome, contacto, email ou ID (ex. 261)"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="sm:min-w-[280px]"
+                />
+                <Button type="submit" variant="outline" disabled={listLoading}>
+                  <Search className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  disabled={listLoading}
+                  onClick={() => loadStudents({ search: appliedSearch })}
+                  title="Atualizar"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </form>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={listLoading || exportingFormat !== null}
+                    className="w-full sm:w-auto shrink-0"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    {exportingFormat ? "Exporting…" : "Export"}
+                    <ChevronDown className="h-4 w-4 ml-2 opacity-60" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    disabled={exportingFormat !== null}
+                    onSelect={() => void handleExport("csv")}
+                  >
+                    Export as CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={exportingFormat !== null}
+                    onSelect={() => void handleExport("json")}
+                  >
+                    Export as JSON
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">
+            Export includes all student records matching the current search, not
+            only the rows shown on this page.
+          </p>
         </CardHeader>
         <CardContent>
           {listError ? (
