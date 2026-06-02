@@ -142,6 +142,7 @@ See also: `driving_school_platform/nextjs_space/docs/ops/production-host-split.m
 - **Organization** is the tenant boundary.
 - **Host resolution** maps the request host to an `Organization` via `organization_domains`.
 - **Never trust `organizationId`** from request body, query string, or import files. Tenant scope must come from the authenticated session and/or host guard.
+- **Nullable `organizationId` on operational models** is documented in [tenant-required-operational-organization-id-audit.md](./tenant-required-operational-organization-id-audit.md). Target state: NOT NULL on tenant-critical rows after gated backfill/migrations.
 - **localhost / dev** exceptions must remain explicit and documented; do not widen them casually.
 - **Platform and unmapped hosts** must stay guarded (no accidental tenant bleed).
 

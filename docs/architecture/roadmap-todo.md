@@ -75,14 +75,11 @@ Parent batch — always slice before implementing.
 
 ### tenant-required-operational-organization-id-audit
 
-**Source:** external database/architecture critique triage (`external-database-architecture-audit-triage`); **docs-only backlog** — no schema changes in this item.
+**Source:** external database/architecture critique triage (`external-database-architecture-audit-triage`).
 
-- Read-only audit of operational models with nullable `organizationId` (confirmed in schema: `Student`, `Instructor`, `Vehicle`, `Lesson`, `Exam`; also review `LessonRequest` and related tenant-reachable models).
-- Classify legitimate global/platform exceptions (e.g. `User.organizationId` for cross-role accounts, `BillingEvent`, global `SystemSetting` / `FeatureFlag`).
-- Check whether real rows exist with `organizationId` NULL in target environments (Preview/Production as applicable).
-- Identify unique/index constraints affected by nullable tenant scope (e.g. `Student` `@@unique([organizationId, schoolStudentId])`).
-- Propose phased backfill and migration plan; implementation gated separately (`APPROVED TO IMPLEMENT: …` + migration approval).
-- **Smallest safe v1 slice:** audit report + classification only; no Prisma/migration/RLS changes in the audit batch itself.
+- **Done (v1 slice):** audit report + classification only — [tenant-required-operational-organization-id-audit.md](./tenant-required-operational-organization-id-audit.md). No Prisma/migration/RLS/runtime changes in this slice.
+- **Next gated slice (recommended):** `tenant-operational-organization-id-backfill-v1` — extend `scripts/backfill-organization-scope.ts` for `Student`/`Instructor`; operator NULL-count SQL; **no NOT NULL migration** in v1.
+- **Deferred:** NOT NULL migrations per table (`tenant-operational-organization-id-not-null-migrations`) after zero NULL rows verified in target DB; explicit migration approval required.
 
 ### billing webhook hardening
 

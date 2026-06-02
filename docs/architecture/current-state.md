@@ -140,13 +140,14 @@ Documented and in use (docs/rules only; no runtime change):
 - Cursor Automations prompt templates (v1)
 - External database architecture audit triage (backlog items created; no implementation from triage alone)
 - `import-export-ui-students-export-v1` — Student records export UI (CSV/JSON) on Fichas registadas (`StudentRecordsManager`); reuses `GET /api/admin/students/export`; English labels for new export controls; `search` query aligned with applied list search; validated via `pnpm check`.
+- `tenant-required-operational-organization-id-audit` — Docs-only classification of nullable `organizationId` on operational models; unique-constraint notes; backfill/migration phased plan. Report: [tenant-required-operational-organization-id-audit.md](./tenant-required-operational-organization-id-audit.md).
 
 ### Likely next (smallest safe slices)
 
-1. `tenant-required-operational-organization-id-audit` — docs-only; no schema in audit slice
+1. `supabase-rls-data-api-policy-matrix` — classification/docs first (RLS policy SQL deferred)
 2. `people-management-ux-unification` — **remaining:** invitations-on-record, instructor/route split, instructor parity (IA v1 nav/labels already shipped)
 3. `import-export-ui-actions` — remaining slices (students import dry-run UI, apply UI, practical lessons import/export UI)
-4. `supabase-rls-data-api-policy-matrix` — classification/docs first
+4. `tenant-operational-organization-id-backfill-v1` — extend backfill script + operator NULL counts; **no NOT NULL migration** in v1 (gated separately)
 5. `audit-log-tenant-context-foundation` — planning only
 6. `product-ui-language-baseline-english-v1` or explicit i18n path — reconcile PT IA exception with English baseline
 
