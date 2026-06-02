@@ -70,6 +70,21 @@ For broad, ambiguous, or cross-cutting proposed work, the reviewer must verify C
 - Out-of-scope fences were violated (scope drift) without explicit reviewer/user approval.
 - An escalation trigger occurred but the batch did not stop/reclassify (D4 / Sensitive Gate) and follow the gate requirements.
 
+## Improvement discovery reviewer expectations
+
+When Cursor reports discoveries during a batch (see [cursor-operating-model.md](./cursor-operating-model.md) — Improvement Discovery and Backlog Triage Protocol), the reviewer must verify:
+
+- **Scope discipline** — Cursor did **not** improperly expand the approved batch scope to fix discovered improvements (check diff vs stated scope).
+- **Deferred recommendations** — out-of-scope findings are listed under **Deferred recommendations** with category, priority, and evidence — not hidden as drive-by fixes.
+- **Evidence and priority** — proposed To-Dos or roadmap items have **concrete evidence** and a justified **P0–P3** priority; reject vague or speculative backlog entries.
+- **Roadmap/current-state hygiene** — reject memory updates based on weak or unconfirmed observations; memory changes must follow Memory Update Protocol.
+- **Safe slices** — accepted improvements are proposed as **smallest safe slices**, not broad refactors, unless explicitly approved.
+
+**Reject merge readiness** when:
+
+- The diff fixes improvement discoveries that were **not** in approved scope without explicit user/reviewer approval.
+- `roadmap-todo.md` or `current-state.md` gained speculative items without evidence or approval.
+
 ### Final evidence and critical claims
 
 **Reject merge readiness** when:

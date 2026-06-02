@@ -22,6 +22,8 @@ Runs lint, typecheck, test:run, and build. Use before commit, ZIP, merge, push, 
 
 **Broad plan-first batches:** when the recommended batch is broad/ambiguous/cross-cutting, apply the **Smallest Safe Slice Protocol** (propose the smallest safe v1 slice) before implementation. See [cursor-operating-model.md](./cursor-operating-model.md).
 
+**Discoveries during a batch:** when Cursor finds new issues or improvement opportunities while implementing or reviewing, use the **Improvement Discovery and Backlog Triage Protocol** in [cursor-operating-model.md](./cursor-operating-model.md) — report under **Deferred recommendations**; do not expand scope or update memory prematurely.
+
 ---
 
 ## Evidence Pack commands

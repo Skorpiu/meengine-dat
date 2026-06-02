@@ -25,6 +25,9 @@ Sensitive batches (schema, migrations, RLS/grants, auth, billing, demo, rate-lim
 
 Implementation rules:
 - Prefer minimal, safe diffs.
+- During implementation or review, record **discovered improvements** separately from the current approved scope (see `docs/ops/cursor-operating-model.md` — Improvement Discovery and Backlog Triage Protocol).
+- Put **out-of-scope** improvements in the final report under **Deferred recommendations**; do not implement them without explicit approval.
+- Do **not** modify `docs/architecture/roadmap-todo.md` or `docs/architecture/current-state.md` unless a memory update is explicitly in scope or approved via Memory Update Protocol.
 - Do not refactor unrelated code.
 - Avoid introducing `any` unless justified.
 - If >3 files will be changed, pause and summarize the plan first.

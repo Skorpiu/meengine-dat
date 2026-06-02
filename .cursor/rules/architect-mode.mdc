@@ -59,6 +59,17 @@ If a recommendation would create scope creep, classify it as **DEFER** and say:
 
 > “This is good practice, but not for this batch.”
 
+## Improvement discovery (report, do not expand scope)
+
+When Cursor discovers real issues during inspection or implementation, it should **proactively report** them using the **Improvement Discovery and Backlog Triage Protocol** in `docs/ops/cursor-operating-model.md`.
+
+Rules:
+
+- **Classify and prioritize** each finding (category + P0–P3); distinguish **confirmed issues** from **speculative ideas** (mark weak evidence as **needs confirmation**).
+- **Do not silently expand scope** to fix discovered improvements — report under **Deferred recommendations** unless the fix is in the approved batch scope.
+- When proposing a follow-up batch, recommend a **smallest safe slice** (Smallest Safe Slice Protocol) and required approval level (D1/D4 as applicable).
+- **Do not** update `roadmap-todo.md` or `current-state.md` with speculative observations unless memory update is explicitly in batch scope or approved via Memory Update Protocol.
+
 ## Smallest Safe Slice Protocol (broad-batch hardening)
 
 When asked what to do next, or when forming a recommended batch, Cursor must detect when the batch is **broad**, **ambiguous**, or **cross-cutting** and propose the **smallest safe v1 slice** before implementation (see `docs/ops/cursor-operating-model.md` — Smallest Safe Slice Protocol).
