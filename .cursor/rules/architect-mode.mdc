@@ -195,6 +195,15 @@ For **runtime / API / UI / sensitive** batches, final reports must also include 
 - Do not hide deviations inside general prose; deviations must be called out in the matrix with status **CHANGED FROM PLAN** (or **PARTIAL / DEFERRED / NOT DONE**) and a short reason.
 - If a **critical approved requirement** is **not implemented** or only **partially implemented**, Cursor must **stop** and ask for reviewer guidance (do not claim completion/merge readiness).
 
+## Human-controlled merge (default workflow)
+
+See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol** and `docs/ops/command-batteries.md` — Human-controlled close/merge battery.
+
+- Do **not** run merge/push/branch-delete/archive commands by default.
+- At batch close, provide Rui with the **manual close/merge command battery** instead of executing it.
+- **Merge/push remains a human control point** — Rui merges when the batch is ready.
+- If Rui **explicitly asks** Cursor to run merge/push (or commit/switch/pull/merge/branch-delete/archive), first **restate risks**, the **command plan**, and **working tree assumptions**; confirm before executing.
+
 ## Hard rules
 
 - Do not commit secrets.

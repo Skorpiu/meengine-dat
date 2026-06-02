@@ -82,3 +82,20 @@ Output:
 - Include Final Evidence Pack output for runtime/API/UI/sensitive batches.
 - Attach Critical Claim Evidence for any security, tenancy, deletion, import/apply, or mitigation claims.
 - Final report must state whether the implemented batch matched the **recommended safe slice** or drifted (and why), including whether any escalation trigger was hit.
+
+## Human-controlled close/merge (after validation)
+
+See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol** and `docs/ops/command-batteries.md` — Human-controlled close/merge battery.
+
+- After a batch is validated, Cursor should **stop** and provide the **manual close/merge battery** — do not run commit/merge/push by default.
+- **Rui runs** the merge/push commands manually.
+- The battery must include:
+  - expected `git status` before staging;
+  - `git add` paths (specific to the batch);
+  - staged diff check;
+  - **Conventional Commits** commit message;
+  - `git switch main`, `git pull --ff-only`, `git merge --no-ff <branch-name>`;
+  - `pnpm -C driving_school_platform/nextjs_space check`;
+  - `git push`;
+  - `git branch -d <branch-name>`;
+  - ZIP archive command (`DAT-<sha>.zip`).

@@ -420,6 +420,58 @@ Before writing the final report, Cursor must answer the following **explicitly**
 - Did I propose memory updates only when appropriate?
 - Did I report out-of-scope discoveries under **Deferred recommendations** without expanding scope?
 
+## Human-Controlled Merge Protocol
+
+Merge and push remain **human-controlled actions**. Cursor prepares merge-readiness analysis; Rui executes close/merge commands.
+
+### Rules
+
+- Cursor must **not** run merge or push commands by default.
+- Cursor may prepare **merge-readiness analysis**.
+- Cursor may say whether a batch **appears merge-ready**.
+- Cursor must provide the **exact close/merge command battery** for Rui to run manually (see [command-batteries.md](./command-batteries.md) — Human-controlled close/merge battery).
+- Cursor must **not** execute the following unless Rui **explicitly asks** Cursor to run those commands in the local repo:
+  - `git commit`
+  - `git switch main`
+  - `git pull`
+  - `git merge`
+  - `git push`
+  - `git branch -d`
+  - `git archive`
+- Even when explicitly asked, Cursor must **first restate the command plan** and **confirm the working tree state**.
+- For the DAT default workflow, **prefer Rui running close/merge commands manually**.
+
+### Required close/merge battery output
+
+When a batch appears merge-ready, Cursor must provide Rui with a complete manual battery that includes:
+
+- expected `git status` before staging;
+- `git add` paths (specific paths — not blind `git add -A` unless justified);
+- staged diff check (`git status --short`, `git diff --cached --stat`);
+- commit command using **Conventional Commits**;
+- `git switch main`;
+- `git pull --ff-only`;
+- `git merge --no-ff <branch-name>`;
+- `pnpm -C driving_school_platform/nextjs_space check`;
+- `git push`;
+- branch delete (`git branch -d <branch-name>`);
+- ZIP archive command (`git archive` → `DAT-<sha>.zip`).
+
+Use the template in [command-batteries.md](./command-batteries.md) — Human-controlled close/merge battery.
+
+### Merge readiness criteria
+
+A batch is **not merge-ready** unless:
+
+- scope matches the approved plan;
+- validation passed (`pnpm -C driving_school_platform/nextjs_space check`);
+- **Final Evidence Pack** is complete (when applicable);
+- **Implementation Conformance Matrix** is complete (when applicable);
+- **memory docs update needed: yes/no** is answered;
+- forbidden areas are confirmed **untouched** or **explicitly approved**.
+
+See also [reviewer-workflow.md](./reviewer-workflow.md) — Human-controlled merge reviewer expectations.
+
 ## Memory Update Protocol
 
 Rules:
