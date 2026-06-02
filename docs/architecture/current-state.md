@@ -109,15 +109,45 @@ pnpm exec prisma migrate status
 
 **Delete/removal (implemented):** School Admin (`SUPER_ADMIN`) may hard-delete a `MANUAL_ONLY` student ficha with no linked User, invitations, lessons of any `LessonSource`, lesson counters, lesson requests, exam registrations, or payments. Blocked deletes return stable **409** codes. Demo org uses the existing user-management mutation guard. Soft-delete/archive remains deferred.
 
+**Product UI language:** baseline is **English** for new product surfaces. Portuguese labels on `/admin/users` from `people-management-information-architecture-v1` are a **temporary approved exception**; reconcile via `product-ui-language-baseline-english-v1` or future i18n (see [roadmap-todo.md](./roadmap-todo.md)).
+
+---
+
+## DAT operational memory (Cursor)
+
+Documented and in use (docs/rules only; no runtime change):
+
+- **Cursor Super-Agent protocols** — [cursor-operating-model.md](../ops/cursor-operating-model.md) (Delegated Technical Lead, Sensitive Batch Gate, Smallest Safe Slice, Memory Update, Final Evidence Pack, etc.)
+- **Reviewer workflow** — [reviewer-workflow.md](../ops/reviewer-workflow.md)
+- **Cursor Automations operating model** — same operating model doc (**Plan and Budget Gate**; read-only default)
+- **Cursor Automations prompt templates (v1)** — [cursor-automations-prompts.md](../ops/cursor-automations-prompts.md)
+- **External database architecture audit triage** — critique classified into roadmap items (`tenant-required-operational-organization-id-audit`, `audit-log-tenant-context-foundation`, `lesson-student-nullability-policy-review`); triage itself is **docs-only**, no schema changes from triage alone
+
+**Daily guidance (no extra Cursor cost):** **Daily Manual Super-Agent Check** is the default workflow ([cursor-automations-prompts.md](../ops/cursor-automations-prompts.md)). Use **Cursor Automations** only if available in the **current plan at no extra cost** (`cursor-automations-super-agent-scheduled-support` in roadmap).
+
 ---
 
 ## Current recommended next phase
 
-**DAT_3.7** — UX and operational polish (see [roadmap-todo.md](./roadmap-todo.md)):
+**DAT_3.7** — UX and operational polish (see [roadmap-todo.md](./roadmap-todo.md)).
 
-1. `student-record-delete-policy-and-action` (v1 done)
-2. `people-management-ux-unification` (IA v1 done; invitations-on-record + route split remain)
-3. `import-export-ui-actions`
-4. Instructor / person management polish
-5. `supabase-rls-data-api-policy-matrix`
-6. Engineering excellence audit items (non-blocking refactors, tracked separately)
+### Done (v1)
+
+- `student-record-delete-policy-and-action`
+- `people-management-information-architecture-v1` (slice of `people-management-ux-unification`)
+- Cursor Super-Agent protocols (operating model + reviewer workflow)
+- Cursor Automations operating model
+- Cursor Automations prompt templates (v1)
+- External database architecture audit triage (backlog items created; no implementation from triage alone)
+
+### Likely next (smallest safe slices)
+
+1. `import-export-ui-students-export-v1` — export UI on Fichas registadas; APIs exist
+2. `tenant-required-operational-organization-id-audit` — docs-only; no schema in audit slice
+3. `people-management-ux-unification` — **remaining:** invitations-on-record, instructor/route split, instructor parity (IA v1 nav/labels already shipped)
+4. `import-export-ui-actions` — broader slices (import dry-run UI, practical lessons import/export UI)
+5. `supabase-rls-data-api-policy-matrix` — classification/docs first
+6. `audit-log-tenant-context-foundation` — planning only
+7. `product-ui-language-baseline-english-v1` or explicit i18n path — reconcile PT IA exception with English baseline
+
+Engineering excellence audit items (non-blocking refactors) remain tracked separately in roadmap P2+.

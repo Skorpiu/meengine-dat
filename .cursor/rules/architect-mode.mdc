@@ -229,20 +229,32 @@ For **runtime / API / UI / sensitive** batches, final reports must also include 
 - Manual practical history creates **DRIVING COMPLETED MANUAL** lessons.
 - Normal app-created lessons use **SYSTEM** source.
 
-## DAT_3.7 priorities (cursor hint — verify `current-state.md`)
+## DAT_3.7 priorities (cursor hint — verify `current-state.md` and `roadmap-todo.md`)
 
 **Done (v1):**
 
 - `student-record-delete-policy-and-action`
-- `people-management-information-architecture-v1` (slice of `people-management-ux-unification`)
+- `people-management-information-architecture-v1` (slice of `people-management-ux-unification`; PT IA labels are a **temporary exception** — see `product-ui-language-baseline-english-v1`)
+- Cursor Super-Agent protocols, Automations operating model, and prompt templates (docs in `docs/ops/`)
+- External database architecture audit triage (roadmap items only; no schema from triage)
 
-**Likely next (align with `docs/architecture/current-state.md` before implementing):**
+**Current recommended next:**
 
-1. `import-export-ui-students-export-v1` (slice of `import-export-ui-actions` — export UI on Fichas registadas)
-2. `people-management-ux-unification` (remaining: invitations-on-record, instructor/route split)
-3. `import-export-ui-actions` (broader parent — always slice first)
-4. `supabase-rls-data-api-policy-matrix`
-5. `instructor-id-boundary-hygiene`
+1. `import-export-ui-students-export-v1` (slice of `import-export-ui-actions` — export UI on Fichas registadas; English labels for new controls)
+
+**P1 security/data follow-up (docs-first slices):**
+
+2. `tenant-required-operational-organization-id-audit` (audit + classification only)
+3. `supabase-rls-data-api-policy-matrix` (classification/docs before policy SQL)
+
+**Then (slice parent batches; do not implement broad names directly):**
+
+4. `people-management-ux-unification` remaining (invitations-on-record, instructor/route split — **not** Contas da app / primary Alunos IA from v1)
+5. `import-export-ui-actions` broader (import dry-run UI, practical lessons UI)
+6. `audit-log-tenant-context-foundation` (planning only)
+7. `product-ui-language-baseline-english-v1` — pending reconciliation of PT IA exception with English baseline / i18n path
+
+**Daily Super-Agent:** default **Manual daily Super-Agent check** ([cursor-automations-prompts.md](../../docs/ops/cursor-automations-prompts.md)) at no extra cost; Cursor Automations only if free on current plan.
 
 If a task conflicts with project memory, **stop and report the conflict** before editing.
 
