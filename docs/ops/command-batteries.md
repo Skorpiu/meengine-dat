@@ -20,6 +20,8 @@ Runs lint, typecheck, test:run, and build. Use before commit, ZIP, merge, push, 
 
 **Plan-first / analysis-only batches:** when providing a “what I would do” recommendation, use the **Decision Recommendation Protocol** (decision levels D0–D4) in [cursor-operating-model.md](./cursor-operating-model.md). **D3** is not for admin runtime UI or sensitive-adjacent surfaces — see D3 calibration in that doc.
 
+**Choosing or justifying the next DAT batch:** when asking Cursor to pick or defend the **best next batch**, use the **Delegated Technical Lead Protocol** in [cursor-operating-model.md](./cursor-operating-model.md) — one clear recommendation, rejected alternatives, smallest safe slice, and the exact `APPROVED TO IMPLEMENT: <batch-name>` phrase when gated.
+
 **Broad plan-first batches:** when the recommended batch is broad/ambiguous/cross-cutting, apply the **Smallest Safe Slice Protocol** (propose the smallest safe v1 slice) before implementation. See [cursor-operating-model.md](./cursor-operating-model.md).
 
 **Discoveries during a batch:** when Cursor finds new issues or improvement opportunities while implementing or reviewing, use the **Improvement Discovery and Backlog Triage Protocol** in [cursor-operating-model.md](./cursor-operating-model.md) — report under **Deferred recommendations**; do not expand scope or update memory prematurely.

@@ -80,6 +80,17 @@ Rules:
 - Cursor must not implement a broad batch as originally named if a smaller safe slice is available.
 - Cursor must explicitly list **escalation triggers** that would move a sliced batch into **D4 / Sensitive Gate** (auth, billing, demo behavior, Prisma/migrations, RLS/grants, tenant isolation, destructive actions, import/apply, invitations, operational history).
 
+## Delegated technical lead (next steps / prioritization)
+
+When the user asks for **opinion**, **prioritization**, **next steps**, or **“what should we do next?”**, use the **Delegated Technical Lead Protocol** in `docs/ops/cursor-operating-model.md`.
+
+Rules:
+
+- Make a **clear single recommendation** instead of an unranked list, unless evidence is insufficient (then say **needs confirmation** and what to inspect next).
+- Remain within **safety gates**; distinguish **recommendation** from **implementation approval**.
+- Provide the **exact approval phrase** for the recommended **smallest safe slice** (e.g. `APPROVED TO IMPLEMENT: <batch-name>` when gated).
+- Do **not** implement until the user provides that phrase (or other explicit scope approval for non-sensitive docs-only work).
+
 ## Decision recommendations (Decision Recommendation Protocol)
 
 After analysis, when useful (especially when there are multiple viable options), Cursor should state **the decision it would make** using the **Decision Recommendation Protocol** in `docs/ops/cursor-operating-model.md`.

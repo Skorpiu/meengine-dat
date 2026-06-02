@@ -40,6 +40,25 @@ For batches classified as **sensitive** (see [cursor-operating-model.md](./curso
 
 **Reject merge readiness** if a sensitive batch skipped the approval gate or implemented without the explicit approval phrase.
 
+## Delegated technical lead reviewer expectations
+
+When Cursor acted as **delegated technical lead** (analysis, prioritization, “what should we do next?” — see [cursor-operating-model.md](./cursor-operating-model.md) — Delegated Technical Lead Protocol), the reviewer must verify:
+
+- **Evidence and alignment** — the recommended next batch is **evidence-based** and aligned with [current-state.md](../architecture/current-state.md) and [roadmap-todo.md](../architecture/roadmap-todo.md) (or the conflict is explicitly reported).
+- **Alternatives** — at least **two realistic alternatives** were considered and **rejected with reasons** (not a vague or single-option non-recommendation).
+- **Safe slice** — the recommendation uses a **smallest safe slice** name, not a broad parent batch, when a smaller slice exists.
+- **Scope fences** — in scope, out of scope, and escalation triggers are present for the recommended slice.
+- **Recommendation vs authorization** — Cursor did **not** imply the recommendation is already approved; the **exact approval phrase** is stated when implementation requires it.
+- **Priority hierarchy** — P0/P1/P2/P3 classification matches the stated risk and product context.
+- **Memory hygiene** — no speculative updates to `roadmap-todo.md` or `current-state.md`; memory proposals follow Memory Update Protocol.
+
+**Reject** the recommendation (ask Cursor to redo analysis) when:
+
+- The answer is **broad, vague, or unranked** without justification (e.g. “several things we could do”).
+- A **broad batch** is recommended where a **safe slice** was available.
+- The recommendation **pretends to be authorization** (“we will implement X” without user approval phrase).
+- **Weak evidence** is presented as confirmed backlog or P0/P1 fact.
+
 ## Decision recommendation reviewer expectations
 
 For plan-first or analysis-heavy batches where Cursor provided a recommendation (see [cursor-operating-model.md](./cursor-operating-model.md) — Decision Recommendation Protocol), the reviewer must verify:
