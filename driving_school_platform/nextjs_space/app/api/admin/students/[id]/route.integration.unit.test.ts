@@ -38,7 +38,12 @@ vi.mock("@/lib/users/user-route-access", async () => {
   };
 });
 
-import { GET, PATCH } from "./route";
+vi.mock("@/lib/students/student-record-delete", () => ({
+  deleteStudentRecordIfEligible: vi.fn(),
+}));
+
+import { GET, PATCH, DELETE } from "./route";
+import { deleteStudentRecordIfEligible } from "@/lib/students/student-record-delete";
 import { getServerSession } from "next-auth";
 import {
   assertUserTenantHost,
@@ -53,6 +58,8 @@ const assertUserTenantHostMock = assertUserTenantHost as unknown as ReturnType<
 >;
 const rejectDemoMock =
   rejectDemoUserManagementMutation as unknown as ReturnType<typeof vi.fn>;
+const deleteStudentMock =
+  deleteStudentRecordIfEligible as unknown as ReturnType<typeof vi.fn>;
 
 const studentRow = {
   id: "stu-1",
@@ -94,6 +101,7 @@ beforeEach(() => {
   });
   assertUserTenantHostMock.mockResolvedValue(null);
   rejectDemoMock.mockResolvedValue(null);
+  deleteStudentMock.mockResolvedValue({ ok: true });
 });
 
 describe("GET /api/admin/students/[id]", () => {
@@ -216,5 +224,116 @@ describe("PATCH /api/admin/students/[id]", () => {
 
     expect(res.status).toBe(404);
     expect(h.updateMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("DELETE /api/admin/students/[id]", () => {
+  it("deletes eligible student and returns success envelope", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    deleteStudentMock.mockResolvedValue({ ok: true });
+
+    const res = await DELETE(
+      req(
+        "DELETE",
+        "http://school.example.com/api/admin/students/stu-1",
+      ) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(body.data.deleted).toBe(true);
+    expect(deleteStudentMock).toHaveBeenCalledWith({
+      organizationId: "org-a",
+      studentId: "stu-1",
+    });
+  });
+
+  it("returns 404 when student not in organization", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    deleteStudentMock.mockResolvedValue({ ok: false, notFound: true });
+
+    const res = await DELETE(
+      req(
+        "DELETE",
+        "http://school.example.com/api/admin/students/stu-9",
+      ) as any,
+      { params: { id: "stu-9" } },
+    );
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 409 with stable code when delete blocked", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    deleteStudentMock.mockResolvedValue({
+      ok: false,
+      notFound: false,
+      code: "student_has_lessons",
+      codes: ["student_has_lessons"],
+    });
+
+    const res = await DELETE(
+      req(
+        "DELETE",
+        "http://school.example.com/api/admin/students/stu-1",
+      ) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.code).toBe("student_has_lessons");
+    expect(body.codes).toEqual(["student_has_lessons"]);
+  });
+
+  it("returns 401 for non-SUPER_ADMIN", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "inst-1", role: "INSTRUCTOR", organizationId: "org-a" },
+    });
+
+    const res = await DELETE(
+      req(
+        "DELETE",
+        "http://school.example.com/api/admin/students/stu-1",
+      ) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(401);
+    expect(deleteStudentMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks demo org via user-management guard", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-demo" },
+    });
+    rejectDemoMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: "Demo restricted",
+          code: "demo_restricted_action",
+        }),
+        { status: 403 },
+      ),
+    );
+
+    const res = await DELETE(
+      req(
+        "DELETE",
+        "http://school.example.com/api/admin/students/stu-1",
+      ) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(403);
+    expect(deleteStudentMock).not.toHaveBeenCalled();
   });
 });

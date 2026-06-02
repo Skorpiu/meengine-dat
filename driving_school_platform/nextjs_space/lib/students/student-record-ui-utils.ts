@@ -1,8 +1,11 @@
 import { buildSchoolStudentId } from "@/lib/students/student-school-id";
+import { canShowStudentRecordDeleteAction } from "@/lib/students/student-record-delete-policy";
 import type {
   StudentAppAccessMode,
   StudentRecordDto,
 } from "@/lib/students/student-record-ui-types";
+
+export { canShowStudentRecordDeleteAction };
 
 export function formatStudentRecordDate(
   iso: string | null | undefined,
@@ -120,6 +123,22 @@ export function studentRecordApiErrorMessage(
       return "Já existe um convite pendente para este email.";
     case "user_already_exists":
       return "Já existe uma conta com este email.";
+    case "student_not_manual_only":
+      return "Só é possível remover fichas sem acesso à app (manual).";
+    case "student_has_linked_user":
+      return "Esta ficha está ligada a uma conta — não pode ser removida.";
+    case "student_has_invitations":
+      return "Esta ficha tem convites associados — remova ou aguarde antes de apagar.";
+    case "student_has_lessons":
+      return "Esta ficha tem aulas ou histórico — não pode ser removida.";
+    case "student_has_lesson_counters":
+      return "Esta ficha tem contadores de aulas — não pode ser removida.";
+    case "student_has_lesson_requests":
+      return "Esta ficha tem pedidos de aula — não pode ser removida.";
+    case "student_has_exam_registrations":
+      return "Esta ficha tem inscrições em exames — não pode ser removida.";
+    case "student_has_payments":
+      return "Esta ficha tem pagamentos associados — não pode ser removida.";
     default:
       return fallback;
   }

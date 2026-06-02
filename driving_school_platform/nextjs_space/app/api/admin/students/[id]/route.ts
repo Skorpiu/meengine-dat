@@ -11,6 +11,7 @@ import {
 } from "@/lib/users/user-route-access";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { deleteStudentRecordIfEligible } from "@/lib/students/student-record-delete";
 import {
   findStudentBySchoolIdInOrg,
   findStudentRecordById,
@@ -204,6 +205,45 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     console.error("Admin student PATCH error:", error);
     return errorResponse(
       "Failed to update student",
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  try {
+    const auth = await requireSuperAdminTenant(request);
+    if (!auth.ok) return auth.response;
+
+    const demoDenied = await rejectDemoUserManagementMutation(
+      auth.organizationId,
+    );
+    if (demoDenied) return demoDenied;
+
+    const result = await deleteStudentRecordIfEligible({
+      organizationId: auth.organizationId,
+      studentId: context.params.id,
+    });
+
+    if (!result.ok) {
+      if (result.notFound) {
+        return errorResponse("Student not found", HTTP_STATUS.NOT_FOUND);
+      }
+      return NextResponse.json(
+        {
+          error: result.code,
+          code: result.code,
+          codes: result.codes,
+        },
+        { status: HTTP_STATUS.CONFLICT },
+      );
+    }
+
+    return successResponse({ deleted: true });
+  } catch (error) {
+    console.error("Admin student DELETE error:", error);
+    return errorResponse(
+      "Failed to delete student",
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
     );
   }
