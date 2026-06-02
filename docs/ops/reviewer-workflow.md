@@ -53,6 +53,17 @@ For **destructive / data-sensitive** batches, verify the stated mitigation (e.g.
 
 Do not approve merge readiness based on prose summary alone.
 
+### Plan-to-implementation conformance (Implementation Conformance Matrix)
+
+For **runtime / API / UI / sensitive** batches, the reviewer must verify the **Implementation Conformance Matrix** exists (see [cursor-operating-model.md](./cursor-operating-model.md) — Implementation Conformance Matrix) and that it is supported by evidence.
+
+**Reject merge readiness** when:
+
+- Approved requirements are missing from the matrix.
+- The matrix claims **DONE** but there is no supporting diff/grep/test evidence.
+- The matrix reports **CHANGED FROM PLAN** but the report does not state whether the deviation needs explicit user/reviewer approval.
+- A **sensitive** batch includes deviations that were not explicitly approved.
+
 ---
 
 ## External advice review protocol (ACCEPT / ADAPT / DEFER / REJECT)

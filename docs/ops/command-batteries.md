@@ -41,6 +41,11 @@ git --no-pager diff --cached --name-only
 
 See [cursor-operating-model.md](./cursor-operating-model.md) (Final Evidence Pack, Critical Claim Evidence Protocol).
 
+**Note:** For runtime/API/UI/sensitive batches, the final report should include **both**:
+
+- the Final Evidence Pack outputs above, and
+- the **Implementation Conformance Matrix** (see [cursor-operating-model.md](./cursor-operating-model.md)).
+
 ---
 
 ## Start branch

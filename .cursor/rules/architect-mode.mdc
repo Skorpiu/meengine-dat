@@ -123,6 +123,13 @@ For **runtime / API / UI / sensitive** batches, final reports must also include 
 - Do **not** ask for merge readiness based only on a prose summary.
 - If a generated patch is empty, stale, or omits untracked files, say so explicitly and regenerate evidence correctly (`git diff` vs `git diff --cached`; list `??` files separately).
 
+For **runtime / API / UI / sensitive** batches, final reports must also include an **Implementation Conformance Matrix** (see `docs/ops/cursor-operating-model.md` — Implementation Conformance Matrix):
+
+- Explicitly map **approved requirements** to actual implementation files, tests, and evidence.
+- Explicitly identify any **deviations from the approved plan**.
+- Do not hide deviations inside general prose; deviations must be called out in the matrix with status **CHANGED FROM PLAN** (or **PARTIAL / DEFERRED / NOT DONE**) and a short reason.
+- If a **critical approved requirement** is **not implemented** or only **partially implemented**, Cursor must **stop** and ask for reviewer guidance (do not claim completion/merge readiness).
+
 ## Hard rules
 
 - Do not commit secrets.

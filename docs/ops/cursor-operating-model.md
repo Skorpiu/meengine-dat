@@ -219,6 +219,60 @@ Example:
 - **Remaining limitation:**
   - test asserts call order; manual diff review confirms the SQL contains `FOR UPDATE`.
 
+## Implementation Conformance Matrix
+
+For every **runtime / API / UI / sensitive** batch, Cursor final reports must include an **Implementation Conformance Matrix** that maps the **approved plan** to the **actual implementation**.
+
+### Required columns
+
+- **Approved requirement**
+- **Implemented in**
+- **Tested in**
+- **Evidence**
+- **Status**
+
+### Allowed status values
+
+- **DONE**
+- **PARTIAL**
+- **DEFERRED**
+- **NOT DONE**
+- **CHANGED FROM PLAN**
+
+### Rules
+
+- Every explicit approved requirement must appear in the matrix.
+- Any **PARTIAL / DEFERRED / NOT DONE / CHANGED FROM PLAN** item must include a short reason.
+- If implementation changed from the approved plan, Cursor must say whether the deviation needs **explicit user/reviewer approval**.
+- Cursor must **not** claim merge readiness if any approved **critical** requirement is **PARTIAL**, **NOT DONE**, or **CHANGED FROM PLAN** (unless explicitly approved and documented).
+
+### Example (student record delete policy batch)
+
+| Approved requirement | Implemented in | Tested in | Evidence | Status |
+| --- | --- | --- | --- | --- |
+| Block linked User | `driving_school_platform/nextjs_space/...` (student delete policy module) | `...student-delete...test...` | diff hunk showing `userId`/relation guard; test asserts blocked reason | DONE |
+| Block invitations | `driving_school_platform/nextjs_space/...` (invitation existence check) | `...student-delete...test...` | grep hit + excerpt for invitation query; test asserts blocked reason | DONE |
+| Block lessons/history | `driving_school_platform/nextjs_space/...` (lesson/practical history guard) | `...student-delete...test...` | diff hunk; test asserts blocked reason | DONE |
+| Row lock before delete | `driving_school_platform/nextjs_space/...` (transaction + `FOR UPDATE`) | `...student-delete...test...` (if present) | grep/diff showing `SELECT ... FOR UPDATE` in the pre-delete path | DONE |
+| Demo guard reused | `driving_school_platform/nextjs_space/...` (demo mutation guard utility) | `...` (if covered) | diff shows reuse of existing guard; CI check output | DONE |
+| Memory docs updated | `docs/architecture/current-state.md` / `docs/architecture/roadmap-todo.md` | n/a | docs diff + rationale in final report | DONE |
+
+Notes:
+
+- This example is intentionally schematic. In real reports, “Implemented in”, “Tested in”, and “Evidence” must be concrete: real paths, test names, and a diff/grep reference.
+
+## Pre-Final Self-Review
+
+Before writing the final report, Cursor must answer the following **explicitly**:
+
+- Did I implement only the approved scope?
+- Did I avoid forbidden areas?
+- Did I update all required tests?
+- Did I provide evidence for critical claims?
+- Did I list staged and unstaged changes correctly?
+- Did I document deviations from the approved plan?
+- Did I propose memory updates only when appropriate?
+
 ## Memory Update Protocol
 
 Rules:

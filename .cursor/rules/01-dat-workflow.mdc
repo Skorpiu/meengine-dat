@@ -34,6 +34,10 @@ Supplementary per-area commands (when a full check is not required yet):
 
 Before the final report (runtime/API/UI/sensitive batches):
 - Run evidence commands from `docs/ops/command-batteries.md` (Evidence Pack commands) and `docs/ops/cursor-operating-model.md` (Final Evidence Pack).
+- Compare the implementation against the approved plan.
+- Include an **Implementation Conformance Matrix** in the final report (see `docs/ops/cursor-operating-model.md` — Implementation Conformance Matrix).
+- Explicitly identify any deviations from the approved plan in the matrix (do not hide them in prose).
+- If git evidence and the conformance matrix disagree, report the mismatch and do not claim completion.
 - For **new/untracked** files, ensure they appear in evidence; plain `git diff` does not show `??` files.
 - For **staged** changes, use `git diff --cached` (and `--cached --stat` / `--cached --name-only`).
 - For **unstaged** changes, use `git diff` (and matching `--stat` / `--name-only`).
