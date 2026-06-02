@@ -8,6 +8,7 @@ Before coding:
 2) List the files you intend to change and why.
 3) Classify batch risk before implementation (see `docs/ops/cursor-operating-model.md`).
 4) If multiple viable options exist, include a **Decision I would make** section using the **Decision Recommendation Protocol** (and mark the decision level D0/D1/D2/D3/D4).
+5) Check whether the batch is **broad / ambiguous / cross-cutting**. If broad, apply `docs/ops/cursor-operating-model.md` — **Smallest Safe Slice Protocol** before planning implementation.
 
 Decision level rules:
 
@@ -56,3 +57,4 @@ Output:
 - Summarize: changed files + why + risks + next steps.
 - Include Final Evidence Pack output for runtime/API/UI/sensitive batches.
 - Attach Critical Claim Evidence for any security, tenancy, deletion, import/apply, or mitigation claims.
+- Final report must state whether the implemented batch matched the **recommended safe slice** or drifted (and why), including whether any escalation trigger was hit.

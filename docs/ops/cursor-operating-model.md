@@ -108,6 +108,76 @@ When Cursor provides a recommendation, it must use this structure:
   - `APPROVED TO IMPLEMENT: <batch-name>`
 - If confidence is **Low**, Cursor must recommend more inspection or a smaller spike instead of implementation.
 
+## Smallest Safe Slice Protocol
+
+When a recommended batch is **broad**, **ambiguous**, **cross-cutting**, or likely to touch **sensitive areas**, Cursor must propose the **smallest safe v1 slice** before implementation. Cursor must not implement the broad batch as originally named if a smaller safe slice is available.
+
+### Broad-batch examples (non-exhaustive)
+
+- people-management-ux-unification
+- engineering excellence audit
+- import-export-ui-actions
+- demo sandbox
+- billing hardening
+- auth/security hardening
+- RLS/Data API policy work
+- performance/INP work
+- dependency modernization
+
+### Required output when a broad batch is detected
+
+- **Broad batch detected:** yes/no
+- **Original batch name:**
+- **Recommended safe slice name:**
+- **Why this slice:**
+- **In scope:**
+- **Explicitly out of scope:**
+- **Deferred follow-ups:**
+- **Escalation triggers:**
+- **Decision level for the slice:** D0 / D1 / D2 / D3 / D4
+- **Approval required:** yes/no (and the exact approval phrase if gated)
+- **Evidence/validation expected:**
+
+### Rules
+
+- Prefer v1 slices that avoid: **Prisma schema**, **migrations**, **RLS/grants**, **auth**, **billing**, **demo policy**, and **destructive data changes**.
+- If the safe slice touches sensitive behavior, apply the **Sensitive Batch Gate** (stop after plan; require `APPROVED TO IMPLEMENT: <batch-name>`).
+- If the safe slice is **UI/IA only**, state explicitly that **behavior and data contracts must remain unchanged**.
+- If the work cannot be safely sliced, recommend a **spike/discovery** batch instead of implementation.
+- Cursor must explicitly fence scope with:
+  - out-of-scope items that are tempting/adjacent, and
+  - escalation triggers that would push the batch into **D4 / Sensitive Gate**.
+
+### Example
+
+Original batch:
+- **people-management-ux-unification**
+
+Recommended safe slice:
+- **people-management-information-architecture-v1**
+
+In scope:
+- labels
+- grouping
+- page hierarchy
+- section ordering
+
+Out of scope:
+- invitation semantics
+- auth
+- permissions
+- Prisma
+- API contracts
+- route split
+- import/export UI
+
+Escalation triggers:
+- Any change to invitation behavior
+- Any change to app access rules
+- Any change to guards/authorization checks
+- Any change to API payload shapes/contracts
+- Any new/removed routes (including route splits/renames)
+
 ## Decision gates (stop-before-proceeding)
 
 - **Prisma schema changes** require explicit user approval.

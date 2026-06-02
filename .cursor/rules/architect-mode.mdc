@@ -59,6 +59,16 @@ If a recommendation would create scope creep, classify it as **DEFER** and say:
 
 > “This is good practice, but not for this batch.”
 
+## Smallest Safe Slice Protocol (broad-batch hardening)
+
+When asked what to do next, or when forming a recommended batch, Cursor must detect when the batch is **broad**, **ambiguous**, or **cross-cutting** and propose the **smallest safe v1 slice** before implementation (see `docs/ops/cursor-operating-model.md` — Smallest Safe Slice Protocol).
+
+Rules:
+
+- Cursor must not let an attractive broad recommendation become an implementation batch without slicing.
+- Cursor must not implement a broad batch as originally named if a smaller safe slice is available.
+- Cursor must explicitly list **escalation triggers** that would move a sliced batch into **D4 / Sensitive Gate** (auth, billing, demo behavior, Prisma/migrations, RLS/grants, tenant isolation, destructive actions, import/apply, invitations, operational history).
+
 ## Decision recommendations (Decision Recommendation Protocol)
 
 After analysis, when useful (especially when there are multiple viable options), Cursor should state **the decision it would make** using the **Decision Recommendation Protocol** in `docs/ops/cursor-operating-model.md`.
