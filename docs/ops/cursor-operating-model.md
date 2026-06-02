@@ -607,6 +607,93 @@ APPROVED TO IMPLEMENT: import-export-ui-students-export-v1
 
 (Use the actual recommended slice name — not a placeholder unless the slice is genuinely undecided and more inspection is required.)
 
+## Communication and Project Language Protocol
+
+### Purpose
+
+Keep **conversation with Rui** in Portuguese (Portugal) while keeping **engineering artifacts** and the **product UI baseline** in English for consistency, reviewability, and future **i18n**.
+
+### Rules
+
+- **Conversation with Rui** (product owner) should be in **Portuguese (Portugal)** by default.
+- **Engineering artifacts** remain in **English**: code, identifiers, branches, commits, tests, APIs, DTOs, technical docs, architecture docs, runbooks, and internal comments.
+- **Product UI baseline** is **English by default** (admin, student, instructor, and public product surfaces).
+- **Future localization** (including Portuguese) should go through **i18n / a language selector**, not ad-hoc literals scattered in components.
+- **Avoid hardcoded Portuguese UI labels** in components unless explicitly approved as a **temporary exception**.
+- **User-facing Portuguese** belongs in **translation resources** once i18n exists — not as the default pattern of component literals today.
+- Cursor must **not** translate code identifiers, route names, API fields, or schema names into Portuguese.
+- Cursor **may** explain English technical terms in Portuguese when talking to Rui.
+- If Rui requests Portuguese UI, **recommend i18n/localization** rather than new hardcoded Portuguese strings, unless the batch explicitly approves a temporary exception.
+
+### Examples
+
+| Context | Language | Example |
+| ------- | -------- | ------- |
+| User-facing chat with Rui | Portuguese (Portugal) | “Recomendo começar por exportação de alunos (slice v1).” |
+| Branch name | English | `import-export-ui-students-export-v1` |
+| Commit message | English | `feat: add student export buttons` |
+| Architecture / ops docs | English | `docs/architecture/current-state.md` |
+| Internal variable | English | `appAccounts` — **not** `contasDaApp` |
+| Product UI baseline label | English | `App accounts` — not hardcoded `Contas da app` in components |
+| Portuguese translation (later, via i18n) | Resource file | `Contas da app` in a locale/translation resource, not a JSX literal by default |
+| API field / Prisma column | English | `schoolStudentId`, `practicalLessonNumber` |
+
+### Exceptions
+
+- PRs or specs may quote **planned** locale strings when documenting future i18n work.
+- **Temporary** hardcoded Portuguese UI copy is allowed only when the user explicitly approves it for a named batch (document the exception and prefer migrating to i18n).
+- If Rui explicitly asks for **English chat** for a thread, follow that request for the thread.
+
+## User Suggestion Intake Protocol
+
+### Purpose
+
+When **Rui** (or the product owner) **suggests an improvement**, Cursor must **not** automatically implement it or blindly add it to the roadmap. Cursor triages the suggestion like a **delegated technical lead**: analyze, classify, prioritize, propose backlog wording, and avoid scope creep.
+
+This protocol **extends** the [Improvement Discovery and Backlog Triage Protocol](#improvement-discovery-and-backlog-triage-protocol) and [Delegated Technical Lead Protocol](#delegated-technical-lead-protocol). Apply [Memory Update Protocol](#memory-update-protocol) before editing `roadmap-todo.md` or `current-state.md`.
+
+### Required output format
+
+When processing a user suggestion, Cursor must use this structure:
+
+- **User suggestion:** (quote or paraphrase faithfully)
+- **Interpretation:** (what the user likely wants — assumptions explicit)
+- **Category:** BUG / RISK / TECH_DEBT / UX / PERF / DX_CI / DOCS / SECURITY / DATA_INTEGRITY
+- **Priority:** P0 / P1 / P2 / P3 (or **needs confirmation**)
+- **Evidence:** paths, memory docs, grep, tests — not speculation alone
+- **Product value:**
+- **Engineering impact:**
+- **Risk:**
+- **Recommended decision:** ACCEPT now / ADAPT / DEFER to backlog / REJECT (with reason)
+- **Add to To-Do:** yes / no
+- **Proposed roadmap wording:** (exact bullet for `roadmap-todo.md` if yes — do not apply without approval unless batch authorizes memory updates)
+- **Recommended batch name:**
+- **Smallest safe slice:**
+- **In scope:**
+- **Out of scope:**
+- **Decision level:** D0 / D1 / D2 / D3 / D4
+- **Approval required:** Yes / No (and exact approval phrase if implementing now)
+- **Next action:**
+
+### Rules
+
+- User suggestions are **valuable product input**, but still require **triage**.
+- Apply the [Improvement Discovery and Backlog Triage Protocol](#improvement-discovery-and-backlog-triage-protocol) **before** proposing a To-Do.
+- If the suggestion is **urgent** and maps to **P0/P1**, Cursor must explain **why it should interrupt** current sequencing (or why it should not).
+- If it is **P2/P3**, Cursor should usually propose adding it to `roadmap-todo.md` as a **deferred** item — not implementing in the current batch.
+- If **evidence is weak**, mark **needs confirmation** and state what to inspect next.
+- Use the [Memory Update Protocol](#memory-update-protocol) before editing memory docs; **propose exact wording** unless the **current batch explicitly authorizes** memory updates.
+- Cursor must distinguish **“recommended To-Do”** from **“implemented now”**.
+- Cursor must **not** expand an approved batch scope to satisfy a new suggestion without explicit approval.
+- Cursor may be **opinionated** about what is best for the project; separate **recommendation** from **authorization**.
+- For suggestions that imply implementation, provide the **exact approval phrase** when gated: `APPROVED TO IMPLEMENT: <batch-name>`.
+
+### Example
+
+**User suggests:** “Devíamos ter importação de alunos diretamente no ecrã de fichas.”
+
+Cursor must **not** immediately edit UI or roadmap. Cursor triages: APIs already exist (`import-export-ui-actions` backend done); gap is UI; recommend slice `import-export-ui-students-import-dry-run-v1` **after** export v1; **Add to To-Do:** only if not already covered; **Proposed roadmap wording** only if a new bullet is needed.
+
 ## Operational memory policy
 
 Durable decisions, workflow changes, migrations, runbooks, client-specific product decisions, and future To-Dos must be reflected in the appropriate docs under `docs/` (architecture and ops), following the [Memory Update Protocol](#memory-update-protocol).

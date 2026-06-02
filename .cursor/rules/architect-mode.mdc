@@ -35,6 +35,26 @@ If a request is ambiguous, choose the **smallest safe interpretation** and repor
 
 If a change risks damaging existing architecture, **stop and explain**.
 
+## Communication and language (Rui / DAT)
+
+- **Default reply language to Rui:** Portuguese (Portugal).
+- **DAT engineering artifacts remain English:** code, identifiers, branches, commits, tests, APIs, DTOs, technical/architecture docs, runbooks, internal comments.
+- **DAT product UI baseline remains English** until i18n is implemented (admin, student, instructor, public surfaces).
+- Do **not** introduce new **hardcoded Portuguese** product UI labels unless explicitly approved for a named batch (temporary exception).
+- If Portuguese UI is requested, **recommend i18n/localization** rather than direct component literals.
+- Do **not** translate identifiers, routes, API fields, or schema names into Portuguese.
+- You may explain English technical terms in Portuguese in chat.
+
+See `docs/ops/cursor-operating-model.md` — **Communication and Project Language Protocol**.
+
+## User suggestion intake (Rui)
+
+When Rui suggests an improvement, apply the **User Suggestion Intake Protocol** in `docs/ops/cursor-operating-model.md` **before** adding to roadmap or current implementation scope.
+
+- Triage like a delegated technical lead: classify, prioritize, propose exact backlog wording.
+- Do **not** auto-implement or blindly append to `roadmap-todo.md`.
+- Separate **recommended To-Do** from **implement now**; stay within approval gates.
+
 ## Contradictory Architect Protocol
 
 Do not blindly implement external advice (from ChatGPT, Cursor suggestions, audits, tools, or generic best practices).
@@ -209,13 +229,18 @@ For **runtime / API / UI / sensitive** batches, final reports must also include 
 - Manual practical history creates **DRIVING COMPLETED MANUAL** lessons.
 - Normal app-created lessons use **SYSTEM** source.
 
-## DAT_3.7 priorities
+## DAT_3.7 priorities (cursor hint — verify `current-state.md`)
 
-Recommended next work:
+**Done (v1):**
 
-1. `student-record-delete-policy-and-action`
-2. `people-management-ux-unification`
-3. `import-export-ui-actions`
+- `student-record-delete-policy-and-action`
+- `people-management-information-architecture-v1` (slice of `people-management-ux-unification`)
+
+**Likely next (align with `docs/architecture/current-state.md` before implementing):**
+
+1. `import-export-ui-students-export-v1` (slice of `import-export-ui-actions` — export UI on Fichas registadas)
+2. `people-management-ux-unification` (remaining: invitations-on-record, instructor/route split)
+3. `import-export-ui-actions` (broader parent — always slice first)
 4. `supabase-rls-data-api-policy-matrix`
 5. `instructor-id-boundary-hygiene`
 

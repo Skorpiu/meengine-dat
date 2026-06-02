@@ -22,6 +22,8 @@ Runs lint, typecheck, test:run, and build. Use before commit, ZIP, merge, push, 
 
 **Choosing or justifying the next DAT batch:** when asking Cursor to pick or defend the **best next batch**, use the **Delegated Technical Lead Protocol** in [cursor-operating-model.md](./cursor-operating-model.md) — one clear recommendation, rejected alternatives, smallest safe slice, and the exact `APPROVED TO IMPLEMENT: <batch-name>` phrase when gated.
 
+**Discussing work with Rui / processing suggested improvements:** use **Communication and Project Language Protocol** (Portuguese chat with Rui; English engineering artifacts and **English product UI baseline** until i18n) and **User Suggestion Intake Protocol** (triage before roadmap or implementation) in [cursor-operating-model.md](./cursor-operating-model.md).
+
 **Broad plan-first batches:** when the recommended batch is broad/ambiguous/cross-cutting, apply the **Smallest Safe Slice Protocol** (propose the smallest safe v1 slice) before implementation. See [cursor-operating-model.md](./cursor-operating-model.md).
 
 **Discoveries during a batch:** when Cursor finds new issues or improvement opportunities while implementing or reviewing, use the **Improvement Discovery and Backlog Triage Protocol** in [cursor-operating-model.md](./cursor-operating-model.md) — report under **Deferred recommendations**; do not expand scope or update memory prematurely.
