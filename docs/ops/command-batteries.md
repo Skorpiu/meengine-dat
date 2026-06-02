@@ -20,6 +20,8 @@ Runs lint, typecheck, test:run, and build. Use before commit, ZIP, merge, push, 
 
 **Plan-first / analysis-only batches:** when providing a “what I would do” recommendation, use the **Decision Recommendation Protocol** (decision levels D0–D4) in [cursor-operating-model.md](./cursor-operating-model.md).
 
+**Broad plan-first batches:** when the recommended batch is broad/ambiguous/cross-cutting, apply the **Smallest Safe Slice Protocol** (propose the smallest safe v1 slice) before implementation. See [cursor-operating-model.md](./cursor-operating-model.md).
+
 ---
 
 ## Evidence Pack commands

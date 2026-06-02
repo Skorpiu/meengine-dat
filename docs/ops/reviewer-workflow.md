@@ -49,6 +49,25 @@ For plan-first or analysis-heavy batches where Cursor provided a recommendation 
 - **D4 enforcement** — reject merge readiness if Cursor implemented a **D4** decision without explicit approval.
 - **Low-confidence handling** — treat **Low** confidence recommendations as requiring more analysis or a smaller spike (do not accept implementation based on low-confidence recommendations).
 
+## Smallest Safe Slice Protocol reviewer expectations
+
+For broad, ambiguous, or cross-cutting proposed work, the reviewer must verify Cursor applied the **Smallest Safe Slice Protocol** (see [cursor-operating-model.md](./cursor-operating-model.md) — Smallest Safe Slice Protocol) **before implementation**:
+
+- **Broad batch detection** — Cursor explicitly stated whether a broad batch was detected (yes/no).
+- **Safe-slice naming** — Cursor proposed a smallest-safe v1 slice name and did not “implement the broad batch as originally named” when a safe slice existed.
+- **Scope fences** — Cursor listed:
+  - in-scope items
+  - explicitly out-of-scope items
+  - deferred follow-ups
+- **Escalation triggers** — Cursor listed triggers that would push the slice into **D4 / Sensitive Gate** (auth, billing, demo behavior, Prisma/migrations, RLS/grants, tenant isolation, destructive actions, import/apply, invitations, operational history).
+- **Decision level correctness** — the decision level for the slice matches the actual risk category and touched areas.
+
+**Reject merge readiness** when:
+
+- A broad batch was implemented without a safe-slice plan.
+- Out-of-scope fences were violated (scope drift) without explicit reviewer/user approval.
+- An escalation trigger occurred but the batch did not stop/reclassify (D4 / Sensitive Gate) and follow the gate requirements.
+
 ### Final evidence and critical claims
 
 **Reject merge readiness** when:
