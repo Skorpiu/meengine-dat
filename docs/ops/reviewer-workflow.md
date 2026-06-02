@@ -157,6 +157,22 @@ For **destructive / data-sensitive** batches, verify the stated mitigation (e.g.
 
 Do not approve merge readiness based on prose summary alone.
 
+## Human-controlled merge reviewer expectations
+
+When Cursor closes a batch (see [cursor-operating-model.md](./cursor-operating-model.md) — **Human-Controlled Merge Protocol**), the reviewer must verify:
+
+- **Manual battery provided** — reject merge readiness if Cursor does **not** provide a complete manual close/merge command battery for Rui to run.
+- **No autonomous merge/push** — verify Cursor did **not** run `git commit`, `git switch main`, `git pull`, `git merge`, `git push`, `git branch -d`, or `git archive` unless Rui **explicitly requested** Cursor to run those commands in the local repo.
+- **Battery accuracy** — verify the command battery matches the **actual changed files** and the **correct branch name** (not stale paths or a wrong branch).
+- **Conventional Commits** — verify the proposed commit message follows Conventional Commits and matches the batch scope (`feat:`, `fix:`, `docs:`, etc.).
+- **Merge readiness criteria** — verify scope, validation, Final Evidence Pack, Implementation Conformance Matrix (when applicable), memory-docs answer, and forbidden-area confirmations before treating the batch as merge-ready.
+
+**Reject merge readiness** when:
+
+- Cursor executed merge/push without explicit user request.
+- The manual battery is missing, incomplete, or uses blind `git add -A` without justification when only specific paths changed.
+- The battery references files or a branch that do not match the evidence pack.
+
 ### Plan-to-implementation conformance (Implementation Conformance Matrix)
 
 For **runtime / API / UI / sensitive** batches, the reviewer must verify the **Implementation Conformance Matrix** exists (see [cursor-operating-model.md](./cursor-operating-model.md) — Implementation Conformance Matrix) and that it is supported by evidence.

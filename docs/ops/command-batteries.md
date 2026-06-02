@@ -147,7 +147,52 @@ git status --short
 
 ---
 
+## Human-controlled close/merge battery
+
+**Default DAT workflow:** Rui runs this battery manually after Cursor validates the batch and provides a filled-in version (paths, branch name, commit message). Cursor must **not** execute these commands by default. See [cursor-operating-model.md](./cursor-operating-model.md) — Human-Controlled Merge Protocol.
+
+Template (replace `<paths>`, `<type>`, `<message>`, and `<branch-name>`):
+
+```bash
+cd ~/Downloads/Projects/driving-academy-tool
+
+git status --short
+git --no-pager diff --stat
+
+git add <paths>
+
+git status --short
+git --no-pager diff --cached --stat
+
+git commit -m "<type>: <message>"
+
+git switch main
+git pull --ff-only
+git merge --no-ff <branch-name> -m "Merge branch '<branch-name>'"
+
+pnpm -C driving_school_platform/nextjs_space check
+
+git push
+git branch -d <branch-name>
+
+SHA=$(git rev-parse --short HEAD)
+git archive --format=zip --output "DAT-${SHA}.zip" HEAD
+```
+
+**Rules:**
+
+- Cursor fills in `<paths>` from the actual batch diff — prefer specific paths over blind `git add -A`.
+- Commit messages follow **Conventional Commits** (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`, `ci:`, `build:`).
+- If check fails after merge, do not push (or revert before push if already merged locally).
+- If `git pull` fails, resolve auth/sync first; paste error to reviewer.
+- ZIP must **not** be committed.
+- If Rui explicitly asks Cursor to run this battery, Cursor must restate risks, command plan, and working tree state first.
+
+---
+
 ## Merge approved batch
+
+Legacy shorthand (prefer **Human-controlled close/merge battery** above for full staging/evidence/ZIP flow):
 
 ```bash
 git status --short
@@ -171,6 +216,7 @@ git branch -d <branch-name>
 - If check fails, do not push.
 - If `git pull` fails, resolve auth/sync first.
 - Paste error to reviewer.
+- **Rui runs merge/push by default** — see Human-controlled close/merge battery.
 
 ---
 
