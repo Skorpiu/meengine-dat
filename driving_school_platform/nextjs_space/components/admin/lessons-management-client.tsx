@@ -10,9 +10,27 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Car, FileText, Clock, RefreshCw } from "lucide-react";
+import {
+  BookOpen,
+  Car,
+  ChevronDown,
+  Download,
+  FileText,
+  Clock,
+  RefreshCw,
+} from "lucide-react";
 import { FeatureGate } from "@/components/license/feature-gate";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  fetchPracticalLessonsExport,
+  type PracticalLessonsExportFormat,
+} from "@/lib/lessons/practical-lessons-export-client";
 import { parseAdminDashboardLessonsPayload } from "@/lib/lessons/admin-dashboard-lessons-response";
 import {
   getExamLessonTypeLabel,
@@ -74,6 +92,8 @@ export function LessonsManagementClient() {
   const [upcomingLessons, setUpcomingLessons] = useState<LessonListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [exportingFormat, setExportingFormat] =
+    useState<PracticalLessonsExportFormat | null>(null);
   const { toast } = useToast();
 
   const fetchLessons = useCallback(async () => {
@@ -121,6 +141,27 @@ export function LessonsManagementClient() {
       title: "Refreshed",
       description: "Lesson data has been updated.",
     });
+  };
+
+  const handleExport = async (format: PracticalLessonsExportFormat) => {
+    setExportingFormat(format);
+    try {
+      const result = await fetchPracticalLessonsExport(format);
+      if (!result.ok) {
+        toast({
+          title: "Export failed",
+          description: result.message,
+          variant: "destructive",
+        });
+        return;
+      }
+      toast({
+        title: "Download started",
+        description: result.filename,
+      });
+    } finally {
+      setExportingFormat(null);
+    }
   };
 
   useEffect(() => {
@@ -299,6 +340,36 @@ export function LessonsManagementClient() {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              {selectedView === "DRIVING" ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={isLoading || exportingFormat !== null}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      {exportingFormat ? "Exporting…" : "Export"}
+                      <ChevronDown className="w-4 h-4 ml-2 opacity-60" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      disabled={exportingFormat !== null}
+                      onSelect={() => void handleExport("csv")}
+                    >
+                      Export as CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      disabled={exportingFormat !== null}
+                      onSelect={() => void handleExport("json")}
+                    >
+                      Export as JSON
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
               <Button
                 variant="outline"
                 size="sm"
@@ -315,6 +386,12 @@ export function LessonsManagementClient() {
               </div>
             </div>
           </div>
+          {selectedView === "DRIVING" ? (
+            <p className="text-xs text-gray-500 mt-3">
+              Export includes all practical (driving) lessons in your
+              organization, not only the lessons shown on this dashboard.
+            </p>
+          ) : null}
         </div>
 
         {/* View Switcher */}

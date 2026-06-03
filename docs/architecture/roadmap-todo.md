@@ -53,11 +53,17 @@ Parent batch — always slice before implementing.
   - Reuses `POST /api/admin/students/import/apply` (`createOnly`; no API contract change).
   - Confirmation before write; list refresh on success.
   - Validated via `pnpm check`.
-- **Next slice (recommended):** `import-export-ui-practical-lessons-export-v1` or parent slice planning for practical lessons import/export UI.
-  - **Out of scope until separately sliced:** row-level validation UX polish across imports.
+- **Done (v1 slice):** `import-export-ui-practical-lessons-export-v1`
+  - Export CSV/JSON on `/admin/lessons` (Driving tab only).
+  - Reuses `GET /api/admin/practical-lessons/export` (no API contract change).
+  - English UI labels for new export controls.
+  - Validated via `pnpm check`.
+- **Next slice (recommended):** `import-export-ui-practical-lessons-import-dry-run-v1`
+  - Practical lessons import dry-run preview UI only.
+  - **Out of scope until separately sliced:** practical lessons import apply UI, per-student history export, row-level validation UX polish.
 - **Deferred slices (parent):**
-  - Importar/Exportar on Aulas Práticas / history.
-  - Students import apply UI.
+  - Importar/Exportar on histórico de aulas práticas (per-student dialog).
+  - Practical lessons import apply UI.
   - Dry-run preview UI before apply (other imports).
   - Row-level validation errors in UI.
   - No raw API URLs for School Admin.

@@ -105,7 +105,7 @@ pnpm exec prisma migrate status
 - **Alunos** and **Instrutores** should be the primary management entities.
 - **All Users** → downgrade/rename to **Contas da App** / **Acessos**.
 - **Invitation / app access** should live **inside** the student or instructor person record.
-- **Import/export** should be UI buttons, not raw API URLs. **Student export** (CSV/JSON) and **student import preview + apply** are available on Fichas registadas (`import-export-ui-students-export-v1`, `import-export-ui-students-import-dry-run-v1`, `import-export-ui-students-import-apply-v1`); practical-lessons import/export UI remains deferred.
+- **Import/export** should be UI buttons, not raw API URLs. **Student** export/import (CSV/JSON, preview + apply) on Fichas registadas; **practical lessons export** (CSV/JSON) on `/admin/lessons` (Driving tab). Practical-lessons import UI remains deferred.
 
 **Delete/removal (implemented):** School Admin (`SUPER_ADMIN`) may hard-delete a `MANUAL_ONLY` student ficha with no linked User, invitations, lessons of any `LessonSource`, lesson counters, lesson requests, exam registrations, or payments. Blocked deletes return stable **409** codes. Demo org uses the existing user-management mutation guard. Soft-delete/archive remains deferred.
 
@@ -146,12 +146,12 @@ Documented and in use (docs/rules only; no runtime change):
 - `cursor-git-bash-command-discipline` — Ops command batteries and Cursor rules require Git Bash/bash syntax by default (`Assumed shell: Git Bash`); no PowerShell mixing; single-line Conventional Commit commands; guarded `DAT-*.zip` generation. See [command-batteries.md](../ops/command-batteries.md), [cursor-operating-model.md](../ops/cursor-operating-model.md).
 - `import-export-ui-students-import-dry-run-v1` — Student import dry-run preview UI on Fichas registadas (`StudentRecordsImportDialog`); reuses `POST /api/admin/students/import/dry-run`; English labels for new import controls; zero-write preview. Validated via `pnpm check`.
 - `import-export-ui-students-import-apply-v1` — Student import apply UI on same dialog; reuses `POST /api/admin/students/import/apply` (`createOnly`); confirmation before write; refreshes list on success; English labels. Validated via `pnpm check`.
+- `import-export-ui-practical-lessons-export-v1` — Practical lessons export UI (CSV/JSON) on `/admin/lessons` Driving tab; reuses `GET /api/admin/practical-lessons/export`; English labels; org-wide export (not dashboard window only). Validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
-1. `import-export-ui-practical-lessons-v1` — practical lessons import/export UI (slice before implementing)
+1. `import-export-ui-practical-lessons-import-dry-run-v1` — practical lessons import dry-run UI (separate gated slice)
 2. `people-management-ux-unification` — **remaining:** invitations-on-record, instructor/route split, instructor parity (IA v1 nav/labels already shipped)
-3. `import-export-ui-actions` — remaining slice: practical lessons import/export UI
 3. `tenant-operational-organization-id-backfill-v1` — extend backfill script + operator NULL counts; **no NOT NULL migration** in v1 (gated separately)
 4. `audit-log-tenant-context-foundation` — planning only
 5. `product-ui-language-baseline-english-v1` or explicit i18n path — reconcile PT IA exception with English baseline
