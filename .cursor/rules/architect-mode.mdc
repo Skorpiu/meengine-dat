@@ -281,18 +281,20 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `tenant-operational-organization-id-null-counts-report-v1` — read-only null-scope report; `pnpm tenant:org-null-report` (audit follow-up)
 - `tenant-operational-organization-id-backfill-dry-run-v1` — dry-run backfill planner; `pnpm tenant:org-backfill:dry-run`; legacy backfill script fail-safe
 - `people-management-ux-unification-invitations-v1` — student-record invitation UX (pendingInvitation, Send/Revoke on row)
-- `supabase-rls-class-b-hardening-v1` — migration `20260603120000_supabase_rls_class_b_hardening_v1` (8 class-B tables; RLS + REVOKE; no policies/schema/runtime changes)
+- `supabase-rls-class-b-hardening-v1` — migration `20260603120000_supabase_rls_class_b_hardening_v1` (8 class-B tables; RLS + REVOKE; Preview SQL gate passed)
+- `product-roadmap-and-platform-boundary-sync-v1` — docs/product hub, decision-log, DAT vs Platform, packaging; see `docs/product/`
 
-**Current recommended next (runtime/data slice):**
+**Current recommended next (runtime/UX slice):**
 
-1. `people-management-ux-unification-instructor-route-split-v1` (D4 — only with explicit route/nav approval) or next P1 from `roadmap-todo.md`
+1. `people-management-internal-tabs-v1` — internal tabs on `/admin/users` (Students/Invitations, Instructors/Invitations, App accounts)
 
 **Likely next (slice parent batches; do not implement broad names directly):**
 
-2. `people-management-ux-unification` remaining (route split, invitations on instructor record — instructors section v1 done)
-3. Explicit i18n framework — deferred until a dedicated batch
+2. `people-management-ux-unification` remaining (invitations on instructor record — instructors section v1 done; **route split deferred D4**)
+3. Product/packaging slices — `docs/product/`, `roadmap-todo.md` **P1 / Product and packaging**
 4. `audit-log-tenant-context-foundation` (planning only)
-5. `supabase-rls-class-b-hardening-v1b` — optional RLS + REVOKE on remaining internal tables (D4 / RLS gate; separate approval from v1)
+5. `supabase-rls-class-b-hardening-v1b` — optional RLS + REVOKE on remaining internal tables (D4 / RLS gate; separate approval)
+6. `i18n-framework-planning-v1` — deferred until dedicated batch
 
 **Daily Super-Agent:** default **Manual daily Super-Agent check** ([cursor-automations-prompts.md](../../docs/ops/cursor-automations-prompts.md)) at no extra cost; Cursor Automations only if free on current plan.
 

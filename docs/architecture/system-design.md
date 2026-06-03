@@ -84,12 +84,23 @@ Do **not** update memory for every trivial interaction. Avoid noisy, duplicate, 
 | Closed work, current state | `docs/architecture/current-state.md` |
 | Durable architecture/domain rules | `docs/architecture/system-design.md` (this file) |
 | Backlog, future work | `docs/architecture/roadmap-todo.md` |
+| Product direction, packaging | `docs/product/` (see README) |
+| Durable decisions (append-only) | `docs/architecture/decision-log.md` |
 | Command changes | `docs/ops/command-batteries.md` |
 | Preview/demo/QA process | `docs/ops/preview-qa-runbook.md` |
 | Review/merge workflow | `docs/ops/reviewer-workflow.md` |
 | Agent behavior rules | `.cursor/rules/architect-mode.mdc` |
 
 **Rule:** If a Cursor batch discovers a durable decision or new operational rule, its **final report** must state whether memory docs need updating — and apply updates in the same docs-only batch or a named follow-up.
+
+**Product decisions (do not duplicate here):**
+
+| Topic | Document |
+| ----- | -------- |
+| DAT vs Platform boundary | [docs/product/dat-vs-platform-boundary.md](../product/dat-vs-platform-boundary.md) |
+| Packaging, import/export tiers, payments meaning, i18n intent | [docs/product/packaging-and-entitlements.md](../product/packaging-and-entitlements.md) |
+| Living assumptions | [docs/product/product-assumptions.md](../product/product-assumptions.md) |
+| Append-only decisions | [decision-log.md](./decision-log.md) |
 
 ---
 

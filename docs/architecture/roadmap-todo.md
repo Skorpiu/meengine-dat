@@ -27,7 +27,9 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 - **Done (v1 slice):** `people-management-information-architecture-v1` — PT IA on `/admin/users` (Pessoas nav, Alunos primary, **Contas da app** section label, helper copy; same route/API/invitation behavior). **Not pending:** primary Alunos/Fichas hierarchy or Contas da app labeling from v1.
 - **Done (v1 slice):** `people-management-ux-unification-invitations-v1` — invitations-on-record for student fichas (list `pendingInvitation`, row Send/Revoke, revoke→`MANUAL_ONLY` when safe).
 - **Done (v1 slice):** `people-management-ux-unification-instructors-section-v1` — read-only **Instructors** section on `/admin/users` (license display, Edit app account reuse, Invitations helper); reuses SSR `User` + `instructor` include; no new routes/API/schema.
-- **Remaining (deferred):** route split (`/admin/instructors` or similar), invitations on instructor record, manual instructor without User (schema), instructor import/export.
+- **Done (v1 docs slice):** `product-roadmap-and-platform-boundary-sync-v1` — `docs/product/` hub, [decision-log.md](./decision-log.md), DAT vs Platform, packaging intent; People **tabs before route split** ([decision-log.md](./decision-log.md) DEC-003).
+- **Next preferred (UX):** `people-management-internal-tabs-v1` — internal tabs on `/admin/users`: Students (+ Invitations), Instructors (+ Invitations), App accounts; same route; English UI baseline.
+- **Remaining (deferred):** `people-management-ux-unification-instructor-route-split-v1` (**D4** — `/admin/instructors` or similar; **not** recommended next while tabs-first stands), invitations on instructor record, manual instructor without User (schema), instructor import/export.
 - Avoid exposing Student vs User as competing tables in admin flows.
 - Natural flows (product direction; English UI baseline for new copy unless batch approves exception):
   - New student ficha
@@ -93,7 +95,7 @@ Parent batch — always slice before implementing.
 
 - **Done (v1 slice):** docs-only classification matrix — [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md). All 31 Prisma tables classified; 7 with RLS in migrations; 0 intended anon/authenticated Data API access today; `rls_enabled_no_policy` documented as intentional for service-only tables. **No** SQL policies, grants, or migrations in this slice.
 - **Done (v1 slice):** `supabase-rls-class-b-hardening-v1` — migration `20260603120000_supabase_rls_class_b_hardening_v1`: 8 tables only (`billing_events`, `entitlement_grants`, `organization_domains` REVOKE; `audit_logs`, `license_keys`, `configuration_history`, `system_settings`, `feature_flags` ENABLE RLS + REVOKE); no `CREATE POLICY`, no `FORCE ROW LEVEL SECURITY`, no Prisma schema/runtime changes. Operator `migrate deploy` on Preview/Production is human-controlled. Validated via `pnpm check`.
-- **Next gated slice (recommended):** `people-management-ux-unification-instructor-route-split-v1` (D4 — new routes/nav) or `supabase-rls-class-b-hardening-v1b` (remaining internal tables — separate D4 approval).
+- **Next gated slice (recommended):** `people-management-internal-tabs-v1` (UX) or `supabase-rls-class-b-hardening-v1b` (D4 — remaining internal tables — separate approval). **Not recommended next:** `people-management-ux-unification-instructor-route-split-v1`.
 - **Deferred:** `supabase-rls-class-b-hardening-v1b` — NextAuth adapter, tenant business, global reference tables (not in v1); tenant-scoped RLS policies (`supabase-rls-tenant-policies-v1`) after org-id backfill/NOT NULL; dedicated `api` schema review.
 
 ### tenant-required-operational-organization-id-audit
@@ -103,7 +105,7 @@ Parent batch — always slice before implementing.
 - **Done (v1 slice):** audit report + classification only — [tenant-required-operational-organization-id-audit.md](./tenant-required-operational-organization-id-audit.md). No Prisma/migration/RLS/runtime changes in this slice.
 - **Done (v1 slice):** `tenant-operational-organization-id-null-counts-report-v1` — read-only report script `scripts/report-tenant-organization-null-scope.ts` (`pnpm tenant:org-null-report`); helpers `lib/tenant-organization-null-scope-report.ts`. No writes.
 - **Done (v1 slice):** `tenant-operational-organization-id-backfill-dry-run-v1` — `scripts/dry-run-tenant-organization-backfill.ts` (`pnpm tenant:org-backfill:dry-run`); helpers `lib/tenant-organization-backfill-dry-run.ts`; legacy `backfill-organization-scope.ts` fail-safe by default. Preview: 0 operational NULLs.
-- **Next gated slice (recommended):** `people-management-ux-unification-instructor-route-split-v1` (D4 — new routes/nav) or other P1 per priority.
+- **Next gated slice (recommended):** `people-management-internal-tabs-v1` or other P1 per priority. Route split **deferred (D4)**.
 - **Deferred:** `tenant-operational-organization-id-backfill-apply-v1` — only when a future dry-run reports proposed rows; `tenant-operational-organization-id-not-null-migrations` / `tenant-operational-organization-id-not-null-readiness-review-v1` after sustained zero NULL verification (explicit migration approval).
 
 ### billing webhook hardening
@@ -122,6 +124,28 @@ Parent batch — always slice before implementing.
 - **Avoid:** automatic merges, migrations, production deploys, and autonomous auth/billing/RLS/demo/import/apply/data-deletion changes.
 - **Later:** evaluate **PR-only** automations only after read-only mode proves reliable (still no auto-merge).
 - Operating model: [cursor-operating-model.md](../ops/cursor-operating-model.md) — **Cursor Automations Operating Model** (including **Plan and Budget Gate**).
+
+---
+
+## P1 / Product and packaging
+
+**Source:** [docs/product/](../product/), [decision-log.md](./decision-log.md). **Docs sync v1 done:** `product-roadmap-and-platform-boundary-sync-v1`. Runtime/UI enforcement deferred per slice.
+
+| Slice | Priority | Notes |
+| ----- | -------- | ----- |
+| `people-management-internal-tabs-v1` | P1 | Preferred next People UX; tabs on `/admin/users` |
+| `admin-settings-client-visibility-review-v1` | P1 | Review hiding/demoting Settings for school admins |
+| `platform-settings-and-feature-flags-boundary-v1` | P2 | Future Platform ownership of flags/system settings |
+| `import-export-business-packaging-v1` | P2 | Tier vs self-service UI enforcement |
+| `provider-assisted-import-runbook-v1` | P2 | Full operator runbook (outline in [packaging-and-entitlements.md](../product/packaging-and-entitlements.md)) |
+| `payment-integration-product-planning-v1` | P2 | School-facing payments product spec |
+| `payments-and-balances-foundation-v1` | P2 | Technical foundation for balances/packages |
+| `competitive-product-discovery-v1` | P2 | Market comparison; prioritize feature themes only |
+| `i18n-framework-planning-v1` | P2 | Real i18n; switcher, fallback, plan tie-in |
+| `language-pack-pt-PT-v1` | P3 | pt-PT copy after framework |
+| `super-agent-product-strategy-protocol-v1` | — | **Done** in `cursor-operating-model.md` (this sync batch) |
+
+**Deferred explicitly:** `people-management-ux-unification-instructor-route-split-v1` (D4; not recommended next).
 
 ---
 
