@@ -3,6 +3,14 @@ import type { InvitationEmailDeliveryDto } from "@/lib/invitations/invitation-ui
 
 export type StudentAppAccessMode = "MANUAL_ONLY" | "INVITED" | "APP_USER";
 
+/** Safe pending invitation summary on student record list (no token or link). */
+export type StudentRecordPendingInvitationDto = {
+  invitationId: string;
+  email: string;
+  expiresAt: string;
+  status: "PENDING";
+};
+
 export type StudentRecordDto = {
   id: string;
   userId: string | null;
@@ -24,6 +32,7 @@ export type StudentRecordDto = {
     firstName: string;
     lastName: string;
   } | null;
+  pendingInvitation: StudentRecordPendingInvitationDto | null;
 };
 
 export type StudentRecordsListResponse = {

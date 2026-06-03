@@ -36,6 +36,7 @@ export type InvitationUserDisplayDto = {
 
 export type InvitationDto = {
   id: string;
+  studentId: string | null;
   email: string;
   role: UserInvitation["role"];
   status: UserInvitation["status"];
@@ -53,6 +54,7 @@ export function mapInvitationDto(
 ): InvitationDto {
   return {
     id: invitation.id,
+    studentId: invitation.studentId ?? null,
     email: invitation.email,
     role: invitation.role,
     status: invitation.status,

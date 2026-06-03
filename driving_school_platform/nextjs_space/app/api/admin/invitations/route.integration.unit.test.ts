@@ -66,6 +66,7 @@ const rejectDemoUserManagementMutationMock =
 
 const invitationDto = {
   id: "inv-1",
+  studentId: null,
   email: "student@school.test",
   role: "STUDENT",
   status: "PENDING",

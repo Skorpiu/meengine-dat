@@ -46,6 +46,7 @@ const rejectDemoUserManagementMutationMock =
 
 const revokedDto = {
   id: "inv-1",
+  studentId: "stu-1",
   email: "student@school.test",
   role: "STUDENT",
   status: "REVOKED",

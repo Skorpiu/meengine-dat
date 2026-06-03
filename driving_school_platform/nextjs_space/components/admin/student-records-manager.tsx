@@ -25,6 +25,7 @@ import {
   Search,
   Car,
   Trash2,
+  UserX,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -56,11 +57,16 @@ import {
   canShowStudentRecordDeleteAction,
   formatEnrollmentDateInputValue,
   formatStudentRecordDate,
-  getStudentAppAccessLabel,
   getStudentRecordDisplayName,
   previewSchoolStudentId,
   studentRecordApiErrorMessage,
 } from "@/lib/students/student-record-ui-utils";
+import {
+  canRevokeStudentRecordInvitation,
+  getStudentAppAccessDetailLines,
+  getStudentAppAccessLabel,
+} from "@/lib/students/student-record-invitation-ui-utils";
+import { invitationApiErrorMessage } from "@/lib/invitations/invitation-ui-utils";
 import { StudentPracticalHistoryDialog } from "@/components/admin/student-practical-history-dialog";
 import { StudentRecordInviteDialog } from "@/components/admin/student-record-invite-dialog";
 import { StudentRecordsImportDialog } from "@/components/admin/student-records-import-dialog";
@@ -138,6 +144,9 @@ export function StudentRecordsManager() {
   const [exportingFormat, setExportingFormat] =
     useState<StudentRecordsExportFormat | null>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [revokingInvitationId, setRevokingInvitationId] = useState<
+    string | null
+  >(null);
 
   const createPreviewId = useMemo(
     () =>
@@ -286,6 +295,52 @@ export function StudentRecordsManager() {
   const openEdit = (student: StudentRecordDto) => {
     setEditingStudent(student);
     setEditForm(studentToForm(student));
+  };
+
+  const handleRevokeInvitation = async (student: StudentRecordDto) => {
+    const invitationId = student.pendingInvitation?.invitationId;
+    if (!invitationId) {
+      return;
+    }
+
+    const email =
+      student.pendingInvitation?.email ?? student.email ?? "this student";
+    if (
+      !confirm(
+        `Revoke the pending invitation for ${email}? The student record will return to no app account if no other pending invitation remains.`,
+      )
+    ) {
+      return;
+    }
+
+    setRevokingInvitationId(invitationId);
+    try {
+      const response = await fetch(
+        `/api/admin/invitations/${encodeURIComponent(invitationId)}/revoke`,
+        { method: "POST" },
+      );
+      const data = await tryReadJson<{ error?: string; code?: string }>(
+        response,
+      );
+
+      if (!response.ok) {
+        toast.error(
+          invitationApiErrorMessage(
+            data?.code,
+            data?.error || "Failed to revoke invitation",
+            { forAdmin: true },
+          ),
+        );
+        return;
+      }
+
+      toast.success("Invitation revoked.");
+      await loadStudents({ search: appliedSearch });
+    } catch {
+      toast.error("An error occurred while revoking the invitation.");
+    } finally {
+      setRevokingInvitationId(null);
+    }
   };
 
   const closeEdit = () => {
@@ -633,14 +688,23 @@ export function StudentRecordsManager() {
                       {student.email ? ` · ${student.email}` : ""}
                     </div>
                     <div className="text-sm text-gray-500">
-                      Inscrição:{" "}
+                      Enrollment:{" "}
                       {formatStudentRecordDate(student.enrollmentDate)}
                     </div>
+                    <div className="mt-2 space-y-0.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="outline">
+                          {getStudentAppAccessLabel(student.appAccessMode)}
+                        </Badge>
+                      </div>
+                      {getStudentAppAccessDetailLines(student).map((line) => (
+                        <p key={line} className="text-xs text-gray-500">
+                          {line}
+                        </p>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant="outline">
-                      {getStudentAppAccessLabel(student.appAccessMode)}
-                    </Badge>
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
                     {canSendStudentRecordInvite(student) ? (
                       <Button
                         size="sm"
@@ -648,7 +712,25 @@ export function StudentRecordsManager() {
                         onClick={() => setInviteStudent(student)}
                       >
                         <MailPlus className="h-4 w-4 mr-1" />
-                        Enviar convite
+                        Send invitation
+                      </Button>
+                    ) : null}
+                    {canRevokeStudentRecordInvitation(student) ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        disabled={
+                          revokingInvitationId ===
+                          student.pendingInvitation?.invitationId
+                        }
+                        onClick={() => void handleRevokeInvitation(student)}
+                      >
+                        <UserX className="h-4 w-4 mr-1" />
+                        {revokingInvitationId ===
+                        student.pendingInvitation?.invitationId
+                          ? "Revoking…"
+                          : "Revoke invitation"}
                       </Button>
                     ) : null}
                     <Button

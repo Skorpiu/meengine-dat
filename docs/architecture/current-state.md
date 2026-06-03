@@ -101,7 +101,7 @@ pnpm exec prisma migrate status
 
 **Product feedback:** “Alunos → Fichas Registadas” is more natural than “All Users” as the primary mental model.
 
-**IA v1 (done):** `people-management-information-architecture-v1` — Admin nav **Pessoas** (`/admin/users` unchanged); page prioritizes **Alunos / Fichas registadas**; flat login list labeled **Contas da app**; helper copy for ficha vs conta; invitations unchanged (de-emphasized wrapper only). Route split and invitation-on-record remain deferred. Student records **export/import** UI on Fichas registadas is implemented (`import-export-ui-students-export-v1`, `import-export-ui-students-import-dry-run-v1`, `import-export-ui-students-import-apply-v1`).
+**IA v1 (done):** `people-management-information-architecture-v1` — Admin nav **Pessoas** (`/admin/users` unchanged); page prioritizes **Alunos / Fichas registadas**; flat login list labeled **Contas da app**; helper copy for ficha vs conta. **Invitations-on-record v1 (done):** `people-management-ux-unification-invitations-v1` — Send/Revoke on student row, `pendingInvitation` in list API, English access copy on invitation slice; global Invitations section retained. Route split remains deferred. Student records **export/import** UI on Fichas registadas is implemented (`import-export-ui-students-export-v1`, `import-export-ui-students-import-dry-run-v1`, `import-export-ui-students-import-apply-v1`).
 
 **Agreed direction (DAT_3.7):**
 
@@ -156,10 +156,11 @@ Documented and in use (docs/rules only; no runtime change):
 - `import-export-ui-practical-lessons-import-apply-v1` — Practical lessons import apply UI on `/admin/lessons` (`PracticalLessonsImportDialog`); preview then explicit confirmation; reuses `POST /api/admin/practical-lessons/import/apply` (`createOnly`); invalidates apply after file change; demo 403 messaging; refreshes lessons list on success. Validated via `pnpm check`.
 - `tenant-operational-organization-id-null-counts-report-v1` — Read-only operator report for nullable operational `organizationId` NULL counts and conflict detection; `pnpm tenant:org-null-report`; helpers in `lib/tenant-organization-null-scope-report.ts`. No DB writes. Validated via `pnpm check`.
 - `tenant-operational-organization-id-backfill-dry-run-v1` — Dry-run-only per-row backfill planner for operational allowlist; `pnpm tenant:org-backfill:dry-run`; rejects `--apply`; legacy `backfill-organization-scope.ts` disabled unless `ALLOW_UNSAFE_BROAD_ORG_BACKFILL=1`. Preview report: 0 operational NULLs, 0 conflicts. Validated via `pnpm check`.
+- `people-management-ux-unification-invitations-v1` — Student-record-centered invitation UX: `pendingInvitation` on list API, Send/Revoke on row, English access copy; `InvitationDto.studentId`; revoke resets linked `Student.appAccessMode` to `MANUAL_ONLY` when safe. Invitations screen retained. Validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
-1. `people-management-ux-unification` — **remaining:** invitations-on-record, instructor/route split, instructor parity (IA v1 nav/labels already shipped) — **recommended** while operational backfill apply has zero proposed rows in Preview
+1. `people-management-ux-unification` — **remaining:** instructor/route split, instructor parity, product UI language reconciliation (invitations-on-record v1 done)
 2. `tenant-operational-organization-id-not-null-readiness-review-v1` — operator/docs review for NOT NULL migrations when NULL counts stay at zero (no apply batch needed yet)
 3. `supabase-rls-class-b-hardening-v1` — optional RLS + REVOKE on remaining internal tables (D4 / RLS gate)
 4. `tenant-operational-organization-id-backfill-apply-v1` — **deferred** until a future environment dry-run shows proposed changes

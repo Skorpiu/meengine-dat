@@ -9,6 +9,7 @@ import {
 
 const invitation = {
   id: "inv-1",
+  studentId: null,
   email: "student@school.test",
   role: "STUDENT" as const,
   status: "PENDING" as const,
