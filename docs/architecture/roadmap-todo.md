@@ -68,8 +68,6 @@ Parent batch — always slice before implementing.
   - **Out of scope until separately sliced:** per-student history export/import UI, row-level validation UX polish.
 - **Deferred slices (parent):**
   - Importar/Exportar on histórico de aulas práticas (per-student dialog).
-  - Practical lessons import apply UI.
-  - Dry-run preview UI before apply (other imports).
   - Row-level validation errors in UI.
   - No raw API URLs for School Admin.
 
