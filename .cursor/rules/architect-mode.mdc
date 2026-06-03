@@ -264,6 +264,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `student-record-delete-policy-and-action`
 - `people-management-information-architecture-v1` (slice of `people-management-ux-unification`)
 - `product-ui-language-baseline-english-v1` — English copy on `/admin/users` People Management tree (reconciled PT IA exception)
+- `people-management-ux-unification-instructors-section-v1` — read-only Instructors section on `/admin/users` (no route split)
 - Cursor Super-Agent protocols, Automations operating model, and prompt templates (docs in `docs/ops/`)
 - External database architecture audit triage (roadmap items only; no schema from triage)
 - `import-export-ui-students-export-v1` (slice of `import-export-ui-actions` — export CSV/JSON on Fichas registadas)
@@ -283,11 +284,11 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Current recommended next (runtime/data slice):**
 
-1. `people-management-ux-unification` (remaining: instructor/route split, instructor parity)
+1. `people-management-ux-unification-instructor-route-split-v1` (D4 — only with explicit route/nav approval) or next P1 from `roadmap-todo.md`
 
 **Likely next (slice parent batches; do not implement broad names directly):**
 
-2. `people-management-ux-unification` remaining (instructor/route split — invitations-on-record and English `/admin/users` copy done)
+2. `people-management-ux-unification` remaining (route split, invitations on instructor record — instructors section v1 done)
 3. Explicit i18n framework — deferred until a dedicated batch
 4. `audit-log-tenant-context-foundation` (planning only)
 5. `supabase-rls-class-b-hardening-v1` — optional RLS + REVOKE on remaining internal tables (D4 / RLS gate)
