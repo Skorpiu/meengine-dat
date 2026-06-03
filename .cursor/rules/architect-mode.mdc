@@ -262,7 +262,8 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 **Done (v1):**
 
 - `student-record-delete-policy-and-action`
-- `people-management-information-architecture-v1` (slice of `people-management-ux-unification`; PT IA labels are a **temporary exception** — see `product-ui-language-baseline-english-v1`)
+- `people-management-information-architecture-v1` (slice of `people-management-ux-unification`)
+- `product-ui-language-baseline-english-v1` — English copy on `/admin/users` People Management tree (reconciled PT IA exception)
 - Cursor Super-Agent protocols, Automations operating model, and prompt templates (docs in `docs/ops/`)
 - External database architecture audit triage (roadmap items only; no schema from triage)
 - `import-export-ui-students-export-v1` (slice of `import-export-ui-actions` — export CSV/JSON on Fichas registadas)
@@ -282,12 +283,12 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Current recommended next (runtime/data slice):**
 
-1. `people-management-ux-unification` (remaining: instructor/route split, instructor parity) or `product-ui-language-baseline-english-v1`
+1. `people-management-ux-unification` (remaining: instructor/route split, instructor parity)
 
 **Likely next (slice parent batches; do not implement broad names directly):**
 
-2. `people-management-ux-unification` remaining (invitations-on-record, instructor/route split — **not** Contas da app / primary Alunos IA from v1)
-3. `product-ui-language-baseline-english-v1` — pending reconciliation of PT IA exception with English baseline / i18n path
+2. `people-management-ux-unification` remaining (instructor/route split — invitations-on-record and English `/admin/users` copy done)
+3. Explicit i18n framework — deferred until a dedicated batch
 4. `audit-log-tenant-context-foundation` (planning only)
 5. `supabase-rls-class-b-hardening-v1` — optional RLS + REVOKE on remaining internal tables (D4 / RLS gate)
 

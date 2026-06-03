@@ -81,10 +81,8 @@ Parent batch — always slice before implementing.
 
 ### product-ui-language-baseline-english-v1
 
-- Audit and reconcile **hardcoded Portuguese** admin UI labels introduced by approved `people-management-information-architecture-v1` (temporary exception).
-- Preserve **English product UI baseline** for new work; prepare strings for future i18n rather than adding scattered PT literals.
-- **Smallest safe v1 slice:** inventory PT/EN strings on `/admin/users` (and related admin people surfaces touched by IA v1) + documented migration plan to English or locale resources.
-- **Out of scope for v1 unless separately approved:** full i18n framework, repo-wide copy sweep, or changing runtime behavior/API contracts.
+- **Done (v1 slice):** English baseline copy on `/admin/users` tree — nav **People**, page IA, student records, app accounts, practical lessons dialog, `student-record-ui-utils` / `student-practical-history-ui-utils` user messages; import dialog alert without PT “fichas”. Route `/admin/users` unchanged; no API/behavior changes. Validated via `pnpm check`.
+- **Deferred:** full i18n framework, repo-wide copy sweep (`translations.ts`, other admin pages), locale switching.
 
 ---
 
@@ -105,7 +103,7 @@ Parent batch — always slice before implementing.
 - **Done (v1 slice):** audit report + classification only — [tenant-required-operational-organization-id-audit.md](./tenant-required-operational-organization-id-audit.md). No Prisma/migration/RLS/runtime changes in this slice.
 - **Done (v1 slice):** `tenant-operational-organization-id-null-counts-report-v1` — read-only report script `scripts/report-tenant-organization-null-scope.ts` (`pnpm tenant:org-null-report`); helpers `lib/tenant-organization-null-scope-report.ts`. No writes.
 - **Done (v1 slice):** `tenant-operational-organization-id-backfill-dry-run-v1` — `scripts/dry-run-tenant-organization-backfill.ts` (`pnpm tenant:org-backfill:dry-run`); helpers `lib/tenant-organization-backfill-dry-run.ts`; legacy `backfill-organization-scope.ts` fail-safe by default. Preview: 0 operational NULLs.
-- **Next gated slice (recommended):** `people-management-ux-unification` (remaining: instructor/route split, instructor parity) or `product-ui-language-baseline-english-v1` for PT IA exception reconciliation.
+- **Next gated slice (recommended):** `people-management-ux-unification` (remaining: instructor/route split, instructor parity).
 - **Deferred:** `tenant-operational-organization-id-backfill-apply-v1` — only when a future dry-run reports proposed rows; `tenant-operational-organization-id-not-null-migrations` / `tenant-operational-organization-id-not-null-readiness-review-v1` after sustained zero NULL verification (explicit migration approval).
 
 ### billing webhook hardening

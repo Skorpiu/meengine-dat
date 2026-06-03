@@ -79,7 +79,7 @@ export function StudentPracticalHistoryDialog({
         toast.error(
           practicalHistoryApiErrorMessage(
             err?.code,
-            err?.error || "Falha ao carregar histórico.",
+            err?.error || "Failed to load history.",
           ),
         );
         setLessons([]);
@@ -88,7 +88,7 @@ export function StudentPracticalHistoryDialog({
       const list = data as PracticalLessonHistoryListResponse;
       setLessons(list.data?.lessons ?? []);
     } catch {
-      toast.error("Falha ao carregar histórico.");
+      toast.error("Failed to load history.");
       setLessons([]);
     } finally {
       setListLoading(false);
@@ -147,17 +147,17 @@ export function StudentPracticalHistoryDialog({
         toast.error(
           practicalHistoryApiErrorMessage(
             err?.code,
-            err?.error || "Falha ao registar aula.",
+            err?.error || "Failed to record lesson.",
           ),
         );
         return;
       }
 
-      toast.success("Aula prática registada.");
+      toast.success("Practical lesson recorded.");
       setForm(emptyPracticalHistoryForm());
       await loadHistory();
     } catch {
-      toast.error("Falha ao registar aula.");
+      toast.error("Failed to record lesson.");
     } finally {
       setCreateLoading(false);
     }
@@ -169,11 +169,11 @@ export function StudentPracticalHistoryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Histórico de aulas práticas</DialogTitle>
+          <DialogTitle>Practical lesson history</DialogTitle>
           <DialogDescription>
             {student.schoolStudentId ?? "—"} —{" "}
-            {getStudentRecordDisplayName(student)}. Registe aulas já realizadas
-            fora do sistema.
+            {getStudentRecordDisplayName(student)}. Record lessons completed
+            outside the system.
           </DialogDescription>
         </DialogHeader>
 
@@ -182,11 +182,11 @@ export function StudentPracticalHistoryDialog({
           className="space-y-4 border rounded-lg p-4"
         >
           <h3 className="text-sm font-semibold text-gray-900">
-            Adicionar aula manual
+            Add manual lesson
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="ph-date">Data</Label>
+              <Label htmlFor="ph-date">Date</Label>
               <Input
                 id="ph-date"
                 type="date"
@@ -198,7 +198,7 @@ export function StudentPracticalHistoryDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ph-time">Hora</Label>
+              <Label htmlFor="ph-time">Time</Label>
               <Input
                 id="ph-time"
                 type="time"
@@ -210,7 +210,7 @@ export function StudentPracticalHistoryDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ph-number">Nº da aula</Label>
+              <Label htmlFor="ph-number">Lesson number</Label>
               <Input
                 id="ph-number"
                 inputMode="numeric"
@@ -226,7 +226,7 @@ export function StudentPracticalHistoryDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ph-duration">Duração (min)</Label>
+              <Label htmlFor="ph-duration">Duration (min)</Label>
               <Input
                 id="ph-duration"
                 inputMode="numeric"
@@ -241,7 +241,7 @@ export function StudentPracticalHistoryDialog({
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="ph-instructor">Instrutor</Label>
+              <Label htmlFor="ph-instructor">Instructor</Label>
               <Select
                 value={form.instructorId || undefined}
                 onValueChange={(value) =>
@@ -249,7 +249,7 @@ export function StudentPracticalHistoryDialog({
                 }
               >
                 <SelectTrigger id="ph-instructor">
-                  <SelectValue placeholder="Selecionar instrutor" />
+                  <SelectValue placeholder="Select instructor" />
                 </SelectTrigger>
                 <SelectContent>
                   {instructors.map((instructor) => (
@@ -261,7 +261,7 @@ export function StudentPracticalHistoryDialog({
               </Select>
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="ph-notes">Notas (opcional)</Label>
+              <Label htmlFor="ph-notes">Notes (optional)</Label>
               <Input
                 id="ph-notes"
                 value={form.notes}
@@ -272,19 +272,19 @@ export function StudentPracticalHistoryDialog({
             </div>
           </div>
           <Button type="submit" disabled={createLoading}>
-            {createLoading ? "A registar…" : "Registar aula"}
+            {createLoading ? "Recording…" : "Record lesson"}
           </Button>
         </form>
 
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-gray-900">
-            Aulas registadas
+            Recorded lessons
           </h3>
           {listLoading ? (
-            <p className="text-sm text-gray-500">A carregar…</p>
+            <p className="text-sm text-gray-500">Loading…</p>
           ) : lessons.length === 0 ? (
             <p className="text-sm text-gray-500">
-              Nenhuma aula prática registada.
+              No practical lessons recorded.
             </p>
           ) : (
             <div className="space-y-2">
@@ -295,7 +295,7 @@ export function StudentPracticalHistoryDialog({
                 >
                   <div>
                     <div className="font-medium">
-                      Prática #{lesson.practicalLessonNumber ?? "—"} ·{" "}
+                      Practical #{lesson.practicalLessonNumber ?? "—"} ·{" "}
                       {formatPracticalHistoryDate(lesson.lessonDate)} ·{" "}
                       {lesson.startTime}
                     </div>

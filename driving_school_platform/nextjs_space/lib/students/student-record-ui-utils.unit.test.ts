@@ -32,7 +32,7 @@ describe("studentRecordApiErrorMessage", () => {
         "school_student_id_already_exists",
         "Conflict",
       ),
-    ).toContain("Já existe um aluno");
+    ).toContain("already exists in this school");
   });
 
   it("falls back for unknown codes", () => {

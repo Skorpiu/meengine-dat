@@ -84,50 +84,50 @@ export function studentRecordApiErrorMessage(
 ): string {
   switch (code) {
     case "school_student_id_already_exists":
-      return "Já existe um aluno com este ID nesta escola.";
+      return "A student with this ID already exists in this school.";
     case "year_suffix_must_be_2_digits":
-      return "O ano de inscrição deve ter exatamente 2 dígitos (ex.: 26).";
+      return "Enrollment year must be exactly 2 digits (e.g. 26).";
     case "sequence_out_of_range":
-      return "O nº de inscrição deve estar entre 1 e 999.";
+      return "Enrollment number must be between 1 and 999.";
     case "sequence_must_be_integer":
-      return "O nº de inscrição deve ser um número inteiro.";
+      return "Enrollment number must be a whole number.";
     case "invalid_email":
-      return "Email inválido.";
+      return "Invalid email.";
     case "enrollment_date_invalid":
-      return "Data de inscrição inválida.";
+      return "Invalid enrollment date.";
     case "demo_restricted_action":
     case "demo_mutation_disabled":
       return (
-        fallback || "Esta ação não está disponível no ambiente de demonstração."
+        fallback || "This action is not available in the demo environment."
       );
     case "missing_email":
-      return "Indique um email para enviar o convite.";
+      return "Enter an email address to send the invitation.";
     case "student_already_linked":
-      return "Esta ficha já está ligada a uma conta.";
+      return "This student record is already linked to an account.";
     case "student_not_found":
-      return "Ficha de aluno não encontrada.";
+      return "Student record not found.";
     case "student_not_invitable":
-      return "Esta ficha já tem acesso à app.";
+      return "This student record already has app access.";
     case "pending_invitation_exists":
-      return "Já existe um convite pendente para este email.";
+      return "A pending invitation already exists for this email.";
     case "user_already_exists":
-      return "Já existe uma conta com este email.";
+      return "An account with this email already exists.";
     case "student_not_manual_only":
-      return "Só é possível remover fichas sem acesso à app (manual).";
+      return "Only student records without app access (manual) can be removed.";
     case "student_has_linked_user":
-      return "Esta ficha está ligada a uma conta — não pode ser removida.";
+      return "This student record is linked to an account and cannot be removed.";
     case "student_has_invitations":
-      return "Esta ficha tem convites associados — remova ou aguarde antes de apagar.";
+      return "This student record has invitations — revoke or wait before deleting.";
     case "student_has_lessons":
-      return "Esta ficha tem aulas ou histórico — não pode ser removida.";
+      return "This student record has lessons or history and cannot be removed.";
     case "student_has_lesson_counters":
-      return "Esta ficha tem contadores de aulas — não pode ser removida.";
+      return "This student record has lesson counters and cannot be removed.";
     case "student_has_lesson_requests":
-      return "Esta ficha tem pedidos de aula — não pode ser removida.";
+      return "This student record has lesson requests and cannot be removed.";
     case "student_has_exam_registrations":
-      return "Esta ficha tem inscrições em exames — não pode ser removida.";
+      return "This student record has exam registrations and cannot be removed.";
     case "student_has_payments":
-      return "Esta ficha tem pagamentos associados — não pode ser removida.";
+      return "This student record has payments and cannot be removed.";
     default:
       return fallback;
   }
