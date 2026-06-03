@@ -5,16 +5,39 @@ const h = vi.hoisted(() => {
   const findManyMock = vi.fn();
   const createMock = vi.fn();
   const updateMock = vi.fn();
+  const countMock = vi.fn();
   const userFindUniqueMock = vi.fn();
   const organizationFindUniqueMock = vi.fn();
+  const studentFindFirstMock = vi.fn();
+  const studentUpdateMock = vi.fn();
+  const transactionMock = vi.fn();
+
+  const txMock = {
+    userInvitation: {
+      findFirst: findFirstMock,
+      findMany: findManyMock,
+      create: createMock,
+      update: updateMock,
+      count: countMock,
+    },
+    student: {
+      findFirst: studentFindFirstMock,
+      update: studentUpdateMock,
+    },
+  };
 
   return {
     findFirstMock,
     findManyMock,
     createMock,
     updateMock,
+    countMock,
     userFindUniqueMock,
     organizationFindUniqueMock,
+    studentFindFirstMock,
+    studentUpdateMock,
+    transactionMock,
+    txMock,
     prismaMock: {
       user: {
         findUnique: userFindUniqueMock,
@@ -28,6 +51,7 @@ const h = vi.hoisted(() => {
         create: createMock,
         update: updateMock,
       },
+      $transaction: transactionMock,
     },
   };
 });
@@ -50,6 +74,7 @@ function sampleRow(overrides: Record<string, unknown> = {}) {
   return {
     id: "inv-1",
     organizationId: "org-a",
+    studentId: null,
     email: "student@school.test",
     role: "STUDENT",
     tokenHash: "secret-hash-never-in-dto",
@@ -77,6 +102,12 @@ beforeEach(() => {
   h.userFindUniqueMock.mockResolvedValue(null);
   h.findFirstMock.mockResolvedValue(null);
   h.findManyMock.mockResolvedValue([]);
+  h.countMock.mockResolvedValue(0);
+  h.studentFindFirstMock.mockResolvedValue(null);
+  h.studentUpdateMock.mockResolvedValue({});
+  h.transactionMock.mockImplementation(
+    async (fn: (tx: typeof h.txMock) => unknown) => fn(h.txMock),
+  );
   h.organizationFindUniqueMock.mockResolvedValue({ name: "Demo School" });
 });
 
@@ -226,6 +257,12 @@ describe("mapInvitationDto", () => {
     const dto = mapInvitationDto(sampleRow() as any);
     expect(dto).not.toHaveProperty("tokenHash");
     expect(JSON.stringify(dto)).not.toContain("secret-hash");
+    expect(dto.studentId).toBeNull();
+  });
+
+  it("maps studentId when present", () => {
+    const dto = mapInvitationDto(sampleRow({ studentId: "stu-1" }) as any);
+    expect(dto.studentId).toBe("stu-1");
   });
 });
 
@@ -261,11 +298,94 @@ describe("revokeInvitation", () => {
     if (result.ok) {
       expect(result.invitation.status).toBe("REVOKED");
       expect(result.invitation).not.toHaveProperty("tokenHash");
+      expect(result.invitation.studentId).toBeNull();
     }
     expect(h.findFirstMock.mock.calls[0][0].where).toEqual({
       id: "inv-1",
       organizationId: "org-a",
     });
+    expect(h.studentUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it("resets linked student to MANUAL_ONLY when INVITED and no other pending invite", async () => {
+    h.findFirstMock.mockResolvedValue(sampleRow({ studentId: "stu-1" }));
+    h.updateMock.mockResolvedValue(
+      sampleRow({
+        studentId: "stu-1",
+        status: "REVOKED",
+        revokedAt: new Date("2026-05-22T00:00:00.000Z"),
+      }),
+    );
+    h.countMock.mockResolvedValue(0);
+    h.studentFindFirstMock.mockResolvedValue({
+      userId: null,
+      appAccessMode: "INVITED",
+    });
+
+    const result = await revokeInvitation({
+      organizationId: "org-a",
+      invitationId: "inv-1",
+    });
+
+    expect(result.ok).toBe(true);
+    expect(h.studentUpdateMock).toHaveBeenCalledWith({
+      where: { id: "stu-1" },
+      data: { appAccessMode: "MANUAL_ONLY" },
+    });
+  });
+
+  it("does not reset student for standalone invitation without studentId", async () => {
+    h.findFirstMock.mockResolvedValue(sampleRow({ studentId: null }));
+    h.updateMock.mockResolvedValue(
+      sampleRow({
+        status: "REVOKED",
+        revokedAt: new Date("2026-05-22T00:00:00.000Z"),
+      }),
+    );
+
+    await revokeInvitation({
+      organizationId: "org-a",
+      invitationId: "inv-1",
+    });
+
+    expect(h.countMock).not.toHaveBeenCalled();
+    expect(h.studentFindFirstMock).not.toHaveBeenCalled();
+    expect(h.studentUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it("does not reset student when already APP_USER", async () => {
+    h.findFirstMock.mockResolvedValue(sampleRow({ studentId: "stu-1" }));
+    h.updateMock.mockResolvedValue(
+      sampleRow({ studentId: "stu-1", status: "REVOKED" }),
+    );
+    h.countMock.mockResolvedValue(0);
+    h.studentFindFirstMock.mockResolvedValue({
+      userId: "user-1",
+      appAccessMode: "APP_USER",
+    });
+
+    await revokeInvitation({
+      organizationId: "org-a",
+      invitationId: "inv-1",
+    });
+
+    expect(h.studentUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it("does not reset student when another pending invitation remains", async () => {
+    h.findFirstMock.mockResolvedValue(sampleRow({ studentId: "stu-1" }));
+    h.updateMock.mockResolvedValue(
+      sampleRow({ studentId: "stu-1", status: "REVOKED" }),
+    );
+    h.countMock.mockResolvedValue(1);
+
+    await revokeInvitation({
+      organizationId: "org-a",
+      invitationId: "inv-1",
+    });
+
+    expect(h.studentFindFirstMock).not.toHaveBeenCalled();
+    expect(h.studentUpdateMock).not.toHaveBeenCalled();
   });
 
   it("returns not_found when invitation is outside org scope", async () => {

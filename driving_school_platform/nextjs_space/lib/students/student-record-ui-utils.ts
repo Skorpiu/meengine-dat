@@ -42,18 +42,7 @@ export function getStudentRecordDisplayName(student: StudentRecordDto): string {
   return student.schoolStudentId ?? "Student";
 }
 
-export function getStudentAppAccessLabel(mode: StudentAppAccessMode): string {
-  switch (mode) {
-    case "MANUAL_ONLY":
-      return "Sem acesso à app";
-    case "INVITED":
-      return "Convite enviado";
-    case "APP_USER":
-      return "Com acesso à app";
-    default:
-      return mode;
-  }
-}
+export { getStudentAppAccessLabel } from "@/lib/students/student-record-invitation-ui-utils";
 
 export function canSendStudentRecordInvite(student: {
   userId: string | null;

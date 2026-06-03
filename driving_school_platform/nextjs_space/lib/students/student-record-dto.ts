@@ -1,4 +1,12 @@
 import type { Prisma } from "@prisma/client";
+import type { StudentRecordPendingInvitationDto } from "@/lib/students/student-record-ui-types";
+
+const PENDING_STUDENT_INVITATION_SELECT = {
+  id: true,
+  email: true,
+  expiresAt: true,
+  status: true,
+} satisfies Prisma.UserInvitationSelect;
 
 /** Safe nested User fields for student record API responses. */
 export const STUDENT_RECORD_USER_SELECT = {
@@ -42,6 +50,12 @@ export const STUDENT_RECORD_SELECT = {
   createdAt: true,
   updatedAt: true,
   user: { select: STUDENT_RECORD_USER_SELECT },
+  userInvitations: {
+    where: { status: "PENDING" },
+    orderBy: { createdAt: "desc" },
+    take: 1,
+    select: PENDING_STUDENT_INVITATION_SELECT,
+  },
 } satisfies Prisma.StudentSelect;
 
 export type StudentRecordRow = Prisma.StudentGetPayload<{
@@ -107,7 +121,23 @@ export type StudentRecordDto = {
     firstName: string;
     lastName: string;
   } | null;
+  pendingInvitation: StudentRecordPendingInvitationDto | null;
 };
+
+function mapPendingStudentInvitation(
+  row: StudentRecordRow,
+): StudentRecordPendingInvitationDto | null {
+  const pending = row.userInvitations?.[0];
+  if (!pending || pending.status !== "PENDING") {
+    return null;
+  }
+  return {
+    invitationId: pending.id,
+    email: pending.email,
+    expiresAt: pending.expiresAt.toISOString(),
+    status: "PENDING",
+  };
+}
 
 export function mapStudentRecordDto(row: StudentRecordRow): StudentRecordDto {
   return {
@@ -133,5 +163,6 @@ export function mapStudentRecordDto(row: StudentRecordRow): StudentRecordDto {
           lastName: row.user.lastName,
         }
       : null,
+    pendingInvitation: mapPendingStudentInvitation(row),
   };
 }

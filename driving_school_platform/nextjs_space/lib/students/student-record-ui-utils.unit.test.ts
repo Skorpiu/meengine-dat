@@ -20,8 +20,8 @@ describe("previewSchoolStudentId", () => {
 });
 
 describe("getStudentAppAccessLabel", () => {
-  it("labels MANUAL_ONLY in Portuguese", () => {
-    expect(getStudentAppAccessLabel("MANUAL_ONLY")).toBe("Sem acesso à app");
+  it("re-exports English labels from invitation UI utils", () => {
+    expect(getStudentAppAccessLabel("MANUAL_ONLY")).toBe("No app account");
   });
 });
 

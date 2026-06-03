@@ -80,6 +80,12 @@ const manualStudentRow = {
   createdAt: new Date("2026-05-29T10:00:00.000Z"),
   updatedAt: new Date("2026-05-29T10:00:00.000Z"),
   user: null,
+  userInvitations: [] as {
+    id: string;
+    email: string;
+    expiresAt: Date;
+    status: string;
+  }[],
 };
 
 function req(method: string, url: string, payload?: unknown): Request {
@@ -162,6 +168,49 @@ describe("GET /api/admin/students", () => {
     expect(student.enrollmentDate).toBeTruthy();
     expect(student.createdAt).toBeTruthy();
     expect(student.updatedAt).toBeTruthy();
+    expect(student.pendingInvitation).toBeNull();
+  });
+
+  it("includes safe pendingInvitation metadata without token fields", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    h.findManyMock.mockResolvedValue([
+      {
+        ...manualStudentRow,
+        appAccessMode: "INVITED",
+        userInvitations: [
+          {
+            id: "inv-1",
+            email: "joao@school.test",
+            expiresAt: new Date("2099-01-01T12:00:00.000Z"),
+            status: "PENDING",
+          },
+        ],
+      },
+    ]);
+
+    const res = await GET(
+      req("GET", "http://school.example.com/api/admin/students") as any,
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.data.students[0].pendingInvitation).toEqual({
+      invitationId: "inv-1",
+      email: "joao@school.test",
+      expiresAt: "2099-01-01T12:00:00.000Z",
+      status: "PENDING",
+    });
+    expect(body.data.students[0].pendingInvitation).not.toHaveProperty(
+      "tokenHash",
+    );
+    expect(body.data.students[0].pendingInvitation).not.toHaveProperty(
+      "inviteLink",
+    );
+
+    const arg = h.findManyMock.mock.calls[0]?.[0];
+    expect(arg.select.userInvitations).toBeDefined();
+    expect(JSON.stringify(arg.select)).not.toContain("tokenHash");
   });
 
   it("scopes list by organizationId", async () => {

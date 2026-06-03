@@ -57,6 +57,7 @@ const rejectDemoMock =
 
 const invitationDto = {
   id: "inv-1",
+  studentId: "stu-1",
   email: "joao@school.test",
   role: "STUDENT",
   status: "PENDING",

@@ -84,7 +84,7 @@ export function StudentRecordInviteDialog({
     });
     if ("error" in payload) {
       toast.error(
-        studentRecordApiErrorMessage(payload.error, "Email obrigatório."),
+        studentRecordApiErrorMessage(payload.error, "Email is required."),
       );
       return;
     }
@@ -111,7 +111,7 @@ export function StudentRecordInviteDialog({
             err?.code,
             invitationApiErrorMessage(
               err?.code,
-              err?.error || "Falha ao enviar convite.",
+              err?.error || "Failed to send invitation.",
               {
                 forAdmin: true,
               },
@@ -128,14 +128,16 @@ export function StudentRecordInviteDialog({
       setEmailDelivery(delivery);
 
       if (delivery?.ok) {
-        toast.success("Convite enviado por email.");
+        toast.success("Invitation email sent.");
       } else {
-        toast.success("Convite criado. Copie o link e partilhe-o com o aluno.");
+        toast.success(
+          "Invitation created. Copy the link and share it with the student.",
+        );
       }
 
       onSuccess?.();
     } catch {
-      toast.error("Ocorreu um erro ao enviar o convite.");
+      toast.error("An error occurred while sending the invitation.");
     } finally {
       setLoading(false);
     }
@@ -146,10 +148,10 @@ export function StudentRecordInviteDialog({
     const copied = await copyTextToClipboard(inviteLink);
     if (copied) {
       setLinkCopied(true);
-      toast.success("Link copiado — partilhe apenas com o aluno.");
+      toast.success("Link copied — share it only with the student.");
       window.setTimeout(() => setLinkCopied(false), 2500);
     } else {
-      toast.error("Não foi possível copiar. Selecione o campo manualmente.");
+      toast.error("Could not copy. Select the field and copy manually.");
     }
   };
 
@@ -167,35 +169,35 @@ export function StudentRecordInviteDialog({
     >
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Enviar convite</DialogTitle>
+          <DialogTitle>Send invitation</DialogTitle>
           <DialogDescription>
-            O aluno criará apenas a conta de acesso. A ficha operacional de{" "}
+            The student will create an app login only. Operational record{" "}
             <span className="font-medium">
               {getStudentRecordDisplayName(student)}
             </span>{" "}
-            ({student.schoolStudentId ?? "—"}) será ligada automaticamente.
+            ({student.schoolStudentId ?? "—"}) will be linked automatically.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="invite-email">Email do convite</Label>
+            <Label htmlFor="invite-email">Invitation email</Label>
             <Input
               id="invite-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="aluno@exemplo.com"
+              placeholder="student@example.com"
               required={!student.email}
               disabled={loading || inviteLink !== null}
             />
             {student.email ? (
               <p className="text-xs text-gray-500">
-                Email registado na ficha: {student.email}
+                Email on record: {student.email}
               </p>
             ) : (
               <p className="text-xs text-gray-500">
-                Indique o email para onde enviar o convite.
+                Enter the email address for this invitation.
               </p>
             )}
           </div>
@@ -203,12 +205,15 @@ export function StudentRecordInviteDialog({
           {inviteLink ? (
             <Alert>
               <AlertDescription className="space-y-2">
+                <p className="text-sm font-medium">
+                  Private invite link — copy now (shown once)
+                </p>
                 {emailDelivery?.attempted && emailDelivery.ok ? (
-                  <p>Email de convite enviado com sucesso.</p>
+                  <p>Invitation email sent successfully.</p>
                 ) : emailDelivery?.attempted && !emailDelivery.ok ? (
                   <p>
-                    Não foi possível enviar o email. Copie o link abaixo e
-                    partilhe-o manualmente.
+                    Email could not be sent. Copy the link below and share it
+                    manually.
                   </p>
                 ) : null}
                 <div className="flex gap-2">
@@ -218,13 +223,13 @@ export function StudentRecordInviteDialog({
                     variant="outline"
                     size="icon"
                     onClick={handleCopyLink}
-                    title="Copiar link"
+                    title="Copy link"
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
                 {linkCopied ? (
-                  <p className="text-xs text-green-700">Link copiado.</p>
+                  <p className="text-xs text-green-700">Link copied.</p>
                 ) : null}
               </AlertDescription>
             </Alert>
@@ -237,12 +242,12 @@ export function StudentRecordInviteDialog({
               onClick={handleClose}
               disabled={loading}
             >
-              {inviteLink ? "Fechar" : "Cancelar"}
+              {inviteLink ? "Close" : "Cancel"}
             </Button>
             {!inviteLink ? (
               <Button type="submit" disabled={loading}>
                 <MailPlus className="h-4 w-4 mr-1" />
-                {loading ? "A enviar…" : "Enviar convite"}
+                {loading ? "Sending…" : "Send invitation"}
               </Button>
             ) : null}
           </div>

@@ -737,9 +737,10 @@ export function UsersManagementClient({
         aria-label="Convites para acesso à app"
       >
         <p className="text-sm text-gray-500 mb-4 max-w-3xl">
-          Convites permitem criar acesso à app por email. O fluxo e as regras de
-          convite mantêm-se iguais; use esta secção quando precisar de enviar um
-          convite sem criar conta manualmente.
+          Invitations grant app access by email. For student records, prefer{" "}
+          <strong>Send invitation</strong> on the student row above so the
+          invite links to the correct operational record. Use this section for
+          instructor invites or other cases not covered by a student record yet.
         </p>
         <InvitationsManagementClient />
       </section>

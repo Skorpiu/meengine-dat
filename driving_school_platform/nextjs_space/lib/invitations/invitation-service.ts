@@ -173,44 +173,79 @@ export async function revokeInvitation(input: {
   invitationId: string;
   revokedByUserId?: string;
 }): Promise<RevokeInvitationResult> {
-  const existing = await prisma.userInvitation.findFirst({
-    where: {
-      id: input.invitationId,
-      organizationId: input.organizationId,
-    },
-    include: INVITATION_LIST_INCLUDE,
-  });
+  return prisma.$transaction(async (tx) => {
+    const existing = await tx.userInvitation.findFirst({
+      where: {
+        id: input.invitationId,
+        organizationId: input.organizationId,
+      },
+      include: INVITATION_LIST_INCLUDE,
+    });
 
-  if (!existing) {
+    if (!existing) {
+      return {
+        ok: false,
+        error: "Invitation not found",
+        code: "invitation_not_found",
+        status: 404,
+      };
+    }
+
+    if (existing.status !== "PENDING") {
+      return {
+        ok: false,
+        error: "Only pending invitations can be revoked",
+        code: "invitation_not_pending",
+        status: 400,
+      };
+    }
+
+    const revokedAt = new Date();
+    const updated = await tx.userInvitation.update({
+      where: { id: existing.id },
+      data: {
+        status: "REVOKED",
+        revokedAt,
+      },
+      include: INVITATION_LIST_INCLUDE,
+    });
+
+    const linkedStudentId = existing.studentId;
+    if (linkedStudentId) {
+      const otherPendingCount = await tx.userInvitation.count({
+        where: {
+          organizationId: input.organizationId,
+          studentId: linkedStudentId,
+          status: "PENDING",
+          id: { not: existing.id },
+        },
+      });
+
+      if (otherPendingCount === 0) {
+        const student = await tx.student.findFirst({
+          where: {
+            id: linkedStudentId,
+            organizationId: input.organizationId,
+          },
+          select: { userId: true, appAccessMode: true },
+        });
+
+        if (
+          student &&
+          student.userId === null &&
+          student.appAccessMode === "INVITED"
+        ) {
+          await tx.student.update({
+            where: { id: linkedStudentId },
+            data: { appAccessMode: "MANUAL_ONLY" },
+          });
+        }
+      }
+    }
+
     return {
-      ok: false,
-      error: "Invitation not found",
-      code: "invitation_not_found",
-      status: 404,
+      ok: true,
+      invitation: mapInvitationDto(updated),
     };
-  }
-
-  if (existing.status !== "PENDING") {
-    return {
-      ok: false,
-      error: "Only pending invitations can be revoked",
-      code: "invitation_not_pending",
-      status: 400,
-    };
-  }
-
-  const revokedAt = new Date();
-  const updated = await prisma.userInvitation.update({
-    where: { id: existing.id },
-    data: {
-      status: "REVOKED",
-      revokedAt,
-    },
-    include: INVITATION_LIST_INCLUDE,
   });
-
-  return {
-    ok: true,
-    invitation: mapInvitationDto(updated),
-  };
 }
