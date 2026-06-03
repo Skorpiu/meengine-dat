@@ -92,8 +92,9 @@ Parent batch — always slice before implementing.
 ### supabase-rls-data-api-policy-matrix
 
 - **Done (v1 slice):** docs-only classification matrix — [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md). All 31 Prisma tables classified; 7 with RLS in migrations; 0 intended anon/authenticated Data API access today; `rls_enabled_no_policy` documented as intentional for service-only tables. **No** SQL policies, grants, or migrations in this slice.
-- **Next gated slice (recommended):** `supabase-rls-class-b-hardening-v1` — enable RLS + `REVOKE ALL FROM anon, authenticated` on remaining internal tables flagged by Security Advisor (D4 / RLS gate).
-- **Deferred:** tenant-scoped RLS policies (`supabase-rls-tenant-policies-v1`) after org-id backfill/NOT NULL; dedicated `api` schema review.
+- **Done (v1 slice):** `supabase-rls-class-b-hardening-v1` — migration `20260603120000_supabase_rls_class_b_hardening_v1`: 8 tables only (`billing_events`, `entitlement_grants`, `organization_domains` REVOKE; `audit_logs`, `license_keys`, `configuration_history`, `system_settings`, `feature_flags` ENABLE RLS + REVOKE); no `CREATE POLICY`, no `FORCE ROW LEVEL SECURITY`, no Prisma schema/runtime changes. Operator `migrate deploy` on Preview/Production is human-controlled. Validated via `pnpm check`.
+- **Next gated slice (recommended):** `people-management-ux-unification-instructor-route-split-v1` (D4 — new routes/nav) or `supabase-rls-class-b-hardening-v1b` (remaining internal tables — separate D4 approval).
+- **Deferred:** `supabase-rls-class-b-hardening-v1b` — NextAuth adapter, tenant business, global reference tables (not in v1); tenant-scoped RLS policies (`supabase-rls-tenant-policies-v1`) after org-id backfill/NOT NULL; dedicated `api` schema review.
 
 ### tenant-required-operational-organization-id-audit
 

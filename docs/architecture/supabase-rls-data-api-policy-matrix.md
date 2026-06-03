@@ -1,7 +1,7 @@
 # Supabase RLS / Data API Policy Matrix (DAT)
 
-**Batch:** `supabase-rls-data-api-policy-matrix`  
-**Status:** Classification and planning only — **no SQL policies, grants, migrations, schema, or runtime changes in this batch.**  
+**Batch:** `supabase-rls-data-api-policy-matrix` (+ follow-up `supabase-rls-class-b-hardening-v1`)  
+**Status:** Classification matrix (docs); **class-B v1 SQL applied** in migration `20260603120000_supabase_rls_class_b_hardening_v1` (8 tables; no policies; operator deploy human-controlled).  
 **Schema source:** `driving_school_platform/nextjs_space/prisma/schema.prisma` (as of matrix date).  
 **Related:** [tenant-required-operational-organization-id-audit.md](./tenant-required-operational-organization-id-audit.md), [supabase-data-api-policy.md](../../driving_school_platform/nextjs_space/docs/ops/supabase-data-api-policy.md), [supabase-data-api-grants.md](../../driving_school_platform/nextjs_space/docs/ops/supabase-data-api-grants.md), [supabase-security-hardening.md](../../driving_school_platform/nextjs_space/docs/engineering/supabase-security-hardening.md).
 
@@ -28,10 +28,10 @@ This matrix:
 | Posture | Count | Meaning |
 | ------- | ----- | ------- |
 | **Primary path: Prisma / server** | All 31 tables | Application reads/writes via Next.js API routes + Prisma |
-| **RLS enabled in migrations (7 tables)** | 7 | Defense-in-depth for Data API exposure |
-| **RLS + explicit REVOKE anon/authenticated (4 tables)** | 4 | Auth/token/rate-limit tables hardened |
-| **RLS enabled, no REVOKE in migration (3 tables)** | 3 | Billing/platform internal tables |
-| **No RLS migration yet (21 tables)** | 21 | Rely on platform defaults + app guards; candidates for class B hardening |
+| **RLS enabled in migrations (12 tables)** | 12 | Defense-in-depth for Data API exposure |
+| **RLS + explicit REVOKE anon/authenticated (11 tables)** | 11 | Auth/token/rate-limit + class-B v1 internal tables hardened |
+| **RLS enabled, REVOKE added in class-B v1 (3 tables)** | 3 | `billing_events`, `entitlement_grants`, `organization_domains` (RLS from earlier migration) |
+| **No RLS migration yet (16 tables)** | 16 | Rely on platform defaults + app guards; candidates for class B v1b hardening |
 | **Intended anon/authenticated Data API access** | **0 tables today** | No reviewed feature requires PostgREST client access |
 
 **Decision (this batch):** Default all Prisma-managed `public` tables to **internal-only (class B)** unless a future product feature explicitly requires **client-facing Data API (class A)** with threat-model review.
@@ -89,10 +89,11 @@ Supabase Security Advisor and linter checks often report **`rls_enabled_no_polic
 
 | Migration | Tables | RLS | REVOKE anon/auth |
 | --------- | ------ | --- | ---------------- |
-| `20260513180000_enable_rls_internal_tables` | `billing_events`, `entitlement_grants`, `organization_domains` | Yes | No |
+| `20260513180000_enable_rls_internal_tables` | `billing_events`, `entitlement_grants`, `organization_domains` | Yes | No (REVOKE added in class-B v1) |
 | `20260529120000_harden_sensitive_auth_tables_rls` | `user_invitations`, `password_reset_tokens`, `email_verification_tokens`, `rate_limit_buckets` | Yes | Yes |
+| `20260603120000_supabase_rls_class_b_hardening_v1` | `billing_events`, `entitlement_grants`, `organization_domains` (REVOKE only); `audit_logs`, `license_keys`, `configuration_history`, `system_settings`, `feature_flags` (RLS + REVOKE) | Yes (5 new); 3 prior | Yes (8 tables) |
 
-All other tables: **no RLS statements** in committed Prisma migrations (as of this matrix).
+Remaining tables without RLS in migrations: **deferred** to `supabase-rls-class-b-hardening-v1b` (separate D4 approval).
 
 Deep ops context: [supabase-data-api-policy.md](../../driving_school_platform/nextjs_space/docs/ops/supabase-data-api-policy.md), [supabase-security-hardening.md](../../driving_school_platform/nextjs_space/docs/engineering/supabase-security-hardening.md).
 
@@ -135,20 +136,20 @@ PostgreSQL table names use `@@map` values from the schema.
 | Table | Prisma model | Tenant scope | Current RLS | Revoke anon/auth | Intended path | Block anon/auth | Future policy | Prisma-primary |
 | ----- | ------------ | ------------ | ----------- | ---------------- | ------------- | --------------- | ------------- | -------------- |
 | `organizations` | Organization | Platform root / tenant registry | None (known) | Unknown | Host resolution, platform admin, subscription metadata | **Yes** | Platform-admin server paths only | **Yes** |
-| `organization_domains` | OrganizationDomain | Required `organizationId` | **Enabled** | No | Host → org mapping; security-sensitive | **Yes** | Confirm REVOKE if Advisor flags grants — **deferred** | **Yes** |
+| `organization_domains` | OrganizationDomain | Required `organizationId` | **Enabled** | **Yes** | Host → org mapping; security-sensitive | **Yes** | **No** permissive anon/auth policies | **Yes** |
 | `organization_features` | OrganizationFeature | Required `organizationId` | None (known) | Unknown | Entitlement/feature gating | **Yes** | Server-side feature checks | **Yes** |
-| `entitlement_grants` | EntitlementGrant | Required `organizationId` | **Enabled** | No | License/entitlement engine | **Yes** | Confirm REVOKE — **deferred** | **Yes** |
-| `license_keys` | LicenseKey | Required `organizationId` | None (known) | Unknown | Platform operator; key material sensitive | **Yes** | Class B hardening candidate | **Yes** |
-| `billing_events` | BillingEvent | Optional `organizationId` | **Enabled** | No | Webhook ingestion — server only | **Yes** | Confirm REVOKE — **deferred** | **Yes** |
+| `entitlement_grants` | EntitlementGrant | Required `organizationId` | **Enabled** | **Yes** | License/entitlement engine | **Yes** | **No** permissive anon/auth policies | **Yes** |
+| `license_keys` | LicenseKey | Required `organizationId` | **Enabled** | **Yes** | Platform operator; key material sensitive | **Yes** | **No** permissive anon/auth policies | **Yes** |
+| `billing_events` | BillingEvent | Optional `organizationId` | **Enabled** | **Yes** | Webhook ingestion — server only | **Yes** | **No** permissive anon/auth policies | **Yes** |
 
 ### AUDIT_CONFIG_HISTORY
 
 | Table | Prisma model | Tenant scope | Current RLS | Revoke anon/auth | Intended path | Block anon/auth | Future policy | Prisma-primary |
 | ----- | ------------ | ------------ | ----------- | ---------------- | ------------- | --------------- | ------------- | -------------- |
-| `audit_logs` | AuditLog | **No `organizationId` today** — see `audit-log-tenant-context-foundation` | None (known) | Unknown | Internal audit write/read (admin/platform) | **Yes** | Tenant-scoped queries need app filter until column added | **Yes** |
-| `configuration_history` | ConfigurationHistory | Optional `organizationId` | None (known) | Unknown | Config change audit | **Yes** | Class B hardening candidate | **Yes** |
-| `system_settings` | SystemSetting | Optional `organizationId`; global keys exist | None (known) | Unknown | Server reads; `isPublic` flag is app-level, not PostgREST | **Yes** | Never expose raw settings via Data API | **Yes** |
-| `feature_flags` | FeatureFlag | Optional `organizationId` | None (known) | Unknown | Server-side flag evaluation | **Yes** | No client flag table access | **Yes** |
+| `audit_logs` | AuditLog | **No `organizationId` today** — see `audit-log-tenant-context-foundation` | **Enabled** | **Yes** | Internal audit write/read (admin/platform) | **Yes** | Tenant-scoped queries need app filter until column added | **Yes** |
+| `configuration_history` | ConfigurationHistory | Optional `organizationId` | **Enabled** | **Yes** | Config change audit | **Yes** | **No** permissive anon/auth policies | **Yes** |
+| `system_settings` | SystemSetting | Optional `organizationId`; global keys exist | **Enabled** | **Yes** | Server reads; `isPublic` flag is app-level, not PostgREST | **Yes** | Never expose raw settings via Data API | **Yes** |
+| `feature_flags` | FeatureFlag | Optional `organizationId` | **Enabled** | **Yes** | Server-side flag evaluation | **Yes** | No client flag table access | **Yes** |
 | `user_preferences` | UserPreference | Via `userId` | None (known) | Unknown | User settings APIs | **Yes** | Possible future user-scoped policy — **deferred** | **Yes** |
 
 ### GLOBAL_REFERENCE
@@ -170,8 +171,8 @@ Demo reset, cron, and ops scripts use the same tables above with **application g
 | -------- | ------ | ------------------- | -------------------------- | ------------------------- |
 | **AUTH_SECURITY** | 8 | 4 / 8 | **All 8** | **None planned** |
 | **TENANT_BUSINESS** | 10 | 0 / 10 | **All 10** | **Deferred** — optional tenant RLS after org-id hardening |
-| **BILLING_PLATFORM** | 6 | 3 / 6 | **All 6** | **None planned**; confirm REVOKE on 3 RLS-enabled |
-| **AUDIT_CONFIG_HISTORY** | 5 | 0 / 5 | **All 5** | **None planned** |
+| **BILLING_PLATFORM** | 6 | 4 / 6 | **All 6** | **None planned** |
+| **AUDIT_CONFIG_HISTORY** | 5 | 4 / 5 | **All 5** | **None planned** |
 | **GLOBAL_REFERENCE** | 2 | 0 / 2 | **Yes (default)** | **Only if** product opts into public catalog via Data API |
 | **FUTURE_CLIENT_FACING** | 0 today | — | — | **notifications**, **user_preferences** are the first candidates if product pivots to `supabase-js` |
 
@@ -206,7 +207,8 @@ RLS and Data API blocks **do not replace** application tenant guards.
 
 | Priority | Batch (suggested name) | Work | Gate |
 | -------- | ------------------------ | ---- | ---- |
-| **P1** | `supabase-rls-class-b-hardening-v1` | Enable RLS + `REVOKE ALL FROM anon, authenticated` on remaining internal tables flagged by Security Advisor (e.g. `audit_logs`, `license_keys`, `configuration_history`, NextAuth adapter tables) — **idempotent SQL migration** | `APPROVED TO IMPLEMENT: supabase-rls-class-b-hardening-v1` (D4 — RLS/grants) |
+| **P1** | `supabase-rls-class-b-hardening-v1` | **Done** — migration `20260603120000_supabase_rls_class_b_hardening_v1` (8 tables; see Known migration baseline) | Closed |
+| **P1** | `supabase-rls-class-b-hardening-v1b` | Enable RLS + REVOKE on remaining internal tables (NextAuth adapter, tenant business, global reference) — **separate** idempotent SQL migration | `APPROVED TO IMPLEMENT: supabase-rls-class-b-hardening-v1b` (D4 — RLS/grants) |
 | **P1** | `tenant-operational-organization-id-backfill-v1` | Backfill NULL `organizationId`; operator counts | Separate approval (data) |
 | **P2** | `supabase-rls-tenant-policies-v1` | Optional **tenant-scoped** RLS policies on `students`, `lessons`, etc. **after** NOT NULL + app guard audit | D4; after org-id hardening |
 | **P2** | `audit-log-tenant-context-foundation` | Add `organizationId` to `AuditLog`; plan tenant-scoped audit queries | Planning / migration gated |
@@ -217,8 +219,8 @@ RLS and Data API blocks **do not replace** application tenant guards.
 
 | Finding | Category | Priority | Verdict |
 | ------- | -------- | -------- | ------- |
-| 21 tables lack RLS in migrations | SECURITY | P2 | **DEFER** to `supabase-rls-class-b-hardening-v1` |
-| 3 RLS-enabled tables lack explicit REVOKE in repo | SECURITY | P2 | **DEFER** — confirm in Supabase dashboard; add REVOKE in hardening batch |
+| 16 tables lack RLS in migrations | SECURITY | P2 | **DEFER** to `supabase-rls-class-b-hardening-v1b` |
+| Class-B v1 (8 tables) RLS + REVOKE | SECURITY | P1 | **ACCEPT** — done in `20260603120000_supabase_rls_class_b_hardening_v1` |
 | `audit_logs` has no tenant column | DATA_INTEGRITY | P2 | **DEFER** — `audit-log-tenant-context-foundation` |
 | Nullable operational `organizationId` | DATA_INTEGRITY | P1 | **DEFER** — existing backlog item |
 | No `@supabase/supabase-js` dependency | DX | — | **ACCEPT** — intentional; Prisma-primary |
@@ -271,4 +273,4 @@ Re-run **Supabase Security Advisor** after any future RLS migration.
 - `driving_school_platform/nextjs_space/docs/ops/supabase-data-api-grants.md`
 - `driving_school_platform/nextjs_space/docs/engineering/supabase-security-hardening.md`
 - `.cursor/rules/database.mdc` — sensitive table gate
-- Migrations: `20260513180000_enable_rls_internal_tables`, `20260529120000_harden_sensitive_auth_tables_rls`
+- Migrations: `20260513180000_enable_rls_internal_tables`, `20260529120000_harden_sensitive_auth_tables_rls`, `20260603120000_supabase_rls_class_b_hardening_v1`

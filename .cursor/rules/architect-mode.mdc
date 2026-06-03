@@ -281,6 +281,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `tenant-operational-organization-id-null-counts-report-v1` — read-only null-scope report; `pnpm tenant:org-null-report` (audit follow-up)
 - `tenant-operational-organization-id-backfill-dry-run-v1` — dry-run backfill planner; `pnpm tenant:org-backfill:dry-run`; legacy backfill script fail-safe
 - `people-management-ux-unification-invitations-v1` — student-record invitation UX (pendingInvitation, Send/Revoke on row)
+- `supabase-rls-class-b-hardening-v1` — migration `20260603120000_supabase_rls_class_b_hardening_v1` (8 class-B tables; RLS + REVOKE; no policies/schema/runtime changes)
 
 **Current recommended next (runtime/data slice):**
 
@@ -291,7 +292,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 2. `people-management-ux-unification` remaining (route split, invitations on instructor record — instructors section v1 done)
 3. Explicit i18n framework — deferred until a dedicated batch
 4. `audit-log-tenant-context-foundation` (planning only)
-5. `supabase-rls-class-b-hardening-v1` — optional RLS + REVOKE on remaining internal tables (D4 / RLS gate)
+5. `supabase-rls-class-b-hardening-v1b` — optional RLS + REVOKE on remaining internal tables (D4 / RLS gate; separate approval from v1)
 
 **Daily Super-Agent:** default **Manual daily Super-Agent check** ([cursor-automations-prompts.md](../../docs/ops/cursor-automations-prompts.md)) at no extra cost; Cursor Automations only if free on current plan.
 
