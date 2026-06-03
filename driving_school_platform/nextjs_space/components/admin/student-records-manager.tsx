@@ -254,9 +254,7 @@ export function StudentRecordsManager() {
     e.preventDefault();
     const payload = buildManualStudentCreatePayload(createForm);
     if ("error" in payload) {
-      toast.error(
-        studentRecordApiErrorMessage(payload.error, "Dados inválidos."),
-      );
+      toast.error(studentRecordApiErrorMessage(payload.error, "Invalid data."));
       return;
     }
 
@@ -282,11 +280,11 @@ export function StudentRecordsManager() {
         return;
       }
 
-      toast.success("Ficha de aluno criada com sucesso.");
+      toast.success("Student record created successfully.");
       setCreateForm(emptyForm());
       await loadStudents({ search: appliedSearch });
     } catch {
-      toast.error("Ocorreu um erro ao criar a ficha.");
+      toast.error("An error occurred while creating the student record.");
     } finally {
       setCreateLoading(false);
     }
@@ -364,20 +362,20 @@ export function StudentRecordsManager() {
         toast.error(
           studentRecordApiErrorMessage(
             data?.code,
-            data?.error || "Não foi possível remover a ficha.",
+            data?.error || "Could not remove the student record.",
           ),
         );
         return;
       }
 
-      toast.success("Ficha de aluno removida com sucesso.");
+      toast.success("Student record removed successfully.");
       setDeleteStudent(null);
       setStudents((prev) => prev.filter((s) => s.id !== deleteStudent.id));
       if (editingStudent?.id === deleteStudent.id) {
         closeEdit();
       }
     } catch {
-      toast.error("Ocorreu um erro ao remover a ficha.");
+      toast.error("An error occurred while removing the student record.");
     } finally {
       setDeleteLoading(false);
     }
@@ -393,7 +391,7 @@ export function StudentRecordsManager() {
     });
 
     if (Object.keys(patch).length === 0) {
-      toast.error("Nenhuma alteração para guardar.");
+      toast.error("No changes to save.");
       return;
     }
 
@@ -403,7 +401,7 @@ export function StudentRecordsManager() {
         String(patch.sequenceNumber ?? ""),
       );
       if (!built) {
-        toast.error("Ano ou nº de inscrição inválidos.");
+        toast.error("Invalid enrollment year or enrollment number.");
         return;
       }
     }
@@ -430,11 +428,11 @@ export function StudentRecordsManager() {
         return;
       }
 
-      toast.success("Ficha atualizada com sucesso.");
+      toast.success("Student record updated successfully.");
       closeEdit();
       await loadStudents({ search: appliedSearch });
     } catch {
-      toast.error("Ocorreu um erro ao atualizar a ficha.");
+      toast.error("An error occurred while updating the student record.");
     } finally {
       setEditLoading(false);
     }
@@ -447,7 +445,7 @@ export function StudentRecordsManager() {
   ) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div className="space-y-2">
-        <Label htmlFor="yearSuffix">Ano de inscrição</Label>
+        <Label htmlFor="yearSuffix">Enrollment year</Label>
         <Input
           id="yearSuffix"
           placeholder="26"
@@ -459,7 +457,7 @@ export function StudentRecordsManager() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="sequenceNumber">Nº inscrição</Label>
+        <Label htmlFor="sequenceNumber">Enrollment number</Label>
         <Input
           id="sequenceNumber"
           placeholder="1"
@@ -472,7 +470,8 @@ export function StudentRecordsManager() {
       </div>
       {previewId ? (
         <p className="sm:col-span-2 text-sm text-gray-600">
-          ID gerado: <span className="font-mono font-medium">{previewId}</span>
+          Generated ID:{" "}
+          <span className="font-mono font-medium">{previewId}</span>
         </p>
       ) : null}
     </div>
@@ -486,7 +485,7 @@ export function StudentRecordsManager() {
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor={`${idPrefix}-firstName`}>Nome</Label>
+          <Label htmlFor={`${idPrefix}-firstName`}>First name</Label>
           <Input
             id={`${idPrefix}-firstName`}
             value={form.firstName}
@@ -497,7 +496,7 @@ export function StudentRecordsManager() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`${idPrefix}-lastName`}>Apelido</Label>
+          <Label htmlFor={`${idPrefix}-lastName`}>Last name</Label>
           <Input
             id={`${idPrefix}-lastName`}
             value={form.lastName}
@@ -509,7 +508,7 @@ export function StudentRecordsManager() {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor={`${idPrefix}-phone`}>Contacto</Label>
+          <Label htmlFor={`${idPrefix}-phone`}>Phone</Label>
           <Input
             id={`${idPrefix}-phone`}
             value={form.phoneNumber}
@@ -531,7 +530,7 @@ export function StudentRecordsManager() {
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-enrollment`}>Data de inscrição</Label>
+        <Label htmlFor={`${idPrefix}-enrollment`}>Enrollment date</Label>
         <Input
           id={`${idPrefix}-enrollment`}
           type="date"
@@ -541,7 +540,7 @@ export function StudentRecordsManager() {
           }
         />
         <p className="text-xs text-gray-500">
-          Opcional na criação — se vazio, usa a data de hoje.
+          Optional on create — if empty, today&apos;s date is used.
         </p>
       </div>
     </>
@@ -552,17 +551,17 @@ export function StudentRecordsManager() {
       <div className="flex items-start gap-3">
         <GraduationCap className="h-8 w-8 text-driving-primary shrink-0 mt-1" />
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Alunos</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Students</h2>
           <p className="text-gray-600 mt-1">
-            Fichas operacionais da escola (com ou sem conta na app). O ID
-            oficial tem 5 dígitos (ano + nº inscrição).
+            School operational student records (with or without an app account).
+            The official ID has 5 digits (enrollment year + enrollment number).
           </p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Nova ficha manual</CardTitle>
+          <CardTitle className="text-lg">New manual student record</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleCreate} className="space-y-4">
@@ -573,7 +572,7 @@ export function StudentRecordsManager() {
               disabled={createLoading}
               className="bg-driving-primary hover:bg-driving-primary/90"
             >
-              {createLoading ? "A criar…" : "Criar ficha"}
+              {createLoading ? "Creating…" : "Create student record"}
             </Button>
           </form>
         </CardContent>
@@ -582,14 +581,16 @@ export function StudentRecordsManager() {
       <Card>
         <CardHeader className="flex flex-col gap-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="text-lg">Fichas registadas</CardTitle>
+            <CardTitle className="text-lg">
+              Registered student records
+            </CardTitle>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2 w-full sm:w-auto">
               <form
                 onSubmit={handleSearch}
                 className="flex w-full sm:w-auto gap-2"
               >
                 <Input
-                  placeholder="Nome, contacto, email ou ID (ex. 261)"
+                  placeholder="Name, phone, email, or ID (e.g. 261)"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   className="sm:min-w-[280px]"
@@ -603,7 +604,7 @@ export function StudentRecordsManager() {
                   size="icon"
                   disabled={listLoading}
                   onClick={() => loadStudents({ search: appliedSearch })}
-                  title="Atualizar"
+                  title="Refresh"
                 >
                   <RefreshCw className="h-4 w-4" />
                 </Button>
@@ -661,11 +662,11 @@ export function StudentRecordsManager() {
           ) : null}
 
           {listLoading ? (
-            <p className="text-sm text-gray-500">A carregar fichas…</p>
+            <p className="text-sm text-gray-500">Loading student records…</p>
           ) : students.length === 0 ? (
             <p className="text-sm text-gray-500">
-              Nenhuma ficha encontrada
-              {appliedSearch ? " para esta pesquisa" : ""}.
+              No student records found
+              {appliedSearch ? " for this search" : ""}.
             </p>
           ) : (
             <div className="space-y-3">
@@ -684,7 +685,7 @@ export function StudentRecordsManager() {
                       </span>
                     </div>
                     <div className="text-sm text-gray-600 mt-1">
-                      {student.phoneNumber || "Sem contacto"}
+                      {student.phoneNumber || "No phone"}
                       {student.email ? ` · ${student.email}` : ""}
                     </div>
                     <div className="text-sm text-gray-500">
@@ -739,7 +740,7 @@ export function StudentRecordsManager() {
                       onClick={() => setHistoryStudent(student)}
                     >
                       <Car className="h-4 w-4 mr-1" />
-                      Aulas práticas
+                      Practical lessons
                     </Button>
                     <Button
                       size="sm"
@@ -747,7 +748,7 @@ export function StudentRecordsManager() {
                       onClick={() => openEdit(student)}
                     >
                       <Edit2 className="h-4 w-4 mr-1" />
-                      Editar
+                      Edit
                     </Button>
                     {canShowStudentRecordDeleteAction(student) ? (
                       <Button
@@ -757,7 +758,7 @@ export function StudentRecordsManager() {
                         onClick={() => setDeleteStudent(student)}
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
-                        Remover ficha
+                        Remove student record
                       </Button>
                     ) : null}
                   </div>
@@ -779,15 +780,15 @@ export function StudentRecordsManager() {
                   })
                 }
               >
-                {loadingMore ? "A carregar…" : "Carregar mais"}
+                {loadingMore ? "Loading…" : "Load more"}
               </Button>
             </div>
           ) : null}
 
           {!listLoading && students.length > 0 ? (
             <p className="text-xs text-gray-400 mt-4 text-center">
-              Mostrando até {LIST_LIMIT} fichas por página
-              {appliedSearch ? " (pesquisa ativa)" : ""}.
+              Showing up to {LIST_LIMIT} student records per page
+              {appliedSearch ? " (search active)" : ""}.
             </p>
           ) : null}
         </CardContent>
@@ -801,10 +802,10 @@ export function StudentRecordsManager() {
       >
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Editar ficha</DialogTitle>
+            <DialogTitle>Edit student record</DialogTitle>
             <DialogDescription>
-              Atualize os dados operacionais. O estado de acesso à app não pode
-              ser alterado aqui.
+              Update operational details. App access status cannot be changed
+              here.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEdit} className="space-y-4">
@@ -817,10 +818,10 @@ export function StudentRecordsManager() {
                 onClick={closeEdit}
                 disabled={editLoading}
               >
-                Cancelar
+                Cancel
               </Button>
               <Button type="submit" disabled={editLoading}>
-                {editLoading ? "A guardar…" : "Guardar"}
+                {editLoading ? "Saving…" : "Save"}
               </Button>
             </div>
           </form>
@@ -858,16 +859,16 @@ export function StudentRecordsManager() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remover ficha de aluno</AlertDialogTitle>
+            <AlertDialogTitle>Remove student record</AlertDialogTitle>
             <AlertDialogDescription>
               {deleteStudent
-                ? `Tem a certeza que pretende remover a ficha ${deleteStudent.schoolStudentId ?? ""} (${getStudentRecordDisplayName(deleteStudent)})? Esta ação é irreversível e só é permitida para fichas manuais sem histórico operacional.`
+                ? `Are you sure you want to remove student record ${deleteStudent.schoolStudentId ?? ""} (${getStudentRecordDisplayName(deleteStudent)})? This action cannot be undone and is only allowed for manual records with no operational history.`
                 : ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteLoading}>
-              Cancelar
+              Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={deleteLoading}
@@ -877,7 +878,7 @@ export function StudentRecordsManager() {
                 void handleDeleteConfirm();
               }}
             >
-              {deleteLoading ? "A remover…" : "Remover"}
+              {deleteLoading ? "Removing…" : "Remove"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

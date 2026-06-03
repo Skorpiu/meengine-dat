@@ -59,13 +59,13 @@ export function practicalHistoryApiErrorMessage(
 ): string {
   switch (code) {
     case "practical_lesson_number_already_exists":
-      return "Já existe uma aula prática com este nº para este aluno.";
+      return "A practical lesson with this number already exists for this student.";
     case "practical_lesson_number_out_of_range":
-      return "O nº da aula deve estar entre 1 e 999.";
+      return "Lesson number must be between 1 and 999.";
     case "practical_lesson_number_required":
-      return "Indique o nº da aula prática.";
+      return "Enter the practical lesson number.";
     case "duration_minutes_invalid":
-      return "Duração inválida (1–480 minutos).";
+      return "Invalid duration (1–480 minutes).";
     case "demo_restricted_action":
     case "demo_write_quota_exceeded":
       return fallback;
@@ -92,13 +92,13 @@ export function buildManualPracticalLessonPayload(form: {
     }
   | { error: string } {
   if (!form.lessonDate.trim()) {
-    return { error: "Indique a data da aula." };
+    return { error: "Enter the lesson date." };
   }
   if (!form.startTime.trim()) {
-    return { error: "Indique a hora da aula." };
+    return { error: "Enter the lesson time." };
   }
   if (!form.instructorId.trim()) {
-    return { error: "Selecione o instrutor." };
+    return { error: "Select an instructor." };
   }
 
   const practicalLessonNumber = Number.parseInt(
@@ -106,10 +106,10 @@ export function buildManualPracticalLessonPayload(form: {
     10,
   );
   if (!Number.isFinite(practicalLessonNumber) || practicalLessonNumber < 1) {
-    return { error: "O nº da aula deve ser um número positivo." };
+    return { error: "Lesson number must be a positive number." };
   }
   if (practicalLessonNumber > 999) {
-    return { error: "O nº da aula deve estar entre 1 e 999." };
+    return { error: "Lesson number must be between 1 and 999." };
   }
 
   const durationMinutes = Number.parseInt(form.durationMinutes.trim(), 10);
@@ -118,7 +118,7 @@ export function buildManualPracticalLessonPayload(form: {
     durationMinutes < 1 ||
     durationMinutes > 480
   ) {
-    return { error: "Duração inválida (1–480 minutos)." };
+    return { error: "Invalid duration (1–480 minutes)." };
   }
 
   const notes = form.notes.trim();
@@ -134,6 +134,6 @@ export function buildManualPracticalLessonPayload(form: {
 
 export function getPracticalHistorySourceLabel(source: string): string {
   if (source === "MANUAL") return "Manual";
-  if (source === "IMPORT") return "Importado";
-  return "Sistema";
+  if (source === "IMPORT") return "Import";
+  return "System";
 }

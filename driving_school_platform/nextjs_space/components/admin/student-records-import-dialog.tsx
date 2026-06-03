@@ -278,8 +278,8 @@ export function StudentRecordsImportDialog({
           <div className="space-y-4">
             <Alert>
               <AlertDescription>
-                Apply creates MANUAL_ONLY fichas only. It does not create app
-                accounts, invitations, or send emails.
+                Apply creates MANUAL_ONLY student records only. It does not
+                create app accounts, invitations, or send emails.
               </AlertDescription>
             </Alert>
 

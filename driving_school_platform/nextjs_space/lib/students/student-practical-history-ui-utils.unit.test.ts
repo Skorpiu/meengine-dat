@@ -35,7 +35,7 @@ describe("student-practical-history-ui-utils", () => {
         durationMinutes: "60",
         notes: "",
       }),
-    ).toEqual({ error: "Indique a data da aula." });
+    ).toEqual({ error: "Enter the lesson date." });
   });
 
   it("maps duplicate number API code to user message", () => {
@@ -44,6 +44,6 @@ describe("student-practical-history-ui-utils", () => {
         "practical_lesson_number_already_exists",
         "fallback",
       ),
-    ).toMatch(/Já existe/);
+    ).toMatch(/already exists/);
   });
 });

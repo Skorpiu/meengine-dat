@@ -522,11 +522,11 @@ export function UsersManagementClient({
       >
         {isLoading
           ? isEdit
-            ? "A guardar..."
-            : "A criar..."
+            ? "Saving..."
+            : "Creating..."
           : isEdit
-            ? "Guardar conta"
-            : "Criar conta"}
+            ? "Save account"
+            : "Create account"}
       </Button>
     </div>
   );
@@ -550,22 +550,21 @@ export function UsersManagementClient({
           </div>
           <div className="text-sm text-gray-600">{user.email}</div>
           <div className="text-sm text-gray-500">
-            {user.phoneNumber || "Sem telefone"} •{" "}
-            {user.address || "Sem morada"}
+            {user.phoneNumber || "No phone"} • {user.address || "No address"}
           </div>
         </div>
       </div>
 
       <div className="flex items-center space-x-3">
         <Badge variant={user.role === "INSTRUCTOR" ? "default" : "secondary"}>
-          {user.role === "INSTRUCTOR" ? "Instrutor" : "Aluno"}
+          {user.role === "INSTRUCTOR" ? "Instructor" : "Student"}
         </Badge>
 
         <Button
           size="sm"
           variant="outline"
           onClick={() => openEditDialog(user)}
-          aria-label="Editar conta"
+          aria-label="Edit account"
         >
           <Edit2 className="w-4 h-4" />
         </Button>
@@ -574,7 +573,7 @@ export function UsersManagementClient({
           size="sm"
           variant="destructive"
           onClick={() => handleDeleteUser(user.id)}
-          aria-label="Remover conta"
+          aria-label="Remove account"
         >
           <Trash2 className="w-4 h-4" />
         </Button>
@@ -586,12 +585,13 @@ export function UsersManagementClient({
     <>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Pessoas</h1>
+        <h1 className="text-3xl font-bold text-gray-900">People</h1>
         <p className="text-gray-600 mt-2 max-w-3xl">
-          Gerir fichas operacionais da escola e contas de acesso à app. As{" "}
-          <strong>fichas</strong> (Alunos / Fichas registadas) podem existir com
-          ou sem conta na app; as <strong>contas da app</strong> são credenciais
-          de login para alunos ou instrutores.
+          Manage school operational student records and app login accounts.{" "}
+          <strong>Student records</strong> (Students / Registered student
+          records) can exist with or without an app account;{" "}
+          <strong>app accounts</strong> are login credentials for students or
+          instructors.
         </p>
       </div>
 
@@ -608,9 +608,9 @@ export function UsersManagementClient({
       >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Editar conta da app</DialogTitle>
+            <DialogTitle>Edit app account</DialogTitle>
             <DialogDescription>
-              Atualizar dados da conta de acesso (login).
+              Update app login account details.
             </DialogDescription>
           </DialogHeader>
           {renderUserForm(true)}
@@ -625,7 +625,7 @@ export function UsersManagementClient({
         <Card className="hover-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Contas de aluno
+              Student app accounts
             </CardTitle>
             <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
@@ -639,7 +639,7 @@ export function UsersManagementClient({
         <Card className="hover-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Contas de instrutor
+              Instructor app accounts
             </CardTitle>
             <Users className="h-4 w-4 text-green-600" />
           </CardHeader>
@@ -653,7 +653,7 @@ export function UsersManagementClient({
         <Card className="hover-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total contas da app
+              Total app accounts
             </CardTitle>
             <CheckCircle className="h-4 w-4 text-purple-600" />
           </CardHeader>
@@ -670,11 +670,12 @@ export function UsersManagementClient({
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
             <CardTitle className="text-lg text-gray-800">
-              Contas da app
+              App accounts
             </CardTitle>
             <p className="text-sm text-gray-600 font-normal max-w-2xl">
-              Credenciais de login na aplicação. Uma ficha de aluno pode existir
-              sem conta; criar conta aqui não substitui a ficha em Alunos acima.
+              App login credentials. A student record can exist without an app
+              account; creating an account here does not replace the student
+              record in Students above.
             </p>
           </div>
           <Dialog
@@ -687,15 +688,15 @@ export function UsersManagementClient({
             <DialogTrigger asChild>
               <Button className="bg-driving-primary hover:bg-driving-primary/90 shrink-0">
                 <UserPlus className="w-4 h-4 mr-2" />
-                Nova conta
+                New account
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Nova conta da app</DialogTitle>
+                <DialogTitle>New app account</DialogTitle>
                 <DialogDescription>
-                  Criar credenciais de login para aluno ou instrutor (não cria
-                  ficha operacional automaticamente).
+                  Create login credentials for a student or instructor (does not
+                  create an operational student record automatically).
                 </DialogDescription>
               </DialogHeader>
               {renderUserForm(false)}
@@ -704,13 +705,13 @@ export function UsersManagementClient({
         </CardHeader>
         <CardContent className="space-y-8">
           {users.length === 0 ? (
-            <p className="text-sm text-gray-500">Nenhuma conta da app.</p>
+            <p className="text-sm text-gray-500">No app accounts.</p>
           ) : (
             <>
               {instructorAccounts.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold text-gray-700">
-                    Instrutores
+                    Instructors
                   </h3>
                   <div className="space-y-4">
                     {instructorAccounts.map(renderAccountRow)}
@@ -720,7 +721,7 @@ export function UsersManagementClient({
               {studentAccounts.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold text-gray-700">
-                    Alunos (com conta na app)
+                    Students (with app account)
                   </h3>
                   <div className="space-y-4">
                     {studentAccounts.map(renderAccountRow)}
@@ -734,7 +735,7 @@ export function UsersManagementClient({
 
       <section
         className="mt-10 pt-8 border-t border-gray-200"
-        aria-label="Convites para acesso à app"
+        aria-label="Invitations for app access"
       >
         <p className="text-sm text-gray-500 mb-4 max-w-3xl">
           Invitations grant app access by email. For student records, prefer{" "}
