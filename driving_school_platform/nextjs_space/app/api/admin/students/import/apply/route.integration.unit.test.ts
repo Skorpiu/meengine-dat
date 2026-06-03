@@ -45,12 +45,16 @@ vi.mock("@/lib/users/user-route-access", async () => {
   return {
     ...actual,
     assertUserTenantHost: vi.fn(),
+    rejectDemoUserManagementMutation: vi.fn(),
   };
 });
 
 import { POST } from "./route";
 import { getServerSession } from "next-auth";
-import { assertUserTenantHost } from "@/lib/users/user-route-access";
+import {
+  assertUserTenantHost,
+  rejectDemoUserManagementMutation,
+} from "@/lib/users/user-route-access";
 import { STUDENT_IMPORT_CSV_HEADERS } from "@/lib/import-export/import-export-contracts";
 
 const getServerSessionMock = getServerSession as unknown as ReturnType<
@@ -59,6 +63,8 @@ const getServerSessionMock = getServerSession as unknown as ReturnType<
 const assertUserTenantHostMock = assertUserTenantHost as unknown as ReturnType<
   typeof vi.fn
 >;
+const rejectDemoUserManagementMutationMock =
+  rejectDemoUserManagementMutation as unknown as ReturnType<typeof vi.fn>;
 
 const CSV_HEADER = STUDENT_IMPORT_CSV_HEADERS.join(";");
 
@@ -84,9 +90,42 @@ beforeEach(() => {
     return callback;
   });
   assertUserTenantHostMock.mockResolvedValue(null);
+  rejectDemoUserManagementMutationMock.mockResolvedValue(null);
 });
 
 describe("POST /api/admin/students/import/apply", () => {
+  it("returns 403 for demo org before import apply and performs no writes", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-demo" },
+    });
+    rejectDemoUserManagementMutationMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: "This action is restricted in the public demo environment.",
+          code: "demo_restricted_action",
+        }),
+        { status: 403 },
+      ),
+    );
+
+    const res = await POST(
+      req({
+        format: "csv",
+        content: `${CSV_HEADER}\n26001;26;1;João;Silva;;;`,
+      }) as any,
+    );
+
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.code).toBe("demo_restricted_action");
+    expect(rejectDemoUserManagementMutationMock).toHaveBeenCalledWith(
+      "org-demo",
+    );
+    expect(h.findManyMock).not.toHaveBeenCalled();
+    expect(h.transactionMock).not.toHaveBeenCalled();
+    expect(h.createMock).not.toHaveBeenCalled();
+  });
+
   it("returns 401 for INSTRUCTOR", async () => {
     getServerSessionMock.mockResolvedValue({
       user: { id: "u1", role: "INSTRUCTOR", organizationId: "org-a" },

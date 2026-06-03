@@ -8,6 +8,7 @@ import {
   validateRequest,
 } from "@/lib/api-utils";
 import { HTTP_STATUS } from "@/lib/constants";
+import { decideDemoRouteMutation } from "@/lib/demo/demo-route-guard";
 import { assertUserTenantHost } from "@/lib/users/user-route-access";
 import { runPracticalLessonImportApply } from "@/lib/import-export/practical-lesson-import-apply";
 
@@ -87,6 +88,17 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await requireSuperAdminTenant(request);
     if (!auth.ok) return auth.response;
+
+    const demoDecision = await decideDemoRouteMutation({
+      organizationId: auth.organizationId,
+      category: "lesson_management",
+    });
+    if (!demoDecision.allowed) {
+      return NextResponse.json(
+        { error: demoDecision.message, code: demoDecision.reason },
+        { status: demoDecision.status },
+      );
+    }
 
     let body: unknown;
     try {
