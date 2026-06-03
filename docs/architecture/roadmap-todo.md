@@ -103,8 +103,9 @@ Parent batch — always slice before implementing.
 
 - **Done (v1 slice):** audit report + classification only — [tenant-required-operational-organization-id-audit.md](./tenant-required-operational-organization-id-audit.md). No Prisma/migration/RLS/runtime changes in this slice.
 - **Done (v1 slice):** `tenant-operational-organization-id-null-counts-report-v1` — read-only report script `scripts/report-tenant-organization-null-scope.ts` (`pnpm tenant:org-null-report`); helpers `lib/tenant-organization-null-scope-report.ts`. No writes.
-- **Next gated slice (recommended):** `tenant-operational-organization-id-backfill-dry-run-v1` — per-row derivation dry-run on allowlisted operational tables; **after** Preview null-scope report reviewed; **no NOT NULL migration**.
-- **Deferred (split from parent backfill):** `tenant-operational-organization-id-backfill-apply-v1` — apply backfill after dry-run validated; `tenant-operational-organization-id-not-null-migrations` after zero NULL rows verified in target DB (explicit migration approval).
+- **Done (v1 slice):** `tenant-operational-organization-id-backfill-dry-run-v1` — `scripts/dry-run-tenant-organization-backfill.ts` (`pnpm tenant:org-backfill:dry-run`); helpers `lib/tenant-organization-backfill-dry-run.ts`; legacy `backfill-organization-scope.ts` fail-safe by default. Preview: 0 operational NULLs.
+- **Next gated slice (recommended):** `people-management-ux-unification` (remaining slices) — no operational backfill apply needed while Preview dry-run shows 0 proposed rows.
+- **Deferred:** `tenant-operational-organization-id-backfill-apply-v1` — only when a future dry-run reports proposed rows; `tenant-operational-organization-id-not-null-migrations` / `tenant-operational-organization-id-not-null-readiness-review-v1` after sustained zero NULL verification (explicit migration approval).
 
 ### billing webhook hardening
 
