@@ -8,7 +8,10 @@ import {
   validateRequest,
 } from "@/lib/api-utils";
 import { HTTP_STATUS } from "@/lib/constants";
-import { assertUserTenantHost } from "@/lib/users/user-route-access";
+import {
+  assertUserTenantHost,
+  rejectDemoUserManagementMutation,
+} from "@/lib/users/user-route-access";
 import { findExistingSchoolStudentIdsInOrg } from "@/lib/students/student-record-queries";
 import {
   collectDuplicateLookupIdsFromApplyInput,
@@ -91,6 +94,11 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await requireSuperAdminTenant(request);
     if (!auth.ok) return auth.response;
+
+    const demoDenied = await rejectDemoUserManagementMutation(
+      auth.organizationId,
+    );
+    if (demoDenied) return demoDenied;
 
     let body: unknown;
     try {

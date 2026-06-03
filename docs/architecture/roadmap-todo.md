@@ -63,12 +63,16 @@ Parent batch — always slice before implementing.
   - Reuses `POST /api/admin/practical-lessons/import/dry-run` (zero-write preview).
   - English UI labels for new import controls.
   - Validated via `pnpm check`.
-- **Next slice (recommended):** `import-apply-demo-guard-v1`
-  - Reuse existing demo mutation guard pattern on `POST /api/admin/students/import/apply` and `POST /api/admin/practical-lessons/import/apply` before exposing more apply UI.
-  - **Out of scope:** UI, Prisma, RLS, demo policy changes beyond apply-route guards.
-- **Then (UI slice):** `import-export-ui-practical-lessons-import-apply-v1`
-  - Practical lessons import apply UI after successful preview (gated; after demo guard).
-  - **Out of scope until separately sliced:** per-student history export/import UI, row-level validation UX polish.
+- **Done (v1 slice):** `import-apply-demo-guard-v1`
+  - Demo mutation guard on student import apply (`rejectDemoUserManagementMutation` / `user_management`) and practical-lessons import apply (`decideDemoRouteMutation` / `lesson_management`).
+  - Dry-run routes unchanged (zero-write).
+  - Validated via `pnpm check`.
+- **Done (v1 slice):** `import-export-ui-practical-lessons-import-apply-v1`
+  - Practical lessons import apply UI on `/admin/lessons` after successful preview.
+  - Explicit confirmation; reuses `POST /api/admin/practical-lessons/import/apply` (`createOnly`).
+  - Invalidates apply when file changes; demo 403 messaging; list refresh on success.
+  - Validated via `pnpm check`.
+- **Out of scope until separately sliced:** per-student history export/import UI, row-level validation UX polish.
 - **Deferred slices (parent):**
   - Importar/Exportar on histórico de aulas práticas (per-student dialog).
   - Row-level validation errors in UI.

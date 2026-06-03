@@ -56,6 +56,15 @@ vi.mock("@/lib/users/user-route-access", async () => {
   };
 });
 
+const demoGuardHoisted = vi.hoisted(() => ({
+  decideDemoRouteMutationMock: vi.fn(),
+}));
+
+vi.mock("@/lib/demo/demo-route-guard", () => ({
+  decideDemoRouteMutation: (...args: unknown[]) =>
+    demoGuardHoisted.decideDemoRouteMutationMock(...args),
+}));
+
 vi.mock("@/lib/lessons/manual-practical-lesson-service", async () => {
   const actual = await vi.importActual<
     typeof import("@/lib/lessons/manual-practical-lesson-service")
@@ -131,9 +140,42 @@ beforeEach(() => {
   });
   h.resolveCategoryMock.mockResolvedValue({ ok: true, categoryId: 2 });
   assertUserTenantHostMock.mockResolvedValue(null);
+  demoGuardHoisted.decideDemoRouteMutationMock.mockResolvedValue({
+    allowed: true,
+  });
 });
 
 describe("POST /api/admin/practical-lessons/import/apply", () => {
+  it("returns 403 for demo org before import apply and performs no writes", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-demo" },
+    });
+    demoGuardHoisted.decideDemoRouteMutationMock.mockResolvedValue({
+      allowed: false,
+      reason: "demo_restricted_action",
+      status: 403,
+      message: "This action is restricted in the public demo environment.",
+    });
+
+    const res = await POST(
+      req({
+        format: "csv",
+        content: `${CSV_HEADER}\n26001;3;2026-05-29;09:00;60;instrutor@school.test;`,
+      }) as any,
+    );
+
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.code).toBe("demo_restricted_action");
+    expect(demoGuardHoisted.decideDemoRouteMutationMock).toHaveBeenCalledWith({
+      organizationId: "org-demo",
+      category: "lesson_management",
+    });
+    expect(h.studentFindManyMock).not.toHaveBeenCalled();
+    expect(h.transactionMock).not.toHaveBeenCalled();
+    expect(h.lessonCreateMock).not.toHaveBeenCalled();
+  });
+
   it("returns 401 for INSTRUCTOR", async () => {
     getServerSessionMock.mockResolvedValue({
       user: { id: "u1", role: "INSTRUCTOR", organizationId: "org-a" },
