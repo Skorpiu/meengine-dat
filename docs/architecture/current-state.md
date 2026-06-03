@@ -105,7 +105,7 @@ pnpm exec prisma migrate status
 - **Alunos** and **Instrutores** should be the primary management entities.
 - **All Users** → downgrade/rename to **Contas da App** / **Acessos**.
 - **Invitation / app access** should live **inside** the student or instructor person record.
-- **Import/export** should be UI buttons, not raw API URLs. **Student export** (CSV/JSON) is available on Fichas registadas; import and practical-lessons import/export UI remain deferred.
+- **Import/export** should be UI buttons, not raw API URLs. **Student export** (CSV/JSON) is available on Fichas registadas; **student import dry-run preview** UI is implemented (`import-export-ui-students-import-dry-run-v1`); import apply and practical-lessons import/export UI remain deferred.
 
 **Delete/removal (implemented):** School Admin (`SUPER_ADMIN`) may hard-delete a `MANUAL_ONLY` student ficha with no linked User, invitations, lessons of any `LessonSource`, lesson counters, lesson requests, exam registrations, or payments. Blocked deletes return stable **409** codes. Demo org uses the existing user-management mutation guard. Soft-delete/archive remains deferred.
 
@@ -144,11 +144,13 @@ Documented and in use (docs/rules only; no runtime change):
 - `tenant-required-operational-organization-id-audit` — Docs-only classification of nullable `organizationId` on operational models; unique-constraint notes; backfill/migration phased plan. Report: [tenant-required-operational-organization-id-audit.md](./tenant-required-operational-organization-id-audit.md).
 - `supabase-rls-data-api-policy-matrix` — Docs-only RLS/Data API classification matrix for all Prisma tables; `rls_enabled_no_policy` intentional for service-only; RLS policy SQL deferred. Report: [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md).
 - `cursor-git-bash-command-discipline` — Ops command batteries and Cursor rules require Git Bash/bash syntax by default (`Assumed shell: Git Bash`); no PowerShell mixing; single-line Conventional Commit commands; guarded `DAT-*.zip` generation. See [command-batteries.md](../ops/command-batteries.md), [cursor-operating-model.md](../ops/cursor-operating-model.md).
+- `import-export-ui-students-import-dry-run-v1` — Student import dry-run preview UI on Fichas registadas (`StudentRecordsImportDialog`); reuses `POST /api/admin/students/import/dry-run`; English labels for new import controls; zero-write preview only (no apply). Validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
-1. `people-management-ux-unification` — **remaining:** invitations-on-record, instructor/route split, instructor parity (IA v1 nav/labels already shipped)
-2. `import-export-ui-actions` — remaining slices (students import dry-run UI, apply UI, practical lessons import/export UI)
+1. `import-export-ui-students-import-apply-v1` — students import apply UI (separate gated slice)
+2. `people-management-ux-unification` — **remaining:** invitations-on-record, instructor/route split, instructor parity (IA v1 nav/labels already shipped)
+3. `import-export-ui-actions` — remaining slices (practical lessons import/export UI)
 3. `tenant-operational-organization-id-backfill-v1` — extend backfill script + operator NULL counts; **no NOT NULL migration** in v1 (gated separately)
 4. `audit-log-tenant-context-foundation` — planning only
 5. `product-ui-language-baseline-english-v1` or explicit i18n path — reconcile PT IA exception with English baseline

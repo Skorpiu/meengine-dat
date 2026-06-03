@@ -17,6 +17,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   ChevronDown,
   Download,
+  Upload,
   Edit2,
   GraduationCap,
   MailPlus,
@@ -62,6 +63,7 @@ import {
 } from "@/lib/students/student-record-ui-utils";
 import { StudentPracticalHistoryDialog } from "@/components/admin/student-practical-history-dialog";
 import { StudentRecordInviteDialog } from "@/components/admin/student-record-invite-dialog";
+import { StudentRecordsImportDialog } from "@/components/admin/student-records-import-dialog";
 import {
   fetchStudentRecordsExport,
   type StudentRecordsExportFormat,
@@ -135,6 +137,7 @@ export function StudentRecordsManager() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [exportingFormat, setExportingFormat] =
     useState<StudentRecordsExportFormat | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   const createPreviewId = useMemo(
     () =>
@@ -550,6 +553,16 @@ export function StudentRecordsManager() {
                   <RefreshCw className="h-4 w-4" />
                 </Button>
               </form>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={listLoading}
+                className="w-full sm:w-auto shrink-0"
+                onClick={() => setImportDialogOpen(true)}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Import
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -747,6 +760,11 @@ export function StudentRecordsManager() {
           if (!open) setInviteStudent(null);
         }}
         onSuccess={() => loadStudents({ search: appliedSearch })}
+      />
+
+      <StudentRecordsImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
       />
 
       <AlertDialog
