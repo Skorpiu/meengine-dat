@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   inferStudentRecordsImportFormat,
+  STUDENT_RECORDS_IMPORT_APPLY_API_PATH,
   STUDENT_RECORDS_IMPORT_DRY_RUN_API_PATH,
 } from "./student-records-import-client";
 
@@ -24,6 +25,14 @@ describe("STUDENT_RECORDS_IMPORT_DRY_RUN_API_PATH", () => {
   it("points at admin dry-run route", () => {
     expect(STUDENT_RECORDS_IMPORT_DRY_RUN_API_PATH).toBe(
       "/api/admin/students/import/dry-run",
+    );
+  });
+});
+
+describe("STUDENT_RECORDS_IMPORT_APPLY_API_PATH", () => {
+  it("points at admin apply route", () => {
+    expect(STUDENT_RECORDS_IMPORT_APPLY_API_PATH).toBe(
+      "/api/admin/students/import/apply",
     );
   });
 });

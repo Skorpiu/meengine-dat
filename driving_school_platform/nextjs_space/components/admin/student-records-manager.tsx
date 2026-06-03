@@ -765,6 +765,7 @@ export function StudentRecordsManager() {
       <StudentRecordsImportDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
+        onSuccess={() => loadStudents({ search: appliedSearch })}
       />
 
       <AlertDialog
