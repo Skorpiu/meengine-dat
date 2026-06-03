@@ -98,7 +98,7 @@ pnpm exec prisma migrate status
 
 **Product feedback:** “Alunos → Fichas Registadas” is more natural than “All Users” as the primary mental model.
 
-**IA v1 (done):** `people-management-information-architecture-v1` — Admin nav **Pessoas** (`/admin/users` unchanged); page prioritizes **Alunos / Fichas registadas**; flat login list labeled **Contas da app**; helper copy for ficha vs conta; invitations unchanged (de-emphasized wrapper only). Route split, invitation-on-record, and student import UI remain deferred. Student records **export** UI (CSV/JSON) is implemented (`import-export-ui-students-export-v1`).
+**IA v1 (done):** `people-management-information-architecture-v1` — Admin nav **Pessoas** (`/admin/users` unchanged); page prioritizes **Alunos / Fichas registadas**; flat login list labeled **Contas da app**; helper copy for ficha vs conta; invitations unchanged (de-emphasized wrapper only). Route split and invitation-on-record remain deferred. Student records **export/import** UI on Fichas registadas is implemented (`import-export-ui-students-export-v1`, `import-export-ui-students-import-dry-run-v1`, `import-export-ui-students-import-apply-v1`).
 
 **Agreed direction (DAT_3.7):**
 

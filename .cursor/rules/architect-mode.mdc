@@ -261,23 +261,26 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `people-management-information-architecture-v1` (slice of `people-management-ux-unification`; PT IA labels are a **temporary exception** — see `product-ui-language-baseline-english-v1`)
 - Cursor Super-Agent protocols, Automations operating model, and prompt templates (docs in `docs/ops/`)
 - External database architecture audit triage (roadmap items only; no schema from triage)
-- `import-export-ui-students-export-v1` (slice of `import-export-ui-actions` — export CSV/JSON on Fichas registadas; English labels for new controls)
+- `import-export-ui-students-export-v1` (slice of `import-export-ui-actions` — export CSV/JSON on Fichas registadas)
+- `import-export-ui-students-import-dry-run-v1` — student import dry-run preview on Fichas registadas
+- `import-export-ui-students-import-apply-v1` — student import apply on same dialog
+- `import-export-ui-practical-lessons-export-v1` — practical lessons export on `/admin/lessons` Driving tab
+- `import-export-ui-practical-lessons-import-dry-run-v1` — practical lessons import dry-run preview on same page
 - `tenant-required-operational-organization-id-audit` — docs-only; report at `docs/architecture/tenant-required-operational-organization-id-audit.md`
+- `supabase-rls-data-api-policy-matrix` — docs-only; report at `docs/architecture/supabase-rls-data-api-policy-matrix.md`
+- `cursor-git-bash-command-discipline` — Git Bash/bash batteries by default; see `docs/ops/command-batteries.md`
 
-**Current recommended next:**
+**Current recommended next (runtime slice):**
 
-1. `supabase-rls-data-api-policy-matrix` (classification/docs before policy SQL)
+1. `import-export-ui-practical-lessons-import-apply-v1` — practical lessons import apply UI after successful preview (gated; reuses existing apply API)
 
-**P1 security/data follow-up (docs-first slices):**
+**Likely next (slice parent batches; do not implement broad names directly):**
 
-2. `tenant-operational-organization-id-backfill-v1` (extend backfill + NULL counts; no NOT NULL migration in v1)
-
-**Then (slice parent batches; do not implement broad names directly):**
-
-3. `people-management-ux-unification` remaining (invitations-on-record, instructor/route split — **not** Contas da app / primary Alunos IA from v1)
-4. `import-export-ui-actions` remaining (`import-export-ui-students-import-dry-run-v1`, apply UI, practical lessons UI)
-5. `audit-log-tenant-context-foundation` (planning only)
-6. `product-ui-language-baseline-english-v1` — pending reconciliation of PT IA exception with English baseline / i18n path
+2. `people-management-ux-unification` remaining (invitations-on-record, instructor/route split — **not** Contas da app / primary Alunos IA from v1)
+3. `tenant-operational-organization-id-backfill-v1` (extend backfill + NULL counts; no NOT NULL migration in v1)
+4. `audit-log-tenant-context-foundation` (planning only)
+5. `product-ui-language-baseline-english-v1` — pending reconciliation of PT IA exception with English baseline / i18n path
+6. `supabase-rls-class-b-hardening-v1` — optional RLS + REVOKE on remaining internal tables (D4 / RLS gate)
 
 **Daily Super-Agent:** default **Manual daily Super-Agent check** ([cursor-automations-prompts.md](../../docs/ops/cursor-automations-prompts.md)) at no extra cost; Cursor Automations only if free on current plan.
 
