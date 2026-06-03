@@ -274,22 +274,19 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `supabase-rls-data-api-policy-matrix` — docs-only; report at `docs/architecture/supabase-rls-data-api-policy-matrix.md`
 - `cursor-git-bash-command-discipline` — Git Bash/bash batteries by default; see `docs/ops/command-batteries.md`
 - `super-agent-operational-housekeeping-sync-v1` — Human-controlled merge batteries, Memory Consistency Gate, Daily Branch Housekeeping (list-only), Prepare next branch; see `docs/ops/cursor-operating-model.md`
+- `import-apply-demo-guard-v1` — demo mutation guard on student/practical-lessons import **apply** routes (`user_management` / `lesson_management`)
+- `import-export-ui-practical-lessons-import-apply-v1` — practical lessons import apply UI on `/admin/lessons` (preview + confirmation + apply)
 
-**Current recommended next (runtime/security slice):**
+**Current recommended next (runtime/data slice):**
 
-1. `import-apply-demo-guard-v1` — demo mutation guard on student/practical-lessons import **apply** routes before exposing more apply UI (reviewer: apply APIs exist; demo guard **needs confirmation** on apply paths)
-
-**Then (UI slice — after demo guard):**
-
-2. `import-export-ui-practical-lessons-import-apply-v1` — practical lessons import apply UI after successful preview (gated; reuses existing apply API)
+1. `tenant-operational-organization-id-backfill-v1` — extend backfill + NULL counts; no NOT NULL migration in v1 (audit follow-up; gated)
 
 **Likely next (slice parent batches; do not implement broad names directly):**
 
-3. `people-management-ux-unification` remaining (invitations-on-record, instructor/route split — **not** Contas da app / primary Alunos IA from v1)
-4. `tenant-operational-organization-id-backfill-v1` (extend backfill + NULL counts; no NOT NULL migration in v1)
-5. `audit-log-tenant-context-foundation` (planning only)
-6. `product-ui-language-baseline-english-v1` — pending reconciliation of PT IA exception with English baseline / i18n path
-7. `supabase-rls-class-b-hardening-v1` — optional RLS + REVOKE on remaining internal tables (D4 / RLS gate)
+2. `people-management-ux-unification` remaining (invitations-on-record, instructor/route split — **not** Contas da app / primary Alunos IA from v1)
+3. `product-ui-language-baseline-english-v1` — pending reconciliation of PT IA exception with English baseline / i18n path
+4. `audit-log-tenant-context-foundation` (planning only)
+5. `supabase-rls-class-b-hardening-v1` — optional RLS + REVOKE on remaining internal tables (D4 / RLS gate)
 
 **Daily Super-Agent:** default **Manual daily Super-Agent check** ([cursor-automations-prompts.md](../../docs/ops/cursor-automations-prompts.md)) at no extra cost; Cursor Automations only if free on current plan.
 

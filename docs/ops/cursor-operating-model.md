@@ -553,7 +553,7 @@ That section must include:
 
 **Branch naming:**
 
-- When Cursor has a **concrete** next slice from [current-state.md](../architecture/current-state.md) / [roadmap-todo.md](../architecture/roadmap-todo.md), use that **exact** slice name as `<new-recommended-branch>` (e.g. `import-apply-demo-guard-v1`).
+- When Cursor has a **concrete** next slice from [current-state.md](../architecture/current-state.md) / [roadmap-todo.md](../architecture/roadmap-todo.md), use that **exact** slice name as `<new-recommended-branch>` (e.g. `import-export-ui-practical-lessons-import-apply-v1`).
 - When no concrete next slice exists, use a descriptive placeholder and state **needs confirmation** — do not invent scope.
 
 Preparing the next branch is **recommendation only** — not authorization to implement. Rui still needs `APPROVED TO IMPLEMENT: <batch-name>` for gated slices.

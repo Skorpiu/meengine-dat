@@ -534,6 +534,9 @@ export function LessonsManagementClient() {
         <PracticalLessonsImportDialog
           open={importDialogOpen}
           onOpenChange={setImportDialogOpen}
+          onSuccess={() => {
+            void fetchLessons();
+          }}
         />
       </>
     </FeatureGate>

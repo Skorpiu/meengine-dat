@@ -274,7 +274,7 @@ git status --short
 
 **Rules:**
 
-- Branch name = smallest safe **next** slice (e.g. `import-apply-demo-guard-v1`), not a broad parent batch.
+- Branch name = smallest safe **next** slice (e.g. `import-export-ui-practical-lessons-import-apply-v1`), not a broad parent batch.
 - Creating the branch is **not** approval to implement — gated slices still need `APPROVED TO IMPLEMENT: <batch-name>`.
 
 ---

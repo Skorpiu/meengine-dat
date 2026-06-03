@@ -11,6 +11,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Table,
@@ -24,14 +34,21 @@ import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { ImportDryRunRowFinding } from "@/lib/import-export/import-export-contracts";
 import {
+  fetchPracticalLessonsImportApply,
   fetchPracticalLessonsImportDryRun,
   inferPracticalLessonsImportFormat,
   type PracticalLessonsImportDryRunReport,
 } from "@/lib/lessons/practical-lessons-import-client";
+import {
+  canApplyPracticalLessonsImport,
+  formatPracticalLessonsImportApplySuccess,
+  type PracticalLessonsImportPayload,
+} from "@/lib/lessons/practical-lessons-import-ui-utils";
 
 type PracticalLessonsImportDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 };
 
 function formatFindingLabel(finding: ImportDryRunRowFinding): string {
@@ -116,18 +133,32 @@ function PreviewTable({
 export function PracticalLessonsImportDialog({
   open,
   onOpenChange,
+  onSuccess,
 }: PracticalLessonsImportDialogProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [importPayload, setImportPayload] =
+    useState<PracticalLessonsImportPayload | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [applyLoading, setApplyLoading] = useState(false);
+  const [applyConfirmOpen, setApplyConfirmOpen] = useState(false);
+  const [applyCompleted, setApplyCompleted] = useState(false);
+  const [applySuccessMessage, setApplySuccessMessage] = useState<string | null>(
+    null,
+  );
   const [report, setReport] =
     useState<PracticalLessonsImportDryRunReport | null>(null);
 
   const resetState = () => {
     setSelectedFile(null);
+    setImportPayload(null);
     setReport(null);
     setPreviewLoading(false);
+    setApplyLoading(false);
+    setApplyConfirmOpen(false);
+    setApplyCompleted(false);
+    setApplySuccessMessage(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -140,10 +171,18 @@ export function PracticalLessonsImportDialog({
     onOpenChange(nextOpen);
   };
 
+  const invalidatePreview = () => {
+    setImportPayload(null);
+    setReport(null);
+    setApplyCompleted(false);
+    setApplySuccessMessage(null);
+    setApplyConfirmOpen(false);
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
     setSelectedFile(file);
-    setReport(null);
+    invalidatePreview();
   };
 
   const handlePreview = async () => {
@@ -167,7 +206,7 @@ export function PracticalLessonsImportDialog({
     }
 
     setPreviewLoading(true);
-    setReport(null);
+    invalidatePreview();
 
     try {
       const content = await selectedFile.text();
@@ -182,6 +221,7 @@ export function PracticalLessonsImportDialog({
         return;
       }
 
+      setImportPayload({ format, content });
       setReport(result.report);
 
       if (result.report.totalRows === 0 && result.report.errors.length > 0) {
@@ -213,98 +253,207 @@ export function PracticalLessonsImportDialog({
     }
   };
 
+  const canApply = canApplyPracticalLessonsImport({
+    importPayload,
+    report,
+    previewLoading,
+    applyLoading,
+    applyCompleted,
+  });
+
+  const handleApplyConfirm = async () => {
+    if (!importPayload || !report || applyLoading) return;
+
+    setApplyLoading(true);
+    try {
+      const result = await fetchPracticalLessonsImportApply(
+        importPayload.format,
+        importPayload.content,
+      );
+
+      if (result.result?.report) {
+        setReport(result.result.report);
+      }
+
+      if (!result.ok) {
+        toast({
+          title: result.demoBlocked
+            ? "Import blocked in demo"
+            : "Import apply failed",
+          description: result.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const successMessage = formatPracticalLessonsImportApplySuccess({
+        createdCount: result.result.createdCount,
+        skippedCount: result.result.skippedCount,
+        warningCount: result.result.report.warnings.length,
+      });
+
+      setApplySuccessMessage(successMessage);
+      setApplyCompleted(true);
+      setImportPayload(null);
+      setApplyConfirmOpen(false);
+
+      toast({
+        title: "Import applied",
+        description: successMessage,
+      });
+      onSuccess?.();
+    } catch {
+      toast({
+        title: "Import apply failed",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setApplyLoading(false);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Import practical lessons (preview)</DialogTitle>
-          <DialogDescription>
-            Upload a CSV or JSON file to validate driving lesson history rows
-            before import. This preview does not create or change records.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Import practical lessons</DialogTitle>
+            <DialogDescription>
+              Upload a CSV or JSON file, run a preview, then apply to create
+              completed driving lesson records. Run preview before apply.
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-4">
-          <Alert>
-            <AlertDescription>
-              Preview only — no lessons are created until a separate apply step
-              is available. Imported lessons will use lesson source IMPORT when
-              applied.
-            </AlertDescription>
-          </Alert>
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                Apply creates COMPLETED DRIVING lessons with lesson source
+                IMPORT. It does not create students, instructors, app accounts,
+                or send emails. Run preview again after changing the file.
+              </AlertDescription>
+            </Alert>
 
-          <div className="space-y-2">
-            <Label htmlFor="practical-lesson-import-file">Import file</Label>
-            <Input
-              id="practical-lesson-import-file"
-              ref={fileInputRef}
-              type="file"
-              accept=".csv,.json,text/csv,application/json"
-              onChange={handleFileChange}
-              disabled={previewLoading}
-            />
-            {selectedFile ? (
-              <p className="text-xs text-gray-500">
-                Selected: {selectedFile.name}
-              </p>
-            ) : (
-              <p className="text-xs text-gray-500">
-                Use the same columns as practical lesson export/import templates
-                (CSV semicolon-separated).
-              </p>
-            )}
-          </div>
+            {applySuccessMessage ? (
+              <Alert className="border-green-200 bg-green-50">
+                <AlertDescription className="text-green-900">
+                  {applySuccessMessage} Preview below reflects the last apply
+                  result. Change the file and run preview before applying again.
+                </AlertDescription>
+              </Alert>
+            ) : null}
 
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!selectedFile || previewLoading}
-            onClick={() => void handlePreview()}
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            {previewLoading ? "Running preview…" : "Run preview"}
-          </Button>
-
-          {report ? (
-            <div className="space-y-4 pt-2 border-t">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                <div>
-                  <p className="text-gray-500">Total rows</p>
-                  <p className="font-semibold">{report.totalRows}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Valid</p>
-                  <p className="font-semibold text-green-700">
-                    {report.validRows}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Invalid</p>
-                  <p className="font-semibold text-red-700">
-                    {report.invalidRows}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Warnings</p>
-                  <p className="font-semibold">{report.warnings.length}</p>
-                </div>
-              </div>
-
-              <FindingsList
-                title="Errors"
-                findings={report.errors}
-                variant="destructive"
+            <div className="space-y-2">
+              <Label htmlFor="practical-lesson-import-file">Import file</Label>
+              <Input
+                id="practical-lesson-import-file"
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.json,text/csv,application/json"
+                onChange={handleFileChange}
+                disabled={previewLoading || applyLoading}
               />
-              <FindingsList
-                title="Warnings"
-                findings={report.warnings}
-                variant="default"
-              />
-              <PreviewTable report={report} />
+              {selectedFile ? (
+                <p className="text-xs text-gray-500">
+                  Selected: {selectedFile.name}
+                </p>
+              ) : (
+                <p className="text-xs text-gray-500">
+                  Use the same columns as practical lesson export/import
+                  templates (CSV semicolon-separated).
+                </p>
+              )}
             </div>
-          ) : null}
-        </div>
-      </DialogContent>
-    </Dialog>
+
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!selectedFile || previewLoading || applyLoading}
+                onClick={() => void handlePreview()}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {previewLoading ? "Running preview…" : "Run preview"}
+              </Button>
+              <Button
+                type="button"
+                disabled={!canApply}
+                className="bg-driving-primary hover:bg-driving-primary/90"
+                onClick={() => setApplyConfirmOpen(true)}
+              >
+                {applyLoading ? "Applying…" : "Apply import"}
+              </Button>
+            </div>
+
+            {report ? (
+              <div className="space-y-4 pt-2 border-t">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                  <div>
+                    <p className="text-gray-500">Total rows</p>
+                    <p className="font-semibold">{report.totalRows}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Valid</p>
+                    <p className="font-semibold text-green-700">
+                      {report.validRows}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Invalid</p>
+                    <p className="font-semibold text-red-700">
+                      {report.invalidRows}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Warnings</p>
+                    <p className="font-semibold">{report.warnings.length}</p>
+                  </div>
+                </div>
+
+                <FindingsList
+                  title="Errors"
+                  findings={report.errors}
+                  variant="destructive"
+                />
+                <FindingsList
+                  title="Warnings"
+                  findings={report.warnings}
+                  variant="default"
+                />
+                <PreviewTable report={report} />
+              </div>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={applyConfirmOpen} onOpenChange={setApplyConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apply practical lessons import</AlertDialogTitle>
+            <AlertDialogDescription>
+              {report
+                ? `This will create ${report.validRows} completed practical lesson record(s) in your organization. Rows are validated again at apply time. This action cannot be bulk-undone.`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={applyLoading}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={applyLoading}
+              className="bg-driving-primary hover:bg-driving-primary/90"
+              onClick={(e) => {
+                e.preventDefault();
+                void handleApplyConfirm();
+              }}
+            >
+              {applyLoading ? "Applying…" : "Apply import"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
