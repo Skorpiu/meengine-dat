@@ -43,10 +43,14 @@ Parent batch — always slice before implementing.
   - Reuses `GET /api/admin/students/export` (no API contract change).
   - English UI labels for new export controls.
   - Validated via `pnpm check`.
-- **Next slice (recommended):** `import-export-ui-students-import-dry-run-v1`
-  - Students import dry-run preview UI only (no apply in the same slice unless separately approved).
-  - Reuse existing dry-run API; zero-write UI.
-  - **Out of scope until separately sliced:** apply UI, practical lessons import/export UI, row-level validation UX polish.
+- **Done (v1 slice):** `import-export-ui-students-import-dry-run-v1`
+  - Import dry-run preview UI on Fichas registadas (`StudentRecordsImportDialog`).
+  - Reuses `POST /api/admin/students/import/dry-run` (zero-write; no apply).
+  - English UI labels for new import controls.
+  - Validated via `pnpm check`.
+- **Next slice (recommended):** `import-export-ui-students-import-apply-v1`
+  - Students import apply UI only (separate approval; reuses existing apply API).
+  - **Out of scope until separately sliced:** practical lessons import/export UI, row-level validation UX polish.
 - **Deferred slices (parent):**
   - Importar/Exportar on Aulas Práticas / history.
   - Students import apply UI.
