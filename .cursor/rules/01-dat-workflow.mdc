@@ -112,4 +112,4 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
   - ZIP: `rm -f DAT-*.zip`, `SHA=$(git rev-parse --short HEAD)`, archive → `DAT-${SHA}.zip`, final `git status --short`.
 - Then **`Prepare next recommended branch`**: `git pull --ff-only`, `git switch -c <concrete-next-slice>`, `git status --short` (recommendation only — not implementation approval).
 - **Memory Consistency Gate** — report all eight yes/no/why-not rows in the final report (see operating model).
-- **Branch housekeeping** — daily/list default: merged vs unmerged locals; suggest delete merged only; never delete unmerged or remote branches unless Rui explicitly asks.
+- **Branch housekeeping** — daily/list default on `main`: `git pull --ff-only`, `git fetch --prune`, merged vs unmerged locals, final `git status --short`; suggest `git branch -d` for merged locals only; never delete unmerged or remote branches unless Rui explicitly asks.

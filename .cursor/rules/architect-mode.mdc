@@ -193,6 +193,7 @@ At the end of each batch, report:
 - limitations
 - confirmation that scope stayed within request
 - **memory docs update needed: yes/no** — list files to update (or “none”) per memory maintenance policy
+- **Memory Consistency Gate** — all eight rows from `docs/ops/cursor-operating-model.md` (yes/no/why not; Done vs Pending drift; alwaysApply stale next)
 
 For **runtime / API / UI / sensitive** batches, final reports must also include the **Final Evidence Pack** and **Critical Claim Evidence Protocol** from `docs/ops/cursor-operating-model.md`:
 
@@ -211,11 +212,14 @@ For **runtime / API / UI / sensitive** batches, final reports must also include 
 
 ## Human-controlled merge (default workflow)
 
-See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol** and `docs/ops/command-batteries.md` — Human-controlled close/merge battery.
+See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol** and `docs/ops/command-batteries.md` — Human-controlled close/merge battery + **Prepare next recommended branch**.
 
 - Do **not** run merge/push/branch-delete/archive commands by default.
-- At batch close, provide Rui with the **manual close/merge command battery** (**Git Bash**, copy-paste-safe) instead of executing it.
-- The battery must start with **`Assumed shell: Git Bash`** and use **one-line** Conventional Commit messages unless Rui explicitly needs otherwise.
+- At batch close, provide Rui a **complete** manual battery (**Git Bash**, copy-paste-safe): pre-staging status, diff stat, `git add` paths, staged diff stat, commit, switch main, pull `--ff-only`, merge `--no-ff`, `pnpm check`, push, delete merged feature branch, ZIP (`rm -f DAT-*.zip`, `SHA=$(…)`, archive), final status — **no omitted steps**.
+- Then provide **`Prepare next recommended branch`**: `git pull --ff-only`, `git switch -c <concrete-next-slice>`, `git status --short` — use the real next slice name from `current-state.md` / `roadmap-todo.md` when known (recommendation only, not authorization).
+- **Daily Branch Housekeeping Protocol** — default list-only (`git branch --merged` / `--no-merged`); may suggest `git branch -d` for merged locals only; never delete unmerged or remote branches unless Rui explicitly asks.
+- **Memory Consistency Gate** — required in every final report (see operating model); incomplete gate blocks merge readiness.
+- Batteries must start with **`Assumed shell: Git Bash`** and use **single-line** Conventional Commits (no multiline heredocs).
 - **Merge/push remains a human control point** — Rui merges when the batch is ready.
 - If Rui **explicitly asks** Cursor to run merge/push (or commit/switch/pull/merge/branch-delete/archive), first **restate risks**, the **command plan**, and **working tree assumptions**; confirm before executing; still use Git Bash syntax unless Rui asked for PowerShell.
 
@@ -269,18 +273,23 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `tenant-required-operational-organization-id-audit` — docs-only; report at `docs/architecture/tenant-required-operational-organization-id-audit.md`
 - `supabase-rls-data-api-policy-matrix` — docs-only; report at `docs/architecture/supabase-rls-data-api-policy-matrix.md`
 - `cursor-git-bash-command-discipline` — Git Bash/bash batteries by default; see `docs/ops/command-batteries.md`
+- `super-agent-operational-housekeeping-sync-v1` — Human-controlled merge batteries, Memory Consistency Gate, Daily Branch Housekeeping (list-only), Prepare next branch; see `docs/ops/cursor-operating-model.md`
 
-**Current recommended next (runtime slice):**
+**Current recommended next (runtime/security slice):**
 
-1. `import-export-ui-practical-lessons-import-apply-v1` — practical lessons import apply UI after successful preview (gated; reuses existing apply API)
+1. `import-apply-demo-guard-v1` — demo mutation guard on student/practical-lessons import **apply** routes before exposing more apply UI (reviewer: apply APIs exist; demo guard **needs confirmation** on apply paths)
+
+**Then (UI slice — after demo guard):**
+
+2. `import-export-ui-practical-lessons-import-apply-v1` — practical lessons import apply UI after successful preview (gated; reuses existing apply API)
 
 **Likely next (slice parent batches; do not implement broad names directly):**
 
-2. `people-management-ux-unification` remaining (invitations-on-record, instructor/route split — **not** Contas da app / primary Alunos IA from v1)
-3. `tenant-operational-organization-id-backfill-v1` (extend backfill + NULL counts; no NOT NULL migration in v1)
-4. `audit-log-tenant-context-foundation` (planning only)
-5. `product-ui-language-baseline-english-v1` — pending reconciliation of PT IA exception with English baseline / i18n path
-6. `supabase-rls-class-b-hardening-v1` — optional RLS + REVOKE on remaining internal tables (D4 / RLS gate)
+3. `people-management-ux-unification` remaining (invitations-on-record, instructor/route split — **not** Contas da app / primary Alunos IA from v1)
+4. `tenant-operational-organization-id-backfill-v1` (extend backfill + NULL counts; no NOT NULL migration in v1)
+5. `audit-log-tenant-context-foundation` (planning only)
+6. `product-ui-language-baseline-english-v1` — pending reconciliation of PT IA exception with English baseline / i18n path
+7. `supabase-rls-class-b-hardening-v1` — optional RLS + REVOKE on remaining internal tables (D4 / RLS gate)
 
 **Daily Super-Agent:** default **Manual daily Super-Agent check** ([cursor-automations-prompts.md](../../docs/ops/cursor-automations-prompts.md)) at no extra cost; Cursor Automations only if free on current plan.
 

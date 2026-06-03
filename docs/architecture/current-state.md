@@ -47,7 +47,10 @@ Detail: `driving_school_platform/nextjs_space/docs/ops/release-checklist.md` and
 | Students export (CSV/JSON) | Done |
 | Students import dry-run / apply | Done |
 | Practical lessons export (CSV/JSON) | Done |
-| Practical lessons import dry-run / apply | Done |
+| Practical lessons import dry-run (API + UI) | Done |
+| Practical lessons import apply (API) | Done |
+| Practical lessons import apply (UI) | Deferred |
+| Import apply demo guard (student + practical lessons apply routes) | Pending (`import-apply-demo-guard-v1`) |
 | Preview QA validation | Completed |
 
 ---
@@ -62,7 +65,7 @@ Functional results recorded during Preview QA (representative checklist):
 - Students export — **passed**
 - Students import dry-run / apply — **passed**
 - Practical lessons export — **passed**
-- Practical lessons import dry-run / apply — **passed**
+- Practical lessons import dry-run / apply (API) — **passed** (apply UI not yet exposed)
 - Invitation linked to existing Student — **passed**
 - No duplicate Student after invitation accept — **passed**
 
@@ -148,14 +151,16 @@ Documented and in use (docs/rules only; no runtime change):
 - `import-export-ui-students-import-apply-v1` — Student import apply UI on same dialog; reuses `POST /api/admin/students/import/apply` (`createOnly`); confirmation before write; refreshes list on success; English labels. Validated via `pnpm check`.
 - `import-export-ui-practical-lessons-export-v1` — Practical lessons export UI (CSV/JSON) on `/admin/lessons` Driving tab; reuses `GET /api/admin/practical-lessons/export`; English labels; org-wide export (not dashboard window only). Validated via `pnpm check`.
 - `import-export-ui-practical-lessons-import-dry-run-v1` — Practical lessons import dry-run preview UI on same page (`PracticalLessonsImportDialog`); reuses `POST /api/admin/practical-lessons/import/dry-run`; English labels; zero-write preview only. Validated via `pnpm check`.
+- `super-agent-operational-housekeeping-sync-v1` — Ops/rules sync: Human-Controlled Merge Protocol, complete close/merge battery, Prepare next recommended branch, Daily Branch Housekeeping (list-only), Memory Consistency Gate (eight rows). See `docs/ops/cursor-operating-model.md`, `docs/ops/command-batteries.md`, `docs/ops/reviewer-workflow.md`.
 
 ### Likely next (smallest safe slices)
 
-1. `import-export-ui-practical-lessons-import-apply-v1` — practical lessons import apply UI (separate gated slice)
-2. `people-management-ux-unification` — **remaining:** invitations-on-record, instructor/route split, instructor parity (IA v1 nav/labels already shipped)
-3. `tenant-operational-organization-id-backfill-v1` — extend backfill script + operator NULL counts; **no NOT NULL migration** in v1 (gated separately)
-4. `audit-log-tenant-context-foundation` — planning only
-5. `product-ui-language-baseline-english-v1` or explicit i18n path — reconcile PT IA exception with English baseline
-6. `supabase-rls-class-b-hardening-v1` — optional follow-up: RLS + REVOKE on remaining internal tables (D4 / RLS gate)
+1. `import-apply-demo-guard-v1` — demo mutation guard on student and practical-lessons import **apply** routes (sequencing gate before more apply UI)
+2. `import-export-ui-practical-lessons-import-apply-v1` — practical lessons import apply UI (gated; after demo guard)
+3. `people-management-ux-unification` — **remaining:** invitations-on-record, instructor/route split, instructor parity (IA v1 nav/labels already shipped)
+4. `tenant-operational-organization-id-backfill-v1` — extend backfill script + operator NULL counts; **no NOT NULL migration** in v1 (gated separately)
+5. `audit-log-tenant-context-foundation` — planning only
+6. `product-ui-language-baseline-english-v1` or explicit i18n path — reconcile PT IA exception with English baseline
+7. `supabase-rls-class-b-hardening-v1` — optional follow-up: RLS + REVOKE on remaining internal tables (D4 / RLS gate)
 
 Engineering excellence audit items (non-blocking refactors) remain tracked separately in roadmap P2+.

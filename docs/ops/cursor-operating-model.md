@@ -494,6 +494,8 @@ Before writing the final report, Cursor must answer the following **explicitly**
 - Did I document deviations from the approved plan?
 - Did I propose memory updates only when appropriate?
 - Did I report out-of-scope discoveries under **Deferred recommendations** without expanding scope?
+- Did I complete the **Memory Consistency Gate** (all yes/no/why-not rows)?
+- Did I provide a **complete** close/merge battery and **Prepare next recommended branch** section (Git Bash, single-line commit)?
 
 ## Human-Controlled Merge Protocol
 
@@ -518,22 +520,43 @@ Merge and push remain **human-controlled actions**. Cursor prepares merge-readin
 
 ### Required close/merge battery output
 
-When a batch appears merge-ready, Cursor must provide Rui with a complete manual battery that includes:
+When a batch appears merge-ready, Cursor must provide Rui with a **complete** manual battery — not a shorthand summary. Incomplete batteries are **not merge-ready**.
 
-- **`Assumed shell: Git Bash`** before the command block (see [Git Bash Command Discipline Protocol](#git-bash-command-discipline-protocol));
-- expected `git status` before staging;
-- `git add` paths (specific paths — not blind `git add -A` unless justified);
-- staged diff check (`git status --short`, `git diff --cached --stat`);
-- commit command using **Conventional Commits**;
+The battery must use the template in [command-batteries.md](./command-batteries.md) — **Human-controlled close/merge battery** — and include **every** step below (filled from the actual batch):
+
+- **`Assumed shell: Git Bash`** immediately before the fenced block;
+- `git status --short` (pre-staging);
+- `git --no-pager diff --stat` (unstaged);
+- `git add` with **specific paths** (not blind `git add -A` unless justified);
+- `git status --short` + `git --no-pager diff --cached --stat` (post-staging);
+- `git commit -m "<type>: <message>"` — **single-line** Conventional Commits only (no multiline heredocs);
 - `git switch main`;
 - `git pull --ff-only`;
-- `git merge --no-ff <branch-name>`;
+- `git merge --no-ff <branch-name> -m "Merge branch '<branch-name>'"`;
 - `pnpm -C driving_school_platform/nextjs_space check`;
 - `git push`;
-- branch delete (`git branch -d <branch-name>`);
-- ZIP archive command (`git archive` → `DAT-<sha>.zip`) using **Git Bash** syntax only (see [Git Bash Command Discipline Protocol](#git-bash-command-discipline-protocol)).
+- `git branch -d <branch-name>`;
+- ZIP: `rm -f DAT-*.zip`, `SHA=$(git rev-parse --short HEAD)`, non-empty `SHA` check, `git archive` → `DAT-${SHA}.zip` (Git Bash only);
+- final `git status --short`.
 
-Use the template in [command-batteries.md](./command-batteries.md) — Human-controlled close/merge battery.
+Cursor must **not** omit steps “because Rui knows the flow.” Reviewers reject incomplete batteries.
+
+### Prepare next recommended branch
+
+After the close/merge battery, Cursor must provide a separate section titled **`Prepare next recommended branch`** (same template tail in [command-batteries.md](./command-batteries.md)).
+
+That section must include:
+
+- `git pull --ff-only` (on `main`, after merge);
+- `git switch -c <new-recommended-branch>`;
+- `git status --short`.
+
+**Branch naming:**
+
+- When Cursor has a **concrete** next slice from [current-state.md](../architecture/current-state.md) / [roadmap-todo.md](../architecture/roadmap-todo.md), use that **exact** slice name as `<new-recommended-branch>` (e.g. `import-apply-demo-guard-v1`).
+- When no concrete next slice exists, use a descriptive placeholder and state **needs confirmation** — do not invent scope.
+
+Preparing the next branch is **recommendation only** — not authorization to implement. Rui still needs `APPROVED TO IMPLEMENT: <batch-name>` for gated slices.
 
 ### Merge readiness criteria
 
@@ -543,10 +566,60 @@ A batch is **not merge-ready** unless:
 - validation passed (`pnpm -C driving_school_platform/nextjs_space check`);
 - **Final Evidence Pack** is complete (when applicable);
 - **Implementation Conformance Matrix** is complete (when applicable);
+- **Memory Consistency Gate** is complete (see [Memory Consistency Gate](#memory-consistency-gate));
 - **memory docs update needed: yes/no** is answered;
-- forbidden areas are confirmed **untouched** or **explicitly approved**.
+- forbidden areas are confirmed **untouched** or **explicitly approved**;
+- **complete** close/merge battery **and** **Prepare next recommended branch** sections are provided.
 
 See also [reviewer-workflow.md](./reviewer-workflow.md) — Human-controlled merge reviewer expectations.
+
+## Daily Branch Housekeeping Protocol
+
+**Purpose:** keep local branch hygiene visible without destructive automation.
+
+### When to run
+
+- **Daily Manual Super-Agent Check** (see [cursor-automations-prompts.md](./cursor-automations-prompts.md)) — list-only by default.
+- After merge close, when reporting branch state alongside the close/merge battery.
+- When the user asks for branch cleanup guidance.
+
+### Rules
+
+- On `main`: `git pull --ff-only`, then `git fetch --prune` (see [command-batteries.md](./command-batteries.md) — Daily branch housekeeping battery).
+- List **merged** local branches (`git branch --merged main` or equivalent).
+- List **unmerged** local branches (`git branch --no-merged main` or equivalent).
+- End with `git status --short`.
+- Cursor **may suggest** deleting **merged** local branches (with explicit `git branch -d` commands for Rui to run).
+- Cursor must **not** delete **unmerged** local branches.
+- Cursor must **not** delete **remote** branches unless Rui **explicitly** asks.
+- **Default action is dry-run/list only** — no `git branch -D`, no `git push origin --delete`, no bulk cleanup scripts unless explicitly requested.
+
+Use the list-only template in [command-batteries.md](./command-batteries.md) — **Daily branch housekeeping battery**.
+
+## Memory Consistency Gate
+
+After **every** batch (docs-only, runtime, sensitive), Cursor must include a **Memory Consistency Gate** block in the final report. This is separate from **memory docs update needed: yes/no** — it audits whether operational memory stayed aligned.
+
+Report each line explicitly:
+
+| Check | Required answer |
+| ----- | ---------------- |
+| `current-state.md` updated? | **yes** / **no** / **why not** |
+| `roadmap-todo.md` updated? | **yes** / **no** / **why not** |
+| `architect-mode.mdc` updated? | **yes** / **no** / **why not** |
+| `system-design.md` updated? | **yes** / **no** / **why not** |
+| `docs/ops` updated? | **yes** / **no** / **why not** |
+| Next recommended batch changed? | **yes** / **no** |
+| Any item appears both **Done** and **Pending/Deferred**? | **yes** / **no** (if yes, list paths) |
+| Any `alwaysApply` rule points to a **completed** batch as current next? | **yes** / **no** (if yes, list rule + stale text) |
+
+**Rules:**
+
+- **yes/no/why not** must be answered for every row — no skipped rows.
+- If the batch closed durable work, memory updates should be **yes** on the relevant files or **why not** must cite explicit batch scope (e.g. “runtime-only; memory update deferred to docs follow-up”).
+- Contradictions (**yes** on “both Done and Pending”) block merge readiness until resolved or explicitly deferred with approval.
+
+See [reviewer-workflow.md](./reviewer-workflow.md) — Memory Consistency Gate reviewer expectations.
 
 ## Memory Update Protocol
 
@@ -919,6 +992,9 @@ Every automation run must use this structure:
 | [Final Evidence Pack](#final-evidence-pack) / [Implementation Conformance Matrix](#implementation-conformance-matrix) | Required for any future PR-only automation output. |
 | [Improvement Discovery and Backlog Triage Protocol](#improvement-discovery-and-backlog-triage-protocol) | Use when automations surface new risks; do not auto-add to roadmap. |
 | [Git Bash Command Discipline Protocol](#git-bash-command-discipline-protocol) | Git Bash default; every battery states `Assumed shell: Git Bash`; no mixed PowerShell/bash. |
+| [Human-Controlled Merge Protocol](#human-controlled-merge-protocol) | Automations must not merge/push; manual batteries only. |
+| [Daily Branch Housekeeping Protocol](#daily-branch-housekeeping-protocol) | List-only default in daily checks; no autonomous branch deletes. |
+| [Memory Consistency Gate](#memory-consistency-gate) | Required in batch close reports; automations flag drift, do not auto-edit memory. |
 
 ## Operational memory policy
 

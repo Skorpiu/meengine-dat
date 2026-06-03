@@ -4,7 +4,7 @@
 
 Support **migration of driving-school clients** moving from legacy software into DAT, starting with **A Conquistadora** as the first real-world case.
 
-This document defines the **technical strategy and contracts** for phased import/export. Student **export** is implemented (see [Implemented: student records export](#implemented-student-records-export)); import, parsers, and UI remain future work.
+This document defines the **technical strategy and contracts** for phased import/export. **Implemented (API + selected UI slices):** student records export/import (dry-run + apply UI on Fichas registadas); practical lessons export + import dry-run UI on `/admin/lessons`; practical lessons import apply **API** only. **Deferred:** practical lessons import apply **UI** (`import-export-ui-practical-lessons-import-apply-v1`, after `import-apply-demo-guard-v1`); per-student history import/export UI. See sections below marked **Implemented:**.
 
 Scope for the first implementation waves:
 
@@ -67,9 +67,11 @@ Within a single batch file, rows are independent unless noted (practical lessons
 | **CSV**  | Non-technical staff, Excel                          | Primary export/import surface for students and practical lessons.               |
 | **JSON** | Technical migrations, scripts, intermediate storage | Structured bulk payloads; may become internal format between dry-run and apply. |
 
-**Phase 1 (future):** CSV/JSON **export** of students and practical lessons.
+**Phase 1 (shipped):** CSV/JSON **export** of students and practical lessons (API + admin UI).
 
-**Phase 2–4 (future):** CSV/JSON **import dry-run** and **apply** for students, then practical lessons.
+**Phase 2–3 (shipped for students; partial for practical lessons):** CSV/JSON **import dry-run** and **apply** APIs; student import dry-run/apply **UI**; practical lessons import dry-run **UI**; practical lessons import apply **API** only.
+
+**Phase 4 (deferred):** practical lessons import apply **UI**; demo guard hardening on apply routes (`import-apply-demo-guard-v1`); per-student practical history import/export UI.
 
 JSON schema versioning (`formatVersion`) will be introduced when parsers are implemented; examples use `formatVersion: 1` as a placeholder.
 
@@ -530,8 +532,9 @@ P2002 on `(organizationId, schoolStudentId)` is surfaced as `duplicate_school_st
 
 ### Limitations (apply batch)
 
+- **Demo guard (sequencing):** apply route may lack demo mutation guard — address in `import-apply-demo-guard-v1` (same sequencing gate as practical lessons apply).
 - Create-only; no update/merge of existing students.
-- No admin UI.
+- Admin apply UI shipped in `import-export-ui-students-import-apply-v1` (this API batch originally had no UI).
 - No multipart upload.
 - No `User` creation, invites, or emails.
 - No practical lesson import.
@@ -803,8 +806,9 @@ P2002 on `practicalLessonNumber` (if a unique constraint exists) is surfaced as 
 
 ### Limitations (apply batch)
 
+- **Demo guard (sequencing):** apply route may lack `decideDemoRouteMutation` / demo mutation guard — add in `import-apply-demo-guard-v1` before exposing practical-lessons import apply UI.
 - Create-only; no update/merge of existing lessons.
-- No admin UI.
+- No admin UI for practical lessons apply (deferred: `import-export-ui-practical-lessons-import-apply-v1`).
 - No multipart upload.
 - No `Student`, `Instructor`, or `User` creation; no invites or emails.
 - No edit/delete of imported history.
@@ -816,21 +820,23 @@ P2002 on `practicalLessonNumber` (if a unique constraint exists) is surfaced as 
 
 ## K. Future phases (implementation batches)
 
-| Batch slug                         | Status   | Deliverable                                                                |
-| ---------------------------------- | -------- | -------------------------------------------------------------------------- |
-| `export-student-records`           | **Done** | `GET /api/admin/students/export`; CSV + JSON                               |
-| `import-student-records-dry-run`   | **Done** | `POST /api/admin/students/import/dry-run`; no writes                       |
-| `import-student-records-apply`     | **Done** | `POST /api/admin/students/import/apply`; create-only; transaction          |
-| `export-practical-lessons`         | **Done** | `GET /api/admin/practical-lessons/export`; CSV + JSON                      |
-| `import-practical-lessons-dry-run` | **Done** | `POST /api/admin/practical-lessons/import/dry-run`; no writes              |
-| `import-practical-lessons-apply`   | **Done** | `POST /api/admin/practical-lessons/import/apply`; create-only; transaction |
+| Batch slug                                             | Status       | Deliverable                                                                |
+| ------------------------------------------------------ | ------------ | -------------------------------------------------------------------------- |
+| `export-student-records`                               | **Done**     | `GET /api/admin/students/export`; CSV + JSON                               |
+| `import-student-records-dry-run`                       | **Done**     | `POST /api/admin/students/import/dry-run`; no writes                       |
+| `import-student-records-apply`                         | **Done**     | `POST /api/admin/students/import/apply`; create-only; transaction          |
+| `export-practical-lessons`                             | **Done**     | `GET /api/admin/practical-lessons/export`; CSV + JSON                      |
+| `import-practical-lessons-dry-run`                     | **Done**     | `POST /api/admin/practical-lessons/import/dry-run`; no writes              |
+| `import-practical-lessons-apply`                       | **Done**     | `POST /api/admin/practical-lessons/import/apply`; create-only; transaction |
+| `import-export-ui-students-export-v1`                  | **Done**     | Student export UI on Fichas registadas                                     |
+| `import-export-ui-students-import-dry-run-v1`          | **Done**     | Student import dry-run UI                                                  |
+| `import-export-ui-students-import-apply-v1`            | **Done**     | Student import apply UI                                                    |
+| `import-export-ui-practical-lessons-export-v1`         | **Done**     | Practical lessons export UI on `/admin/lessons`                            |
+| `import-export-ui-practical-lessons-import-dry-run-v1` | **Done**     | Practical lessons import dry-run UI                                        |
+| `import-apply-demo-guard-v1`                           | **Next**     | Demo mutation guard on student + practical-lessons import apply routes     |
+| `import-export-ui-practical-lessons-import-apply-v1`   | **Deferred** | Practical lessons import apply UI (after demo guard)                       |
 
-Each batch should:
-
-1. Reuse `lib/import-export/import-export-contracts.ts` (extend if needed).
-2. Add parser/normalizer modules under `lib/import-export/` (future).
-3. Add integration tests with fixture files from `docs/examples/import-export/`.
-4. Add minimal admin UI (separate batch) after API stabilizes.
+**Historical note:** parser/normalizer modules under `lib/import-export/` and integration tests were delivered in earlier API batches; UI slices followed per `docs/architecture/roadmap-todo.md`.
 
 ---
 

@@ -187,18 +187,47 @@ When Cursor provides command batteries or runs terminal steps (see [cursor-opera
 
 When Cursor closes a batch (see [cursor-operating-model.md](./cursor-operating-model.md) — **Human-Controlled Merge Protocol**), the reviewer must verify:
 
-- **Manual battery provided** — reject merge readiness if Cursor does **not** provide a complete manual close/merge command battery for Rui to run.
+- **Manual battery provided** — reject merge readiness if Cursor does **not** provide a **complete** manual close/merge command battery for Rui to run (all steps in [command-batteries.md](./command-batteries.md) — Human-controlled close/merge battery).
+- **Prepare next recommended branch** — reject if the final report is **missing** the section titled **Prepare next recommended branch** with `git pull --ff-only`, `git switch -c <branch>`, and `git status --short`; reject if the branch name contradicts `current-state.md` / `roadmap-todo.md` without explanation.
 - **No autonomous merge/push** — verify Cursor did **not** run `git commit`, `git switch main`, `git pull`, `git merge`, `git push`, `git branch -d`, or `git archive` unless Rui **explicitly requested** Cursor to run those commands in the local repo.
 - **Battery accuracy** — verify the command battery matches the **actual changed files** and the **correct branch name** (not stale paths or a wrong branch).
-- **Conventional Commits** — verify the proposed commit message follows Conventional Commits and matches the batch scope (`feat:`, `fix:`, `docs:`, etc.).
-- **Merge readiness criteria** — verify scope, validation, Final Evidence Pack, Implementation Conformance Matrix (when applicable), memory-docs answer, and forbidden-area confirmations before treating the batch as merge-ready.
+- **Conventional Commits** — verify the proposed commit message is **single-line** Conventional Commits (`feat:`, `fix:`, `docs:`, etc.) — no multiline heredocs.
+- **Shell** — batteries state **`Assumed shell: Git Bash`** and use Bash syntax only.
+- **Merge readiness criteria** — verify scope, validation, Final Evidence Pack, Implementation Conformance Matrix (when applicable), **Memory Consistency Gate**, memory-docs answer, and forbidden-area confirmations before treating the batch as merge-ready.
 
 **Reject merge readiness** when:
 
 - Cursor executed merge/push without explicit user request.
-- The manual battery is missing, incomplete, or uses blind `git add -A` without justification when only specific paths changed.
+- The manual battery is **missing or incomplete** (e.g. no pre-staging status, no staged diff stat, no `pnpm check`, no ZIP + final status, no **Prepare next recommended branch**).
+- The manual battery uses blind `git add -A` without justification when only specific paths changed.
 - The battery references files or a branch that do not match the evidence pack.
-- The battery violates **Git Bash command discipline** (PowerShell syntax, doc paths as commands, or invalid ZIP steps) — see Git Bash command discipline reviewer expectations above.
+- The battery violates **Git Bash command discipline** (PowerShell syntax, doc paths as commands, multiline commit heredocs, or invalid ZIP steps) — see Git Bash command discipline reviewer expectations above.
+
+## Daily Branch Housekeeping reviewer expectations
+
+When Cursor reports branch hygiene (see [cursor-operating-model.md](./cursor-operating-model.md) — **Daily Branch Housekeeping Protocol**), the reviewer must verify:
+
+- **List-only default** — on `main`, includes `git pull --ff-only`, `git fetch --prune`, merged/unmerged **local** branch lists, and final `git status --short`; no automatic deletes.
+- **Unmerged safety** — reject advice that deletes or force-deletes **unmerged** local branches by default.
+- **Remote safety** — reject advice that deletes **remote** branches unless Rui explicitly requested remote cleanup.
+
+**Reject** branch housekeeping output when:
+
+- Cursor proposes `git branch -D`, bulk remote deletion, or `git push origin --delete` without explicit user request.
+- Cursor deletes branches autonomously instead of listing/suggesting.
+
+## Memory Consistency Gate reviewer expectations
+
+For **every** batch final report (see [cursor-operating-model.md](./cursor-operating-model.md) — **Memory Consistency Gate**), the reviewer must verify:
+
+- All eight gate rows are present with **yes** / **no** / **why not** (not skipped).
+- **Done vs Pending/Deferred** — if “both Done and Pending” is **yes**, reject merge readiness until memory docs or rules are reconciled (or the contradiction is explicitly approved and scoped).
+- **alwaysApply drift** — if `architect-mode.mdc` (or other always-on rules) still list a **completed** batch as “current recommended next”, reject until synced or explained.
+
+**Reject merge readiness** when:
+
+- The **Memory Consistency Gate** section is missing from the final report.
+- Memory contradictions are reported **yes** but not fixed or explicitly deferred with approval in the same batch.
 
 ### Plan-to-implementation conformance (Implementation Conformance Matrix)
 

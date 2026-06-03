@@ -233,7 +233,7 @@ Do **not** generalize this format to all future clients without an explicit prod
 - **CSV:** semicolon (`;`) separator.
 - **Dates:** `YYYY-MM-DD`.
 - **Times:** `HH:mm` (parsers may normalize `9:00` → `09:00` where implemented).
-- **Student records export UI** is implemented (`import-export-ui-students-export-v1`): CSV/JSON via `GET /api/admin/students/export` on Fichas registadas. **Import UI** and **practical lessons import/export UI** remain pending under **DAT_3.7** (`import-export-ui-actions`).
+- **Student records export/import UI** is implemented on Fichas registadas (`import-export-ui-students-export-v1`, dry-run/apply v1 slices). **Practical lessons export + import dry-run UI** are implemented on `/admin/lessons` Driving tab (`import-export-ui-practical-lessons-export-v1`, `import-export-ui-practical-lessons-import-dry-run-v1`). **Practical lessons import apply UI** remains deferred (`import-export-ui-practical-lessons-import-apply-v1`, after `import-apply-demo-guard-v1`). Apply APIs exist for students and practical lessons; **demo guard on apply routes** is the recommended sequencing gate before more apply UI.
 
 Deep contracts: `driving_school_platform/nextjs_space/docs/engineering/client-data-import-export-strategy.md`.
 
