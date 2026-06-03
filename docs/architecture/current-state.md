@@ -155,11 +155,14 @@ Documented and in use (docs/rules only; no runtime change):
 - `import-apply-demo-guard-v1` — Demo mutation guard on `POST /api/admin/students/import/apply` (`rejectDemoUserManagementMutation` / `user_management`) and `POST /api/admin/practical-lessons/import/apply` (`decideDemoRouteMutation` / `lesson_management`); blocks writes in demo orgs before body parse/apply; dry-run routes unchanged. Validated via `pnpm check`.
 - `import-export-ui-practical-lessons-import-apply-v1` — Practical lessons import apply UI on `/admin/lessons` (`PracticalLessonsImportDialog`); preview then explicit confirmation; reuses `POST /api/admin/practical-lessons/import/apply` (`createOnly`); invalidates apply after file change; demo 403 messaging; refreshes lessons list on success. Validated via `pnpm check`.
 - `tenant-operational-organization-id-null-counts-report-v1` — Read-only operator report for nullable operational `organizationId` NULL counts and conflict detection; `pnpm tenant:org-null-report`; helpers in `lib/tenant-organization-null-scope-report.ts`. No DB writes. Validated via `pnpm check`.
+- `tenant-operational-organization-id-backfill-dry-run-v1` — Dry-run-only per-row backfill planner for operational allowlist; `pnpm tenant:org-backfill:dry-run`; rejects `--apply`; legacy `backfill-organization-scope.ts` disabled unless `ALLOW_UNSAFE_BROAD_ORG_BACKFILL=1`. Preview report: 0 operational NULLs, 0 conflicts. Validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
-1. `tenant-operational-organization-id-backfill-dry-run-v1` — per-row derivation dry-run for operational backfill (**after** Preview report reviewed); parent `tenant-operational-organization-id-backfill-v1` split; **no NOT NULL migration**
-2. `people-management-ux-unification` — **remaining:** invitations-on-record, instructor/route split, instructor parity (IA v1 nav/labels already shipped)
+1. `people-management-ux-unification` — **remaining:** invitations-on-record, instructor/route split, instructor parity (IA v1 nav/labels already shipped) — **recommended** while operational backfill apply has zero proposed rows in Preview
+2. `tenant-operational-organization-id-not-null-readiness-review-v1` — operator/docs review for NOT NULL migrations when NULL counts stay at zero (no apply batch needed yet)
+3. `supabase-rls-class-b-hardening-v1` — optional RLS + REVOKE on remaining internal tables (D4 / RLS gate)
+4. `tenant-operational-organization-id-backfill-apply-v1` — **deferred** until a future environment dry-run shows proposed changes
 3. `product-ui-language-baseline-english-v1` or explicit i18n path — reconcile PT IA exception with English baseline
 4. `audit-log-tenant-context-foundation` — planning only
 5. `supabase-rls-class-b-hardening-v1` — optional follow-up: RLS + REVOKE on remaining internal tables (D4 / RLS gate)

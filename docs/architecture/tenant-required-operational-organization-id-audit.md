@@ -130,9 +130,9 @@ Single plate cannot exist twice in DB **across all tenants**. Acceptable for sin
 
 ## Existing backfill tooling
 
-**Script:** `driving_school_platform/nextjs_space/scripts/backfill-organization-scope.ts`
+**Script:** `driving_school_platform/nextjs_space/scripts/backfill-organization-scope.ts` (**deprecated — disabled by default**; use `pnpm tenant:org-backfill:dry-run`)
 
-**Updates when `organizationId` IS NULL:**
+**Legacy behavior when `ALLOW_UNSAFE_BROAD_ORG_BACKFILL=1` — updates when `organizationId` IS NULL:**
 
 - `Vehicle`, `Lesson`, `Exam`, `LessonRequest`
 - `SystemSetting`, `ConfigurationHistory`, `FeatureFlag`
@@ -144,6 +144,23 @@ Single plate cannot exist twice in DB **across all tenants**. Acceptable for sin
 **Behavior:** Picks org from `TARGET_ORG_ID` / `DEFAULT_ORG_ID` / `ORG_ID` or first org by `createdAt`. Idempotent `updateMany`.
 
 **Audit note:** For multi-org databases, blind single-org backfill is **unsafe** without per-row org resolution — acceptable only for single-tenant Preview/legacy; Production multi-tenant needs classified backfill rules (future batch).
+
+---
+
+## Backfill dry-run operator (v1)
+
+**Batch:** `tenant-operational-organization-id-backfill-dry-run-v1`  
+**Script:** `driving_school_platform/nextjs_space/scripts/dry-run-tenant-organization-backfill.ts`  
+**Command:** `pnpm -C driving_school_platform/nextjs_space tenant:org-backfill:dry-run`
+
+- **Dry-run only:** plans per-row `organizationId` proposals; **no writes**; rejects `--apply` / `--write`.
+- **Allowlist:** `students`, `instructors`, `vehicles`, `lessons`, `exams`, `lesson_requests` only.
+- **Derivation:** deterministic sources only (User, Student, Instructor, Vehicle, Lesson/Exam relations); **no** single-org fallback.
+- **Legacy script:** `scripts/backfill-organization-scope.ts` is **disabled by default** (`ALLOW_UNSAFE_BROAD_ORG_BACKFILL=1` to run legacy unsafe path).
+- **Preview note (2026-06):** null-scope report showed **0** operational NULL rows, **SAFE_TO_DRY_RUN** — dry-run should report **0 proposed changes** in that environment.
+- **Apply:** deferred to `tenant-operational-organization-id-backfill-apply-v1` only when a future dry-run shows proposed rows.
+
+Helpers: `lib/tenant-organization-backfill-dry-run.ts`.
 
 ---
 
@@ -207,8 +224,9 @@ Record results in Preview QA notes when run; not required to close this audit do
 | ----- | ---------------- | ---- | ---- |
 | **0** | — | Run read-only report on Preview; repeat before Production | Operator (`tenant:org-null-report`) |
 | **1** | `tenant-operational-organization-id-null-counts-report-v1` | **Done (v1)** — read-only report script + helpers | `APPROVED TO IMPLEMENT: tenant-operational-organization-id-null-counts-report-v1` |
-| **2** | `tenant-operational-organization-id-backfill-dry-run-v1` | Per-row derivation dry-run; no writes | After Preview report reviewed; separate approval |
-| **3** | `tenant-operational-organization-id-backfill-apply-v1` | Apply backfill on allowlisted operational tables | After dry-run validated |
+| **2** | `tenant-operational-organization-id-backfill-dry-run-v1` | **Done (v1)** — per-row derivation dry-run; legacy script fail-safe | `pnpm tenant:org-backfill:dry-run` |
+| **3** | `tenant-operational-organization-id-backfill-apply-v1` | Apply backfill on allowlisted operational tables | **Deferred** until dry-run shows proposed rows in target DB |
+| **3b** | `tenant-operational-organization-id-not-null-readiness-review-v1` | Operator review for NOT NULL when zero NULLs confirmed | Alternative next when apply not needed |
 | **4** | `tenant-operational-organization-id-not-null-migrations` | Per-table NOT NULL after zero NULL rows verified | Explicit migration approval + `migrate deploy` operator command |
 | **5** | `supabase-rls-data-api-policy-matrix` | **Done (v1)** — classification matrix only; see [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md). Explicit RLS **SQL** on tenant tables → `supabase-rls-tenant-policies-v1` (D4) |
 | **6** | Product | Revisit global uniques (`Vehicle.registrationNumber`, `SystemSetting.settingKey`) for multi-client | Product decision |

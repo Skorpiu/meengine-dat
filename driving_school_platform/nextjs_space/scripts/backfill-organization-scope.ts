@@ -1,8 +1,14 @@
 /**
- * Backfill Script: Organization Scope on core models
+ * DEPRECATED — unsafe broad single-organization backfill.
  *
- * Sets organizationId on legacy rows where it's null.
- * Safe to run multiple times (idempotent).
+ * This script used blind updateMany to the first/default organization and
+ * touched config tables. It is disabled by default.
+ *
+ * Safe operator (dry-run only):
+ *   pnpm tenant:org-backfill:dry-run
+ *
+ * Legacy unsafe execution (discouraged; Preview/operator only):
+ *   ALLOW_UNSAFE_BROAD_ORG_BACKFILL=1 tsx scripts/backfill-organization-scope.ts
  */
 
 import "dotenv/config";
@@ -10,8 +16,31 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+function exitDeprecated(): never {
+  console.error(
+    "\n❌ scripts/backfill-organization-scope.ts is DEPRECATED and disabled by default.",
+  );
+  console.error(
+    "   It performed unsafe broad single-org updateMany (including config tables).",
+  );
+  console.error("\n   Use the read-only planners instead:");
+  console.error("   pnpm tenant:org-null-report");
+  console.error("   pnpm tenant:org-backfill:dry-run");
+  console.error("\n   To run legacy unsafe backfill (operator risk):");
+  console.error(
+    "   ALLOW_UNSAFE_BROAD_ORG_BACKFILL=1 tsx scripts/backfill-organization-scope.ts\n",
+  );
+  process.exit(1);
+}
+
 async function main(): Promise<void> {
-  console.log("🔧 Backfilling organizationId on core models...\n");
+  if (process.env.ALLOW_UNSAFE_BROAD_ORG_BACKFILL !== "1") {
+    exitDeprecated();
+  }
+
+  console.warn(
+    "⚠️  ALLOW_UNSAFE_BROAD_ORG_BACKFILL=1 — running legacy broad backfill (writes data).\n",
+  );
 
   const preferredOrgId =
     process.env.TARGET_ORG_ID ||
@@ -19,16 +48,15 @@ async function main(): Promise<void> {
     process.env.ORG_ID ||
     null;
 
-  const org =
-    preferredOrgId
-      ? await prisma.organization.findUnique({
-          where: { id: preferredOrgId },
-          select: { id: true, name: true },
-        })
-      : await prisma.organization.findFirst({
-          select: { id: true, name: true },
-          orderBy: { createdAt: "asc" },
-        });
+  const org = preferredOrgId
+    ? await prisma.organization.findUnique({
+        where: { id: preferredOrgId },
+        select: { id: true, name: true },
+      })
+    : await prisma.organization.findFirst({
+        select: { id: true, name: true },
+        orderBy: { createdAt: "asc" },
+      });
 
   if (!org) {
     throw new Error("No organization found. Run seed-organization.ts first.");
@@ -36,7 +64,7 @@ async function main(): Promise<void> {
 
   console.log(`✅ Using organization: ${org.name} (${org.id})\n`);
 
-    const results = await prisma.$transaction([
+  const results = await prisma.$transaction([
     prisma.vehicle.updateMany({
       where: { organizationId: null },
       data: { organizationId: org.id },
@@ -53,8 +81,6 @@ async function main(): Promise<void> {
       where: { organizationId: null },
       data: { organizationId: org.id },
     }),
-
-    // Settings / history (B2)
     prisma.systemSetting.updateMany({
       where: { organizationId: null },
       data: { organizationId: org.id },
@@ -69,7 +95,15 @@ async function main(): Promise<void> {
     }),
   ]);
 
-  const [vehicles, lessons, exams, lessonRequests, systemSettings, configHistory, featureFlags] = results;
+  const [
+    vehicles,
+    lessons,
+    exams,
+    lessonRequests,
+    systemSettings,
+    configHistory,
+    featureFlags,
+  ] = results;
 
   console.log("📌 Backfill results:");
   console.log(`- vehicles:       ${vehicles.count}`);

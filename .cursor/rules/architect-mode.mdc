@@ -277,10 +277,11 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `import-apply-demo-guard-v1` — demo mutation guard on student/practical-lessons import **apply** routes (`user_management` / `lesson_management`)
 - `import-export-ui-practical-lessons-import-apply-v1` — practical lessons import apply UI on `/admin/lessons` (preview + confirmation + apply)
 - `tenant-operational-organization-id-null-counts-report-v1` — read-only null-scope report; `pnpm tenant:org-null-report` (audit follow-up)
+- `tenant-operational-organization-id-backfill-dry-run-v1` — dry-run backfill planner; `pnpm tenant:org-backfill:dry-run`; legacy backfill script fail-safe
 
 **Current recommended next (runtime/data slice):**
 
-1. `tenant-operational-organization-id-backfill-dry-run-v1` — per-row derivation dry-run after Preview report reviewed; no NOT NULL migration (parent `tenant-operational-organization-id-backfill-v1` split; gated)
+1. `people-management-ux-unification` (remaining) — Preview has 0 operational NULLs / 0 dry-run proposals; backfill apply deferred
 
 **Likely next (slice parent batches; do not implement broad names directly):**
 
