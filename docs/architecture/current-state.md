@@ -159,12 +159,13 @@ Documented and in use (docs/rules only; no runtime change):
 - `people-management-ux-unification-invitations-v1` — Student-record-centered invitation UX: `pendingInvitation` on list API, Send/Revoke on row, English access copy; `InvitationDto.studentId`; revoke resets linked `Student.appAccessMode` to `MANUAL_ONLY` when safe. Invitations screen retained. Validated via `pnpm check`.
 - `product-ui-language-baseline-english-v1` — English baseline copy on `/admin/users` tree (People nav label, student records, app accounts, practical lessons dialog, UI error helpers); no route/API/behavior changes. Validated via `pnpm check`.
 - `people-management-ux-unification-instructors-section-v1` — Read-only Instructors section on `/admin/users` (license, app account status, Edit app account); SSR data reuse; invitations-on-instructor deferred. Validated via `pnpm check`.
+- `supabase-rls-class-b-hardening-v1` — Prisma migration `20260603120000_supabase_rls_class_b_hardening_v1`: RLS + explicit `REVOKE ALL FROM anon, authenticated` on 8 class-B internal tables (`billing_events`, `entitlement_grants`, `organization_domains`, `audit_logs`, `license_keys`, `configuration_history`, `system_settings`, `feature_flags`); no policies, no schema/runtime changes. Operator deploy to Preview/Production is human-controlled. Validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
 1. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate admin route/nav for instructors if product approves
 2. `tenant-operational-organization-id-not-null-readiness-review-v1` — operator/docs review for NOT NULL migrations when NULL counts stay at zero (no apply batch needed yet)
-3. `supabase-rls-class-b-hardening-v1` — optional RLS + REVOKE on remaining internal tables (D4 / RLS gate)
+3. `supabase-rls-class-b-hardening-v1b` — **deferred (D4):** optional RLS + REVOKE on remaining internal tables (NextAuth adapter, tenant business, global reference) — separate approval; not v1 scope
 4. `tenant-operational-organization-id-backfill-apply-v1` — **deferred** until a future environment dry-run shows proposed changes
 5. `audit-log-tenant-context-foundation` — planning only
 6. Explicit i18n framework — deferred until a dedicated batch
