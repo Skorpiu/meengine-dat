@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { InvitationsManagementClient } from "@/components/admin/invitations-management-client";
 import { StudentRecordsManager } from "@/components/admin/student-records-manager";
+import { InstructorRecordsManager } from "@/components/admin/instructor-records-manager";
 
 async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
   const contentType = response.headers.get("content-type") || "";
@@ -54,6 +55,8 @@ type StudentInfo = {
 };
 
 type InstructorInfo = {
+  id?: string;
+  instructorIdNumber?: string | null;
   instructorLicenseNumber?: string | null;
   instructorLicenseExpiry?: string | Date | null;
 };
@@ -587,11 +590,12 @@ export function UsersManagementClient({
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">People</h1>
         <p className="text-gray-600 mt-2 max-w-3xl">
-          Manage school operational student records and app login accounts.{" "}
-          <strong>Student records</strong> (Students / Registered student
-          records) can exist with or without an app account;{" "}
-          <strong>app accounts</strong> are login credentials for students or
-          instructors.
+          Manage school operational student records, instructor profiles, and
+          app login accounts. <strong>Student records</strong> can exist with or
+          without an app account; <strong>instructors</strong> are always linked
+          to an app account and operational license data;{" "}
+          <strong>app accounts</strong> below manage login credentials and
+          access.
         </p>
       </div>
 
@@ -619,6 +623,15 @@ export function UsersManagementClient({
 
       {/* Primary: operational student records */}
       <StudentRecordsManager />
+
+      {/* Instructors: operational profiles (app-account-linked) */}
+      <InstructorRecordsManager
+        users={users}
+        onEditAppAccount={(instructorUser) => {
+          const fullUser = users.find((u) => u.id === instructorUser.id);
+          if (fullUser) openEditDialog(fullUser);
+        }}
+      />
 
       {/* Summary stats for app accounts */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
@@ -673,9 +686,10 @@ export function UsersManagementClient({
               App accounts
             </CardTitle>
             <p className="text-sm text-gray-600 font-normal max-w-2xl">
-              App login credentials. A student record can exist without an app
-              account; creating an account here does not replace the student
-              record in Students above.
+              App login credentials and access management. Instructor
+              operational details are listed in Instructors above. A student
+              record can exist without an app account; creating an account here
+              does not replace the student record in Students above.
             </p>
           </div>
           <Dialog
