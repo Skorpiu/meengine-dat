@@ -211,9 +211,9 @@ git status --short
 
 ## Human-controlled close/merge battery
 
-**Default DAT workflow:** Rui runs this battery manually after Cursor validates the batch and provides a filled-in version (paths, branch name, commit message). Cursor must **not** execute these commands by default. See [cursor-operating-model.md](./cursor-operating-model.md) — Human-Controlled Merge Protocol.
+**Default DAT workflow:** Rui runs this battery manually after Cursor validates the batch and provides a **filled-in, complete** version (paths, branch name, commit message). Cursor must **not** execute these commands by default. See [cursor-operating-model.md](./cursor-operating-model.md) — Human-Controlled Merge Protocol.
 
-Template (replace `<paths>`, `<type>`, `<message>`, and `<branch-name>`):
+Template (replace `<paths>`, `<type>`, `<message>`, `<branch-name>`, and `<new-recommended-branch>`):
 
 Assumed shell: Git Bash
 
@@ -239,18 +239,74 @@ pnpm -C driving_school_platform/nextjs_space check
 git push
 git branch -d <branch-name>
 
+rm -f DAT-*.zip
 SHA=$(git rev-parse --short HEAD)
 test -n "$SHA" && git archive --format=zip --output "DAT-${SHA}.zip" HEAD || echo "SHA missing — fix before archive"
+
+git status --short
 ```
 
 **Rules:**
 
 - Cursor fills in `<paths>` from the actual batch diff — prefer specific paths over blind `git add -A`.
-- Commit messages follow **Conventional Commits** (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`, `ci:`, `build:`).
+- Commit messages follow **Conventional Commits** — **single-line** only, e.g. `git commit -m "docs: …"` (no multiline heredocs).
+- Every step in the block must appear in Cursor’s final report battery — omissions are incomplete.
 - If check fails after merge, do not push (or revert before push if already merged locally).
 - If `git pull` fails, resolve auth/sync first; paste error to reviewer.
 - ZIP must **not** be committed.
 - If Rui explicitly asks Cursor to run this battery, Cursor must restate risks, command plan, and working tree state first.
+
+---
+
+## Prepare next recommended branch
+
+Run on **`main`** after the close/merge battery above (merge and push succeeded). Use the **concrete** next slice name from `current-state.md` / `roadmap-todo.md` when known.
+
+Assumed shell: Git Bash
+
+```bash
+cd ~/Downloads/Projects/driving-academy-tool
+
+git pull --ff-only
+git switch -c <new-recommended-branch>
+git status --short
+```
+
+**Rules:**
+
+- Branch name = smallest safe **next** slice (e.g. `import-apply-demo-guard-v1`), not a broad parent batch.
+- Creating the branch is **not** approval to implement — gated slices still need `APPROVED TO IMPLEMENT: <batch-name>`.
+
+---
+
+## Daily branch housekeeping battery
+
+**Default: list only** — no deletes unless Rui explicitly asks. See [cursor-operating-model.md](./cursor-operating-model.md) — Daily Branch Housekeeping Protocol.
+
+Assumed shell: Git Bash
+
+```bash
+cd ~/Downloads/Projects/driving-academy-tool
+
+git switch main
+git pull --ff-only
+git fetch --prune
+
+echo "--- Merged into main (local) ---"
+git branch --merged main
+
+echo "--- Not merged into main (local) ---"
+git branch --no-merged main
+
+git status --short
+```
+
+**Rules:**
+
+- **Default: list only / dry-run** — no branch deletes unless Rui explicitly asks.
+- Cursor may **suggest** `git branch -d <name>` only for branches listed under **merged**.
+- Do **not** suggest `-D`, remote deletes, or deleting **unmerged** branches by default.
+- Do **not** run delete commands unless Rui explicitly requests execution.
 
 ---
 
