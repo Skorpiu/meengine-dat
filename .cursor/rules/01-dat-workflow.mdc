@@ -97,17 +97,19 @@ Output:
 
 ## Human-controlled close/merge (after validation)
 
-See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol** and `docs/ops/command-batteries.md` — Human-controlled close/merge battery.
+See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**, **Daily Branch Housekeeping Protocol**, **Memory Consistency Gate**; templates in `docs/ops/command-batteries.md`.
 
 - After validation, close/merge batteries remain **human-controlled** — Cursor does **not** run commit/merge/push by default.
-- **Rui runs** merge/push manually in **Git Bash**; batteries must be **copy-paste-safe** (simple blocks, one-line commits).
-- The battery must start with **`Assumed shell: Git Bash`** and include:
-  - expected `git status` before staging;
+- **Rui runs** merge/push manually in **Git Bash**; batteries must be **complete** and **copy-paste-safe** (single-line commits; no multiline heredocs).
+- The battery must start with **`Assumed shell: Git Bash`** and include **every** step from command-batteries — Human-controlled close/merge battery:
+  - `git status --short` and `git --no-pager diff --stat` before staging;
   - `git add` paths (specific to the batch; use `\` continuations if listing many paths);
-  - staged diff check;
-  - **single-line Conventional Commits** message, e.g. `git commit -m "type: message"`;
+  - `git status --short` and `git --no-pager diff --cached --stat` after staging;
+  - **single-line** Conventional Commit, e.g. `git commit -m "type: message"`;
   - `git switch main`, `git pull --ff-only`, `git merge --no-ff <branch-name>`;
   - `pnpm -C driving_school_platform/nextjs_space check`;
-  - `git push`;
-  - `git branch -d <branch-name>`;
-  - ZIP: `rm -f DAT-*.zip`, `SHA=$(git rev-parse --short HEAD)`, `git archive` → `DAT-${SHA}.zip` (Bash only; no PowerShell).
+  - `git push`, `git branch -d <branch-name>`;
+  - ZIP: `rm -f DAT-*.zip`, `SHA=$(git rev-parse --short HEAD)`, archive → `DAT-${SHA}.zip`, final `git status --short`.
+- Then **`Prepare next recommended branch`**: `git pull --ff-only`, `git switch -c <concrete-next-slice>`, `git status --short` (recommendation only — not implementation approval).
+- **Memory Consistency Gate** — report all eight yes/no/why-not rows in the final report (see operating model).
+- **Branch housekeeping** — daily/list default: merged vs unmerged locals; suggest delete merged only; never delete unmerged or remote branches unless Rui explicitly asks.
