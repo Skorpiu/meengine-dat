@@ -58,9 +58,14 @@ Parent batch — always slice before implementing.
   - Reuses `GET /api/admin/practical-lessons/export` (no API contract change).
   - English UI labels for new export controls.
   - Validated via `pnpm check`.
-- **Next slice (recommended):** `import-export-ui-practical-lessons-import-dry-run-v1`
-  - Practical lessons import dry-run preview UI only.
-  - **Out of scope until separately sliced:** practical lessons import apply UI, per-student history export, row-level validation UX polish.
+- **Done (v1 slice):** `import-export-ui-practical-lessons-import-dry-run-v1`
+  - Import dry-run preview UI on `/admin/lessons` (`PracticalLessonsImportDialog`).
+  - Reuses `POST /api/admin/practical-lessons/import/dry-run` (zero-write preview).
+  - English UI labels for new import controls.
+  - Validated via `pnpm check`.
+- **Next slice (recommended):** `import-export-ui-practical-lessons-import-apply-v1`
+  - Practical lessons import apply UI after successful preview.
+  - **Out of scope until separately sliced:** per-student history export/import UI, row-level validation UX polish.
 - **Deferred slices (parent):**
   - Importar/Exportar on histórico de aulas práticas (per-student dialog).
   - Practical lessons import apply UI.

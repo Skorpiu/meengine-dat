@@ -18,9 +18,11 @@ import {
   FileText,
   Clock,
   RefreshCw,
+  Upload,
 } from "lucide-react";
 import { FeatureGate } from "@/components/license/feature-gate";
 import { useToast } from "@/hooks/use-toast";
+import { PracticalLessonsImportDialog } from "@/components/admin/practical-lessons-import-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -94,6 +96,7 @@ export function LessonsManagementClient() {
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [exportingFormat, setExportingFormat] =
     useState<PracticalLessonsExportFormat | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const fetchLessons = useCallback(async () => {
@@ -341,34 +344,46 @@ export function LessonsManagementClient() {
             </div>
             <div className="flex items-center gap-2">
               {selectedView === "DRIVING" ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={isLoading || exportingFormat !== null}
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      {exportingFormat ? "Exporting…" : "Export"}
-                      <ChevronDown className="w-4 h-4 ml-2 opacity-60" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      disabled={exportingFormat !== null}
-                      onSelect={() => void handleExport("csv")}
-                    >
-                      Export as CSV
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      disabled={exportingFormat !== null}
-                      onSelect={() => void handleExport("json")}
-                    >
-                      Export as JSON
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isLoading}
+                    onClick={() => setImportDialogOpen(true)}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Import
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={isLoading || exportingFormat !== null}
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        {exportingFormat ? "Exporting…" : "Export"}
+                        <ChevronDown className="w-4 h-4 ml-2 opacity-60" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        disabled={exportingFormat !== null}
+                        onSelect={() => void handleExport("csv")}
+                      >
+                        Export as CSV
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        disabled={exportingFormat !== null}
+                        onSelect={() => void handleExport("json")}
+                      >
+                        Export as JSON
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
               ) : null}
               <Button
                 variant="outline"
@@ -515,6 +530,11 @@ export function LessonsManagementClient() {
             </CardContent>
           </Card>
         </div>
+
+        <PracticalLessonsImportDialog
+          open={importDialogOpen}
+          onOpenChange={setImportDialogOpen}
+        />
       </>
     </FeatureGate>
   );
