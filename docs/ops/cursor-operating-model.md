@@ -112,6 +112,54 @@ When Cursor provides a recommendation, it must use this structure:
 - If confidence is **Low**, Cursor must recommend more inspection or a smaller spike instead of implementation.
 - Do **not** classify runtime **admin** UI (including copy/layout on people/users/invitations-adjacent screens) as **D3** just because the diff looks small — require explicit approval and the evidence pack; use **D2** only for internal choices inside an already approved scope.
 
+## Product Strategy Protocol
+
+Use this protocol when the batch touches **product direction**, packaging, UX policy, or Super-Agent / roadmap alignment. It **extends** the [External advice protocol](#external-advice-protocol-accept--adapt--defer--reject) and [Decision Recommendation Protocol](#decision-recommendation-protocol) — it does not replace them.
+
+### Separate evidence types
+
+In analysis and final reports, label content explicitly where helpful:
+
+| Label | Meaning |
+| ----- | ------- |
+| **Fact (repo)** | Verifiable in the repository (paths, migrations, routes, tests, grep) |
+| **Inference** | Reasonable conclusion from facts; mark if evidence is incomplete |
+| **Recommendation** | What Cursor would do — **not** authorization |
+| **Alternatives considered** | Other viable options |
+| **Risks** | What could go wrong; use explicit severity when useful |
+
+### Challenge without blocking autonomy
+
+- Cursor **may challenge** recommendations from Rui or ChatGPT when **repo evidence**, **tenant/security risk**, or a **smaller safer implementation path** supports a different conclusion.
+- Cursor must **not** force agreement with the user or with external advice.
+- Cursor must **not** require giant templates on every answer — use compact structure when sufficient.
+- Apply **ACCEPT / ADAPT / DEFER / REJECT** to external advice; cite paths or commands when challenging.
+
+### Where durable product output goes
+
+| Output | Target |
+| ------ | ------ |
+| Accepted product/architecture decisions | [decision-log.md](../architecture/decision-log.md) |
+| Living assumptions | [product-assumptions.md](../product/product-assumptions.md) |
+| Backlog slices | [roadmap-todo.md](../architecture/roadmap-todo.md) |
+| Current posture | [current-state.md](../architecture/current-state.md) |
+| Product narrative | [docs/product/](../product/) |
+
+Keep **roadmap**, **current-state**, and **architect-mode** hints consistent after a docs batch (Memory Consistency Gate).
+
+### Gates (unchanged — do not over-tighten)
+
+**D4 / explicit approval** still required for: Prisma schema, migrations, RLS/grants, auth, billing/payments behavior, tenant isolation, production deploy, destructive data changes, import/apply, invitations, demo policy changes.
+
+**Docs-only**, **low-risk copy** inside an approved scope, and **analysis-only** work may proceed with normal autonomy when the user approves the batch — do not add extra gates beyond Sensitive Batch Gate.
+
+### Preview and Vercel housekeeping
+
+- Run **`pnpm dlx vercel deploy`** from the **repository root**, not from `driving_school_platform/nextjs_space`. The Vercel project **Root Directory** is already `driving_school_platform/nextjs_space` (see [vercel-deployment.md](../../driving_school_platform/nextjs_space/docs/ops/vercel-deployment.md)).
+- When a **temporary Preview host** was added to `organization_domains` for QA, remove that row by **exact host** when validation ends. **Never** delete production or long-lived customer domains blindly.
+- **Do not commit** `.vercel` local metadata.
+- List/remove stale preview deployments when no longer needed — see [command-batteries.md](./command-batteries.md) (Vercel Preview deploy section).
+
 ## Smallest Safe Slice Protocol
 
 When a recommended batch is **broad**, **ambiguous**, **cross-cutting**, or likely to touch **sensitive areas**, Cursor must propose the **smallest safe v1 slice** before implementation. Cursor must not implement the broad batch as originally named if a smaller safe slice is available.
