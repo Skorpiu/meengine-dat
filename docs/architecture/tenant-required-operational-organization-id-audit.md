@@ -147,9 +147,24 @@ Single plate cannot exist twice in DB **across all tenants**. Acceptable for sin
 
 ---
 
+## Read-only null-scope report operator (v1)
+
+**Batch:** `tenant-operational-organization-id-null-counts-report-v1`  
+**Script:** `driving_school_platform/nextjs_space/scripts/report-tenant-organization-null-scope.ts`  
+**Command:** `pnpm -C driving_school_platform/nextjs_space tenant:org-null-report`
+
+- **Read-only:** Prisma `count` / `groupBy` and guarded `SELECT` raw SQL only; no apply/dry-run write modes.
+- **Output:** operational and dual-scope NULL counts, conflict detection, active org sanity, `SAFE_TO_DRY_RUN` / `BLOCKED` summary.
+- **Exit code:** non-zero when high-risk conflicts exist or readiness is `BLOCKED` (data unchanged).
+- **Preview first:** run on Preview and record results before Production or any backfill slice.
+
+Helpers (unit-tested): `lib/tenant-organization-null-scope-report.ts`.
+
+---
+
 ## Operator verification — NULL row counts (needs confirmation)
 
-Run against **target** database only (Preview vs Production explicitly chosen). Do not paste `DATABASE_URL` into tickets.
+Run the report script above **or** the SQL below against **target** database only (Preview vs Production explicitly chosen). Do not paste `DATABASE_URL` into tickets.
 
 ```sql
 -- Core operational (TENANT_REQUIRED)
@@ -190,11 +205,13 @@ Record results in Preview QA notes when run; not required to close this audit do
 
 | Phase | Name (suggested) | Work | Gate |
 | ----- | ---------------- | ---- | ---- |
-| **0** | — | Run SQL counts above on Preview; repeat before Production | Operator |
-| **1** | `tenant-operational-organization-id-backfill-v1` | Extend backfill for `Student`/`Instructor`; document multi-org rules; optional read-only report script | `APPROVED TO IMPLEMENT: …` + no NOT NULL yet |
-| **2** | `tenant-operational-organization-id-not-null-migrations` | Per-table NOT NULL after zero NULL rows verified | Explicit migration approval + `migrate deploy` operator command |
-| **3** | `supabase-rls-data-api-policy-matrix` | **Done (v1)** — classification matrix only; see [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md). Explicit RLS **SQL** on tenant tables → `supabase-rls-tenant-policies-v1` (D4) |
-| **4** | Product | Revisit global uniques (`Vehicle.registrationNumber`, `SystemSetting.settingKey`) for multi-client | Product decision |
+| **0** | — | Run read-only report on Preview; repeat before Production | Operator (`tenant:org-null-report`) |
+| **1** | `tenant-operational-organization-id-null-counts-report-v1` | **Done (v1)** — read-only report script + helpers | `APPROVED TO IMPLEMENT: tenant-operational-organization-id-null-counts-report-v1` |
+| **2** | `tenant-operational-organization-id-backfill-dry-run-v1` | Per-row derivation dry-run; no writes | After Preview report reviewed; separate approval |
+| **3** | `tenant-operational-organization-id-backfill-apply-v1` | Apply backfill on allowlisted operational tables | After dry-run validated |
+| **4** | `tenant-operational-organization-id-not-null-migrations` | Per-table NOT NULL after zero NULL rows verified | Explicit migration approval + `migrate deploy` operator command |
+| **5** | `supabase-rls-data-api-policy-matrix` | **Done (v1)** — classification matrix only; see [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md). Explicit RLS **SQL** on tenant tables → `supabase-rls-tenant-policies-v1` (D4) |
+| **6** | Product | Revisit global uniques (`Vehicle.registrationNumber`, `SystemSetting.settingKey`) for multi-client | Product decision |
 
 **Do not combine phase 2 with feature batches.**
 

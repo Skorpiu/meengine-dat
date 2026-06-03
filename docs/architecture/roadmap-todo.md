@@ -102,8 +102,9 @@ Parent batch — always slice before implementing.
 **Source:** external database/architecture critique triage (`external-database-architecture-audit-triage`).
 
 - **Done (v1 slice):** audit report + classification only — [tenant-required-operational-organization-id-audit.md](./tenant-required-operational-organization-id-audit.md). No Prisma/migration/RLS/runtime changes in this slice.
-- **Next gated slice (recommended):** `tenant-operational-organization-id-backfill-v1` — extend `scripts/backfill-organization-scope.ts` for `Student`/`Instructor`; operator NULL-count SQL; **no NOT NULL migration** in v1.
-- **Deferred:** NOT NULL migrations per table (`tenant-operational-organization-id-not-null-migrations`) after zero NULL rows verified in target DB; explicit migration approval required.
+- **Done (v1 slice):** `tenant-operational-organization-id-null-counts-report-v1` — read-only report script `scripts/report-tenant-organization-null-scope.ts` (`pnpm tenant:org-null-report`); helpers `lib/tenant-organization-null-scope-report.ts`. No writes.
+- **Next gated slice (recommended):** `tenant-operational-organization-id-backfill-dry-run-v1` — per-row derivation dry-run on allowlisted operational tables; **after** Preview null-scope report reviewed; **no NOT NULL migration**.
+- **Deferred (split from parent backfill):** `tenant-operational-organization-id-backfill-apply-v1` — apply backfill after dry-run validated; `tenant-operational-organization-id-not-null-migrations` after zero NULL rows verified in target DB (explicit migration approval).
 
 ### billing webhook hardening
 

@@ -35,6 +35,7 @@
     "demo:personas:cleanup": "tsx scripts/cleanup-demo-personas.ts",
     "demo:practical:configure": "tsx scripts/configure-demo-practical-readiness.ts",
     "demo:client-ready": "tsx scripts/check-client-demo-ready.ts",
+    "tenant:org-null-report": "tsx scripts/report-tenant-organization-null-scope.ts",
     "predev": "pnpm -s env:check",
     "test:e2e": "playwright test",
     "test:e2e:demo": "playwright test e2e/demo-smoke.spec.ts",
