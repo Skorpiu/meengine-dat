@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import type {
 } from "@/lib/invitations/invitation-ui-types";
 import {
   copyTextToClipboard,
+  filterInvitationsByRole,
   formatInvitationDateTime,
   invitationApiErrorMessage,
   invitationStatusLabel,
@@ -61,13 +62,26 @@ function statusBadgeVariant(
 
 const DEFAULT_EXPIRES_IN_DAYS = 7;
 
-export function InvitationsManagementClient() {
+export type InvitationsManagementClientProps = {
+  roleFilter?: InvitableRole;
+  defaultRole?: InvitableRole;
+  embedded?: boolean;
+};
+
+export function InvitationsManagementClient({
+  roleFilter,
+  defaultRole,
+  embedded = false,
+}: InvitationsManagementClientProps = {}) {
+  const lockedRole = roleFilter ?? defaultRole;
+  const initialRole = lockedRole ?? "STUDENT";
+
   const [invitations, setInvitations] = useState<InvitationDto[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState("");
 
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<InvitableRole>("STUDENT");
+  const [role, setRole] = useState<InvitableRole>(initialRole);
   const [expiresInDays, setExpiresInDays] = useState(
     String(DEFAULT_EXPIRES_IN_DAYS),
   );
@@ -80,6 +94,20 @@ export function InvitationsManagementClient() {
   const [revokingId, setRevokingId] = useState<string | null>(null);
 
   const formBusy = createLoading || revokingId !== null;
+  const createRole = lockedRole ?? role;
+
+  useEffect(() => {
+    if (lockedRole) {
+      setRole(lockedRole);
+    }
+  }, [lockedRole]);
+
+  const visibleInvitations = useMemo(() => {
+    if (!roleFilter) {
+      return invitations;
+    }
+    return filterInvitationsByRole(invitations, roleFilter);
+  }, [invitations, roleFilter]);
 
   const loadInvitations = useCallback(async () => {
     setListLoading(true);
@@ -125,7 +153,7 @@ export function InvitationsManagementClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: email.trim(),
-          role,
+          role: createRole,
           expiresInDays: Number.isFinite(days) ? days : DEFAULT_EXPIRES_IN_DAYS,
         }),
       });
@@ -215,8 +243,15 @@ export function InvitationsManagementClient() {
     }
   };
 
+  const emptyListMessage =
+    roleFilter === "STUDENT"
+      ? "No student invitations yet. Create one above."
+      : roleFilter === "INSTRUCTOR"
+        ? "No instructor invitations yet. Create one above."
+        : "No invitations yet. Create one above.";
+
   return (
-    <Card className="mt-8">
+    <Card className={embedded ? undefined : "mt-8"}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MailPlus className="h-5 w-5" />
@@ -235,7 +270,9 @@ export function InvitationsManagementClient() {
           className="space-y-4 rounded-lg border p-4"
         >
           <h3 className="font-medium text-gray-900">Create invitation</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div
+            className={`grid grid-cols-1 gap-4 ${lockedRole ? "md:grid-cols-2" : "md:grid-cols-3"}`}
+          >
             <div className="space-y-2 md:col-span-1">
               <Label htmlFor="invite-email">Email</Label>
               <Input
@@ -244,26 +281,39 @@ export function InvitationsManagementClient() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="student@example.com"
+                placeholder={
+                  createRole === "INSTRUCTOR"
+                    ? "instructor@example.com"
+                    : "student@example.com"
+                }
                 disabled={formBusy}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Role</Label>
-              <Select
-                value={role}
-                onValueChange={(value) => setRole(value as InvitableRole)}
-                disabled={formBusy}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="STUDENT">Student</SelectItem>
-                  <SelectItem value="INSTRUCTOR">Instructor</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {lockedRole ? (
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <div className="flex h-10 items-center rounded-md border bg-muted/40 px-3 text-sm">
+                  {lockedRole === "INSTRUCTOR" ? "Instructor" : "Student"}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <Select
+                  value={role}
+                  onValueChange={(value) => setRole(value as InvitableRole)}
+                  disabled={formBusy}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="STUDENT">Student</SelectItem>
+                    <SelectItem value="INSTRUCTOR">Instructor</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="invite-expires">Expires in (days)</Label>
               <Input
@@ -339,20 +389,18 @@ export function InvitationsManagementClient() {
             </Alert>
           )}
 
-          {listLoading && invitations.length === 0 && !listError && (
+          {listLoading && visibleInvitations.length === 0 && !listError && (
             <p className="text-sm text-muted-foreground">
               Loading invitations…
             </p>
           )}
 
-          {!listLoading && invitations.length === 0 && !listError && (
-            <p className="text-sm text-muted-foreground">
-              No invitations yet. Create one above.
-            </p>
+          {!listLoading && visibleInvitations.length === 0 && !listError && (
+            <p className="text-sm text-muted-foreground">{emptyListMessage}</p>
           )}
 
           <div className="space-y-3">
-            {invitations.map((invitation) => (
+            {visibleInvitations.map((invitation) => (
               <div
                 key={invitation.id}
                 className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg"
@@ -360,7 +408,10 @@ export function InvitationsManagementClient() {
                 <div className="space-y-1 min-w-0">
                   <div className="font-medium truncate">{invitation.email}</div>
                   <div className="text-sm text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
-                    <span>Role: {invitation.role}</span>
+                    {!roleFilter ? <span>Role: {invitation.role}</span> : null}
+                    {invitation.studentId ? (
+                      <span>Linked to student record</span>
+                    ) : null}
                     <span>
                       Expires: {formatInvitationDateTime(invitation.expiresAt)}
                     </span>

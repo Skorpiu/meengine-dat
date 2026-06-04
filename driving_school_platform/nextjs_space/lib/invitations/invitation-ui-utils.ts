@@ -1,4 +1,5 @@
 import type { InvitationDto } from "./invitation-dto";
+import type { InvitableRole } from "./invitation-ui-types";
 
 export function formatInvitationDateTime(iso: string): string {
   const date = new Date(iso);
@@ -9,6 +10,14 @@ export function formatInvitationDateTime(iso: string): string {
     dateStyle: "medium",
     timeStyle: "short",
   });
+}
+
+/** Client-side filter for role-scoped invitation tabs (no API query param). */
+export function filterInvitationsByRole(
+  invitations: InvitationDto[],
+  role: InvitableRole,
+): InvitationDto[] {
+  return invitations.filter((invitation) => invitation.role === role);
 }
 
 export function invitationStatusLabel(status: InvitationDto["status"]): string {

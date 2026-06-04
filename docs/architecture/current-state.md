@@ -103,7 +103,7 @@ pnpm exec prisma migrate status
 
 **IA v1 (done):** `people-management-information-architecture-v1` — Admin **People** hub at `/admin/users` (route unchanged); page prioritizes **Students / Registered student records**; **Instructors** section (read-only operational view); flat login list labeled **App accounts**; helper copy for student record vs app account vs instructor. **Invitations-on-record v1 (done):** `people-management-ux-unification-invitations-v1` — Send/Revoke on student row, `pendingInvitation` in list API, English access copy on invitation slice; global Invitations section retained for instructors. **Instructors section v1 (done):** `people-management-ux-unification-instructors-section-v1` — first-class Instructors block on same page; no route split.
 
-**People UX next (product decision):** prefer **`people-management-internal-tabs-v1`** — internal tabs on `/admin/users` (Students → Invitations, Instructors → Invitations, App accounts). **`people-management-ux-unification-instructor-route-split-v1`** is **deferred (D4)** — not recommended next. See [decision-log.md](./decision-log.md) DEC-003 and [docs/product/dat-vs-platform-boundary.md](../product/dat-vs-platform-boundary.md).
+**People UX (tabs v1 done):** **`people-management-internal-tabs-v1`** — L1 tabs on `/admin/users` (Students, Instructors, App accounts) with L2 Records/Invitations under Students and Profiles/Invitations under Instructors; same route/API/SSR; client-side invitation list filter by role. **`people-management-ux-unification-instructor-route-split-v1`** remains **deferred (D4)** — not recommended next. See [decision-log.md](./decision-log.md) DEC-003.
 
 Student records **export/import** UI on registered student records is implemented (`import-export-ui-students-export-v1`, `import-export-ui-students-import-dry-run-v1`, `import-export-ui-students-import-apply-v1`).
 
@@ -165,10 +165,11 @@ Documented and in use (docs/rules only; no runtime change):
 - `people-management-ux-unification-instructors-section-v1` — Read-only Instructors section on `/admin/users` (license, app account status, Edit app account); SSR data reuse; invitations-on-instructor deferred. Validated via `pnpm check`.
 - `supabase-rls-class-b-hardening-v1` — Prisma migration `20260603120000_supabase_rls_class_b_hardening_v1`: RLS + explicit `REVOKE ALL FROM anon, authenticated` on 8 class-B internal tables (`billing_events`, `entitlement_grants`, `organization_domains`, `audit_logs`, `license_keys`, `configuration_history`, `system_settings`, `feature_flags`); no policies, no schema/runtime changes. **Preview:** migration applied; SQL gate 8/8 RLS; zero grants to `anon`/`authenticated` on those tables; smoke passed. Production deploy human-controlled. Validated via `pnpm check`.
 - `product-roadmap-and-platform-boundary-sync-v1` — Docs-only product hub (`docs/product/`), [decision-log.md](./decision-log.md), DAT vs Platform boundary, packaging intent, People tabs-before-split, Super-Agent Product Strategy Protocol. No runtime changes. Validated via `pnpm check`.
+- `people-management-internal-tabs-v1` — Internal tabs on `/admin/users` (Students/Records+Invitations, Instructors/Profiles+Invitations, App accounts); `InvitationsManagementClient` `roleFilter` client-side; row-level student Send/Revoke preserved; `page.tsx`/SSR unchanged. Validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
-1. `people-management-internal-tabs-v1` — internal tabs on `/admin/users` (Students/Invitations, Instructors/Invitations, App accounts); **preferred** People UX slice
+1. `admin-settings-client-visibility-review-v1` — review hiding/demoting Settings for school admins (product/packaging P1)
 2. `tenant-operational-organization-id-not-null-readiness-review-v1` — operator/docs review for NOT NULL migrations when NULL counts stay at zero (no apply batch needed yet)
 3. `supabase-rls-class-b-hardening-v1b` — **deferred (D4):** optional RLS + REVOKE on remaining internal tables — separate approval
 4. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next; only if product reverses tabs-first decision
