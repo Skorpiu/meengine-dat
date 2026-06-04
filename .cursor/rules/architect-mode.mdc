@@ -285,14 +285,15 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `product-roadmap-and-platform-boundary-sync-v1` — docs/product hub, decision-log, DAT vs Platform, packaging; see `docs/product/`
 - `people-management-internal-tabs-v1` — internal L1/L2 tabs on `/admin/users` (Students, Instructors, App accounts); client-side invitation role filter; SSR unchanged
 - `people-management-onboarding-reframe-v1` — L2 Onboarding (manual student + new instructor + invitations); App accounts tab retained
+- `people-management-profiles-status-and-pagination-v1` — Students → Profiles; profile badges + label guide; 15/page Load more; instructor search; Pending invitations Onboarding copy (absorbs record-status-badges + instructor-people-search UI)
 
 **Current recommended next (runtime/UX slice):**
 
-1. `people-management-record-status-badges-v1` — record/access badges on People rows (UI only)
+1. `people-management-row-app-access-v1` — row-level edit/remove app account before demoting App accounts tab
 
-**Likely next after badges / row app access:**
+**Likely next after row app access:**
 
-2. `people-management-row-app-access-v1` then `people-management-app-accounts-demote-v1`
+2. `people-management-app-accounts-demote-v1` then `people-management-onboarding-unlinked-invitations-v1`
 3. `admin-settings-client-visibility-review-v1` — review hiding/demoting Settings for school admins (product P1)
 
 **Likely next (slice parent batches; do not implement broad names directly):**

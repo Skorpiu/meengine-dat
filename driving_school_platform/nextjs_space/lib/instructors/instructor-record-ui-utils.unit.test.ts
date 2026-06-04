@@ -1,10 +1,12 @@
 import { describe, it, expect } from "vitest";
 import {
   filterInstructorRecordUsers,
+  filterInstructorRecordUsersBySearch,
   formatInstructorLicenseExpiry,
   getInstructorAppAccountStatusLabel,
   getInstructorRecordDisplayName,
   hasOperationalInstructorRecord,
+  matchesInstructorRecordSearch,
 } from "./instructor-record-ui-utils";
 import type { InstructorRecordUserDto } from "./instructor-record-ui-types";
 
@@ -63,9 +65,36 @@ describe("formatInstructorLicenseExpiry", () => {
 
 describe("getInstructorAppAccountStatusLabel", () => {
   it("maps approval state", () => {
-    expect(getInstructorAppAccountStatusLabel(true)).toBe("App account active");
+    expect(getInstructorAppAccountStatusLabel(true)).toBe("App access active");
     expect(getInstructorAppAccountStatusLabel(false)).toBe(
-      "App account pending approval",
+      "App access pending approval",
+    );
+  });
+});
+
+describe("matchesInstructorRecordSearch", () => {
+  it("matches name, email, and license number", () => {
+    const user = baseInstructor();
+    expect(matchesInstructorRecordSearch(user, "ana")).toBe(true);
+    expect(matchesInstructorRecordSearch(user, "inst@school")).toBe(true);
+    expect(matchesInstructorRecordSearch(user, "lic-001")).toBe(true);
+    expect(matchesInstructorRecordSearch(user, "unknown")).toBe(false);
+  });
+});
+
+describe("filterInstructorRecordUsersBySearch", () => {
+  it("returns all instructors when search is empty", () => {
+    const users = [baseInstructor(), baseInstructor({ id: "user-2" })];
+    expect(filterInstructorRecordUsersBySearch(users, "")).toHaveLength(2);
+  });
+
+  it("filters by search query", () => {
+    const users = [
+      baseInstructor(),
+      baseInstructor({ id: "user-2", email: "other@school.test" }),
+    ];
+    expect(filterInstructorRecordUsersBySearch(users, "other@")).toHaveLength(
+      1,
     );
   });
 });

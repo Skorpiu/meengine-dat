@@ -31,7 +31,46 @@ export function formatInstructorLicenseExpiry(
 export function getInstructorAppAccountStatusLabel(
   isApproved: boolean,
 ): string {
-  return isApproved ? "App account active" : "App account pending approval";
+  return isApproved ? "App access active" : "App access pending approval";
+}
+
+const INSTRUCTOR_SEARCH_NORMALIZE = (value: string) =>
+  value.trim().toLowerCase();
+
+export function matchesInstructorRecordSearch(
+  user: InstructorRecordUserDto,
+  query: string,
+): boolean {
+  const q = INSTRUCTOR_SEARCH_NORMALIZE(query);
+  if (!q) {
+    return true;
+  }
+  const name = getInstructorRecordDisplayName(user).toLowerCase();
+  const email = (user.email ?? "").toLowerCase();
+  const license = (
+    user.instructor?.instructorLicenseNumber ?? ""
+  ).toLowerCase();
+  const instructorId = (
+    user.instructor?.instructorIdNumber ?? ""
+  ).toLowerCase();
+  return (
+    name.includes(q) ||
+    email.includes(q) ||
+    license.includes(q) ||
+    instructorId.includes(q)
+  );
+}
+
+export function filterInstructorRecordUsersBySearch(
+  users: InstructorRecordUserDto[],
+  query: string,
+): InstructorRecordUserDto[] {
+  const trimmed = query.trim();
+  const base = filterInstructorRecordUsers(users);
+  if (!trimmed) {
+    return base;
+  }
+  return base.filter((user) => matchesInstructorRecordSearch(user, trimmed));
 }
 
 export function hasOperationalInstructorRecord(

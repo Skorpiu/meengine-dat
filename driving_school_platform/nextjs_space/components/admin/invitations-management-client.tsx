@@ -14,7 +14,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Copy, Link2, MailPlus, RefreshCw, UserX } from "lucide-react";
+import {
+  ChevronDown,
+  Copy,
+  Link2,
+  MailPlus,
+  RefreshCw,
+  UserX,
+} from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import toast from "react-hot-toast";
 import type {
   CreateInvitationResponse,
@@ -103,11 +115,13 @@ export function InvitationsManagementClient({
   }, [lockedRole]);
 
   const visibleInvitations = useMemo(() => {
-    if (!roleFilter) {
-      return invitations;
-    }
-    return filterInvitationsByRole(invitations, roleFilter);
+    const byRole = roleFilter
+      ? filterInvitationsByRole(invitations, roleFilter)
+      : invitations;
+    return byRole.filter((inv) => inv.status === "PENDING");
   }, [invitations, roleFilter]);
+
+  const pendingCount = visibleInvitations.length;
 
   const loadInvitations = useCallback(async () => {
     setListLoading(true);
@@ -245,23 +259,25 @@ export function InvitationsManagementClient({
 
   const emptyListMessage =
     roleFilter === "STUDENT"
-      ? "No student invitations yet. Create one above."
+      ? "No pending student invitations. Linked invites also appear on Students → Profiles."
       : roleFilter === "INSTRUCTOR"
-        ? "No instructor invitations yet. Create one above."
-        : "No invitations yet. Create one above.";
+        ? "No pending instructor invitations. Instructor invites are managed here until profile-level status is added."
+        : "No pending invitations. Create one above.";
 
   return (
     <Card className={embedded ? undefined : "mt-8"}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MailPlus className="h-5 w-5" />
-          Invitations
+          Pending invitations
         </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Invite links are <strong>sensitive</strong> (like a password). Share
-          them only with the intended person. The link is shown once after
-          creation — copy it before leaving this page. The list below never
-          shows links or tokens.
+        <p className="text-sm text-muted-foreground max-w-3xl">
+          Profile status on <strong>Students → Profiles</strong> is the primary
+          view for linked student invites. Use this section for{" "}
+          <strong>standalone or unlinked</strong> invites and for{" "}
+          <strong>instructor</strong> invites (not shown on instructor profiles
+          yet). Invite links are <strong>sensitive</strong> — copy when shown
+          once after creation. Lists never show links or tokens.
         </p>
       </CardHeader>
       <CardContent className="space-y-8">
@@ -366,9 +382,15 @@ export function InvitationsManagementClient({
           </Alert>
         )}
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium text-gray-900">Invitation list</h3>
+        <Collapsible defaultOpen className="space-y-4 rounded-lg border p-4">
+          <div className="flex items-center justify-between gap-2">
+            <CollapsibleTrigger className="group flex flex-1 items-center justify-between gap-2 text-left font-medium text-gray-900 hover:text-gray-950">
+              <span>
+                Pending invitation list
+                {pendingCount > 0 ? ` (${pendingCount})` : ""}
+              </span>
+              <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+            </CollapsibleTrigger>
             <Button
               type="button"
               variant="outline"
@@ -383,48 +405,58 @@ export function InvitationsManagementClient({
             </Button>
           </div>
 
-          {listError && (
-            <Alert variant="destructive">
-              <AlertDescription>{listError}</AlertDescription>
-            </Alert>
-          )}
+          <CollapsibleContent className="space-y-4">
+            {listError && (
+              <Alert variant="destructive">
+                <AlertDescription>{listError}</AlertDescription>
+              </Alert>
+            )}
 
-          {listLoading && visibleInvitations.length === 0 && !listError && (
-            <p className="text-sm text-muted-foreground">
-              Loading invitations…
-            </p>
-          )}
+            {listLoading && visibleInvitations.length === 0 && !listError && (
+              <p className="text-sm text-muted-foreground">
+                Loading pending invitations…
+              </p>
+            )}
 
-          {!listLoading && visibleInvitations.length === 0 && !listError && (
-            <p className="text-sm text-muted-foreground">{emptyListMessage}</p>
-          )}
+            {!listLoading && visibleInvitations.length === 0 && !listError && (
+              <p className="text-sm text-muted-foreground">
+                {emptyListMessage}
+              </p>
+            )}
 
-          <div className="space-y-3">
-            {visibleInvitations.map((invitation) => (
-              <div
-                key={invitation.id}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg"
-              >
-                <div className="space-y-1 min-w-0">
-                  <div className="font-medium truncate">{invitation.email}</div>
-                  <div className="text-sm text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
-                    {!roleFilter ? <span>Role: {invitation.role}</span> : null}
-                    {invitation.studentId ? (
-                      <span>Linked to student record</span>
-                    ) : null}
-                    <span>
-                      Expires: {formatInvitationDateTime(invitation.expiresAt)}
-                    </span>
-                    <span>
-                      Created: {formatInvitationDateTime(invitation.createdAt)}
-                    </span>
+            <div className="space-y-3">
+              {visibleInvitations.map((invitation) => (
+                <div
+                  key={invitation.id}
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg"
+                >
+                  <div className="space-y-1 min-w-0">
+                    <div className="font-medium truncate">
+                      {invitation.email}
+                    </div>
+                    <div className="text-sm text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
+                      {!roleFilter ? (
+                        <span>Role: {invitation.role}</span>
+                      ) : null}
+                      {invitation.studentId ? (
+                        <span>Also on Students → Profiles</span>
+                      ) : (
+                        <span>Not linked to a student profile</span>
+                      )}
+                      <span>
+                        Expires:{" "}
+                        {formatInvitationDateTime(invitation.expiresAt)}
+                      </span>
+                      <span>
+                        Created:{" "}
+                        {formatInvitationDateTime(invitation.createdAt)}
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Badge variant={statusBadgeVariant(invitation.status)}>
-                    {invitationStatusLabel(invitation.status)}
-                  </Badge>
-                  {invitation.status === "PENDING" && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant={statusBadgeVariant(invitation.status)}>
+                      {invitationStatusLabel(invitation.status)}
+                    </Badge>
                     <Button
                       type="button"
                       size="sm"
@@ -435,12 +467,12 @@ export function InvitationsManagementClient({
                       <UserX className="h-4 w-4 mr-1" />
                       {revokingId === invitation.id ? "Revoking…" : "Revoke"}
                     </Button>
-                  )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
+              ))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </CardContent>
     </Card>
   );

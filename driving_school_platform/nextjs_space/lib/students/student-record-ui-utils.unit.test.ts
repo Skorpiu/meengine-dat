@@ -21,7 +21,7 @@ describe("previewSchoolStudentId", () => {
 
 describe("getStudentAppAccessLabel", () => {
   it("re-exports English labels from invitation UI utils", () => {
-    expect(getStudentAppAccessLabel("MANUAL_ONLY")).toBe("No app account");
+    expect(getStudentAppAccessLabel("MANUAL_ONLY")).toBe("No app access");
   });
 });
 
