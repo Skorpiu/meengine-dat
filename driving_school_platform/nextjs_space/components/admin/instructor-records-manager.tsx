@@ -17,28 +17,39 @@ import {
 type InstructorRecordsManagerProps = {
   users: InstructorRecordUserDto[];
   onEditAppAccount: (user: InstructorRecordUserDto) => void;
+  embedded?: boolean;
 };
 
 export function InstructorRecordsManager({
   users,
   onEditAppAccount,
+  embedded = false,
 }: InstructorRecordsManagerProps) {
   const instructors = filterInstructorRecordUsers(users);
 
   return (
-    <section className="mt-10 space-y-6">
-      <div className="flex items-start gap-3">
-        <UserCog className="h-8 w-8 text-driving-primary shrink-0 mt-1" />
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Instructors</h2>
-          <p className="text-gray-600 mt-1 max-w-3xl">
-            Instructor operational profiles are linked to app login accounts.
-            Each instructor has a User account and an Instructor record with
-            license details. To grant access for a new instructor, use the{" "}
-            <strong>Invitations</strong> section below (role Instructor).
-          </p>
+    <section className={embedded ? "space-y-6" : "mt-10 space-y-6"}>
+      {!embedded ? (
+        <div className="flex items-start gap-3">
+          <UserCog className="h-8 w-8 text-driving-primary shrink-0 mt-1" />
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Instructors</h2>
+            <p className="text-gray-600 mt-1 max-w-3xl">
+              Instructor operational profiles are linked to app login accounts.
+              Each instructor has a User account and an Instructor record with
+              license details. To grant access for a new instructor, use the{" "}
+              <strong>Invitations</strong> tab (role Instructor).
+            </p>
+          </div>
         </div>
-      </div>
+      ) : (
+        <p className="text-sm text-gray-600 max-w-3xl">
+          Instructor operational profiles are linked to app login accounts. Each
+          instructor has a User account and an Instructor record with license
+          details. To grant access for a new instructor, use the{" "}
+          <strong>Invitations</strong> tab.
+        </p>
+      )}
 
       <Card>
         <CardHeader>
@@ -47,8 +58,8 @@ export function InstructorRecordsManager({
         <CardContent>
           {instructors.length === 0 ? (
             <p className="text-sm text-gray-500">
-              No instructors registered yet. Create an instructor app account
-              below or send an invitation with role Instructor.
+              No instructors registered yet. Create an instructor app account in
+              App accounts or send an invitation from the Invitations tab.
             </p>
           ) : (
             <div className="space-y-3">

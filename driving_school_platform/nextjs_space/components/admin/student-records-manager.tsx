@@ -114,7 +114,13 @@ function studentToForm(student: StudentRecordDto) {
   };
 }
 
-export function StudentRecordsManager() {
+type StudentRecordsManagerProps = {
+  embedded?: boolean;
+};
+
+export function StudentRecordsManager({
+  embedded = false,
+}: StudentRecordsManagerProps = {}) {
   const [students, setStudents] = useState<StudentRecordDto[]>([]);
   const [searchInput, setSearchInput] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
@@ -547,17 +553,25 @@ export function StudentRecordsManager() {
   );
 
   return (
-    <section className="mt-10 space-y-6">
-      <div className="flex items-start gap-3">
-        <GraduationCap className="h-8 w-8 text-driving-primary shrink-0 mt-1" />
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Students</h2>
-          <p className="text-gray-600 mt-1">
-            School operational student records (with or without an app account).
-            The official ID has 5 digits (enrollment year + enrollment number).
-          </p>
+    <section className={embedded ? "space-y-6" : "mt-10 space-y-6"}>
+      {!embedded ? (
+        <div className="flex items-start gap-3">
+          <GraduationCap className="h-8 w-8 text-driving-primary shrink-0 mt-1" />
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Students</h2>
+            <p className="text-gray-600 mt-1">
+              School operational student records (with or without an app
+              account). The official ID has 5 digits (enrollment year +
+              enrollment number).
+            </p>
+          </div>
         </div>
-      </div>
+      ) : (
+        <p className="text-sm text-gray-600 max-w-3xl">
+          School operational student records (with or without an app account).
+          The official ID has 5 digits (enrollment year + enrollment number).
+        </p>
+      )}
 
       <Card>
         <CardHeader>

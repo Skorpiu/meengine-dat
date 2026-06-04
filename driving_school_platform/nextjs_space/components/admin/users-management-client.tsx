@@ -25,6 +25,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Users, UserPlus, Trash2, CheckCircle, Edit2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InvitationsManagementClient } from "@/components/admin/invitations-management-client";
 import { StudentRecordsManager } from "@/components/admin/student-records-manager";
 import { InstructorRecordsManager } from "@/components/admin/instructor-records-manager";
@@ -591,11 +592,11 @@ export function UsersManagementClient({
         <h1 className="text-3xl font-bold text-gray-900">People</h1>
         <p className="text-gray-600 mt-2 max-w-3xl">
           Manage school operational student records, instructor profiles, and
-          app login accounts. <strong>Student records</strong> can exist with or
-          without an app account; <strong>instructors</strong> are always linked
-          to an app account and operational license data;{" "}
-          <strong>app accounts</strong> below manage login credentials and
-          access.
+          app login accounts. Use the tabs below: <strong>Students</strong> and{" "}
+          <strong>Instructors</strong> for operational work and invitations;{" "}
+          <strong>App accounts</strong> for login credentials when needed.
+          Student records can exist with or without an app account; instructors
+          are always linked to an app account and license data.
         </p>
       </div>
 
@@ -621,144 +622,187 @@ export function UsersManagementClient({
         </DialogContent>
       </Dialog>
 
-      {/* Primary: operational student records */}
-      <StudentRecordsManager />
+      <Tabs defaultValue="students" className="space-y-6">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
+          <TabsTrigger value="students">Students</TabsTrigger>
+          <TabsTrigger value="instructors">Instructors</TabsTrigger>
+          <TabsTrigger value="app-accounts">App accounts</TabsTrigger>
+        </TabsList>
 
-      {/* Instructors: operational profiles (app-account-linked) */}
-      <InstructorRecordsManager
-        users={users}
-        onEditAppAccount={(instructorUser) => {
-          const fullUser = users.find((u) => u.id === instructorUser.id);
-          if (fullUser) openEditDialog(fullUser);
-        }}
-      />
+        <TabsContent value="students" className="space-y-6">
+          <Tabs defaultValue="records" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="records">Records</TabsTrigger>
+              <TabsTrigger value="invitations">Invitations</TabsTrigger>
+            </TabsList>
+            <TabsContent value="records">
+              <StudentRecordsManager embedded />
+            </TabsContent>
+            <TabsContent value="invitations" className="space-y-4">
+              <p className="text-sm text-gray-600 max-w-3xl">
+                Review or create student invitations for app access. When the
+                student record already exists, prefer{" "}
+                <strong>Send invitation</strong> on the student row in{" "}
+                <strong>Records</strong> so the invite links to the correct
+                operational record.
+              </p>
+              <InvitationsManagementClient
+                roleFilter="STUDENT"
+                defaultRole="STUDENT"
+                embedded
+              />
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
 
-      {/* Summary stats for app accounts */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
-        <Card className="hover-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Student app accounts
-            </CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {stats.totalStudents}
-            </div>
-          </CardContent>
-        </Card>
+        <TabsContent value="instructors" className="space-y-6">
+          <Tabs defaultValue="profiles" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="profiles">Profiles</TabsTrigger>
+              <TabsTrigger value="invitations">Invitations</TabsTrigger>
+            </TabsList>
+            <TabsContent value="profiles">
+              <InstructorRecordsManager
+                users={users}
+                embedded
+                onEditAppAccount={(instructorUser) => {
+                  const fullUser = users.find(
+                    (u) => u.id === instructorUser.id,
+                  );
+                  if (fullUser) openEditDialog(fullUser);
+                }}
+              />
+            </TabsContent>
+            <TabsContent value="invitations" className="space-y-4">
+              <p className="text-sm text-gray-600 max-w-3xl">
+                Review or create instructor invitations for app access. Use this
+                tab for instructor invites; student invites belong under
+                Students.
+              </p>
+              <InvitationsManagementClient
+                roleFilter="INSTRUCTOR"
+                defaultRole="INSTRUCTOR"
+                embedded
+              />
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
 
-        <Card className="hover-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Instructor app accounts
-            </CardTitle>
-            <Users className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {stats.totalInstructors}
-            </div>
-          </CardContent>
-        </Card>
+        <TabsContent value="app-accounts" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="hover-card">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Student app accounts
+                </CardTitle>
+                <Users className="h-4 w-4 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">
+                  {stats.totalStudents}
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="hover-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total app accounts
-            </CardTitle>
-            <CheckCircle className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {stats.totalUsers}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Card className="hover-card">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Instructor app accounts
+                </CardTitle>
+                <Users className="h-4 w-4 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {stats.totalInstructors}
+                </div>
+              </CardContent>
+            </Card>
 
-      {/* Secondary: app login accounts */}
-      <Card className="border-gray-200 bg-gray-50/40">
-        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-lg text-gray-800">
-              App accounts
-            </CardTitle>
-            <p className="text-sm text-gray-600 font-normal max-w-2xl">
-              App login credentials and access management. Instructor
-              operational details are listed in Instructors above. A student
-              record can exist without an app account; creating an account here
-              does not replace the student record in Students above.
-            </p>
+            <Card className="hover-card">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Total app accounts
+                </CardTitle>
+                <CheckCircle className="h-4 w-4 text-purple-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-purple-600">
+                  {stats.totalUsers}
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <Dialog
-            open={isCreateDialogOpen}
-            onOpenChange={(open) => {
-              setIsCreateDialogOpen(open);
-              if (!open) resetForm();
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button className="bg-driving-primary hover:bg-driving-primary/90 shrink-0">
-                <UserPlus className="w-4 h-4 mr-2" />
-                New account
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>New app account</DialogTitle>
-                <DialogDescription>
-                  Create login credentials for a student or instructor (does not
-                  create an operational student record automatically).
-                </DialogDescription>
-              </DialogHeader>
-              {renderUserForm(false)}
-            </DialogContent>
-          </Dialog>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          {users.length === 0 ? (
-            <p className="text-sm text-gray-500">No app accounts.</p>
-          ) : (
-            <>
-              {instructorAccounts.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-gray-700">
-                    Instructors
-                  </h3>
-                  <div className="space-y-4">
-                    {instructorAccounts.map(renderAccountRow)}
-                  </div>
-                </div>
-              )}
-              {studentAccounts.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-gray-700">
-                    Students (with app account)
-                  </h3>
-                  <div className="space-y-4">
-                    {studentAccounts.map(renderAccountRow)}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
 
-      <section
-        className="mt-10 pt-8 border-t border-gray-200"
-        aria-label="Invitations for app access"
-      >
-        <p className="text-sm text-gray-500 mb-4 max-w-3xl">
-          Invitations grant app access by email. For student records, prefer{" "}
-          <strong>Send invitation</strong> on the student row above so the
-          invite links to the correct operational record. Use this section for
-          instructor invites or other cases not covered by a student record yet.
-        </p>
-        <InvitationsManagementClient />
-      </section>
+          <Card className="border-gray-200 bg-gray-50/40">
+            <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-lg text-gray-800">
+                  App accounts
+                </CardTitle>
+                <p className="text-sm text-gray-600 font-normal max-w-2xl">
+                  App login credentials and access management. Instructor
+                  operational details are under Instructors → Profiles. A
+                  student record can exist without an app account; creating an
+                  account here does not replace the student record under
+                  Students → Records.
+                </p>
+              </div>
+              <Dialog
+                open={isCreateDialogOpen}
+                onOpenChange={(open) => {
+                  setIsCreateDialogOpen(open);
+                  if (!open) resetForm();
+                }}
+              >
+                <DialogTrigger asChild>
+                  <Button className="bg-driving-primary hover:bg-driving-primary/90 shrink-0">
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    New account
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>New app account</DialogTitle>
+                    <DialogDescription>
+                      Create login credentials for a student or instructor (does
+                      not create an operational student record automatically).
+                    </DialogDescription>
+                  </DialogHeader>
+                  {renderUserForm(false)}
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              {users.length === 0 ? (
+                <p className="text-sm text-gray-500">No app accounts.</p>
+              ) : (
+                <>
+                  {instructorAccounts.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-semibold text-gray-700">
+                        Instructors
+                      </h3>
+                      <div className="space-y-4">
+                        {instructorAccounts.map(renderAccountRow)}
+                      </div>
+                    </div>
+                  )}
+                  {studentAccounts.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-semibold text-gray-700">
+                        Students (with app account)
+                      </h3>
+                      <div className="space-y-4">
+                        {studentAccounts.map(renderAccountRow)}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </>
   );
 }

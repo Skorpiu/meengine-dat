@@ -1,9 +1,37 @@
 import { describe, it, expect } from "vitest";
 import {
+  filterInvitationsByRole,
   formatInvitationDateTime,
   invitationApiErrorMessage,
   invitationStatusLabel,
 } from "./invitation-ui-utils";
+import type { InvitationDto } from "./invitation-dto";
+
+describe("filterInvitationsByRole", () => {
+  const base = {
+    id: "inv-1",
+    studentId: null,
+    email: "a@example.com",
+    status: "PENDING" as const,
+    expiresAt: "2026-06-01T00:00:00.000Z",
+    acceptedAt: null,
+    revokedAt: null,
+    createdAt: "2026-05-01T00:00:00.000Z",
+    updatedAt: "2026-05-01T00:00:00.000Z",
+    createdBy: null,
+    acceptedUser: null,
+  };
+
+  it("returns only invitations matching the role", () => {
+    const invitations: InvitationDto[] = [
+      { ...base, id: "1", role: "STUDENT" },
+      { ...base, id: "2", role: "INSTRUCTOR" },
+      { ...base, id: "3", role: "STUDENT" },
+    ];
+    expect(filterInvitationsByRole(invitations, "STUDENT")).toHaveLength(2);
+    expect(filterInvitationsByRole(invitations, "INSTRUCTOR")).toHaveLength(1);
+  });
+});
 
 describe("formatInvitationDateTime", () => {
   it("formats a valid ISO timestamp", () => {
