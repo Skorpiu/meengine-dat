@@ -91,5 +91,5 @@ export function getStudentAppAccessDetailLines(
 }
 
 export function getStudentInvitedWithoutPendingHelp(): string {
-  return "Marked as invitation pending, but no active pending invitation was found. Check the Invitations section below or send a new invitation after resolving any duplicate email invites.";
+  return "Marked as invitation pending, but no active pending invitation was found. Check Students → Onboarding or send a new invitation after resolving any duplicate email invites.";
 }

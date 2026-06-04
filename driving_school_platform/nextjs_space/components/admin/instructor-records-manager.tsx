@@ -38,16 +38,14 @@ export function InstructorRecordsManager({
               Instructor operational profiles are linked to app login accounts.
               Each instructor has a User account and an Instructor record with
               license details. To grant access for a new instructor, use the{" "}
-              <strong>Invitations</strong> tab (role Instructor).
+              <strong>Onboarding</strong> tab.
             </p>
           </div>
         </div>
       ) : (
         <p className="text-sm text-gray-600 max-w-3xl">
-          Instructor operational profiles are linked to app login accounts. Each
-          instructor has a User account and an Instructor record with license
-          details. To grant access for a new instructor, use the{" "}
-          <strong>Invitations</strong> tab.
+          Registered instructors — license and app account status. Add new
+          instructors under <strong>Onboarding</strong>.
         </p>
       )}
 
@@ -58,8 +56,8 @@ export function InstructorRecordsManager({
         <CardContent>
           {instructors.length === 0 ? (
             <p className="text-sm text-gray-500">
-              No instructors registered yet. Create an instructor app account in
-              App accounts or send an invitation from the Invitations tab.
+              No instructors registered yet. Add an instructor under{" "}
+              <strong>Onboarding</strong>.
             </p>
           ) : (
             <div className="space-y-3">

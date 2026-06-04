@@ -51,7 +51,6 @@ import type {
   StudentRecordsListResponse,
 } from "@/lib/students/student-record-ui-types";
 import {
-  buildManualStudentCreatePayload,
   buildManualStudentPatchPayload,
   canSendStudentRecordInvite,
   canShowStudentRecordDeleteAction,
@@ -99,6 +98,8 @@ const emptyForm = () => ({
   enrollmentDate: "",
 });
 
+type StudentRecordFormState = ReturnType<typeof emptyForm>;
+
 function studentToForm(student: StudentRecordDto) {
   return {
     yearSuffix: student.schoolStudentYearSuffix ?? "",
@@ -129,9 +130,6 @@ export function StudentRecordsManager({
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const [createForm, setCreateForm] = useState(emptyForm);
-  const [createLoading, setCreateLoading] = useState(false);
-
   const [editingStudent, setEditingStudent] = useState<StudentRecordDto | null>(
     null,
   );
@@ -153,12 +151,6 @@ export function StudentRecordsManager({
   const [revokingInvitationId, setRevokingInvitationId] = useState<
     string | null
   >(null);
-
-  const createPreviewId = useMemo(
-    () =>
-      previewSchoolStudentId(createForm.yearSuffix, createForm.sequenceNumber),
-    [createForm.yearSuffix, createForm.sequenceNumber],
-  );
 
   const editPreviewId = useMemo(
     () => previewSchoolStudentId(editForm.yearSuffix, editForm.sequenceNumber),
@@ -253,46 +245,6 @@ export function StudentRecordsManager({
       toast.success(`Download started (${result.filename}).`);
     } finally {
       setExportingFormat(null);
-    }
-  };
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const payload = buildManualStudentCreatePayload(createForm);
-    if ("error" in payload) {
-      toast.error(studentRecordApiErrorMessage(payload.error, "Invalid data."));
-      return;
-    }
-
-    setCreateLoading(true);
-    try {
-      const response = await fetch("/api/admin/students", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await tryReadJson<
-        StudentRecordMutationResponse | StudentRecordApiError
-      >(response);
-
-      if (!response.ok) {
-        const err = data as StudentRecordApiError | null;
-        toast.error(
-          studentRecordApiErrorMessage(
-            err?.code,
-            err?.error || "Failed to create student record",
-          ),
-        );
-        return;
-      }
-
-      toast.success("Student record created successfully.");
-      setCreateForm(emptyForm());
-      await loadStudents({ search: appliedSearch });
-    } catch {
-      toast.error("An error occurred while creating the student record.");
-    } finally {
-      setCreateLoading(false);
     }
   };
 
@@ -445,8 +397,8 @@ export function StudentRecordsManager({
   };
 
   const renderIdFields = (
-    form: typeof createForm,
-    setForm: React.Dispatch<React.SetStateAction<typeof createForm>>,
+    form: StudentRecordFormState,
+    setForm: React.Dispatch<React.SetStateAction<StudentRecordFormState>>,
     previewId: string | null,
   ) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -484,8 +436,8 @@ export function StudentRecordsManager({
   );
 
   const renderContactFields = (
-    form: typeof createForm,
-    setForm: React.Dispatch<React.SetStateAction<typeof createForm>>,
+    form: StudentRecordFormState,
+    setForm: React.Dispatch<React.SetStateAction<StudentRecordFormState>>,
     idPrefix: string,
   ) => (
     <>
@@ -568,29 +520,10 @@ export function StudentRecordsManager({
         </div>
       ) : (
         <p className="text-sm text-gray-600 max-w-3xl">
-          School operational student records (with or without an app account).
-          The official ID has 5 digits (enrollment year + enrollment number).
+          Registered student records — search, import/export, and row actions.
+          Create new records under <strong>Onboarding</strong>.
         </p>
       )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">New manual student record</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreate} className="space-y-4">
-            {renderIdFields(createForm, setCreateForm, createPreviewId)}
-            {renderContactFields(createForm, setCreateForm, "create")}
-            <Button
-              type="submit"
-              disabled={createLoading}
-              className="bg-driving-primary hover:bg-driving-primary/90"
-            >
-              {createLoading ? "Creating…" : "Create student record"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader className="flex flex-col gap-4">

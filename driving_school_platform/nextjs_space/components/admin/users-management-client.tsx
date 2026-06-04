@@ -27,6 +27,8 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InvitationsManagementClient } from "@/components/admin/invitations-management-client";
+import { InstructorAccountCreateForm } from "@/components/admin/instructor-account-create-form";
+import { StudentManualRecordCreateForm } from "@/components/admin/student-manual-record-create-form";
 import { StudentRecordsManager } from "@/components/admin/student-records-manager";
 import { InstructorRecordsManager } from "@/components/admin/instructor-records-manager";
 
@@ -591,12 +593,12 @@ export function UsersManagementClient({
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">People</h1>
         <p className="text-gray-600 mt-2 max-w-3xl">
-          Manage school operational student records, instructor profiles, and
-          app login accounts. Use the tabs below: <strong>Students</strong> and{" "}
-          <strong>Instructors</strong> for operational work and invitations;{" "}
-          <strong>App accounts</strong> for login credentials when needed.
-          Student records can exist with or without an app account; instructors
-          are always linked to an app account and license data.
+          Manage school operational student records and instructor profiles. Use{" "}
+          <strong>Records</strong> / <strong>Profiles</strong> for existing
+          people; <strong>Onboarding</strong> to add records, create instructor
+          accounts, or send invitations. <strong>App accounts</strong> remains
+          available for advanced login management until row-level actions are
+          added.
         </p>
       </div>
 
@@ -633,19 +635,23 @@ export function UsersManagementClient({
           <Tabs defaultValue="records" className="space-y-6">
             <TabsList>
               <TabsTrigger value="records">Records</TabsTrigger>
-              <TabsTrigger value="invitations">Invitations</TabsTrigger>
+              <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
             </TabsList>
             <TabsContent value="records">
               <StudentRecordsManager embedded />
             </TabsContent>
-            <TabsContent value="invitations" className="space-y-4">
+            <TabsContent value="onboarding" className="space-y-6">
               <p className="text-sm text-gray-600 max-w-3xl">
-                Review or create student invitations for app access. When the
-                student record already exists, prefer{" "}
-                <strong>Send invitation</strong> on the student row in{" "}
+                Add learners to the school: create a{" "}
+                <strong>manual student record</strong> when they exist
+                operationally but do not need app access yet, or use{" "}
+                <strong>invitations</strong> when they should access the app.
+                When a student record already exists, prefer{" "}
+                <strong>Send invitation</strong> on the row in{" "}
                 <strong>Records</strong> so the invite links to the correct
-                operational record.
+                record.
               </p>
+              <StudentManualRecordCreateForm />
               <InvitationsManagementClient
                 roleFilter="STUDENT"
                 defaultRole="STUDENT"
@@ -659,7 +665,7 @@ export function UsersManagementClient({
           <Tabs defaultValue="profiles" className="space-y-6">
             <TabsList>
               <TabsTrigger value="profiles">Profiles</TabsTrigger>
-              <TabsTrigger value="invitations">Invitations</TabsTrigger>
+              <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
             </TabsList>
             <TabsContent value="profiles">
               <InstructorRecordsManager
@@ -673,12 +679,14 @@ export function UsersManagementClient({
                 }}
               />
             </TabsContent>
-            <TabsContent value="invitations" className="space-y-4">
+            <TabsContent value="onboarding" className="space-y-6">
               <p className="text-sm text-gray-600 max-w-3xl">
-                Review or create instructor invitations for app access. Use this
-                tab for instructor invites; student invites belong under
-                Students.
+                Add instructors: <strong>New instructor</strong> creates an app
+                login and operational profile with license details now. Use{" "}
+                <strong>invitations</strong> when the instructor should register
+                themselves via email instead.
               </p>
+              <InstructorAccountCreateForm />
               <InvitationsManagementClient
                 roleFilter="INSTRUCTOR"
                 defaultRole="INSTRUCTOR"
@@ -689,6 +697,11 @@ export function UsersManagementClient({
         </TabsContent>
 
         <TabsContent value="app-accounts" className="space-y-6">
+          <p className="text-sm text-gray-500 max-w-3xl">
+            Advanced login management — use <strong>Onboarding</strong> for new
+            students and instructors where possible. This tab will be simplified
+            once account actions are available on each person row.
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="hover-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -740,11 +753,11 @@ export function UsersManagementClient({
                   App accounts
                 </CardTitle>
                 <p className="text-sm text-gray-600 font-normal max-w-2xl">
-                  App login credentials and access management. Instructor
-                  operational details are under Instructors → Profiles. A
-                  student record can exist without an app account; creating an
-                  account here does not replace the student record under
-                  Students → Records.
+                  Secondary login credentials management. Prefer Students →
+                  Onboarding or Instructors → Onboarding for new people.
+                  Creating a student account here also creates a linked student
+                  profile — it does not replace a manual record under Students →
+                  Records.
                 </p>
               </div>
               <Dialog
