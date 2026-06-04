@@ -32,10 +32,20 @@ function baseStudent(
 }
 
 describe("getStudentAppAccessLabel", () => {
-  it("uses English labels", () => {
-    expect(getStudentAppAccessLabel("MANUAL_ONLY")).toBe("No app account");
-    expect(getStudentAppAccessLabel("INVITED")).toBe("Invitation pending");
-    expect(getStudentAppAccessLabel("APP_USER")).toBe("App account linked");
+  it("uses English profile app access labels", () => {
+    expect(getStudentAppAccessLabel("MANUAL_ONLY")).toBe("No app access");
+    expect(getStudentAppAccessLabel("INVITED")).toBe("Invite pending");
+    expect(
+      getStudentAppAccessLabel("INVITED", {
+        pendingInvitation: {
+          invitationId: "inv-1",
+          email: "a@b.test",
+          expiresAt: "2099-01-01T00:00:00.000Z",
+          status: "PENDING",
+        },
+      }),
+    ).toBe("Pending invite");
+    expect(getStudentAppAccessLabel("APP_USER")).toBe("App access");
   });
 });
 

@@ -103,7 +103,7 @@ pnpm exec prisma migrate status
 
 **IA v1 (done):** `people-management-information-architecture-v1` — Admin **People** hub at `/admin/users` (route unchanged); page prioritizes **Students / Registered student records**; **Instructors** section (read-only operational view); flat login list labeled **App accounts**; helper copy for student record vs app account vs instructor. **Invitations-on-record v1 (done):** `people-management-ux-unification-invitations-v1` — Send/Revoke on student row, `pendingInvitation` in list API, English access copy on invitation slice; global Invitations section retained for instructors. **Instructors section v1 (done):** `people-management-ux-unification-instructors-section-v1` — first-class Instructors block on same page; no route split.
 
-**People UX (tabs + onboarding reframe done):** **`people-management-internal-tabs-v1`** — L1 tabs (Students, Instructors, App accounts); L2 **Records/Onboarding** and **Profiles/Onboarding**; **`people-management-onboarding-reframe-v1`** — manual student create + instructor create + invitations under Onboarding; App accounts tab retained (demoted copy). **`people-management-ux-unification-instructor-route-split-v1`** remains **deferred (D4)**. Broader polish split: status badges, row app access, app-accounts demote, instructor search/import/export (see roadmap).
+**People UX (tabs + profiles polish done):** **`people-management-internal-tabs-v1`** — L1 tabs; **`people-management-onboarding-reframe-v1`** — Onboarding flows; **`people-management-profiles-status-and-pagination-v1`** — Students → **Profiles**, profile origin + app-access badges, label guide, list limit 15 + Load more, instructor client search + Load more, Pending invitations copy (list retained). **`people-management-record-status-badges-v1`** absorbed by profiles batch. App accounts tab retained. **`people-management-ux-unification-instructor-route-split-v1`** **deferred (D4)**. Next polish: row app access, app-accounts demote, unlinked invitations section, instructor invite on profile (see roadmap).
 
 Student records **export/import** UI on registered student records is implemented (`import-export-ui-students-export-v1`, `import-export-ui-students-import-dry-run-v1`, `import-export-ui-students-import-apply-v1`).
 
@@ -167,11 +167,12 @@ Documented and in use (docs/rules only; no runtime change):
 - `product-roadmap-and-platform-boundary-sync-v1` — Docs-only product hub (`docs/product/`), [decision-log.md](./decision-log.md), DAT vs Platform boundary, packaging intent, People tabs-before-split, Super-Agent Product Strategy Protocol. No runtime changes. Validated via `pnpm check`.
 - `people-management-internal-tabs-v1` — Internal tabs on `/admin/users` (Students/Records+Invitations, Instructors/Profiles+Invitations, App accounts); `InvitationsManagementClient` `roleFilter` client-side; row-level student Send/Revoke preserved; `page.tsx`/SSR unchanged. Validated via `pnpm check`.
 - `people-management-onboarding-reframe-v1` — L2 **Onboarding** subtabs; `StudentManualRecordCreateForm` + `InstructorAccountCreateForm`; Records/Profiles list-only focus; App accounts secondary copy; no API/schema changes. Validated via `pnpm check`.
+- `people-management-profiles-status-and-pagination-v1` — Students → **Profiles** tab; profile origin + app-access badges + collapsible label guide; student list `limit=15` + server Load more; instructor client search + 15/page Load more; **Pending invitations** Onboarding copy (list not removed); absorbs `people-management-record-status-badges-v1` and `instructor-people-search-v1` UI scope. No API/schema/SSR tenant changes. Validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
-1. `people-management-record-status-badges-v1` — record/access badges on student (and later instructor) rows
-2. `people-management-row-app-access-v1` — row-level edit/remove app account before demoting App accounts tab
+1. `people-management-row-app-access-v1` — row-level edit/remove app account before demoting App accounts tab
+2. `people-management-onboarding-unlinked-invitations-v1` — dedicated unlinked pending invitations section (list removal still deferred)
 3. `admin-settings-client-visibility-review-v1` — review hiding/demoting Settings for school admins (product/packaging P1)
 2. `tenant-operational-organization-id-not-null-readiness-review-v1` — operator/docs review for NOT NULL migrations when NULL counts stay at zero (no apply batch needed yet)
 3. `supabase-rls-class-b-hardening-v1b` — **deferred (D4):** optional RLS + REVOKE on remaining internal tables — separate approval

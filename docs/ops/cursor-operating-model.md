@@ -145,7 +145,21 @@ In analysis and final reports, label content explicitly where helpful:
 | Current posture | [current-state.md](../architecture/current-state.md) |
 | Product narrative | [docs/product/](../product/) |
 
-Keep **roadmap**, **current-state**, and **architect-mode** hints consistent after a docs batch (Memory Consistency Gate).
+Keep **roadmap**, **current-state**, and **architect-mode** hints consistent after a docs batch (Memory Consistency Gate). When backlog or **Done** slices change, update those three (and [decision-log.md](../architecture/decision-log.md) when the decision is durable) in the **same batch** as the implementation or an explicit docs sync batch — do not leave Super-Agent memory stale.
+
+### Manual local QA command battery (People / admin UI batches)
+
+When a batch final report includes a **manual QA checklist**, Cursor must include these **exact** commands (Git Bash paths as written; Rui may run from any shell that reaches the directory):
+
+```bash
+cd ~/Downloads/Projects/driving-academy-tool/driving_school_platform/nextjs_space
+pnpm dev
+```
+
+Also state:
+
+- Stop the dev server with **Ctrl+C**.
+- If the terminal shows `Terminate batch job (Y/N)?`, press **Y** then **Enter**.
 
 ### Gates (unchanged — do not over-tighten)
 

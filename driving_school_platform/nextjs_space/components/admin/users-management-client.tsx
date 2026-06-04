@@ -593,9 +593,9 @@ export function UsersManagementClient({
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">People</h1>
         <p className="text-gray-600 mt-2 max-w-3xl">
-          Manage school operational student records and instructor profiles. Use{" "}
-          <strong>Records</strong> / <strong>Profiles</strong> for existing
-          people; <strong>Onboarding</strong> to add records, create instructor
+          Manage school student profiles and instructor profiles. Use{" "}
+          <strong>Profiles</strong> to find people (search first);{" "}
+          <strong>Onboarding</strong> to add profiles, create instructor
           accounts, or send invitations. <strong>App accounts</strong> remains
           available for advanced login management until row-level actions are
           added.
@@ -632,24 +632,24 @@ export function UsersManagementClient({
         </TabsList>
 
         <TabsContent value="students" className="space-y-6">
-          <Tabs defaultValue="records" className="space-y-6">
+          <Tabs defaultValue="profiles" className="space-y-6">
             <TabsList>
-              <TabsTrigger value="records">Records</TabsTrigger>
+              <TabsTrigger value="profiles">Profiles</TabsTrigger>
               <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
             </TabsList>
-            <TabsContent value="records">
+            <TabsContent value="profiles">
               <StudentRecordsManager embedded />
             </TabsContent>
             <TabsContent value="onboarding" className="space-y-6">
               <p className="text-sm text-gray-600 max-w-3xl">
                 Add learners to the school: create a{" "}
-                <strong>manual student record</strong> when they exist
+                <strong>manual student profile</strong> when they exist
                 operationally but do not need app access yet, or use{" "}
-                <strong>invitations</strong> when they should access the app.
-                When a student record already exists, prefer{" "}
+                <strong>pending invitations</strong> below when they should
+                register via email. When a profile already exists, prefer{" "}
                 <strong>Send invitation</strong> on the row in{" "}
-                <strong>Records</strong> so the invite links to the correct
-                record.
+                <strong>Profiles</strong> so the invite links to the correct
+                profile.
               </p>
               <StudentManualRecordCreateForm />
               <InvitationsManagementClient
@@ -756,8 +756,8 @@ export function UsersManagementClient({
                   Secondary login credentials management. Prefer Students →
                   Onboarding or Instructors → Onboarding for new people.
                   Creating a student account here also creates a linked student
-                  profile — it does not replace a manual record under Students →
-                  Records.
+                  profile — it does not replace a manual profile under Students
+                  → Profiles.
                 </p>
               </div>
               <Dialog

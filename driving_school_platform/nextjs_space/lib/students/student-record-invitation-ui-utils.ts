@@ -3,18 +3,18 @@ import type {
   StudentRecordDto,
   StudentRecordPendingInvitationDto,
 } from "@/lib/students/student-record-ui-types";
+import { getStudentAppAccessStatusLabel } from "@/lib/students/student-profile-label-utils";
 
-export function getStudentAppAccessLabel(mode: StudentAppAccessMode): string {
-  switch (mode) {
-    case "MANUAL_ONLY":
-      return "No app account";
-    case "INVITED":
-      return "Invitation pending";
-    case "APP_USER":
-      return "App account linked";
-    default:
-      return mode;
-  }
+export function getStudentAppAccessLabel(
+  mode: StudentAppAccessMode,
+  options?: {
+    pendingInvitation?: StudentRecordPendingInvitationDto | null;
+  },
+): string {
+  return getStudentAppAccessStatusLabel({
+    appAccessMode: mode,
+    pendingInvitation: options?.pendingInvitation ?? null,
+  });
 }
 
 export function formatPendingInvitationExpiry(
@@ -91,5 +91,5 @@ export function getStudentAppAccessDetailLines(
 }
 
 export function getStudentInvitedWithoutPendingHelp(): string {
-  return "Marked as invitation pending, but no active pending invitation was found. Check Students → Onboarding or send a new invitation after resolving any duplicate email invites.";
+  return "Marked as invite pending, but no active pending invitation was found. Check Students → Onboarding or send a new invitation after resolving any duplicate email invites.";
 }

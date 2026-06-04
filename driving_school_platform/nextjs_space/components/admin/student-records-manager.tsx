@@ -63,8 +63,15 @@ import {
 import {
   canRevokeStudentRecordInvitation,
   getStudentAppAccessDetailLines,
-  getStudentAppAccessLabel,
 } from "@/lib/students/student-record-invitation-ui-utils";
+import { getStudentProfileRowBadges } from "@/lib/students/student-profile-label-utils";
+import { PeopleProfileLabelGuide } from "@/components/admin/people-profile-label-guide";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { invitationApiErrorMessage } from "@/lib/invitations/invitation-ui-utils";
 import { StudentPracticalHistoryDialog } from "@/components/admin/student-practical-history-dialog";
 import { StudentRecordInviteDialog } from "@/components/admin/student-record-invite-dialog";
@@ -74,7 +81,7 @@ import {
   type StudentRecordsExportFormat,
 } from "@/lib/students/student-records-export-client";
 
-const LIST_LIMIT = 100;
+const LIST_LIMIT = 15;
 
 async function tryReadJson<T>(response: Response): Promise<T | null> {
   const contentType = response.headers.get("content-type") || "";
@@ -512,25 +519,24 @@ export function StudentRecordsManager({
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Students</h2>
             <p className="text-gray-600 mt-1">
-              School operational student records (with or without an app
-              account). The official ID has 5 digits (enrollment year +
-              enrollment number).
+              School operational student profiles (with or without app access).
+              The official ID has 5 digits (enrollment year + enrollment
+              number).
             </p>
           </div>
         </div>
       ) : (
         <p className="text-sm text-gray-600 max-w-3xl">
-          Registered student records — search, import/export, and row actions.
-          Create new records under <strong>Onboarding</strong>.
+          Student profiles — search is the fastest way to find someone;
+          import/export and row actions are available below. Create new profiles
+          under <strong>Onboarding</strong>.
         </p>
       )}
 
       <Card>
         <CardHeader className="flex flex-col gap-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="text-lg">
-              Registered student records
-            </CardTitle>
+            <CardTitle className="text-lg">Student profiles</CardTitle>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2 w-full sm:w-auto">
               <form
                 onSubmit={handleSearch}
@@ -597,9 +603,10 @@ export function StudentRecordsManager({
             </div>
           </div>
           <p className="text-xs text-gray-500">
-            Export includes all student records matching the current search, not
-            only the rows shown on this page.
+            Export includes all student profiles matching the current search,
+            not only the rows shown on this page.
           </p>
+          <PeopleProfileLabelGuide variant="student" />
         </CardHeader>
         <CardContent>
           {listError ? (
@@ -609,109 +616,120 @@ export function StudentRecordsManager({
           ) : null}
 
           {listLoading ? (
-            <p className="text-sm text-gray-500">Loading student records…</p>
+            <p className="text-sm text-gray-500">Loading student profiles…</p>
           ) : students.length === 0 ? (
             <p className="text-sm text-gray-500">
-              No student records found
+              No student profiles found
               {appliedSearch ? " for this search" : ""}.
             </p>
           ) : (
-            <div className="space-y-3">
-              {students.map((student) => (
-                <div
-                  key={student.id}
-                  className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50"
-                >
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-sm font-semibold text-driving-primary">
-                        {student.schoolStudentId ?? "—"}
-                      </span>
-                      <span className="font-medium">
-                        {getStudentRecordDisplayName(student)}
-                      </span>
-                    </div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      {student.phoneNumber || "No phone"}
-                      {student.email ? ` · ${student.email}` : ""}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Enrollment:{" "}
-                      {formatStudentRecordDate(student.enrollmentDate)}
-                    </div>
-                    <div className="mt-2 space-y-0.5">
+            <TooltipProvider delayDuration={300}>
+              <div className="space-y-3">
+                {students.map((student) => (
+                  <div
+                    key={student.id}
+                    className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50"
+                  >
+                    <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="outline">
-                          {getStudentAppAccessLabel(student.appAccessMode)}
-                        </Badge>
+                        <span className="font-mono text-sm font-semibold text-driving-primary">
+                          {student.schoolStudentId ?? "—"}
+                        </span>
+                        <span className="font-medium">
+                          {getStudentRecordDisplayName(student)}
+                        </span>
                       </div>
-                      {getStudentAppAccessDetailLines(student).map((line) => (
-                        <p key={line} className="text-xs text-gray-500">
-                          {line}
-                        </p>
-                      ))}
+                      <div className="text-sm text-gray-600 mt-1">
+                        {student.phoneNumber || "No phone"}
+                        {student.email ? ` · ${student.email}` : ""}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Enrollment:{" "}
+                        {formatStudentRecordDate(student.enrollmentDate)}
+                      </div>
+                      <div className="mt-2 space-y-0.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {getStudentProfileRowBadges(student).map((badge) => (
+                            <Tooltip key={badge.key}>
+                              <TooltipTrigger asChild>
+                                <Badge variant={badge.variant}>
+                                  {badge.label}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-xs">
+                                {badge.tooltip}
+                              </TooltipContent>
+                            </Tooltip>
+                          ))}
+                        </div>
+                        {getStudentAppAccessDetailLines(student).map((line) => (
+                          <p key={line} className="text-xs text-gray-500">
+                            {line}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 shrink-0">
+                      {canSendStudentRecordInvite(student) ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setInviteStudent(student)}
+                        >
+                          <MailPlus className="h-4 w-4 mr-1" />
+                          Send invitation
+                        </Button>
+                      ) : null}
+                      {canRevokeStudentRecordInvitation(student) ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          disabled={
+                            revokingInvitationId ===
+                            student.pendingInvitation?.invitationId
+                          }
+                          onClick={() => void handleRevokeInvitation(student)}
+                        >
+                          <UserX className="h-4 w-4 mr-1" />
+                          {revokingInvitationId ===
+                          student.pendingInvitation?.invitationId
+                            ? "Revoking…"
+                            : "Revoke invitation"}
+                        </Button>
+                      ) : null}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setHistoryStudent(student)}
+                      >
+                        <Car className="h-4 w-4 mr-1" />
+                        Practical lessons
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openEdit(student)}
+                      >
+                        <Edit2 className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                      {canShowStudentRecordDeleteAction(student) ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => setDeleteStudent(student)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Remove student record
+                        </Button>
+                      ) : null}
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 shrink-0">
-                    {canSendStudentRecordInvite(student) ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setInviteStudent(student)}
-                      >
-                        <MailPlus className="h-4 w-4 mr-1" />
-                        Send invitation
-                      </Button>
-                    ) : null}
-                    {canRevokeStudentRecordInvitation(student) ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        disabled={
-                          revokingInvitationId ===
-                          student.pendingInvitation?.invitationId
-                        }
-                        onClick={() => void handleRevokeInvitation(student)}
-                      >
-                        <UserX className="h-4 w-4 mr-1" />
-                        {revokingInvitationId ===
-                        student.pendingInvitation?.invitationId
-                          ? "Revoking…"
-                          : "Revoke invitation"}
-                      </Button>
-                    ) : null}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setHistoryStudent(student)}
-                    >
-                      <Car className="h-4 w-4 mr-1" />
-                      Practical lessons
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => openEdit(student)}
-                    >
-                      <Edit2 className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                    {canShowStudentRecordDeleteAction(student) ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => setDeleteStudent(student)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Remove student record
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </TooltipProvider>
           )}
 
           {nextCursor ? (
@@ -734,7 +752,7 @@ export function StudentRecordsManager({
 
           {!listLoading && students.length > 0 ? (
             <p className="text-xs text-gray-400 mt-4 text-center">
-              Showing up to {LIST_LIMIT} student records per page
+              Showing up to {LIST_LIMIT} student profiles per page
               {appliedSearch ? " (search active)" : ""}.
             </p>
           ) : null}
