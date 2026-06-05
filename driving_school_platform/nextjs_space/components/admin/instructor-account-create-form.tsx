@@ -253,13 +253,15 @@ export function InstructorAccountCreateForm({
             </div>
           </div>
 
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-driving-primary hover:bg-driving-primary/90"
-          >
-            {isLoading ? "Creating…" : "Create instructor"}
-          </Button>
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="bg-driving-primary hover:bg-driving-primary/90"
+            >
+              {isLoading ? "Creating…" : "Create Instructor"}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

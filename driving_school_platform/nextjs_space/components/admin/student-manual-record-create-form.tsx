@@ -109,13 +109,15 @@ export function StudentManualRecordCreateForm({
         <form onSubmit={handleCreate} className="space-y-4">
           {renderIdFields(createForm, setCreateForm, createPreviewId)}
           {renderContactFields(createForm, setCreateForm, "create")}
-          <Button
-            type="submit"
-            disabled={createLoading}
-            className="bg-driving-primary hover:bg-driving-primary/90"
-          >
-            {createLoading ? "Creating…" : "Create student record"}
-          </Button>
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={createLoading}
+              className="bg-driving-primary hover:bg-driving-primary/90"
+            >
+              {createLoading ? "Creating…" : "Create Student"}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>
