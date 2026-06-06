@@ -75,12 +75,6 @@ export function getStudentAppAccessDetailLines(
       break;
     }
     case "APP_USER": {
-      const accountEmail = student.user?.email?.trim();
-      if (accountEmail) {
-        lines.push(`App account: ${accountEmail}`);
-      } else {
-        lines.push("Linked to an app login account.");
-      }
       break;
     }
     default:

@@ -37,6 +37,21 @@ const STUDENT_ENTRIES = [
     label: "App access",
     description: "Linked to an app login account.",
   },
+  {
+    label: "Active app access / App access pending approval",
+    description:
+      "Compact app-access status for students with a linked login (shown instead of generic App access on APP_USER rows).",
+  },
+  {
+    label: "Automatic / Manual (transmission)",
+    description:
+      "Transmission type from the linked app account, when set in Edit Student → App access.",
+  },
+  {
+    label: "Category B / Categories A, B",
+    description:
+      "License categories on the linked app account, when available.",
+  },
 ] as const;
 
 const INSTRUCTOR_ENTRIES = [

@@ -104,7 +104,7 @@ describe("getStudentAppAccessDetailLines", () => {
     expect(lines[0]).toBe(getStudentInvitedWithoutPendingHelp());
   });
 
-  it("shows app account email for APP_USER", () => {
+  it("returns no detail lines for APP_USER (compact badges + row email)", () => {
     const lines = getStudentAppAccessDetailLines(
       baseStudent({
         appAccessMode: "APP_USER",
@@ -117,6 +117,6 @@ describe("getStudentAppAccessDetailLines", () => {
         },
       }),
     );
-    expect(lines[0]).toContain("linked@school.test");
+    expect(lines).toEqual([]);
   });
 });

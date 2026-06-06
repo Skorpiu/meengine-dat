@@ -638,7 +638,28 @@ export function UsersManagementClient({
               <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
             </TabsList>
             <TabsContent value="profiles">
-              <StudentRecordsManager embedded />
+              <StudentRecordsManager
+                embedded
+                categories={categories}
+                transmissionTypes={transmissionTypes}
+                getLinkedAppAccountDetails={(userId) => {
+                  const fullUser = users.find((u) => u.id === userId);
+                  if (!fullUser) return null;
+                  return {
+                    email: fullUser.email,
+                    isApproved: fullUser.isApproved,
+                    firstName: fullUser.firstName,
+                    lastName: fullUser.lastName,
+                    phoneNumber: fullUser.phoneNumber,
+                    address: fullUser.address,
+                    selectedCategories: fullUser.student?.category
+                      ? [fullUser.student.category.name]
+                      : [],
+                    transmissionType:
+                      fullUser.student?.transmissionType?.name ?? "",
+                  };
+                }}
+              />
             </TabsContent>
             <TabsContent value="onboarding" className="space-y-6">
               <p className="text-sm text-gray-600 max-w-3xl">

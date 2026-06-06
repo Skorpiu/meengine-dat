@@ -1,11 +1,17 @@
 import { describe, it, expect } from "vitest";
 import {
   buildManualStudentCreatePayload,
+  buildLinkedStudentUserUpdateBody,
   buildStudentRecordInvitePayload,
   canSendStudentRecordInvite,
+  canShowStudentAppAccessSection,
+  canShowStudentPendingInvitationSection,
   getStudentAppAccessLabel,
+  getStudentCanonicalEmailDisplay,
+  hasLinkedStudentUserFormChanges,
   previewSchoolStudentId,
   studentRecordApiErrorMessage,
+  toLinkedStudentUserUpdateForm,
 } from "./student-record-ui-utils";
 import type { StudentRecordDto } from "./student-record-ui-types";
 
@@ -61,6 +67,107 @@ describe("buildManualStudentCreatePayload", () => {
   });
 });
 
+describe("getStudentCanonicalEmailDisplay", () => {
+  it("prefers student email then linked then user", () => {
+    expect(
+      getStudentCanonicalEmailDisplay(
+        {
+          email: "student@school.test",
+          user: {
+            id: "u1",
+            email: "user@school.test",
+            firstName: "A",
+            lastName: "B",
+          },
+        },
+        "linked@school.test",
+      ),
+    ).toBe("student@school.test");
+    expect(
+      getStudentCanonicalEmailDisplay(
+        {
+          email: null,
+          user: {
+            id: "u1",
+            email: "user@school.test",
+            firstName: "A",
+            lastName: "B",
+          },
+        },
+        "linked@school.test",
+      ),
+    ).toBe("linked@school.test");
+    expect(
+      getStudentCanonicalEmailDisplay(
+        {
+          email: null,
+          user: {
+            id: "u1",
+            email: "user@school.test",
+            firstName: "A",
+            lastName: "B",
+          },
+        },
+        null,
+      ),
+    ).toBe("user@school.test");
+  });
+});
+
+describe("canShowStudentAppAccessSection", () => {
+  const base: Pick<StudentRecordDto, "userId" | "appAccessMode"> = {
+    userId: "user-1",
+    appAccessMode: "APP_USER",
+  };
+
+  it("shows App access section for APP_USER with userId", () => {
+    expect(canShowStudentAppAccessSection(base)).toBe(true);
+  });
+
+  it("hides App access section for APP_USER without userId", () => {
+    expect(canShowStudentAppAccessSection({ ...base, userId: null })).toBe(
+      false,
+    );
+  });
+
+  it("hides App access section for INVITED", () => {
+    expect(
+      canShowStudentAppAccessSection({
+        ...base,
+        appAccessMode: "INVITED",
+        userId: null,
+      }),
+    ).toBe(false);
+  });
+
+  it("hides App access section for MANUAL_ONLY", () => {
+    expect(
+      canShowStudentAppAccessSection({
+        ...base,
+        appAccessMode: "MANUAL_ONLY",
+        userId: null,
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("canShowStudentPendingInvitationSection", () => {
+  it("shows for INVITED", () => {
+    expect(
+      canShowStudentPendingInvitationSection({ appAccessMode: "INVITED" }),
+    ).toBe(true);
+  });
+
+  it("hides for APP_USER and MANUAL_ONLY", () => {
+    expect(
+      canShowStudentPendingInvitationSection({ appAccessMode: "APP_USER" }),
+    ).toBe(false);
+    expect(
+      canShowStudentPendingInvitationSection({ appAccessMode: "MANUAL_ONLY" }),
+    ).toBe(false);
+  });
+});
+
 describe("canSendStudentRecordInvite", () => {
   const base: Pick<StudentRecordDto, "userId" | "appAccessMode"> = {
     userId: null,
@@ -85,6 +192,37 @@ describe("canSendStudentRecordInvite", () => {
     expect(
       canSendStudentRecordInvite({ ...base, appAccessMode: "APP_USER" }),
     ).toBe(false);
+  });
+});
+
+describe("linked student user update helpers", () => {
+  const form = {
+    firstName: "Ana",
+    lastName: "Silva",
+    phoneNumber: "912345678",
+    address: "Rua A",
+    selectedCategories: ["B"],
+    transmissionType: "Manual",
+  };
+
+  it("buildLinkedStudentUserUpdateBody includes role STUDENT", () => {
+    expect(
+      buildLinkedStudentUserUpdateBody({ userId: "u1", form }),
+    ).toMatchObject({
+      userId: "u1",
+      role: "STUDENT",
+      firstName: "Ana",
+    });
+  });
+
+  it("detects linked user form changes", () => {
+    expect(hasLinkedStudentUserFormChanges(form, form)).toBe(false);
+    expect(
+      hasLinkedStudentUserFormChanges(
+        { ...form, address: "Rua B" },
+        toLinkedStudentUserUpdateForm(form),
+      ),
+    ).toBe(true);
   });
 });
 

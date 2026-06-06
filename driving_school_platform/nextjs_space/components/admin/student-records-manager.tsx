@@ -6,6 +6,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +39,7 @@ import {
   Car,
   Trash2,
   UserX,
+  ChevronRight,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -44,22 +58,34 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 import type {
   StudentRecordApiError,
   StudentRecordDto,
   StudentRecordMutationResponse,
   StudentRecordsListResponse,
 } from "@/lib/students/student-record-ui-types";
+import type { LinkedStudentUserUpdateForm } from "@/lib/students/student-record-ui-utils";
 import {
   buildManualStudentPatchPayload,
+  buildLinkedStudentUserUpdateBody,
   canSendStudentRecordInvite,
-  canShowStudentRecordDeleteAction,
+  canShowStudentAppAccessSection,
+  canShowStudentPendingInvitationSection,
   formatEnrollmentDateInputValue,
   formatStudentRecordDate,
+  getStudentCanonicalEmailDisplay,
   getStudentRecordDisplayName,
+  hasLinkedStudentUserFormChanges,
   previewSchoolStudentId,
   studentRecordApiErrorMessage,
+  toLinkedStudentUserUpdateForm,
 } from "@/lib/students/student-record-ui-utils";
+import {
+  getStudentDeleteBlockedModalFooterNote,
+  getStudentDeleteUiState,
+} from "@/lib/students/student-record-delete-ui-utils";
+import { getStudentAppAccessCompactBadges } from "@/lib/students/student-app-access-summary-utils";
 import {
   canRevokeStudentRecordInvitation,
   getStudentAppAccessDetailLines,
@@ -103,32 +129,76 @@ const emptyForm = () => ({
   phoneNumber: "",
   email: "",
   enrollmentDate: "",
+  address: "",
+  selectedCategories: [] as string[],
+  transmissionType: "",
 });
 
 type StudentRecordFormState = ReturnType<typeof emptyForm>;
 
-function studentToForm(student: StudentRecordDto) {
+type CategoryOption = { id: number; name: string };
+type TransmissionTypeOption = { id: number; name: string };
+
+export type LinkedAppAccountDetails = {
+  email: string;
+  isApproved: boolean;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string | null;
+  address: string | null;
+  selectedCategories: string[];
+  transmissionType: string;
+};
+
+function studentToForm(
+  student: StudentRecordDto,
+  linked: LinkedAppAccountDetails | null,
+): StudentRecordFormState {
+  const isAppUser = student.appAccessMode === "APP_USER";
   return {
     yearSuffix: student.schoolStudentYearSuffix ?? "",
     sequenceNumber:
       student.schoolStudentSequence != null
         ? String(student.schoolStudentSequence)
         : "",
-    firstName: student.firstName ?? "",
-    lastName: student.lastName ?? "",
-    phoneNumber: student.phoneNumber ?? "",
-    email: student.email ?? "",
+    firstName:
+      student.firstName?.trim() ||
+      linked?.firstName ||
+      student.user?.firstName ||
+      "",
+    lastName:
+      student.lastName?.trim() ||
+      linked?.lastName ||
+      student.user?.lastName ||
+      "",
+    phoneNumber:
+      student.phoneNumber?.trim() || linked?.phoneNumber?.trim() || "",
+    email: isAppUser
+      ? linked?.email || student.user?.email || student.email || ""
+      : student.email || "",
     enrollmentDate: formatEnrollmentDateInputValue(student.enrollmentDate),
+    address: linked?.address?.trim() || "",
+    selectedCategories: linked?.selectedCategories ?? [],
+    transmissionType: linked?.transmissionType ?? "",
   };
 }
 
 type StudentRecordsManagerProps = {
   embedded?: boolean;
+  categories?: CategoryOption[];
+  transmissionTypes?: TransmissionTypeOption[];
+  getLinkedAppAccountDetails?: (
+    userId: string,
+  ) => LinkedAppAccountDetails | null;
 };
 
 export function StudentRecordsManager({
   embedded = false,
+  categories = [],
+  transmissionTypes = [],
+  getLinkedAppAccountDetails,
 }: StudentRecordsManagerProps = {}) {
+  const router = useRouter();
   const [students, setStudents] = useState<StudentRecordDto[]>([]);
   const [searchInput, setSearchInput] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
@@ -141,6 +211,8 @@ export function StudentRecordsManager({
     null,
   );
   const [editForm, setEditForm] = useState(emptyForm);
+  const [editLinkedOriginal, setEditLinkedOriginal] =
+    useState<LinkedStudentUserUpdateForm | null>(null);
   const [editLoading, setEditLoading] = useState(false);
   const [historyStudent, setHistoryStudent] = useState<StudentRecordDto | null>(
     null,
@@ -148,9 +220,11 @@ export function StudentRecordsManager({
   const [inviteStudent, setInviteStudent] = useState<StudentRecordDto | null>(
     null,
   );
-  const [deleteStudent, setDeleteStudent] = useState<StudentRecordDto | null>(
-    null,
-  );
+  const [deleteDialog, setDeleteDialog] = useState<{
+    student: StudentRecordDto;
+    allowed: boolean;
+    blockMessages: string[];
+  } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [exportingFormat, setExportingFormat] =
     useState<StudentRecordsExportFormat | null>(null);
@@ -158,6 +232,21 @@ export function StudentRecordsManager({
   const [revokingInvitationId, setRevokingInvitationId] = useState<
     string | null
   >(null);
+  const [linkedDetailsOverlay, setLinkedDetailsOverlay] = useState<
+    Record<string, LinkedAppAccountDetails>
+  >({});
+
+  const getEffectiveLinkedDetails = useCallback(
+    (userId: string): LinkedAppAccountDetails | null => {
+      const base = getLinkedAppAccountDetails?.(userId) ?? null;
+      const overlay = linkedDetailsOverlay[userId];
+      if (overlay && base) {
+        return { ...base, ...overlay };
+      }
+      return overlay ?? base;
+    },
+    [getLinkedAppAccountDetails, linkedDetailsOverlay],
+  );
 
   const editPreviewId = useMemo(
     () => previewSchoolStudentId(editForm.yearSuffix, editForm.sequenceNumber),
@@ -256,8 +345,23 @@ export function StudentRecordsManager({
   };
 
   const openEdit = (student: StudentRecordDto) => {
+    const linked =
+      student.userId != null ? getEffectiveLinkedDetails(student.userId) : null;
+    const form = studentToForm(student, linked);
     setEditingStudent(student);
-    setEditForm(studentToForm(student));
+    setEditForm(form);
+    setEditLinkedOriginal(
+      linked
+        ? toLinkedStudentUserUpdateForm({
+            firstName: form.firstName,
+            lastName: form.lastName,
+            phoneNumber: form.phoneNumber,
+            address: form.address,
+            selectedCategories: form.selectedCategories,
+            transmissionType: form.transmissionType,
+          })
+        : null,
+    );
   };
 
   const handleRevokeInvitation = async (student: StudentRecordDto) => {
@@ -309,38 +413,48 @@ export function StudentRecordsManager({
   const closeEdit = () => {
     setEditingStudent(null);
     setEditForm(emptyForm());
+    setEditLinkedOriginal(null);
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteStudent) return;
+    if (!deleteDialog?.allowed) return;
+    const target = deleteDialog.student;
 
     setDeleteLoading(true);
     try {
-      const response = await fetch(`/api/admin/students/${deleteStudent.id}`, {
+      const response = await fetch(`/api/admin/students/${target.id}`, {
         method: "DELETE",
       });
-      const data = await tryReadJson<{ code?: string; error?: string }>(
-        response,
-      );
+      const data = await tryReadJson<{
+        code?: string;
+        codes?: string[];
+        error?: string;
+      }>(response);
 
       if (!response.ok) {
-        toast.error(
-          studentRecordApiErrorMessage(
-            data?.code,
-            data?.error || "Could not remove the student record.",
-          ),
+        const message = studentRecordApiErrorMessage(
+          data?.code,
+          data?.error || "Could not delete this student.",
         );
+        toast.error(message);
+        if (data?.code) {
+          setDeleteDialog({
+            student: target,
+            allowed: false,
+            blockMessages: [message],
+          });
+        }
         return;
       }
 
-      toast.success("Student record removed successfully.");
-      setDeleteStudent(null);
-      setStudents((prev) => prev.filter((s) => s.id !== deleteStudent.id));
-      if (editingStudent?.id === deleteStudent.id) {
+      toast.success("Student removed.");
+      setDeleteDialog(null);
+      setStudents((prev) => prev.filter((s) => s.id !== target.id));
+      if (editingStudent?.id === target.id) {
         closeEdit();
       }
     } catch {
-      toast.error("An error occurred while removing the student record.");
+      toast.error("An error occurred while deleting the student.");
     } finally {
       setDeleteLoading(false);
     }
@@ -355,7 +469,25 @@ export function StudentRecordsManager({
       original: editingStudent,
     });
 
-    if (Object.keys(patch).length === 0) {
+    if (canShowStudentAppAccessSection(editingStudent)) {
+      delete patch.email;
+    }
+
+    const linkedForm = toLinkedStudentUserUpdateForm({
+      firstName: editForm.firstName,
+      lastName: editForm.lastName,
+      phoneNumber: editForm.phoneNumber,
+      address: editForm.address,
+      selectedCategories: editForm.selectedCategories,
+      transmissionType: editForm.transmissionType,
+    });
+
+    const needsUserSync =
+      canShowStudentAppAccessSection(editingStudent) &&
+      editingStudent.userId != null &&
+      hasLinkedStudentUserFormChanges(linkedForm, editLinkedOriginal);
+
+    if (Object.keys(patch).length === 0 && !needsUserSync) {
       toast.error("No changes to save.");
       return;
     }
@@ -373,31 +505,82 @@ export function StudentRecordsManager({
 
     setEditLoading(true);
     try {
-      const response = await fetch(`/api/admin/students/${editingStudent.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patch),
-      });
-      const data = await tryReadJson<
-        StudentRecordMutationResponse | StudentRecordApiError
-      >(response);
-
-      if (!response.ok) {
-        const err = data as StudentRecordApiError | null;
-        toast.error(
-          studentRecordApiErrorMessage(
-            err?.code,
-            err?.error || "Failed to update student record",
-          ),
+      if (Object.keys(patch).length > 0) {
+        const response = await fetch(
+          `/api/admin/students/${editingStudent.id}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(patch),
+          },
         );
-        return;
+        const data = await tryReadJson<
+          StudentRecordMutationResponse | StudentRecordApiError
+        >(response);
+
+        if (!response.ok) {
+          const err = data as StudentRecordApiError | null;
+          toast.error(
+            studentRecordApiErrorMessage(
+              err?.code,
+              err?.error || "Failed to update student",
+            ),
+          );
+          return;
+        }
       }
 
-      toast.success("Student record updated successfully.");
+      if (needsUserSync && editingStudent.userId) {
+        const userResponse = await fetch("/api/users/update", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            buildLinkedStudentUserUpdateBody({
+              userId: editingStudent.userId,
+              form: linkedForm,
+            }),
+          ),
+        });
+        const userData = await tryReadJson<{ error?: string }>(userResponse);
+        if (!userResponse.ok) {
+          toast.error(
+            userData?.error || "Failed to update app access details.",
+          );
+          if (Object.keys(patch).length > 0) {
+            toast.error(
+              "Student profile was saved, but app access details could not be updated.",
+            );
+            await loadStudents({ search: appliedSearch });
+          }
+          return;
+        }
+      }
+
+      toast.success("Student updated successfully.");
+
+      if (needsUserSync && editingStudent.userId) {
+        const prevLinked = getEffectiveLinkedDetails(editingStudent.userId);
+        setLinkedDetailsOverlay((prev) => ({
+          ...prev,
+          [editingStudent.userId!]: {
+            email:
+              prevLinked?.email ?? editingStudent.user?.email ?? editForm.email,
+            isApproved: prevLinked?.isApproved ?? true,
+            firstName: editForm.firstName,
+            lastName: editForm.lastName,
+            phoneNumber: editForm.phoneNumber || null,
+            address: editForm.address || null,
+            selectedCategories: [...editForm.selectedCategories],
+            transmissionType: editForm.transmissionType,
+          },
+        }));
+      }
+
       closeEdit();
+      router.refresh();
       await loadStudents({ search: appliedSearch });
     } catch {
-      toast.error("An error occurred while updating the student record.");
+      toast.error("An error occurred while updating the student.");
     } finally {
       setEditLoading(false);
     }
@@ -442,10 +625,20 @@ export function StudentRecordsManager({
     </div>
   );
 
+  const toggleEditCategory = (category: string) => {
+    setEditForm((prev) => ({
+      ...prev,
+      selectedCategories: prev.selectedCategories.includes(category)
+        ? prev.selectedCategories.filter((c) => c !== category)
+        : [...prev.selectedCategories, category],
+    }));
+  };
+
   const renderContactFields = (
     form: StudentRecordFormState,
     setForm: React.Dispatch<React.SetStateAction<StudentRecordFormState>>,
     idPrefix: string,
+    options?: { hideEmail?: boolean },
   ) => (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -482,17 +675,19 @@ export function StudentRecordsManager({
             }
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor={`${idPrefix}-email`}>Email</Label>
-          <Input
-            id={`${idPrefix}-email`}
-            type="email"
-            value={form.email}
-            onChange={(e) =>
-              setForm((prev) => ({ ...prev, email: e.target.value }))
-            }
-          />
-        </div>
+        {!options?.hideEmail ? (
+          <div className="space-y-2">
+            <Label htmlFor={`${idPrefix}-email`}>Email</Label>
+            <Input
+              id={`${idPrefix}-email`}
+              type="email"
+              value={form.email}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, email: e.target.value }))
+              }
+            />
+          </div>
+        ) : null}
       </div>
       <div className="space-y-2">
         <Label htmlFor={`${idPrefix}-enrollment`}>Enrollment date</Label>
@@ -510,6 +705,137 @@ export function StudentRecordsManager({
       </div>
     </>
   );
+
+  const renderAppAccessSection = (
+    form: StudentRecordFormState,
+    setForm: React.Dispatch<React.SetStateAction<StudentRecordFormState>>,
+    linked: LinkedAppAccountDetails | null,
+  ) => (
+    <Collapsible
+      defaultOpen
+      className="rounded-lg border border-blue-100 bg-blue-50/60"
+    >
+      <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 px-4 py-3 text-left">
+        <span className="font-medium text-blue-900">App access</span>
+        <ChevronRight className="h-4 w-4 text-blue-700 transition-transform group-data-[state=open]:rotate-90" />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-4 px-4 pb-4">
+        <p className="text-sm text-blue-800">
+          Login and license preferences for the linked app account. Name and
+          phone are edited once in Student profile above.
+        </p>
+        {linked?.email ? (
+          <div className="space-y-1">
+            <Label>Login email</Label>
+            <p className="text-sm font-medium text-blue-950">{linked.email}</p>
+            <p className="text-xs text-blue-700">
+              Login email cannot be changed here.
+            </p>
+          </div>
+        ) : null}
+        {linked ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-blue-900">Access status:</span>
+            <Badge variant={linked.isApproved ? "secondary" : "default"}>
+              {linked.isApproved
+                ? "Approved — can sign in"
+                : "Pending approval"}
+            </Badge>
+          </div>
+        ) : null}
+        <div className="space-y-2">
+          <Label htmlFor="edit-app-address">Address</Label>
+          <Input
+            id="edit-app-address"
+            value={form.address}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, address: e.target.value }))
+            }
+            placeholder="Address on app account"
+          />
+        </div>
+        {categories.length > 0 ? (
+          <div className="space-y-2">
+            <Label>License categories</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto p-2 bg-white rounded border">
+              {categories.map((cat) => (
+                <div key={cat.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`edit-app-cat-${cat.id}`}
+                    checked={form.selectedCategories.includes(cat.name)}
+                    onCheckedChange={() => toggleEditCategory(cat.name)}
+                  />
+                  <label
+                    htmlFor={`edit-app-cat-${cat.id}`}
+                    className="text-sm font-medium leading-none cursor-pointer"
+                  >
+                    {cat.name}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {transmissionTypes.length > 0 ? (
+          <div className="space-y-2">
+            <Label>Transmission type</Label>
+            <Select
+              value={form.transmissionType || undefined}
+              onValueChange={(value) =>
+                setForm((prev) => ({ ...prev, transmissionType: value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select transmission" />
+              </SelectTrigger>
+              <SelectContent>
+                {transmissionTypes.map((type) => (
+                  <SelectItem key={type.id} value={type.name}>
+                    {type.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+
+  const renderPendingInvitationSection = (student: StudentRecordDto) => {
+    const inviteEmail =
+      student.pendingInvitation?.email?.trim() || student.email?.trim() || "—";
+    return (
+      <Collapsible
+        defaultOpen
+        className="rounded-lg border border-amber-100 bg-amber-50/60"
+      >
+        <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 px-4 py-3 text-left">
+          <span className="font-medium text-amber-900">App access</span>
+          <ChevronRight className="h-4 w-4 text-amber-700 transition-transform group-data-[state=open]:rotate-90" />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-3 px-4 pb-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-amber-900">Access status:</span>
+            <Badge variant="default">Invitation pending</Badge>
+          </div>
+          <div className="space-y-1">
+            <Label>Invitation email</Label>
+            <p className="text-sm font-medium text-amber-950">{inviteEmail}</p>
+          </div>
+          <p className="text-xs text-amber-800">
+            Use <strong>Revoke invitation</strong> on the profile row to cancel
+            a pending invite. Resend is not available here.
+          </p>
+        </CollapsibleContent>
+      </Collapsible>
+    );
+  };
+
+  const editingLinkedDetails =
+    editingStudent?.userId != null
+      ? getEffectiveLinkedDetails(editingStudent.userId)
+      : null;
 
   return (
     <section className={embedded ? "space-y-6" : "mt-10 space-y-6"}>
@@ -625,109 +951,157 @@ export function StudentRecordsManager({
           ) : (
             <TooltipProvider delayDuration={300}>
               <div className="space-y-3">
-                {students.map((student) => (
-                  <div
-                    key={student.id}
-                    className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50"
-                  >
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-sm font-semibold text-driving-primary">
-                          {student.schoolStudentId ?? "—"}
-                        </span>
-                        <span className="font-medium">
-                          {getStudentRecordDisplayName(student)}
-                        </span>
-                      </div>
-                      <div className="text-sm text-gray-600 mt-1">
-                        {student.phoneNumber || "No phone"}
-                        {student.email ? ` · ${student.email}` : ""}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        Enrollment:{" "}
-                        {formatStudentRecordDate(student.enrollmentDate)}
-                      </div>
-                      <div className="mt-2 space-y-0.5">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {getStudentProfileRowBadges(student).map((badge) => (
-                            <Tooltip key={badge.key}>
-                              <TooltipTrigger asChild>
-                                <Badge variant={badge.variant}>
-                                  {badge.label}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="max-w-xs">
-                                {badge.tooltip}
-                              </TooltipContent>
-                            </Tooltip>
-                          ))}
-                        </div>
-                        {getStudentAppAccessDetailLines(student).map((line) => (
-                          <p key={line} className="text-xs text-gray-500">
-                            {line}
-                          </p>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2 shrink-0">
-                      {canSendStudentRecordInvite(student) ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setInviteStudent(student)}
-                        >
-                          <MailPlus className="h-4 w-4 mr-1" />
-                          Send invitation
-                        </Button>
-                      ) : null}
-                      {canRevokeStudentRecordInvitation(student) ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          disabled={
-                            revokingInvitationId ===
-                            student.pendingInvitation?.invitationId
+                {students.map((student) => {
+                  const linked =
+                    student.userId != null
+                      ? getEffectiveLinkedDetails(student.userId)
+                      : null;
+                  const profileBadges = getStudentProfileRowBadges(
+                    student,
+                  ).filter(
+                    (badge) =>
+                      !(
+                        student.appAccessMode === "APP_USER" &&
+                        badge.key === "app-access"
+                      ),
+                  );
+                  const appAccessCompactBadges =
+                    getStudentAppAccessCompactBadges(
+                      student,
+                      linked
+                        ? {
+                            isApproved: linked.isApproved,
+                            transmissionType: linked.transmissionType,
+                            selectedCategories: linked.selectedCategories,
                           }
-                          onClick={() => void handleRevokeInvitation(student)}
+                        : null,
+                    );
+                  const canonicalEmail = getStudentCanonicalEmailDisplay(
+                    student,
+                    linked?.email,
+                  );
+
+                  return (
+                    <div
+                      key={student.id}
+                      className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-mono text-sm font-semibold text-driving-primary">
+                            {student.schoolStudentId ?? "—"}
+                          </span>
+                          <span className="font-medium">
+                            {getStudentRecordDisplayName(student)}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1">
+                          {student.phoneNumber || "No phone"}
+                          {canonicalEmail ? ` · ${canonicalEmail}` : ""}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Enrollment:{" "}
+                          {formatStudentRecordDate(student.enrollmentDate)}
+                        </div>
+                        <div className="mt-2 space-y-0.5">
+                          <div className="flex flex-wrap items-center gap-2">
+                            {profileBadges.map((badge) => (
+                              <Tooltip key={badge.key}>
+                                <TooltipTrigger asChild>
+                                  <Badge variant={badge.variant}>
+                                    {badge.label}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-xs">
+                                  {badge.tooltip}
+                                </TooltipContent>
+                              </Tooltip>
+                            ))}
+                            {appAccessCompactBadges.map((badge) => (
+                              <Tooltip key={badge.key}>
+                                <TooltipTrigger asChild>
+                                  <Badge variant={badge.variant}>
+                                    {badge.label}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-xs">
+                                  {badge.tooltip}
+                                </TooltipContent>
+                              </Tooltip>
+                            ))}
+                          </div>
+                          {getStudentAppAccessDetailLines(student).map(
+                            (line) => (
+                              <p key={line} className="text-xs text-gray-500">
+                                {line}
+                              </p>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        {canSendStudentRecordInvite(student) ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setInviteStudent(student)}
+                          >
+                            <MailPlus className="h-4 w-4 mr-1" />
+                            Send invitation
+                          </Button>
+                        ) : null}
+                        {canRevokeStudentRecordInvitation(student) ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            disabled={
+                              revokingInvitationId ===
+                              student.pendingInvitation?.invitationId
+                            }
+                            onClick={() => void handleRevokeInvitation(student)}
+                          >
+                            <UserX className="h-4 w-4 mr-1" />
+                            {revokingInvitationId ===
+                            student.pendingInvitation?.invitationId
+                              ? "Revoking…"
+                              : "Revoke invitation"}
+                          </Button>
+                        ) : null}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setHistoryStudent(student)}
                         >
-                          <UserX className="h-4 w-4 mr-1" />
-                          {revokingInvitationId ===
-                          student.pendingInvitation?.invitationId
-                            ? "Revoking…"
-                            : "Revoke invitation"}
+                          <Car className="h-4 w-4 mr-1" />
+                          Practical lessons
                         </Button>
-                      ) : null}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setHistoryStudent(student)}
-                      >
-                        <Car className="h-4 w-4 mr-1" />
-                        Practical lessons
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openEdit(student)}
-                      >
-                        <Edit2 className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                      {canShowStudentRecordDeleteAction(student) ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEdit(student)}
+                        >
+                          <Edit2 className="h-4 w-4 mr-1" />
+                          Edit Student
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => setDeleteStudent(student)}
+                          onClick={() =>
+                            setDeleteDialog({
+                              student,
+                              ...getStudentDeleteUiState(student),
+                            })
+                          }
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
-                          Remove student record
+                          Delete
                         </Button>
-                      ) : null}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </TooltipProvider>
           )}
@@ -767,15 +1141,36 @@ export function StudentRecordsManager({
       >
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit student record</DialogTitle>
+            <DialogTitle>Edit Student</DialogTitle>
             <DialogDescription>
-              Update operational details. App access status cannot be changed
-              here.
+              Update this student&apos;s profile and linked app access where
+              available.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEdit} className="space-y-4">
-            {renderIdFields(editForm, setEditForm, editPreviewId)}
-            {renderContactFields(editForm, setEditForm, "edit")}
+            <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <h3 className="font-medium text-gray-900">Student profile</h3>
+              {renderIdFields(editForm, setEditForm, editPreviewId)}
+              {renderContactFields(
+                editForm,
+                setEditForm,
+                "edit",
+                editingStudent && canShowStudentAppAccessSection(editingStudent)
+                  ? { hideEmail: true }
+                  : undefined,
+              )}
+            </div>
+            {editingStudent && canShowStudentAppAccessSection(editingStudent)
+              ? renderAppAccessSection(
+                  editForm,
+                  setEditForm,
+                  editingLinkedDetails,
+                )
+              : null}
+            {editingStudent &&
+            canShowStudentPendingInvitationSection(editingStudent)
+              ? renderPendingInvitationSection(editingStudent)
+              : null}
             <div className="flex gap-2 justify-end">
               <Button
                 type="button"
@@ -786,7 +1181,7 @@ export function StudentRecordsManager({
                 Cancel
               </Button>
               <Button type="submit" disabled={editLoading}>
-                {editLoading ? "Saving…" : "Save"}
+                {editLoading ? "Saving…" : "Save Student"}
               </Button>
             </div>
           </form>
@@ -817,34 +1212,79 @@ export function StudentRecordsManager({
       />
 
       <AlertDialog
-        open={deleteStudent !== null}
+        open={deleteDialog !== null}
         onOpenChange={(open) => {
-          if (!open && !deleteLoading) setDeleteStudent(null);
+          if (!open && !deleteLoading) setDeleteDialog(null);
         }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove student record</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteStudent
-                ? `Are you sure you want to remove student record ${deleteStudent.schoolStudentId ?? ""} (${getStudentRecordDisplayName(deleteStudent)})? This action cannot be undone and is only allowed for manual records with no operational history.`
-                : ""}
+            <AlertDialogTitle>
+              {deleteDialog?.allowed
+                ? "Delete Student?"
+                : "Delete not available"}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                {deleteDialog?.allowed ? (
+                  <p>
+                    This will remove the student profile from People where it is
+                    safe to do so. Deletion may still be blocked if the student
+                    has lessons, payments, invitations, app access, or other
+                    records that must be preserved.
+                  </p>
+                ) : (
+                  <>
+                    <p>
+                      This student cannot be deleted yet. Resolve the items
+                      below first.
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {deleteDialog?.blockMessages.map((message) => (
+                        <li key={message}>{message}</li>
+                      ))}
+                    </ul>
+                    <p>{getStudentDeleteBlockedModalFooterNote()}</p>
+                  </>
+                )}
+                {deleteDialog ? (
+                  <p>
+                    Student:{" "}
+                    <span className="font-medium text-foreground">
+                      {getStudentRecordDisplayName(deleteDialog.student)}
+                    </span>
+                    {deleteDialog.student.schoolStudentId ? (
+                      <>
+                        {" "}
+                        (
+                        <span className="font-mono">
+                          {deleteDialog.student.schoolStudentId}
+                        </span>
+                        )
+                      </>
+                    ) : null}
+                    .
+                  </p>
+                ) : null}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteLoading}>
-              Cancel
+              {deleteDialog?.allowed ? "Cancel" : "Close"}
             </AlertDialogCancel>
-            <AlertDialogAction
-              disabled={deleteLoading}
-              className="bg-red-600 hover:bg-red-700"
-              onClick={(e) => {
-                e.preventDefault();
-                void handleDeleteConfirm();
-              }}
-            >
-              {deleteLoading ? "Removing…" : "Remove"}
-            </AlertDialogAction>
+            {deleteDialog?.allowed ? (
+              <AlertDialogAction
+                disabled={deleteLoading}
+                className="bg-red-600 hover:bg-red-700"
+                onClick={(e) => {
+                  e.preventDefault();
+                  void handleDeleteConfirm();
+                }}
+              >
+                {deleteLoading ? "Deleting…" : "Delete Student"}
+              </AlertDialogAction>
+            ) : null}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
