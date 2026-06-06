@@ -286,14 +286,15 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `people-management-internal-tabs-v1` — internal L1/L2 tabs on `/admin/users` (Students, Instructors, App accounts); client-side invitation role filter; SSR unchanged
 - `people-management-onboarding-reframe-v1` — L2 Onboarding (manual student + new instructor + invitations); App accounts tab retained
 - `people-management-profiles-status-and-pagination-v1` — Students → Profiles; profile badges + label guide; 15/page Load more; instructor search; Pending invitations Onboarding copy (absorbs record-status-badges + instructor-people-search UI)
+- `people-management-row-app-access-v1` — unified **Edit Student** + **Delete**; compact APP_USER row badges; canonical email; blocked Delete copy; remove/reactivate + Change email deferred (DEC-014/015); instructors deferred (`people-management-edit-instructor-unified-v1`)
 
 **Current recommended next (runtime/UX slice):**
 
-1. `people-management-row-app-access-v1` — row-level edit/remove app account before demoting App accounts tab
+1. `people-management-app-accounts-demote-v1` — demote/simplify App accounts tab after row-level edit parity (remove/unlink still deferred)
 
-**Likely next after row app access:**
+**Likely next after app accounts demote:**
 
-2. `people-management-app-accounts-demote-v1` then `people-management-onboarding-unlinked-invitations-v1`
+2. `people-management-onboarding-unlinked-invitations-v1`
 3. `admin-settings-client-visibility-review-v1` — review hiding/demoting Settings for school admins (product P1)
 
 **Likely next (slice parent batches; do not implement broad names directly):**

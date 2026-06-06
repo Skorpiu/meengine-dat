@@ -42,6 +42,19 @@ export function getStudentRecordDisplayName(student: StudentRecordDto): string {
   return student.schoolStudentId ?? "Student";
 }
 
+/** School Admin canonical email — one field, not separate operational vs login. */
+export function getStudentCanonicalEmailDisplay(
+  student: Pick<StudentRecordDto, "email" | "user">,
+  linkedEmail?: string | null,
+): string | null {
+  return (
+    student.email?.trim() ||
+    linkedEmail?.trim() ||
+    student.user?.email?.trim() ||
+    null
+  );
+}
+
 export { getStudentAppAccessLabel } from "@/lib/students/student-record-invitation-ui-utils";
 
 export function canSendStudentRecordInvite(student: {
@@ -49,6 +62,79 @@ export function canSendStudentRecordInvite(student: {
   appAccessMode: StudentAppAccessMode;
 }): boolean {
   return student.appAccessMode === "MANUAL_ONLY" && student.userId === null;
+}
+
+/** Edit Student dialog: show App access section for linked login account. */
+export function canShowStudentAppAccessSection(student: {
+  userId: string | null;
+  appAccessMode: StudentAppAccessMode | string;
+}): boolean {
+  return student.appAccessMode === "APP_USER" && student.userId !== null;
+}
+
+/** Edit Student dialog: show pending invitation status (read-only; actions stay on row). */
+export function canShowStudentPendingInvitationSection(student: {
+  appAccessMode: StudentAppAccessMode | string;
+}): boolean {
+  return student.appAccessMode === "INVITED";
+}
+
+export type LinkedStudentUserUpdateForm = {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  address: string;
+  selectedCategories: string[];
+  transmissionType: string;
+};
+
+export function buildLinkedStudentUserUpdateBody(input: {
+  userId: string;
+  form: LinkedStudentUserUpdateForm;
+}): Record<string, unknown> {
+  return {
+    userId: input.userId,
+    firstName: input.form.firstName.trim(),
+    lastName: input.form.lastName.trim(),
+    phoneNumber: input.form.phoneNumber.trim(),
+    address: input.form.address.trim(),
+    role: "STUDENT",
+    selectedCategories: input.form.selectedCategories,
+    transmissionType: input.form.transmissionType,
+  };
+}
+
+export function hasLinkedStudentUserFormChanges(
+  form: LinkedStudentUserUpdateForm,
+  original: LinkedStudentUserUpdateForm | null,
+): boolean {
+  if (!original) return true;
+  return (
+    form.firstName.trim() !== original.firstName.trim() ||
+    form.lastName.trim() !== original.lastName.trim() ||
+    form.phoneNumber.trim() !== original.phoneNumber.trim() ||
+    form.address.trim() !== original.address.trim() ||
+    form.transmissionType !== original.transmissionType ||
+    form.selectedCategories.join(",") !== original.selectedCategories.join(",")
+  );
+}
+
+export function toLinkedStudentUserUpdateForm(input: {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  address: string;
+  selectedCategories: string[];
+  transmissionType: string;
+}): LinkedStudentUserUpdateForm {
+  return {
+    firstName: input.firstName,
+    lastName: input.lastName,
+    phoneNumber: input.phoneNumber,
+    address: input.address,
+    selectedCategories: [...input.selectedCategories],
+    transmissionType: input.transmissionType,
+  };
 }
 
 export function buildStudentRecordInvitePayload(input: {
