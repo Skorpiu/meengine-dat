@@ -214,6 +214,18 @@ export function studentRecordApiErrorMessage(
       return "This student record has exam registrations and cannot be removed.";
     case "student_has_payments":
       return "This student record has payments and cannot be removed.";
+    case "student_not_app_user":
+      return "Only students with active app access can have app access removed.";
+    case "student_no_linked_user":
+      return "This student record has no linked app account.";
+    case "linked_user_not_found":
+      return "Linked app account not found.";
+    case "linked_user_role_mismatch":
+      return "Linked app account is not a student account.";
+    case "linked_user_tenant_mismatch":
+      return "Linked app account does not belong to this school.";
+    case "student_app_access_already_removed":
+      return "App access has already been removed for this student.";
     default:
       return fallback;
   }

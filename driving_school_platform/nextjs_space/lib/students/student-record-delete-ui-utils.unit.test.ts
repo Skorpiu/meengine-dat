@@ -24,7 +24,7 @@ describe("getStudentDeleteUiState", () => {
       state.blockMessages.some((m) => m.includes("app access is active")),
     ).toBe(true);
     expect(
-      state.blockMessages.some((m) => m.includes("Remove or deactivate")),
+      state.blockMessages.some((m) => m.includes("Remove app access")),
     ).toBe(true);
     expect(
       state.blockMessages.some((m) => m.includes("historical records")),
@@ -52,9 +52,9 @@ describe("getStudentDeleteUiState", () => {
 });
 
 describe("getStudentDeleteBlockedModalFooterNote", () => {
-  it("states no remove/unlink in this batch", () => {
+  it("states delete does not remove app access automatically", () => {
     expect(getStudentDeleteBlockedModalFooterNote()).toContain(
-      "does not remove app accounts",
+      "does not remove app access automatically",
     );
   });
 });

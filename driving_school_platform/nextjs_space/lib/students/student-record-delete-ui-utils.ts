@@ -24,7 +24,7 @@ export function getStudentDeleteUiState(student: {
       "This student cannot be deleted while app access is active.",
     );
     blockMessages.push(
-      "Remove or deactivate app access first (future policy — not available on this screen yet). The student profile and all historical records must be preserved.",
+      "Use Remove app access in Edit Student → App access first. The student profile and all historical records will be preserved.",
     );
     blockMessages.push(HISTORY_BLOCK_NOTE);
   } else if (student.appAccessMode === "INVITED") {
@@ -52,7 +52,7 @@ export function getStudentDeleteUiState(student: {
   };
 }
 
-/** Footer copy for blocked delete modal — no remove/unlink/destructive actions implied. */
+/** Footer copy for blocked delete modal — Delete does not remove app access implicitly. */
 export function getStudentDeleteBlockedModalFooterNote(): string {
-  return "This action does not remove app accounts, unlink logins, deactivate app access, or delete historical records. Safe remove/reactivate app access flows are planned for a future batch.";
+  return "Delete does not remove app access automatically. Use Remove app access in Edit Student when needed. Reactivate app access is planned for a future batch.";
 }

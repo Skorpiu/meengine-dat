@@ -85,6 +85,10 @@ import {
   getStudentDeleteBlockedModalFooterNote,
   getStudentDeleteUiState,
 } from "@/lib/students/student-record-delete-ui-utils";
+import {
+  canShowRemoveStudentAppAccessAction,
+  REMOVE_STUDENT_APP_ACCESS_MODAL,
+} from "@/lib/students/student-app-access-remove-ui-utils";
 import { getStudentAppAccessCompactBadges } from "@/lib/students/student-app-access-summary-utils";
 import {
   canRevokeStudentRecordInvitation,
@@ -226,6 +230,9 @@ export function StudentRecordsManager({
     blockMessages: string[];
   } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [removeAppAccessDialog, setRemoveAppAccessDialog] =
+    useState<StudentRecordDto | null>(null);
+  const [removeAppAccessLoading, setRemoveAppAccessLoading] = useState(false);
   const [exportingFormat, setExportingFormat] =
     useState<StudentRecordsExportFormat | null>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -457,6 +464,67 @@ export function StudentRecordsManager({
       toast.error("An error occurred while deleting the student.");
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+  const handleRemoveAppAccessConfirm = async () => {
+    if (!removeAppAccessDialog) return;
+    const target = removeAppAccessDialog;
+    const previousUserId = target.userId;
+
+    setRemoveAppAccessLoading(true);
+    try {
+      const response = await fetch(
+        `/api/admin/students/${encodeURIComponent(target.id)}/app-access/remove`,
+        { method: "POST" },
+      );
+      const data = await tryReadJson<
+        StudentRecordMutationResponse | StudentRecordApiError
+      >(response);
+
+      if (!response.ok) {
+        const err = data as StudentRecordApiError | null;
+        toast.error(
+          studentRecordApiErrorMessage(
+            err?.code,
+            err?.error || "Failed to remove app access.",
+          ),
+        );
+        return;
+      }
+
+      const updated = (data as StudentRecordMutationResponse).data?.student;
+      if (!updated) {
+        toast.error("Failed to remove app access.");
+        return;
+      }
+
+      toast.success("App access removed.");
+      setRemoveAppAccessDialog(null);
+      setStudents((prev) =>
+        prev.map((s) => (s.id === updated.id ? updated : s)),
+      );
+
+      if (previousUserId) {
+        setLinkedDetailsOverlay((prev) => {
+          const next = { ...prev };
+          delete next[previousUserId];
+          return next;
+        });
+      }
+
+      if (editingStudent?.id === updated.id) {
+        setEditingStudent(updated);
+        const form = studentToForm(updated, null);
+        setEditForm(form);
+        setEditLinkedOriginal(null);
+      }
+
+      router.refresh();
+    } catch {
+      toast.error("An error occurred while removing app access.");
+    } finally {
+      setRemoveAppAccessLoading(false);
     }
   };
 
@@ -707,6 +775,7 @@ export function StudentRecordsManager({
   );
 
   const renderAppAccessSection = (
+    student: StudentRecordDto,
     form: StudentRecordFormState,
     setForm: React.Dispatch<React.SetStateAction<StudentRecordFormState>>,
     linked: LinkedAppAccountDetails | null,
@@ -796,6 +865,24 @@ export function StudentRecordsManager({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+        ) : null}
+        {canShowRemoveStudentAppAccessAction(student) ? (
+          <div className="border-t border-blue-200 pt-4">
+            <p className="text-xs text-blue-800 mb-3">
+              Disabling app access preserves the student profile, lessons,
+              payments, and history. The linked app account is not deleted.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+              disabled={removeAppAccessLoading}
+              onClick={() => setRemoveAppAccessDialog(student)}
+            >
+              <UserX className="h-4 w-4 mr-2" />
+              Remove app access
+            </Button>
           </div>
         ) : null}
       </CollapsibleContent>
@@ -1162,6 +1249,7 @@ export function StudentRecordsManager({
             </div>
             {editingStudent && canShowStudentAppAccessSection(editingStudent)
               ? renderAppAccessSection(
+                  editingStudent,
                   editForm,
                   setEditForm,
                   editingLinkedDetails,
@@ -1285,6 +1373,62 @@ export function StudentRecordsManager({
                 {deleteLoading ? "Deleting…" : "Delete Student"}
               </AlertDialogAction>
             ) : null}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={removeAppAccessDialog !== null}
+        onOpenChange={(open) => {
+          if (!open && !removeAppAccessLoading) setRemoveAppAccessDialog(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {REMOVE_STUDENT_APP_ACCESS_MODAL.title}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p>{REMOVE_STUDENT_APP_ACCESS_MODAL.description}</p>
+                {removeAppAccessDialog ? (
+                  <p>
+                    Student:{" "}
+                    <span className="font-medium text-foreground">
+                      {getStudentRecordDisplayName(removeAppAccessDialog)}
+                    </span>
+                    {removeAppAccessDialog.schoolStudentId ? (
+                      <>
+                        {" "}
+                        (
+                        <span className="font-mono">
+                          {removeAppAccessDialog.schoolStudentId}
+                        </span>
+                        )
+                      </>
+                    ) : null}
+                    .
+                  </p>
+                ) : null}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removeAppAccessLoading}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={removeAppAccessLoading}
+              className="bg-red-600 hover:bg-red-700"
+              onClick={(e) => {
+                e.preventDefault();
+                void handleRemoveAppAccessConfirm();
+              }}
+            >
+              {removeAppAccessLoading
+                ? "Removing…"
+                : REMOVE_STUDENT_APP_ACCESS_MODAL.confirmLabel}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

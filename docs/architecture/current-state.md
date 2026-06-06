@@ -169,11 +169,13 @@ Documented and in use (docs/rules only; no runtime change):
 - `people-management-onboarding-reframe-v1` — L2 **Onboarding** subtabs; `StudentManualRecordCreateForm` + `InstructorAccountCreateForm`; Records/Profiles list-only focus; App accounts secondary copy; no API/schema changes. Validated via `pnpm check`.
 - `people-management-profiles-status-and-pagination-v1` — Students → **Profiles** tab; profile origin + app-access badges + collapsible label guide; student list `limit=15` + server Load more; instructor client search + 15/page Load more; **Pending invitations** Onboarding copy (list not removed); absorbs `people-management-record-status-badges-v1` and `instructor-people-search-v1` UI scope. No API/schema/SSR tenant changes. Validated via `pnpm check`.
 - `people-management-row-app-access-v1` — Students → Profiles **Edit Student** + **Delete**; compact APP_USER row badges (status, transmission, categories) with post-save overlay; canonical email once in row; improved blocked Delete modal; unified editor (Student profile + App access); dual-save `PATCH` + `PUT`; App accounts tab retained; remove/reactivate app access + Change email deferred (DEC-014/015); instructor unified editor deferred (`people-management-edit-instructor-unified-v1`). No API/schema/SSR changes. Validated via `pnpm check`.
+- `people-management-app-access-remove-v1` — **Remove app access** for APP_USER students: `POST /api/admin/students/[id]/app-access/remove`; transactional service `lib/students/student-app-access-lifecycle-service.ts`; Edit Student → App access UI + confirmation modal; preserves Student/User rows and history; disables login via `isApproved=false` + session invalidation; Student → `MANUAL_ONLY` + `userId=null`; reactivate/change email/app-accounts demote still deferred. Policy: [student-app-access-lifecycle-policy.md](./student-app-access-lifecycle-policy.md). Validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
-1. `people-management-app-accounts-demote-v1` — demote/simplify App accounts tab after row-level edit parity (remove/unlink still deferred)
-2. `people-management-onboarding-unlinked-invitations-v1` — dedicated unlinked pending invitations section (list removal still deferred)
+1. `people-management-app-access-reactivate-v1` — re-enable app access after remove
+2. `people-management-app-accounts-demote-v1` — demote/simplify App accounts tab after remove/reactivate parity
+3. `people-management-onboarding-unlinked-invitations-v1` — dedicated unlinked pending invitations section (list removal still deferred)
 3. `admin-settings-client-visibility-review-v1` — review hiding/demoting Settings for school admins (product/packaging P1)
 2. `tenant-operational-organization-id-not-null-readiness-review-v1` — operator/docs review for NOT NULL migrations when NULL counts stay at zero (no apply batch needed yet)
 3. `supabase-rls-class-b-hardening-v1b` — **deferred (D4):** optional RLS + REVOKE on remaining internal tables — separate approval

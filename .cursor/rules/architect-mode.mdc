@@ -287,10 +287,15 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `people-management-onboarding-reframe-v1` — L2 Onboarding (manual student + new instructor + invitations); App accounts tab retained
 - `people-management-profiles-status-and-pagination-v1` — Students → Profiles; profile badges + label guide; 15/page Load more; instructor search; Pending invitations Onboarding copy (absorbs record-status-badges + instructor-people-search UI)
 - `people-management-row-app-access-v1` — unified **Edit Student** + **Delete**; compact APP_USER row badges; canonical email; blocked Delete copy; remove/reactivate + Change email deferred (DEC-014/015); instructors deferred (`people-management-edit-instructor-unified-v1`)
+- `people-management-app-access-remove-v1` — Remove app access for APP_USER students (`POST /api/admin/students/[id]/app-access/remove`); preserves profile/history; disables login; reactivate/change email still deferred
 
 **Current recommended next (runtime/UX slice):**
 
-1. `people-management-app-accounts-demote-v1` — demote/simplify App accounts tab after row-level edit parity (remove/unlink still deferred)
+1. `people-management-app-access-reactivate-v1` — re-enable app access after remove
+
+**Likely next after reactivate:**
+
+2. `people-management-app-accounts-demote-v1` — demote/simplify App accounts tab after remove/reactivate parity
 
 **Likely next after app accounts demote:**
 
