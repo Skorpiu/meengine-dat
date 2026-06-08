@@ -1,13 +1,46 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Edit2, Search, UserCog } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Edit2, ChevronRight, Search, Trash2, UserCog } from "lucide-react";
 import type { InstructorRecordUserDto } from "@/lib/instructors/instructor-record-ui-types";
+import {
+  buildInstructorUserUpdateBody,
+  hasInstructorEditFormChanges,
+  INSTRUCTOR_PROFILE_ROW_DELETE_LABEL,
+  INSTRUCTOR_PROFILE_ROW_EDIT_LABEL,
+  toInstructorEditForm,
+  type InstructorEditForm,
+} from "@/lib/instructors/instructor-record-edit-ui-utils";
+import { getInstructorDeleteUiState } from "@/lib/instructors/instructor-record-delete-ui-utils";
 import {
   filterInstructorRecordUsersBySearch,
   formatInstructorLicenseExpiry,
@@ -27,18 +60,40 @@ const INSTRUCTOR_PAGE_SIZE = 15;
 
 type InstructorRecordsManagerProps = {
   users: InstructorRecordUserDto[];
-  onEditAppAccount: (user: InstructorRecordUserDto) => void;
   embedded?: boolean;
 };
 
+async function tryReadJson<T>(response: Response): Promise<T | null> {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().includes("application/json")) {
+    return null;
+  }
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
 export function InstructorRecordsManager({
   users,
-  onEditAppAccount,
   embedded = false,
 }: InstructorRecordsManagerProps) {
+  const router = useRouter();
   const [searchInput, setSearchInput] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [visibleCount, setVisibleCount] = useState(INSTRUCTOR_PAGE_SIZE);
+  const [editingUser, setEditingUser] =
+    useState<InstructorRecordUserDto | null>(null);
+  const [editForm, setEditForm] = useState<InstructorEditForm | null>(null);
+  const [editOriginal, setEditOriginal] = useState<InstructorEditForm | null>(
+    null,
+  );
+  const [editLoading, setEditLoading] = useState(false);
+  const [deleteDialogUser, setDeleteDialogUser] =
+    useState<InstructorRecordUserDto | null>(null);
+
+  const deleteUiState = getInstructorDeleteUiState();
 
   const filteredInstructors = useMemo(
     () => filterInstructorRecordUsersBySearch(users, appliedSearch),
@@ -56,6 +111,66 @@ export function InstructorRecordsManager({
     e.preventDefault();
     setAppliedSearch(searchInput.trim());
     setVisibleCount(INSTRUCTOR_PAGE_SIZE);
+  };
+
+  const openEdit = (user: InstructorRecordUserDto) => {
+    const form = toInstructorEditForm(user);
+    setEditingUser(user);
+    setEditForm(form);
+    setEditOriginal(form);
+  };
+
+  const closeEdit = () => {
+    setEditingUser(null);
+    setEditForm(null);
+    setEditOriginal(null);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser || !editForm || !editOriginal) return;
+
+    if (!hasInstructorEditFormChanges(editForm, editOriginal)) {
+      toast.error("No changes to save.");
+      return;
+    }
+
+    if (!editForm.instructorLicenseNumber.trim()) {
+      toast.error("Instructor license number is required.");
+      return;
+    }
+    if (!editForm.instructorLicenseExpiry) {
+      toast.error("Instructor license expiry is required.");
+      return;
+    }
+
+    setEditLoading(true);
+    try {
+      const response = await fetch("/api/users/update", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          buildInstructorUserUpdateBody({
+            userId: editingUser.id,
+            form: editForm,
+          }),
+        ),
+      });
+      const data = await tryReadJson<{ error?: string }>(response);
+
+      if (!response.ok) {
+        toast.error(data?.error || "Failed to update instructor.");
+        return;
+      }
+
+      toast.success("Instructor updated.");
+      closeEdit();
+      router.refresh();
+    } catch {
+      toast.error("An error occurred while saving.");
+    } finally {
+      setEditLoading(false);
+    }
   };
 
   return (
@@ -187,21 +302,31 @@ export function InstructorRecordsManager({
                             <Alert variant="destructive" className="py-2">
                               <AlertDescription className="text-sm">
                                 App account exists but no operational Instructor
-                                record is linked. Use Edit app account to add
+                                record is linked. Use{" "}
+                                {INSTRUCTOR_PROFILE_ROW_EDIT_LABEL} to add
                                 license details, or contact support if this
                                 persists.
                               </AlertDescription>
                             </Alert>
                           )}
                         </div>
-                        <div className="flex shrink-0">
+                        <div className="flex shrink-0 flex-wrap gap-2">
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => onEditAppAccount(user)}
+                            onClick={() => openEdit(user)}
                           >
                             <Edit2 className="h-4 w-4 mr-1" />
-                            Edit app account
+                            {INSTRUCTOR_PROFILE_ROW_EDIT_LABEL}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => setDeleteDialogUser(user)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            {INSTRUCTOR_PROFILE_ROW_DELETE_LABEL}
                           </Button>
                         </div>
                       </div>
@@ -234,6 +359,225 @@ export function InstructorRecordsManager({
           )}
         </CardContent>
       </Card>
+
+      <Dialog
+        open={editingUser !== null && editForm !== null}
+        onOpenChange={(open) => {
+          if (!open && !editLoading) closeEdit();
+        }}
+      >
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{INSTRUCTOR_PROFILE_ROW_EDIT_LABEL}</DialogTitle>
+            <DialogDescription>
+              Update this instructor&apos;s profile and linked app access
+              details.
+            </DialogDescription>
+          </DialogHeader>
+          {editForm && editingUser ? (
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 className="font-medium text-gray-900">
+                  Instructor profile
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-instructor-firstName">
+                      First name
+                    </Label>
+                    <Input
+                      id="edit-instructor-firstName"
+                      value={editForm.firstName}
+                      onChange={(e) =>
+                        setEditForm((prev) =>
+                          prev ? { ...prev, firstName: e.target.value } : prev,
+                        )
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-instructor-lastName">Last name</Label>
+                    <Input
+                      id="edit-instructor-lastName"
+                      value={editForm.lastName}
+                      onChange={(e) =>
+                        setEditForm((prev) =>
+                          prev ? { ...prev, lastName: e.target.value } : prev,
+                        )
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-instructor-phone">Phone</Label>
+                  <Input
+                    id="edit-instructor-phone"
+                    value={editForm.phoneNumber}
+                    onChange={(e) =>
+                      setEditForm((prev) =>
+                        prev ? { ...prev, phoneNumber: e.target.value } : prev,
+                      )
+                    }
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-instructor-license">
+                      Instructor license number
+                    </Label>
+                    <Input
+                      id="edit-instructor-license"
+                      value={editForm.instructorLicenseNumber}
+                      onChange={(e) =>
+                        setEditForm((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                instructorLicenseNumber: e.target.value,
+                              }
+                            : prev,
+                        )
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-instructor-license-expiry">
+                      Instructor license expiry
+                    </Label>
+                    <Input
+                      id="edit-instructor-license-expiry"
+                      type="date"
+                      value={editForm.instructorLicenseExpiry}
+                      onChange={(e) =>
+                        setEditForm((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                instructorLicenseExpiry: e.target.value,
+                              }
+                            : prev,
+                        )
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+                {editingUser.instructor?.instructorIdNumber ? (
+                  <div className="space-y-1">
+                    <Label>Instructor ID</Label>
+                    <p className="text-sm font-mono text-gray-700">
+                      {editingUser.instructor.instructorIdNumber}
+                    </p>
+                    <p className="text-xs text-gray-500">Read-only.</p>
+                  </div>
+                ) : null}
+              </div>
+
+              <Collapsible
+                defaultOpen
+                className="rounded-lg border border-green-100 bg-green-50/60"
+              >
+                <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 px-4 py-3 text-left">
+                  <span className="font-medium text-green-900">App access</span>
+                  <ChevronRight className="h-4 w-4 text-green-700 transition-transform group-data-[state=open]:rotate-90" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 px-4 pb-4">
+                  <p className="text-sm text-green-800">
+                    Login details for the linked app account. Name and phone are
+                    edited once in Instructor profile above.
+                  </p>
+                  <div className="space-y-1">
+                    <Label>Login email</Label>
+                    <p className="text-sm font-medium text-green-950">
+                      {editingUser.email}
+                    </p>
+                    <p className="text-xs text-green-700">
+                      Login email cannot be changed here.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm text-green-900">
+                      App access status:
+                    </span>
+                    <Badge
+                      variant={editingUser.isApproved ? "secondary" : "default"}
+                    >
+                      {getInstructorAppAccountStatusLabel(
+                        editingUser.isApproved,
+                      )}
+                    </Badge>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-instructor-address">Address</Label>
+                    <Input
+                      id="edit-instructor-address"
+                      value={editForm.address}
+                      onChange={(e) =>
+                        setEditForm((prev) =>
+                          prev ? { ...prev, address: e.target.value } : prev,
+                        )
+                      }
+                      placeholder="Address on app account"
+                    />
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              <div className="flex gap-2 justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={closeEdit}
+                  disabled={editLoading}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={editLoading}>
+                  {editLoading ? "Saving…" : "Save Instructor"}
+                </Button>
+              </div>
+            </form>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        open={deleteDialogUser !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteDialogUser(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{deleteUiState.title}</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                {deleteDialogUser ? (
+                  <p>
+                    Instructor:{" "}
+                    <span className="font-medium text-foreground">
+                      {getInstructorRecordDisplayName(deleteDialogUser)}
+                    </span>
+                    .
+                  </p>
+                ) : null}
+                <ul className="list-disc pl-5 space-y-1">
+                  {deleteUiState.blockMessages.map((message) => (
+                    <li key={message}>{message}</li>
+                  ))}
+                </ul>
+                <p>{deleteUiState.footerNote}</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Close</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }

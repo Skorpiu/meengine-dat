@@ -171,12 +171,14 @@ Documented and in use (docs/rules only; no runtime change):
 - `people-management-row-app-access-v1` — Students → Profiles **Edit Student** + **Delete**; compact APP_USER row badges (status, transmission, categories) with post-save overlay; canonical email once in row; improved blocked Delete modal; unified editor (Student profile + App access); dual-save `PATCH` + `PUT`; App accounts tab retained; remove/reactivate app access + Change email deferred (DEC-014/015); instructor unified editor deferred (`people-management-edit-instructor-unified-v1`). No API/schema/SSR changes. Validated via `pnpm check`.
 - `people-management-app-access-remove-v1` — **Remove app access** for APP_USER students: `POST /api/admin/students/[id]/app-access/remove`; transactional service `lib/students/student-app-access-lifecycle-service.ts`; Edit Student → App access UI + confirmation modal; preserves Student/User rows and history; disables login via `isApproved=false` + session invalidation; Student → `MANUAL_ONLY` + `userId=null`; reactivate/change email/app-accounts demote still deferred. Policy: [student-app-access-lifecycle-policy.md](./student-app-access-lifecycle-policy.md). Validated via `pnpm check`.
 - `people-management-app-access-reactivate-v1` — **Reactivate app access** for eligible MANUAL_ONLY students: `POST /api/admin/students/[id]/app-access/reactivate`; orphan User relink by canonical email (Path A); Path B → stable 409 + Send invitation; preserves Student id/history; no duplicate Student; change email/app-accounts demote still deferred. Policy: [student-app-access-lifecycle-policy.md](./student-app-access-lifecycle-policy.md). Validated via `pnpm check`.
+- `people-management-edit-instructor-unified-v1` — Instructors → Profiles **Edit Instructor** + **Delete** (always blocked v1); unified editor (Instructor profile + App access); login email read-only; `PUT /api/users/update` only; App accounts tab retained; instructor delete policy + app access lifecycle deferred (DEC-018). No API/schema/SSR changes. Validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
-1. `people-management-app-accounts-demote-v1` — demote/simplify App accounts tab after student lifecycle parity (instructor unified flow still deferred)
-2. `people-management-onboarding-unlinked-invitations-v1` — dedicated unlinked pending invitations section (list removal still deferred)
-3. `admin-settings-client-visibility-review-v1` — review hiding/demoting Settings for school admins (product/packaging P1)
+1. `instructor-delete-policy-v1` — safe instructor delete policy + API before row-level destructive actions
+2. `people-management-app-accounts-demote-v1` — demote/simplify App accounts tab after instructor row parity (delete policy recommended first)
+3. `people-management-onboarding-unlinked-invitations-v1` — dedicated unlinked pending invitations section (list removal still deferred)
+4. `admin-settings-client-visibility-review-v1` — review hiding/demoting Settings for school admins (product/packaging P1)
 2. `tenant-operational-organization-id-not-null-readiness-review-v1` — operator/docs review for NOT NULL migrations when NULL counts stay at zero (no apply batch needed yet)
 3. `supabase-rls-class-b-hardening-v1b` — **deferred (D4):** optional RLS + REVOKE on remaining internal tables — separate approval
 4. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next; only if product reverses tabs-first decision

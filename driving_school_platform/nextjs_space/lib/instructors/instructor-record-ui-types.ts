@@ -15,6 +15,7 @@ export type InstructorRecordUserDto = {
   firstName: string;
   lastName: string;
   phoneNumber: string | null;
+  address?: string | null;
   role: string;
   isApproved: boolean;
   instructor?: InstructorOperationalDto | null;
