@@ -18,15 +18,15 @@ Manual validation for **School Admin → copy invite link → private accept** b
 
 ## 1. Student invite — happy path
 
-| Step | Action                                                                                                                                                 | Expected                                                                 |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| 1.1  | Sign in as School Admin on tenant host → **Admin → Users** → **Invitations**.                                                                          | Invitations card loads; list has no raw token or full invite URL.        |
-| 1.2  | Create invitation: email `student-smoke+PLACEHOLDER@example.com`, role **Student**, default expiry.                                                    | Success toast; **amber** “Private invite link — copy now” alert appears. |
-| 1.3  | Click **Copy invite link**.                                                                                                                            | Button shows **Copied!** (briefly); toast confirms copy.                 |
-| 1.4  | Confirm invitation list row shows email, role, status **Pending**, expiry — **no** `token`, `tokenHash`, or invite URL in UI or network list response. | List `GET /api/admin/invitations` has no link/hash fields.               |
-| 1.5  | Open copied link in **private window** (do not share link in chat/ticket).                                                                             | `/invitations/accept` shows org name, email, role Student.               |
-| 1.6  | Complete accept: first name `Smoke`, last name `Student`, password `PLACEHOLDER_STRONG_PASSWORD`.                                                      | Success message + **Go to login**.                                       |
-| 1.7  | Sign in on tenant host with invitee email + password.                                                                                                  | Lands as **Student** in correct org.                                     |
+| Step | Action                                                                                                                                                                                 | Expected                                                                                      |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 1.1  | Sign in as School Admin on tenant host → **People** (`/admin/users`) → **Students** → **Onboarding**.                                                                                  | “Invite students without a profile yet” card loads; list has no raw token or full invite URL. |
+| 1.2  | Create invitation: email `student-smoke+PLACEHOLDER@example.com`, role **Student** (locked on this tab), default expiry.                                                               | Success toast; **amber** “Private invite link — copy now” alert appears.                      |
+| 1.3  | Click **Copy invite link**.                                                                                                                                                            | Button shows **Copied!** (briefly); toast confirms copy.                                      |
+| 1.4  | Confirm row appears under **Student invitations without a profile** with email, **No student profile yet**, status **Pending**, expiry — **no** token or invite URL in UI or list API. | List `GET /api/admin/invitations` has no link/hash fields.                                    |
+| 1.5  | Open copied link in **private window** (do not share link in chat/ticket).                                                                                                             | `/invitations/accept` shows org name, email, role Student.                                    |
+| 1.6  | Complete accept: first name `Smoke`, last name `Student`, password `PLACEHOLDER_STRONG_PASSWORD`.                                                                                      | Success message + **Go to login**.                                                            |
+| 1.7  | Sign in on tenant host with invitee email + password.                                                                                                                                  | Lands as **Student** in correct org.                                                          |
 
 Record: date `____`, environment `____`, org slug `____`, admin operator `____` (initials).
 
