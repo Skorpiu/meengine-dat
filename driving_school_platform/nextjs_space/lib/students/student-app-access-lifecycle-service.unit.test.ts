@@ -10,6 +10,7 @@ const h = vi.hoisted(() => {
   const passwordResetUpdateManyMock = vi.fn();
   const emailVerificationUpdateManyMock = vi.fn();
   const invitationUpdateManyMock = vi.fn();
+  const invitationCountMock = vi.fn();
   const studentFindFirstAfterMock = vi.fn();
 
   const transactionMock = vi.fn(
@@ -27,7 +28,10 @@ const h = vi.hoisted(() => {
         session: { deleteMany: sessionDeleteManyMock },
         passwordResetToken: { updateMany: passwordResetUpdateManyMock },
         emailVerificationToken: { updateMany: emailVerificationUpdateManyMock },
-        userInvitation: { updateMany: invitationUpdateManyMock },
+        userInvitation: {
+          updateMany: invitationUpdateManyMock,
+          count: invitationCountMock,
+        },
       };
       return fn(tx);
     },
@@ -43,6 +47,7 @@ const h = vi.hoisted(() => {
     passwordResetUpdateManyMock,
     emailVerificationUpdateManyMock,
     invitationUpdateManyMock,
+    invitationCountMock,
     studentFindFirstAfterMock,
     transactionMock,
     prismaMock: {
@@ -58,8 +63,10 @@ vi.mock("@/lib/db", () => ({
 
 import {
   removeStudentAppAccess,
+  reactivateStudentAppAccess,
   resolveStudentEmailAfterAppAccessRemove,
   STUDENT_APP_ACCESS_REMOVE_CODE,
+  STUDENT_APP_ACCESS_REACTIVATE_CODE,
 } from "@/lib/students/student-app-access-lifecycle-service";
 
 const appUserRow = {
@@ -107,6 +114,7 @@ beforeEach(() => {
   h.emailVerificationUpdateManyMock.mockResolvedValue({ count: 0 });
   h.userUpdateMock.mockResolvedValue(linkedUser);
   h.invitationUpdateManyMock.mockResolvedValue({ count: 1 });
+  h.invitationCountMock.mockResolvedValue(0);
   h.studentFindFirstAfterMock.mockResolvedValue(updatedStudentRow);
 });
 
@@ -308,6 +316,230 @@ describe("removeStudentAppAccess", () => {
     expect(result).toMatchObject({
       ok: false,
       code: STUDENT_APP_ACCESS_REMOVE_CODE.STUDENT_APP_ACCESS_ALREADY_REMOVED,
+    });
+  });
+});
+
+const manualOnlyRow = {
+  id: "stu-1",
+  organizationId: "org-a",
+  appAccessMode: "MANUAL_ONLY" as const,
+  userId: null,
+  email: "student@school.test",
+};
+
+const reactivatedStudentRow = {
+  ...updatedStudentRow,
+  appAccessMode: "APP_USER" as const,
+  userId: "user-1",
+  user: {
+    id: "user-1",
+    email: "student@school.test",
+    firstName: "João",
+    lastName: "Silva",
+  },
+  userInvitations: [],
+};
+
+describe("reactivateStudentAppAccess", () => {
+  beforeEach(() => {
+    h.queryRawMock.mockResolvedValue([{ id: "stu-1" }]);
+    h.studentFindFirstMock.mockImplementation(async ({ where }: any) => {
+      if (where?.userId && where?.id?.not) {
+        return null;
+      }
+      return manualOnlyRow;
+    });
+    h.invitationCountMock.mockResolvedValue(0);
+    h.userFindFirstMock.mockResolvedValue(linkedUser);
+    h.studentUpdateMock.mockResolvedValue(manualOnlyRow);
+    h.userUpdateMock.mockResolvedValue({ ...linkedUser, isApproved: true });
+    h.studentFindFirstAfterMock.mockResolvedValue(reactivatedStudentRow);
+  });
+
+  it("relinks orphan User and sets APP_USER", async () => {
+    const result = await reactivateStudentAppAccess({
+      organizationId: "org-a",
+      studentId: "stu-1",
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.student.appAccessMode).toBe("APP_USER");
+      expect(result.student.userId).toBe("user-1");
+    }
+
+    expect(h.userUpdateMock).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: { isApproved: true },
+    });
+    expect(h.studentUpdateMock).toHaveBeenCalledWith({
+      where: { id: "stu-1" },
+      data: {
+        userId: "user-1",
+        appAccessMode: "APP_USER",
+        email: "student@school.test",
+      },
+    });
+  });
+
+  it("preserves student id and does not create duplicate student", async () => {
+    await reactivateStudentAppAccess({
+      organizationId: "org-a",
+      studentId: "stu-1",
+    });
+
+    expect(h.studentUpdateMock).toHaveBeenCalledTimes(1);
+    expect(h.studentUpdateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "stu-1" } }),
+    );
+  });
+
+  it("returns notFound for missing student", async () => {
+    h.queryRawMock.mockResolvedValue([]);
+
+    const result = await reactivateStudentAppAccess({
+      organizationId: "org-a",
+      studentId: "missing",
+    });
+
+    expect(result).toEqual({ ok: false, notFound: true });
+  });
+
+  it("returns 409 for already APP_USER", async () => {
+    h.studentFindFirstMock.mockResolvedValue({
+      ...manualOnlyRow,
+      appAccessMode: "APP_USER",
+      userId: "user-1",
+    });
+
+    const result = await reactivateStudentAppAccess({
+      organizationId: "org-a",
+      studentId: "stu-1",
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: STUDENT_APP_ACCESS_REACTIVATE_CODE.STUDENT_ALREADY_HAS_APP_ACCESS,
+      status: 409,
+    });
+  });
+
+  it("returns 409 for INVITED state", async () => {
+    h.studentFindFirstMock.mockResolvedValue({
+      ...manualOnlyRow,
+      appAccessMode: "INVITED",
+    });
+
+    const result = await reactivateStudentAppAccess({
+      organizationId: "org-a",
+      studentId: "stu-1",
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: STUDENT_APP_ACCESS_REACTIVATE_CODE.STUDENT_HAS_PENDING_INVITATION,
+    });
+  });
+
+  it("returns 409 for pending invitation", async () => {
+    h.invitationCountMock.mockResolvedValue(1);
+
+    const result = await reactivateStudentAppAccess({
+      organizationId: "org-a",
+      studentId: "stu-1",
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: STUDENT_APP_ACCESS_REACTIVATE_CODE.STUDENT_HAS_PENDING_INVITATION,
+    });
+  });
+
+  it("returns 400 for missing email", async () => {
+    h.studentFindFirstMock.mockResolvedValue({
+      ...manualOnlyRow,
+      email: null,
+    });
+
+    const result = await reactivateStudentAppAccess({
+      organizationId: "org-a",
+      studentId: "stu-1",
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: STUDENT_APP_ACCESS_REACTIVATE_CODE.MISSING_EMAIL,
+      status: 400,
+    });
+  });
+
+  it("returns 409 when orphan user not found (Path B)", async () => {
+    h.userFindFirstMock.mockResolvedValue(null);
+
+    const result = await reactivateStudentAppAccess({
+      organizationId: "org-a",
+      studentId: "stu-1",
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: STUDENT_APP_ACCESS_REACTIVATE_CODE.REACTIVATE_ORPHAN_USER_NOT_FOUND,
+      status: 409,
+    });
+  });
+
+  it("returns 409 when user linked to another student", async () => {
+    h.studentFindFirstMock.mockImplementation(async ({ where }: any) => {
+      if (where?.userId && where?.id?.not) {
+        return { id: "stu-other" };
+      }
+      return manualOnlyRow;
+    });
+
+    const result = await reactivateStudentAppAccess({
+      organizationId: "org-a",
+      studentId: "stu-1",
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: STUDENT_APP_ACCESS_REACTIVATE_CODE.USER_LINKED_TO_OTHER_STUDENT,
+    });
+  });
+
+  it("returns 409 for cross-tenant orphan user", async () => {
+    h.userFindFirstMock.mockResolvedValue({
+      ...linkedUser,
+      organizationId: "org-other",
+    });
+
+    const result = await reactivateStudentAppAccess({
+      organizationId: "org-a",
+      studentId: "stu-1",
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: STUDENT_APP_ACCESS_REACTIVATE_CODE.ORPHAN_USER_TENANT_MISMATCH,
+    });
+  });
+
+  it("returns stable 409 on second reactivate", async () => {
+    h.studentFindFirstMock.mockResolvedValue({
+      ...manualOnlyRow,
+      appAccessMode: "APP_USER",
+      userId: "user-1",
+    });
+
+    const result = await reactivateStudentAppAccess({
+      organizationId: "org-a",
+      studentId: "stu-1",
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: STUDENT_APP_ACCESS_REACTIVATE_CODE.STUDENT_ALREADY_HAS_APP_ACCESS,
     });
   });
 });

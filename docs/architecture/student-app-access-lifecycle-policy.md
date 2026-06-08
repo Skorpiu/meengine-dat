@@ -2,7 +2,9 @@
 
 ## Purpose
 
-Documents the **Remove app access** v1 behavior for School Admin People management. Reactivate and Change email remain future slices.
+Documents **Remove** and **Reactivate app access** for School Admin People management. Change email remains a future slice.
+
+---
 
 ## Remove app access (`people-management-app-access-remove-v1`)
 
@@ -28,7 +30,7 @@ Documents the **Remove app access** v1 behavior for School Admin People manageme
 - If `Student.email` is empty, copy linked `User.email` onto the Student record.
 - If `Student.email` is already set, **keep unchanged** (operational email may differ; Change email is a future batch).
 
-### Stable errors
+### Stable errors (remove)
 
 | Condition | HTTP | Code |
 | --------- | ---- | ---- |
@@ -41,36 +43,100 @@ Documents the **Remove app access** v1 behavior for School Admin People manageme
 | Linked User wrong tenant | 409 | `linked_user_tenant_mismatch` |
 | Demo org | 403 | demo guard code |
 
-**Idempotency:** Second remove on an already-removed student returns **409** `student_app_access_already_removed` (not a silent no-op).
+**Idempotency:** Second remove → **409** `student_app_access_already_removed`.
+
+---
+
+## Reactivate app access (`people-management-app-access-reactivate-v1`)
+
+**Goal:** Restore app login on the **same** Student profile by re-linking an existing orphan User when safe. Never creates a duplicate Student.
+
+### API
+
+- `POST /api/admin/students/[id]/app-access/reactivate`
+- Same guards as remove (admin, tenant, demo).
+- Optional JSON body reserved for future category/transmission updates; v1 ignores body safely.
+
+### Eligibility
+
+- Student in tenant with `appAccessMode === MANUAL_ONLY`, `userId === null`.
+- Canonical `Student.email` present and valid.
+- No **PENDING** invitation on the Student.
+- Not `INVITED` / not already `APP_USER`.
+
+### Path A — orphan User relink (implemented)
+
+Find User where:
+
+- `email` = normalized Student email
+- `role === STUDENT`
+- `organizationId` = tenant
+- Not linked to a **different** Student (`students.userId`)
+
+Then atomically:
+
+1. `User.isApproved = true` (User row preserved)
+2. `Student.userId = user.id`, `Student.appAccessMode = APP_USER`
+3. Normalize `Student.email` to canonical form
+
+Category/transmission: edit after reactivate via normal **Edit Student → App access** (v1 conservative).
+
+### Path B — no orphan User
+
+Returns **409** `reactivate_orphan_user_not_found` with message to use **Send invitation** on the profile row. Does **not** auto-invite or create Students.
+
+### Path C — User linked to another Student
+
+**409** `user_linked_to_other_student`.
+
+### Path D — email mismatch
+
+If orphan User email does not match Student canonical email after normalization → **409** `student_email_user_mismatch`. Requires future **Change email** batch (`people-management-student-email-change-policy-v1`).
+
+### Stable errors (reactivate)
+
+| Condition | HTTP | Code |
+| --------- | ---- | ---- |
+| Missing / cross-tenant Student | 404 | (message only) |
+| Missing email | 400 | `missing_email` |
+| Invalid email format | 400 | `invalid_email` |
+| Already `APP_USER` / has userId | 409 | `student_already_has_app_access` |
+| `INVITED` or pending invitation | 409 | `student_has_pending_invitation` |
+| Not `MANUAL_ONLY` | 409 | `student_not_manual_only` |
+| No orphan User (Path B) | 409 | `reactivate_orphan_user_not_found` |
+| User linked elsewhere (Path C) | 409 | `user_linked_to_other_student` |
+| Orphan role ≠ STUDENT | 409 | `orphan_user_role_mismatch` |
+| Orphan wrong tenant | 409 | `orphan_user_tenant_mismatch` |
+| Email mismatch (Path D) | 409 | `student_email_user_mismatch` |
+| Demo org | 403 | demo guard code |
+
+**Idempotency:** Second reactivate when already active → **409** `student_already_has_app_access`.
 
 ### UI
 
-- **Edit Student → App access** section: destructive **Remove app access** button (APP_USER only).
-- Strong confirmation modal; does not auto-run on Delete.
-- Blocked Delete copy directs admin to Remove app access first when app access is active.
+- **Edit Student → App access** section for eligible `MANUAL_ONLY` students: **Reactivate app access** + confirmation modal.
+- After success: row → `APP_USER`, badges return, **Remove app access** available, **Send invitation** hidden.
+- **Delete** remains separate; active app access blocks delete again (existing policy).
 
-### Explicit non-goals (this slice)
+---
+
+## Explicit non-goals (both slices)
 
 - No hard delete of User or Student.
-- No Reactivate app access (`people-management-app-access-reactivate-v1`).
 - No Change email (`people-management-student-email-change-policy-v1`).
-- No App Accounts tab demote (`people-management-app-accounts-demote-v1` — deferred until remove/reactivate safe).
-- No Prisma schema / migration / RLS changes.
-
-### Deferred hardening
-
-- Dedicated bulk invalidation helper for auth tokens (currently uses existing token models in-transaction).
-- Login block after remove relies on `isApproved=false` + session deletion; no auth-core changes in v1.
+- No App Accounts tab demote until instructor unified flow is safe.
+- No Prisma schema / migration / RLS / auth-core changes.
 
 ## Future slices
 
 | Batch | Scope |
 | ----- | ----- |
-| `people-management-app-access-reactivate-v1` | Re-enable app access; reuse profile/account where safe |
 | `people-management-student-email-change-policy-v1` | Canonical Change email (Student + User + invitations) |
-| `people-management-app-accounts-demote-v1` | Simplify App accounts tab after lifecycle parity |
+| `people-management-app-accounts-demote-v1` | Simplify App accounts tab after lifecycle + instructor parity |
 
 ## Related decisions
 
 - DEC-014 — App access lifecycle product intent
 - DEC-015 — Canonical student email
+- DEC-016 — Remove app access v1
+- DEC-017 — Reactivate app access v1 (orphan User relink; Path B → Send invitation)

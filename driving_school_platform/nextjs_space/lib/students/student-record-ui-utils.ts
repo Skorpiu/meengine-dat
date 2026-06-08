@@ -199,7 +199,7 @@ export function studentRecordApiErrorMessage(
     case "user_already_exists":
       return "An account with this email already exists.";
     case "student_not_manual_only":
-      return "Only student records without app access (manual) can be removed.";
+      return "This action is only available for manual student records without active app access.";
     case "student_has_linked_user":
       return "This student record is linked to an account and cannot be removed.";
     case "student_has_invitations":
@@ -226,6 +226,20 @@ export function studentRecordApiErrorMessage(
       return "Linked app account does not belong to this school.";
     case "student_app_access_already_removed":
       return "App access has already been removed for this student.";
+    case "student_already_has_app_access":
+      return "This student already has active app access.";
+    case "student_has_pending_invitation":
+      return "This student has a pending invitation. Revoke it before reactivating app access.";
+    case "reactivate_orphan_user_not_found":
+      return "No existing app account was found for this email. Use Send invitation on the profile row instead.";
+    case "user_linked_to_other_student":
+      return "An app account with this email is already linked to another student record.";
+    case "orphan_user_role_mismatch":
+      return "Existing app account is not a student account.";
+    case "orphan_user_tenant_mismatch":
+      return "Existing app account does not belong to this school.";
+    case "student_email_user_mismatch":
+      return "Student email does not match the existing app account. Change email is not available yet.";
     default:
       return fallback;
   }
