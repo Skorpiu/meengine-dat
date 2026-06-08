@@ -77,6 +77,8 @@ const manualStudentRow = {
   schoolStudentIdSource: "MANUAL",
   enrollmentDate: new Date("2026-05-29T10:00:00.000Z"),
   appAccessMode: "MANUAL_ONLY",
+  category: null,
+  transmissionType: null,
   createdAt: new Date("2026-05-29T10:00:00.000Z"),
   updatedAt: new Date("2026-05-29T10:00:00.000Z"),
   user: null,

@@ -23,6 +23,8 @@ function baseStudent(
     schoolStudentIdSource: "MANUAL",
     enrollmentDate: null,
     appAccessMode: "MANUAL_ONLY",
+    category: null,
+    transmissionType: null,
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
     user: null,

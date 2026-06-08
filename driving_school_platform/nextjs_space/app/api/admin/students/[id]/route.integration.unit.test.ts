@@ -3,15 +3,29 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const h = vi.hoisted(() => {
   const findFirstMock = vi.fn();
   const updateMock = vi.fn();
+  const categoryFindFirstMock = vi.fn();
+  const transmissionFindFirstMock = vi.fn();
 
   const prismaMock = {
     student: {
       findFirst: findFirstMock,
       update: updateMock,
     },
+    category: {
+      findFirst: categoryFindFirstMock,
+    },
+    transmissionType: {
+      findFirst: transmissionFindFirstMock,
+    },
   };
 
-  return { prismaMock, findFirstMock, updateMock };
+  return {
+    prismaMock,
+    findFirstMock,
+    updateMock,
+    categoryFindFirstMock,
+    transmissionFindFirstMock,
+  };
 });
 
 vi.mock("@/lib/db", () => ({
@@ -74,9 +88,12 @@ const studentRow = {
   schoolStudentIdSource: "MANUAL",
   enrollmentDate: new Date("2026-05-29T10:00:00.000Z"),
   appAccessMode: "MANUAL_ONLY",
+  category: null,
+  transmissionType: null,
   createdAt: new Date("2026-05-29T10:00:00.000Z"),
   updatedAt: new Date("2026-05-29T10:00:00.000Z"),
   user: null,
+  userInvitations: [],
 };
 
 function req(method: string, url: string, payload?: unknown): Request {
@@ -223,6 +240,57 @@ describe("PATCH /api/admin/students/[id]", () => {
     );
 
     expect(res.status).toBe(404);
+    expect(h.updateMock).not.toHaveBeenCalled();
+  });
+
+  it("updates license category and transmission on student profile", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    h.findFirstMock.mockResolvedValue({ id: "stu-1" });
+    h.categoryFindFirstMock.mockResolvedValue({ id: 2 });
+    h.transmissionFindFirstMock.mockResolvedValue({ id: 3 });
+    h.updateMock.mockResolvedValue({
+      ...studentRow,
+      category: { id: 2, name: "B" },
+      transmissionType: { id: 3, name: "Manual" },
+    });
+
+    const res = await PATCH(
+      req("PATCH", "http://school.example.com/api/admin/students/stu-1", {
+        categoryName: "B",
+        transmissionTypeName: "Manual",
+      }) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(200);
+    const updateArg = h.updateMock.mock.calls[0]?.[0];
+    expect(updateArg.data.category).toEqual({ connect: { id: 2 } });
+    expect(updateArg.data.transmissionType).toEqual({ connect: { id: 3 } });
+    const body = await res.json();
+    expect(body.data.student.category).toEqual({ id: 2, name: "B" });
+    expect(body.data.student.transmissionType).toEqual({
+      id: 3,
+      name: "Manual",
+    });
+  });
+
+  it("returns 400 when category name is unknown", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    h.findFirstMock.mockResolvedValue({ id: "stu-1" });
+    h.categoryFindFirstMock.mockResolvedValue(null);
+
+    const res = await PATCH(
+      req("PATCH", "http://school.example.com/api/admin/students/stu-1", {
+        categoryName: "Z",
+      }) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(400);
     expect(h.updateMock).not.toHaveBeenCalled();
   });
 });
