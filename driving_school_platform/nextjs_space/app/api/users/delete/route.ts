@@ -52,6 +52,14 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Prevent admin from deleting themselves
+    if (userId === session.user.id) {
+      return NextResponse.json(
+        { error: "You cannot delete your own account" },
+        { status: 400 },
+      );
+    }
+
     if (targetUser.role === "INSTRUCTOR") {
       return NextResponse.json(
         {
@@ -64,11 +72,15 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Prevent admin from deleting themselves
-    if (userId === session.user.id) {
+    if (targetUser.role === "STUDENT") {
       return NextResponse.json(
-        { error: "You cannot delete your own account" },
-        { status: 400 },
+        {
+          error: "use_student_delete_policy",
+          code: "use_student_delete_policy",
+          message:
+            "Student accounts cannot be deleted via legacy user delete. Use People → Students → Profiles for student record delete policy, or Remove/Reactivate app access for login lifecycle changes.",
+        },
+        { status: 409 },
       );
     }
 

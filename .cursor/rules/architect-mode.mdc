@@ -294,6 +294,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `instructor-hard-delete-zero-deps-v1` — Zero-deps hard delete API + Profiles Delete UI + legacy INSTRUCTOR guard on `DELETE /api/users/delete`
 - `instructor-deactivate-v1` — Deactivate + Reactivate in Edit → App access; APIs; badge/App access colors aligned with Vehicles + Students; Schedule Map warning; booking enforcement + credentials login block
 - `people-management-app-accounts-demote-v1` — App Accounts removed from People L1 tabs; **Advanced accounts** read-only diagnostics (collapsed by default); no legacy create/edit/delete UI; APIs unchanged
+- `users-delete-student-guard-v1` — `DELETE /api/users/delete` blocks STUDENT with **409** `use_student_delete_policy` (symmetric to INSTRUCTOR); legacy endpoint no longer deletes STUDENT/INSTRUCTOR Users
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
@@ -303,7 +304,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Likely next:**
 
-2. `users-delete-student-guard-v1` — guard `DELETE /api/users/delete` for STUDENT (symmetric to INSTRUCTOR)
+2. `people-management-student-email-change-policy-v1` — canonical Change email flow
 3. `admin-settings-client-visibility-review-v1` — review hiding/demoting Settings for school admins (product P1)
 
 **Likely next (slice parent batches; do not implement broad names directly):**
