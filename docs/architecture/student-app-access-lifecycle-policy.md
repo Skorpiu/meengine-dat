@@ -133,7 +133,7 @@ If orphan User email does not match Student canonical email after normalization 
 | ----- | ----- |
 | `people-management-student-email-change-policy-v1` | Canonical Change email (Student + User + invitations) |
 | `people-management-app-accounts-demote-v1` | **Done** — Advanced accounts read-only diagnostics; no create/edit/delete UI |
-| `users-delete-student-guard-v1` | Guard `DELETE /api/users/delete` for STUDENT (symmetric to INSTRUCTOR) |
+| `users-delete-student-guard-v1` | **Done** — `DELETE /api/users/delete` returns **409** `use_student_delete_policy` for STUDENT; use People → Students → Profiles or app access lifecycle |
 
 ## Related decisions
 

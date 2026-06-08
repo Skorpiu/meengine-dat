@@ -218,7 +218,7 @@ Batch **`instructor-hard-delete-zero-deps-v1`** added a guard on **`DELETE /api/
 | 3 | **`instructor-deactivate-v1`** | Deactivate + Reactivate lifecycle in Edit → App access; status badges; Schedule Map inactive-instructor warning; booking filters (**done** when merged) |
 | 4 | **`people-management-app-accounts-demote-v1`** | Demote App accounts tab — read-only Advanced accounts; no delete UI (**done** when merged) |
 | 5 | **`people-management-instructor-app-access-lifecycle-policy-v1`** | Remove/reactivate app access policy + API |
-| 6 | **`users-delete-student-guard-v1`** | Guard `DELETE /api/users/delete` for STUDENT (symmetric to INSTRUCTOR) |
+| 6 | **`users-delete-student-guard-v1`** | Guard `DELETE /api/users/delete` for STUDENT — **409** `use_student_delete_policy` (**done** when merged) |
 | 7 | **`instructor-archive-schema-v1`** (optional, D4) | `Instructor.status` / `archivedAt` if product requires formal archive |
 
 ---

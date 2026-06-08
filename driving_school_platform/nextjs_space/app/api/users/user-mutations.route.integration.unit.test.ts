@@ -11,6 +11,7 @@ const h = vi.hoisted(() => {
   const userDeleteManyMock = vi.fn();
   const studentCreateMock = vi.fn();
   const studentUpdateManyMock = vi.fn();
+  const studentFindFirstMock = vi.fn();
   const instructorCreateMock = vi.fn();
   const instructorUpdateManyMock = vi.fn();
   const categoryFindFirstMock = vi.fn();
@@ -25,7 +26,11 @@ const h = vi.hoisted(() => {
       deleteMany: userDeleteManyMock,
     },
     organization: { findUnique: organizationFindUniqueMock },
-    student: { create: studentCreateMock, updateMany: studentUpdateManyMock },
+    student: {
+      create: studentCreateMock,
+      updateMany: studentUpdateManyMock,
+      findFirst: studentFindFirstMock,
+    },
     instructor: {
       create: instructorCreateMock,
       updateMany: instructorUpdateManyMock,
@@ -44,6 +49,8 @@ const h = vi.hoisted(() => {
     userUpdateManyMock,
     userDeleteManyMock,
     studentCreateMock,
+    studentUpdateManyMock,
+    studentFindFirstMock,
     prismaMock,
   };
 });
@@ -255,8 +262,11 @@ describe("User management mutations (tenant + demo guards)", () => {
     expect(h.userDeleteManyMock).not.toHaveBeenCalled();
   });
 
-  it("DELETE scopes deleteMany by organizationId", async () => {
-    h.userFindFirstMock.mockResolvedValue({ id: "target2", role: "STUDENT" });
+  it("DELETE scopes deleteMany by organizationId for non-STUDENT/INSTRUCTOR roles", async () => {
+    h.userFindFirstMock.mockResolvedValue({
+      id: "target2",
+      role: "SUPER_ADMIN",
+    });
 
     const res = await deleteUser(
       new Request("http://localhost/api/users/delete?userId=target2") as any,
@@ -266,6 +276,29 @@ describe("User management mutations (tenant + demo guards)", () => {
     expect(h.userDeleteManyMock).toHaveBeenCalledWith({
       where: { id: "target2", organizationId: "org1" },
     });
+  });
+
+  it("DELETE returns 409 use_student_delete_policy for STUDENT role", async () => {
+    h.userFindFirstMock.mockResolvedValue({
+      id: "target-student",
+      role: "STUDENT",
+    });
+
+    const res = await deleteUser(
+      new Request(
+        "http://localhost/api/users/delete?userId=target-student",
+      ) as any,
+    );
+
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.code).toBe("use_student_delete_policy");
+    expect(body.error).toBe("use_student_delete_policy");
+    expect(body.message).toContain("Students → Profiles");
+    expect(body.message).toContain("Remove/Reactivate app access");
+    expect(h.userDeleteManyMock).not.toHaveBeenCalled();
+    expect(h.studentUpdateManyMock).not.toHaveBeenCalled();
+    expect(h.studentFindFirstMock).not.toHaveBeenCalled();
   });
 
   it("DELETE returns 409 use_instructor_delete_policy for INSTRUCTOR role", async () => {
