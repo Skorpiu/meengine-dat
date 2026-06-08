@@ -93,7 +93,7 @@ beforeEach(() => {
   h.guardTenantAuthenticatedRouteMock.mockResolvedValue({ allowed: true });
   h.organizationFindUniqueMock.mockResolvedValue({ isDemo: false });
   h.getServerSessionMock.mockResolvedValue(prodSession);
-  h.userFindFirstMock.mockResolvedValue({ id: "target1" });
+  h.userFindFirstMock.mockResolvedValue({ id: "target1", role: "STUDENT" });
   h.userUpdateManyMock.mockResolvedValue({ count: 1 });
   h.userDeleteManyMock.mockResolvedValue({ count: 1 });
 });
@@ -256,6 +256,8 @@ describe("User management mutations (tenant + demo guards)", () => {
   });
 
   it("DELETE scopes deleteMany by organizationId", async () => {
+    h.userFindFirstMock.mockResolvedValue({ id: "target2", role: "STUDENT" });
+
     const res = await deleteUser(
       new Request("http://localhost/api/users/delete?userId=target2") as any,
     );
@@ -266,7 +268,27 @@ describe("User management mutations (tenant + demo guards)", () => {
     });
   });
 
+  it("DELETE returns 409 use_instructor_delete_policy for INSTRUCTOR role", async () => {
+    h.userFindFirstMock.mockResolvedValue({
+      id: "target-instructor",
+      role: "INSTRUCTOR",
+    });
+
+    const res = await deleteUser(
+      new Request(
+        "http://localhost/api/users/delete?userId=target-instructor",
+      ) as any,
+    );
+
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.code).toBe("use_instructor_delete_policy");
+    expect(body.message).toContain("Instructors → Profiles");
+    expect(h.userDeleteManyMock).not.toHaveBeenCalled();
+  });
+
   it("DELETE prevents self-delete", async () => {
+    h.userFindFirstMock.mockResolvedValue({ id: "admin1", role: "STUDENT" });
     const res = await deleteUser(
       new Request("http://localhost/api/users/delete?userId=admin1") as any,
     );

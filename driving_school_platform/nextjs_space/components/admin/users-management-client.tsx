@@ -295,15 +295,22 @@ export function UsersManagementClient({
         },
       );
 
-      const data = await tryReadJson<{ message?: string; error?: string }>(
-        response,
-      );
+      const data = await tryReadJson<{
+        message?: string;
+        error?: string;
+        code?: string;
+      }>(response);
 
       if (response.ok) {
         toast.success(data?.message || "User deleted successfully");
         router.refresh();
       } else {
-        toast.error(data?.error || "Failed to delete user");
+        const message =
+          data?.code === "use_instructor_delete_policy"
+            ? data.message ||
+              "Instructor accounts cannot be deleted from App Accounts. Use People → Instructors → Profiles."
+            : data?.error || "Failed to delete user";
+        toast.error(message);
       }
     } catch (error) {
       toast.error("An error occurred");
