@@ -20,6 +20,7 @@ import {
 import {
   createManualStudentBodySchema,
   isStudentAppAccessModeParam,
+  normalizeStudentRecordAddress,
   normalizeStudentRecordEmail,
   normalizeStudentRecordPhone,
   parseOptionalEnrollmentDate,
@@ -196,6 +197,7 @@ export async function POST(request: NextRequest) {
         lastName: data.lastName?.trim() || null,
         email,
         phoneNumber: normalizeStudentRecordPhone(data.phoneNumber),
+        address: normalizeStudentRecordAddress(data.address),
         schoolStudentId: schoolId.parts.schoolStudentId,
         schoolStudentYearSuffix: schoolId.parts.yearSuffix,
         schoolStudentSequence: schoolId.parts.sequenceNumber,

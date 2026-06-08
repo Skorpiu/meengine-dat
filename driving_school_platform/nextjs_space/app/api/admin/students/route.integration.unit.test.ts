@@ -71,6 +71,7 @@ const manualStudentRow = {
   lastName: "Silva",
   email: "joao@school.test",
   phoneNumber: "+351900000000",
+  address: null,
   schoolStudentId: "26001",
   schoolStudentYearSuffix: "26",
   schoolStudentSequence: 1,
@@ -284,6 +285,29 @@ describe("POST /api/admin/students", () => {
     expect(createArg.data.schoolStudentIdSource).toBe("MANUAL");
     expect(createArg.data.studentIdNumber).toBeUndefined();
     expect(createArg.select).toEqual(STUDENT_RECORD_SELECT);
+  });
+
+  it("persists optional address on manual create", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    h.createMock.mockResolvedValue({
+      ...manualStudentRow,
+      address: "Avenida Central 5",
+    });
+
+    const res = await POST(
+      req("POST", "http://school.example.com/api/admin/students", {
+        firstName: "João",
+        yearSuffix: "26",
+        sequenceNumber: 1,
+        address: "Avenida Central 5",
+      }) as any,
+    );
+
+    expect(res.status).toBe(201);
+    const createArg = h.createMock.mock.calls[0]?.[0];
+    expect(createArg.data.address).toBe("Avenida Central 5");
   });
 
   it("returns 409 when schoolStudentId already exists in org", async () => {

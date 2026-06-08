@@ -42,7 +42,7 @@ export function toInstructorEditForm(
   };
 }
 
-/** Body for PUT /api/users/update — role INSTRUCTOR; login email is not included. */
+/** Body for PUT /api/users/update — profile fields on User; login email is not included. */
 export function buildInstructorUserUpdateBody(input: {
   userId: string;
   form: InstructorEditForm;

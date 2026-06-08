@@ -82,6 +82,7 @@ const studentRow = {
   lastName: "Silva",
   email: null,
   phoneNumber: null,
+  address: null,
   schoolStudentId: "26001",
   schoolStudentYearSuffix: "26",
   schoolStudentSequence: 1,
@@ -274,6 +275,47 @@ describe("PATCH /api/admin/students/[id]", () => {
       id: 3,
       name: "Manual",
     });
+  });
+
+  it("persists address on student profile", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    h.findFirstMock.mockResolvedValue({ id: "stu-1" });
+    h.updateMock.mockResolvedValue({
+      ...studentRow,
+      address: "Rua das Flores 10",
+    });
+
+    const res = await PATCH(
+      req("PATCH", "http://school.example.com/api/admin/students/stu-1", {
+        address: "Rua das Flores 10",
+      }) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(200);
+    const updateArg = h.updateMock.mock.calls[0]?.[0];
+    expect(updateArg.data.address).toBe("Rua das Flores 10");
+  });
+
+  it("clears address when null is sent", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    h.findFirstMock.mockResolvedValue({ id: "stu-1" });
+    h.updateMock.mockResolvedValue({ ...studentRow, address: null });
+
+    const res = await PATCH(
+      req("PATCH", "http://school.example.com/api/admin/students/stu-1", {
+        address: null,
+      }) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(200);
+    const updateArg = h.updateMock.mock.calls[0]?.[0];
+    expect(updateArg.data.address).toBeNull();
   });
 
   it("returns 400 when category name is unknown", async () => {

@@ -219,6 +219,7 @@ export async function createManualStudentRecord(input: {
   lastName: string | null;
   email: string | null;
   phoneNumber: string | null;
+  address: string | null;
   schoolStudentId: string;
   schoolStudentYearSuffix: string;
   schoolStudentSequence: number;
@@ -232,6 +233,7 @@ export async function createManualStudentRecord(input: {
       lastName: input.lastName,
       email: input.email,
       phoneNumber: input.phoneNumber,
+      address: input.address,
       schoolStudentId: input.schoolStudentId,
       schoolStudentYearSuffix: input.schoolStudentYearSuffix,
       schoolStudentSequence: input.schoolStudentSequence,

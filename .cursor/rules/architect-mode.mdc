@@ -300,6 +300,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `people-management-onboarding-unlinked-invitations-v1` — Students → Onboarding unlinked-only pending student invite list; client-side Expired display; helpers `lib/invitations/invitation-ui-utils.ts`
 - `people-management-advanced-accounts-removal-and-profile-avatars-v1` — Advanced accounts section removed from People; `PeopleProfileAvatar` on Students/Instructors Profiles; `loadAdminUsersPageData` bridge retained; no API/schema changes
 - `people-management-student-profile-operational-fields-v1` — license category + transmission on Student profile; PATCH student operational fields; App access = login/lifecycle only; MANUAL_ONLY App access section in Edit Student
+- `people-management-profile-address-fields-v1` — Address on Student/Instructor profile (DEC-023); `Student.address` migration; PATCH/POST students + manual create; APP_USER syncs `User.address`; Instructor UI-only on `User.address`; App access = login/lifecycle only
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 

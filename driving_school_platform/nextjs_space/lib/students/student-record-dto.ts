@@ -14,6 +14,7 @@ export const STUDENT_RECORD_USER_SELECT = {
   email: true,
   firstName: true,
   lastName: true,
+  address: true,
 } satisfies Prisma.UserSelect;
 
 /** Nested User fields for lesson-form student list (no email). */
@@ -41,6 +42,7 @@ export const STUDENT_RECORD_SELECT = {
   lastName: true,
   email: true,
   phoneNumber: true,
+  address: true,
   schoolStudentId: true,
   schoolStudentYearSuffix: true,
   schoolStudentSequence: true,
@@ -109,6 +111,8 @@ export type StudentRecordDto = {
   lastName: string | null;
   email: string | null;
   phoneNumber: string | null;
+  /** Stored on Student; may be null while linked User still has legacy address. */
+  address: string | null;
   schoolStudentId: string | null;
   schoolStudentYearSuffix: string | null;
   schoolStudentSequence: number | null;
@@ -151,6 +155,7 @@ export function mapStudentRecordDto(row: StudentRecordRow): StudentRecordDto {
     lastName: row.lastName,
     email: row.email,
     phoneNumber: row.phoneNumber,
+    address: row.address,
     schoolStudentId: row.schoolStudentId,
     schoolStudentYearSuffix: row.schoolStudentYearSuffix,
     schoolStudentSequence: row.schoolStudentSequence,
