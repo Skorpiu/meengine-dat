@@ -114,7 +114,16 @@ import {
 import { invitationApiErrorMessage } from "@/lib/invitations/invitation-ui-utils";
 import { StudentPracticalHistoryDialog } from "@/components/admin/student-practical-history-dialog";
 import { StudentRecordInviteDialog } from "@/components/admin/student-record-invite-dialog";
+import {
+  ChangeStudentEmailButton,
+  StudentEmailChangeDialog,
+} from "@/components/admin/student-email-change-dialog";
 import { StudentRecordsImportDialog } from "@/components/admin/student-records-import-dialog";
+import {
+  canShowChangeStudentEmailAction,
+  shouldHideStudentProfileEmailField,
+  shouldOmitEmailFromStudentPatch,
+} from "@/lib/students/student-email-change-ui-utils";
 import {
   fetchStudentRecordsExport,
   type StudentRecordsExportFormat,
@@ -255,6 +264,8 @@ export function StudentRecordsManager({
   const [revokingInvitationId, setRevokingInvitationId] = useState<
     string | null
   >(null);
+  const [changeEmailStudent, setChangeEmailStudent] =
+    useState<StudentRecordDto | null>(null);
   const [linkedDetailsOverlay, setLinkedDetailsOverlay] = useState<
     Record<string, LinkedAppAccountDetails>
   >({});
@@ -636,7 +647,7 @@ export function StudentRecordsManager({
       original: editingStudent,
     });
 
-    if (canShowStudentAppAccessSection(editingStudent)) {
+    if (shouldOmitEmailFromStudentPatch(editingStudent)) {
       delete patch.email;
     }
 
@@ -958,12 +969,18 @@ export function StudentRecordsManager({
           category, and transmission are edited in Student profile above.
         </p>
         {linked?.email ? (
-          <div className="space-y-1">
+          <div className="space-y-2">
             <Label>Login email</Label>
             <p className="text-sm font-medium text-blue-950">{linked.email}</p>
             <p className="text-xs text-blue-700">
               Login email cannot be changed here.
             </p>
+            {canShowChangeStudentEmailAction(student) ? (
+              <ChangeStudentEmailButton
+                variant="app-access"
+                onClick={() => setChangeEmailStudent(student)}
+              />
+            ) : null}
           </div>
         ) : null}
         {linked ? (
@@ -1048,9 +1065,15 @@ export function StudentRecordsManager({
             <span className="text-sm text-amber-900">Access status:</span>
             <Badge variant="default">Invitation pending</Badge>
           </div>
-          <div className="space-y-1">
+          <div className="space-y-2">
             <Label>Invitation email</Label>
             <p className="text-sm font-medium text-amber-950">{inviteEmail}</p>
+            {canShowChangeStudentEmailAction(student) ? (
+              <ChangeStudentEmailButton
+                variant="app-access"
+                onClick={() => setChangeEmailStudent(student)}
+              />
+            ) : null}
           </div>
           <p className="text-xs text-amber-800">
             Use <strong>Revoke invitation</strong> on the profile row to cancel
@@ -1458,10 +1481,21 @@ export function StudentRecordsManager({
                 editForm,
                 setEditForm,
                 "edit",
-                editingStudent && canShowStudentAppAccessSection(editingStudent)
+                editingStudent &&
+                  shouldHideStudentProfileEmailField(editingStudent)
                   ? { hideEmail: true }
                   : undefined,
               )}
+              {editingStudent &&
+              canShowChangeStudentEmailAction(editingStudent) &&
+              (editingStudent.appAccessMode === "MANUAL_ONLY" ||
+                canShowStudentReactivateAppAccessSection(editingStudent)) ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <ChangeStudentEmailButton
+                    onClick={() => setChangeEmailStudent(editingStudent)}
+                  />
+                </div>
+              ) : null}
               {renderProfileOperationalFields(editForm, setEditForm, "edit")}
             </div>
             {editingStudent &&
@@ -1516,6 +1550,54 @@ export function StudentRecordsManager({
           if (!open) setInviteStudent(null);
         }}
         onSuccess={() => loadStudents({ search: appliedSearch })}
+      />
+
+      <StudentEmailChangeDialog
+        student={changeEmailStudent}
+        linkedEmail={
+          changeEmailStudent?.userId != null
+            ? getEffectiveLinkedDetails(changeEmailStudent.userId)?.email
+            : null
+        }
+        open={changeEmailStudent !== null}
+        onOpenChange={(open) => {
+          if (!open) setChangeEmailStudent(null);
+        }}
+        onSuccess={async (updated) => {
+          if (editingStudent?.id === updated.id) {
+            const linked =
+              updated.userId != null
+                ? getEffectiveLinkedDetails(updated.userId)
+                : null;
+            setEditingStudent(updated);
+            setEditForm(studentToForm(updated, linked));
+          }
+          if (updated.userId && updated.user) {
+            const prevLinked = getEffectiveLinkedDetails(updated.userId);
+            setLinkedDetailsOverlay((prev) => ({
+              ...prev,
+              [updated.userId!]: {
+                email: updated.user!.email,
+                isApproved: prevLinked?.isApproved ?? true,
+                firstName:
+                  prevLinked?.firstName ??
+                  updated.firstName ??
+                  updated.user!.firstName,
+                lastName:
+                  prevLinked?.lastName ??
+                  updated.lastName ??
+                  updated.user!.lastName,
+                phoneNumber:
+                  prevLinked?.phoneNumber ?? updated.phoneNumber ?? null,
+                address: prevLinked?.address ?? updated.address ?? null,
+                selectedCategories: prevLinked?.selectedCategories ?? [],
+                transmissionType: prevLinked?.transmissionType ?? "",
+              },
+            }));
+          }
+          router.refresh();
+          await loadStudents({ search: appliedSearch });
+        }}
       />
 
       <StudentRecordsImportDialog

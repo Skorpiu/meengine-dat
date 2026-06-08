@@ -301,12 +301,13 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `people-management-advanced-accounts-removal-and-profile-avatars-v1` — Advanced accounts section removed from People; `PeopleProfileAvatar` on Students/Instructors Profiles; `loadAdminUsersPageData` bridge retained; no API/schema changes
 - `people-management-student-profile-operational-fields-v1` — license category + transmission on Student profile; PATCH student operational fields; App access = login/lifecycle only; MANUAL_ONLY App access section in Edit Student
 - `people-management-profile-address-fields-v1` — Address on Student/Instructor profile (DEC-023); `Student.address` migration; PATCH/POST students + manual create; APP_USER syncs `User.address`; Instructor UI-only on `User.address`; App access = login/lifecycle only
+- `people-management-student-email-change-policy-v1` — Change email via `POST /api/admin/students/[id]/change-email`; PATCH guard `use_change_email_flow`; Edit Student modal; DEC-024; no schema/migration
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
 **Current recommended next (runtime/UX slice):**
 
-1. `people-management-student-email-change-policy-v1` — canonical Change email flow
+1. `people-management-instructor-profile-invite-badge-v1` — instructor pending invite on Profiles
 
 **Likely next:**
 

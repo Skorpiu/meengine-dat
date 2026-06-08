@@ -120,20 +120,66 @@ If orphan User email does not match Student canonical email after normalization 
 
 ---
 
-## Explicit non-goals (both slices)
+## Change email (`people-management-student-email-change-policy-v1`)
+
+**Goal:** Explicit School Admin flow to change the canonical student email without diverging Student / User / invitation state.
+
+### API
+
+- `POST /api/admin/students/[id]/change-email` — body `{ "newEmail": "..." }`
+- Admin-only (`SUPER_ADMIN`), tenant host guard, demo `user_management` mutation guard.
+- Generic `PATCH /api/admin/students/[id]` rejects `email` unless `MANUAL_ONLY`, no `userId`, no pending invitation (**409** `use_change_email_flow`).
+
+### Policy by mode
+
+| Mode | Effects |
+| ---- | ------- |
+| **MANUAL_ONLY** (no user, no pending invite) | Update `Student.email`; global `User.email` + org student email + pending invitation collision checks |
+| **INVITED** | Revoke PENDING invitations for Student; update `Student.email`; set `MANUAL_ONLY`; admin must **Send invitation** again (no auto-resend v1) |
+| **APP_USER** | Atomic `Student.email` + `User.email`; delete `Session` rows; invalidate password-reset and email-verification tokens; admin attestation (`isEmailVerified=true`, `emailVerified=now()`) |
+| **Post-remove MANUAL_ONLY** | Update `Student.email` only; orphan User unchanged; reactivate still validates email match |
+
+### Stable errors (change email)
+
+| Condition | HTTP | Code |
+| --------- | ---- | ---- |
+| Missing / cross-tenant Student | 404 | (message only) |
+| Invalid / empty email | 400 | `invalid_email` |
+| Same as current | 400 | `email_unchanged` |
+| PATCH email on APP_USER / INVITED / linked / pending | 409 | `use_change_email_flow` |
+| Global User email taken | 409 | `user_email_already_exists` |
+| Another Student in org | 409 | `student_email_already_in_use` |
+| Pending invitation for new email (other record) | 409 | `pending_invitation_exists` |
+| APP_USER without linked user | 409 | `student_no_linked_user` |
+| Linked User missing / wrong role / tenant | 409 | `linked_user_not_found` / `linked_user_role_mismatch` / `linked_user_tenant_mismatch` |
+| Demo org | 403 | demo guard code |
+
+### JWT limitation
+
+After APP_USER change, DB sessions are deleted but **JWT cookies may remain valid until expiry** (NextAuth JWT strategy — same class of limitation as instructor deactivate, DEC-020). Old email cannot log in after `User.email` update.
+
+### UI
+
+- **Change email** button in Edit Student (profile for MANUAL_ONLY/reactivatable; App access for APP_USER/INVITED).
+- Modal: current email read-only, new email, contextual warning copy.
+
+---
+
+## Explicit non-goals (remove + reactivate slices)
 
 - No hard delete of User or Student.
-- No Change email (`people-management-student-email-change-policy-v1`).
-- App Accounts demote implemented (`people-management-app-accounts-demote-v1`) — Advanced accounts read-only diagnostics only.
+- No auto-resend invitation after change email (admin uses **Send invitation**).
+- No email notification to new address (deferred).
+- No JWT hard invalidation / session version (deferred).
 - No Prisma schema / migration / RLS / auth-core changes.
 
 ## Future slices
 
 | Batch | Scope |
 | ----- | ----- |
-| `people-management-student-email-change-policy-v1` | Canonical Change email (Student + User + invitations) |
-| `people-management-app-accounts-demote-v1` | **Done** — Advanced accounts read-only diagnostics; no create/edit/delete UI |
-| `users-delete-student-guard-v1` | **Done** — `DELETE /api/users/delete` returns **409** `use_student_delete_policy` for STUDENT; use People → Students → Profiles or app access lifecycle |
+| `people-management-instructor-email-change-policy-v1` | Instructor Change email (separate batch) |
+| `people-management-app-accounts-demote-v1` | **Done** — Advanced accounts removed from People UI |
+| `users-delete-student-guard-v1` | **Done** — `DELETE /api/users/delete` returns **409** `use_student_delete_policy` for STUDENT |
 
 ## Related decisions
 
@@ -141,3 +187,4 @@ If orphan User email does not match Student canonical email after normalization 
 - DEC-015 — Canonical student email
 - DEC-016 — Remove app access v1
 - DEC-017 — Reactivate app access v1 (orphan User relink; Path B → Send invitation)
+- DEC-024 — Student Change email v1
