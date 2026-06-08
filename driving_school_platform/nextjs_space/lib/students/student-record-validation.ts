@@ -40,6 +40,8 @@ export const patchStudentRecordBodySchema = z
     yearSuffix: trimmedString.optional(),
     sequenceNumber: z.number().optional(),
     enrollmentDate: z.string().nullable().optional(),
+    categoryName: z.string().trim().nullable().optional(),
+    transmissionTypeName: z.string().trim().nullable().optional(),
   })
   .superRefine((data, ctx) => {
     const hasYear = data.yearSuffix !== undefined;

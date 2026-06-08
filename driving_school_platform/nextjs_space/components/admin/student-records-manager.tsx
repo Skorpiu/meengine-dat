@@ -72,6 +72,7 @@ import {
   buildLinkedStudentUserUpdateBody,
   canSendStudentRecordInvite,
   canShowStudentAppAccessSection,
+  canShowStudentManualOnlyAppAccessSection,
   canShowStudentPendingInvitationSection,
   formatEnrollmentDateInputValue,
   formatStudentRecordDate,
@@ -95,6 +96,7 @@ import {
   REACTIVATE_STUDENT_APP_ACCESS_MODAL,
 } from "@/lib/students/student-app-access-reactivate-ui-utils";
 import { getStudentAppAccessCompactBadges } from "@/lib/students/student-app-access-summary-utils";
+import { getStudentProfileOperationalCompactBadges } from "@/lib/students/student-profile-operational-utils";
 import {
   canRevokeStudentRecordInvitation,
   getStudentAppAccessDetailLines,
@@ -188,8 +190,11 @@ function studentToForm(
       : student.email || "",
     enrollmentDate: formatEnrollmentDateInputValue(student.enrollmentDate),
     address: linked?.address?.trim() || "",
-    selectedCategories: linked?.selectedCategories ?? [],
-    transmissionType: linked?.transmissionType ?? "",
+    selectedCategories: student.category?.name
+      ? [student.category.name]
+      : (linked?.selectedCategories ?? []),
+    transmissionType:
+      student.transmissionType?.name ?? linked?.transmissionType ?? "",
   };
 }
 
@@ -374,8 +379,6 @@ export function StudentRecordsManager({
             lastName: form.lastName,
             phoneNumber: form.phoneNumber,
             address: form.address,
-            selectedCategories: form.selectedCategories,
-            transmissionType: form.transmissionType,
           })
         : null,
     );
@@ -605,8 +608,6 @@ export function StudentRecordsManager({
                 lastName: updated.lastName ?? updated.user?.lastName ?? "",
                 phoneNumber: updated.phoneNumber ?? "",
                 address: linked.address ?? "",
-                selectedCategories: linked.selectedCategories ?? [],
-                transmissionType: linked.transmissionType ?? "",
               })
             : null,
         );
@@ -638,8 +639,6 @@ export function StudentRecordsManager({
       lastName: editForm.lastName,
       phoneNumber: editForm.phoneNumber,
       address: editForm.address,
-      selectedCategories: editForm.selectedCategories,
-      transmissionType: editForm.transmissionType,
     });
 
     const needsUserSync =
@@ -789,8 +788,8 @@ export function StudentRecordsManager({
     setEditForm((prev) => ({
       ...prev,
       selectedCategories: prev.selectedCategories.includes(category)
-        ? prev.selectedCategories.filter((c) => c !== category)
-        : [...prev.selectedCategories, category],
+        ? []
+        : [category],
     }));
   };
 
@@ -866,6 +865,62 @@ export function StudentRecordsManager({
     </>
   );
 
+  const renderProfileOperationalFields = (
+    form: StudentRecordFormState,
+    setForm: React.Dispatch<React.SetStateAction<StudentRecordFormState>>,
+    idPrefix: string,
+  ) => (
+    <>
+      {categories.length > 0 ? (
+        <div className="space-y-2">
+          <Label>License category</Label>
+          <p className="text-xs text-gray-500">
+            One license category per student profile (school operational data).
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto p-2 bg-white rounded border">
+            {categories.map((cat) => (
+              <div key={cat.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`${idPrefix}-cat-${cat.id}`}
+                  checked={form.selectedCategories.includes(cat.name)}
+                  onCheckedChange={() => toggleEditCategory(cat.name)}
+                />
+                <label
+                  htmlFor={`${idPrefix}-cat-${cat.id}`}
+                  className="text-sm font-medium leading-none cursor-pointer"
+                >
+                  {cat.name}
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {transmissionTypes.length > 0 ? (
+        <div className="space-y-2">
+          <Label htmlFor={`${idPrefix}-transmission`}>Transmission type</Label>
+          <Select
+            value={form.transmissionType || undefined}
+            onValueChange={(value) =>
+              setForm((prev) => ({ ...prev, transmissionType: value }))
+            }
+          >
+            <SelectTrigger id={`${idPrefix}-transmission`}>
+              <SelectValue placeholder="Select transmission" />
+            </SelectTrigger>
+            <SelectContent>
+              {transmissionTypes.map((type) => (
+                <SelectItem key={type.id} value={type.name}>
+                  {type.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ) : null}
+    </>
+  );
+
   const renderAppAccessSection = (
     student: StudentRecordDto,
     form: StudentRecordFormState,
@@ -882,8 +937,9 @@ export function StudentRecordsManager({
       </CollapsibleTrigger>
       <CollapsibleContent className="space-y-4 px-4 pb-4">
         <p className="text-sm text-blue-800">
-          Login and license preferences for the linked app account. Name and
-          phone are edited once in Student profile above.
+          Login status and address for the linked app account. Name, phone,
+          license category, and transmission are edited in Student profile
+          above.
         </p>
         {linked?.email ? (
           <div className="space-y-1">
@@ -915,50 +971,6 @@ export function StudentRecordsManager({
             placeholder="Address on app account"
           />
         </div>
-        {categories.length > 0 ? (
-          <div className="space-y-2">
-            <Label>License categories</Label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto p-2 bg-white rounded border">
-              {categories.map((cat) => (
-                <div key={cat.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`edit-app-cat-${cat.id}`}
-                    checked={form.selectedCategories.includes(cat.name)}
-                    onCheckedChange={() => toggleEditCategory(cat.name)}
-                  />
-                  <label
-                    htmlFor={`edit-app-cat-${cat.id}`}
-                    className="text-sm font-medium leading-none cursor-pointer"
-                  >
-                    {cat.name}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-        {transmissionTypes.length > 0 ? (
-          <div className="space-y-2">
-            <Label>Transmission type</Label>
-            <Select
-              value={form.transmissionType || undefined}
-              onValueChange={(value) =>
-                setForm((prev) => ({ ...prev, transmissionType: value }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select transmission" />
-              </SelectTrigger>
-              <SelectContent>
-                {transmissionTypes.map((type) => (
-                  <SelectItem key={type.id} value={type.name}>
-                    {type.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ) : null}
         {canShowRemoveStudentAppAccessAction(student) ? (
           <div className="border-t border-blue-200 pt-4">
             <p className="text-xs text-blue-800 mb-3">
@@ -976,6 +988,39 @@ export function StudentRecordsManager({
               Remove app access
             </Button>
           </div>
+        ) : null}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+
+  const renderManualOnlyAppAccessSection = (student: StudentRecordDto) => (
+    <Collapsible
+      defaultOpen
+      className="rounded-lg border border-gray-200 bg-gray-50/80"
+    >
+      <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 px-4 py-3 text-left">
+        <span className="font-medium text-gray-900">App access</span>
+        <ChevronRight className="h-4 w-4 text-gray-600 transition-transform group-data-[state=open]:rotate-90" />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-3 px-4 pb-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-gray-800">Access status:</span>
+          <Badge variant="outline">No app access yet</Badge>
+        </div>
+        <p className="text-sm text-gray-700">
+          This student has an operational profile only. Use{" "}
+          <strong>Send invitation</strong> when they should register and sign in
+          to the app.
+        </p>
+        {canSendStudentRecordInvite(student) ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setInviteStudent(student)}
+          >
+            <MailPlus className="h-4 w-4 mr-1" />
+            Send invitation
+          </Button>
         ) : null}
       </CollapsibleContent>
     </Collapsible>
@@ -1190,16 +1235,12 @@ export function StudentRecordsManager({
                         badge.key === "app-access"
                       ),
                   );
+                  const profileOperationalBadges =
+                    getStudentProfileOperationalCompactBadges(student);
                   const appAccessCompactBadges =
                     getStudentAppAccessCompactBadges(
                       student,
-                      linked
-                        ? {
-                            isApproved: linked.isApproved,
-                            transmissionType: linked.transmissionType,
-                            selectedCategories: linked.selectedCategories,
-                          }
-                        : null,
+                      linked ? { isApproved: linked.isApproved } : null,
                     );
                   const canonicalEmail = getStudentCanonicalEmailDisplay(
                     student,
@@ -1241,6 +1282,21 @@ export function StudentRecordsManager({
                           <div className="mt-2 space-y-0.5">
                             <div className="flex flex-wrap items-center gap-2">
                               {profileBadges.map((badge) => (
+                                <Tooltip key={badge.key}>
+                                  <TooltipTrigger asChild>
+                                    <Badge variant={badge.variant}>
+                                      {badge.label}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    side="top"
+                                    className="max-w-xs"
+                                  >
+                                    {badge.tooltip}
+                                  </TooltipContent>
+                                </Tooltip>
+                              ))}
+                              {profileOperationalBadges.map((badge) => (
                                 <Tooltip key={badge.key}>
                                   <TooltipTrigger asChild>
                                     <Badge variant={badge.variant}>
@@ -1401,7 +1457,12 @@ export function StudentRecordsManager({
                   ? { hideEmail: true }
                   : undefined,
               )}
+              {renderProfileOperationalFields(editForm, setEditForm, "edit")}
             </div>
+            {editingStudent &&
+            canShowStudentManualOnlyAppAccessSection(editingStudent)
+              ? renderManualOnlyAppAccessSection(editingStudent)
+              : null}
             {editingStudent && canShowStudentAppAccessSection(editingStudent)
               ? renderAppAccessSection(
                   editingStudent,

@@ -18,6 +18,7 @@ import {
   isStudentSchoolIdConflict,
   updateStudentRecord,
 } from "@/lib/students/student-record-queries";
+import { resolveStudentOperationalFieldIds } from "@/lib/students/student-record-operational-fields";
 import {
   normalizeStudentRecordEmail,
   normalizeStudentRecordPhone,
@@ -171,6 +172,31 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       updateData.schoolStudentYearSuffix = schoolId.parts.yearSuffix;
       updateData.schoolStudentSequence = schoolId.parts.sequenceNumber;
       updateData.schoolStudentIdSource = "MANUAL";
+    }
+
+    if (
+      data.categoryName !== undefined ||
+      data.transmissionTypeName !== undefined
+    ) {
+      const resolved = await resolveStudentOperationalFieldIds({
+        categoryName: data.categoryName,
+        transmissionTypeName: data.transmissionTypeName,
+      });
+      if (!resolved.ok) {
+        return errorResponse(resolved.error, HTTP_STATUS.BAD_REQUEST);
+      }
+      if (resolved.fields.categoryId !== undefined) {
+        updateData.category =
+          resolved.fields.categoryId === null
+            ? { disconnect: true }
+            : { connect: { id: resolved.fields.categoryId } };
+      }
+      if (resolved.fields.transmissionTypeId !== undefined) {
+        updateData.transmissionType =
+          resolved.fields.transmissionTypeId === null
+            ? { disconnect: true }
+            : { connect: { id: resolved.fields.transmissionTypeId } };
+      }
     }
 
     if (Object.keys(updateData).length === 0) {

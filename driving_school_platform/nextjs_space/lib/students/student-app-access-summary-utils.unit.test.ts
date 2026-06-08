@@ -21,22 +21,10 @@ describe("formatCategoryCompactLabel", () => {
 });
 
 describe("formatAppAccessCompactSummaryLine", () => {
-  it("builds compact summary with transmission and category", () => {
+  it("builds login status summary only", () => {
     expect(
       formatAppAccessCompactSummaryLine({
         isApproved: true,
-        transmissionType: "Automatic",
-        selectedCategories: ["B"],
-      }),
-    ).toBe("Active app access · Automatic · Category B");
-  });
-
-  it("omits empty transmission and categories", () => {
-    expect(
-      formatAppAccessCompactSummaryLine({
-        isApproved: true,
-        transmissionType: "",
-        selectedCategories: [],
       }),
     ).toBe("Active app access");
   });
@@ -45,10 +33,8 @@ describe("formatAppAccessCompactSummaryLine", () => {
     expect(
       formatAppAccessCompactSummaryLine({
         isApproved: false,
-        transmissionType: "Manual",
-        selectedCategories: [],
       }),
-    ).toBe("App access pending approval · Manual");
+    ).toBe("App access pending approval");
   });
 });
 
@@ -62,11 +48,11 @@ describe("getStudentAppAccessCompactBadges", () => {
     ).toEqual([]);
   });
 
-  it("returns status badge only when linked details missing", () => {
+  it("returns status badge only for APP_USER", () => {
     expect(
       getStudentAppAccessCompactBadges(
         { appAccessMode: "APP_USER", userId: "u1" },
-        null,
+        { isApproved: true },
       ),
     ).toEqual([
       expect.objectContaining({
@@ -76,19 +62,11 @@ describe("getStudentAppAccessCompactBadges", () => {
     ]);
   });
 
-  it("includes transmission and category badges when present", () => {
+  it("does not include category or transmission badges", () => {
     const badges = getStudentAppAccessCompactBadges(
       { appAccessMode: "APP_USER", userId: "u1" },
-      {
-        isApproved: true,
-        transmissionType: "Automatic",
-        selectedCategories: ["B"],
-      },
+      { isApproved: true },
     );
-    expect(badges.map((b) => b.label)).toEqual([
-      "Active app access",
-      "Automatic",
-      "Category B",
-    ]);
+    expect(badges.map((b) => b.key)).toEqual(["app-access-status"]);
   });
 });

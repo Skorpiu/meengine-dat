@@ -72,6 +72,14 @@ export function canShowStudentAppAccessSection(student: {
   return student.appAccessMode === "APP_USER" && student.userId !== null;
 }
 
+/** Edit Student dialog: show App access guidance for manual profiles without login. */
+export function canShowStudentManualOnlyAppAccessSection(student: {
+  userId: string | null;
+  appAccessMode: StudentAppAccessMode | string;
+}): boolean {
+  return student.appAccessMode === "MANUAL_ONLY" && student.userId === null;
+}
+
 /** Edit Student dialog: show pending invitation status (read-only; actions stay on row). */
 export function canShowStudentPendingInvitationSection(student: {
   appAccessMode: StudentAppAccessMode | string;
@@ -84,8 +92,6 @@ export type LinkedStudentUserUpdateForm = {
   lastName: string;
   phoneNumber: string;
   address: string;
-  selectedCategories: string[];
-  transmissionType: string;
 };
 
 export function buildLinkedStudentUserUpdateBody(input: {
@@ -99,8 +105,6 @@ export function buildLinkedStudentUserUpdateBody(input: {
     phoneNumber: input.form.phoneNumber.trim(),
     address: input.form.address.trim(),
     role: "STUDENT",
-    selectedCategories: input.form.selectedCategories,
-    transmissionType: input.form.transmissionType,
   };
 }
 
@@ -113,9 +117,7 @@ export function hasLinkedStudentUserFormChanges(
     form.firstName.trim() !== original.firstName.trim() ||
     form.lastName.trim() !== original.lastName.trim() ||
     form.phoneNumber.trim() !== original.phoneNumber.trim() ||
-    form.address.trim() !== original.address.trim() ||
-    form.transmissionType !== original.transmissionType ||
-    form.selectedCategories.join(",") !== original.selectedCategories.join(",")
+    form.address.trim() !== original.address.trim()
   );
 }
 
@@ -124,16 +126,12 @@ export function toLinkedStudentUserUpdateForm(input: {
   lastName: string;
   phoneNumber: string;
   address: string;
-  selectedCategories: string[];
-  transmissionType: string;
 }): LinkedStudentUserUpdateForm {
   return {
     firstName: input.firstName,
     lastName: input.lastName,
     phoneNumber: input.phoneNumber,
     address: input.address,
-    selectedCategories: [...input.selectedCategories],
-    transmissionType: input.transmissionType,
   };
 }
 
@@ -181,6 +179,10 @@ export function studentRecordApiErrorMessage(
       return "Invalid email.";
     case "enrollment_date_invalid":
       return "Invalid enrollment date.";
+    case "category_not_found":
+      return "License category not found.";
+    case "transmission_type_not_found":
+      return "Transmission type not found.";
     case "demo_restricted_action":
     case "demo_mutation_disabled":
       return (
@@ -312,6 +314,8 @@ export type ManualStudentPatchPayload = {
   yearSuffix?: string;
   sequenceNumber?: number;
   enrollmentDate?: string | null;
+  categoryName?: string | null;
+  transmissionTypeName?: string | null;
 };
 
 export function buildManualStudentPatchPayload(input: {
@@ -322,6 +326,8 @@ export function buildManualStudentPatchPayload(input: {
   yearSuffix: string;
   sequenceNumber: string;
   enrollmentDate: string;
+  selectedCategories: string[];
+  transmissionType: string;
   original: StudentRecordDto;
 }): ManualStudentPatchPayload {
   const payload: ManualStudentPatchPayload = {};
@@ -365,6 +371,19 @@ export function buildManualStudentPatchPayload(input: {
   ) {
     payload.yearSuffix = yearSuffix;
     payload.sequenceNumber = sequenceNumber;
+  }
+
+  const categoryName = input.selectedCategories[0]?.trim() ?? "";
+  const originalCategory = input.original.category?.name?.trim() ?? "";
+  if (categoryName !== originalCategory) {
+    payload.categoryName = categoryName || null;
+  }
+
+  const transmissionName = input.transmissionType.trim();
+  const originalTransmission =
+    input.original.transmissionType?.name?.trim() ?? "";
+  if (transmissionName !== originalTransmission) {
+    payload.transmissionTypeName = transmissionName || null;
   }
 
   return payload;

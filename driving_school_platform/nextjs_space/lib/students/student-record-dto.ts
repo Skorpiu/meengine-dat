@@ -49,6 +49,8 @@ export const STUDENT_RECORD_SELECT = {
   appAccessMode: true,
   createdAt: true,
   updatedAt: true,
+  category: { select: { id: true, name: true } },
+  transmissionType: { select: { id: true, name: true } },
   user: { select: STUDENT_RECORD_USER_SELECT },
   userInvitations: {
     where: { status: "PENDING" },
@@ -113,6 +115,8 @@ export type StudentRecordDto = {
   schoolStudentIdSource: string | null;
   enrollmentDate: string | null;
   appAccessMode: string;
+  category: { id: number; name: string } | null;
+  transmissionType: { id: number; name: string } | null;
   createdAt: string;
   updatedAt: string;
   user: {
@@ -153,6 +157,12 @@ export function mapStudentRecordDto(row: StudentRecordRow): StudentRecordDto {
     schoolStudentIdSource: row.schoolStudentIdSource,
     enrollmentDate: row.enrollmentDate?.toISOString() ?? null,
     appAccessMode: row.appAccessMode,
+    category: row.category
+      ? { id: row.category.id, name: row.category.name }
+      : null,
+    transmissionType: row.transmissionType
+      ? { id: row.transmissionType.id, name: row.transmissionType.name }
+      : null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     user: row.user
