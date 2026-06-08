@@ -2,14 +2,17 @@
 
 ## Purpose
 
-Formal policy for School Admin **Instructor** lifecycle in People management: **Delete**, **Deactivate**, and **Remove app access** are **separate concepts**. This document is the contract for future implementation batches. Runtime/API/UI are **not** changed by the docs-only slice `instructor-delete-policy-v1-docs`.
+Formal policy for School Admin **Instructor** lifecycle in People management: **Delete**, **Deactivate**, and **Remove app access** are **separate concepts**. Policy doc established in `instructor-delete-policy-v1-docs`; zero-deps hard delete implemented in `instructor-hard-delete-zero-deps-v1`.
 
 **Related:** [decision-log.md](./decision-log.md) DEC-018, DEC-019; [student-app-access-lifecycle-policy.md](./student-app-access-lifecycle-policy.md) (student parallel).
 
-**Current runtime (post `people-management-edit-instructor-unified-v1`):**
+**Current runtime (post `instructor-hard-delete-zero-deps-v1`):**
 
-- Instructors → Profiles: **Edit Instructor** + **Delete** (UI always blocked until implementation).
-- App Accounts tab: legacy `DELETE /api/users/delete` still exists — **unsafe** for instructors; must not remain the long-term path.
+- Instructors → Profiles: **Edit Instructor** + **Delete** (policy-aware: allowed only zero-deps; blocked modal with stable codes otherwise).
+- `DELETE /api/admin/instructors/[id]` — dedicated hard delete by `Instructor.id` (SUPER_ADMIN, tenant, demo guard).
+- `DELETE /api/users/delete` — returns **409** `use_instructor_delete_policy` when target role is **INSTRUCTOR**.
+- App Accounts tab: legacy delete still exists for non-instructor roles; instructor delete must use Profiles.
+- **Deactivate** and **Remove app access** — not implemented (future batches).
 
 ---
 
@@ -105,7 +108,8 @@ Formal policy for School Admin **Instructor** lifecycle in People management: **
 | **Hard delete blocked** | — | Any row in “Hard delete blocked reasons” below |
 | **Deactivate** | Operational `Instructor` exists; admin intends to stop booking/login; preserve history | Demo (optional guard); policy TBD for self-deactivate |
 | **Remove app access** | — | **Deferred** — not available until instructor app-access lifecycle batch |
-| **No action** | Current Profiles **Delete** UI (always blocked until `instructor-hard-delete-zero-deps-v1`) | — |
+| **No action** | — | — |
+| **Hard delete (Profiles)** | Zero-deps checks pass | Any dependency or policy guard fails |
 
 ### Hard delete allowed — all must be true
 
@@ -121,7 +125,7 @@ Formal policy for School Admin **Instructor** lifecycle in People management: **
 | Tenant | `Instructor.organizationId` matches session `organizationId` (load by `Instructor.id`, never trust body org) |
 | Demo | Not demo org (`rejectDemoUserManagementMutation`) |
 
-### Hard delete blocked reasons (409 stable codes — future implementation)
+### Hard delete blocked reasons (409 stable codes — implemented)
 
 | Code | Condition |
 | ---- | --------- |
@@ -132,20 +136,22 @@ Formal policy for School Admin **Instructor** lifecycle in People management: **
 | `instructor_has_preferred_students` | Any student preferred instructor |
 | `instructor_has_pending_invitation` | Pending INSTRUCTOR invitation for email |
 | `instructor_delete_self_not_allowed` | Admin targets own account |
+| `instructor_delete_not_allowed` | Inconsistent user/instructor link or delete failed safely |
 | `instructor_not_found` | 404 — missing or cross-tenant |
 
 ---
 
-## D. Future API contracts (not implemented in docs slice)
+## D. API contracts
 
-### `DELETE /api/admin/instructors/[id]` — `instructor-hard-delete-zero-deps-v1`
+### `DELETE /api/admin/instructors/[id]` — **implemented** (`instructor-hard-delete-zero-deps-v1`)
 
 | Aspect | Contract |
 | ------ | -------- |
 | **ID** | `Instructor.id` (not `User.id`) |
 | **Auth** | `SUPER_ADMIN`, tenant host guard, demo `user_management` guard |
 | **Behavior** | Transaction: lock instructor row (`FOR UPDATE`), evaluate eligibility, hard-delete linked `User` (cascade `Instructor`) only when allowed |
-| **Success** | `200` / `{ success: true }` |
+| **Implementation** | `lib/instructors/instructor-record-delete-policy.ts`, `lib/instructors/instructor-record-delete.ts`, `app/api/admin/instructors/[id]/route.ts` |
+| **Success** | `200` / `{ success: true, data: { deleted: true } }` |
 | **Blocked** | `409` + stable codes from matrix above |
 | **Not found** | `404` |
 | **Demo** | `403` |
@@ -170,14 +176,14 @@ Mirror patterns from `lib/students/student-record-delete.ts` and `student-record
 
 ---
 
-## E. Legacy guard requirement
+## E. Legacy guard — **implemented**
 
-Future batch **`instructor-hard-delete-zero-deps-v1`** must add a guard on **`DELETE /api/users/delete`**:
+Batch **`instructor-hard-delete-zero-deps-v1`** added a guard on **`DELETE /api/users/delete`**:
 
 - If target `User.role === 'INSTRUCTOR'` → **`409`** with stable code **`use_instructor_delete_policy`**
-- Message: instruct admin to use People → Instructors → Profiles (policy endpoint when implemented)
+- Message: instruct admin to use People → Instructors → Profiles
 - Prevents destructive user-level deletion bypassing People policy
-- App Accounts tab delete for instructors should eventually call policy endpoints or be removed on demote (`people-management-app-accounts-demote-v1`)
+- App Accounts tab delete for instructors should eventually call policy endpoints or be removed on demote (`people-management-app-accounts-demote-v1` — still deferred)
 
 ---
 
@@ -186,7 +192,7 @@ Future batch **`instructor-hard-delete-zero-deps-v1`** must add a guard on **`DE
 | Order | Batch | Scope |
 | ----- | ----- | ----- |
 | 1 | **`instructor-delete-policy-v1-docs`** | This policy doc + DEC-019 + memory (**done** when merged) |
-| 2 | **`instructor-hard-delete-zero-deps-v1`** | `DELETE /api/admin/instructors/[id]` + UI allowed/blocked + legacy guard |
+| 2 | **`instructor-hard-delete-zero-deps-v1`** | `DELETE /api/admin/instructors/[id]` + UI allowed/blocked + legacy guard (**done** when merged) |
 | 3 | **`instructor-deactivate-v1`** | Deactivate endpoint + UI badge + scheduling filters |
 | 4 | **`people-management-instructor-app-access-lifecycle-policy-v1`** | Remove/reactivate app access policy + API |
 | 5 | **`people-management-app-accounts-demote-v1`** | Demote tab **after** policy-driven delete/deactivate + legacy guard |

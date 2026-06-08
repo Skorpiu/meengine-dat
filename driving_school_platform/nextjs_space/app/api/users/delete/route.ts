@@ -43,6 +43,27 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const targetUser = await prisma.user.findFirst({
+      where: { id: userId, organizationId: orgId },
+      select: { id: true, role: true },
+    });
+
+    if (!targetUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    if (targetUser.role === "INSTRUCTOR") {
+      return NextResponse.json(
+        {
+          error: "use_instructor_delete_policy",
+          code: "use_instructor_delete_policy",
+          message:
+            "Instructor accounts cannot be deleted from App Accounts. Use People → Instructors → Profiles to delete zero-dependency instructor records, or Deactivate when the instructor has operational history.",
+        },
+        { status: 409 },
+      );
+    }
+
     // Prevent admin from deleting themselves
     if (userId === session.user.id) {
       return NextResponse.json(

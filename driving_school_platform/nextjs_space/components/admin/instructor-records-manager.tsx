@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/collapsible";
 import {
   AlertDialog,
+  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -40,7 +41,12 @@ import {
   toInstructorEditForm,
   type InstructorEditForm,
 } from "@/lib/instructors/instructor-record-edit-ui-utils";
-import { getInstructorDeleteUiState } from "@/lib/instructors/instructor-record-delete-ui-utils";
+import {
+  getInstructorDeleteConfirmActionLabel,
+  getInstructorDeleteUiState,
+  instructorRecordDeleteApiErrorMessage,
+  mapInstructorDeleteBlockCodesToMessages,
+} from "@/lib/instructors/instructor-record-delete-ui-utils";
 import {
   filterInstructorRecordUsersBySearch,
   formatInstructorLicenseExpiry,
@@ -61,6 +67,15 @@ const INSTRUCTOR_PAGE_SIZE = 15;
 type InstructorRecordsManagerProps = {
   users: InstructorRecordUserDto[];
   embedded?: boolean;
+};
+
+type DeleteDialogState = {
+  user: InstructorRecordUserDto;
+  allowed: boolean;
+  title: string;
+  blockMessages: string[];
+  confirmMessages: string[];
+  footerNote: string;
 };
 
 async function tryReadJson<T>(response: Response): Promise<T | null> {
@@ -90,14 +105,22 @@ export function InstructorRecordsManager({
     null,
   );
   const [editLoading, setEditLoading] = useState(false);
-  const [deleteDialogUser, setDeleteDialogUser] =
-    useState<InstructorRecordUserDto | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<DeleteDialogState | null>(
+    null,
+  );
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [removedUserIds, setRemovedUserIds] = useState<Set<string>>(
+    () => new Set(),
+  );
 
-  const deleteUiState = getInstructorDeleteUiState();
+  const visibleUsers = useMemo(
+    () => users.filter((user) => !removedUserIds.has(user.id)),
+    [users, removedUserIds],
+  );
 
   const filteredInstructors = useMemo(
-    () => filterInstructorRecordUsersBySearch(users, appliedSearch),
-    [users, appliedSearch],
+    () => filterInstructorRecordUsersBySearch(visibleUsers, appliedSearch),
+    [visibleUsers, appliedSearch],
   );
 
   const visibleInstructors = useMemo(
@@ -170,6 +193,60 @@ export function InstructorRecordsManager({
       toast.error("An error occurred while saving.");
     } finally {
       setEditLoading(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog?.allowed) return;
+    const target = deleteDialog.user;
+    const instructorId = target.instructor?.id;
+    if (!instructorId) return;
+
+    setDeleteLoading(true);
+    try {
+      const response = await fetch(
+        `/api/admin/instructors/${encodeURIComponent(instructorId)}`,
+        { method: "DELETE" },
+      );
+      const data = await tryReadJson<{
+        code?: string;
+        codes?: string[];
+        error?: string;
+      }>(response);
+
+      if (!response.ok) {
+        const message = instructorRecordDeleteApiErrorMessage(
+          data?.code,
+          data?.error || "Could not delete this instructor.",
+        );
+        toast.error(message);
+        if (data?.code || data?.codes?.length) {
+          setDeleteDialog({
+            user: target,
+            allowed: false,
+            title: "Delete not available",
+            blockMessages: mapInstructorDeleteBlockCodesToMessages(
+              data?.codes ?? (data?.code ? [data.code] : undefined),
+              message,
+            ),
+            confirmMessages: [],
+            footerNote: getInstructorDeleteUiState(target).footerNote,
+          });
+        }
+        return;
+      }
+
+      toast.success("Instructor removed.");
+      setDeleteDialog(null);
+      setRemovedUserIds((prev) => new Set(prev).add(target.id));
+      if (editingUser?.id === target.id) {
+        closeEdit();
+      }
+      router.refresh();
+    } catch {
+      toast.error("An error occurred while deleting.");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -323,7 +400,17 @@ export function InstructorRecordsManager({
                             size="sm"
                             variant="outline"
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => setDeleteDialogUser(user)}
+                            onClick={() => {
+                              const ui = getInstructorDeleteUiState(user);
+                              setDeleteDialog({
+                                user,
+                                allowed: ui.allowed,
+                                title: ui.title,
+                                blockMessages: ui.blockMessages,
+                                confirmMessages: ui.confirmMessages,
+                                footerNote: ui.footerNote,
+                              });
+                            }}
                           >
                             <Trash2 className="h-4 w-4 mr-1" />
                             {INSTRUCTOR_PROFILE_ROW_DELETE_LABEL}
@@ -545,36 +632,65 @@ export function InstructorRecordsManager({
       </Dialog>
 
       <AlertDialog
-        open={deleteDialogUser !== null}
+        open={deleteDialog !== null}
         onOpenChange={(open) => {
-          if (!open) setDeleteDialogUser(null);
+          if (!open && !deleteLoading) setDeleteDialog(null);
         }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{deleteUiState.title}</AlertDialogTitle>
+            <AlertDialogTitle>{deleteDialog?.title}</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-3 text-sm text-muted-foreground">
-                {deleteDialogUser ? (
+                {deleteDialog?.allowed ? (
+                  <>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {deleteDialog.confirmMessages.map((message) => (
+                        <li key={message}>{message}</li>
+                      ))}
+                    </ul>
+                    <p>{deleteDialog.footerNote}</p>
+                  </>
+                ) : (
+                  <>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {deleteDialog?.blockMessages.map((message) => (
+                        <li key={message}>{message}</li>
+                      ))}
+                    </ul>
+                    <p>{deleteDialog?.footerNote}</p>
+                  </>
+                )}
+                {deleteDialog ? (
                   <p>
                     Instructor:{" "}
                     <span className="font-medium text-foreground">
-                      {getInstructorRecordDisplayName(deleteDialogUser)}
+                      {getInstructorRecordDisplayName(deleteDialog.user)}
                     </span>
                     .
                   </p>
                 ) : null}
-                <ul className="list-disc pl-5 space-y-1">
-                  {deleteUiState.blockMessages.map((message) => (
-                    <li key={message}>{message}</li>
-                  ))}
-                </ul>
-                <p>{deleteUiState.footerNote}</p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Close</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteLoading}>
+              {deleteDialog?.allowed ? "Cancel" : "Close"}
+            </AlertDialogCancel>
+            {deleteDialog?.allowed ? (
+              <AlertDialogAction
+                disabled={deleteLoading}
+                className="bg-red-600 hover:bg-red-700"
+                onClick={(e) => {
+                  e.preventDefault();
+                  void handleDeleteConfirm();
+                }}
+              >
+                {deleteLoading
+                  ? "Deleting…"
+                  : getInstructorDeleteConfirmActionLabel()}
+              </AlertDialogAction>
+            ) : null}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
