@@ -87,6 +87,12 @@ describe("LESSON_DETAIL_SELECT", () => {
     }
   });
 
+  it("instructor select includes booking availability for schedule warnings", () => {
+    expect(LESSON_LIST_SELECT.instructor.select?.isAvailableForBooking).toBe(
+      true,
+    );
+  });
+
   it("instructor select includes userId for access checks", () => {
     expect(LESSON_DETAIL_SELECT.instructor.select?.userId).toBe(true);
   });

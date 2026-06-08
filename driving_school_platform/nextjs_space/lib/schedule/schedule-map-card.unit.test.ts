@@ -1,10 +1,12 @@
 import { describe, it, expect } from "vitest";
 import {
   SCHEDULE_MAP_LESSON_TYPE_COLOR_CLASSES,
+  SCHEDULE_MAP_INACTIVE_INSTRUCTOR_WARNING,
   getScheduleLessonTypeColorClasses,
   getScheduleLessonTypeShortLabel,
   getScheduleMapChipLines,
   getScheduleMapLessonColorClasses,
+  isScheduleMapLessonInstructorInactive,
 } from "./schedule-map-card";
 
 describe("schedule-map-card", () => {
@@ -73,6 +75,43 @@ describe("schedule-map-card", () => {
         }),
       ).toContain("green");
     });
+
+    it("inactive instructor uses warning red styling", () => {
+      expect(
+        getScheduleMapLessonColorClasses({
+          lessonType: "DRIVING",
+          status: "SCHEDULED",
+          instructorInactive: true,
+        }),
+      ).toContain("red");
+    });
+  });
+
+  it("detects inactive assigned instructor", () => {
+    expect(
+      isScheduleMapLessonInstructorInactive({
+        instructor: { isAvailableForBooking: false, user: {} },
+      }),
+    ).toBe(true);
+    expect(
+      isScheduleMapLessonInstructorInactive({
+        instructor: { isAvailableForBooking: true, user: {} },
+      }),
+    ).toBe(false);
+  });
+
+  it("adds inactive instructor warning to chip lines", () => {
+    const lines = getScheduleMapChipLines({
+      lessonType: "DRIVING",
+      startTime: "09:00",
+      student: { user: { firstName: "Ana", lastName: "Silva" } },
+      instructor: {
+        isAvailableForBooking: false,
+        user: { firstName: "João", lastName: "Costa" },
+      },
+    });
+
+    expect(lines).toContain(SCHEDULE_MAP_INACTIVE_INSTRUCTOR_WARNING);
   });
 
   it("builds compact chip lines with type, time, and student", () => {

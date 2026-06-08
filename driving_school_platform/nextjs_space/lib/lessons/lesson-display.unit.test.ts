@@ -9,6 +9,7 @@ import {
   getLessonVehicleLabel,
   getPracticalLessonNumberLabel,
   isExamLessonType,
+  isLessonInstructorInactive,
 } from "./lesson-display";
 import { LESSON_TYPES } from "@/lib/constants";
 
@@ -42,6 +43,16 @@ describe("lesson-display", () => {
     expect(getLessonParticipantName(nested)).toBe("Ada Lovelace");
     expect(getLessonInstructorName(nested)).toBe("Ada Lovelace");
     expect(getLessonParticipantName(null)).toBe("Student");
+  });
+
+  it("isLessonInstructorInactive detects deactivated instructor", () => {
+    expect(isLessonInstructorInactive({ isAvailableForBooking: false })).toBe(
+      true,
+    );
+    expect(isLessonInstructorInactive({ isAvailableForBooking: true })).toBe(
+      false,
+    );
+    expect(isLessonInstructorInactive(null)).toBe(false);
   });
 
   it("uses operational student fields when user is absent", () => {
