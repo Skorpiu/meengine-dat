@@ -20,6 +20,7 @@ import {
 } from "@/lib/students/student-record-queries";
 import { resolveStudentOperationalFieldIds } from "@/lib/students/student-record-operational-fields";
 import {
+  normalizeStudentRecordAddress,
   normalizeStudentRecordEmail,
   normalizeStudentRecordPhone,
   parseEnrollmentDateForPatch,
@@ -120,6 +121,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
     if (data.phoneNumber !== undefined) {
       updateData.phoneNumber = normalizeStudentRecordPhone(data.phoneNumber);
+    }
+    if (data.address !== undefined) {
+      updateData.address = normalizeStudentRecordAddress(data.address);
     }
     if (data.email !== undefined) {
       const email = normalizeStudentRecordEmail(data.email);

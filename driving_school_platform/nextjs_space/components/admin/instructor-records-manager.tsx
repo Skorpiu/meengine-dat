@@ -737,6 +737,23 @@ export function InstructorRecordsManager({
                           }
                         />
                       </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-instructor-profile-address">
+                          Address
+                        </Label>
+                        <Input
+                          id="edit-instructor-profile-address"
+                          value={editForm.address}
+                          onChange={(e) =>
+                            setEditForm((prev) =>
+                              prev
+                                ? { ...prev, address: e.target.value }
+                                : prev,
+                            )
+                          }
+                          placeholder="Residential or contact address"
+                        />
+                      </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="edit-instructor-license">
@@ -805,9 +822,8 @@ export function InstructorRecordsManager({
                       </CollapsibleTrigger>
                       <CollapsibleContent className="space-y-4 px-4 pb-4">
                         <p className={appAccessTheme.bodyTextClass}>
-                          Login and license preferences for the linked app
-                          account. Name and phone are edited once in Instructor
-                          profile above.
+                          Login status for the linked app account. Name, phone,
+                          and address are edited in Instructor profile above.
                         </p>
                         <div className="space-y-1">
                           <Label>Login email</Label>
@@ -886,23 +902,6 @@ export function InstructorRecordsManager({
                             </Button>
                           </div>
                         ) : null}
-                        <div className="space-y-2">
-                          <Label htmlFor="edit-instructor-address">
-                            Address
-                          </Label>
-                          <Input
-                            id="edit-instructor-address"
-                            value={editForm.address}
-                            onChange={(e) =>
-                              setEditForm((prev) =>
-                                prev
-                                  ? { ...prev, address: e.target.value }
-                                  : prev,
-                              )
-                            }
-                            placeholder="Address on app account"
-                          />
-                        </div>
                       </CollapsibleContent>
                     </Collapsible>
 

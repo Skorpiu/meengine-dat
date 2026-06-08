@@ -1,5 +1,6 @@
 import { buildSchoolStudentId } from "@/lib/students/student-school-id";
 import { canShowStudentRecordDeleteAction } from "@/lib/students/student-record-delete-policy";
+import { resolveStudentProfileAddress } from "@/lib/students/student-profile-address-utils";
 import type {
   StudentAppAccessMode,
   StudentRecordDto,
@@ -87,6 +88,7 @@ export function canShowStudentPendingInvitationSection(student: {
   return student.appAccessMode === "INVITED";
 }
 
+/** Profile fields synced to linked User for APP_USER students. */
 export type LinkedStudentUserUpdateForm = {
   firstName: string;
   lastName: string;
@@ -252,6 +254,7 @@ export type ManualStudentCreatePayload = {
   lastName?: string;
   phoneNumber?: string;
   email?: string;
+  address?: string;
   yearSuffix: string;
   sequenceNumber: number;
   enrollmentDate?: string;
@@ -262,6 +265,7 @@ export function buildManualStudentCreatePayload(input: {
   lastName: string;
   phoneNumber: string;
   email: string;
+  address: string;
   yearSuffix: string;
   sequenceNumber: string;
   enrollmentDate: string;
@@ -300,6 +304,9 @@ export function buildManualStudentCreatePayload(input: {
   const email = input.email.trim();
   if (email) payload.email = email;
 
+  const address = input.address.trim();
+  if (address) payload.address = address;
+
   const enrollmentDate = input.enrollmentDate.trim();
   if (enrollmentDate) payload.enrollmentDate = enrollmentDate;
 
@@ -314,6 +321,7 @@ export type ManualStudentPatchPayload = {
   yearSuffix?: string;
   sequenceNumber?: number;
   enrollmentDate?: string | null;
+  address?: string | null;
   categoryName?: string | null;
   transmissionTypeName?: string | null;
 };
@@ -323,11 +331,13 @@ export function buildManualStudentPatchPayload(input: {
   lastName: string;
   phoneNumber: string;
   email: string;
+  address: string;
   yearSuffix: string;
   sequenceNumber: string;
   enrollmentDate: string;
   selectedCategories: string[];
   transmissionType: string;
+  linkedUserAddress?: string | null;
   original: StudentRecordDto;
 }): ManualStudentPatchPayload {
   const payload: ManualStudentPatchPayload = {};
@@ -350,6 +360,15 @@ export function buildManualStudentPatchPayload(input: {
   const email = input.email.trim();
   if (email !== (input.original.email ?? "")) {
     payload.email = email || null;
+  }
+
+  const address = input.address.trim();
+  const originalAddress = resolveStudentProfileAddress(
+    input.original,
+    input.linkedUserAddress,
+  );
+  if (address !== originalAddress) {
+    payload.address = address || null;
   }
 
   const enrollmentInput = input.enrollmentDate.trim();

@@ -17,6 +17,7 @@ function baseStudent(
     lastName: "Silva",
     email: "ana@school.test",
     phoneNumber: null,
+    address: null,
     schoolStudentId: "26001",
     schoolStudentYearSuffix: "26",
     schoolStudentSequence: 1,

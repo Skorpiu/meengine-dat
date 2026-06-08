@@ -150,7 +150,11 @@ export function sanitizeObject<T extends Record<string, unknown>>(obj: T): T {
   const sanitized: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(obj)) {
-    if (value === null || value === undefined) continue;
+    if (value === undefined) continue;
+    if (value === null) {
+      sanitized[key] = null;
+      continue;
+    }
 
     if (typeof value === "string") {
       const trimmed = value.trim();

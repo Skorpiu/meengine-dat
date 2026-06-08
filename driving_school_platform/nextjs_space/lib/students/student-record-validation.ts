@@ -22,6 +22,7 @@ export const createManualStudentBodySchema = z.object({
   lastName: trimmedString.optional(),
   phoneNumber: trimmedString.optional(),
   email: trimmedString.optional(),
+  address: z.string().trim().nullable().optional(),
   yearSuffix: trimmedString.min(1, "year_suffix_required"),
   sequenceNumber: z.number({ required_error: "sequence_number_required" }),
   enrollmentDate: trimmedString.optional(),
@@ -36,6 +37,7 @@ export const patchStudentRecordBodySchema = z
     firstName: trimmedString.min(1).optional(),
     lastName: z.string().trim().nullable().optional(),
     phoneNumber: z.string().trim().nullable().optional(),
+    address: z.string().trim().nullable().optional(),
     email: z.string().trim().email().nullable().optional(),
     yearSuffix: trimmedString.optional(),
     sequenceNumber: z.number().optional(),
@@ -129,5 +131,13 @@ export function normalizeStudentRecordPhone(
 ): string | null {
   if (phone === undefined || phone === null) return null;
   const trimmed = phone.trim();
+  return trimmed || null;
+}
+
+export function normalizeStudentRecordAddress(
+  address: string | undefined | null,
+): string | null {
+  if (address === undefined || address === null) return null;
+  const trimmed = address.trim();
   return trimmed || null;
 }

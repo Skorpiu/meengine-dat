@@ -13,6 +13,7 @@ describe("mapStudentRecordDto", () => {
     lastName: "Silva",
     email: "ana@school.test",
     phoneNumber: null,
+    address: null,
     schoolStudentId: "26001",
     schoolStudentYearSuffix: "26",
     schoolStudentSequence: 1,
@@ -31,6 +32,14 @@ describe("mapStudentRecordDto", () => {
     const dto = mapStudentRecordDto(baseRow);
     expect(dto.category).toEqual({ id: 2, name: "B" });
     expect(dto.transmissionType).toEqual({ id: 3, name: "Automatic" });
+  });
+
+  it("maps address from Student row", () => {
+    const dto = mapStudentRecordDto({
+      ...baseRow,
+      address: "Rua A 1",
+    });
+    expect(dto.address).toBe("Rua A 1");
   });
 
   it("maps null category and transmission when unset", () => {

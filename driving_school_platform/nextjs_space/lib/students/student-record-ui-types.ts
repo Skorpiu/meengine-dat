@@ -18,6 +18,7 @@ export type StudentRecordDto = {
   lastName: string | null;
   email: string | null;
   phoneNumber: string | null;
+  address: string | null;
   schoolStudentId: string | null;
   schoolStudentYearSuffix: string | null;
   schoolStudentSequence: number | null;

@@ -97,6 +97,7 @@ import {
 } from "@/lib/students/student-app-access-reactivate-ui-utils";
 import { getStudentAppAccessCompactBadges } from "@/lib/students/student-app-access-summary-utils";
 import { getStudentProfileOperationalCompactBadges } from "@/lib/students/student-profile-operational-utils";
+import { resolveStudentProfileAddress } from "@/lib/students/student-profile-address-utils";
 import {
   canRevokeStudentRecordInvitation,
   getStudentAppAccessDetailLines,
@@ -189,7 +190,7 @@ function studentToForm(
       ? linked?.email || student.user?.email || student.email || ""
       : student.email || "",
     enrollmentDate: formatEnrollmentDateInputValue(student.enrollmentDate),
-    address: linked?.address?.trim() || "",
+    address: resolveStudentProfileAddress(student, linked?.address),
     selectedCategories: student.category?.name
       ? [student.category.name]
       : (linked?.selectedCategories ?? []),
@@ -625,8 +626,13 @@ export function StudentRecordsManager({
     e.preventDefault();
     if (!editingStudent) return;
 
+    const linkedForPatch =
+      editingStudent.userId != null
+        ? getEffectiveLinkedDetails(editingStudent.userId)
+        : null;
     const patch = buildManualStudentPatchPayload({
       ...editForm,
+      linkedUserAddress: linkedForPatch?.address,
       original: editingStudent,
     });
 
@@ -703,11 +709,11 @@ export function StudentRecordsManager({
         const userData = await tryReadJson<{ error?: string }>(userResponse);
         if (!userResponse.ok) {
           toast.error(
-            userData?.error || "Failed to update app access details.",
+            userData?.error || "Failed to update linked app account.",
           );
           if (Object.keys(patch).length > 0) {
             toast.error(
-              "Student profile was saved, but app access details could not be updated.",
+              "Student profile was saved, but the linked app account could not be updated.",
             );
             await loadStudents({ search: appliedSearch });
           }
@@ -849,6 +855,17 @@ export function StudentRecordsManager({
         ) : null}
       </div>
       <div className="space-y-2">
+        <Label htmlFor={`${idPrefix}-address`}>Address</Label>
+        <Input
+          id={`${idPrefix}-address`}
+          value={form.address}
+          onChange={(e) =>
+            setForm((prev) => ({ ...prev, address: e.target.value }))
+          }
+          placeholder="Residential or contact address"
+        />
+      </div>
+      <div className="space-y-2">
         <Label htmlFor={`${idPrefix}-enrollment`}>Enrollment date</Label>
         <Input
           id={`${idPrefix}-enrollment`}
@@ -937,9 +954,8 @@ export function StudentRecordsManager({
       </CollapsibleTrigger>
       <CollapsibleContent className="space-y-4 px-4 pb-4">
         <p className="text-sm text-blue-800">
-          Login status and address for the linked app account. Name, phone,
-          license category, and transmission are edited in Student profile
-          above.
+          Login status for the linked app account. Name, phone, address, license
+          category, and transmission are edited in Student profile above.
         </p>
         {linked?.email ? (
           <div className="space-y-1">
@@ -960,17 +976,6 @@ export function StudentRecordsManager({
             </Badge>
           </div>
         ) : null}
-        <div className="space-y-2">
-          <Label htmlFor="edit-app-address">Address</Label>
-          <Input
-            id="edit-app-address"
-            value={form.address}
-            onChange={(e) =>
-              setForm((prev) => ({ ...prev, address: e.target.value }))
-            }
-            placeholder="Address on app account"
-          />
-        </div>
         {canShowRemoveStudentAppAccessAction(student) ? (
           <div className="border-t border-blue-200 pt-4">
             <p className="text-xs text-blue-800 mb-3">

@@ -35,6 +35,7 @@ const emptyForm = () => ({
   lastName: "",
   phoneNumber: "",
   email: "",
+  address: "",
   enrollmentDate: "",
 });
 
@@ -217,6 +218,17 @@ function renderContactFields(
             }
           />
         </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor={`${idPrefix}-address`}>Address</Label>
+        <Input
+          id={`${idPrefix}-address`}
+          value={form.address}
+          onChange={(e) =>
+            setForm((prev) => ({ ...prev, address: e.target.value }))
+          }
+          placeholder="Residential or contact address"
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor={`${idPrefix}-enrollment`}>Enrollment date</Label>

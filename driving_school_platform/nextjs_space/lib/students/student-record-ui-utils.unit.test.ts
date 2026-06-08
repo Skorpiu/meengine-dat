@@ -57,6 +57,7 @@ describe("buildManualStudentCreatePayload", () => {
       lastName: "",
       phoneNumber: "",
       email: "",
+      address: "",
       yearSuffix: "26",
       sequenceNumber: "1",
       enrollmentDate: "",
@@ -231,7 +232,7 @@ describe("linked student user update helpers", () => {
     address: "Rua A",
   };
 
-  it("buildLinkedStudentUserUpdateBody includes role STUDENT without operational fields", () => {
+  it("buildLinkedStudentUserUpdateBody syncs profile fields including address", () => {
     expect(
       buildLinkedStudentUserUpdateBody({ userId: "u1", form }),
     ).toMatchObject({
@@ -244,7 +245,7 @@ describe("linked student user update helpers", () => {
     ).not.toHaveProperty("selectedCategories");
   });
 
-  it("detects linked user form changes for app access fields only", () => {
+  it("detects linked user profile sync changes including address", () => {
     expect(hasLinkedStudentUserFormChanges(form, form)).toBe(false);
     expect(
       hasLinkedStudentUserFormChanges(
@@ -263,6 +264,7 @@ describe("buildManualStudentPatchPayload", () => {
     lastName: "Silva",
     email: "ana@school.test",
     phoneNumber: null,
+    address: null,
     schoolStudentId: "26001",
     schoolStudentYearSuffix: "26",
     schoolStudentSequence: 1,
@@ -277,12 +279,48 @@ describe("buildManualStudentPatchPayload", () => {
     pendingInvitation: null,
   };
 
+  it("includes address when profile address changes", () => {
+    const patch = buildManualStudentPatchPayload({
+      firstName: "Ana",
+      lastName: "Silva",
+      phoneNumber: "",
+      email: "ana@school.test",
+      address: "Rua Nova 2",
+      yearSuffix: "26",
+      sequenceNumber: "1",
+      enrollmentDate: "",
+      selectedCategories: [],
+      transmissionType: "",
+      original,
+    });
+    expect(patch.address).toBe("Rua Nova 2");
+  });
+
+  it("uses linked User address fallback when comparing unchanged effective address", () => {
+    const patch = buildManualStudentPatchPayload({
+      firstName: "Ana",
+      lastName: "Silva",
+      phoneNumber: "",
+      email: "ana@school.test",
+      address: "Legacy User St",
+      yearSuffix: "26",
+      sequenceNumber: "1",
+      enrollmentDate: "",
+      selectedCategories: [],
+      transmissionType: "",
+      linkedUserAddress: "Legacy User St",
+      original,
+    });
+    expect(patch.address).toBeUndefined();
+  });
+
   it("includes categoryName and transmissionTypeName when operational fields change", () => {
     const patch = buildManualStudentPatchPayload({
       firstName: "Ana",
       lastName: "Silva",
       phoneNumber: "",
       email: "ana@school.test",
+      address: "",
       yearSuffix: "26",
       sequenceNumber: "1",
       enrollmentDate: "",
@@ -300,6 +338,7 @@ describe("buildManualStudentPatchPayload", () => {
       lastName: "Silva",
       phoneNumber: "",
       email: "ana@school.test",
+      address: "",
       yearSuffix: "26",
       sequenceNumber: "1",
       enrollmentDate: "",
