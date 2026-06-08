@@ -689,16 +689,7 @@ export function UsersManagementClient({
               <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
             </TabsList>
             <TabsContent value="profiles">
-              <InstructorRecordsManager
-                users={users}
-                embedded
-                onEditAppAccount={(instructorUser) => {
-                  const fullUser = users.find(
-                    (u) => u.id === instructorUser.id,
-                  );
-                  if (fullUser) openEditDialog(fullUser);
-                }}
-              />
+              <InstructorRecordsManager users={users} embedded />
             </TabsContent>
             <TabsContent value="onboarding" className="space-y-6">
               <p className="text-sm text-gray-600 max-w-3xl">

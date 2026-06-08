@@ -67,6 +67,16 @@ const INSTRUCTOR_ENTRIES = [
     label: "App access pending approval",
     description: "Account exists but is not approved yet.",
   },
+  {
+    label: "Edit Instructor",
+    description:
+      "Primary row action — opens unified editor (Instructor profile + App access).",
+  },
+  {
+    label: "Delete",
+    description:
+      "Visible on the row; blocked in v1 until instructor delete policy is implemented.",
+  },
 ] as const;
 
 export function PeopleProfileLabelGuide({
