@@ -7,6 +7,7 @@ export type InstructorOperationalDto = {
   instructorIdNumber?: string | null;
   instructorLicenseNumber?: string | null;
   instructorLicenseExpiry?: string | Date | null;
+  isAvailableForBooking?: boolean;
 };
 
 export type InstructorRecordUserDto = {

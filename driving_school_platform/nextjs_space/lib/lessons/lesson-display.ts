@@ -38,6 +38,15 @@ export function getLessonInstructorName(instructor?: NestedUserName): string {
   return getLessonParticipantName(instructor);
 }
 
+export const LESSON_INACTIVE_INSTRUCTOR_WARNING =
+  "Assigned instructor is inactive";
+
+export function isLessonInstructorInactive(
+  instructor?: { isAvailableForBooking?: boolean | null } | null,
+): boolean {
+  return instructor?.isAvailableForBooking === false;
+}
+
 export function getLessonVehicleLabel(
   vehicle?: {
     registrationNumber?: string | null;

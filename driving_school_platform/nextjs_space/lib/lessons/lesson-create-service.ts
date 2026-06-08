@@ -91,6 +91,14 @@ export async function createAdminLesson(input: {
     };
   }
 
+  if (!instructor.isAvailableForBooking) {
+    return {
+      ok: false,
+      error: "instructor_not_available_for_booking",
+      status: HTTP_STATUS.CONFLICT,
+    };
+  }
+
   let categoryId: number;
 
   if (lessonType === "THEORY") {

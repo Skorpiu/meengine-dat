@@ -1,4 +1,9 @@
 import type { InstructorRecordUserDto } from "@/lib/instructors/instructor-record-ui-types";
+import {
+  PEOPLE_APP_ACCESS_SECTION_THEME,
+  PEOPLE_OPERATIONAL_ACTIVE_BADGE,
+  PEOPLE_OPERATIONAL_INACTIVE_BADGE,
+} from "@/lib/people/people-app-access-ui-theme";
 
 export function filterInstructorRecordUsers(
   users: InstructorRecordUserDto[],
@@ -32,6 +37,97 @@ export function getInstructorAppAccountStatusLabel(
   isApproved: boolean,
 ): string {
   return isApproved ? "App access active" : "App access pending approval";
+}
+
+export function isInstructorProfileInactive(
+  user: InstructorRecordUserDto,
+): boolean {
+  return user.instructor?.isAvailableForBooking === false;
+}
+
+export function isInstructorPendingApproval(
+  user: InstructorRecordUserDto,
+): boolean {
+  return user.instructor?.isAvailableForBooking !== false && !user.isApproved;
+}
+
+export type InstructorPeopleStatusBadge = {
+  label: string;
+  variant: "secondary" | "default" | "destructive" | "outline";
+  className?: string;
+  tooltip: string;
+};
+
+export type InstructorAppAccessSectionTheme = {
+  containerClass: string;
+  triggerTitleClass: string;
+  triggerIconClass: string;
+  bodyTextClass: string;
+  labelTextClass: string;
+  mutedTextClass: string;
+};
+
+/** Edit Instructor → App access: same blue section as Edit Student → App access. */
+export function getInstructorAppAccessSectionTheme(): InstructorAppAccessSectionTheme {
+  return PEOPLE_APP_ACCESS_SECTION_THEME;
+}
+
+/**
+ * Instructors → Profiles row badge.
+ * Active/Inactive follow Vehicles; pending approval follows Students app-access badges.
+ */
+export function getInstructorPeopleStatusBadge(
+  user: InstructorRecordUserDto,
+): InstructorPeopleStatusBadge {
+  if (isInstructorProfileInactive(user)) {
+    return {
+      label: PEOPLE_OPERATIONAL_INACTIVE_BADGE.label,
+      variant: PEOPLE_OPERATIONAL_INACTIVE_BADGE.variant,
+      tooltip:
+        "Instructor is deactivated — not available for new bookings; app login disabled. History is preserved.",
+    };
+  }
+  if (isInstructorPendingApproval(user)) {
+    return {
+      label: "App access pending approval",
+      variant: "default",
+      tooltip: "Account exists but is not approved yet.",
+    };
+  }
+  return {
+    label: PEOPLE_OPERATIONAL_ACTIVE_BADGE.label,
+    variant: PEOPLE_OPERATIONAL_ACTIVE_BADGE.variant,
+    tooltip: "Instructor is active — available for booking and can sign in.",
+  };
+}
+
+/**
+ * Edit Instructor → App access status badge.
+ * Wording/colors match Edit Student → App access (`Access status` row).
+ */
+export function getInstructorEditAppAccessStatusBadge(
+  user: InstructorRecordUserDto,
+): InstructorPeopleStatusBadge {
+  if (isInstructorProfileInactive(user)) {
+    return {
+      label: PEOPLE_OPERATIONAL_INACTIVE_BADGE.label,
+      variant: PEOPLE_OPERATIONAL_INACTIVE_BADGE.variant,
+      tooltip:
+        "Instructor is deactivated — login disabled; history preserved. Reactivate from App access when needed.",
+    };
+  }
+  if (isInstructorPendingApproval(user)) {
+    return {
+      label: "Pending approval",
+      variant: "default",
+      tooltip: "Account exists but is not approved yet.",
+    };
+  }
+  return {
+    label: "Approved — can sign in",
+    variant: "secondary",
+    tooltip: "Instructor can sign in and is available for booking.",
+  };
 }
 
 const INSTRUCTOR_SEARCH_NORMALIZE = (value: string) =>

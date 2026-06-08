@@ -196,10 +196,13 @@ export function LessonForm({
   const fetchInstructors = useCallback(
     async (signal?: AbortSignal) => {
       try {
-        const response = await fetch("/api/admin/users?role=INSTRUCTOR", {
-          credentials: "include",
-          signal,
-        });
+        const response = await fetch(
+          "/api/admin/instructors/all?forBooking=true",
+          {
+            credentials: "include",
+            signal,
+          },
+        );
 
         if (!response.ok) {
           throw new Error(`Failed to fetch instructors (${response.status})`);
@@ -212,7 +215,24 @@ export function LessonForm({
           data = null;
         }
 
-        setInstructors(getArrayProp<InstructorOption>(data, "users"));
+        const raw = getArrayProp<{
+          id: string;
+          firstName?: string;
+          lastName?: string;
+          name?: string;
+        }>(data, "instructors");
+
+        setInstructors(
+          raw.map((instructor) => ({
+            id: instructor.id,
+            firstName:
+              instructor.firstName ?? instructor.name?.split(" ")[0] ?? "",
+            lastName:
+              instructor.lastName ??
+              instructor.name?.split(" ").slice(1).join(" ") ??
+              "",
+          })),
+        );
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError")
           return;

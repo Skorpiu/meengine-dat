@@ -6,13 +6,19 @@ Formal policy for School Admin **Instructor** lifecycle in People management: **
 
 **Related:** [decision-log.md](./decision-log.md) DEC-018, DEC-019; [student-app-access-lifecycle-policy.md](./student-app-access-lifecycle-policy.md) (student parallel).
 
-**Current runtime (post `instructor-hard-delete-zero-deps-v1`):**
+**Current runtime (post `instructor-deactivate-v1` UX alignment):**
 
-- Instructors → Profiles: **Edit Instructor** + **Delete** (policy-aware: allowed only zero-deps; blocked modal with stable codes otherwise).
-- `DELETE /api/admin/instructors/[id]` — dedicated hard delete by `Instructor.id` (SUPER_ADMIN, tenant, demo guard).
-- `DELETE /api/users/delete` — returns **409** `use_instructor_delete_policy` when target role is **INSTRUCTOR**.
-- App Accounts tab: legacy delete still exists for non-instructor roles; instructor delete must use Profiles.
-- **Deactivate** and **Remove app access** — not implemented (future batches).
+- Instructors → Profiles: **Edit Instructor** and policy-aware **Delete** only on the row.
+- Deactivate / Reactivate lifecycle actions live inside **Edit Instructor → App access** (not dominant row actions).
+- `POST /api/admin/instructors/[id]/deactivate` — deactivate by `Instructor.id` (SUPER_ADMIN, tenant, demo guard).
+- `POST /api/admin/instructors/[id]/reactivate` — reactivate by `Instructor.id` (same guards; included in pre-merge UX correction).
+- `DELETE /api/admin/instructors/[id]` — zero-deps hard delete (unchanged).
+- `DELETE /api/users/delete` — **409** `use_instructor_delete_policy` for INSTRUCTOR role.
+- Inactive instructors (`isAvailableForBooking=false`) remain in People with **Inactive** (red) badge; excluded from new booking via `?forBooking=true` and lesson-create guard.
+- Schedule Map and admin lesson list cards warn when an **assigned** instructor is inactive (`Assigned instructor is inactive`); lessons remain visible.
+- **Remove app access** lifecycle — not implemented (future batch).
+
+**JWT note:** Deactivate sets `User.isApproved=false`, clears DB `Session` rows, and credentials `authorize()` blocks new logins for non-admins. **Already-issued JWT sessions may remain valid until expiry** (NextAuth JWT strategy).
 
 ---
 
@@ -88,7 +94,7 @@ Formal policy for School Admin **Instructor** lifecycle in People management: **
 - Default product action when an instructor leaves the school.
 - Does **not** remove `Instructor` or `User` rows.
 - Expected v1 mechanism (no schema): `Instructor.isAvailableForBooking = false`, `User.isApproved = false`, session invalidation, UI badge “Inactive”.
-- Instructor remains visible in People with history intact; excluded from new lesson assignment (future batch `instructor-deactivate-v1`).
+- Instructor remains visible in People with history intact; excluded from new lesson assignment (`instructor-deactivate-v1`).
 
 ### 3. Remove app access (deferred lifecycle)
 
@@ -158,14 +164,30 @@ Formal policy for School Admin **Instructor** lifecycle in People management: **
 
 Mirror patterns from `lib/students/student-record-delete.ts` and `student-record-delete-policy.ts`.
 
-### `POST /api/admin/instructors/[id]/deactivate` — `instructor-deactivate-v1`
+### `POST /api/admin/instructors/[id]/deactivate` — **implemented** (`instructor-deactivate-v1`)
 
 | Aspect | Contract |
 | ------ | -------- |
 | **Goal** | Disable booking + login; **preserve** all history |
-| **Likely effects** | `isAvailableForBooking = false`, `User.isApproved = false`, invalidate `Session` rows |
-| **Reactivate** | Future slice (optional `POST .../reactivate`) |
-| **Schema** | **None** required for v1 |
+| **Effects** | `isAvailableForBooking = false`, `User.isApproved = false`, `Session.deleteMany`, revoke pending INSTRUCTOR invitations for email |
+| **Implementation** | `lib/instructors/instructor-record-deactivate-policy.ts`, `lib/instructors/instructor-record-deactivate.ts`, `app/api/admin/instructors/[id]/deactivate/route.ts` |
+| **Success** | `200` / `{ success: true, data: { deactivated: true, alreadyInactive?, warningCodes?, futureLessonsCount? } }` |
+| **Blocked** | `409` — `instructor_deactivate_self_not_allowed`, `instructor_deactivate_not_allowed` |
+| **Warnings (non-blocking)** | `instructor_has_future_lessons` when future `SCHEDULED` lessons exist |
+| **UI** | Edit Instructor → App access (not row-level Deactivate); Active/Inactive row badges match Vehicles; Edit App access blue section + Access status labels match Students |
+| **Schedule visibility** | Lessons with inactive assigned instructor remain visible; Schedule Map + admin lesson lists show `Assigned instructor is inactive` |
+| **JWT** | New credentials logins blocked via `isApproved` check; existing JWT may persist until expiry |
+
+### `POST /api/admin/instructors/[id]/reactivate` — **implemented** (included in `instructor-deactivate-v1` UX correction)
+
+| Aspect | Contract |
+| ------ | -------- |
+| **Goal** | Restore booking + login for a deactivated instructor; **preserve** all history |
+| **Effects** | `isAvailableForBooking = true`, `User.isApproved = true`; does **not** recreate sessions or touch lessons |
+| **Implementation** | `lib/instructors/instructor-record-reactivate-policy.ts`, `lib/instructors/instructor-record-reactivate.ts`, `app/api/admin/instructors/[id]/reactivate/route.ts` |
+| **Success** | `200` / `{ success: true, data: { reactivated: true, alreadyActive? } }` |
+| **Blocked** | `409` — `instructor_reactivate_not_allowed` |
+| **UI** | Edit Instructor → App access → **Reactivate instructor** when inactive |
 
 ### `POST /api/admin/instructors/[id]/app-access/remove` — deferred
 
@@ -193,7 +215,8 @@ Batch **`instructor-hard-delete-zero-deps-v1`** added a guard on **`DELETE /api/
 | ----- | ----- | ----- |
 | 1 | **`instructor-delete-policy-v1-docs`** | This policy doc + DEC-019 + memory (**done** when merged) |
 | 2 | **`instructor-hard-delete-zero-deps-v1`** | `DELETE /api/admin/instructors/[id]` + UI allowed/blocked + legacy guard (**done** when merged) |
-| 3 | **`instructor-deactivate-v1`** | Deactivate endpoint + UI badge + scheduling filters |
+| 3 | **`instructor-deactivate-v1`** | Deactivate + Reactivate lifecycle in Edit → App access; status badges; Schedule Map inactive-instructor warning; booking filters (**done** when merged) |
+| 4 | **`people-management-app-accounts-demote-v1`** | Demote App accounts tab (after instructor lifecycle v1) |
 | 4 | **`people-management-instructor-app-access-lifecycle-policy-v1`** | Remove/reactivate app access policy + API |
 | 5 | **`people-management-app-accounts-demote-v1`** | Demote tab **after** policy-driven delete/deactivate + legacy guard |
 | 6 | **`instructor-archive-schema-v1`** (optional, D4) | `Instructor.status` / `archivedAt` if product requires formal archive |

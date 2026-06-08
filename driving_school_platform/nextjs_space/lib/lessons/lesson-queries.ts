@@ -17,6 +17,7 @@ export const LESSON_LIST_STUDENT_SELECT = {
 
 export const LESSON_LIST_INSTRUCTOR_SELECT = {
   id: true,
+  isAvailableForBooking: true,
   user: { select: LESSON_NESTED_USER_SELECT },
 } satisfies Prisma.InstructorSelect;
 

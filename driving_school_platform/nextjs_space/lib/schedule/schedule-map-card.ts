@@ -25,6 +25,7 @@ export type ScheduleMapCardLesson = {
   practicalLessonNumber?: number | null;
   student?: StudentDisplaySource;
   instructor?: {
+    isAvailableForBooking?: boolean | null;
     user?: { firstName?: string | null; lastName?: string | null };
   };
   vehicle?: {
@@ -55,15 +56,30 @@ export function getScheduleLessonTypeColorClasses(lessonType: string): string {
   return "bg-gray-100 border-gray-300 text-gray-800";
 }
 
-/** Schedule Map card color: status overrides, then lesson type. */
+export const SCHEDULE_MAP_INACTIVE_INSTRUCTOR_WARNING =
+  "Assigned instructor is inactive";
+
+export function isScheduleMapLessonInstructorInactive(
+  lesson: Pick<ScheduleMapCardLesson, "instructor">,
+): boolean {
+  const instructor = lesson.instructor;
+  if (!instructor) return false;
+  return instructor.isAvailableForBooking === false;
+}
+
+/** Schedule Map card color: status overrides, inactive instructor warning, then lesson type. */
 export function getScheduleMapLessonColorClasses(input: {
   lessonType: string;
   status?: string | null;
+  instructorInactive?: boolean;
 }): string {
   if (input.status === "COMPLETED")
     return "bg-green-100 border-green-300 text-green-800";
   if (input.status === "CANCELLED")
     return "bg-red-100 border-red-300 text-red-800";
+  if (input.instructorInactive) {
+    return "bg-red-50 border-red-400 text-red-900 ring-1 ring-red-300";
+  }
   return getScheduleLessonTypeColorClasses(input.lessonType);
 }
 
@@ -95,6 +111,10 @@ export function getScheduleMapChipLines(
   const displayPerson = person || fallbackPerson;
   if (displayPerson) {
     lines.push(displayPerson);
+  }
+
+  if (isScheduleMapLessonInstructorInactive(lesson)) {
+    lines.push(SCHEDULE_MAP_INACTIVE_INSTRUCTOR_WARNING);
   }
 
   const reg = lesson.vehicle?.registrationNumber?.trim();

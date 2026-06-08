@@ -55,6 +55,7 @@ import { useRouter } from "next/navigation";
 import {
   getScheduleMapChipLines,
   getScheduleMapLessonColorClasses,
+  isScheduleMapLessonInstructorInactive,
 } from "@/lib/schedule/schedule-map-card";
 import { getStudentDisplayName } from "@/lib/students/student-display";
 import type { ScheduleMapStudentPayload } from "@/lib/students/schedule-lesson-student";
@@ -100,6 +101,7 @@ export interface Lesson {
   status: string;
   student?: ScheduleMapStudentPayload;
   instructor?: {
+    isAvailableForBooking?: boolean;
     user: {
       id: string;
       firstName: string;
@@ -583,6 +585,7 @@ export function ScheduleMap({
     getScheduleMapLessonColorClasses({
       lessonType: lesson.lessonType,
       status: lesson.status,
+      instructorInactive: isScheduleMapLessonInstructorInactive(lesson),
     });
 
   const dates = getDateRange();
