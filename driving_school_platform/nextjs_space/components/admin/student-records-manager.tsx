@@ -39,6 +39,7 @@ import {
   Car,
   Trash2,
   UserX,
+  UserCheck,
   ChevronRight,
 } from "lucide-react";
 import {
@@ -89,6 +90,10 @@ import {
   canShowRemoveStudentAppAccessAction,
   REMOVE_STUDENT_APP_ACCESS_MODAL,
 } from "@/lib/students/student-app-access-remove-ui-utils";
+import {
+  canShowStudentReactivateAppAccessSection,
+  REACTIVATE_STUDENT_APP_ACCESS_MODAL,
+} from "@/lib/students/student-app-access-reactivate-ui-utils";
 import { getStudentAppAccessCompactBadges } from "@/lib/students/student-app-access-summary-utils";
 import {
   canRevokeStudentRecordInvitation,
@@ -233,6 +238,10 @@ export function StudentRecordsManager({
   const [removeAppAccessDialog, setRemoveAppAccessDialog] =
     useState<StudentRecordDto | null>(null);
   const [removeAppAccessLoading, setRemoveAppAccessLoading] = useState(false);
+  const [reactivateAppAccessDialog, setReactivateAppAccessDialog] =
+    useState<StudentRecordDto | null>(null);
+  const [reactivateAppAccessLoading, setReactivateAppAccessLoading] =
+    useState(false);
   const [exportingFormat, setExportingFormat] =
     useState<StudentRecordsExportFormat | null>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -525,6 +534,88 @@ export function StudentRecordsManager({
       toast.error("An error occurred while removing app access.");
     } finally {
       setRemoveAppAccessLoading(false);
+    }
+  };
+
+  const handleReactivateAppAccessConfirm = async () => {
+    if (!reactivateAppAccessDialog) return;
+    const target = reactivateAppAccessDialog;
+
+    setReactivateAppAccessLoading(true);
+    try {
+      const response = await fetch(
+        `/api/admin/students/${encodeURIComponent(target.id)}/app-access/reactivate`,
+        { method: "POST" },
+      );
+      const data = await tryReadJson<
+        StudentRecordMutationResponse | StudentRecordApiError
+      >(response);
+
+      if (!response.ok) {
+        const err = data as StudentRecordApiError | null;
+        toast.error(
+          studentRecordApiErrorMessage(
+            err?.code,
+            err?.error || "Failed to reactivate app access.",
+          ),
+        );
+        return;
+      }
+
+      const updated = (data as StudentRecordMutationResponse).data?.student;
+      if (!updated) {
+        toast.error("Failed to reactivate app access.");
+        return;
+      }
+
+      toast.success("App access reactivated.");
+      setReactivateAppAccessDialog(null);
+      setStudents((prev) =>
+        prev.map((s) => (s.id === updated.id ? updated : s)),
+      );
+
+      if (updated.userId && updated.user) {
+        setLinkedDetailsOverlay((prev) => ({
+          ...prev,
+          [updated.userId!]: {
+            email: updated.user!.email,
+            isApproved: true,
+            firstName: updated.user!.firstName,
+            lastName: updated.user!.lastName,
+            phoneNumber: updated.phoneNumber,
+            address: null,
+            selectedCategories: [],
+            transmissionType: "",
+          },
+        }));
+      }
+
+      if (editingStudent?.id === updated.id) {
+        const linked =
+          updated.userId != null
+            ? getEffectiveLinkedDetails(updated.userId)
+            : null;
+        setEditingStudent(updated);
+        setEditForm(studentToForm(updated, linked));
+        setEditLinkedOriginal(
+          linked
+            ? toLinkedStudentUserUpdateForm({
+                firstName: updated.firstName ?? updated.user?.firstName ?? "",
+                lastName: updated.lastName ?? updated.user?.lastName ?? "",
+                phoneNumber: updated.phoneNumber ?? "",
+                address: linked.address ?? "",
+                selectedCategories: linked.selectedCategories ?? [],
+                transmissionType: linked.transmissionType ?? "",
+              })
+            : null,
+        );
+      }
+
+      router.refresh();
+    } catch {
+      toast.error("An error occurred while reactivating app access.");
+    } finally {
+      setReactivateAppAccessLoading(false);
     }
   };
 
@@ -919,6 +1010,52 @@ export function StudentRecordsManager({
     );
   };
 
+  const renderReactivateAppAccessSection = (student: StudentRecordDto) => {
+    const canonicalEmail = getStudentCanonicalEmailDisplay(student);
+    return (
+      <Collapsible
+        defaultOpen
+        className="rounded-lg border border-emerald-100 bg-emerald-50/60"
+      >
+        <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 px-4 py-3 text-left">
+          <span className="font-medium text-emerald-900">App access</span>
+          <ChevronRight className="h-4 w-4 text-emerald-700 transition-transform group-data-[state=open]:rotate-90" />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-4 px-4 pb-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-emerald-900">Access status:</span>
+            <Badge variant="outline">No active app access</Badge>
+          </div>
+          {canonicalEmail ? (
+            <div className="space-y-1">
+              <Label>Email</Label>
+              <p className="text-sm font-medium text-emerald-950">
+                {canonicalEmail}
+              </p>
+            </div>
+          ) : null}
+          <p className="text-xs text-emerald-800">
+            Reactivate restores access using the existing student profile when a
+            matching app account already exists. Otherwise use{" "}
+            <strong>Send invitation</strong> on the profile row.
+          </p>
+          {canShowStudentReactivateAppAccessSection(student) ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="border-emerald-300 text-emerald-800 hover:bg-emerald-100"
+              disabled={reactivateAppAccessLoading}
+              onClick={() => setReactivateAppAccessDialog(student)}
+            >
+              <UserCheck className="h-4 w-4 mr-2" />
+              Reactivate app access
+            </Button>
+          ) : null}
+        </CollapsibleContent>
+      </Collapsible>
+    );
+  };
+
   const editingLinkedDetails =
     editingStudent?.userId != null
       ? getEffectiveLinkedDetails(editingStudent.userId)
@@ -1259,6 +1396,10 @@ export function StudentRecordsManager({
             canShowStudentPendingInvitationSection(editingStudent)
               ? renderPendingInvitationSection(editingStudent)
               : null}
+            {editingStudent &&
+            canShowStudentReactivateAppAccessSection(editingStudent)
+              ? renderReactivateAppAccessSection(editingStudent)
+              : null}
             <div className="flex gap-2 justify-end">
               <Button
                 type="button"
@@ -1428,6 +1569,64 @@ export function StudentRecordsManager({
               {removeAppAccessLoading
                 ? "Removing…"
                 : REMOVE_STUDENT_APP_ACCESS_MODAL.confirmLabel}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={reactivateAppAccessDialog !== null}
+        onOpenChange={(open) => {
+          if (!open && !reactivateAppAccessLoading) {
+            setReactivateAppAccessDialog(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {REACTIVATE_STUDENT_APP_ACCESS_MODAL.title}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p>{REACTIVATE_STUDENT_APP_ACCESS_MODAL.description}</p>
+                {reactivateAppAccessDialog ? (
+                  <p>
+                    Student:{" "}
+                    <span className="font-medium text-foreground">
+                      {getStudentRecordDisplayName(reactivateAppAccessDialog)}
+                    </span>
+                    {reactivateAppAccessDialog.schoolStudentId ? (
+                      <>
+                        {" "}
+                        (
+                        <span className="font-mono">
+                          {reactivateAppAccessDialog.schoolStudentId}
+                        </span>
+                        )
+                      </>
+                    ) : null}
+                    .
+                  </p>
+                ) : null}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={reactivateAppAccessLoading}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={reactivateAppAccessLoading}
+              className="bg-emerald-700 hover:bg-emerald-800"
+              onClick={(e) => {
+                e.preventDefault();
+                void handleReactivateAppAccessConfirm();
+              }}
+            >
+              {reactivateAppAccessLoading
+                ? "Reactivating…"
+                : REACTIVATE_STUDENT_APP_ACCESS_MODAL.confirmLabel}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

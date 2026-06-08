@@ -5,6 +5,7 @@ import {
   STUDENT_RECORD_SELECT,
   type StudentRecordDto,
 } from "@/lib/students/student-record-dto";
+import { normalizeStudentRecordEmail } from "@/lib/students/student-record-validation";
 
 /** Stable API codes for remove app access (409 unless noted). */
 export const STUDENT_APP_ACCESS_REMOVE_CODE = {
@@ -247,6 +248,296 @@ export async function removeStudentAppAccess(input: {
         userId: null,
         appAccessMode: "MANUAL_ONLY",
         ...(emailUpdate !== undefined ? { email: emailUpdate } : {}),
+      },
+    });
+
+    return { kind: "ok" as const };
+  });
+
+  if (txResult.kind === "not_found") {
+    return { ok: false, notFound: true };
+  }
+
+  if (txResult.kind === "validation") {
+    return txResult.error;
+  }
+
+  const updated = await prisma.student.findFirst({
+    where: {
+      id: input.studentId,
+      organizationId: input.organizationId,
+    },
+    select: STUDENT_RECORD_SELECT,
+  });
+
+  if (!updated) {
+    return { ok: false, notFound: true };
+  }
+
+  return { ok: true, student: mapStudentRecordDto(updated) };
+}
+
+/** Stable API codes for reactivate app access (409 unless noted). */
+export const STUDENT_APP_ACCESS_REACTIVATE_CODE = {
+  STUDENT_NOT_FOUND: "student_not_found",
+  MISSING_EMAIL: "missing_email",
+  INVALID_EMAIL: "invalid_email",
+  STUDENT_ALREADY_HAS_APP_ACCESS: "student_already_has_app_access",
+  STUDENT_NOT_MANUAL_ONLY: "student_not_manual_only",
+  STUDENT_HAS_PENDING_INVITATION: "student_has_pending_invitation",
+  REACTIVATE_ORPHAN_USER_NOT_FOUND: "reactivate_orphan_user_not_found",
+  USER_LINKED_TO_OTHER_STUDENT: "user_linked_to_other_student",
+  ORPHAN_USER_ROLE_MISMATCH: "orphan_user_role_mismatch",
+  ORPHAN_USER_TENANT_MISMATCH: "orphan_user_tenant_mismatch",
+  STUDENT_EMAIL_USER_MISMATCH: "student_email_user_mismatch",
+} as const;
+
+export type StudentAppAccessReactivateCode =
+  (typeof STUDENT_APP_ACCESS_REACTIVATE_CODE)[keyof typeof STUDENT_APP_ACCESS_REACTIVATE_CODE];
+
+export type ReactivateStudentAppAccessResult =
+  | { ok: true; student: StudentRecordDto }
+  | { ok: false; notFound: true }
+  | {
+      ok: false;
+      notFound: false;
+      code: StudentAppAccessReactivateCode;
+      error: string;
+      status: 400 | 409;
+    };
+
+const REACTIVATE_ROW_SELECT = {
+  id: true,
+  organizationId: true,
+  appAccessMode: true,
+  userId: true,
+  email: true,
+} satisfies Prisma.StudentSelect;
+
+type ReactivateRow = Prisma.StudentGetPayload<{
+  select: typeof REACTIVATE_ROW_SELECT;
+}>;
+
+function isValidEmailFormat(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function mapReactivateValidationError(
+  row: ReactivateRow,
+  canonicalEmail: string | null,
+): Exclude<ReactivateStudentAppAccessResult, { ok: true }> | null {
+  if (row.appAccessMode === "APP_USER" || row.userId != null) {
+    return {
+      ok: false,
+      notFound: false,
+      code: STUDENT_APP_ACCESS_REACTIVATE_CODE.STUDENT_ALREADY_HAS_APP_ACCESS,
+      error: "This student already has active app access.",
+      status: 409,
+    };
+  }
+
+  if (row.appAccessMode === "INVITED") {
+    return {
+      ok: false,
+      notFound: false,
+      code: STUDENT_APP_ACCESS_REACTIVATE_CODE.STUDENT_HAS_PENDING_INVITATION,
+      error:
+        "This student has a pending invitation. Revoke it before reactivating app access.",
+      status: 409,
+    };
+  }
+
+  if (row.appAccessMode !== "MANUAL_ONLY") {
+    return {
+      ok: false,
+      notFound: false,
+      code: STUDENT_APP_ACCESS_REACTIVATE_CODE.STUDENT_NOT_MANUAL_ONLY,
+      error:
+        "Only manual student records without app access can be reactivated.",
+      status: 409,
+    };
+  }
+
+  if (!canonicalEmail) {
+    return {
+      ok: false,
+      notFound: false,
+      code: STUDENT_APP_ACCESS_REACTIVATE_CODE.MISSING_EMAIL,
+      error: "An email address is required to reactivate app access.",
+      status: 400,
+    };
+  }
+
+  if (!isValidEmailFormat(canonicalEmail)) {
+    return {
+      ok: false,
+      notFound: false,
+      code: STUDENT_APP_ACCESS_REACTIVATE_CODE.INVALID_EMAIL,
+      error: "Invalid email address.",
+      status: 400,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Re-links an existing orphan User to a MANUAL_ONLY Student (Path A).
+ * Path B: no orphan User → stable 409 directing admin to Send invitation.
+ */
+export async function reactivateStudentAppAccess(input: {
+  organizationId: string;
+  studentId: string;
+}): Promise<ReactivateStudentAppAccessResult> {
+  const txResult = await prisma.$transaction(async (tx) => {
+    const locked = await lockStudentRowForUpdate(tx, input);
+    if (!locked) {
+      return { kind: "not_found" as const };
+    }
+
+    const row = await tx.student.findFirst({
+      where: {
+        id: input.studentId,
+        organizationId: input.organizationId,
+      },
+      select: REACTIVATE_ROW_SELECT,
+    });
+
+    if (!row) {
+      return { kind: "not_found" as const };
+    }
+
+    const canonicalEmail = normalizeStudentRecordEmail(row.email);
+    const validationError = mapReactivateValidationError(row, canonicalEmail);
+    if (validationError) {
+      return { kind: "validation" as const, error: validationError };
+    }
+
+    const pendingInvitationCount = await tx.userInvitation.count({
+      where: {
+        organizationId: input.organizationId,
+        studentId: row.id,
+        status: "PENDING",
+      },
+    });
+
+    if (pendingInvitationCount > 0) {
+      return {
+        kind: "validation" as const,
+        error: {
+          ok: false as const,
+          notFound: false as const,
+          code: STUDENT_APP_ACCESS_REACTIVATE_CODE.STUDENT_HAS_PENDING_INVITATION,
+          error:
+            "This student has a pending invitation. Revoke it before reactivating app access.",
+          status: 409 as const,
+        },
+      };
+    }
+
+    const orphanUser = await tx.user.findFirst({
+      where: {
+        email: canonicalEmail!,
+        role: "STUDENT",
+        organizationId: input.organizationId,
+      },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        organizationId: true,
+      },
+    });
+
+    if (!orphanUser) {
+      return {
+        kind: "validation" as const,
+        error: {
+          ok: false as const,
+          notFound: false as const,
+          code: STUDENT_APP_ACCESS_REACTIVATE_CODE.REACTIVATE_ORPHAN_USER_NOT_FOUND,
+          error:
+            "No existing app account was found for this email. Use Send invitation on the profile row instead.",
+          status: 409 as const,
+        },
+      };
+    }
+
+    if (orphanUser.role !== "STUDENT") {
+      return {
+        kind: "validation" as const,
+        error: {
+          ok: false as const,
+          notFound: false as const,
+          code: STUDENT_APP_ACCESS_REACTIVATE_CODE.ORPHAN_USER_ROLE_MISMATCH,
+          error: "Existing app account is not a student account.",
+          status: 409 as const,
+        },
+      };
+    }
+
+    if (orphanUser.organizationId !== input.organizationId) {
+      return {
+        kind: "validation" as const,
+        error: {
+          ok: false as const,
+          notFound: false as const,
+          code: STUDENT_APP_ACCESS_REACTIVATE_CODE.ORPHAN_USER_TENANT_MISMATCH,
+          error: "Existing app account does not belong to this school.",
+          status: 409 as const,
+        },
+      };
+    }
+
+    const orphanEmail = normalizeStudentRecordEmail(orphanUser.email);
+    if (orphanEmail !== canonicalEmail) {
+      return {
+        kind: "validation" as const,
+        error: {
+          ok: false as const,
+          notFound: false as const,
+          code: STUDENT_APP_ACCESS_REACTIVATE_CODE.STUDENT_EMAIL_USER_MISMATCH,
+          error:
+            "Student email does not match the existing app account. Change email is not available yet — contact support or use a matching profile.",
+          status: 409 as const,
+        },
+      };
+    }
+
+    const linkedElsewhere = await tx.student.findFirst({
+      where: {
+        organizationId: input.organizationId,
+        userId: orphanUser.id,
+        id: { not: row.id },
+      },
+      select: { id: true },
+    });
+
+    if (linkedElsewhere) {
+      return {
+        kind: "validation" as const,
+        error: {
+          ok: false as const,
+          notFound: false as const,
+          code: STUDENT_APP_ACCESS_REACTIVATE_CODE.USER_LINKED_TO_OTHER_STUDENT,
+          error:
+            "An app account with this email is already linked to another student record.",
+          status: 409 as const,
+        },
+      };
+    }
+
+    await tx.user.update({
+      where: { id: orphanUser.id },
+      data: { isApproved: true },
+    });
+
+    await tx.student.update({
+      where: { id: row.id },
+      data: {
+        userId: orphanUser.id,
+        appAccessMode: "APP_USER",
+        email: canonicalEmail,
       },
     });
 
