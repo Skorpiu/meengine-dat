@@ -205,7 +205,7 @@ Batch **`instructor-hard-delete-zero-deps-v1`** added a guard on **`DELETE /api/
 - If target `User.role === 'INSTRUCTOR'` → **`409`** with stable code **`use_instructor_delete_policy`**
 - Message: instruct admin to use People → Instructors → Profiles
 - Prevents destructive user-level deletion bypassing People policy
-- App Accounts tab delete for instructors should eventually call policy endpoints or be removed on demote (`people-management-app-accounts-demote-v1` — still deferred)
+- App Accounts tab delete for instructors removed in `people-management-app-accounts-demote-v1` — no UI path to `DELETE /api/users/delete` from People
 
 ---
 
@@ -216,10 +216,10 @@ Batch **`instructor-hard-delete-zero-deps-v1`** added a guard on **`DELETE /api/
 | 1 | **`instructor-delete-policy-v1-docs`** | This policy doc + DEC-019 + memory (**done** when merged) |
 | 2 | **`instructor-hard-delete-zero-deps-v1`** | `DELETE /api/admin/instructors/[id]` + UI allowed/blocked + legacy guard (**done** when merged) |
 | 3 | **`instructor-deactivate-v1`** | Deactivate + Reactivate lifecycle in Edit → App access; status badges; Schedule Map inactive-instructor warning; booking filters (**done** when merged) |
-| 4 | **`people-management-app-accounts-demote-v1`** | Demote App accounts tab (after instructor lifecycle v1) |
-| 4 | **`people-management-instructor-app-access-lifecycle-policy-v1`** | Remove/reactivate app access policy + API |
-| 5 | **`people-management-app-accounts-demote-v1`** | Demote tab **after** policy-driven delete/deactivate + legacy guard |
-| 6 | **`instructor-archive-schema-v1`** (optional, D4) | `Instructor.status` / `archivedAt` if product requires formal archive |
+| 4 | **`people-management-app-accounts-demote-v1`** | Demote App accounts tab — read-only Advanced accounts; no delete UI (**done** when merged) |
+| 5 | **`people-management-instructor-app-access-lifecycle-policy-v1`** | Remove/reactivate app access policy + API |
+| 6 | **`users-delete-student-guard-v1`** | Guard `DELETE /api/users/delete` for STUDENT (symmetric to INSTRUCTOR) |
+| 7 | **`instructor-archive-schema-v1`** (optional, D4) | `Instructor.status` / `archivedAt` if product requires formal archive |
 
 ---
 

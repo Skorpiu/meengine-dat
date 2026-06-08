@@ -63,12 +63,6 @@ export default async function AdminUsersPage() {
     orderBy: { name: "asc" },
   });
 
-  const stats = {
-    totalStudents: users.filter((u) => u.role === "STUDENT").length,
-    totalInstructors: users.filter((u) => u.role === "INSTRUCTOR").length,
-    totalUsers: users.length,
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar currentPage="users" />
@@ -76,7 +70,6 @@ export default async function AdminUsersPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <UsersManagementClient
           users={users}
-          stats={stats}
           categories={categories}
           transmissionTypes={transmissionTypes}
         />

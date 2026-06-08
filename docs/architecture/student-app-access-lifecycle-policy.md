@@ -124,7 +124,7 @@ If orphan User email does not match Student canonical email after normalization 
 
 - No hard delete of User or Student.
 - No Change email (`people-management-student-email-change-policy-v1`).
-- No App Accounts tab demote until instructor unified flow is safe.
+- App Accounts demote implemented (`people-management-app-accounts-demote-v1`) — Advanced accounts read-only diagnostics only.
 - No Prisma schema / migration / RLS / auth-core changes.
 
 ## Future slices
@@ -132,7 +132,8 @@ If orphan User email does not match Student canonical email after normalization 
 | Batch | Scope |
 | ----- | ----- |
 | `people-management-student-email-change-policy-v1` | Canonical Change email (Student + User + invitations) |
-| `people-management-app-accounts-demote-v1` | Simplify App accounts tab after lifecycle + instructor parity |
+| `people-management-app-accounts-demote-v1` | **Done** — Advanced accounts read-only diagnostics; no create/edit/delete UI |
+| `users-delete-student-guard-v1` | Guard `DELETE /api/users/delete` for STUDENT (symmetric to INSTRUCTOR) |
 
 ## Related decisions
 
