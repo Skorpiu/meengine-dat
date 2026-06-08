@@ -101,6 +101,7 @@ import {
 } from "@/lib/students/student-record-invitation-ui-utils";
 import { getStudentProfileRowBadges } from "@/lib/students/student-profile-label-utils";
 import { PeopleProfileLabelGuide } from "@/components/admin/people-profile-label-guide";
+import { PeopleProfileAvatar } from "@/components/people/people-profile-avatar";
 import {
   Tooltip,
   TooltipContent,
@@ -1205,62 +1206,79 @@ export function StudentRecordsManager({
                     linked?.email,
                   );
 
+                  const avatarFirstName =
+                    student.firstName?.trim() || linked?.firstName || null;
+                  const avatarLastName =
+                    student.lastName?.trim() || linked?.lastName || null;
+
                   return (
                     <div
                       key={student.id}
                       className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50"
                     >
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-mono text-sm font-semibold text-driving-primary">
-                            {student.schoolStudentId ?? "—"}
-                          </span>
-                          <span className="font-medium">
-                            {getStudentRecordDisplayName(student)}
-                          </span>
-                        </div>
-                        <div className="text-sm text-gray-600 mt-1">
-                          {student.phoneNumber || "No phone"}
-                          {canonicalEmail ? ` · ${canonicalEmail}` : ""}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          Enrollment:{" "}
-                          {formatStudentRecordDate(student.enrollmentDate)}
-                        </div>
-                        <div className="mt-2 space-y-0.5">
+                      <div className="flex items-start gap-4 min-w-0 flex-1">
+                        <PeopleProfileAvatar
+                          firstName={avatarFirstName}
+                          lastName={avatarLastName}
+                        />
+                        <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
-                            {profileBadges.map((badge) => (
-                              <Tooltip key={badge.key}>
-                                <TooltipTrigger asChild>
-                                  <Badge variant={badge.variant}>
-                                    {badge.label}
-                                  </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="max-w-xs">
-                                  {badge.tooltip}
-                                </TooltipContent>
-                              </Tooltip>
-                            ))}
-                            {appAccessCompactBadges.map((badge) => (
-                              <Tooltip key={badge.key}>
-                                <TooltipTrigger asChild>
-                                  <Badge variant={badge.variant}>
-                                    {badge.label}
-                                  </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="max-w-xs">
-                                  {badge.tooltip}
-                                </TooltipContent>
-                              </Tooltip>
-                            ))}
+                            <span className="font-mono text-sm font-semibold text-driving-primary">
+                              {student.schoolStudentId ?? "—"}
+                            </span>
+                            <span className="font-medium">
+                              {getStudentRecordDisplayName(student)}
+                            </span>
                           </div>
-                          {getStudentAppAccessDetailLines(student).map(
-                            (line) => (
-                              <p key={line} className="text-xs text-gray-500">
-                                {line}
-                              </p>
-                            ),
-                          )}
+                          <div className="text-sm text-gray-600 mt-1">
+                            {student.phoneNumber || "No phone"}
+                            {canonicalEmail ? ` · ${canonicalEmail}` : ""}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            Enrollment:{" "}
+                            {formatStudentRecordDate(student.enrollmentDate)}
+                          </div>
+                          <div className="mt-2 space-y-0.5">
+                            <div className="flex flex-wrap items-center gap-2">
+                              {profileBadges.map((badge) => (
+                                <Tooltip key={badge.key}>
+                                  <TooltipTrigger asChild>
+                                    <Badge variant={badge.variant}>
+                                      {badge.label}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    side="top"
+                                    className="max-w-xs"
+                                  >
+                                    {badge.tooltip}
+                                  </TooltipContent>
+                                </Tooltip>
+                              ))}
+                              {appAccessCompactBadges.map((badge) => (
+                                <Tooltip key={badge.key}>
+                                  <TooltipTrigger asChild>
+                                    <Badge variant={badge.variant}>
+                                      {badge.label}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    side="top"
+                                    className="max-w-xs"
+                                  >
+                                    {badge.tooltip}
+                                  </TooltipContent>
+                                </Tooltip>
+                              ))}
+                            </div>
+                            {getStudentAppAccessDetailLines(student).map(
+                              (line) => (
+                                <p key={line} className="text-xs text-gray-500">
+                                  {line}
+                                </p>
+                              ),
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 shrink-0">
