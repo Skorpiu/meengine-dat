@@ -75,6 +75,7 @@ import {
   hasOperationalInstructorRecord,
 } from "@/lib/instructors/instructor-record-ui-utils";
 import { PeopleProfileLabelGuide } from "@/components/admin/people-profile-label-guide";
+import { PeopleProfileAvatar } from "@/components/people/people-profile-avatar";
 import {
   Tooltip,
   TooltipContent,
@@ -525,75 +526,81 @@ export function InstructorRecordsManager({
                         key={user.id}
                         className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50"
                       >
-                        <div className="min-w-0 space-y-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-medium">
-                              {getInstructorRecordDisplayName(user)}
-                            </span>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge variant="outline">Instructor</Badge>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="max-w-xs">
-                                Operational instructor profile linked to an app
-                                login account.
-                              </TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge
-                                  variant={statusBadge.variant}
-                                  className={statusBadge.className}
-                                >
-                                  {statusBadge.label}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="max-w-xs">
-                                {statusBadge.tooltip}
-                              </TooltipContent>
-                            </Tooltip>
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {user.email}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {user.phoneNumber || "No phone"} · App account
-                            linked
-                          </div>
-                          {hasRecord ? (
-                            <div className="text-sm text-gray-600 space-y-0.5">
-                              <div>
-                                License:{" "}
-                                <span className="font-mono">
-                                  {user.instructor?.instructorLicenseNumber}
-                                </span>
-                              </div>
-                              <div>
-                                License expires:{" "}
-                                {formatInstructorLicenseExpiry(
-                                  user.instructor?.instructorLicenseExpiry,
-                                )}
-                              </div>
-                              {user.instructor?.instructorIdNumber ? (
-                                <div className="text-xs text-gray-500">
-                                  Instructor ID:{" "}
+                        <div className="flex items-start gap-4 min-w-0 flex-1">
+                          <PeopleProfileAvatar
+                            firstName={user.firstName}
+                            lastName={user.lastName}
+                          />
+                          <div className="min-w-0 space-y-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-medium">
+                                {getInstructorRecordDisplayName(user)}
+                              </span>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant="outline">Instructor</Badge>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-xs">
+                                  Operational instructor profile linked to an
+                                  app login account.
+                                </TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge
+                                    variant={statusBadge.variant}
+                                    className={statusBadge.className}
+                                  >
+                                    {statusBadge.label}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-xs">
+                                  {statusBadge.tooltip}
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {user.email}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {user.phoneNumber || "No phone"} · App account
+                              linked
+                            </div>
+                            {hasRecord ? (
+                              <div className="text-sm text-gray-600 space-y-0.5">
+                                <div>
+                                  License:{" "}
                                   <span className="font-mono">
-                                    {user.instructor.instructorIdNumber}
+                                    {user.instructor?.instructorLicenseNumber}
                                   </span>
                                 </div>
-                              ) : null}
-                            </div>
-                          ) : (
-                            <Alert variant="destructive" className="py-2">
-                              <AlertDescription className="text-sm">
-                                App account exists but no operational Instructor
-                                record is linked. Use{" "}
-                                {INSTRUCTOR_PROFILE_ROW_EDIT_LABEL} to add
-                                license details, or contact support if this
-                                persists.
-                              </AlertDescription>
-                            </Alert>
-                          )}
+                                <div>
+                                  License expires:{" "}
+                                  {formatInstructorLicenseExpiry(
+                                    user.instructor?.instructorLicenseExpiry,
+                                  )}
+                                </div>
+                                {user.instructor?.instructorIdNumber ? (
+                                  <div className="text-xs text-gray-500">
+                                    Instructor ID:{" "}
+                                    <span className="font-mono">
+                                      {user.instructor.instructorIdNumber}
+                                    </span>
+                                  </div>
+                                ) : null}
+                              </div>
+                            ) : (
+                              <Alert variant="destructive" className="py-2">
+                                <AlertDescription className="text-sm">
+                                  App account exists but no operational
+                                  Instructor record is linked. Use{" "}
+                                  {INSTRUCTOR_PROFILE_ROW_EDIT_LABEL} to add
+                                  license details, or contact support if this
+                                  persists.
+                                </AlertDescription>
+                              </Alert>
+                            )}
+                          </div>
                         </div>
                         <div className="flex shrink-0 flex-wrap gap-2">
                           <Button
