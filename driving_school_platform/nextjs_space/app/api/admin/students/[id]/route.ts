@@ -19,6 +19,7 @@ import {
   updateStudentRecord,
 } from "@/lib/students/student-record-queries";
 import { resolveStudentOperationalFieldIds } from "@/lib/students/student-record-operational-fields";
+import { validateStudentRecordEmailPatchAllowed } from "@/lib/students/student-email-change-service";
 import {
   normalizeStudentRecordAddress,
   normalizeStudentRecordEmail,
@@ -126,6 +127,23 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       updateData.address = normalizeStudentRecordAddress(data.address);
     }
     if (data.email !== undefined) {
+      const emailPatchAllowed = await validateStudentRecordEmailPatchAllowed({
+        organizationId: auth.organizationId,
+        studentId: context.params.id,
+      });
+      if (!emailPatchAllowed.ok) {
+        if (emailPatchAllowed.notFound) {
+          return errorResponse("Student not found", HTTP_STATUS.NOT_FOUND);
+        }
+        return NextResponse.json(
+          {
+            error: emailPatchAllowed.error,
+            code: emailPatchAllowed.code,
+          },
+          { status: emailPatchAllowed.status },
+        );
+      }
+
       const email = normalizeStudentRecordEmail(data.email);
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return errorResponse("invalid_email", HTTP_STATUS.BAD_REQUEST);

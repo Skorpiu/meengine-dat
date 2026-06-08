@@ -179,6 +179,16 @@ export function studentRecordApiErrorMessage(
       return "Enrollment number must be a whole number.";
     case "invalid_email":
       return "Invalid email.";
+    case "email_unchanged":
+      return "The new email is the same as the current email.";
+    case "use_change_email_flow":
+      return "Use Change email to update this student's email address.";
+    case "user_email_already_exists":
+      return "An account with this email already exists.";
+    case "student_email_already_in_use":
+      return "Another student in this school already uses this email.";
+    case "student_change_email_failed":
+      return "Failed to change student email.";
     case "enrollment_date_invalid":
       return "Invalid enrollment date.";
     case "category_not_found":

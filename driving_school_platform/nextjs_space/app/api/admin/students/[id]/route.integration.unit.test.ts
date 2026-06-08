@@ -335,6 +335,89 @@ describe("PATCH /api/admin/students/[id]", () => {
     expect(res.status).toBe(400);
     expect(h.updateMock).not.toHaveBeenCalled();
   });
+
+  it("allows email patch for MANUAL_ONLY without linked user", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    h.findFirstMock
+      .mockResolvedValueOnce({
+        id: "stu-1",
+        organizationId: "org-a",
+        appAccessMode: "MANUAL_ONLY",
+        userId: null,
+        email: null,
+        userInvitations: [],
+      })
+      .mockResolvedValueOnce({ id: "stu-1" });
+    h.updateMock.mockResolvedValue({
+      ...studentRow,
+      email: "new@school.test",
+    });
+
+    const res = await PATCH(
+      req("PATCH", "http://school.example.com/api/admin/students/stu-1", {
+        email: "new@school.test",
+      }) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(200);
+    const updateArg = h.updateMock.mock.calls[0]?.[0];
+    expect(updateArg.data.email).toBe("new@school.test");
+  });
+
+  it("returns 409 use_change_email_flow when patching APP_USER email", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    h.findFirstMock.mockResolvedValueOnce({
+      id: "stu-1",
+      organizationId: "org-a",
+      appAccessMode: "APP_USER",
+      userId: "user-1",
+      email: "old@school.test",
+      userInvitations: [],
+    });
+
+    const res = await PATCH(
+      req("PATCH", "http://school.example.com/api/admin/students/stu-1", {
+        email: "new@school.test",
+      }) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.code).toBe("use_change_email_flow");
+    expect(h.updateMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 409 use_change_email_flow when patching INVITED email", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    h.findFirstMock.mockResolvedValueOnce({
+      id: "stu-1",
+      organizationId: "org-a",
+      appAccessMode: "INVITED",
+      userId: null,
+      email: "old@school.test",
+      userInvitations: [{ id: "inv-1" }],
+    });
+
+    const res = await PATCH(
+      req("PATCH", "http://school.example.com/api/admin/students/stu-1", {
+        email: "new@school.test",
+      }) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.code).toBe("use_change_email_flow");
+    expect(h.updateMock).not.toHaveBeenCalled();
+  });
 });
 
 describe("DELETE /api/admin/students/[id]", () => {
