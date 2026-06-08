@@ -290,13 +290,13 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `people-management-app-access-remove-v1` — Remove app access for APP_USER students (`POST /api/admin/students/[id]/app-access/remove`); preserves profile/history; disables login
 - `people-management-app-access-reactivate-v1` — Reactivate app access for MANUAL_ONLY students (`POST /api/admin/students/[id]/app-access/reactivate`); orphan User relink; Path B → Send invitation
 - `people-management-edit-instructor-unified-v1` — Instructors → Profiles **Edit Instructor** + blocked **Delete**; unified editor (profile + App access); `PUT /api/users/update`; App accounts tab retained (DEC-018)
-- `instructor-delete-policy-v1-docs` — Instructor delete/deactivate policy doc; DEC-019; Profiles Delete still UI-blocked at runtime
+- `instructor-delete-policy-v1-docs` — Instructor delete/deactivate policy doc; DEC-019
+- `instructor-hard-delete-zero-deps-v1` — Zero-deps hard delete API + Profiles Delete UI + legacy INSTRUCTOR guard on `DELETE /api/users/delete`
 
 **Current recommended next (runtime/UX slice):**
 
-1. `instructor-hard-delete-zero-deps-v1` — `DELETE /api/admin/instructors/[id]` zero-deps only + Profiles Delete UI + guard `DELETE /api/users/delete` for INSTRUCTOR (D4)
-2. `instructor-deactivate-v1` — normal “left the school” path; preserve history; no schema v1
-3. `people-management-app-accounts-demote-v1` — **not before** instructor hard-delete + deactivate policy implementation
+1. `instructor-deactivate-v1` — normal “left the school” path; preserve history; no schema v1
+2. `people-management-app-accounts-demote-v1` — **not before** instructor deactivate policy implementation
 
 **Likely next after app accounts demote:**
 
