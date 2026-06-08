@@ -45,12 +45,17 @@ const STUDENT_ENTRIES = [
   {
     label: "Automatic / Manual (transmission)",
     description:
-      "Transmission type from the linked app account, when set in Edit Student → App access.",
+      "Transmission type on the student profile (school operational data), when set in Edit Student → Student profile.",
   },
   {
-    label: "Category B / Categories A, B",
+    label: "Category B",
     description:
-      "License categories on the linked app account, when available.",
+      "License category on the student profile (one category per profile), when set in Edit Student → Student profile.",
+  },
+  {
+    label: "No app access yet",
+    description:
+      "Manual profile without app login — shown in Edit Student → App access; use Send invitation when ready.",
   },
 ] as const;
 

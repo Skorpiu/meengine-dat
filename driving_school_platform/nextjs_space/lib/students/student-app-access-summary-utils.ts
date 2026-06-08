@@ -3,8 +3,6 @@ import type { ProfileBadgeVariant } from "@/lib/students/student-profile-label-u
 
 export type StudentLinkedAppAccessSummary = {
   isApproved: boolean;
-  transmissionType: string;
-  selectedCategories: string[];
 };
 
 export type StudentAppAccessCompactBadge = {
@@ -27,7 +25,7 @@ export function formatCategoryCompactLabel(
   return `Categories ${trimmed.join(", ")}`;
 }
 
-/** Single-line summary, e.g. "Active app access · Automatic · Category B". */
+/** Single-line app-access status summary (login/approval only). */
 export function formatAppAccessCompactSummaryLine(
   linked: StudentLinkedAppAccessSummary | null,
 ): string | null {
@@ -35,23 +33,12 @@ export function formatAppAccessCompactSummaryLine(
     return null;
   }
 
-  const parts: string[] = [
-    linked.isApproved ? "Active app access" : "App access pending approval",
-  ];
-
-  const transmission = linked.transmissionType.trim();
-  if (transmission) {
-    parts.push(transmission);
-  }
-
-  const categoryLabel = formatCategoryCompactLabel(linked.selectedCategories);
-  if (categoryLabel) {
-    parts.push(categoryLabel);
-  }
-
-  return parts.length > 0 ? parts.join(" · ") : null;
+  return linked.isApproved
+    ? "Active app access"
+    : "App access pending approval";
 }
 
+/** Compact badges for APP_USER login/approval status only (not profile operational fields). */
 export function getStudentAppAccessCompactBadges(
   student: {
     appAccessMode: StudentAppAccessMode | string;
@@ -63,42 +50,18 @@ export function getStudentAppAccessCompactBadges(
     return [];
   }
 
-  const badges: StudentAppAccessCompactBadge[] = [];
-
-  badges.push({
-    key: "app-access-status",
-    label:
-      linked?.isApproved === false
-        ? "App access pending approval"
-        : "Active app access",
-    variant: linked?.isApproved === false ? "default" : "secondary",
-    tooltip:
-      linked?.isApproved === false
-        ? "App account exists but is not approved to sign in yet."
-        : "Student has active app access and can sign in when approved.",
-  });
-
-  const transmission = linked?.transmissionType.trim();
-  if (transmission) {
-    badges.push({
-      key: "transmission",
-      label: transmission,
-      variant: "outline",
-      tooltip: `Transmission type: ${transmission}`,
-    });
-  }
-
-  const categoryLabel = formatCategoryCompactLabel(
-    linked?.selectedCategories ?? [],
-  );
-  if (categoryLabel) {
-    badges.push({
-      key: "categories",
-      label: categoryLabel,
-      variant: "outline",
-      tooltip: `License categories: ${(linked?.selectedCategories ?? []).join(", ")}`,
-    });
-  }
-
-  return badges;
+  return [
+    {
+      key: "app-access-status",
+      label:
+        linked?.isApproved === false
+          ? "App access pending approval"
+          : "Active app access",
+      variant: linked?.isApproved === false ? "default" : "secondary",
+      tooltip:
+        linked?.isApproved === false
+          ? "App account exists but is not approved to sign in yet."
+          : "Student has active app access and can sign in when approved.",
+    },
+  ];
 }

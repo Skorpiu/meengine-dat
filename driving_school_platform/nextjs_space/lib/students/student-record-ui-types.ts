@@ -24,6 +24,8 @@ export type StudentRecordDto = {
   schoolStudentIdSource: string | null;
   enrollmentDate: string | null;
   appAccessMode: StudentAppAccessMode;
+  category: { id: number; name: string } | null;
+  transmissionType: { id: number; name: string } | null;
   createdAt: string;
   updatedAt: string;
   user: {

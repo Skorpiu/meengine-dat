@@ -1,10 +1,12 @@
 import { describe, it, expect } from "vitest";
 import {
   buildManualStudentCreatePayload,
+  buildManualStudentPatchPayload,
   buildLinkedStudentUserUpdateBody,
   buildStudentRecordInvitePayload,
   canSendStudentRecordInvite,
   canShowStudentAppAccessSection,
+  canShowStudentManualOnlyAppAccessSection,
   canShowStudentPendingInvitationSection,
   getStudentAppAccessLabel,
   getStudentCanonicalEmailDisplay,
@@ -151,6 +153,32 @@ describe("canShowStudentAppAccessSection", () => {
   });
 });
 
+describe("canShowStudentManualOnlyAppAccessSection", () => {
+  it("shows App access guidance for MANUAL_ONLY without userId", () => {
+    expect(
+      canShowStudentManualOnlyAppAccessSection({
+        appAccessMode: "MANUAL_ONLY",
+        userId: null,
+      }),
+    ).toBe(true);
+  });
+
+  it("hides for APP_USER and INVITED", () => {
+    expect(
+      canShowStudentManualOnlyAppAccessSection({
+        appAccessMode: "APP_USER",
+        userId: "u1",
+      }),
+    ).toBe(false);
+    expect(
+      canShowStudentManualOnlyAppAccessSection({
+        appAccessMode: "INVITED",
+        userId: null,
+      }),
+    ).toBe(false);
+  });
+});
+
 describe("canShowStudentPendingInvitationSection", () => {
   it("shows for INVITED", () => {
     expect(
@@ -201,11 +229,9 @@ describe("linked student user update helpers", () => {
     lastName: "Silva",
     phoneNumber: "912345678",
     address: "Rua A",
-    selectedCategories: ["B"],
-    transmissionType: "Manual",
   };
 
-  it("buildLinkedStudentUserUpdateBody includes role STUDENT", () => {
+  it("buildLinkedStudentUserUpdateBody includes role STUDENT without operational fields", () => {
     expect(
       buildLinkedStudentUserUpdateBody({ userId: "u1", form }),
     ).toMatchObject({
@@ -213,9 +239,12 @@ describe("linked student user update helpers", () => {
       role: "STUDENT",
       firstName: "Ana",
     });
+    expect(
+      buildLinkedStudentUserUpdateBody({ userId: "u1", form }),
+    ).not.toHaveProperty("selectedCategories");
   });
 
-  it("detects linked user form changes", () => {
+  it("detects linked user form changes for app access fields only", () => {
     expect(hasLinkedStudentUserFormChanges(form, form)).toBe(false);
     expect(
       hasLinkedStudentUserFormChanges(
@@ -223,6 +252,63 @@ describe("linked student user update helpers", () => {
         toLinkedStudentUserUpdateForm(form),
       ),
     ).toBe(true);
+  });
+});
+
+describe("buildManualStudentPatchPayload", () => {
+  const original: StudentRecordDto = {
+    id: "stu-1",
+    userId: null,
+    firstName: "Ana",
+    lastName: "Silva",
+    email: "ana@school.test",
+    phoneNumber: null,
+    schoolStudentId: "26001",
+    schoolStudentYearSuffix: "26",
+    schoolStudentSequence: 1,
+    schoolStudentIdSource: "MANUAL",
+    enrollmentDate: null,
+    appAccessMode: "MANUAL_ONLY",
+    category: null,
+    transmissionType: null,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    user: null,
+    pendingInvitation: null,
+  };
+
+  it("includes categoryName and transmissionTypeName when operational fields change", () => {
+    const patch = buildManualStudentPatchPayload({
+      firstName: "Ana",
+      lastName: "Silva",
+      phoneNumber: "",
+      email: "ana@school.test",
+      yearSuffix: "26",
+      sequenceNumber: "1",
+      enrollmentDate: "",
+      selectedCategories: ["B"],
+      transmissionType: "Manual",
+      original,
+    });
+    expect(patch.categoryName).toBe("B");
+    expect(patch.transmissionTypeName).toBe("Manual");
+  });
+
+  it("omits operational fields when unchanged", () => {
+    const patch = buildManualStudentPatchPayload({
+      firstName: "Ana",
+      lastName: "Silva",
+      phoneNumber: "",
+      email: "ana@school.test",
+      yearSuffix: "26",
+      sequenceNumber: "1",
+      enrollmentDate: "",
+      selectedCategories: [],
+      transmissionType: "",
+      original,
+    });
+    expect(patch.categoryName).toBeUndefined();
+    expect(patch.transmissionTypeName).toBeUndefined();
   });
 });
 
