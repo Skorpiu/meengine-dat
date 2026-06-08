@@ -1,5 +1,16 @@
 import type { InvitationDto } from "./invitation-dto";
 import type { InvitableRole } from "./invitation-ui-types";
+import { isInvitationExpired } from "./invitation-token-service";
+
+export type InvitationDisplayStatus = "Pending" | "Expired";
+
+/** Admin copy when linked student invites exist but are omitted from Onboarding list. */
+export const STUDENT_LINKED_INVITES_ON_PROFILES_COPY =
+  "Invitations tied to an existing student profile are managed on Students → Profiles (Send invitation / Revoke on the profile row).";
+
+/** Admin copy when a pending invitation is past its expiry (client-side only). */
+export const INVITATION_EXPIRED_ADMIN_ACTION_COPY =
+  "This invitation has expired. Revoke it before sending a new one.";
 
 export function formatInvitationDateTime(iso: string): string {
   const date = new Date(iso);
@@ -18,6 +29,92 @@ export function filterInvitationsByRole(
   role: InvitableRole,
 ): InvitationDto[] {
   return invitations.filter((invitation) => invitation.role === role);
+}
+
+export function filterPendingInvitations(
+  invitations: InvitationDto[],
+): InvitationDto[] {
+  return invitations.filter((invitation) => invitation.status === "PENDING");
+}
+
+export function isInvitationExpiredForDisplay(
+  expiresAtIso: string,
+  now: Date = new Date(),
+): boolean {
+  const expiresAt = new Date(expiresAtIso);
+  if (Number.isNaN(expiresAt.getTime())) {
+    return false;
+  }
+  return isInvitationExpired(expiresAt, now);
+}
+
+/** Pending vs Expired for admin lists (does not write EXPIRED to the database). */
+export function getInvitationDisplayStatus(
+  invitation: Pick<InvitationDto, "status" | "expiresAt">,
+  now: Date = new Date(),
+): InvitationDisplayStatus {
+  if (invitation.status !== "PENDING") {
+    return invitation.status === "EXPIRED" ? "Expired" : "Pending";
+  }
+  if (isInvitationExpiredForDisplay(invitation.expiresAt, now)) {
+    return "Expired";
+  }
+  return "Pending";
+}
+
+export function invitationDisplayStatusLabel(
+  status: InvitationDisplayStatus,
+): string {
+  return status === "Expired" ? "Expired" : "Pending";
+}
+
+export function partitionStudentPendingInvitations(
+  invitations: InvitationDto[],
+): { linked: InvitationDto[]; unlinked: InvitationDto[] } {
+  const pendingStudents = invitations.filter(
+    (invitation) =>
+      invitation.role === "STUDENT" && invitation.status === "PENDING",
+  );
+  return {
+    linked: pendingStudents.filter(
+      (invitation) => invitation.studentId != null,
+    ),
+    unlinked: pendingStudents.filter(
+      (invitation) => invitation.studentId == null,
+    ),
+  };
+}
+
+export function filterUnlinkedPendingStudentInvitations(
+  invitations: InvitationDto[],
+): InvitationDto[] {
+  return partitionStudentPendingInvitations(invitations).unlinked;
+}
+
+export function countLinkedPendingStudentInvitations(
+  invitations: InvitationDto[],
+): number {
+  return partitionStudentPendingInvitations(invitations).linked.length;
+}
+
+/**
+ * Rows shown in People → Onboarding invitation lists.
+ * Student tab: unlinked pending only; instructor tab: all pending for role.
+ */
+export function getOnboardingVisibleInvitations(
+  invitations: InvitationDto[],
+  roleFilter?: InvitableRole,
+): InvitationDto[] {
+  const pending = filterPendingInvitations(invitations);
+  const byRole = roleFilter
+    ? filterInvitationsByRole(pending, roleFilter)
+    : pending;
+
+  if (roleFilter === "STUDENT") {
+    return filterUnlinkedPendingStudentInvitations(byRole);
+  }
+
+  return byRole;
 }
 
 export function invitationStatusLabel(status: InvitationDto["status"]): string {

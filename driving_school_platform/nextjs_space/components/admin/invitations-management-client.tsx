@@ -38,10 +38,15 @@ import type {
 } from "@/lib/invitations/invitation-ui-types";
 import {
   copyTextToClipboard,
-  filterInvitationsByRole,
+  countLinkedPendingStudentInvitations,
   formatInvitationDateTime,
+  getInvitationDisplayStatus,
+  getOnboardingVisibleInvitations,
+  INVITATION_EXPIRED_ADMIN_ACTION_COPY,
   invitationApiErrorMessage,
-  invitationStatusLabel,
+  invitationDisplayStatusLabel,
+  STUDENT_LINKED_INVITES_ON_PROFILES_COPY,
+  type InvitationDisplayStatus,
 } from "@/lib/invitations/invitation-ui-utils";
 
 async function tryReadJson<T>(response: Response): Promise<T | null> {
@@ -56,20 +61,10 @@ async function tryReadJson<T>(response: Response): Promise<T | null> {
   }
 }
 
-function statusBadgeVariant(
-  status: InvitationDto["status"],
+function displayStatusBadgeVariant(
+  displayStatus: InvitationDisplayStatus,
 ): "default" | "secondary" | "destructive" | "outline" {
-  switch (status) {
-    case "PENDING":
-      return "default";
-    case "ACCEPTED":
-      return "secondary";
-    case "EXPIRED":
-    case "REVOKED":
-      return "destructive";
-    default:
-      return "outline";
-  }
+  return displayStatus === "Expired" ? "destructive" : "default";
 }
 
 const DEFAULT_EXPIRES_IN_DAYS = 7;
@@ -114,14 +109,22 @@ export function InvitationsManagementClient({
     }
   }, [lockedRole]);
 
-  const visibleInvitations = useMemo(() => {
-    const byRole = roleFilter
-      ? filterInvitationsByRole(invitations, roleFilter)
-      : invitations;
-    return byRole.filter((inv) => inv.status === "PENDING");
-  }, [invitations, roleFilter]);
+  const visibleInvitations = useMemo(
+    () => getOnboardingVisibleInvitations(invitations, roleFilter),
+    [invitations, roleFilter],
+  );
+
+  const linkedStudentInviteCount = useMemo(
+    () =>
+      roleFilter === "STUDENT"
+        ? countLinkedPendingStudentInvitations(invitations)
+        : 0,
+    [invitations, roleFilter],
+  );
 
   const pendingCount = visibleInvitations.length;
+  const isStudentOnboarding = roleFilter === "STUDENT";
+  const isInstructorOnboarding = roleFilter === "INSTRUCTOR";
 
   const loadInvitations = useCallback(async () => {
     setListLoading(true);
@@ -257,27 +260,59 @@ export function InvitationsManagementClient({
     }
   };
 
-  const emptyListMessage =
-    roleFilter === "STUDENT"
-      ? "No pending student invitations. Linked invites also appear on Students → Profiles."
-      : roleFilter === "INSTRUCTOR"
-        ? "No pending instructor invitations. Instructor invites are managed here until profile-level status is added."
-        : "No pending invitations. Create one above.";
+  const emptyListMessage = isStudentOnboarding
+    ? "No pending student invitations without a profile. When a student profile already exists, use Send invitation on Students → Profiles."
+    : isInstructorOnboarding
+      ? "No pending instructor invitations."
+      : "No pending invitations. Create one above.";
+
+  const listTitle = isStudentOnboarding
+    ? "Student invitations without a profile"
+    : isInstructorOnboarding
+      ? "Pending instructor invitations"
+      : "Pending invitation list";
+
+  const cardTitle = isStudentOnboarding
+    ? "Invite students without a profile yet"
+    : isInstructorOnboarding
+      ? "Instructor invitations"
+      : "Pending invitations";
+
+  const cardDescription = isStudentOnboarding ? (
+    <>
+      Use this when someone should register by email but does not have a student
+      profile yet. If the student already has a profile, use{" "}
+      <strong>Send invitation</strong> on <strong>Students → Profiles</strong>{" "}
+      instead. Invite links are <strong>sensitive</strong> — copy when shown
+      once after creation. Lists never show links or tokens.
+    </>
+  ) : isInstructorOnboarding ? (
+    <>
+      Invite instructors who should register themselves by email. Instructor
+      invites are managed here until profile-level status is added. Invite links
+      are <strong>sensitive</strong> — copy when shown once after creation.
+      Lists never show links or tokens.
+    </>
+  ) : (
+    <>
+      Profile status on <strong>Students → Profiles</strong> is the primary view
+      for linked student invites. Use this section for{" "}
+      <strong>standalone or unlinked</strong> invites and for{" "}
+      <strong>instructor</strong> invites. Invite links are{" "}
+      <strong>sensitive</strong> — copy when shown once after creation. Lists
+      never show links or tokens.
+    </>
+  );
 
   return (
     <Card className={embedded ? undefined : "mt-8"}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MailPlus className="h-5 w-5" />
-          Pending invitations
+          {cardTitle}
         </CardTitle>
         <p className="text-sm text-muted-foreground max-w-3xl">
-          Profile status on <strong>Students → Profiles</strong> is the primary
-          view for linked student invites. Use this section for{" "}
-          <strong>standalone or unlinked</strong> invites and for{" "}
-          <strong>instructor</strong> invites (not shown on instructor profiles
-          yet). Invite links are <strong>sensitive</strong> — copy when shown
-          once after creation. Lists never show links or tokens.
+          {cardDescription}
         </p>
       </CardHeader>
       <CardContent className="space-y-8">
@@ -386,7 +421,7 @@ export function InvitationsManagementClient({
           <div className="flex items-center justify-between gap-2">
             <CollapsibleTrigger className="group flex flex-1 items-center justify-between gap-2 text-left font-medium text-gray-900 hover:text-gray-950">
               <span>
-                Pending invitation list
+                {listTitle}
                 {pendingCount > 0 ? ` (${pendingCount})` : ""}
               </span>
               <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
@@ -424,52 +459,75 @@ export function InvitationsManagementClient({
               </p>
             )}
 
+            {isStudentOnboarding && linkedStudentInviteCount > 0 && (
+              <p className="text-sm text-muted-foreground rounded-md border border-dashed bg-muted/30 px-3 py-2">
+                {linkedStudentInviteCount === 1
+                  ? "1 invitation tied to an existing student profile is not shown here. "
+                  : `${linkedStudentInviteCount} invitations tied to existing student profiles are not shown here. `}
+                {STUDENT_LINKED_INVITES_ON_PROFILES_COPY}
+              </p>
+            )}
+
             <div className="space-y-3">
-              {visibleInvitations.map((invitation) => (
-                <div
-                  key={invitation.id}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg"
-                >
-                  <div className="space-y-1 min-w-0">
-                    <div className="font-medium truncate">
-                      {invitation.email}
-                    </div>
-                    <div className="text-sm text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
-                      {!roleFilter ? (
-                        <span>Role: {invitation.role}</span>
+              {visibleInvitations.map((invitation) => {
+                const displayStatus = getInvitationDisplayStatus(invitation);
+                const isExpired = displayStatus === "Expired";
+
+                return (
+                  <div
+                    key={invitation.id}
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg"
+                  >
+                    <div className="space-y-1 min-w-0">
+                      <div className="font-medium truncate">
+                        {invitation.email}
+                      </div>
+                      <div className="text-sm text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
+                        {!roleFilter ? (
+                          <span>Role: {invitation.role}</span>
+                        ) : null}
+                        {isStudentOnboarding ? (
+                          <span>No student profile yet</span>
+                        ) : isInstructorOnboarding ? (
+                          <span>Awaiting instructor registration</span>
+                        ) : invitation.studentId ? (
+                          <span>Also on Students → Profiles</span>
+                        ) : (
+                          <span>Not linked to a student profile</span>
+                        )}
+                        <span>
+                          Expires:{" "}
+                          {formatInvitationDateTime(invitation.expiresAt)}
+                        </span>
+                        <span>
+                          Created:{" "}
+                          {formatInvitationDateTime(invitation.createdAt)}
+                        </span>
+                      </div>
+                      {isExpired ? (
+                        <p className="text-sm text-destructive">
+                          {INVITATION_EXPIRED_ADMIN_ACTION_COPY}
+                        </p>
                       ) : null}
-                      {invitation.studentId ? (
-                        <span>Also on Students → Profiles</span>
-                      ) : (
-                        <span>Not linked to a student profile</span>
-                      )}
-                      <span>
-                        Expires:{" "}
-                        {formatInvitationDateTime(invitation.expiresAt)}
-                      </span>
-                      <span>
-                        Created:{" "}
-                        {formatInvitationDateTime(invitation.createdAt)}
-                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant={displayStatusBadgeVariant(displayStatus)}>
+                        {invitationDisplayStatusLabel(displayStatus)}
+                      </Badge>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={revokingId === invitation.id}
+                        onClick={() => handleRevoke(invitation)}
+                      >
+                        <UserX className="h-4 w-4 mr-1" />
+                        {revokingId === invitation.id ? "Revoking…" : "Revoke"}
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant={statusBadgeVariant(invitation.status)}>
-                      {invitationStatusLabel(invitation.status)}
-                    </Badge>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={revokingId === invitation.id}
-                      onClick={() => handleRevoke(invitation)}
-                    >
-                      <UserX className="h-4 w-4 mr-1" />
-                      {revokingId === invitation.id ? "Revoking…" : "Revoke"}
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CollapsibleContent>
         </Collapsible>

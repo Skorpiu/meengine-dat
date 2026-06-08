@@ -297,16 +297,18 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `users-delete-student-guard-v1` — `DELETE /api/users/delete` blocks STUDENT with **409** `use_student_delete_policy` (symmetric to INSTRUCTOR); legacy endpoint no longer deletes STUDENT/INSTRUCTOR Users
 - `admin-users-page-tenant-scope-v1` — analysis-only audit; P1 SSR cross-tenant read leak on `/admin/users` (report: `docs/architecture/admin-users-page-tenant-scope-audit.md`)
 - `admin-users-page-tenant-scope-fix-v1` — SSR People page scopes Users to `session.user.organizationId`; loader `lib/people/admin-users-page-data.ts`
+- `people-management-onboarding-unlinked-invitations-v1` — Students → Onboarding unlinked-only pending student invite list; client-side Expired display; helpers `lib/invitations/invitation-ui-utils.ts`
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
 **Current recommended next (runtime/UX slice):**
 
-1. `people-management-onboarding-unlinked-invitations-v1` — dedicated unlinked pending invitations section
+1. `people-management-student-email-change-policy-v1` — canonical Change email flow
 
 **Likely next:**
 
-2. `people-management-student-email-change-policy-v1` — canonical Change email flow
+2. `people-management-instructor-profile-invite-badge-v1` — instructor pending invite on Profiles
+3. `admin-settings-client-visibility-review-v1` — review hiding/demoting Settings for school admins (product P1)
 3. `admin-settings-client-visibility-review-v1` — review hiding/demoting Settings for school admins (product P1)
 
 **Likely next (slice parent batches; do not implement broad names directly):**
