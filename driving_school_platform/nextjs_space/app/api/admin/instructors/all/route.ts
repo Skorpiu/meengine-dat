@@ -8,12 +8,22 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 
+function parseForBookingParam(value: string | null): boolean {
+  if (value === null || value === "") {
+    return false;
+  }
+  const normalized = value.trim().toLowerCase();
+  return normalized === "true" || normalized === "1";
+}
+
 /**
  * GET handler - Fetch all instructors
  * Accessible by SUPER_ADMIN roles only
+ *
+ * Query: `forBooking=true` returns only instructors with isAvailableForBooking=true.
+ * Default (forBooking=false) returns all tenant instructors for historical filters.
  */
 export async function GET(request: NextRequest) {
-  // Verify authentication - SUPER_ADMIN only
   const session = await getServerSession(authOptions);
 
   if (!session?.user || session.user.role !== "SUPER_ADMIN") {
@@ -39,32 +49,49 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const forBooking = parseForBookingParam(
+    request.nextUrl.searchParams.get("forBooking"),
+  );
+
   try {
-    // Query User table where role === 'INSTRUCTOR'
     const instructorUsers = await prisma.user.findMany({
       where: {
         role: "INSTRUCTOR",
         organizationId: orgId,
+        ...(forBooking
+          ? {
+              instructor: {
+                isAvailableForBooking: true,
+              },
+            }
+          : {}),
       },
       select: {
         id: true,
         firstName: true,
         lastName: true,
         email: true,
+        instructor: {
+          select: {
+            isAvailableForBooking: true,
+          },
+        },
       },
       orderBy: {
         firstName: "asc",
       },
     });
 
-    // Format response as required: { instructors: [{ id, userId, name }] }
     const instructors = instructorUsers.map((user) => ({
       id: user.id,
       userId: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
       name:
         `${user.firstName} ${user.lastName}`.trim() ||
         user.email ||
         "Instructor",
+      isAvailableForBooking: user.instructor?.isAvailableForBooking ?? false,
     }));
 
     return NextResponse.json(

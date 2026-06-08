@@ -42,6 +42,8 @@ import {
   getLessonParticipantName,
   getLessonVehicleLabel,
   getPracticalLessonNumberLabel,
+  isLessonInstructorInactive,
+  LESSON_INACTIVE_INSTRUCTOR_WARNING,
 } from "@/lib/lessons/lesson-display";
 
 async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
@@ -83,6 +85,7 @@ type LessonListItem = {
     user?: { firstName?: string | null; lastName?: string | null } | null;
   } | null;
   instructor?: {
+    isAvailableForBooking?: boolean | null;
     user?: { firstName?: string | null; lastName?: string | null } | null;
   } | null;
 };
@@ -206,6 +209,7 @@ export function LessonsManagementClient() {
     const isExamsTab = selectedView === "EXAMS";
     const studentName = getLessonParticipantName(lesson.student);
     const instructorName = getLessonInstructorName(lesson.instructor);
+    const instructorInactive = isLessonInstructorInactive(lesson.instructor);
     const locationLabel = getLessonLocationLabel(lesson);
     const vehicleLabel = getLessonVehicleLabel(lesson.vehicle);
     const practicalLabel = getPracticalLessonNumberLabel(lesson);
@@ -244,6 +248,11 @@ export function LessonsManagementClient() {
                 {instructorName ? (
                   <div className="text-sm text-gray-600">
                     Instructor: {instructorName}
+                    {instructorInactive ? (
+                      <span className="ml-2 text-xs font-medium text-red-700">
+                        ({LESSON_INACTIVE_INSTRUCTOR_WARNING})
+                      </span>
+                    ) : null}
                   </div>
                 ) : null}
                 {locationLabel ? (
@@ -270,6 +279,11 @@ export function LessonsManagementClient() {
                 {instructorName ? (
                   <div className="text-sm text-gray-600">
                     with {instructorName}
+                    {instructorInactive ? (
+                      <span className="ml-2 text-xs font-medium text-red-700">
+                        ({LESSON_INACTIVE_INSTRUCTOR_WARNING})
+                      </span>
+                    ) : null}
                   </div>
                 ) : null}
                 <div className="text-sm text-gray-500">

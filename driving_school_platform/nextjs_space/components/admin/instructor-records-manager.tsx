@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +42,24 @@ import {
   type InstructorEditForm,
 } from "@/lib/instructors/instructor-record-edit-ui-utils";
 import {
+  formatDeactivateSuccessToast,
+  getInstructorDeactivateConfirmActionLabel,
+  getInstructorDeactivateUiState,
+  canShowDeactivateInstructorInEditDialog,
+  getInstructorEditDeactivateHelpText,
+  INSTRUCTOR_EDIT_DEACTIVATE_ACTION_LABEL,
+  instructorRecordDeactivateApiErrorMessage,
+} from "@/lib/instructors/instructor-record-deactivate-ui-utils";
+import {
+  formatReactivateSuccessToast,
+  getInstructorReactivateConfirmActionLabel,
+  getInstructorReactivateUiState,
+  canShowReactivateInstructorInEditDialog,
+  getInstructorEditReactivateHelpText,
+  INSTRUCTOR_EDIT_REACTIVATE_ACTION_LABEL,
+  instructorRecordReactivateApiErrorMessage,
+} from "@/lib/instructors/instructor-record-reactivate-ui-utils";
+import {
   getInstructorDeleteConfirmActionLabel,
   getInstructorDeleteUiState,
   instructorRecordDeleteApiErrorMessage,
@@ -50,7 +68,9 @@ import {
 import {
   filterInstructorRecordUsersBySearch,
   formatInstructorLicenseExpiry,
-  getInstructorAppAccountStatusLabel,
+  getInstructorAppAccessSectionTheme,
+  getInstructorEditAppAccessStatusBadge,
+  getInstructorPeopleStatusBadge,
   getInstructorRecordDisplayName,
   hasOperationalInstructorRecord,
 } from "@/lib/instructors/instructor-record-ui-utils";
@@ -70,6 +90,24 @@ type InstructorRecordsManagerProps = {
 };
 
 type DeleteDialogState = {
+  user: InstructorRecordUserDto;
+  allowed: boolean;
+  title: string;
+  blockMessages: string[];
+  confirmMessages: string[];
+  footerNote: string;
+};
+
+type DeactivateDialogState = {
+  user: InstructorRecordUserDto;
+  allowed: boolean;
+  title: string;
+  blockMessages: string[];
+  confirmMessages: string[];
+  footerNote: string;
+};
+
+type ReactivateDialogState = {
   user: InstructorRecordUserDto;
   allowed: boolean;
   title: string;
@@ -109,13 +147,56 @@ export function InstructorRecordsManager({
     null,
   );
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deactivateDialog, setDeactivateDialog] =
+    useState<DeactivateDialogState | null>(null);
+  const [deactivateLoading, setDeactivateLoading] = useState(false);
+  const [reactivateDialog, setReactivateDialog] =
+    useState<ReactivateDialogState | null>(null);
+  const [reactivateLoading, setReactivateLoading] = useState(false);
   const [removedUserIds, setRemovedUserIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [deactivatedUserIds, setDeactivatedUserIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [reactivatedUserIds, setReactivatedUserIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+
+  const applyLocalProfileState = useCallback(
+    (user: InstructorRecordUserDto): InstructorRecordUserDto => {
+      if (removedUserIds.has(user.id)) {
+        return user;
+      }
+      if (deactivatedUserIds.has(user.id)) {
+        return {
+          ...user,
+          isApproved: false,
+          instructor: user.instructor
+            ? { ...user.instructor, isAvailableForBooking: false }
+            : user.instructor,
+        };
+      }
+      if (reactivatedUserIds.has(user.id)) {
+        return {
+          ...user,
+          isApproved: true,
+          instructor: user.instructor
+            ? { ...user.instructor, isAvailableForBooking: true }
+            : user.instructor,
+        };
+      }
+      return user;
+    },
+    [removedUserIds, deactivatedUserIds, reactivatedUserIds],
+  );
 
   const visibleUsers = useMemo(
-    () => users.filter((user) => !removedUserIds.has(user.id)),
-    [users, removedUserIds],
+    () =>
+      users
+        .filter((user) => !removedUserIds.has(user.id))
+        .map(applyLocalProfileState),
+    [users, removedUserIds, applyLocalProfileState],
   );
 
   const filteredInstructors = useMemo(
@@ -250,6 +331,138 @@ export function InstructorRecordsManager({
     }
   };
 
+  const handleDeactivateConfirm = async () => {
+    if (!deactivateDialog?.allowed) return;
+    const target = deactivateDialog.user;
+    const instructorId = target.instructor?.id;
+    if (!instructorId) return;
+
+    setDeactivateLoading(true);
+    try {
+      const response = await fetch(
+        `/api/admin/instructors/${encodeURIComponent(instructorId)}/deactivate`,
+        { method: "POST" },
+      );
+      const data = await tryReadJson<{
+        code?: string;
+        error?: string;
+        data?: {
+          deactivated?: boolean;
+          alreadyInactive?: boolean;
+          warningCodes?: string[];
+          futureLessonsCount?: number;
+        };
+      }>(response);
+
+      if (!response.ok) {
+        toast.error(
+          instructorRecordDeactivateApiErrorMessage(
+            data?.code,
+            data?.error || "Could not deactivate this instructor.",
+          ),
+        );
+        return;
+      }
+
+      toast.success(
+        formatDeactivateSuccessToast({
+          alreadyInactive: data?.data?.alreadyInactive,
+          warningCodes: data?.data?.warningCodes,
+          futureLessonsCount: data?.data?.futureLessonsCount,
+        }),
+      );
+      setDeactivateDialog(null);
+      setDeactivatedUserIds((prev) => new Set(prev).add(target.id));
+      setReactivatedUserIds((prev) => {
+        const next = new Set(prev);
+        next.delete(target.id);
+        return next;
+      });
+      if (editingUser?.id === target.id) {
+        setEditingUser((prev) =>
+          prev
+            ? {
+                ...prev,
+                isApproved: false,
+                instructor: prev.instructor
+                  ? { ...prev.instructor, isAvailableForBooking: false }
+                  : prev.instructor,
+              }
+            : prev,
+        );
+      }
+      router.refresh();
+    } catch {
+      toast.error("An error occurred while deactivating.");
+    } finally {
+      setDeactivateLoading(false);
+    }
+  };
+
+  const handleReactivateConfirm = async () => {
+    if (!reactivateDialog?.allowed) return;
+    const target = reactivateDialog.user;
+    const instructorId = target.instructor?.id;
+    if (!instructorId) return;
+
+    setReactivateLoading(true);
+    try {
+      const response = await fetch(
+        `/api/admin/instructors/${encodeURIComponent(instructorId)}/reactivate`,
+        { method: "POST" },
+      );
+      const data = await tryReadJson<{
+        code?: string;
+        error?: string;
+        data?: {
+          reactivated?: boolean;
+          alreadyActive?: boolean;
+        };
+      }>(response);
+
+      if (!response.ok) {
+        toast.error(
+          instructorRecordReactivateApiErrorMessage(
+            data?.code,
+            data?.error || "Could not reactivate this instructor.",
+          ),
+        );
+        return;
+      }
+
+      toast.success(
+        formatReactivateSuccessToast({
+          alreadyActive: data?.data?.alreadyActive,
+        }),
+      );
+      setReactivateDialog(null);
+      setReactivatedUserIds((prev) => new Set(prev).add(target.id));
+      setDeactivatedUserIds((prev) => {
+        const next = new Set(prev);
+        next.delete(target.id);
+        return next;
+      });
+      if (editingUser?.id === target.id) {
+        setEditingUser((prev) =>
+          prev
+            ? {
+                ...prev,
+                isApproved: true,
+                instructor: prev.instructor
+                  ? { ...prev.instructor, isAvailableForBooking: true }
+                  : prev.instructor,
+              }
+            : prev,
+        );
+      }
+      router.refresh();
+    } catch {
+      toast.error("An error occurred while reactivating.");
+    } finally {
+      setReactivateLoading(false);
+    }
+  };
+
   return (
     <section className={embedded ? "space-y-6" : "mt-10 space-y-6"}>
       {!embedded ? (
@@ -306,9 +519,7 @@ export function InstructorRecordsManager({
                 <div className="space-y-3">
                   {visibleInstructors.map((user) => {
                     const hasRecord = hasOperationalInstructorRecord(user);
-                    const appAccessLabel = getInstructorAppAccountStatusLabel(
-                      user.isApproved,
-                    );
+                    const statusBadge = getInstructorPeopleStatusBadge(user);
                     return (
                       <div
                         key={user.id}
@@ -331,17 +542,14 @@ export function InstructorRecordsManager({
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Badge
-                                  variant={
-                                    user.isApproved ? "secondary" : "default"
-                                  }
+                                  variant={statusBadge.variant}
+                                  className={statusBadge.className}
                                 >
-                                  {appAccessLabel}
+                                  {statusBadge.label}
                                 </Badge>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="max-w-xs">
-                                {user.isApproved
-                                  ? "Instructor can sign in (account approved)."
-                                  : "Account exists but is not approved yet."}
+                                {statusBadge.tooltip}
                               </TooltipContent>
                             </Tooltip>
                           </div>
@@ -461,173 +669,253 @@ export function InstructorRecordsManager({
               details.
             </DialogDescription>
           </DialogHeader>
-          {editForm && editingUser ? (
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <h3 className="font-medium text-gray-900">
-                  Instructor profile
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-instructor-firstName">
-                      First name
-                    </Label>
-                    <Input
-                      id="edit-instructor-firstName"
-                      value={editForm.firstName}
-                      onChange={(e) =>
-                        setEditForm((prev) =>
-                          prev ? { ...prev, firstName: e.target.value } : prev,
-                        )
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-instructor-lastName">Last name</Label>
-                    <Input
-                      id="edit-instructor-lastName"
-                      value={editForm.lastName}
-                      onChange={(e) =>
-                        setEditForm((prev) =>
-                          prev ? { ...prev, lastName: e.target.value } : prev,
-                        )
-                      }
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-instructor-phone">Phone</Label>
-                  <Input
-                    id="edit-instructor-phone"
-                    value={editForm.phoneNumber}
-                    onChange={(e) =>
-                      setEditForm((prev) =>
-                        prev ? { ...prev, phoneNumber: e.target.value } : prev,
-                      )
-                    }
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-instructor-license">
-                      Instructor license number
-                    </Label>
-                    <Input
-                      id="edit-instructor-license"
-                      value={editForm.instructorLicenseNumber}
-                      onChange={(e) =>
-                        setEditForm((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                instructorLicenseNumber: e.target.value,
-                              }
-                            : prev,
-                        )
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-instructor-license-expiry">
-                      Instructor license expiry
-                    </Label>
-                    <Input
-                      id="edit-instructor-license-expiry"
-                      type="date"
-                      value={editForm.instructorLicenseExpiry}
-                      onChange={(e) =>
-                        setEditForm((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                instructorLicenseExpiry: e.target.value,
-                              }
-                            : prev,
-                        )
-                      }
-                      required
-                    />
-                  </div>
-                </div>
-                {editingUser.instructor?.instructorIdNumber ? (
-                  <div className="space-y-1">
-                    <Label>Instructor ID</Label>
-                    <p className="text-sm font-mono text-gray-700">
-                      {editingUser.instructor.instructorIdNumber}
-                    </p>
-                    <p className="text-xs text-gray-500">Read-only.</p>
-                  </div>
-                ) : null}
-              </div>
+          {editForm && editingUser
+            ? (() => {
+                const appAccessTheme = getInstructorAppAccessSectionTheme();
+                const editAccessBadge =
+                  getInstructorEditAppAccessStatusBadge(editingUser);
+                return (
+                  <form onSubmit={handleEditSubmit} className="space-y-4">
+                    <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <h3 className="font-medium text-gray-900">
+                        Instructor profile
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-instructor-firstName">
+                            First name
+                          </Label>
+                          <Input
+                            id="edit-instructor-firstName"
+                            value={editForm.firstName}
+                            onChange={(e) =>
+                              setEditForm((prev) =>
+                                prev
+                                  ? { ...prev, firstName: e.target.value }
+                                  : prev,
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-instructor-lastName">
+                            Last name
+                          </Label>
+                          <Input
+                            id="edit-instructor-lastName"
+                            value={editForm.lastName}
+                            onChange={(e) =>
+                              setEditForm((prev) =>
+                                prev
+                                  ? { ...prev, lastName: e.target.value }
+                                  : prev,
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-instructor-phone">Phone</Label>
+                        <Input
+                          id="edit-instructor-phone"
+                          value={editForm.phoneNumber}
+                          onChange={(e) =>
+                            setEditForm((prev) =>
+                              prev
+                                ? { ...prev, phoneNumber: e.target.value }
+                                : prev,
+                            )
+                          }
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-instructor-license">
+                            Instructor license number
+                          </Label>
+                          <Input
+                            id="edit-instructor-license"
+                            value={editForm.instructorLicenseNumber}
+                            onChange={(e) =>
+                              setEditForm((prev) =>
+                                prev
+                                  ? {
+                                      ...prev,
+                                      instructorLicenseNumber: e.target.value,
+                                    }
+                                  : prev,
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-instructor-license-expiry">
+                            Instructor license expiry
+                          </Label>
+                          <Input
+                            id="edit-instructor-license-expiry"
+                            type="date"
+                            value={editForm.instructorLicenseExpiry}
+                            onChange={(e) =>
+                              setEditForm((prev) =>
+                                prev
+                                  ? {
+                                      ...prev,
+                                      instructorLicenseExpiry: e.target.value,
+                                    }
+                                  : prev,
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                      </div>
+                      {editingUser.instructor?.instructorIdNumber ? (
+                        <div className="space-y-1">
+                          <Label>Instructor ID</Label>
+                          <p className="text-sm font-mono text-gray-700">
+                            {editingUser.instructor.instructorIdNumber}
+                          </p>
+                          <p className="text-xs text-gray-500">Read-only.</p>
+                        </div>
+                      ) : null}
+                    </div>
 
-              <Collapsible
-                defaultOpen
-                className="rounded-lg border border-green-100 bg-green-50/60"
-              >
-                <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 px-4 py-3 text-left">
-                  <span className="font-medium text-green-900">App access</span>
-                  <ChevronRight className="h-4 w-4 text-green-700 transition-transform group-data-[state=open]:rotate-90" />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-4 px-4 pb-4">
-                  <p className="text-sm text-green-800">
-                    Login details for the linked app account. Name and phone are
-                    edited once in Instructor profile above.
-                  </p>
-                  <div className="space-y-1">
-                    <Label>Login email</Label>
-                    <p className="text-sm font-medium text-green-950">
-                      {editingUser.email}
-                    </p>
-                    <p className="text-xs text-green-700">
-                      Login email cannot be changed here.
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm text-green-900">
-                      App access status:
-                    </span>
-                    <Badge
-                      variant={editingUser.isApproved ? "secondary" : "default"}
+                    <Collapsible
+                      defaultOpen
+                      className={appAccessTheme.containerClass}
                     >
-                      {getInstructorAppAccountStatusLabel(
-                        editingUser.isApproved,
-                      )}
-                    </Badge>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-instructor-address">Address</Label>
-                    <Input
-                      id="edit-instructor-address"
-                      value={editForm.address}
-                      onChange={(e) =>
-                        setEditForm((prev) =>
-                          prev ? { ...prev, address: e.target.value } : prev,
-                        )
-                      }
-                      placeholder="Address on app account"
-                    />
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+                      <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 px-4 py-3 text-left">
+                        <span className={appAccessTheme.triggerTitleClass}>
+                          App access
+                        </span>
+                        <ChevronRight
+                          className={`${appAccessTheme.triggerIconClass} transition-transform group-data-[state=open]:rotate-90`}
+                        />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-4 px-4 pb-4">
+                        <p className={appAccessTheme.bodyTextClass}>
+                          Login and license preferences for the linked app
+                          account. Name and phone are edited once in Instructor
+                          profile above.
+                        </p>
+                        <div className="space-y-1">
+                          <Label>Login email</Label>
+                          <p className={`text-sm font-medium text-blue-950`}>
+                            {editingUser.email}
+                          </p>
+                          <p className={appAccessTheme.mutedTextClass}>
+                            Login email cannot be changed here.
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={appAccessTheme.labelTextClass}>
+                            Access status:
+                          </span>
+                          <Badge variant={editAccessBadge.variant}>
+                            {editAccessBadge.label}
+                          </Badge>
+                        </div>
+                        {canShowDeactivateInstructorInEditDialog(
+                          editingUser,
+                        ) ? (
+                          <div className="border-t border-blue-200 pt-4 space-y-3">
+                            <p
+                              className={`${appAccessTheme.mutedTextClass} mb-0`}
+                            >
+                              {getInstructorEditDeactivateHelpText()}
+                            </p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                              onClick={() => {
+                                const ui =
+                                  getInstructorDeactivateUiState(editingUser);
+                                setDeactivateDialog({
+                                  user: editingUser,
+                                  allowed: ui.allowed,
+                                  title: ui.title,
+                                  blockMessages: ui.blockMessages,
+                                  confirmMessages: ui.confirmMessages,
+                                  footerNote: ui.footerNote,
+                                });
+                              }}
+                            >
+                              {INSTRUCTOR_EDIT_DEACTIVATE_ACTION_LABEL}
+                            </Button>
+                          </div>
+                        ) : null}
+                        {canShowReactivateInstructorInEditDialog(
+                          editingUser,
+                        ) ? (
+                          <div className="border-t border-blue-200 pt-4 space-y-3">
+                            <p
+                              className={`${appAccessTheme.mutedTextClass} mb-0`}
+                            >
+                              {getInstructorEditReactivateHelpText()}
+                            </p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="border-emerald-300 text-emerald-800 hover:bg-emerald-100"
+                              onClick={() => {
+                                const ui =
+                                  getInstructorReactivateUiState(editingUser);
+                                setReactivateDialog({
+                                  user: editingUser,
+                                  allowed: ui.allowed,
+                                  title: ui.title,
+                                  blockMessages: ui.blockMessages,
+                                  confirmMessages: ui.confirmMessages,
+                                  footerNote: ui.footerNote,
+                                });
+                              }}
+                            >
+                              {INSTRUCTOR_EDIT_REACTIVATE_ACTION_LABEL}
+                            </Button>
+                          </div>
+                        ) : null}
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-instructor-address">
+                            Address
+                          </Label>
+                          <Input
+                            id="edit-instructor-address"
+                            value={editForm.address}
+                            onChange={(e) =>
+                              setEditForm((prev) =>
+                                prev
+                                  ? { ...prev, address: e.target.value }
+                                  : prev,
+                              )
+                            }
+                            placeholder="Address on app account"
+                          />
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
 
-              <div className="flex gap-2 justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={closeEdit}
-                  disabled={editLoading}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={editLoading}>
-                  {editLoading ? "Saving…" : "Save Instructor"}
-                </Button>
-              </div>
-            </form>
-          ) : null}
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={closeEdit}
+                        disabled={editLoading}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={editLoading}>
+                        {editLoading ? "Saving…" : "Save Instructor"}
+                      </Button>
+                    </div>
+                  </form>
+                );
+              })()
+            : null}
         </DialogContent>
       </Dialog>
 
@@ -689,6 +977,134 @@ export function InstructorRecordsManager({
                 {deleteLoading
                   ? "Deleting…"
                   : getInstructorDeleteConfirmActionLabel()}
+              </AlertDialogAction>
+            ) : null}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={deactivateDialog !== null}
+        onOpenChange={(open) => {
+          if (!open && !deactivateLoading) setDeactivateDialog(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{deactivateDialog?.title}</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                {deactivateDialog?.allowed ? (
+                  <>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {deactivateDialog.confirmMessages.map((message) => (
+                        <li key={message}>{message}</li>
+                      ))}
+                    </ul>
+                    <p>{deactivateDialog.footerNote}</p>
+                  </>
+                ) : (
+                  <>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {deactivateDialog?.blockMessages.map((message) => (
+                        <li key={message}>{message}</li>
+                      ))}
+                    </ul>
+                    <p>{deactivateDialog?.footerNote}</p>
+                  </>
+                )}
+                {deactivateDialog ? (
+                  <p>
+                    Instructor:{" "}
+                    <span className="font-medium text-foreground">
+                      {getInstructorRecordDisplayName(deactivateDialog.user)}
+                    </span>
+                    .
+                  </p>
+                ) : null}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deactivateLoading}>
+              {deactivateDialog?.allowed ? "Cancel" : "Close"}
+            </AlertDialogCancel>
+            {deactivateDialog?.allowed ? (
+              <AlertDialogAction
+                disabled={deactivateLoading}
+                className="bg-amber-600 hover:bg-amber-700"
+                onClick={(e) => {
+                  e.preventDefault();
+                  void handleDeactivateConfirm();
+                }}
+              >
+                {deactivateLoading
+                  ? "Deactivating…"
+                  : getInstructorDeactivateConfirmActionLabel()}
+              </AlertDialogAction>
+            ) : null}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={reactivateDialog !== null}
+        onOpenChange={(open) => {
+          if (!open && !reactivateLoading) setReactivateDialog(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{reactivateDialog?.title}</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                {reactivateDialog?.allowed ? (
+                  <>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {reactivateDialog.confirmMessages.map((message) => (
+                        <li key={message}>{message}</li>
+                      ))}
+                    </ul>
+                    <p>{reactivateDialog.footerNote}</p>
+                  </>
+                ) : (
+                  <>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {reactivateDialog?.blockMessages.map((message) => (
+                        <li key={message}>{message}</li>
+                      ))}
+                    </ul>
+                    <p>{reactivateDialog?.footerNote}</p>
+                  </>
+                )}
+                {reactivateDialog ? (
+                  <p>
+                    Instructor:{" "}
+                    <span className="font-medium text-foreground">
+                      {getInstructorRecordDisplayName(reactivateDialog.user)}
+                    </span>
+                    .
+                  </p>
+                ) : null}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={reactivateLoading}>
+              {reactivateDialog?.allowed ? "Cancel" : "Close"}
+            </AlertDialogCancel>
+            {reactivateDialog?.allowed ? (
+              <AlertDialogAction
+                disabled={reactivateLoading}
+                className="bg-green-600 hover:bg-green-700"
+                onClick={(e) => {
+                  e.preventDefault();
+                  void handleReactivateConfirm();
+                }}
+              >
+                {reactivateLoading
+                  ? "Reactivating…"
+                  : getInstructorReactivateConfirmActionLabel()}
               </AlertDialogAction>
             ) : null}
           </AlertDialogFooter>

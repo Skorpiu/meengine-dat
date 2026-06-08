@@ -173,13 +173,13 @@ Documented and in use (docs/rules only; no runtime change):
 - `people-management-app-access-reactivate-v1` — **Reactivate app access** for eligible MANUAL_ONLY students: `POST /api/admin/students/[id]/app-access/reactivate`; orphan User relink by canonical email (Path A); Path B → stable 409 + Send invitation; preserves Student id/history; no duplicate Student; change email/app-accounts demote still deferred. Policy: [student-app-access-lifecycle-policy.md](./student-app-access-lifecycle-policy.md). Validated via `pnpm check`.
 - `people-management-edit-instructor-unified-v1` — Instructors → Profiles **Edit Instructor** + **Delete** (always blocked v1); unified editor (Instructor profile + App access); login email read-only; `PUT /api/users/update` only; App accounts tab retained; instructor delete policy + app access lifecycle deferred (DEC-018). No API/schema/SSR changes. Validated via `pnpm check`.
 - `instructor-delete-policy-v1-docs` — Docs-only formal policy for Instructor **Delete** (zero-deps hard delete), **Deactivate** (normal leave-school path), and deferred **Remove app access**; eligibility matrix; future API contracts; legacy `DELETE /api/users/delete` guard requirement. Policy: [instructor-delete-policy.md](./instructor-delete-policy.md). DEC-019. Validated via `pnpm check`.
-- `instructor-hard-delete-zero-deps-v1` — Zero-dependency instructor hard delete: `DELETE /api/admin/instructors/[id]` (by `Instructor.id`); policy/service in `lib/instructors/instructor-record-delete-*`; Profiles Delete policy-aware UI; legacy guard on `DELETE /api/users/delete` for INSTRUCTOR (`409 use_instructor_delete_policy`). No schema/migration/RLS/auth core changes. Deactivate + app access lifecycle still deferred. Validated via `pnpm check`.
+- `instructor-hard-delete-zero-deps-v1` — Zero-dependency instructor hard delete (see policy doc). Validated via `pnpm check`.
+- `instructor-deactivate-v1` — Instructor deactivate + reactivate lifecycle in Edit Instructor → App access; APIs; People badges aligned with Vehicles (Active/Inactive) and Students (app-access pending / Edit App access blue section); Schedule Map + admin lesson inactive-instructor warning; booking enforcement; credentials login block. Shared UX constants: `lib/people/people-app-access-ui-theme.ts`. No schema/migration/RLS changes. App accounts demote still deferred. Validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
-1. `instructor-deactivate-v1` — deactivate endpoint + UI (normal path when instructor leaves; preserve history)
-2. `people-management-app-accounts-demote-v1` — demote App accounts tab **after** instructor deactivate (hard delete + legacy guard done)
-3. `people-management-onboarding-unlinked-invitations-v1` — dedicated unlinked pending invitations section (list removal still deferred)
+1. `people-management-app-accounts-demote-v1` — demote App accounts tab
+2. `people-management-onboarding-unlinked-invitations-v1` — dedicated unlinked pending invitations section (list removal still deferred)
 4. `admin-settings-client-visibility-review-v1` — review hiding/demoting Settings for school admins (product/packaging P1)
 2. `tenant-operational-organization-id-not-null-readiness-review-v1` — operator/docs review for NOT NULL migrations when NULL counts stay at zero (no apply batch needed yet)
 3. `supabase-rls-class-b-hardening-v1b` — **deferred (D4):** optional RLS + REVOKE on remaining internal tables — separate approval

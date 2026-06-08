@@ -4,6 +4,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "./db";
 import bcrypt from "bcryptjs";
 import { getRequestHost, resolveOrganizationIdFromHost } from "./tenant";
+import { getCredentialsLoginBlockReason } from "./auth/credentials-login-eligibility";
 type GetRequestHostArg = Parameters<typeof getRequestHost>[0];
 
 export const authOptions: NextAuthOptions = {
@@ -63,6 +64,10 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isPasswordValid) {
+          throw new Error("Invalid credentials");
+        }
+
+        if (getCredentialsLoginBlockReason(user) === "not_approved") {
           throw new Error("Invalid credentials");
         }
 

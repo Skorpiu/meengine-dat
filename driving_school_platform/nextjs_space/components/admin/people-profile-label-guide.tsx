@@ -60,22 +60,29 @@ const INSTRUCTOR_ENTRIES = [
     description: "Operational instructor profile tied to an app login account.",
   },
   {
-    label: "App access active",
-    description: "Instructor can sign in (account approved).",
+    label: "Active",
+    description:
+      "Operational instructor is active (same blue primary badge as Vehicles Active).",
+  },
+  {
+    label: "Inactive",
+    description:
+      "Instructor is deactivated — not available for booking; login disabled (same muted secondary badge as Vehicles Inactive). History preserved.",
   },
   {
     label: "App access pending approval",
-    description: "Account exists but is not approved yet.",
+    description:
+      "Account exists but is not approved yet (same primary badge as Students app-access pending).",
   },
   {
     label: "Edit Instructor",
     description:
-      "Primary row action — opens unified editor (Instructor profile + App access).",
+      "Primary row action — opens unified editor (Instructor profile + App access). Deactivate and Reactivate live under App access.",
   },
   {
     label: "Delete",
     description:
-      "Visible on the row; blocked in v1 until instructor delete policy is implemented.",
+      "Visible on the row when zero-dependency hard delete is allowed by policy.",
   },
 ] as const;
 

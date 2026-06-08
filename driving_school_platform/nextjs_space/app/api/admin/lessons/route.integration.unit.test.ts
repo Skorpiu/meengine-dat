@@ -113,6 +113,7 @@ beforeEach(() => {
 
   h.instructorFindFirstMock.mockResolvedValue({
     id: "inst-db-1",
+    isAvailableForBooking: true,
     qualifiedCategories: [{ id: 1 }],
   });
 

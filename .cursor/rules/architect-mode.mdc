@@ -292,11 +292,13 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `people-management-edit-instructor-unified-v1` — Instructors → Profiles **Edit Instructor** + blocked **Delete**; unified editor (profile + App access); `PUT /api/users/update`; App accounts tab retained (DEC-018)
 - `instructor-delete-policy-v1-docs` — Instructor delete/deactivate policy doc; DEC-019
 - `instructor-hard-delete-zero-deps-v1` — Zero-deps hard delete API + Profiles Delete UI + legacy INSTRUCTOR guard on `DELETE /api/users/delete`
+- `instructor-deactivate-v1` — Deactivate + Reactivate in Edit → App access; APIs; badge/App access colors aligned with Vehicles + Students; Schedule Map warning; booking enforcement + credentials login block
+
+**UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
 **Current recommended next (runtime/UX slice):**
 
-1. `instructor-deactivate-v1` — normal “left the school” path; preserve history; no schema v1
-2. `people-management-app-accounts-demote-v1` — **not before** instructor deactivate policy implementation
+1. `people-management-app-accounts-demote-v1` — demote App accounts tab
 
 **Likely next after app accounts demote:**
 

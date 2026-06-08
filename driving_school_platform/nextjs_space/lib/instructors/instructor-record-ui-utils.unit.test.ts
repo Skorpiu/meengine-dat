@@ -3,11 +3,16 @@ import {
   filterInstructorRecordUsers,
   filterInstructorRecordUsersBySearch,
   formatInstructorLicenseExpiry,
+  getInstructorAppAccessSectionTheme,
   getInstructorAppAccountStatusLabel,
+  getInstructorEditAppAccessStatusBadge,
+  getInstructorPeopleStatusBadge,
   getInstructorRecordDisplayName,
   hasOperationalInstructorRecord,
+  isInstructorProfileInactive,
   matchesInstructorRecordSearch,
 } from "./instructor-record-ui-utils";
+import { PEOPLE_APP_ACCESS_SECTION_THEME } from "@/lib/people/people-app-access-ui-theme";
 import type { InstructorRecordUserDto } from "./instructor-record-ui-types";
 
 const baseInstructor = (
@@ -108,5 +113,115 @@ describe("hasOperationalInstructorRecord", () => {
     expect(
       hasOperationalInstructorRecord(baseInstructor({ instructor: null })),
     ).toBe(false);
+  });
+});
+
+describe("getInstructorPeopleStatusBadge", () => {
+  it("shows Inactive with secondary variant (Vehicles convention)", () => {
+    const badge = getInstructorPeopleStatusBadge(
+      baseInstructor({
+        isApproved: false,
+        instructor: {
+          ...baseInstructor().instructor!,
+          isAvailableForBooking: false,
+        },
+      }),
+    );
+    expect(badge.label).toBe("Inactive");
+    expect(badge.variant).toBe("secondary");
+  });
+
+  it("shows Active with default variant (Vehicles convention)", () => {
+    const badge = getInstructorPeopleStatusBadge(
+      baseInstructor({
+        isApproved: true,
+        instructor: {
+          ...baseInstructor().instructor!,
+          isAvailableForBooking: true,
+        },
+      }),
+    );
+    expect(badge.label).toBe("Active");
+    expect(badge.variant).toBe("default");
+    expect(badge.className).toBeUndefined();
+  });
+
+  it("shows pending approval with default variant (Students app-access convention)", () => {
+    const badge = getInstructorPeopleStatusBadge(
+      baseInstructor({
+        isApproved: false,
+        instructor: {
+          ...baseInstructor().instructor!,
+          isAvailableForBooking: true,
+        },
+      }),
+    );
+    expect(badge.label).toBe("App access pending approval");
+    expect(badge.variant).toBe("default");
+  });
+
+  it("isInstructorProfileInactive reflects booking flag", () => {
+    expect(
+      isInstructorProfileInactive(
+        baseInstructor({
+          instructor: {
+            ...baseInstructor().instructor!,
+            isAvailableForBooking: false,
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("getInstructorAppAccessSectionTheme", () => {
+  it("uses shared blue theme matching Edit Student App access", () => {
+    expect(getInstructorAppAccessSectionTheme()).toEqual(
+      PEOPLE_APP_ACCESS_SECTION_THEME,
+    );
+  });
+});
+
+describe("getInstructorEditAppAccessStatusBadge", () => {
+  it("matches Edit Student approved/pending labels and variants", () => {
+    expect(
+      getInstructorEditAppAccessStatusBadge(
+        baseInstructor({ isApproved: true }),
+      ),
+    ).toMatchObject({
+      label: "Approved — can sign in",
+      variant: "secondary",
+    });
+    expect(
+      getInstructorEditAppAccessStatusBadge(
+        baseInstructor({
+          isApproved: false,
+          instructor: {
+            ...baseInstructor().instructor!,
+            isAvailableForBooking: true,
+          },
+        }),
+      ),
+    ).toMatchObject({
+      label: "Pending approval",
+      variant: "default",
+    });
+  });
+
+  it("uses Inactive secondary badge when deactivated", () => {
+    expect(
+      getInstructorEditAppAccessStatusBadge(
+        baseInstructor({
+          isApproved: false,
+          instructor: {
+            ...baseInstructor().instructor!,
+            isAvailableForBooking: false,
+          },
+        }),
+      ),
+    ).toMatchObject({
+      label: "Inactive",
+      variant: "secondary",
+    });
   });
 });

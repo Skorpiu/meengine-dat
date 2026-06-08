@@ -52,6 +52,7 @@ beforeEach(() => {
   h.getNextPracticalLessonNumberMock.mockResolvedValue(1);
   h.instructorFindFirstMock.mockResolvedValue({
     id: "inst-1",
+    isAvailableForBooking: true,
     qualifiedCategories: [{ id: 1 }],
   });
   h.lessonCreateMock.mockResolvedValue({ id: "lesson-1" });
@@ -420,6 +421,34 @@ describe("createAdminLesson", () => {
       status: 404,
     });
     expect(h.transactionMock).not.toHaveBeenCalled();
+    expect(h.lessonCreateMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 409 when instructor is not available for booking", async () => {
+    h.instructorFindFirstMock.mockResolvedValueOnce({
+      id: "inst-1",
+      isAvailableForBooking: false,
+      qualifiedCategories: [{ id: 1 }],
+    });
+
+    const result = await createAdminLesson({
+      organizationId: "org-1",
+      durationMinutes: 60,
+      payload: {
+        lessonType: "DRIVING",
+        instructorId: "user-inst",
+        studentId: "stu-1",
+        lessonDate: "2026-01-06",
+        startTime: "10:00",
+        endTime: "11:00",
+      },
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "instructor_not_available_for_booking",
+      status: 409,
+    });
     expect(h.lessonCreateMock).not.toHaveBeenCalled();
   });
 });
