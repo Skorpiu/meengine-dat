@@ -68,6 +68,7 @@ import {
 import {
   filterInstructorRecordUsersBySearch,
   formatInstructorLicenseExpiry,
+  formatInstructorProfileContactLine,
   getInstructorAppAccessSectionTheme,
   getInstructorEditAppAccessStatusBadge,
   getInstructorPeopleStatusBadge,
@@ -563,8 +564,7 @@ export function InstructorRecordsManager({
                               {user.email}
                             </div>
                             <div className="text-sm text-gray-500">
-                              {user.phoneNumber || "No phone"} · App account
-                              linked
+                              {formatInstructorProfileContactLine(user)}
                             </div>
                             {hasRecord ? (
                               <div className="text-sm text-gray-600 space-y-0.5">
