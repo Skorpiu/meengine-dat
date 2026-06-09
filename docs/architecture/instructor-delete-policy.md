@@ -4,7 +4,7 @@
 
 Formal policy for School Admin **Instructor** lifecycle in People management: **Delete**, **Deactivate**, and **Remove app access** are **separate concepts**. Policy doc established in `instructor-delete-policy-v1-docs`; zero-deps hard delete implemented in `instructor-hard-delete-zero-deps-v1`.
 
-**Related:** [decision-log.md](./decision-log.md) DEC-018, DEC-019; [student-app-access-lifecycle-policy.md](./student-app-access-lifecycle-policy.md) (student parallel).
+**Related:** [decision-log.md](./decision-log.md) DEC-018, DEC-019, DEC-028; [student-app-access-lifecycle-policy.md](./student-app-access-lifecycle-policy.md) (student parallel); [instructor-email-change-policy.md](./instructor-email-change-policy.md) (future change-email — preserves deactivate state and lesson history).
 
 **Current runtime (post `instructor-deactivate-v1` UX alignment):**
 
@@ -59,6 +59,7 @@ Formal policy for School Admin **Instructor** lifecycle in People management: **
 
 - `UserInvitation` has `studentId` for students only — **no** `instructorId`.
 - Instructor invitations are matched by `email` + `role = INSTRUCTOR` + `status = PENDING`.
+- **Change email (future, DEC-028):** Instructor profile change-email revokes PENDING INSTRUCTOR invitations on the **old** email (same pattern as deactivate). Pending invitations **without** a profile are not changed via Instructor change-email — see [instructor-email-change-policy.md](./instructor-email-change-policy.md).
 
 ### Existing operational fields (no dedicated lifecycle status today)
 
