@@ -305,12 +305,13 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `people-management-instructor-profile-invite-badge-v1` — UI-only instructor invite/profile lifecycle clarity (DEC-025): Onboarding copy; Profiles conditional app-account subtitle; instructor label guide; no Pending invite badge on Profiles; no API/schema
 - `admin-settings-client-visibility-review-v1` — docs-only audit: `/admin/settings` operator/internal; module gating = License/Entitlements (DEC-026); report `docs/architecture/admin-settings-client-visibility-audit.md`; no runtime changes
 - `admin-settings-client-visibility-hide-v1` — UI-only (DEC-026 Fase B): Settings removed from school admin navbar; `/admin/settings` operator/internal copy; CRUD tabs + APIs unchanged
+- `admin-license-client-readonly-v1` — UI-only (DEC-026 Fase C): `/admin/license` Plan & features read-only; Activate/toggles hidden; navbar **Plan**; APIs/gating unchanged
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
 **Current recommended next (runtime/UX slice):**
 
-1. `admin-license-client-readonly-v1` — UI-only: License read-only for School Admin (product P1)
+1. `tenant-operational-organization-id-not-null-readiness-review-v1` — operator/docs review when NULL counts stay at zero (no apply yet)
 
 **Likely next:**
 

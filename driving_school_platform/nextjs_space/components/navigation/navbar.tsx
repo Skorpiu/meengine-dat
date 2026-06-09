@@ -74,7 +74,7 @@ export function Navbar({ currentPage }: NavbarProps) {
         }
 
         adminItems.push({
-          label: "License",
+          label: "Plan",
           href: "/admin/license",
           icon: Key,
         });

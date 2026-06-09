@@ -1,8 +1,8 @@
 # Admin Settings Client Visibility Audit
 
 **Batch:** `admin-settings-client-visibility-review-v1` (docs-only); Fase B `admin-settings-client-visibility-hide-v1` (UI-only, **done**)  
-**Status:** Fase A + B complete; Fase C (`admin-license-client-readonly-v1`) pending  
-**Baseline:** main `4145d8f` (Fase B)  
+**Status:** Fase A + B + C complete (`admin-license-client-readonly-v1` done)  
+**Baseline:** main `d035ad3` (Fase C)  
 **Related:** [decision-log.md](./decision-log.md) DEC-002, DEC-026; [dat-vs-platform-boundary.md](../product/dat-vs-platform-boundary.md)
 
 ---
@@ -64,9 +64,9 @@ Docs and ops refer to School Admin as `SUPER_ADMIN` on the tenant host.
 | UI section | Behavior | Data |
 | ---------- | -------- | ---- |
 | Organization information | Read-only display | `Organization` name, `subscriptionTier` |
-| Activate license key | Form + POST | `POST /api/admin/license/activate` → `EntitlementGrant` |
-| Premium features | Toggle switches | `POST /api/admin/license/features` → `OrganizationFeature` |
-| Feature summary | Read-only cards | Derived from entitlements |
+| Activate license key | **Hidden** (Fase C) — API retained for ops | `POST /api/admin/license/activate` → `EntitlementGrant` |
+| Premium features | **Read-only** list + cards (Fase C) — API retained for ops | `POST /api/admin/license/features` → `OrganizationFeature` |
+| Feature summary | Merged into **Modules & features** (read-only) | Derived from entitlements |
 
 **This is the effective product gating surface** for navbar and `FeatureGate` (e.g. `VEHICLE_MANAGEMENT`, `LESSON_MANAGEMENT`).
 
@@ -140,8 +140,8 @@ Lesson create, vehicles, and exams logic do **not** call `getSystemSetting()` to
 | Organization info (read-only) | `KEEP_CLIENT_VISIBLE` | Tier / org name useful |
 | Feature summary (read-only) | `KEEP_CLIENT_VISIBLE` | What modules are active |
 | Activate license key | `MOVE_TO_PLATFORM` | Commercial / operator; demo uses scripts |
-| Premium feature toggles | `MOVE_TO_PLATFORM` / `HIDE_INTERNAL` | Fase C — read-only for School Admin |
-| Page link in navbar | `RENAME_OR_REFRAME` | Future "Plan" or "Features" (read-only) |
+| Premium feature toggles | `HIDE_INTERNAL` (Fase C done) | UI read-only; POST API retained for ops |
+| Page link in navbar | `RENAME_OR_REFRAME` (Fase C done) | Navbar label **Plan** → `/admin/license` |
 
 ### Navbar
 
@@ -211,7 +211,7 @@ Operator scripts (demo / prod)
 | ----- | ----- | ---- | ----- |
 | **A** | `admin-settings-client-visibility-review-v1` | **docs-only** | This audit + memory update (**done**) |
 | **B** | `admin-settings-client-visibility-hide-v1` | UI-only | Remove Settings from navbar; operator-only message on `/admin/settings`; **APIs unchanged** (**done**) |
-| **C** | `admin-license-client-readonly-v1` | UI-only | License: read-only status/summary for School Admin; hide Activate + toggles; **APIs unchanged** |
+| **C** | `admin-license-client-readonly-v1` | UI-only | License: read-only status/summary for School Admin; hide Activate + toggles; **APIs unchanged** (**done**) |
 | **D** | `school-operational-alerts-v1` | runtime (future) | Vehicle expiry / inspection / maintenance lead times — spec + wiring; not in Settings today |
 | **P2** | `platform-settings-and-feature-flags-boundary-v1` | Platform | Future ownership of flags/system settings UI |
 

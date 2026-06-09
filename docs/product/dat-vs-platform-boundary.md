@@ -56,7 +56,7 @@
 - **Future:** demote, hide, or reposition from client-facing DAT.
 - **Ownership:** most of this moves to **future Platform**; DAT keeps only **School Settings** a school admin can understand (branding, practical prefs, etc. — to be defined per slice).
 
-**Audit (done):** [admin-settings-client-visibility-audit.md](../architecture/admin-settings-client-visibility-audit.md) — `admin-settings-client-visibility-review-v1`. **Module gating** uses License/Entitlements (DEC-026), not `feature_flags` CRUD. **Fase B (done):** `admin-settings-client-visibility-hide-v1` — Settings hidden from school admin nav; `/admin/settings` operator copy. **Next UI slice:** `admin-license-client-readonly-v1`. Platform extraction: `platform-settings-and-feature-flags-boundary-v1` (P2).
+**Audit (done):** [admin-settings-client-visibility-audit.md](../architecture/admin-settings-client-visibility-audit.md) — `admin-settings-client-visibility-review-v1`. **Module gating** uses License/Entitlements (DEC-026), not `feature_flags` CRUD. **Fase B (done):** Settings hidden from school admin nav; `/admin/settings` operator copy. **Fase C (done):** `/admin/license` Plan & features read-only; navbar **Plan**. Platform extraction: `platform-settings-and-feature-flags-boundary-v1` (P2).
 
 ---
 
