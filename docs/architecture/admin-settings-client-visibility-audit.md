@@ -1,8 +1,8 @@
 # Admin Settings Client Visibility Audit
 
-**Batch:** `admin-settings-client-visibility-review-v1` (docs-only)  
-**Status:** Analysis persisted — implementation deferred to phased slices below  
-**Baseline:** main `136846b`  
+**Batch:** `admin-settings-client-visibility-review-v1` (docs-only); Fase B `admin-settings-client-visibility-hide-v1` (UI-only, **done**)  
+**Status:** Fase A + B complete; Fase C (`admin-license-client-readonly-v1`) pending  
+**Baseline:** main `4145d8f` (Fase B)  
 **Related:** [decision-log.md](./decision-log.md) DEC-002, DEC-026; [dat-vs-platform-boundary.md](../product/dat-vs-platform-boundary.md)
 
 ---
@@ -30,7 +30,7 @@ Docs and ops refer to School Admin as `SUPER_ADMIN` on the tenant host.
 
 **Page:** `app/admin/settings/page.tsx`  
 **Auth:** SSR redirect unless `session.user.role === "SUPER_ADMIN"`  
-**Navbar:** link shown for `SUPER_ADMIN` (`components/navigation/navbar.tsx`)
+**Navbar:** link **hidden** for `SUPER_ADMIN` since Fase B (`admin-settings-client-visibility-hide-v1`); route remains reachable by direct URL
 
 | UI element | Component / API | Description |
 | ---------- | --------------- | ----------- |
@@ -210,7 +210,7 @@ Operator scripts (demo / prod)
 | Phase | Batch | Type | Scope |
 | ----- | ----- | ---- | ----- |
 | **A** | `admin-settings-client-visibility-review-v1` | **docs-only** | This audit + memory update (**done**) |
-| **B** | `admin-settings-client-visibility-hide-v1` | UI-only | Remove Settings from navbar; optional operator-only message on `/admin/settings`; **APIs unchanged** |
+| **B** | `admin-settings-client-visibility-hide-v1` | UI-only | Remove Settings from navbar; operator-only message on `/admin/settings`; **APIs unchanged** (**done**) |
 | **C** | `admin-license-client-readonly-v1` | UI-only | License: read-only status/summary for School Admin; hide Activate + toggles; **APIs unchanged** |
 | **D** | `school-operational-alerts-v1` | runtime (future) | Vehicle expiry / inspection / maintenance lead times — spec + wiring; not in Settings today |
 | **P2** | `platform-settings-and-feature-flags-boundary-v1` | Platform | Future ownership of flags/system settings UI |

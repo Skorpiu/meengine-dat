@@ -114,7 +114,7 @@ Parent batch — always slice before implementing.
 
 - **Done (v1 slice):** docs-only classification matrix — [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md). All 31 Prisma tables classified; 7 with RLS in migrations; 0 intended anon/authenticated Data API access today; `rls_enabled_no_policy` documented as intentional for service-only tables. **No** SQL policies, grants, or migrations in this slice.
 - **Done (v1 slice):** `supabase-rls-class-b-hardening-v1` — migration `20260603120000_supabase_rls_class_b_hardening_v1`: 8 tables only (`billing_events`, `entitlement_grants`, `organization_domains` REVOKE; `audit_logs`, `license_keys`, `configuration_history`, `system_settings`, `feature_flags` ENABLE RLS + REVOKE); no `CREATE POLICY`, no `FORCE ROW LEVEL SECURITY`, no Prisma schema/runtime changes. Operator `migrate deploy` on Preview/Production is human-controlled. Validated via `pnpm check`.
-- **Next gated slice (recommended):** `admin-settings-client-visibility-hide-v1` (product P1) or `supabase-rls-class-b-hardening-v1b` (D4 — remaining internal tables — separate approval). **Not recommended next:** `people-management-ux-unification-instructor-route-split-v1`.
+- **Next gated slice (recommended):** `admin-license-client-readonly-v1` (product P1) or `supabase-rls-class-b-hardening-v1b` (D4 — remaining internal tables — separate approval). **Not recommended next:** `people-management-ux-unification-instructor-route-split-v1`.
 - **Deferred:** `supabase-rls-class-b-hardening-v1b` — NextAuth adapter, tenant business, global reference tables (not in v1); tenant-scoped RLS policies (`supabase-rls-tenant-policies-v1`) after org-id backfill/NOT NULL; dedicated `api` schema review.
 
 ### tenant-required-operational-organization-id-audit
@@ -124,7 +124,7 @@ Parent batch — always slice before implementing.
 - **Done (v1 slice):** audit report + classification only — [tenant-required-operational-organization-id-audit.md](./tenant-required-operational-organization-id-audit.md). No Prisma/migration/RLS/runtime changes in this slice.
 - **Done (v1 slice):** `tenant-operational-organization-id-null-counts-report-v1` — read-only report script `scripts/report-tenant-organization-null-scope.ts` (`pnpm tenant:org-null-report`); helpers `lib/tenant-organization-null-scope-report.ts`. No writes.
 - **Done (v1 slice):** `tenant-operational-organization-id-backfill-dry-run-v1` — `scripts/dry-run-tenant-organization-backfill.ts` (`pnpm tenant:org-backfill:dry-run`); helpers `lib/tenant-organization-backfill-dry-run.ts`; legacy `backfill-organization-scope.ts` fail-safe by default. Preview: 0 operational NULLs.
-- **Next gated slice (recommended):** `admin-settings-client-visibility-hide-v1` or other P1 per priority. Route split **deferred (D4)**.
+- **Next gated slice (recommended):** `admin-license-client-readonly-v1` or other P1 per priority. Route split **deferred (D4)**.
 - **Deferred:** `tenant-operational-organization-id-backfill-apply-v1` — only when a future dry-run reports proposed rows; `tenant-operational-organization-id-not-null-migrations` / `tenant-operational-organization-id-not-null-readiness-review-v1` after sustained zero NULL verification (explicit migration approval).
 
 ### billing webhook hardening
@@ -154,7 +154,7 @@ Parent batch — always slice before implementing.
 | ----- | -------- | ----- |
 | `people-management-internal-tabs-v1` | — | **Done** — tabs on `/admin/users` |
 | `admin-settings-client-visibility-review-v1` | — | **Done (docs)** — audit [admin-settings-client-visibility-audit.md](./admin-settings-client-visibility-audit.md); DEC-026 |
-| `admin-settings-client-visibility-hide-v1` | P1 | UI-only: hide Settings from school admin nav; APIs unchanged |
+| `admin-settings-client-visibility-hide-v1` | — | **Done** — Settings hidden from school admin nav; operator copy on `/admin/settings`; APIs unchanged |
 | `admin-license-client-readonly-v1` | P1 | UI-only: License read-only for School Admin; hide activate/toggles |
 | `school-operational-alerts-v1` | P2 | Future: vehicle expiry/inspection/maintenance lead times (spec + wiring) |
 | `platform-settings-and-feature-flags-boundary-v1` | P2 | Future Platform ownership of flags/system settings |

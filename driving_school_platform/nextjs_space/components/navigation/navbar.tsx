@@ -73,10 +73,11 @@ export function Navbar({ currentPage }: NavbarProps) {
           });
         }
 
-        adminItems.push(
-          { label: "License", href: "/admin/license", icon: Key },
-          { label: "Settings", href: "/admin/settings", icon: Settings },
-        );
+        adminItems.push({
+          label: "License",
+          href: "/admin/license",
+          icon: Key,
+        });
 
         return adminItems;
 
