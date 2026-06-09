@@ -226,8 +226,9 @@ Record results in Preview QA notes when run; not required to close this audit do
 | **1** | `tenant-operational-organization-id-null-counts-report-v1` | **Done (v1)** — read-only report script + helpers | `APPROVED TO IMPLEMENT: tenant-operational-organization-id-null-counts-report-v1` |
 | **2** | `tenant-operational-organization-id-backfill-dry-run-v1` | **Done (v1)** — per-row derivation dry-run; legacy script fail-safe | `pnpm tenant:org-backfill:dry-run` |
 | **3** | `tenant-operational-organization-id-backfill-apply-v1` | Apply backfill on allowlisted operational tables | **Deferred** until dry-run shows proposed rows in target DB |
-| **3b** | `tenant-operational-organization-id-not-null-readiness-review-v1` | Operator review for NOT NULL when zero NULLs confirmed | Alternative next when apply not needed |
-| **4** | `tenant-operational-organization-id-not-null-migrations` | Per-table NOT NULL after zero NULL rows verified | Explicit migration approval + `migrate deploy` operator command |
+| **3b** | `tenant-operational-organization-id-not-null-readiness-review-v1` | **Done** — analysis-only review | Completed 2026-06-09 |
+| **3c** | `tenant-operational-organization-id-not-null-readiness-doc-v1` | **Done** — readiness doc + DEC-027 | [tenant-operational-organization-id-not-null-readiness.md](./tenant-operational-organization-id-not-null-readiness.md) |
+| **4** | `tenant-operational-organization-id-not-null-migrations` | Per-table NOT NULL after zero NULL rows verified on **target** DB | Explicit D4 approval + `migrate deploy` operator command |
 | **5** | `supabase-rls-data-api-policy-matrix` | **Done (v1)** — classification matrix only; see [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md). Explicit RLS **SQL** on tenant tables → `supabase-rls-tenant-policies-v1` (D4) |
 | **6** | Product | Revisit global uniques (`Vehicle.registrationNumber`, `SystemSetting.settingKey`) for multi-client | Product decision |
 
@@ -248,8 +249,15 @@ Record results in Preview QA notes when run; not required to close this audit do
 
 ---
 
+## Readiness (post-audit)
+
+Operator-validated readiness for future NOT NULL on the six operational tables: [tenant-operational-organization-id-not-null-readiness.md](./tenant-operational-organization-id-not-null-readiness.md) (DEC-027). Validated 2026-06-09: 0 operational NULLs, `SAFE_TO_DRY_RUN`, 0 dry-run proposals — backfill apply not required in that environment.
+
+---
+
 ## References
 
+- [tenant-operational-organization-id-not-null-readiness.md](./tenant-operational-organization-id-not-null-readiness.md) — DEC-027 readiness
 - `docs/architecture/system-design.md` — tenancy model
 - `.cursor/rules/database.mdc` — tenant-critical entities
 - `driving_school_platform/nextjs_space/scripts/backfill-organization-scope.ts`
