@@ -288,10 +288,14 @@ export function InvitationsManagementClient({
     </>
   ) : isInstructorOnboarding ? (
     <>
-      Invite instructors who should register themselves by email. Instructor
-      invites are managed here until profile-level status is added. Invite links
-      are <strong>sensitive</strong> — copy when shown once after creation.
-      Lists never show links or tokens.
+      Invite instructors who should register themselves by email. Pending
+      instructor invitations stay here in <strong>Onboarding</strong> until the
+      invite is accepted. After acceptance, the instructor appears on{" "}
+      <strong>Instructors → Profiles</strong> as{" "}
+      <strong>App access pending approval</strong> or <strong>Active</strong> —
+      not as a pending invite on the profile row. Invite links are{" "}
+      <strong>sensitive</strong> — copy when shown once after creation. Lists
+      never show links or tokens.
     </>
   ) : (
     <>

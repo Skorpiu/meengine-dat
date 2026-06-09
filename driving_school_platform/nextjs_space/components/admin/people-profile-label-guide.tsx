@@ -65,19 +65,29 @@ const INSTRUCTOR_ENTRIES = [
     description: "Operational instructor profile tied to an app login account.",
   },
   {
-    label: "Active",
+    label: "Pending invite (Onboarding)",
     description:
-      "Operational instructor is active (same blue primary badge as Vehicles Active).",
-  },
-  {
-    label: "Inactive",
-    description:
-      "Instructor is deactivated — not available for booking; login disabled (same muted secondary badge as Vehicles Inactive). History preserved.",
+      "Invitation sent before an instructor profile exists — managed on Instructors → Onboarding, not on Profiles.",
   },
   {
     label: "App access pending approval",
     description:
-      "Account exists but is not approved yet (same primary badge as Students app-access pending).",
+      "Profile exists after invite acceptance (or admin creation awaiting approval) — account not approved to sign in yet. Shown on Profiles, not Onboarding.",
+  },
+  {
+    label: "Active",
+    description:
+      "Approved and available for booking; can sign in (same blue primary badge as Vehicles Active).",
+  },
+  {
+    label: "Inactive",
+    description:
+      "Deactivated — not available for booking; login disabled (same muted secondary badge as Vehicles Inactive). History preserved.",
+  },
+  {
+    label: "App account linked / awaiting approval / inactive",
+    description:
+      "Row subtitle under the email: linked when active; awaiting approval when not yet approved; inactive when deactivated.",
   },
   {
     label: "Edit Instructor",

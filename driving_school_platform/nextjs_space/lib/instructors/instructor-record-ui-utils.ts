@@ -51,6 +51,27 @@ export function isInstructorPendingApproval(
   return user.instructor?.isAvailableForBooking !== false && !user.isApproved;
 }
 
+/** Instructors → Profiles row subtitle (app account lifecycle, not operational profile data). */
+export function getInstructorProfileAppAccountSubtitle(
+  user: InstructorRecordUserDto,
+): string {
+  if (isInstructorProfileInactive(user)) {
+    return "App account inactive";
+  }
+  if (isInstructorPendingApproval(user)) {
+    return "App account awaiting approval";
+  }
+  return "App account linked";
+}
+
+/** Phone + app-account subtitle line on instructor profile rows. */
+export function formatInstructorProfileContactLine(
+  user: InstructorRecordUserDto,
+): string {
+  const phone = user.phoneNumber?.trim() ? user.phoneNumber : "No phone";
+  return `${phone} · ${getInstructorProfileAppAccountSubtitle(user)}`;
+}
+
 export type InstructorPeopleStatusBadge = {
   label: string;
   variant: "secondary" | "default" | "destructive" | "outline";

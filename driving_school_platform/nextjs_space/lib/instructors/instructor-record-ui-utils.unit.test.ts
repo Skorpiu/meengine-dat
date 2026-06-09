@@ -3,10 +3,12 @@ import {
   filterInstructorRecordUsers,
   filterInstructorRecordUsersBySearch,
   formatInstructorLicenseExpiry,
+  formatInstructorProfileContactLine,
   getInstructorAppAccessSectionTheme,
   getInstructorAppAccountStatusLabel,
   getInstructorEditAppAccessStatusBadge,
   getInstructorPeopleStatusBadge,
+  getInstructorProfileAppAccountSubtitle,
   getInstructorRecordDisplayName,
   hasOperationalInstructorRecord,
   isInstructorProfileInactive,
@@ -179,6 +181,56 @@ describe("getInstructorAppAccessSectionTheme", () => {
     expect(getInstructorAppAccessSectionTheme()).toEqual(
       PEOPLE_APP_ACCESS_SECTION_THEME,
     );
+  });
+});
+
+describe("getInstructorProfileAppAccountSubtitle", () => {
+  it("returns linked when active and approved", () => {
+    expect(getInstructorProfileAppAccountSubtitle(baseInstructor())).toBe(
+      "App account linked",
+    );
+  });
+
+  it("returns awaiting approval when not approved but available for booking", () => {
+    expect(
+      getInstructorProfileAppAccountSubtitle(
+        baseInstructor({
+          isApproved: false,
+          instructor: {
+            ...baseInstructor().instructor!,
+            isAvailableForBooking: true,
+          },
+        }),
+      ),
+    ).toBe("App account awaiting approval");
+  });
+
+  it("returns inactive when deactivated", () => {
+    expect(
+      getInstructorProfileAppAccountSubtitle(
+        baseInstructor({
+          isApproved: false,
+          instructor: {
+            ...baseInstructor().instructor!,
+            isAvailableForBooking: false,
+          },
+        }),
+      ),
+    ).toBe("App account inactive");
+  });
+});
+
+describe("formatInstructorProfileContactLine", () => {
+  it("joins phone and app-account subtitle", () => {
+    expect(formatInstructorProfileContactLine(baseInstructor())).toBe(
+      "+351912000000 · App account linked",
+    );
+  });
+
+  it("uses No phone when phone is empty", () => {
+    expect(
+      formatInstructorProfileContactLine(baseInstructor({ phoneNumber: null })),
+    ).toBe("No phone · App account linked");
   });
 });
 
