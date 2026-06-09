@@ -56,7 +56,7 @@
 - **Future:** demote, hide, or reposition from client-facing DAT.
 - **Ownership:** most of this moves to **future Platform**; DAT keeps only **School Settings** a school admin can understand (branding, practical prefs, etc. — to be defined per slice).
 
-**Do not implement** hiding or Platform extraction in this documentation batch alone. Track: `admin-settings-client-visibility-review-v1`, `platform-settings-and-feature-flags-boundary-v1`.
+**Audit (done):** [admin-settings-client-visibility-audit.md](../architecture/admin-settings-client-visibility-audit.md) — `admin-settings-client-visibility-review-v1`. **Module gating** uses License/Entitlements (DEC-026), not `feature_flags` CRUD. **Next UI slices:** `admin-settings-client-visibility-hide-v1`, `admin-license-client-readonly-v1`. Platform extraction: `platform-settings-and-feature-flags-boundary-v1` (P2).
 
 ---
 
