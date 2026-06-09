@@ -308,16 +308,18 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `admin-license-client-readonly-v1` — UI-only (DEC-026 Fase C): `/admin/license` Plan & features read-only; Activate/toggles hidden; navbar **Plan**; APIs/gating unchanged
 - `tenant-operational-organization-id-not-null-readiness-review-v1` — analysis-only readiness review for future NOT NULL on six operational tables
 - `tenant-operational-organization-id-not-null-readiness-doc-v1` — docs-only readiness + DEC-027; report `docs/architecture/tenant-operational-organization-id-not-null-readiness.md`; operator evidence 2026-06-09: 0 operational NULLs, no backfill apply needed
+- `people-management-instructor-email-change-policy-v1` — analysis-only Instructor change-email policy
+- `people-management-instructor-email-change-policy-doc-v1` — docs-only policy + DEC-028; `docs/architecture/instructor-email-change-policy.md`; runtime deferred
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
 **Current recommended next (runtime/UX slice):**
 
-1. `tenant-operational-organization-id-not-null-migrations` — **deferred (D4):** per-table NOT NULL on six operational tables only; explicit approval + human `migrate deploy`; re-run `pnpm tenant:org-null-report` on target DB first
+1. `people-management-instructor-email-change-v1` — dedicated `POST /api/admin/instructors/[id]/change-email` + Edit Instructor modal (DEC-028); explicit approval required
 
 **Likely next:**
 
-2. `people-management-instructor-email-change-policy-v1` — instructor change email (deferred)
+2. `tenant-operational-organization-id-not-null-migrations` — **deferred (D4):** per-table NOT NULL on six operational tables; explicit approval + human `migrate deploy`
 
 **Likely next (slice parent batches; do not implement broad names directly):**
 

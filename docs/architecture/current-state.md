@@ -190,12 +190,14 @@ Documented and in use (docs/rules only; no runtime change):
 - `admin-license-client-readonly-v1` — UI-only (DEC-026 Fase C): `/admin/license` reframed as **Plan & features** read-only; Activate key form and feature toggles removed from UI; consolidated Modules & features section; navbar label **Plan**; `useLicense`/APIs/gating unchanged. Validated via `pnpm check`.
 - `tenant-operational-organization-id-not-null-readiness-review-v1` — analysis-only readiness review for future NOT NULL on six operational tables; no runtime/schema changes. Validated via prior `pnpm check` on main.
 - `tenant-operational-organization-id-not-null-readiness-doc-v1` — docs-only readiness artifact + **DEC-027**; report [tenant-operational-organization-id-not-null-readiness.md](./tenant-operational-organization-id-not-null-readiness.md). Operator evidence 2026-06-09: 22 migrations up to date; 0 operational NULLs; `SAFE_TO_DRY_RUN`; 0 dry-run proposals; backfill apply not required. No schema/migration/runtime changes. Validated via `pnpm check`.
+- `people-management-instructor-email-change-policy-v1` — analysis-only Instructor change-email policy; no runtime/schema changes.
+- `people-management-instructor-email-change-policy-doc-v1` — docs-only policy + **DEC-028**; [instructor-email-change-policy.md](./instructor-email-change-policy.md). Future runtime: `POST /api/admin/instructors/[id]/change-email`. Validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
-1. `tenant-operational-organization-id-not-null-migrations` — **deferred (D4):** per-table NOT NULL on six operational tables only; requires explicit approval + human `migrate deploy`; re-run `pnpm tenant:org-null-report` on target DB first
-2. `supabase-rls-class-b-hardening-v1b` — **deferred (D4):** optional RLS + REVOKE on remaining internal tables — separate approval
-3. `people-management-instructor-email-change-policy-v1` — instructor change email (deferred)
+1. `people-management-instructor-email-change-v1` — runtime: dedicated change-email API + Edit Instructor modal (DEC-028); explicit approval required
+2. `tenant-operational-organization-id-not-null-migrations` — **deferred (D4):** per-table NOT NULL on six operational tables only; requires explicit approval + human `migrate deploy`; re-run `pnpm tenant:org-null-report` on target DB first
+3. `supabase-rls-class-b-hardening-v1b` — **deferred (D4):** optional RLS + REVOKE on remaining internal tables — separate approval
 4. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next
 5. `tenant-operational-organization-id-backfill-apply-v1` — **deferred** until a future environment dry-run shows proposed changes (not needed in 2026-06-09 validated env)
 6. `audit-log-tenant-context-foundation` — planning only

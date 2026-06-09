@@ -177,7 +177,7 @@ After APP_USER change, DB sessions are deleted but **JWT cookies may remain vali
 
 | Batch | Scope |
 | ----- | ----- |
-| `people-management-instructor-email-change-policy-v1` | Instructor Change email (separate batch) |
+| `people-management-instructor-email-change-v1` | Instructor Change email runtime (policy: [instructor-email-change-policy.md](./instructor-email-change-policy.md), DEC-028) |
 | `people-management-app-accounts-demote-v1` | **Done** — Advanced accounts removed from People UI |
 | `users-delete-student-guard-v1` | **Done** — `DELETE /api/users/delete` returns **409** `use_student_delete_policy` for STUDENT |
 
