@@ -304,17 +304,17 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `people-management-student-email-change-policy-v1` — Change email via `POST /api/admin/students/[id]/change-email`; PATCH guard `use_change_email_flow`; Edit Student modal; DEC-024; no schema/migration
 - `people-management-instructor-profile-invite-badge-v1` — UI-only instructor invite/profile lifecycle clarity (DEC-025): Onboarding copy; Profiles conditional app-account subtitle; instructor label guide; no Pending invite badge on Profiles; no API/schema
 - `admin-settings-client-visibility-review-v1` — docs-only audit: `/admin/settings` operator/internal; module gating = License/Entitlements (DEC-026); report `docs/architecture/admin-settings-client-visibility-audit.md`; no runtime changes
+- `admin-settings-client-visibility-hide-v1` — UI-only (DEC-026 Fase B): Settings removed from school admin navbar; `/admin/settings` operator/internal copy; CRUD tabs + APIs unchanged
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
 **Current recommended next (runtime/UX slice):**
 
-1. `admin-settings-client-visibility-hide-v1` — UI-only: hide Settings from school admin navbar; APIs unchanged (product P1)
+1. `admin-license-client-readonly-v1` — UI-only: License read-only for School Admin (product P1)
 
 **Likely next:**
 
-2. `admin-license-client-readonly-v1` — UI-only: License read-only for School Admin (product P1)
-3. `people-management-instructor-email-change-policy-v1` — instructor change email (deferred)
+2. `people-management-instructor-email-change-policy-v1` — instructor change email (deferred)
 
 **Likely next (slice parent batches; do not implement broad names directly):**
 
