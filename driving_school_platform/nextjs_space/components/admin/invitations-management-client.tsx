@@ -36,6 +36,7 @@ import type {
   ListInvitationsResponse,
   RevokeInvitationResponse,
 } from "@/lib/invitations/invitation-ui-types";
+import { canShowInvitationChangeEmailAction } from "@/lib/invitations/invitation-email-update-ui-utils";
 import {
   copyTextToClipboard,
   countLinkedPendingStudentInvitations,
@@ -48,6 +49,10 @@ import {
   STUDENT_LINKED_INVITES_ON_PROFILES_COPY,
   type InvitationDisplayStatus,
 } from "@/lib/invitations/invitation-ui-utils";
+import {
+  ChangeInvitationEmailButton,
+  InvitationEmailChangeDialog,
+} from "@/components/admin/invitation-email-change-dialog";
 
 async function tryReadJson<T>(response: Response): Promise<T | null> {
   const contentType = response.headers.get("content-type") || "";
@@ -99,6 +104,9 @@ export function InvitationsManagementClient({
   );
   const [linkCopied, setLinkCopied] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [changeEmailInvitation, setChangeEmailInvitation] =
+    useState<InvitationDto | null>(null);
+  const [changeEmailOpen, setChangeEmailOpen] = useState(false);
 
   const formBusy = createLoading || revokingId !== null;
   const createRole = lockedRole ?? role;
@@ -218,6 +226,17 @@ export function InvitationsManagementClient({
     } else {
       toast.error("Could not copy link. Select the field and copy manually.");
     }
+  };
+
+  const handleOpenChangeEmail = (invitation: InvitationDto) => {
+    setChangeEmailInvitation(invitation);
+    setChangeEmailOpen(true);
+  };
+
+  const handleChangeEmailSuccess = (updated: InvitationDto) => {
+    setInvitations((prev) =>
+      prev.map((row) => (row.id === updated.id ? updated : row)),
+    );
   };
 
   const handleRevoke = async (invitation: InvitationDto) => {
@@ -514,10 +533,19 @@ export function InvitationsManagementClient({
                         </p>
                       ) : null}
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                       <Badge variant={displayStatusBadgeVariant(displayStatus)}>
                         {invitationDisplayStatusLabel(displayStatus)}
                       </Badge>
+                      {canShowInvitationChangeEmailAction(
+                        invitation,
+                        roleFilter,
+                      ) ? (
+                        <ChangeInvitationEmailButton
+                          disabled={revokingId === invitation.id}
+                          onClick={() => handleOpenChangeEmail(invitation)}
+                        />
+                      ) : null}
                       <Button
                         type="button"
                         size="sm"
@@ -535,6 +563,13 @@ export function InvitationsManagementClient({
             </div>
           </CollapsibleContent>
         </Collapsible>
+
+        <InvitationEmailChangeDialog
+          invitation={changeEmailInvitation}
+          open={changeEmailOpen}
+          onOpenChange={setChangeEmailOpen}
+          onSuccess={handleChangeEmailSuccess}
+        />
       </CardContent>
     </Card>
   );

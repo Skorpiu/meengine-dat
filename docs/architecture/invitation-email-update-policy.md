@@ -1,7 +1,7 @@
 # Pending invitation email update — Policy (v1)
 
-**Batch:** `invitation-email-update-policy-doc-v1`  
-**Status:** Policy and planning only — **no schema, migration, API, UI, or runtime changes in this batch.**  
+**Batch:** `invitation-email-update-policy-doc-v1` (+ runtime slice `invitation-email-update-unlinked-instructor-v1`)  
+**Status:** Policy accepted (DEC-029). **Runtime slice 2a done** — unlinked INSTRUCTOR pending invitations (`POST /api/admin/invitations/[id]/change-email` + Instructors → Onboarding UI). Slices 2b/2c deferred.  
 **Decision:** [DEC-029](./decision-log.md)  
 **Related:** [DEC-024](./decision-log.md) (Student Change email), [DEC-028](./decision-log.md) (Instructor Change email), [student-app-access-lifecycle-policy.md](./student-app-access-lifecycle-policy.md), [instructor-email-change-policy.md](./instructor-email-change-policy.md)
 
@@ -154,22 +154,24 @@ Accept route continues to reject expired invitations regardless until accept log
 
 ---
 
-## Future API (not implemented)
+## API — slice 2a (implemented)
 
 ```
 POST /api/admin/invitations/[id]/change-email
 Body: { "newEmail": "..." }
 ```
 
-**Guards (future runtime):**
+**Scope (v1 runtime):** `PENDING` + `role = INSTRUCTOR` + `studentId = null` only.
+
+**Guards:**
 
 - `SUPER_ADMIN` session + `organizationId` from session (never from body)
 - Tenant host guard (`assertUserTenantHost`)
 - Demo mutation guard (`rejectDemoUserManagementMutation` / `user_management`)
 
-**Response (future):** `{ invitation, inviteLink, emailDelivery? }` — `emailDelivery` omitted or noop in v1 (no auto-send).
+**Response:** `{ invitation, inviteLink }` — no auto-send email in v1.
 
-**Explicitly not changed in v1 runtime:**
+**Explicitly not changed in slice 2a:**
 
 - `POST /api/invitations/accept`
 - `generateInvitationToken` / `hashInvitationToken` algorithms
@@ -177,9 +179,13 @@ Body: { "newEmail": "..." }
 
 ---
 
-## Future UI (not implemented)
+## UI — slice 2a (implemented)
 
-- **Onboarding** pending invitation rows: **Change email** beside **Revoke**
+- **Instructors → Onboarding** pending invitation rows: **Change email** beside **Revoke**
+
+## UI — slices 2b/2c (deferred)
+
+- **Students → Onboarding** / **Profiles** linked-student rows: **Change email** (future)
 - Modal: current email read-only, new email, warnings:
   - “This updates the invitation email.”
   - “The previous invite link will stop working.”
@@ -195,7 +201,7 @@ Body: { "newEmail": "..." }
 | ----- | ----- | ------ |
 | 0 | `invitation-email-update-v1` | **Done** — analysis-only |
 | 1 | `invitation-email-update-policy-doc-v1` | **Done** — this document + DEC-029 |
-| 2a | `invitation-email-update-unlinked-instructor-v1` | **Deferred** — API + Onboarding UI (INSTRUCTOR) |
+| 2a | `invitation-email-update-unlinked-instructor-v1` | **Done** — API + Onboarding UI (INSTRUCTOR); token regeneration; no auto-send |
 | 2b | `invitation-email-update-unlinked-student-v1` | **Deferred** — + STUDENT unlinked Onboarding |
 | 2c | `invitation-email-update-linked-student-v1` | **Deferred** — + Profiles linked student sync |
 
