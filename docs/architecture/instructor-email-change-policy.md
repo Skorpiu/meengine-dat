@@ -23,7 +23,7 @@ Define the safe School Admin policy for changing an **Instructor login email** b
 | **No Student-style modes** | No `MANUAL_ONLY` / `INVITED` / `APP_USER` on Instructor |
 | **UI today** | Edit Instructor → App access shows login email **read-only**; `PUT /api/users/update` does **not** accept `email` |
 | **Profiles / search** | `User.email` via `InstructorRecordUserDto` |
-| **Pending INSTRUCTOR invitations** | `UserInvitation.email` in Onboarding only — **no** `Instructor` row until accept (DEC-025) |
+| **Pending INSTRUCTOR invitations** | `UserInvitation.email` in Onboarding only — **no** `Instructor` row until accept (DEC-025). Email update: [invitation-email-update-policy.md](./invitation-email-update-policy.md) (DEC-029) |
 
 ---
 
@@ -58,7 +58,7 @@ All three operational states use the **same** change-email effects on `User.emai
 
 | State | Policy |
 | ----- | ------ |
-| **Pending invitation** (Onboarding, no `User` / `Instructor` yet) | **Not** Instructor change-email. **v1 workaround:** Revoke invitation + Send new invitation. **Deferred:** `invitation-email-update-v1` |
+| **Pending invitation** (Onboarding, no `User` / `Instructor` yet) | **Not** Instructor change-email. **Fallback:** Revoke + Send new invitation. **Future:** invitation email update — [invitation-email-update-policy.md](./invitation-email-update-policy.md) (DEC-029) |
 
 ---
 
@@ -159,7 +159,10 @@ Same class of limitation as DEC-024 and instructor deactivate (DEC-020): after D
 | 0 | `people-management-instructor-email-change-policy-v1` | **Done** — analysis |
 | 1 | `people-management-instructor-email-change-policy-doc-v1` | **Done** — this document + DEC-028 |
 | 2 | `people-management-instructor-email-change-v1` | **Done** — service + route + UI + tests |
-| — | `invitation-email-update-v1` | **Deferred** — edit pending invitation email without revoke |
+| — | `invitation-email-update-policy-doc-v1` | **Done** — [invitation-email-update-policy.md](./invitation-email-update-policy.md) + DEC-029 |
+| 2a | `invitation-email-update-unlinked-instructor-v1` | **Deferred** — API + Onboarding UI (INSTRUCTOR) |
+| 2b | `invitation-email-update-unlinked-student-v1` | **Deferred** — + STUDENT unlinked |
+| 2c | `invitation-email-update-linked-student-v1` | **Deferred** — + linked Student sync |
 
 **Runtime gate:** ~~`APPROVED TO IMPLEMENT: people-management-instructor-email-change-v1`~~ **Closed** (runtime v1 merged).
 
@@ -172,7 +175,7 @@ Same class of limitation as DEC-024 and instructor deactivate (DEC-020): after D
 - No People layout / App Accounts changes
 - No Platform identity policy
 - No NOT NULL / RLS / billing / auth-core changes in policy or doc batch
-- No pending-invitation email edit in Instructor change-email v1
+- No pending-invitation email edit in Instructor change-email v1 (use DEC-029 policy for pending invites)
 
 ---
 
@@ -183,3 +186,4 @@ Same class of limitation as DEC-024 and instructor deactivate (DEC-020): after D
 - DEC-024 — Student Change email (parallel security patterns)
 - DEC-025 — Pending instructor invites live in Onboarding only
 - DEC-028 — Instructor Change email policy (this document)
+- DEC-029 — Pending invitation email update ([invitation-email-update-policy.md](./invitation-email-update-policy.md))

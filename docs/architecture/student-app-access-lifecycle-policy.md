@@ -165,6 +165,20 @@ After APP_USER change, DB sessions are deleted but **JWT cookies may remain vali
 
 ---
 
+## Pending invitation email update (DEC-029)
+
+For **`PENDING` `UserInvitation`** rows (before accept), changing the invitation email is **not** Student Change email. Policy: [invitation-email-update-policy.md](./invitation-email-update-policy.md).
+
+| Context | Today | Future (DEC-029 runtime) |
+| ------- | ----- | ------------------------ |
+| Student linked invite (`studentId` set) | Revoke on profile row; or Student Change email (INVITED) revokes + `MANUAL_ONLY` + re-invite | Update invitation + sync `Student.email`; keep `INVITED` |
+| Student unlinked (Onboarding) | Revoke + new invitation | Update invitation + regenerate token |
+| Instructor unlinked (Onboarding) | Revoke + new invitation | Update invitation + regenerate token |
+
+**Rejected:** update invitation email without regenerating `tokenHash` (old links would accept with new email).
+
+---
+
 ## Explicit non-goals (remove + reactivate slices)
 
 - No hard delete of User or Student.
@@ -177,7 +191,9 @@ After APP_USER change, DB sessions are deleted but **JWT cookies may remain vali
 
 | Batch | Scope |
 | ----- | ----- |
-| `people-management-instructor-email-change-v1` | Instructor Change email runtime (policy: [instructor-email-change-policy.md](./instructor-email-change-policy.md), DEC-028) |
+| `people-management-instructor-email-change-v1` | **Done** — Instructor Change email (DEC-028) |
+| `invitation-email-update-policy-doc-v1` | **Done** — Pending invitation email update policy (DEC-029) |
+| `invitation-email-update-unlinked-instructor-v1` | **Deferred** — invitation change-email runtime slice 2a |
 | `people-management-app-accounts-demote-v1` | **Done** — Advanced accounts removed from People UI |
 | `users-delete-student-guard-v1` | **Done** — `DELETE /api/users/delete` returns **409** `use_student_delete_policy` for STUDENT |
 
@@ -188,3 +204,4 @@ After APP_USER change, DB sessions are deleted but **JWT cookies may remain vali
 - DEC-016 — Remove app access v1
 - DEC-017 — Reactivate app access v1 (orphan User relink; Path B → Send invitation)
 - DEC-024 — Student Change email v1
+- DEC-029 — Pending invitation email update ([invitation-email-update-policy.md](./invitation-email-update-policy.md))

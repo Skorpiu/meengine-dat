@@ -59,7 +59,7 @@ Formal policy for School Admin **Instructor** lifecycle in People management: **
 
 - `UserInvitation` has `studentId` for students only — **no** `instructorId`.
 - Instructor invitations are matched by `email` + `role = INSTRUCTOR` + `status = PENDING`.
-- **Change email (future, DEC-028):** Instructor profile change-email revokes PENDING INSTRUCTOR invitations on the **old** email (same pattern as deactivate). Pending invitations **without** a profile are not changed via Instructor change-email — see [instructor-email-change-policy.md](./instructor-email-change-policy.md).
+- **Change email (future, DEC-028):** Instructor profile change-email revokes PENDING INSTRUCTOR invitations on the **old** email (same pattern as deactivate). Pending invitations **without** a profile are not changed via Instructor change-email — see [invitation-email-update-policy.md](./invitation-email-update-policy.md) (DEC-029).
 
 ### Existing operational fields (no dedicated lifecycle status today)
 
