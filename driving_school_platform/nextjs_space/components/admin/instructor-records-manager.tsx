@@ -83,6 +83,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  ChangeInstructorEmailButton,
+  InstructorEmailChangeDialog,
+} from "@/components/admin/instructor-email-change-dialog";
+import { canShowChangeInstructorEmailAction } from "@/lib/instructors/instructor-email-change-ui-utils";
 
 const INSTRUCTOR_PAGE_SIZE = 15;
 
@@ -164,33 +169,46 @@ export function InstructorRecordsManager({
   const [reactivatedUserIds, setReactivatedUserIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [changeEmailUser, setChangeEmailUser] =
+    useState<InstructorRecordUserDto | null>(null);
+  const [emailUpdatesByUserId, setEmailUpdatesByUserId] = useState<
+    Record<string, string>
+  >({});
 
   const applyLocalProfileState = useCallback(
     (user: InstructorRecordUserDto): InstructorRecordUserDto => {
-      if (removedUserIds.has(user.id)) {
-        return user;
+      const emailOverride = emailUpdatesByUserId[user.id];
+      const baseUser = emailOverride ? { ...user, email: emailOverride } : user;
+
+      if (removedUserIds.has(baseUser.id)) {
+        return baseUser;
       }
-      if (deactivatedUserIds.has(user.id)) {
+      if (deactivatedUserIds.has(baseUser.id)) {
         return {
-          ...user,
+          ...baseUser,
           isApproved: false,
-          instructor: user.instructor
-            ? { ...user.instructor, isAvailableForBooking: false }
-            : user.instructor,
+          instructor: baseUser.instructor
+            ? { ...baseUser.instructor, isAvailableForBooking: false }
+            : baseUser.instructor,
         };
       }
-      if (reactivatedUserIds.has(user.id)) {
+      if (reactivatedUserIds.has(baseUser.id)) {
         return {
-          ...user,
+          ...baseUser,
           isApproved: true,
-          instructor: user.instructor
-            ? { ...user.instructor, isAvailableForBooking: true }
-            : user.instructor,
+          instructor: baseUser.instructor
+            ? { ...baseUser.instructor, isAvailableForBooking: true }
+            : baseUser.instructor,
         };
       }
-      return user;
+      return baseUser;
     },
-    [removedUserIds, deactivatedUserIds, reactivatedUserIds],
+    [
+      removedUserIds,
+      deactivatedUserIds,
+      reactivatedUserIds,
+      emailUpdatesByUserId,
+    ],
   );
 
   const visibleUsers = useMemo(
@@ -825,14 +843,19 @@ export function InstructorRecordsManager({
                           Login status for the linked app account. Name, phone,
                           and address are edited in Instructor profile above.
                         </p>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           <Label>Login email</Label>
                           <p className={`text-sm font-medium text-blue-950`}>
                             {editingUser.email}
                           </p>
                           <p className={appAccessTheme.mutedTextClass}>
-                            Login email cannot be changed here.
+                            Login email cannot be changed in the profile form.
                           </p>
+                          {canShowChangeInstructorEmailAction(editingUser) ? (
+                            <ChangeInstructorEmailButton
+                              onClick={() => setChangeEmailUser(editingUser)}
+                            />
+                          ) : null}
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
                           <span className={appAccessTheme.labelTextClass}>
@@ -1116,6 +1139,24 @@ export function InstructorRecordsManager({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <InstructorEmailChangeDialog
+        user={changeEmailUser}
+        open={changeEmailUser !== null}
+        onOpenChange={(open) => {
+          if (!open) setChangeEmailUser(null);
+        }}
+        onSuccess={(updated) => {
+          setEmailUpdatesByUserId((prev) => ({
+            ...prev,
+            [updated.id]: updated.email,
+          }));
+          if (editingUser?.id === updated.id) {
+            setEditingUser(updated);
+          }
+          router.refresh();
+        }}
+      />
     </section>
   );
 }

@@ -1,7 +1,7 @@
 # Instructor Change email — Policy (v1)
 
-**Batch:** `people-management-instructor-email-change-policy-doc-v1`  
-**Status:** Policy and planning only — **no schema, migration, API, UI, or runtime changes in this batch.**  
+**Batch:** `people-management-instructor-email-change-v1`  
+**Status:** **Runtime implemented** — service, API, UI, tests (DEC-028).  
 **Decision:** [DEC-028](./decision-log.md)  
 **Related:** [DEC-024](./decision-log.md) (Student Change email), [instructor-delete-policy.md](./instructor-delete-policy.md), [student-app-access-lifecycle-policy.md](./student-app-access-lifecycle-policy.md)
 
@@ -62,14 +62,20 @@ All three operational states use the **same** change-email effects on `User.emai
 
 ---
 
-## Future API (not implemented — reference only)
+## Future API (implemented — v1)
 
 ```
 POST /api/admin/instructors/[id]/change-email
 Body: { "newEmail": "..." }
 ```
 
-**Guards (future runtime):**
+**Runtime (v1):**
+
+- Route: `app/api/admin/instructors/[id]/change-email/route.ts`
+- Service: `lib/instructors/instructor-email-change-service.ts`
+- UI: Edit Instructor → App access → **Change email** (`components/admin/instructor-email-change-dialog.tsx`)
+
+**Guards:**
 
 - `SUPER_ADMIN` session + `organizationId` from session (never from body)
 - Tenant host guard (`assertUserTenantHost`)
@@ -79,7 +85,7 @@ Body: { "newEmail": "..." }
 
 ---
 
-## Required validations (future runtime)
+## Required validations (runtime v1)
 
 | Check | On failure |
 | ----- | ---------- |
@@ -94,7 +100,7 @@ Body: { "newEmail": "..." }
 
 ---
 
-## Required side effects (future runtime)
+## Required side effects (runtime v1)
 
 Within a single transaction (after row lock on `instructors`):
 
@@ -121,7 +127,7 @@ Same class of limitation as DEC-024 and instructor deactivate (DEC-020): after D
 
 ---
 
-## Suggested stable error codes (future runtime)
+## Suggested stable error codes (runtime v1)
 
 | Condition | HTTP | Code |
 | --------- | ---- | ---- |
@@ -138,9 +144,9 @@ Same class of limitation as DEC-024 and instructor deactivate (DEC-020): after D
 
 ---
 
-## Future UI (not implemented)
+## UI (implemented v1)
 
-- **Change email** action in **Edit Instructor → App access** (mirror Student modal pattern).
+- **Change email** action in **Edit Instructor → App access** (mirrors Student modal pattern).
 - Login email remains read-only in the main form; dedicated modal with current email + new email + contextual warnings.
 - Copy clarifies: pending invitations without a profile are changed via Onboarding (revoke + resend), not this action.
 
@@ -152,10 +158,10 @@ Same class of limitation as DEC-024 and instructor deactivate (DEC-020): after D
 | ----- | ----- | ------ |
 | 0 | `people-management-instructor-email-change-policy-v1` | **Done** — analysis |
 | 1 | `people-management-instructor-email-change-policy-doc-v1` | **Done** — this document + DEC-028 |
-| 2 | `people-management-instructor-email-change-v1` | **Deferred** — service + route + UI + tests |
+| 2 | `people-management-instructor-email-change-v1` | **Done** — service + route + UI + tests |
 | — | `invitation-email-update-v1` | **Deferred** — edit pending invitation email without revoke |
 
-**Runtime gate:** `APPROVED TO IMPLEMENT: people-management-instructor-email-change-v1`
+**Runtime gate:** ~~`APPROVED TO IMPLEMENT: people-management-instructor-email-change-v1`~~ **Closed** (runtime v1 merged).
 
 ---
 

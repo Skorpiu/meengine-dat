@@ -250,6 +250,26 @@ describe("User management mutations (tenant + demo guards)", () => {
     });
   });
 
+  it("PUT update ignores email in body (use dedicated change-email flow)", async () => {
+    const res = await updateUser(
+      new Request("http://localhost/api/users/update", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          userId: "target1",
+          firstName: "Updated",
+          email: "new@school.test",
+        }),
+      }) as any,
+    );
+
+    expect(res.status).toBe(200);
+    expect(h.userUpdateManyMock).toHaveBeenCalledWith({
+      where: { id: "target1", organizationId: "org1" },
+      data: expect.not.objectContaining({ email: "new@school.test" }),
+    });
+  });
+
   it("DELETE blocks demo org", async () => {
     h.getServerSessionMock.mockResolvedValue(demoSession);
     h.organizationFindUniqueMock.mockResolvedValue({ isDemo: true });
