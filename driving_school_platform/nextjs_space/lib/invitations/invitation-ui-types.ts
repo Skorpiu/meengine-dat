@@ -26,6 +26,11 @@ export type RevokeInvitationResponse = {
   invitation: InvitationDto;
 };
 
+export type ChangeInvitationEmailResponse = {
+  invitation: InvitationDto;
+  inviteLink: string;
+};
+
 export type InvitationApiError = {
   error: string;
   code?: string;
