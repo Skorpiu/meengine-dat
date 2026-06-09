@@ -187,11 +187,11 @@ Documented and in use (docs/rules only; no runtime change):
 - `people-management-instructor-profile-invite-badge-v1` — UI-only instructor invite/profile lifecycle clarity (DEC-025): Onboarding copy explains pending invites stay pre-profile; Profiles conditional app-account subtitle (`linked` / `awaiting approval` / `inactive`); expanded instructor label guide; helpers `getInstructorProfileAppAccountSubtitle` / `formatInstructorProfileContactLine`. No `Pending invite` badge on Profiles; no API/schema/RLS changes. Validated via `pnpm check`.
 - `admin-settings-client-visibility-review-v1` — docs-only audit: `/admin/settings` is operator/internal (System Settings + Feature Flags CRUD); module gating uses License/Entitlements (DEC-026). Report: [admin-settings-client-visibility-audit.md](./admin-settings-client-visibility-audit.md). Phased next: hide Settings nav (B), License read-only (C), vehicle alerts (D). No runtime/UI/API/schema changes. Validated via `pnpm check`.
 - `admin-settings-client-visibility-hide-v1` — UI-only (DEC-026 Fase B): Settings removed from school admin navbar (`components/navigation/navbar.tsx`); `/admin/settings` retained with operator/internal header + alert copy; CRUD tabs unchanged; all settings/feature-flags/config APIs unchanged. Validated via `pnpm check`.
+- `admin-license-client-readonly-v1` — UI-only (DEC-026 Fase C): `/admin/license` reframed as **Plan & features** read-only; Activate key form and feature toggles removed from UI; consolidated Modules & features section; navbar label **Plan**; `useLicense`/APIs/gating unchanged. Validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
-1. `admin-license-client-readonly-v1` — UI-only: License read-only for School Admin; hide activate/toggles; APIs unchanged (product P1)
-2. `tenant-operational-organization-id-not-null-readiness-review-v1` — operator/docs review for NOT NULL migrations when NULL counts stay at zero (no apply batch needed yet)
+1. `tenant-operational-organization-id-not-null-readiness-review-v1` — operator/docs review for NOT NULL migrations when NULL counts stay at zero (no apply batch needed yet)
 3. `supabase-rls-class-b-hardening-v1b` — **deferred (D4):** optional RLS + REVOKE on remaining internal tables — separate approval
 4. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next; only if product reverses tabs-first decision
 5. `tenant-operational-organization-id-backfill-apply-v1` — **deferred** until a future environment dry-run shows proposed changes
