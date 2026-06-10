@@ -82,16 +82,19 @@ When adding or changing `public` tables:
 
 ---
 
-## Related internal tables (follow-up, out of scope)
+## Related internal tables (follow-up)
 
-These were **not** changed in this batch. Revisit if Security Advisor or grants audit flags them:
+**Class-B v1 (done):** `billing_events`, `entitlement_grants`, `organization_domains`, `audit_logs`, `license_keys`, `configuration_history`, `system_settings`, `feature_flags` — see [`20260603120000_supabase_rls_class_b_hardening_v1`](../../prisma/migrations/20260603120000_supabase_rls_class_b_hardening_v1/migration.sql).
 
-| Table                                                          | Notes                                                                                                                                                                                                      |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `billing_events`, `entitlement_grants`, `organization_domains` | RLS already enabled in [`20260513180000_enable_rls_internal_tables`](../../prisma/migrations/20260513180000_enable_rls_internal_tables/migration.sql); confirm explicit `REVOKE` if Advisor reports grants |
-| `audit_logs`, `configuration_history`                          | Operational/internal; candidate for same **class B** pattern                                                                                                                                               |
-| `license_keys`                                                 | Sensitive; backend-only today                                                                                                                                                                              |
-| `verification_tokens`, `sessions`, `accounts`                  | NextAuth adapter tables — **different** threat model if Data API is ever enabled; review separately                                                                                                        |
+**Class-B v1b (planned slices — DEC-030):** [supabase-rls-class-b-hardening-v1b-plan.md](../../../../docs/architecture/supabase-rls-class-b-hardening-v1b-plan.md)
+
+| Slice                   | Tables                                                                                                                                                                                       | Status                                               |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| **B1 nextauth**         | `accounts`, `sessions`, `verification_tokens`, `users`                                                                                                                                       | Planned — first SQL slice                            |
+| **B2 tenant business**  | `students`, `instructors`, `vehicles`, `lessons`, `exams`, `lesson_requests`, `lesson_counters`, `exam_registrations`, `payments`, `notifications`, `organizations`, `organization_features` | Planned after B1                                     |
+| **B3 global reference** | `categories`, `transmission_types`, `user_preferences`                                                                                                                                       | Optional P3 — lower priority; global catalog not PII |
+
+**Not v1b:** tenant-scoped `CREATE POLICY` → `supabase-rls-tenant-policies-v1` (P2, separate).
 
 ---
 

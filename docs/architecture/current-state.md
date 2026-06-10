@@ -201,11 +201,13 @@ Documented and in use (docs/rules only; no runtime change):
 - `tenant-operational-organization-id-not-null-migrations-plan-v1` — docs-only D4 gate: GO/NO-GO checklist, operator pre-migration battery, single-migration proposal, post-migration smoke tests; report [tenant-operational-organization-id-not-null-readiness.md](./tenant-operational-organization-id-not-null-readiness.md). No schema/migration/runtime/data changes. Validated via `pnpm check`.
 - `tenant-operational-organization-id-not-null-migrations-v1` — migration `20260610140000_make_operational_organization_id_required`: `SET NOT NULL` on six operational tables; Prisma schema `organizationId String` on `Student`, `Instructor`, `Vehicle`, `Lesson`, `Exam`, `LessonRequest`. Validated via `pnpm check`.
 - `tenant-operational-organization-id-not-null-deploy-record-v1` — docs-only deploy record on main `1854d1b`: operator `migrate deploy` succeeded on validated target env; post-deploy 23 migrations up to date; 0 operational NULLs; `SAFE_TO_DRY_RUN`; dry-run 0 proposed/conflicts/ambiguous; `pnpm check` OK. **`User.organizationId` and dual-scope/global tables remain nullable by design** (DEC-027). Report: [tenant-operational-organization-id-not-null-readiness.md](./tenant-operational-organization-id-not-null-readiness.md).
+- `supabase-rls-class-b-hardening-v1b-review` — analysis-only RLS posture after D4 NOT NULL; 12 tables hardened, 19 candidates, 0 policies, Prisma-primary, no `supabase-js`. No SQL/runtime changes.
+- `supabase-rls-class-b-hardening-v1b-plan-v1` — docs-only sliced plan + **DEC-030**; report [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md). B1 nextauth → B2 tenant business → B3 global reference; `supabase-rls-tenant-policies-v1` deferred P2. No migration/runtime.
 
 ### Likely next (smallest safe slices)
 
-1. `supabase-rls-class-b-hardening-v1b` — **deferred (D4):** optional RLS + REVOKE on remaining internal tables — separate approval
-3. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next
+1. `supabase-rls-class-b-hardening-v1b-nextauth-v1` — **deferred (D4):** first SQL slice — RLS+REVOKE on `accounts`, `sessions`, `verification_tokens`, `users` only
+2. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next
 4. `tenant-operational-organization-id-backfill-apply-v1` — **deferred** until a future environment dry-run shows proposed changes (not needed in 2026-06-09 validated env)
 5. `audit-log-tenant-context-foundation` — planning only
 6. Product/packaging planning slices — see [roadmap-todo.md](./roadmap-todo.md) **P1 / Product and packaging** and [docs/product/](../product/)

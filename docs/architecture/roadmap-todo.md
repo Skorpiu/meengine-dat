@@ -123,10 +123,12 @@ Parent batch — always slice before implementing.
 
 ### supabase-rls-data-api-policy-matrix
 
-- **Done (v1 slice):** docs-only classification matrix — [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md). All 31 Prisma tables classified; 7 with RLS in migrations; 0 intended anon/authenticated Data API access today; `rls_enabled_no_policy` documented as intentional for service-only tables. **No** SQL policies, grants, or migrations in this slice.
+- **Done (v1 slice):** docs-only classification matrix — [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md). All 31 Prisma tables classified; 12 with RLS in migrations (after class-B v1); 0 intended anon/authenticated Data API access today; `rls_enabled_no_policy` documented as intentional for service-only tables. **No** SQL policies in repo.
 - **Done (v1 slice):** `supabase-rls-class-b-hardening-v1` — migration `20260603120000_supabase_rls_class_b_hardening_v1`: 8 tables only (`billing_events`, `entitlement_grants`, `organization_domains` REVOKE; `audit_logs`, `license_keys`, `configuration_history`, `system_settings`, `feature_flags` ENABLE RLS + REVOKE); no `CREATE POLICY`, no `FORCE ROW LEVEL SECURITY`, no Prisma schema/runtime changes. Operator `migrate deploy` on Preview/Production is human-controlled. Validated via `pnpm check`.
-- **Next gated code slice (recommended):** `supabase-rls-class-b-hardening-v1b` (D4) or other P1/P2 per priority. **Not recommended next:** `people-management-ux-unification-instructor-route-split-v1`. **Operator-only (if another env pending):** gate + `migrate deploy` for `20260610140000_make_operational_organization_id_required` — not a code batch.
-- **Deferred:** `supabase-rls-class-b-hardening-v1b` — NextAuth adapter, tenant business, global reference tables (not in v1); tenant-scoped RLS policies (`supabase-rls-tenant-policies-v1`) after org-id backfill/NOT NULL; dedicated `api` schema review.
+- **Done (analysis):** `supabase-rls-class-b-hardening-v1b-review` — analysis-only; 12 hardened / 19 candidates / 0 policies; Prisma-primary.
+- **Done (docs/plan):** `supabase-rls-class-b-hardening-v1b-plan-v1` — sliced v1b plan + **DEC-030**; [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md). No SQL/runtime.
+- **Next gated code slice (recommended):** `supabase-rls-class-b-hardening-v1b-nextauth-v1` (D4 — B1: 4 NextAuth tables). **Not recommended next:** monolithic v1b (19 tables) or `people-management-ux-unification-instructor-route-split-v1`.
+- **Deferred:** `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` (B2), `supabase-rls-class-b-hardening-v1b-global-reference-v1` (B3/P3); `supabase-rls-tenant-policies-v1` (P2 — `CREATE POLICY`; separate from v1b); `supabase-exposed-schema-review`.
 
 ### tenant-required-operational-organization-id-audit
 
