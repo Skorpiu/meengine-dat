@@ -31,7 +31,7 @@ This matrix:
 | **RLS enabled in migrations (12 tables)** | 12 | Defense-in-depth for Data API exposure |
 | **RLS + explicit REVOKE anon/authenticated (11 tables)** | 11 | Auth/token/rate-limit + class-B v1 internal tables hardened |
 | **RLS enabled, REVOKE added in class-B v1 (3 tables)** | 3 | `billing_events`, `entitlement_grants`, `organization_domains` (RLS from earlier migration) |
-| **No RLS migration yet (16 tables)** | 16 | Rely on platform defaults + app guards; candidates for class B v1b hardening |
+| **No RLS migration yet (19 tables)** | 19 | Rely on platform defaults + app guards; candidates for sliced class B v1b (see plan doc) |
 | **Intended anon/authenticated Data API access** | **0 tables today** | No reviewed feature requires PostgREST client access |
 
 **Decision (this batch):** Default all Prisma-managed `public` tables to **internal-only (class B)** unless a future product feature explicitly requires **client-facing Data API (class A)** with threat-model review.
@@ -120,13 +120,13 @@ PostgreSQL table names use `@@map` values from the schema.
 
 | Table | Prisma model | Tenant scope | Current RLS | Revoke anon/auth | Intended path | Block anon/auth | Future policy | Prisma-primary |
 | ----- | ------------ | ------------ | ----------- | ---------------- | ------------- | --------------- | ------------- | -------------- |
-| `students` | Student | `organizationId` (nullable today — see org audit) | None (known) | Unknown | Admin/student/instructor APIs; session + host guard | **Yes** | Optional tenant RLS after NOT NULL backfill — **deferred** | **Yes** |
-| `instructors` | Instructor | `organizationId` (nullable today) | None (known) | Unknown | Admin/instructor APIs | **Yes** | Optional tenant RLS — **deferred** | **Yes** |
-| `lessons` | Lesson | `organizationId` (nullable today) | None (known) | Unknown | Calendar, admin, student/instructor views | **Yes** | Optional tenant RLS — **deferred** | **Yes** |
-| `lesson_requests` | LessonRequest | `organizationId` (nullable today) | None (known) | Unknown | Student request + admin review | **Yes** | Optional tenant RLS — **deferred** | **Yes** |
+| `students` | Student | `organizationId` NOT NULL (validated env; DEC-027) | None (known) | Unknown | Admin/student/instructor APIs; session + host guard | **Yes** | v1b B2 revoke-only — **deferred**; tenant policies P2 | **Yes** |
+| `instructors` | Instructor | `organizationId` NOT NULL (validated env) | None (known) | Unknown | Admin/instructor APIs | **Yes** | v1b B2 — **deferred** | **Yes** |
+| `lessons` | Lesson | `organizationId` NOT NULL (validated env) | None (known) | Unknown | Calendar, admin, student/instructor views | **Yes** | v1b B2 — **deferred** | **Yes** |
+| `lesson_requests` | LessonRequest | `organizationId` NOT NULL (validated env) | None (known) | Unknown | Student request + admin review | **Yes** | v1b B2 — **deferred** | **Yes** |
 | `lesson_counters` | LessonCounter | Via `studentId` → Student | None (known) | Unknown | Progress/counter services | **Yes** | Optional via parent tenant — **deferred** | **Yes** |
-| `vehicles` | Vehicle | `organizationId` (nullable today) | None (known) | Unknown | Admin fleet management | **Yes** | Optional tenant RLS — **deferred** | **Yes** |
-| `exams` | Exam | `organizationId` (nullable today) | None (known) | Unknown | Admin exam scheduling | **Yes** | Optional tenant RLS — **deferred** | **Yes** |
+| `vehicles` | Vehicle | `organizationId` NOT NULL (validated env) | None (known) | Unknown | Admin fleet management | **Yes** | v1b B2 — **deferred** | **Yes** |
+| `exams` | Exam | `organizationId` NOT NULL (validated env) | None (known) | Unknown | Admin exam scheduling | **Yes** | v1b B2 — **deferred** | **Yes** |
 | `exam_registrations` | ExamRegistration | Via `examId` + `studentId` | None (known) | Unknown | Exam enrollment flows | **Yes** | Optional via parent — **deferred** | **Yes** |
 | `payments` | Payment | Via `userId` / optional `studentId` | None (known) | Unknown | Billing UI + admin; sanitized errors | **Yes** | Unlikely Data API; webhook/server writes | **Yes** |
 | `notifications` | Notification | Via `userId` | None (known) | Unknown | In-app notification APIs | **Yes** | Possible **future** read-only policy for authenticated user-owned rows — **only if** product moves to `supabase-js` | **Yes** (today) |
@@ -186,10 +186,10 @@ RLS and Data API blocks **do not replace** application tenant guards.
 | ---- | ------ |
 | Never trust `organizationId` from request body/query | [system-design.md](./system-design.md) |
 | Tenant scope from session + host guard | `assertUserTenantHost`, admin route patterns |
-| Nullable `organizationId` on six operational tables is a **data-integrity risk** | [tenant-required-operational-organization-id-audit.md](./tenant-required-operational-organization-id-audit.md) |
+| Six operational tables: `organizationId` NOT NULL on validated env (DEC-027) | [tenant-operational-organization-id-not-null-readiness.md](./tenant-operational-organization-id-not-null-readiness.md) |
 | Sensitive tables require explicit approval before new grants/policies | [.cursor/rules/database.mdc](../../.cursor/rules/database.mdc) |
 
-**Recommended sequencing:** org-id backfill → optional NOT NULL migrations → optional tenant RLS policies (separate gated batches). This matrix **does not** authorize NOT NULL or RLS SQL.
+**Recommended sequencing:** org-id NOT NULL (done validated env) → sliced v1b revoke-only → optional tenant RLS policies P2 (`supabase-rls-tenant-policies-v1`). Plan: [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md) (DEC-030).
 
 ---
 
@@ -208,9 +208,11 @@ RLS and Data API blocks **do not replace** application tenant guards.
 | Priority | Batch (suggested name) | Work | Gate |
 | -------- | ------------------------ | ---- | ---- |
 | **P1** | `supabase-rls-class-b-hardening-v1` | **Done** — migration `20260603120000_supabase_rls_class_b_hardening_v1` (8 tables; see Known migration baseline) | Closed |
-| **P1** | `supabase-rls-class-b-hardening-v1b` | Enable RLS + REVOKE on remaining internal tables (NextAuth adapter, tenant business, global reference) — **separate** idempotent SQL migration | `APPROVED TO IMPLEMENT: supabase-rls-class-b-hardening-v1b` (D4 — RLS/grants) |
-| **P1** | `tenant-operational-organization-id-backfill-v1` | Backfill NULL `organizationId`; operator counts | Separate approval (data) |
-| **P2** | `supabase-rls-tenant-policies-v1` | Optional **tenant-scoped** RLS policies on `students`, `lessons`, etc. **after** NOT NULL + app guard audit | D4; after org-id hardening |
+| **P1** | `supabase-rls-class-b-hardening-v1b-plan-v1` | **Done** — sliced plan (B1/B2/B3); DEC-030 | [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md) |
+| **P1** | `supabase-rls-class-b-hardening-v1b-nextauth-v1` | B1: RLS + REVOKE on `accounts`, `sessions`, `verification_tokens`, `users` | `APPROVED TO IMPLEMENT: supabase-rls-class-b-hardening-v1b-nextauth-v1` (D4) |
+| **P1** | `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` | B2: 12 tenant/platform tables — revoke-only | D4 after B1 smoke |
+| **P3** | `supabase-rls-class-b-hardening-v1b-global-reference-v1` | B3: `categories`, `transmission_types`, `user_preferences` | Optional / separate approval |
+| **P2** | `supabase-rls-tenant-policies-v1` | **Tenant `CREATE POLICY`** — separate from v1b; JWT/helper analysis; only if Data API tenant access required | D4; **not** v1b |
 | **P2** | `audit-log-tenant-context-foundation` | Add `organizationId` to `AuditLog`; plan tenant-scoped audit queries | Planning / migration gated |
 | **P2** | `supabase-exposed-schema-review` | Remove `public` from Supabase exposed schemas or add dedicated `api` schema for any future Data API feature | Ops + product decision |
 | **P3** | `supabase-private-schema-refactor` | Move class C tables out of `public` | Large refactor — defer |
@@ -219,10 +221,10 @@ RLS and Data API blocks **do not replace** application tenant guards.
 
 | Finding | Category | Priority | Verdict |
 | ------- | -------- | -------- | ------- |
-| 16 tables lack RLS in migrations | SECURITY | P2 | **DEFER** to `supabase-rls-class-b-hardening-v1b` |
+| 19 tables lack RLS in migrations | SECURITY | P1/P3 | **DEFER** to sliced v1b (B1→B2→B3) per [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md) |
 | Class-B v1 (8 tables) RLS + REVOKE | SECURITY | P1 | **ACCEPT** — done in `20260603120000_supabase_rls_class_b_hardening_v1` |
 | `audit_logs` has no tenant column | DATA_INTEGRITY | P2 | **DEFER** — `audit-log-tenant-context-foundation` |
-| Nullable operational `organizationId` | DATA_INTEGRITY | P1 | **DEFER** — existing backlog item |
+| Operational `organizationId` NOT NULL | DATA_INTEGRITY | — | **Done** on validated env (DEC-027) |
 | No `@supabase/supabase-js` dependency | DX | — | **ACCEPT** — intentional; Prisma-primary |
 
 ---
@@ -260,7 +262,8 @@ Re-run **Supabase Security Advisor** after any future RLS migration.
 | Enable RLS on all tables in this docs batch | **REJECT** — SQL deferred |
 | `rls_enabled_no_policy` as intentional for service-only | **ACCEPT** |
 | Prisma remains primary path | **ACCEPT** |
-| Tenant RLS before org-id NOT NULL backfill | **REJECT** — wrong sequencing |
+| Monolithic v1b (19 tables one migration) | **REJECT** — use sliced plan DEC-030 |
+| Tenant `CREATE POLICY` in v1b revoke batch | **REJECT** — `supabase-rls-tenant-policies-v1` only |
 | Dedicated `api` schema for future client features | **DEFER** |
 
 ---
@@ -273,4 +276,5 @@ Re-run **Supabase Security Advisor** after any future RLS migration.
 - `driving_school_platform/nextjs_space/docs/ops/supabase-data-api-grants.md`
 - `driving_school_platform/nextjs_space/docs/engineering/supabase-security-hardening.md`
 - `.cursor/rules/database.mdc` — sensitive table gate
+- [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md) — sliced v1b plan (DEC-030)
 - Migrations: `20260513180000_enable_rls_internal_tables`, `20260529120000_harden_sensitive_auth_tables_rls`, `20260603120000_supabase_rls_class_b_hardening_v1`
