@@ -55,7 +55,7 @@ Internal tables in **`public`** must **not** be treated as a public HTTP API by 
   - `public.transmission_types`
   - `public.user_preferences`
 
-  Operator **`migrate deploy`** is human-controlled. B3 smoke matrix in plan doc. **v1b revoke-only complete (31/31 Prisma tables).**
+  **Deployed + smoke-passed** on validated target env (2026-06-10): operator `migrate deploy` succeeded; post-deploy 26 migrations up to date (main `cdfacf2`, feature `f63f19d`); B3 manual smoke pass (operator-confirmed all green). See [supabase-rls-class-b-hardening-v1b-plan.md](../../../../docs/architecture/supabase-rls-class-b-hardening-v1b-plan.md) (DEC-030). **RLS Class-B v1b revoke-only complete (31/31 Prisma tables).**
 
 With RLS enabled and **no** policies, roles that are subject to RLS and are **not** the table owner/superuser will not get rows through PostgREST unless policies are added later.
 
@@ -67,7 +67,7 @@ This batch does **not** use `FORCE ROW LEVEL SECURITY`.
 
 ## Future hardening (recommended)
 
-1. **Sliced Class-B v1b** — B1 NextAuth **done**; B2 tenant business **done + deployed + smoke-passed**; B3 global reference **done** (migration `20260610170000_supabase_rls_class_b_hardening_v1b_global_reference`; baseline main `018812a`). **v1b revoke-only complete (31/31).** Pattern: `ENABLE ROW LEVEL SECURITY` + `REVOKE ALL FROM anon, authenticated`; **no** `CREATE POLICY`; **no** `FORCE ROW LEVEL SECURITY`. See [supabase-rls-class-b-hardening-v1b-plan.md](../../../../docs/architecture/supabase-rls-class-b-hardening-v1b-plan.md) (DEC-030).
+1. **Sliced Class-B v1b** — **complete (2026-06-10):** B1 NextAuth **done + deployed + smoke-passed**; B2 tenant business **done + deployed + smoke-passed**; B3 global reference **done + deployed + smoke-passed** (main `cdfacf2`). **31/31 Prisma tables** hardened with RLS+REVOKE. Revoke-only track closed. Pattern: `ENABLE ROW LEVEL SECURITY` + `REVOKE ALL FROM anon, authenticated`; **no** `CREATE POLICY`; **no** `FORCE ROW LEVEL SECURITY`. See [supabase-rls-class-b-hardening-v1b-plan.md](../../../../docs/architecture/supabase-rls-class-b-hardening-v1b-plan.md) (DEC-030).
 2. **Exposed schemas** — If your Supabase project exposes `public` to the Data API, consider removing `public` from exposed schemas when compatible with your workflow, so internal tables are not in scope for accidental REST exposure.
 3. **Dedicated API schema** — If you later adopt the Data API for specific features, prefer a dedicated schema (e.g. `api`) with narrow views + explicit grants + reviewed RLS policies, rather than widening access to all of `public`.
 4. **Keep internal tables without broad public policies** — Continue to default to “no anon/authenticated policy” unless documented otherwise. **Tenant-scoped `CREATE POLICY`** (`supabase-rls-tenant-policies-v1`) is a **separate P2** batch — not part of v1b revoke-only.

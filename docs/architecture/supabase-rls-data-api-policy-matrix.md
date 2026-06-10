@@ -99,7 +99,9 @@ Supabase Security Advisor and linter checks often report **`rls_enabled_no_polic
 
 **Deploy evidence (B2, 2026-06-10):** merged main `dd26d18` (feature `dce55c7`); operator `migrate deploy` succeeded on validated target env; post-deploy **25** migrations up to date; `pnpm check` 163/1223/build OK; B2 manual smoke matrix **pass** (operator-confirmed green).
 
-**All 31 Prisma-mapped `public` tables** now have RLS + REVOKE in migrations (v1b revoke-only complete). B3 operator deploy human-controlled.
+**Deploy evidence (B3, 2026-06-10):** merged main `cdfacf2` (feature `f63f19d`); operator `migrate deploy` succeeded on validated target env; post-deploy **26** migrations up to date; `pnpm check` 163/1223/build OK; B3 manual smoke matrix **pass** (operator-confirmed all green).
+
+**All 31 Prisma-mapped `public` tables** have RLS + REVOKE in migrations. **RLS Class-B v1b revoke-only complete** — B1+B2+B3 deployed + smoke green on validated env (2026-06-10). Tenant `CREATE POLICY` (`supabase-rls-tenant-policies-v1`) remains **P2 separate**.
 
 Deep ops context: [supabase-data-api-policy.md](../../driving_school_platform/nextjs_space/docs/ops/supabase-data-api-policy.md), [supabase-security-hardening.md](../../driving_school_platform/nextjs_space/docs/engineering/supabase-security-hardening.md).
 
@@ -219,8 +221,8 @@ RLS and Data API blocks **do not replace** application tenant guards.
 | **P1** | `supabase-rls-class-b-hardening-v1b-nextauth-deploy-record-v1` | **Done** — deploy + smoke pass on validated env | Closed |
 | **P1** | `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` | **Done** — migration `20260610160000_supabase_rls_class_b_hardening_v1b_tenant_business_revoke` (12 tables); deployed validated env 2026-06-10 (main `dd26d18`) | Closed |
 | **P1** | `supabase-rls-class-b-hardening-v1b-tenant-business-deploy-record-v1` | **Done** — deploy + smoke pass on validated env | Closed |
-| **P3** | `supabase-rls-class-b-hardening-v1b-global-reference-v1` | **Done** — migration `20260610170000_supabase_rls_class_b_hardening_v1b_global_reference` (3 tables); baseline main `018812a` | Closed — operator deploy human-controlled |
-| **P3** | `supabase-rls-class-b-hardening-v1b-global-reference-deploy-record-v1` | B3 deploy + smoke after operator deploy | Docs-only; human-controlled |
+| **P3** | `supabase-rls-class-b-hardening-v1b-global-reference-v1` | **Done** — migration `20260610170000_supabase_rls_class_b_hardening_v1b_global_reference` (3 tables); deployed validated env 2026-06-10 (main `cdfacf2`) | Closed |
+| **P3** | `supabase-rls-class-b-hardening-v1b-global-reference-deploy-record-v1` | **Done** — deploy + smoke pass on validated env; v1b revoke-only complete (31/31) | Closed |
 | **P2** | `supabase-rls-tenant-policies-v1` | **Tenant `CREATE POLICY`** — separate from v1b; JWT/helper analysis; only if Data API tenant access required | D4; **not** v1b |
 | **P2** | `audit-log-tenant-context-foundation` | Add `organizationId` to `AuditLog`; plan tenant-scoped audit queries | Planning / migration gated |
 | **P2** | `supabase-exposed-schema-review` | Remove `public` from Supabase exposed schemas or add dedicated `api` schema for any future Data API feature | Ops + product decision |
