@@ -203,10 +203,11 @@ Documented and in use (docs/rules only; no runtime change):
 - `tenant-operational-organization-id-not-null-deploy-record-v1` — docs-only deploy record on main `1854d1b`: operator `migrate deploy` succeeded on validated target env; post-deploy 23 migrations up to date; 0 operational NULLs; `SAFE_TO_DRY_RUN`; dry-run 0 proposed/conflicts/ambiguous; `pnpm check` OK. **`User.organizationId` and dual-scope/global tables remain nullable by design** (DEC-027). Report: [tenant-operational-organization-id-not-null-readiness.md](./tenant-operational-organization-id-not-null-readiness.md).
 - `supabase-rls-class-b-hardening-v1b-review` — analysis-only RLS posture after D4 NOT NULL; 12 tables hardened, 19 candidates, 0 policies, Prisma-primary, no `supabase-js`. No SQL/runtime changes.
 - `supabase-rls-class-b-hardening-v1b-plan-v1` — docs-only sliced plan + **DEC-030**; report [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md). B1 nextauth → B2 tenant business → B3 global reference; `supabase-rls-tenant-policies-v1` deferred P2. No migration/runtime.
+- `supabase-rls-class-b-hardening-v1b-nextauth-v1` — Prisma migration `20260610150000_supabase_rls_class_b_hardening_v1b_nextauth`: RLS + `REVOKE ALL FROM anon, authenticated` on 4 NextAuth tables (`accounts`, `sessions`, `verification_tokens`, `users`); no `CREATE POLICY`, no `FORCE ROW LEVEL SECURITY`, no `schema.prisma`/runtime changes. Operator `migrate deploy` human-controlled. Validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
-1. `supabase-rls-class-b-hardening-v1b-nextauth-v1` — **deferred (D4):** first SQL slice — RLS+REVOKE on `accounts`, `sessions`, `verification_tokens`, `users` only
+1. `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` — **deferred (D4):** B2 SQL slice — RLS+REVOKE on 12 tenant/platform tables (after B1 deploy smoke)
 2. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next
 4. `tenant-operational-organization-id-backfill-apply-v1` — **deferred** until a future environment dry-run shows proposed changes (not needed in 2026-06-09 validated env)
 5. `audit-log-tenant-context-foundation` — planning only

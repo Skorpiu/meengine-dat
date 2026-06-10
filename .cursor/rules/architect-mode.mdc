@@ -284,6 +284,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `supabase-rls-class-b-hardening-v1` — migration `20260603120000_supabase_rls_class_b_hardening_v1` (8 class-B tables; RLS + REVOKE; Preview SQL gate passed)
 - `supabase-rls-class-b-hardening-v1b-review` — analysis-only; 12 hardened / 19 candidates / 0 policies; Prisma-primary
 - `supabase-rls-class-b-hardening-v1b-plan-v1` — docs-only sliced v1b plan + DEC-030; report `docs/architecture/supabase-rls-class-b-hardening-v1b-plan.md`
+- `supabase-rls-class-b-hardening-v1b-nextauth-v1` — migration `20260610150000_supabase_rls_class_b_hardening_v1b_nextauth` (B1: RLS+REVOKE on `accounts`, `sessions`, `verification_tokens`, `users`); operator deploy human-controlled
 - `product-roadmap-and-platform-boundary-sync-v1` — docs/product hub, decision-log, DAT vs Platform, packaging; see `docs/product/`
 - `people-management-internal-tabs-v1` — internal L1/L2 tabs on `/admin/users` (Students, Instructors, App accounts); client-side invitation role filter; SSR unchanged
 - `people-management-onboarding-reframe-v1` — L2 Onboarding (manual student + new instructor + invitations); App accounts tab retained
@@ -326,11 +327,11 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Current recommended next (runtime/UX slice):**
 
-1. `supabase-rls-class-b-hardening-v1b-nextauth-v1` — B1: RLS+REVOKE on `accounts`, `sessions`, `verification_tokens`, `users` (**D4**)
+1. `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` — B2: RLS+REVOKE on 12 tenant/platform tables (**D4**; after B1 deploy smoke)
 
 **Likely next:**
 
-2. `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` — B2 after B1 smoke
+2. `supabase-rls-class-b-hardening-v1b-global-reference-v1` — B3 optional P3
 3. `people-management-ux-unification` remaining (invitations on instructor record — tabs v1 done; **route split deferred D4**)
 
 **Likely next (slice parent batches; do not implement broad names directly):**

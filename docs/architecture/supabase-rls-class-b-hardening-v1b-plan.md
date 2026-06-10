@@ -1,9 +1,9 @@
 # Supabase RLS Class-B Hardening v1b — Plan (sliced)
 
-**Batch:** `supabase-rls-class-b-hardening-v1b-plan-v1`  
-**Status:** Docs-only plan — **no migration, schema, RLS policy SQL, or runtime changes.**  
+**Batch:** `supabase-rls-class-b-hardening-v1b-plan-v1` (+ B1 implementation `supabase-rls-class-b-hardening-v1b-nextauth-v1`)  
+**Status:** Plan **done**; B1 migration **in repo** — operator `migrate deploy` human-controlled.  
 **Prior analysis:** `supabase-rls-class-b-hardening-v1b-review` (analysis-only)  
-**Baseline main:** `5613283`  
+**Baseline main:** `40eb18a`  
 **Related:** [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md), [tenant-operational-organization-id-not-null-readiness.md](./tenant-operational-organization-id-not-null-readiness.md) (D4 NOT NULL deployed on validated env)
 
 ---
@@ -201,7 +201,7 @@ Add: forms load categories/transmission types; student/instructor create dialogs
 | ----- | ----- | ------ |
 | v1 | `supabase-rls-class-b-hardening-v1` | **Done** — 8 tables |
 | Plan | `supabase-rls-class-b-hardening-v1b-plan-v1` | **Done** (this document) |
-| B1 | `supabase-rls-class-b-hardening-v1b-nextauth-v1` | **Deferred (D4)** — first recommended SQL slice |
+| B1 | `supabase-rls-class-b-hardening-v1b-nextauth-v1` | **Done (migration in repo)** — `20260610150000_supabase_rls_class_b_hardening_v1b_nextauth`; operator deploy human-controlled |
 | B2 | `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` | **Deferred (D4)** |
 | B3 | `supabase-rls-class-b-hardening-v1b-global-reference-v1` | **Deferred (P3 / D4)** |
 | P2 | `supabase-rls-tenant-policies-v1` | **Deferred** — not part of v1b |

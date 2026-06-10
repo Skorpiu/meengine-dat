@@ -92,8 +92,9 @@ Supabase Security Advisor and linter checks often report **`rls_enabled_no_polic
 | `20260513180000_enable_rls_internal_tables` | `billing_events`, `entitlement_grants`, `organization_domains` | Yes | No (REVOKE added in class-B v1) |
 | `20260529120000_harden_sensitive_auth_tables_rls` | `user_invitations`, `password_reset_tokens`, `email_verification_tokens`, `rate_limit_buckets` | Yes | Yes |
 | `20260603120000_supabase_rls_class_b_hardening_v1` | `billing_events`, `entitlement_grants`, `organization_domains` (REVOKE only); `audit_logs`, `license_keys`, `configuration_history`, `system_settings`, `feature_flags` (RLS + REVOKE) | Yes (5 new); 3 prior | Yes (8 tables) |
+| `20260610150000_supabase_rls_class_b_hardening_v1b_nextauth` | `accounts`, `sessions`, `verification_tokens`, `users` (RLS + REVOKE) | Yes (4 new) | Yes (4 tables) |
 
-Remaining tables without RLS in migrations: **deferred** to `supabase-rls-class-b-hardening-v1b` (separate D4 approval).
+Remaining tables without RLS in migrations: **15** — B2/B3 slices per [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md) (DEC-030).
 
 Deep ops context: [supabase-data-api-policy.md](../../driving_school_platform/nextjs_space/docs/ops/supabase-data-api-policy.md), [supabase-security-hardening.md](../../driving_school_platform/nextjs_space/docs/engineering/supabase-security-hardening.md).
 
@@ -107,10 +108,10 @@ PostgreSQL table names use `@@map` values from the schema.
 
 | Table | Prisma model | Tenant scope | Current RLS | Revoke anon/auth | Intended path | Block anon/auth | Future policy | Prisma-primary |
 | ----- | ------------ | ------------ | ----------- | ---------------- | ------------- | --------------- | ------------- | -------------- |
-| `users` | User | Optional `organizationId`; PLATFORM_ADMIN may be global | None (known) | Unknown | Auth APIs + admin; never expose `passwordHash` / tokens in lists | **Yes** | Unlikely for Data API; app session is source of truth | **Yes** |
-| `accounts` | Account | Via `userId` | None (known) | Unknown | NextAuth adapter — server only | **Yes** | Review if Data API ever enabled for auth | **Yes** |
-| `sessions` | Session | Via `userId` | None (known) | Unknown | NextAuth adapter — server only | **Yes** | Same as accounts | **Yes** |
-| `verification_tokens` | VerificationToken | N/A (NextAuth) | None (known) | Unknown | NextAuth adapter — server only | **Yes** | Same as accounts | **Yes** |
+| `users` | User | Optional `organizationId`; PLATFORM_ADMIN may be global | **Enabled** | **Yes** | Auth APIs + admin; never expose `passwordHash` / tokens in lists | **Yes** | Unlikely for Data API; app session is source of truth | **Yes** |
+| `accounts` | Account | Via `userId` | **Enabled** | **Yes** | NextAuth adapter — server only | **Yes** | Review if Data API ever enabled for auth | **Yes** |
+| `sessions` | Session | Via `userId` | **Enabled** | **Yes** | NextAuth adapter — server only | **Yes** | Same as accounts | **Yes** |
+| `verification_tokens` | VerificationToken | N/A (NextAuth) | **Enabled** | **Yes** | NextAuth adapter — server only | **Yes** | Same as accounts | **Yes** |
 | `user_invitations` | UserInvitation | Required `organizationId` | **Enabled** | **Yes** | Admin invite APIs; `tokenHash` never in client lists | **Yes** | **No** permissive anon/auth policies | **Yes** |
 | `password_reset_tokens` | PasswordResetToken | Via `userId` | **Enabled** | **Yes** | Password reset service | **Yes** | **No** | **Yes** |
 | `email_verification_tokens` | EmailVerificationToken | Via `userId` | **Enabled** | **Yes** | Email verification service | **Yes** | **No** | **Yes** |
@@ -169,7 +170,7 @@ Demo reset, cron, and ops scripts use the same tables above with **application g
 
 | Category | Tables | RLS in migrations | Block anon/auth (intended) | Future Data API policies |
 | -------- | ------ | ------------------- | -------------------------- | ------------------------- |
-| **AUTH_SECURITY** | 8 | 4 / 8 | **All 8** | **None planned** |
+| **AUTH_SECURITY** | 8 | 8 / 8 | **All 8** | **None planned** |
 | **TENANT_BUSINESS** | 10 | 0 / 10 | **All 10** | **Deferred** — optional tenant RLS after org-id hardening |
 | **BILLING_PLATFORM** | 6 | 4 / 6 | **All 6** | **None planned** |
 | **AUDIT_CONFIG_HISTORY** | 5 | 4 / 5 | **All 5** | **None planned** |
@@ -209,8 +210,8 @@ RLS and Data API blocks **do not replace** application tenant guards.
 | -------- | ------------------------ | ---- | ---- |
 | **P1** | `supabase-rls-class-b-hardening-v1` | **Done** — migration `20260603120000_supabase_rls_class_b_hardening_v1` (8 tables; see Known migration baseline) | Closed |
 | **P1** | `supabase-rls-class-b-hardening-v1b-plan-v1` | **Done** — sliced plan (B1/B2/B3); DEC-030 | [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md) |
-| **P1** | `supabase-rls-class-b-hardening-v1b-nextauth-v1` | B1: RLS + REVOKE on `accounts`, `sessions`, `verification_tokens`, `users` | `APPROVED TO IMPLEMENT: supabase-rls-class-b-hardening-v1b-nextauth-v1` (D4) |
-| **P1** | `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` | B2: 12 tenant/platform tables — revoke-only | D4 after B1 smoke |
+| **P1** | `supabase-rls-class-b-hardening-v1b-nextauth-v1` | **Done** — migration `20260610150000_supabase_rls_class_b_hardening_v1b_nextauth` (4 tables) | Closed — operator deploy human-controlled |
+| **P1** | `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` | B2: 12 tenant/platform tables — revoke-only | `APPROVED TO IMPLEMENT: supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` (D4) after B1 smoke |
 | **P3** | `supabase-rls-class-b-hardening-v1b-global-reference-v1` | B3: `categories`, `transmission_types`, `user_preferences` | Optional / separate approval |
 | **P2** | `supabase-rls-tenant-policies-v1` | **Tenant `CREATE POLICY`** — separate from v1b; JWT/helper analysis; only if Data API tenant access required | D4; **not** v1b |
 | **P2** | `audit-log-tenant-context-foundation` | Add `organizationId` to `AuditLog`; plan tenant-scoped audit queries | Planning / migration gated |
@@ -221,7 +222,7 @@ RLS and Data API blocks **do not replace** application tenant guards.
 
 | Finding | Category | Priority | Verdict |
 | ------- | -------- | -------- | ------- |
-| 19 tables lack RLS in migrations | SECURITY | P1/P3 | **DEFER** to sliced v1b (B1→B2→B3) per [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md) |
+| 15 tables lack RLS in migrations (B1 done) | SECURITY | P1/P3 | **DEFER** to B2/B3 slices per [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md) |
 | Class-B v1 (8 tables) RLS + REVOKE | SECURITY | P1 | **ACCEPT** — done in `20260603120000_supabase_rls_class_b_hardening_v1` |
 | `audit_logs` has no tenant column | DATA_INTEGRITY | P2 | **DEFER** — `audit-log-tenant-context-foundation` |
 | Operational `organizationId` NOT NULL | DATA_INTEGRITY | — | **Done** on validated env (DEC-027) |
