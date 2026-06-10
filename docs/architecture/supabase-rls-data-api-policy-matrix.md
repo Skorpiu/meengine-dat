@@ -28,9 +28,9 @@ This matrix:
 | Posture | Count | Meaning |
 | ------- | ----- | ------- |
 | **Primary path: Prisma / server** | All 31 tables | Application reads/writes via Next.js API routes + Prisma |
-| **RLS enabled in migrations (28 tables)** | 28 | Defense-in-depth for Data API exposure (v1 + B1 + B2) |
-| **RLS + explicit REVOKE anon/authenticated (28 tables)** | 28 | All hardened tables include REVOKE |
-| **No RLS migration yet (3 tables)** | 3 | B3 only: `categories`, `transmission_types`, `user_preferences` |
+| **RLS enabled in migrations (31 tables)** | 31 | Defense-in-depth for Data API exposure (v1 + B1 + B2 + B3) |
+| **RLS + explicit REVOKE anon/authenticated (31 tables)** | 31 | All hardened tables include REVOKE |
+| **No RLS migration yet (0 tables)** | 0 | **v1b revoke-only complete** — all Prisma-mapped tables hardened |
 | **Intended anon/authenticated Data API access** | **0 tables today** | No reviewed feature requires PostgREST client access |
 
 **Decision (this batch):** Default all Prisma-managed `public` tables to **internal-only (class B)** unless a future product feature explicitly requires **client-facing Data API (class A)** with threat-model review.
@@ -93,12 +93,13 @@ Supabase Security Advisor and linter checks often report **`rls_enabled_no_polic
 | `20260603120000_supabase_rls_class_b_hardening_v1` | `billing_events`, `entitlement_grants`, `organization_domains` (REVOKE only); `audit_logs`, `license_keys`, `configuration_history`, `system_settings`, `feature_flags` (RLS + REVOKE) | Yes (5 new); 3 prior | Yes (8 tables) |
 | `20260610150000_supabase_rls_class_b_hardening_v1b_nextauth` | `accounts`, `sessions`, `verification_tokens`, `users` (RLS + REVOKE) | Yes (4 new) | Yes (4 tables) |
 | `20260610160000_supabase_rls_class_b_hardening_v1b_tenant_business_revoke` | `students`, `instructors`, `vehicles`, `lessons`, `exams`, `lesson_requests`, `lesson_counters`, `exam_registrations`, `payments`, `notifications`, `organizations`, `organization_features` (RLS + REVOKE) | Yes (12 new) | Yes (12 tables) |
+| `20260610170000_supabase_rls_class_b_hardening_v1b_global_reference` | `categories`, `transmission_types`, `user_preferences` (RLS + REVOKE) | Yes (3 new) | Yes (3 tables) |
 
 **Deploy evidence (B1, 2026-06-10):** merged main `edd73de` (feature `d579a1f`); operator `migrate deploy` succeeded on validated target env; post-deploy **24** migrations up to date; `pnpm check` 163/1223/build OK; B1 manual auth smoke **pass** (operator-confirmed).
 
 **Deploy evidence (B2, 2026-06-10):** merged main `dd26d18` (feature `dce55c7`); operator `migrate deploy` succeeded on validated target env; post-deploy **25** migrations up to date; `pnpm check` 163/1223/build OK; B2 manual smoke matrix **pass** (operator-confirmed green).
 
-Remaining tables without RLS in migrations: **3** — B3 slice per [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md) (DEC-030).
+**All 31 Prisma-mapped `public` tables** now have RLS + REVOKE in migrations (v1b revoke-only complete). B3 operator deploy human-controlled.
 
 Deep ops context: [supabase-data-api-policy.md](../../driving_school_platform/nextjs_space/docs/ops/supabase-data-api-policy.md), [supabase-security-hardening.md](../../driving_school_platform/nextjs_space/docs/engineering/supabase-security-hardening.md).
 
@@ -155,14 +156,14 @@ PostgreSQL table names use `@@map` values from the schema.
 | `configuration_history` | ConfigurationHistory | Optional `organizationId` | **Enabled** | **Yes** | Config change audit | **Yes** | **No** permissive anon/auth policies | **Yes** |
 | `system_settings` | SystemSetting | Optional `organizationId`; global keys exist | **Enabled** | **Yes** | Server reads; `isPublic` flag is app-level, not PostgREST | **Yes** | Never expose raw settings via Data API | **Yes** |
 | `feature_flags` | FeatureFlag | Optional `organizationId` | **Enabled** | **Yes** | Server-side flag evaluation | **Yes** | No client flag table access | **Yes** |
-| `user_preferences` | UserPreference | Via `userId` | None (known) | Unknown | User settings APIs | **Yes** | Possible future user-scoped policy — **deferred** | **Yes** |
+| `user_preferences` | UserPreference | Via `userId` | **Enabled** | **Yes** | User settings APIs | **Yes** | Possible future user-scoped policy — **deferred** | **Yes** |
 
 ### GLOBAL_REFERENCE
 
 | Table | Prisma model | Tenant scope | Current RLS | Revoke anon/auth | Intended path | Block anon/auth | Future policy | Prisma-primary |
 | ----- | ------------ | ------------ | ----------- | ---------------- | ------------- | --------------- | ------------- | -------------- |
-| `categories` | Category | Shared catalog | None (known) | Unknown | Reference data in forms/lessons | **Yes** (default) | Read-only anon policy **only if** public catalog via Data API is product-approved | **Yes** |
-| `transmission_types` | TransmissionType | Shared catalog | None (known) | Unknown | Reference data | **Yes** (default) | Same as categories | **Yes** |
+| `categories` | Category | Shared catalog | **Enabled** | **Yes** | Reference data in forms/lessons | **Yes** (default) | Read-only anon policy **only if** public catalog via Data API is product-approved | **Yes** |
+| `transmission_types` | TransmissionType | Shared catalog | **Enabled** | **Yes** | Reference data | **Yes** (default) | Same as categories | **Yes** |
 
 ### SERVICE_INTERNAL (demo / ops — no separate tables)
 
@@ -177,8 +178,8 @@ Demo reset, cron, and ops scripts use the same tables above with **application g
 | **AUTH_SECURITY** | 8 | 8 / 8 | **All 8** | **None planned** |
 | **TENANT_BUSINESS** | 10 | 10 / 10 | **All 10** | **None planned** (revoke-only v1b B2) |
 | **BILLING_PLATFORM** | 6 | 6 / 6 | **All 6** | **None planned** |
-| **AUDIT_CONFIG_HISTORY** | 5 | 4 / 5 | **All 5** | **None planned** |
-| **GLOBAL_REFERENCE** | 2 | 0 / 2 | **Yes (default)** | **Only if** product opts into public catalog via Data API |
+| **AUDIT_CONFIG_HISTORY** | 5 | 5 / 5 | **All 5** | **None planned** |
+| **GLOBAL_REFERENCE** | 2 | 2 / 2 | **Yes (default)** | **Only if** product opts into public catalog via Data API |
 | **FUTURE_CLIENT_FACING** | 0 today | — | — | **notifications**, **user_preferences** are the first candidates if product pivots to `supabase-js` |
 
 ---
@@ -218,7 +219,8 @@ RLS and Data API blocks **do not replace** application tenant guards.
 | **P1** | `supabase-rls-class-b-hardening-v1b-nextauth-deploy-record-v1` | **Done** — deploy + smoke pass on validated env | Closed |
 | **P1** | `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` | **Done** — migration `20260610160000_supabase_rls_class_b_hardening_v1b_tenant_business_revoke` (12 tables); deployed validated env 2026-06-10 (main `dd26d18`) | Closed |
 | **P1** | `supabase-rls-class-b-hardening-v1b-tenant-business-deploy-record-v1` | **Done** — deploy + smoke pass on validated env | Closed |
-| **P3** | `supabase-rls-class-b-hardening-v1b-global-reference-v1` | B3: `categories`, `transmission_types`, `user_preferences` | `APPROVED TO IMPLEMENT: supabase-rls-class-b-hardening-v1b-global-reference-v1` (D4) |
+| **P3** | `supabase-rls-class-b-hardening-v1b-global-reference-v1` | **Done** — migration `20260610170000_supabase_rls_class_b_hardening_v1b_global_reference` (3 tables); baseline main `018812a` | Closed — operator deploy human-controlled |
+| **P3** | `supabase-rls-class-b-hardening-v1b-global-reference-deploy-record-v1` | B3 deploy + smoke after operator deploy | Docs-only; human-controlled |
 | **P2** | `supabase-rls-tenant-policies-v1` | **Tenant `CREATE POLICY`** — separate from v1b; JWT/helper analysis; only if Data API tenant access required | D4; **not** v1b |
 | **P2** | `audit-log-tenant-context-foundation` | Add `organizationId` to `AuditLog`; plan tenant-scoped audit queries | Planning / migration gated |
 | **P2** | `supabase-exposed-schema-review` | Remove `public` from Supabase exposed schemas or add dedicated `api` schema for any future Data API feature | Ops + product decision |
@@ -228,7 +230,7 @@ RLS and Data API blocks **do not replace** application tenant guards.
 
 | Finding | Category | Priority | Verdict |
 | ------- | -------- | -------- | ------- |
-| 3 tables lack RLS in migrations (B1/B2 done) | SECURITY | P3 | **DEFER** to B3 slice per [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md) |
+| 3 tables lack RLS in migrations (B1/B2 done) | SECURITY | P3 | **ACCEPT** — done in B3 `20260610170000_supabase_rls_class_b_hardening_v1b_global_reference` |
 | Class-B v1 (8 tables) RLS + REVOKE | SECURITY | P1 | **ACCEPT** — done in `20260603120000_supabase_rls_class_b_hardening_v1` |
 | `audit_logs` has no tenant column | DATA_INTEGRITY | P2 | **DEFER** — `audit-log-tenant-context-foundation` |
 | Operational `organizationId` NOT NULL | DATA_INTEGRITY | — | **Done** on validated env (DEC-027) |
