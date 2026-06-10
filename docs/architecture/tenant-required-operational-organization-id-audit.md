@@ -229,7 +229,7 @@ Record results in Preview QA notes when run; not required to close this audit do
 | **3b** | `tenant-operational-organization-id-not-null-readiness-review-v1` | **Done** — analysis-only review | Completed 2026-06-09 |
 | **3c** | `tenant-operational-organization-id-not-null-readiness-doc-v1` | **Done** — readiness doc + DEC-027 | [tenant-operational-organization-id-not-null-readiness.md](./tenant-operational-organization-id-not-null-readiness.md) |
 | **4a** | `tenant-operational-organization-id-not-null-migrations-plan-v1` | **Done** — D4 GO/NO-GO gate, operator battery, single-migration proposal, smoke checklist | [tenant-operational-organization-id-not-null-readiness.md](./tenant-operational-organization-id-not-null-readiness.md) |
-| **4b** | `tenant-operational-organization-id-not-null-migrations-v1` | `SET NOT NULL` on six operational tables after operator GO on target DB | `APPROVED TO IMPLEMENT: tenant-operational-organization-id-not-null-migrations-v1` + human `migrate deploy` |
+| **4b** | `tenant-operational-organization-id-not-null-migrations-v1` | **Done (migration file + schema)** — `20260610140000_make_operational_organization_id_required`; human `migrate deploy` pending | Operator deploy + smoke QA per environment |
 | **5** | `supabase-rls-data-api-policy-matrix` | **Done (v1)** — classification matrix only; see [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md). Explicit RLS **SQL** on tenant tables → `supabase-rls-tenant-policies-v1` (D4) |
 | **6** | Product | Revisit global uniques (`Vehicle.registrationNumber`, `SystemSetting.settingKey`) for multi-client | Product decision |
 

@@ -155,7 +155,7 @@ model Student {
   studentNumber                Int                      @unique @default(autoincrement())
   categoryId                   Int?
   transmissionTypeId         Int?
-  organizationId               String?
+  organizationId               String
   hasDrivingLicense            Boolean                  @default(false)
   existingLicenseNumber        String?
   existingLicenseCategories    String[]
@@ -180,7 +180,7 @@ model Student {
   lessons                      Lesson[]
   paymentsStudent              Payment[]                @relation("PaymentStudent")
   category                     Category?                @relation(fields: [categoryId], references: [id])
-  organization                 Organization?            @relation(fields: [organizationId], references: [id])
+  organization                 Organization             @relation(fields: [organizationId], references: [id])
   preferredInstructor          Instructor?              @relation("PreferredStudents", fields: [preferredInstructorId], references: [id])
   transmissionType             TransmissionType?        @relation(fields: [transmissionTypeId], references: [id])
   user                         User?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -202,7 +202,7 @@ model Instructor {
   id                         String             @id @default(cuid())
   userId                     String             @unique
   instructorIdNumber         String?            @unique
-  organizationId             String?
+  organizationId             String
   instructorLicenseNumber    String             @unique
   instructorLicenseExpiry    DateTime
   instructorCertificateUrl   String?
@@ -221,7 +221,7 @@ model Instructor {
   createdAt                  DateTime           @default(now())
   updatedAt                  DateTime           @updatedAt
   exams                      Exam[]
-  organization               Organization?      @relation(fields: [organizationId], references: [id])
+  organization               Organization       @relation(fields: [organizationId], references: [id])
   user                       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   lessonRequests             LessonRequest[]
   lessons                    Lesson[]
@@ -268,8 +268,8 @@ model Vehicle {
   lessons               Lesson[]
   category              Category?        @relation(fields: [categoryId], references: [id])
   transmissionType      TransmissionType @relation(fields: [transmissionTypeId], references: [id])
-  organizationId        String?
-  organization          Organization?    @relation(fields: [organizationId], references: [id])
+  organizationId        String
+  organization          Organization     @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId])
   @@index([status])
@@ -305,8 +305,8 @@ model LessonRequest {
   preferredVehicle   Vehicle?      @relation(fields: [preferredVehicleId], references: [id])
   reviewer           User?         @relation("ReviewedBy", fields: [reviewedBy], references: [id])
   student            Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  organizationId     String?
-  organization       Organization? @relation(fields: [organizationId], references: [id])
+  organizationId     String
+  organization       Organization  @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId])
   @@index([studentId])
@@ -361,8 +361,8 @@ model Lesson {
   transmissionType         TransmissionType? @relation(fields: [transmissionTypeId], references: [id])
   vehicle                  Vehicle?          @relation(fields: [vehicleId], references: [id])
   payments                 Payment[]
-  organizationId           String?
-  organization             Organization?     @relation(fields: [organizationId], references: [id])
+  organizationId           String
+  organization             Organization      @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId])
   @@index([studentId])
@@ -423,8 +423,8 @@ model Exam {
   category             Category           @relation(fields: [categoryId], references: [id])
   examiner             Instructor?        @relation(fields: [examinerId], references: [id])
   vehicle              Vehicle?           @relation(fields: [vehicleId], references: [id])
-  organizationId       String?
-  organization         Organization?      @relation(fields: [organizationId], references: [id])
+  organizationId       String
+  organization         Organization       @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId])
   @@index([examDate])

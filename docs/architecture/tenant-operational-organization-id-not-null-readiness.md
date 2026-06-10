@@ -1,8 +1,8 @@
 # Tenant Operational `organizationId` NOT NULL — Readiness and D4 Gate
 
-**Latest planning batch:** `tenant-operational-organization-id-not-null-migrations-plan-v1`  
-**Prior docs batch:** `tenant-operational-organization-id-not-null-readiness-doc-v1`  
-**Status:** Planning gate complete — **no schema, migration, RLS, runtime, or data changes in plan-v1.**  
+**Latest implementation batch:** `tenant-operational-organization-id-not-null-migrations-v1`  
+**Prior planning batch:** `tenant-operational-organization-id-not-null-migrations-plan-v1`  
+**Status:** Migration **created** — `migrate deploy` **not run** by Cursor; human operator step required per environment.  
 **Decision:** [DEC-027](./decision-log.md)  
 **Prior work:** [tenant-required-operational-organization-id-audit.md](./tenant-required-operational-organization-id-audit.md)  
 **Schema baseline:** `driving_school_platform/nextjs_space/prisma/schema.prisma` (as of main `29d5cd8`).
@@ -13,11 +13,7 @@
 
 Record **operator-validated readiness** to apply future `NOT NULL` constraints on the six operational tables that today allow nullable `organizationId`, without requiring a backfill apply batch in the validated environment.
 
-This document does **not** authorize migrations. Phase 4b (`tenant-operational-organization-id-not-null-migrations-v1`) remains a separate **D4** implementation batch requiring:
-
-1. Operator **GO** on the checklist below (fresh outputs on the **target** environment).
-2. Explicit approval: `APPROVED TO IMPLEMENT: tenant-operational-organization-id-not-null-migrations-v1`
-3. Human-controlled `pnpm exec prisma migrate deploy` on that environment only.
+Phase 4b migration SQL and Prisma schema are **implemented** in batch `tenant-operational-organization-id-not-null-migrations-v1`. **Deploy is not automatic** — operator must run human-controlled `pnpm exec prisma migrate deploy` on each target environment after re-validating the gate checklist.
 
 ---
 
@@ -190,8 +186,8 @@ pnpm tenant:org-backfill:dry-run
 | One operator deploy / one rollback unit | Matches “tenant operational hardening” as one change |
 | Prisma schema can update all six fields in one commit | `organizationId String` (required) on six models |
 
-**Suggested migration folder name (when implemented):**  
-`YYYYMMDDHHMMSS_tenant_operational_organization_id_not_null_v1`
+**Migration (implemented):**  
+`prisma/migrations/20260610140000_make_operational_organization_id_required/migration.sql`
 
 **Suggested SQL shape (illustrative — do not run from this doc):**
 
@@ -260,7 +256,7 @@ Before `APPROVED TO IMPLEMENT: tenant-operational-organization-id-not-null-migra
 | 3b | `tenant-operational-organization-id-not-null-readiness-review-v1` | **Done** (analysis) |
 | 3c | `tenant-operational-organization-id-not-null-readiness-doc-v1` | **Done** (DEC-027 + operator evidence) |
 | 4a | `tenant-operational-organization-id-not-null-migrations-plan-v1` | **Done** (D4 gate, operator battery, migration proposal, smoke checklist — **no migration**) |
-| 4b | `tenant-operational-organization-id-not-null-migrations-v1` | **Deferred (D4)** — requires operator GO + `APPROVED TO IMPLEMENT` + human `migrate deploy` |
+| 4b | `tenant-operational-organization-id-not-null-migrations-v1` | **Migration created** — human `migrate deploy` + smoke QA per environment pending |
 | 5 | `supabase-rls-tenant-policies-v1` | **Deferred** — optional after NOT NULL / backfill |
 
 **Operator scripts (confirmed present in `package.json` on main `29d5cd8`):**

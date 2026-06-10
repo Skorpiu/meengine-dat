@@ -1,91 +1,96 @@
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
-import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
-
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting database seeding...')
+  console.log("🌱 Starting database seeding...");
 
   // Safety guard: never run destructive seed in production by accident
-  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PROD_SEED !== 'true') {
-    throw new Error('Refusing to run seed in production. Set ALLOW_PROD_SEED=true if you really mean it.');
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.ALLOW_PROD_SEED !== "true"
+  ) {
+    throw new Error(
+      "Refusing to run seed in production. Set ALLOW_PROD_SEED=true if you really mean it.",
+    );
   }
 
   // Clear existing data (be careful in production!)
-  console.log('🗑️ Clearing existing data...')
-  await prisma.auditLog.deleteMany()
-  await prisma.notification.deleteMany()
-  await prisma.payment.deleteMany()
-  await prisma.examRegistration.deleteMany()
-  await prisma.exam.deleteMany()
-  await prisma.lessonCounter.deleteMany()
-  await prisma.lesson.deleteMany()
-  await prisma.lessonRequest.deleteMany()
-  await prisma.vehicle.deleteMany()
-  await prisma.student.deleteMany()
-  await prisma.instructor.deleteMany()
-  await prisma.session.deleteMany()
-  await prisma.account.deleteMany()
-  await prisma.user.deleteMany()
-  await prisma.category.deleteMany()
-  await prisma.transmissionType.deleteMany()
-  await prisma.systemSetting.deleteMany()
-  await prisma.featureFlag.deleteMany()
-  await prisma.configurationHistory.deleteMany()
-  await prisma.licenseKey.deleteMany()
-  await prisma.organizationFeature.deleteMany()
-  await prisma.organizationDomain.deleteMany()
-  await prisma.organization.deleteMany()
-
+  console.log("🗑️ Clearing existing data...");
+  await prisma.auditLog.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.payment.deleteMany();
+  await prisma.examRegistration.deleteMany();
+  await prisma.exam.deleteMany();
+  await prisma.lessonCounter.deleteMany();
+  await prisma.lesson.deleteMany();
+  await prisma.lessonRequest.deleteMany();
+  await prisma.vehicle.deleteMany();
+  await prisma.student.deleteMany();
+  await prisma.instructor.deleteMany();
+  await prisma.session.deleteMany();
+  await prisma.account.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.category.deleteMany();
+  await prisma.transmissionType.deleteMany();
+  await prisma.systemSetting.deleteMany();
+  await prisma.featureFlag.deleteMany();
+  await prisma.configurationHistory.deleteMany();
+  await prisma.licenseKey.deleteMany();
+  await prisma.organizationFeature.deleteMany();
+  await prisma.organizationDomain.deleteMany();
+  await prisma.organization.deleteMany();
 
   // 0. Create Default Organization (multi-tenant baseline)
-  console.log('🏢 Creating default organization...')
+  console.log("🏢 Creating default organization...");
   const organization = await prisma.organization.create({
     data: {
-      name: 'A Conquistadora',
-      email: 'admin@aconquistadora.com',
-      phoneNumber: '+1234567890',
-      address: '123 Main Street',
-      city: 'Guimarães',
-      postalCode: '4800-000',
-      subscriptionTier: 'BASE',
-      subscriptionStatus: 'ACTIVE',
-      primaryColor: '#2563eb',
-      secondaryColor: '#dc2626',
+      name: "A Conquistadora",
+      email: "admin@aconquistadora.com",
+      phoneNumber: "+1234567890",
+      address: "123 Main Street",
+      city: "Guimarães",
+      postalCode: "4800-000",
+      subscriptionTier: "BASE",
+      subscriptionStatus: "ACTIVE",
+      primaryColor: "#2563eb",
+      secondaryColor: "#dc2626",
     },
-  })
-  const orgId = organization.id
-  console.log(`✅ Organization created: ${organization.name} (${orgId})`)
+  });
+  const orgId = organization.id;
+  console.log(`✅ Organization created: ${organization.name} (${orgId})`);
 
   // Seed tenant hosts → organization domains
-  const hosts = (process.env.TENANT_HOSTS ?? 'www.meengine.io,meengine-dat.vercel.app')
-    .split(',')
-    .map(h => h.trim())
-    .filter(Boolean)
+  const hosts = (
+    process.env.TENANT_HOSTS ?? "www.meengine.io,meengine-dat.vercel.app"
+  )
+    .split(",")
+    .map((h) => h.trim())
+    .filter(Boolean);
 
   for (let i = 0; i < hosts.length; i++) {
-    const host = hosts[i]
+    const host = hosts[i];
     await prisma.organizationDomain.upsert({
       where: { host },
       create: { host, organizationId: orgId, isPrimary: i === 0 },
       update: { organizationId: orgId, isPrimary: i === 0 },
-    })
+    });
   }
-  console.log(`✅ Seeded ${hosts.length} organization domains`)
+  console.log(`✅ Seeded ${hosts.length} organization domains`);
 
   // Create organization features (disabled by default)
   const featureKeys = [
-    'STUDENT_ACCESS',
-    'VEHICLE_MANAGEMENT',
-    'LESSON_MANAGEMENT',
-    'SCREENSHOT_PROTECTION',
-    'ADVANCED_REPORTING',
-    'SMS_NOTIFICATIONS',
-    'MOBILE_APP',
-    'PAYMENT_INTEGRATION',
-    'MULTI_LANGUAGE',
-  ] as const
+    "STUDENT_ACCESS",
+    "VEHICLE_MANAGEMENT",
+    "LESSON_MANAGEMENT",
+    "SCREENSHOT_PROTECTION",
+    "ADVANCED_REPORTING",
+    "SMS_NOTIFICATIONS",
+    "MOBILE_APP",
+    "PAYMENT_INTEGRATION",
+    "MULTI_LANGUAGE",
+  ] as const;
 
   for (const featureKey of featureKeys) {
     await prisma.organizationFeature.upsert({
@@ -101,685 +106,715 @@ async function main() {
         isEnabled: false,
       },
       update: {},
-    })
+    });
   }
-  console.log('✅ Organization features created (disabled by default)')
+  console.log("✅ Organization features created (disabled by default)");
 
   // Create sample license key for testing
   const licenseKey = await prisma.licenseKey.create({
     data: {
       organizationId: orgId,
       key: `LIC-${Date.now()}-SEED`,
-      featureKeys: ['STUDENT_ACCESS', 'VEHICLE_MANAGEMENT'],
+      featureKeys: ["STUDENT_ACCESS", "VEHICLE_MANAGEMENT"],
       isUsed: false,
-      notes: 'Seed sample license key for testing',
+      notes: "Seed sample license key for testing",
     },
-  })
-  console.log(`✅ Sample license key created: ${licenseKey.key}`)
+  });
+  console.log(`✅ Sample license key created: ${licenseKey.key}`);
 
   // 1. Create Transmission Types
-  console.log('📡 Creating transmission types...')
+  console.log("📡 Creating transmission types...");
   const manualTransmission = await prisma.transmissionType.create({
     data: {
-      name: 'Manual',
-      code: 'MT',
-      description: 'Manual transmission vehicles',
+      name: "Manual",
+      code: "MT",
+      description: "Manual transmission vehicles",
     },
-  })
+  });
 
   const automaticTransmission = await prisma.transmissionType.create({
     data: {
-      name: 'Automatic',
-      code: 'AT',
-      description: 'Automatic transmission vehicles',
+      name: "Automatic",
+      code: "AT",
+      description: "Automatic transmission vehicles",
     },
-  })
+  });
 
-  console.log(`✅ Created transmission types: ${manualTransmission.name}, ${automaticTransmission.name}`)
+  console.log(
+    `✅ Created transmission types: ${manualTransmission.name}, ${automaticTransmission.name}`,
+  );
 
   // 2. Create Categories
-  console.log('📚 Creating categories...')
+  console.log("📚 Creating categories...");
   const categories = [
     {
-      name: 'AM',
-      fullName: 'Moped',
-      description: 'Light two-wheel vehicles up to 45km/h',
+      name: "AM",
+      fullName: "Moped",
+      description: "Light two-wheel vehicles up to 45km/h",
       transmissionTypeId: automaticTransmission.id,
       minAge: 14,
       minLessonHours: 10,
       displayOrder: 1,
     },
     {
-      name: 'A1',
-      fullName: 'Light Motorcycle',
-      description: 'Light motorcycles up to 125cc',
+      name: "A1",
+      fullName: "Light Motorcycle",
+      description: "Light motorcycles up to 125cc",
       transmissionTypeId: manualTransmission.id,
       minAge: 16,
       minLessonHours: 15,
       displayOrder: 2,
     },
     {
-      name: 'A2',
-      fullName: 'Medium Motorcycle',
-      description: 'Medium motorcycles up to 35kW',
+      name: "A2",
+      fullName: "Medium Motorcycle",
+      description: "Medium motorcycles up to 35kW",
       transmissionTypeId: manualTransmission.id,
       minAge: 18,
       minLessonHours: 18,
       displayOrder: 3,
     },
     {
-      name: 'A',
-      fullName: 'Motorcycle',
-      description: 'All motorcycles and motor tricycles',
+      name: "A",
+      fullName: "Motorcycle",
+      description: "All motorcycles and motor tricycles",
       transmissionTypeId: manualTransmission.id,
       minAge: 24,
       minLessonHours: 20,
       displayOrder: 4,
     },
     {
-      name: 'B1',
-      fullName: 'Light Quadricycle',
-      description: 'Light quadricycles',
+      name: "B1",
+      fullName: "Light Quadricycle",
+      description: "Light quadricycles",
       transmissionTypeId: manualTransmission.id,
       minAge: 16,
       minLessonHours: 15,
       displayOrder: 5,
     },
     {
-      name: 'B',
-      fullName: 'Car',
-      description: 'Passenger vehicles up to 3,500kg',
+      name: "B",
+      fullName: "Car",
+      description: "Passenger vehicles up to 3,500kg",
       transmissionTypeId: manualTransmission.id,
       minAge: 18,
       minLessonHours: 30,
       displayOrder: 6,
     },
     {
-      name: 'C1',
-      fullName: 'Light Truck',
-      description: 'Vehicles from 3,500kg to 7,500kg',
+      name: "C1",
+      fullName: "Light Truck",
+      description: "Vehicles from 3,500kg to 7,500kg",
       transmissionTypeId: manualTransmission.id,
       minAge: 18,
       minLessonHours: 35,
       displayOrder: 7,
     },
     {
-      name: 'C',
-      fullName: 'Truck',
-      description: 'Vehicles exceeding 3,500kg',
+      name: "C",
+      fullName: "Truck",
+      description: "Vehicles exceeding 3,500kg",
       transmissionTypeId: manualTransmission.id,
       minAge: 21,
       minLessonHours: 40,
       displayOrder: 8,
     },
     {
-      name: 'D1',
-      fullName: 'Small Bus',
-      description: 'Vehicles with 9-16 passenger seats',
+      name: "D1",
+      fullName: "Small Bus",
+      description: "Vehicles with 9-16 passenger seats",
       transmissionTypeId: manualTransmission.id,
       minAge: 21,
       minLessonHours: 45,
       displayOrder: 9,
     },
     {
-      name: 'D',
-      fullName: 'Bus',
-      description: 'Vehicles with more than 8 passenger seats',
+      name: "D",
+      fullName: "Bus",
+      description: "Vehicles with more than 8 passenger seats",
       transmissionTypeId: manualTransmission.id,
       minAge: 24,
       minLessonHours: 50,
       displayOrder: 10,
     },
     {
-      name: 'B+E',
-      fullName: 'Car with Trailer',
-      description: 'Car with trailer exceeding 750kg',
+      name: "B+E",
+      fullName: "Car with Trailer",
+      description: "Car with trailer exceeding 750kg",
       transmissionTypeId: manualTransmission.id,
       minAge: 18,
       minLessonHours: 35,
       displayOrder: 11,
     },
     {
-      name: 'C+E',
-      fullName: 'Truck with Trailer',
-      description: 'Truck with trailer',
+      name: "C+E",
+      fullName: "Truck with Trailer",
+      description: "Truck with trailer",
       transmissionTypeId: manualTransmission.id,
       minAge: 21,
       minLessonHours: 45,
       displayOrder: 12,
     },
     {
-      name: 'C1+E',
-      fullName: 'Light Truck with Trailer',
-      description: 'Light truck with trailer',
+      name: "C1+E",
+      fullName: "Light Truck with Trailer",
+      description: "Light truck with trailer",
       transmissionTypeId: manualTransmission.id,
       minAge: 18,
       minLessonHours: 40,
       displayOrder: 13,
     },
     {
-      name: 'D+E',
-      fullName: 'Bus with Trailer',
-      description: 'Bus with trailer',
+      name: "D+E",
+      fullName: "Bus with Trailer",
+      description: "Bus with trailer",
       transmissionTypeId: manualTransmission.id,
       minAge: 24,
       minLessonHours: 55,
       displayOrder: 14,
     },
     {
-      name: 'D1+E',
-      fullName: 'Small Bus with Trailer',
-      description: 'Small bus with trailer',
+      name: "D1+E",
+      fullName: "Small Bus with Trailer",
+      description: "Small bus with trailer",
       transmissionTypeId: manualTransmission.id,
       minAge: 21,
       minLessonHours: 50,
       displayOrder: 15,
     },
-  ]
+  ];
 
   const createdCategories = await Promise.all(
-    categories.map(category =>
+    categories.map((category) =>
       prisma.category.create({
         data: category,
-      })
-    )
-  )
+      }),
+    ),
+  );
 
-  console.log(`✅ Created ${createdCategories.length} categories`)
+  console.log(`✅ Created ${createdCategories.length} categories`);
 
   // 3. Create Super Admin User
-  console.log('👑 Creating super admin user...')
-  const hashedPassword = await bcrypt.hash('Conquistadora!', 12)
-  
+  console.log("👑 Creating super admin user...");
+  const hashedPassword = await bcrypt.hash("Conquistadora!", 12);
+
   const superAdmin = await prisma.user.create({
     data: {
-      email: 'conquistadora@drivingschool.com',
+      email: "conquistadora@drivingschool.com",
       organizationId: orgId,
       passwordHash: hashedPassword,
       role: "SUPER_ADMIN" as any,
-      firstName: 'Conquistadora',
-      lastName: 'Admin',
-      phoneNumber: '+1-555-0100',
+      firstName: "Conquistadora",
+      lastName: "Admin",
+      phoneNumber: "+1-555-0100",
       isEmailVerified: true,
       isApproved: true,
     },
-  })
+  });
 
-  console.log(`✅ Created super admin: ${superAdmin.firstName} ${superAdmin.lastName}`)
+  console.log(
+    `✅ Created super admin: ${superAdmin.firstName} ${superAdmin.lastName}`,
+  );
 
   // 4. Create Default Test User (john@doe.com)
-  console.log('👤 Creating default test user...')
-  const testUserPassword = await bcrypt.hash('johndoe123', 12)
-  
+  console.log("👤 Creating default test user...");
+  const testUserPassword = await bcrypt.hash("johndoe123", 12);
+
   const testUser = await prisma.user.create({
     data: {
-      email: 'john@doe.com',
+      email: "john@doe.com",
       organizationId: orgId,
       passwordHash: testUserPassword,
       role: "SUPER_ADMIN" as any,
-      firstName: 'John',
-      lastName: 'Doe',
-      phoneNumber: '+1-555-0001',
+      firstName: "John",
+      lastName: "Doe",
+      phoneNumber: "+1-555-0001",
       isEmailVerified: true,
       isApproved: true,
     },
-  })
+  });
 
-  console.log(`✅ Created test user: ${testUser.firstName} ${testUser.lastName}`)
+  console.log(
+    `✅ Created test user: ${testUser.firstName} ${testUser.lastName}`,
+  );
 
   // 5. Create Sample Instructors
-  console.log('👨‍🏫 Creating sample instructors...')
+  console.log("👨‍🏫 Creating sample instructors...");
   const instructorUsers = await Promise.all([
     prisma.user.create({
       data: {
-        email: 'michael.johnson@drivingschool.com',
+        email: "michael.johnson@drivingschool.com",
         organizationId: orgId,
-        passwordHash: await bcrypt.hash('instructor123', 12),
+        passwordHash: await bcrypt.hash("instructor123", 12),
         role: "INSTRUCTOR" as any,
-        firstName: 'Michael',
-        lastName: 'Johnson',
-        phoneNumber: '+1-555-0201',
+        firstName: "Michael",
+        lastName: "Johnson",
+        phoneNumber: "+1-555-0201",
         isEmailVerified: true,
         isApproved: true,
       },
     }),
     prisma.user.create({
       data: {
-        email: 'sarah.williams@drivingschool.com',
+        email: "sarah.williams@drivingschool.com",
         organizationId: orgId,
-        passwordHash: await bcrypt.hash('instructor123', 12),
+        passwordHash: await bcrypt.hash("instructor123", 12),
         role: "INSTRUCTOR" as any,
-        firstName: 'Sarah',
-        lastName: 'Williams',
-        phoneNumber: '+1-555-0202',
+        firstName: "Sarah",
+        lastName: "Williams",
+        phoneNumber: "+1-555-0202",
         isEmailVerified: true,
         isApproved: true,
       },
     }),
     prisma.user.create({
       data: {
-        email: 'david.brown@drivingschool.com',
+        email: "david.brown@drivingschool.com",
         organizationId: orgId,
-        passwordHash: await bcrypt.hash('instructor123', 12),
+        passwordHash: await bcrypt.hash("instructor123", 12),
         role: "INSTRUCTOR" as any,
-        firstName: 'David',
-        lastName: 'Brown',
-        phoneNumber: '+1-555-0203',
+        firstName: "David",
+        lastName: "Brown",
+        phoneNumber: "+1-555-0203",
         isEmailVerified: true,
         isApproved: true,
       },
     }),
-  ])
+  ]);
 
   const instructors = await Promise.all([
     prisma.instructor.create({
       data: {
         userId: instructorUsers[0].id,
-        instructorLicenseNumber: 'INS-001-2024',
-        instructorLicenseExpiry: new Date('2026-12-31'),
-        employmentType: 'FULL_TIME',
-        hourlyRate: 45.00,
+        organizationId: orgId,
+        instructorLicenseNumber: "INS-001-2024",
+        instructorLicenseExpiry: new Date("2026-12-31"),
+        employmentType: "FULL_TIME",
+        hourlyRate: 45.0,
         maxLessonsPerDay: 8,
         isAvailableForBooking: true,
-        specializations: 'Manual transmission, Highway driving',
+        specializations: "Manual transmission, Highway driving",
         qualifiedCategories: {
-          connect: createdCategories.filter(c => ['B', 'B+E', 'C1'].includes(c.name)).map(c => ({ id: c.id })),
+          connect: createdCategories
+            .filter((c) => ["B", "B+E", "C1"].includes(c.name))
+            .map((c) => ({ id: c.id })),
         },
         qualifiedTransmissionTypes: {
-          connect: [{ id: manualTransmission.id }, { id: automaticTransmission.id }],
+          connect: [
+            { id: manualTransmission.id },
+            { id: automaticTransmission.id },
+          ],
         },
       },
     }),
     prisma.instructor.create({
       data: {
         userId: instructorUsers[1].id,
-        instructorLicenseNumber: 'INS-002-2024',
-        instructorLicenseExpiry: new Date('2026-12-31'),
-        employmentType: 'FULL_TIME',
-        hourlyRate: 42.00,
+        organizationId: orgId,
+        instructorLicenseNumber: "INS-002-2024",
+        instructorLicenseExpiry: new Date("2026-12-31"),
+        employmentType: "FULL_TIME",
+        hourlyRate: 42.0,
         maxLessonsPerDay: 8,
         isAvailableForBooking: true,
-        specializations: 'Automatic transmission, City driving, Nervous students',
+        specializations:
+          "Automatic transmission, City driving, Nervous students",
         qualifiedCategories: {
-          connect: createdCategories.filter(c => ['B', 'A1', 'A2'].includes(c.name)).map(c => ({ id: c.id })),
+          connect: createdCategories
+            .filter((c) => ["B", "A1", "A2"].includes(c.name))
+            .map((c) => ({ id: c.id })),
         },
         qualifiedTransmissionTypes: {
-          connect: [{ id: manualTransmission.id }, { id: automaticTransmission.id }],
+          connect: [
+            { id: manualTransmission.id },
+            { id: automaticTransmission.id },
+          ],
         },
       },
     }),
     prisma.instructor.create({
       data: {
         userId: instructorUsers[2].id,
-        instructorLicenseNumber: 'INS-003-2024',
-        instructorLicenseExpiry: new Date('2026-12-31'),
-        employmentType: 'PART_TIME',
-        hourlyRate: 48.00,
+        organizationId: orgId,
+        instructorLicenseNumber: "INS-003-2024",
+        instructorLicenseExpiry: new Date("2026-12-31"),
+        employmentType: "PART_TIME",
+        hourlyRate: 48.0,
         maxLessonsPerDay: 6,
         isAvailableForBooking: true,
-        specializations: 'Heavy vehicles, Commercial driving',
+        specializations: "Heavy vehicles, Commercial driving",
         qualifiedCategories: {
-          connect: createdCategories.filter(c => ['C', 'C1', 'D', 'D1'].includes(c.name)).map(c => ({ id: c.id })),
+          connect: createdCategories
+            .filter((c) => ["C", "C1", "D", "D1"].includes(c.name))
+            .map((c) => ({ id: c.id })),
         },
         qualifiedTransmissionTypes: {
           connect: [{ id: manualTransmission.id }],
         },
       },
     }),
-  ])
+  ]);
 
-  console.log(`✅ Created ${instructors.length} instructors`)
+  console.log(`✅ Created ${instructors.length} instructors`);
 
   // 6. Create Sample Students
-  console.log('👨‍🎓 Creating sample students...')
+  console.log("👨‍🎓 Creating sample students...");
   const studentUsers = await Promise.all([
     prisma.user.create({
       data: {
-        email: 'alice.smith@email.com',
+        email: "alice.smith@email.com",
         organizationId: orgId,
-        passwordHash: await bcrypt.hash('student123', 12),
+        passwordHash: await bcrypt.hash("student123", 12),
         role: "STUDENT" as any,
-        firstName: 'Alice',
-        lastName: 'Smith',
-        phoneNumber: '+1-555-0301',
-        dateOfBirth: new Date('1998-05-15'),
-        address: '123 Main St',
-        city: 'Springfield',
-        postalCode: '12345',
+        firstName: "Alice",
+        lastName: "Smith",
+        phoneNumber: "+1-555-0301",
+        dateOfBirth: new Date("1998-05-15"),
+        address: "123 Main St",
+        city: "Springfield",
+        postalCode: "12345",
         isEmailVerified: true,
         isApproved: true,
       },
     }),
     prisma.user.create({
       data: {
-        email: 'bob.wilson@email.com',
+        email: "bob.wilson@email.com",
         organizationId: orgId,
-        passwordHash: await bcrypt.hash('student123', 12),
+        passwordHash: await bcrypt.hash("student123", 12),
         role: "STUDENT" as any,
-        firstName: 'Bob',
-        lastName: 'Wilson',
-        phoneNumber: '+1-555-0302',
-        dateOfBirth: new Date('2000-08-22'),
-        address: '456 Oak Ave',
-        city: 'Springfield',
-        postalCode: '12346',
+        firstName: "Bob",
+        lastName: "Wilson",
+        phoneNumber: "+1-555-0302",
+        dateOfBirth: new Date("2000-08-22"),
+        address: "456 Oak Ave",
+        city: "Springfield",
+        postalCode: "12346",
         isEmailVerified: true,
         isApproved: true,
       },
     }),
     prisma.user.create({
       data: {
-        email: 'carol.davis@email.com',
+        email: "carol.davis@email.com",
         organizationId: orgId,
-        passwordHash: await bcrypt.hash('student123', 12),
+        passwordHash: await bcrypt.hash("student123", 12),
         role: "STUDENT" as any,
-        firstName: 'Carol',
-        lastName: 'Davis',
-        phoneNumber: '+1-555-0303',
-        dateOfBirth: new Date('1995-11-10'),
-        address: '789 Pine Rd',
-        city: 'Springfield',
-        postalCode: '12347',
+        firstName: "Carol",
+        lastName: "Davis",
+        phoneNumber: "+1-555-0303",
+        dateOfBirth: new Date("1995-11-10"),
+        address: "789 Pine Rd",
+        city: "Springfield",
+        postalCode: "12347",
         isEmailVerified: true,
         isApproved: true,
       },
     }),
-  ])
+  ]);
 
-  const categoryB = createdCategories.find(c => c.name === 'B')
-  const categoryA1 = createdCategories.find(c => c.name === 'A1')
+  const categoryB = createdCategories.find((c) => c.name === "B");
+  const categoryA1 = createdCategories.find((c) => c.name === "A1");
 
   const students = await Promise.all([
     prisma.student.create({
       data: {
         userId: studentUsers[0].id,
+        organizationId: orgId,
         studentNumber: 1,
-        studentIdNumber: 'STU-001-2024',
+        studentIdNumber: "STU-001-2024",
         categoryId: categoryB?.id,
         transmissionTypeId: automaticTransmission.id,
-        emergencyContactName: 'Jane Smith',
-        emergencyContactPhone: '+1-555-0401',
-        emergencyContactRelationship: 'Mother',
+        emergencyContactName: "Jane Smith",
+        emergencyContactPhone: "+1-555-0401",
+        emergencyContactRelationship: "Mother",
         preferredInstructorId: instructors[1].id,
-        preferredLessonTime: 'afternoon',
-        specialRequirements: 'Prefers calm driving environments',
+        preferredLessonTime: "afternoon",
+        specialRequirements: "Prefers calm driving environments",
       },
     }),
     prisma.student.create({
       data: {
         userId: studentUsers[1].id,
+        organizationId: orgId,
         studentNumber: 2,
-        studentIdNumber: 'STU-002-2024',
+        studentIdNumber: "STU-002-2024",
         categoryId: categoryB?.id,
         transmissionTypeId: manualTransmission.id,
-        emergencyContactName: 'Mary Wilson',
-        emergencyContactPhone: '+1-555-0402',
-        emergencyContactRelationship: 'Mother',
+        emergencyContactName: "Mary Wilson",
+        emergencyContactPhone: "+1-555-0402",
+        emergencyContactRelationship: "Mother",
         preferredInstructorId: instructors[0].id,
-        preferredLessonTime: 'morning',
+        preferredLessonTime: "morning",
       },
     }),
     prisma.student.create({
       data: {
         userId: studentUsers[2].id,
+        organizationId: orgId,
         studentNumber: 3,
-        studentIdNumber: 'STU-003-2024',
+        studentIdNumber: "STU-003-2024",
         categoryId: categoryA1?.id,
         transmissionTypeId: manualTransmission.id,
-        emergencyContactName: 'Robert Davis',
-        emergencyContactPhone: '+1-555-0403',
-        emergencyContactRelationship: 'Father',
+        emergencyContactName: "Robert Davis",
+        emergencyContactPhone: "+1-555-0403",
+        emergencyContactRelationship: "Father",
         preferredInstructorId: instructors[1].id,
-        preferredLessonTime: 'evening',
-        specialRequirements: 'Experienced with motorcycles',
+        preferredLessonTime: "evening",
+        specialRequirements: "Experienced with motorcycles",
       },
     }),
-  ])
+  ]);
 
-  console.log(`✅ Created ${students.length} students`)
+  console.log(`✅ Created ${students.length} students`);
 
   // 7. Create Sample Vehicles
-  console.log('🚗 Creating sample vehicles...')
+  console.log("🚗 Creating sample vehicles...");
   const vehicles = await Promise.all([
     prisma.vehicle.create({
       data: {
-        registrationNumber: 'DS-001-2024',
-        make: 'Toyota',
-        model: 'Corolla',
+        registrationNumber: "DS-001-2024",
+        organizationId: orgId,
+        make: "Toyota",
+        model: "Corolla",
         year: 2023,
-        color: 'White',
-        vin: 'JTD3232P1S2123456',
+        color: "White",
+        vin: "JTD3232P1S2123456",
         categoryId: categoryB?.id,
         transmissionTypeId: automaticTransmission.id,
-        status: 'AVAILABLE',
+        status: "AVAILABLE",
         currentMileage: 15000,
         serviceIntervalKm: 10000,
-        nextServiceDate: new Date('2024-12-01'),
-        insurancePolicyNumber: 'POL-2024-001',
-        insuranceExpiryDate: new Date('2024-12-31'),
-        insuranceCompany: 'SafeDrive Insurance',
+        nextServiceDate: new Date("2024-12-01"),
+        insurancePolicyNumber: "POL-2024-001",
+        insuranceExpiryDate: new Date("2024-12-31"),
+        insuranceCompany: "SafeDrive Insurance",
         hasDualControls: true,
         hasDashcam: true,
-        fuelType: 'PETROL',
+        fuelType: "PETROL",
       },
     }),
     prisma.vehicle.create({
       data: {
-        registrationNumber: 'DS-002-2024',
-        make: 'Honda',
-        model: 'Civic',
+        registrationNumber: "DS-002-2024",
+        organizationId: orgId,
+        make: "Honda",
+        model: "Civic",
         year: 2022,
-        color: 'Blue',
-        vin: 'JHK3232P1S2654321',
+        color: "Blue",
+        vin: "JHK3232P1S2654321",
         categoryId: categoryB?.id,
         transmissionTypeId: manualTransmission.id,
-        status: 'AVAILABLE',
+        status: "AVAILABLE",
         currentMileage: 22000,
         serviceIntervalKm: 10000,
-        nextServiceDate: new Date('2024-11-15'),
-        insurancePolicyNumber: 'POL-2024-002',
-        insuranceExpiryDate: new Date('2024-12-31'),
-        insuranceCompany: 'SafeDrive Insurance',
+        nextServiceDate: new Date("2024-11-15"),
+        insurancePolicyNumber: "POL-2024-002",
+        insuranceExpiryDate: new Date("2024-12-31"),
+        insuranceCompany: "SafeDrive Insurance",
         hasDualControls: true,
         hasDashcam: false,
-        fuelType: 'PETROL',
+        fuelType: "PETROL",
       },
     }),
     prisma.vehicle.create({
       data: {
-        registrationNumber: 'DS-003-2024',
-        make: 'Yamaha',
-        model: 'YBR 125',
+        registrationNumber: "DS-003-2024",
+        organizationId: orgId,
+        make: "Yamaha",
+        model: "YBR 125",
         year: 2023,
-        color: 'Black',
-        vin: 'YAM123456789012345',
+        color: "Black",
+        vin: "YAM123456789012345",
         categoryId: categoryA1?.id,
         transmissionTypeId: manualTransmission.id,
-        status: 'AVAILABLE',
+        status: "AVAILABLE",
         currentMileage: 5000,
         serviceIntervalKm: 5000,
-        nextServiceDate: new Date('2024-10-30'),
-        insurancePolicyNumber: 'POL-2024-003',
-        insuranceExpiryDate: new Date('2024-12-31'),
-        insuranceCompany: 'MotoBike Insurance',
+        nextServiceDate: new Date("2024-10-30"),
+        insurancePolicyNumber: "POL-2024-003",
+        insuranceExpiryDate: new Date("2024-12-31"),
+        insuranceCompany: "MotoBike Insurance",
         hasDualControls: false,
         hasDashcam: false,
-        fuelType: 'PETROL',
+        fuelType: "PETROL",
       },
     }),
     prisma.vehicle.create({
       data: {
-        registrationNumber: 'DS-004-2024',
-        make: 'Volkswagen',
-        model: 'Golf',
+        registrationNumber: "DS-004-2024",
+        organizationId: orgId,
+        make: "Volkswagen",
+        model: "Golf",
         year: 2023,
-        color: 'Silver',
-        vin: 'VWG3232P1S2987654',
+        color: "Silver",
+        vin: "VWG3232P1S2987654",
         categoryId: categoryB?.id,
         transmissionTypeId: manualTransmission.id,
-        status: 'AVAILABLE',
+        status: "AVAILABLE",
         currentMileage: 12000,
         serviceIntervalKm: 15000,
-        nextServiceDate: new Date('2024-12-15'),
-        insurancePolicyNumber: 'POL-2024-004',
-        insuranceExpiryDate: new Date('2024-12-31'),
-        insuranceCompany: 'SafeDrive Insurance',
+        nextServiceDate: new Date("2024-12-15"),
+        insurancePolicyNumber: "POL-2024-004",
+        insuranceExpiryDate: new Date("2024-12-31"),
+        insuranceCompany: "SafeDrive Insurance",
         hasDualControls: true,
         hasDashcam: true,
-        fuelType: 'DIESEL',
+        fuelType: "DIESEL",
       },
     }),
     prisma.vehicle.create({
       data: {
-        registrationNumber: 'DS-005-2024',
-        make: 'Nissan',
-        model: 'Leaf',
+        registrationNumber: "DS-005-2024",
+        organizationId: orgId,
+        make: "Nissan",
+        model: "Leaf",
         year: 2023,
-        color: 'Green',
-        vin: 'NIS3232P1S2147258',
+        color: "Green",
+        vin: "NIS3232P1S2147258",
         categoryId: categoryB?.id,
         transmissionTypeId: automaticTransmission.id,
-        status: 'AVAILABLE',
+        status: "AVAILABLE",
         currentMileage: 8000,
         serviceIntervalKm: 20000,
-        nextServiceDate: new Date('2025-01-30'),
-        insurancePolicyNumber: 'POL-2024-005',
-        insuranceExpiryDate: new Date('2024-12-31'),
-        insuranceCompany: 'EcoDrive Insurance',
+        nextServiceDate: new Date("2025-01-30"),
+        insurancePolicyNumber: "POL-2024-005",
+        insuranceExpiryDate: new Date("2024-12-31"),
+        insuranceCompany: "EcoDrive Insurance",
         hasDualControls: true,
         hasDashcam: true,
-        fuelType: 'ELECTRIC',
+        fuelType: "ELECTRIC",
       },
     }),
-  ])
+  ]);
 
-  console.log(`✅ Created ${vehicles.length} vehicles`)
+  console.log(`✅ Created ${vehicles.length} vehicles`);
 
   // 8. Create System Settings
-  console.log('⚙️ Creating system settings...')
+  console.log("⚙️ Creating system settings...");
   const systemSettings = await Promise.all([
     prisma.systemSetting.create({
       data: {
-        settingKey: 'business_name',
-        settingValue: 'Driving School Academy',
-        settingType: 'STRING',
-        description: 'School name',
-        category: 'general',
+        settingKey: "business_name",
+        settingValue: "Driving School Academy",
+        settingType: "STRING",
+        description: "School name",
+        category: "general",
         isPublic: true,
       },
     }),
     prisma.systemSetting.create({
       data: {
-        settingKey: 'business_email',
-        settingValue: 'info@elitedrivingacademy.com',
-        settingType: 'STRING',
-        description: 'Primary contact email',
-        category: 'general',
+        settingKey: "business_email",
+        settingValue: "info@elitedrivingacademy.com",
+        settingType: "STRING",
+        description: "Primary contact email",
+        category: "general",
         isPublic: true,
       },
     }),
     prisma.systemSetting.create({
       data: {
-        settingKey: 'business_phone',
-        settingValue: '+1-555-DRIVE-NOW',
-        settingType: 'STRING',
-        description: 'Primary contact phone',
-        category: 'general',
+        settingKey: "business_phone",
+        settingValue: "+1-555-DRIVE-NOW",
+        settingType: "STRING",
+        description: "Primary contact phone",
+        category: "general",
         isPublic: true,
       },
     }),
     prisma.systemSetting.create({
       data: {
-        settingKey: 'default_lesson_duration',
-        settingValue: '60',
-        settingType: 'INTEGER',
-        description: 'Default lesson duration in minutes',
-        category: 'lessons',
+        settingKey: "default_lesson_duration",
+        settingValue: "60",
+        settingType: "INTEGER",
+        description: "Default lesson duration in minutes",
+        category: "lessons",
         isPublic: true,
       },
     }),
     prisma.systemSetting.create({
       data: {
-        settingKey: 'lesson_cancellation_hours',
-        settingValue: '24',
-        settingType: 'INTEGER',
-        description: 'Minimum hours before lesson to cancel',
-        category: 'lessons',
+        settingKey: "lesson_cancellation_hours",
+        settingValue: "24",
+        settingType: "INTEGER",
+        description: "Minimum hours before lesson to cancel",
+        category: "lessons",
         isPublic: true,
       },
     }),
     prisma.systemSetting.create({
       data: {
-        settingKey: 'auto_approve_lessons',
-        settingValue: 'false',
-        settingType: 'BOOLEAN',
-        description: 'Auto-approve lesson requests',
-        category: 'lessons',
+        settingKey: "auto_approve_lessons",
+        settingValue: "false",
+        settingType: "BOOLEAN",
+        description: "Auto-approve lesson requests",
+        category: "lessons",
         isPublic: false,
       },
     }),
     prisma.systemSetting.create({
       data: {
-        settingKey: 'max_daily_lessons_per_student',
-        settingValue: '3',
-        settingType: 'INTEGER',
-        description: 'Maximum lessons per student per day',
-        category: 'lessons',
+        settingKey: "max_daily_lessons_per_student",
+        settingValue: "3",
+        settingType: "INTEGER",
+        description: "Maximum lessons per student per day",
+        category: "lessons",
         isPublic: true,
       },
     }),
     prisma.systemSetting.create({
       data: {
-        settingKey: 'theory_exam_pass_score',
-        settingValue: '80',
-        settingType: 'DECIMAL',
-        description: 'Minimum score to pass theory exam (%)',
-        category: 'exams',
+        settingKey: "theory_exam_pass_score",
+        settingValue: "80",
+        settingType: "DECIMAL",
+        description: "Minimum score to pass theory exam (%)",
+        category: "exams",
         isPublic: true,
       },
     }),
     prisma.systemSetting.create({
       data: {
-        settingKey: 'practical_exam_max_attempts',
-        settingValue: '3',
-        settingType: 'INTEGER',
-        description: 'Maximum practical exam attempts',
-        category: 'exams',
+        settingKey: "practical_exam_max_attempts",
+        settingValue: "3",
+        settingType: "INTEGER",
+        description: "Maximum practical exam attempts",
+        category: "exams",
         isPublic: true,
       },
     }),
     prisma.systemSetting.create({
       data: {
-        settingKey: 'email_notifications_enabled',
-        settingValue: 'true',
-        settingType: 'BOOLEAN',
-        description: 'Enable email notifications',
-        category: 'notifications',
+        settingKey: "email_notifications_enabled",
+        settingValue: "true",
+        settingType: "BOOLEAN",
+        description: "Enable email notifications",
+        category: "notifications",
         isPublic: false,
       },
     }),
     prisma.systemSetting.create({
       data: {
-        settingKey: 'booking_advance_days',
-        settingValue: '30',
-        settingType: 'INTEGER',
-        description: 'Days in advance for booking',
-        category: 'lessons',
+        settingKey: "booking_advance_days",
+        settingValue: "30",
+        settingType: "INTEGER",
+        description: "Days in advance for booking",
+        category: "lessons",
         isPublic: true,
       },
     }),
-  ])
+  ]);
 
-  console.log(`✅ Created ${systemSettings.length} system settings`)
+  console.log(`✅ Created ${systemSettings.length} system settings`);
 
   // Backfill org scope for seeded rows (keeps seed simpler/less error-prone)
-  await prisma.instructor.updateMany({ data: { organizationId: orgId } })
-  await prisma.student.updateMany({ data: { organizationId: orgId } })
-  await prisma.vehicle.updateMany({ data: { organizationId: orgId } })
-  await prisma.systemSetting.updateMany({ data: { organizationId: orgId } })
+  await prisma.instructor.updateMany({ data: { organizationId: orgId } });
+  await prisma.student.updateMany({ data: { organizationId: orgId } });
+  await prisma.vehicle.updateMany({ data: { organizationId: orgId } });
+  await prisma.systemSetting.updateMany({ data: { organizationId: orgId } });
 
   // 9. Create Sample Lesson Counter for students
-  console.log('📊 Creating lesson counters...')
+  console.log("📊 Creating lesson counters...");
   const lessonCounters = await Promise.all([
     prisma.lessonCounter.create({
       data: {
@@ -820,9 +855,9 @@ async function main() {
         progressPercentage: 20.0,
       },
     }),
-  ])
+  ]);
 
-  console.log(`✅ Created ${lessonCounters.length} lesson counters`)
+  console.log(`✅ Created ${lessonCounters.length} lesson counters`);
 
   // Summary
   console.log(`
@@ -855,15 +890,15 @@ async function main() {
   Password: student123
 
 ✅ Ready to start the application!
-  `)
+  `);
 }
 
 main()
   .then(async () => {
-    await prisma.$disconnect()
+    await prisma.$disconnect();
   })
   .catch(async (e) => {
-    console.error('❌ Seeding failed:', e)
-    await prisma.$disconnect()
-    process.exit(1)
-  })
+    console.error("❌ Seeding failed:", e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });

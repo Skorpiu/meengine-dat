@@ -11,6 +11,12 @@
 import { loadEnvConfig } from "@next/env";
 import { PrismaClient } from "@prisma/client";
 import {
+  countSqlInstructorsNullOrgUserHasOrg,
+  countSqlLessonRequestsNullOrgStudentMissingOrg,
+  countSqlNullOrganizationId,
+  countSqlStudentsNullOrgUserHasOrg,
+} from "@/lib/tenant-operational-organization-id-sql";
+import {
   assertSelectOnlySql,
   computeAmbiguousRowCount,
   countOperationalNulls,
@@ -119,27 +125,27 @@ async function gatherOperationalCounts(
   const [student, instructor, vehicle, lesson, exam, lessonRequest] =
     await Promise.all([
       countNullAndTotal(
-        prisma.student.count({ where: { organizationId: null } }),
+        countSqlNullOrganizationId(prisma, "student"),
         prisma.student.count(),
       ),
       countNullAndTotal(
-        prisma.instructor.count({ where: { organizationId: null } }),
+        countSqlNullOrganizationId(prisma, "instructor"),
         prisma.instructor.count(),
       ),
       countNullAndTotal(
-        prisma.vehicle.count({ where: { organizationId: null } }),
+        countSqlNullOrganizationId(prisma, "vehicle"),
         prisma.vehicle.count(),
       ),
       countNullAndTotal(
-        prisma.lesson.count({ where: { organizationId: null } }),
+        countSqlNullOrganizationId(prisma, "lesson"),
         prisma.lesson.count(),
       ),
       countNullAndTotal(
-        prisma.exam.count({ where: { organizationId: null } }),
+        countSqlNullOrganizationId(prisma, "exam"),
         prisma.exam.count(),
       ),
       countNullAndTotal(
-        prisma.lessonRequest.count({ where: { organizationId: null } }),
+        countSqlNullOrganizationId(prisma, "lessonRequest"),
         prisma.lessonRequest.count(),
       ),
     ]);
@@ -220,24 +226,9 @@ async function gatherConflicts(
     runSelectRaw<{ id: string }[]>(prisma, LESSONS_CONFLICTING_SOURCES_SQL),
     runSelectRaw<{ id: string }[]>(prisma, EXAMS_CONFLICTING_SOURCES_SQL),
     runSelectRaw<{ id: string }[]>(prisma, VEHICLES_CONFLICTING_SOURCES_SQL),
-    prisma.student.count({
-      where: {
-        organizationId: null,
-        user: { organizationId: { not: null } },
-      },
-    }),
-    prisma.instructor.count({
-      where: {
-        organizationId: null,
-        user: { organizationId: { not: null } },
-      },
-    }),
-    prisma.lessonRequest.count({
-      where: {
-        organizationId: null,
-        student: { organizationId: null },
-      },
-    }),
+    countSqlStudentsNullOrgUserHasOrg(prisma),
+    countSqlInstructorsNullOrgUserHasOrg(prisma),
+    countSqlLessonRequestsNullOrgStudentMissingOrg(prisma),
   ]);
 
   const counts: ConflictCounts = {
