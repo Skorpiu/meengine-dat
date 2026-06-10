@@ -65,24 +65,29 @@ const INSTRUCTOR_ENTRIES = [
     description: "Operational instructor profile tied to an app login account.",
   },
   {
-    label: "Pending invite (Onboarding)",
+    label: "Pending invite (Onboarding only)",
     description:
-      "Invitation sent before an instructor profile exists — managed on Instructors → Onboarding, not on Profiles.",
+      "Invitation sent before an instructor profile exists — managed on Instructors → Onboarding. There is no Pending invite row badge on Profiles in the current model.",
   },
   {
-    label: "App access pending approval",
+    label: "App access pending approval (Profiles)",
     description:
-      "Profile exists after invite acceptance (or admin creation awaiting approval) — account not approved to sign in yet. Shown on Profiles, not Onboarding.",
+      "Profile exists after invite acceptance or direct admin creation — account not approved to sign in yet. Shown on Profiles, not Onboarding.",
   },
   {
-    label: "Active",
+    label: "Active (Profiles)",
     description:
       "Approved and available for booking; can sign in (same blue primary badge as Vehicles Active).",
   },
   {
-    label: "Inactive",
+    label: "Inactive (Profiles)",
     description:
       "Deactivated — not available for booking; login disabled (same muted secondary badge as Vehicles Inactive). History preserved.",
+  },
+  {
+    label: "Students vs instructors (invitations)",
+    description:
+      "Students can show Pending invite on Profiles when the profile is INVITED. Instructors only appear on Profiles after registration — pending invites stay on Onboarding until then.",
   },
   {
     label: "App account linked / awaiting approval / inactive",

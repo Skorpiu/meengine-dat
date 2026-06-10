@@ -311,6 +311,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `people-management-profile-address-fields-v1` — Address on Student/Instructor profile (DEC-023); `Student.address` migration; PATCH/POST students + manual create; APP_USER syncs `User.address`; Instructor UI-only on `User.address`; App access = login/lifecycle only
 - `people-management-student-email-change-policy-v1` — Change email via `POST /api/admin/students/[id]/change-email`; PATCH guard `use_change_email_flow`; Edit Student modal; DEC-024; no schema/migration
 - `people-management-instructor-profile-invite-badge-v1` — UI-only instructor invite/profile lifecycle clarity (DEC-025): Onboarding copy; Profiles conditional app-account subtitle; instructor label guide; no Pending invite badge on Profiles; no API/schema
+- `people-management-ux-unification-instructor-invitations-v1` — UI-only closure under `people-management-ux-unification` (DEC-025): refined Onboarding/Profiles copy + label guide (Student vs Instructor asymmetry); helpers reused from `instructor-record-ui-utils.ts`; no API/schema
 - `admin-settings-client-visibility-review-v1` — docs-only audit: `/admin/settings` operator/internal; module gating = License/Entitlements (DEC-026); report `docs/architecture/admin-settings-client-visibility-audit.md`; no runtime changes
 - `admin-settings-client-visibility-hide-v1` — UI-only (DEC-026 Fase B): Settings removed from school admin navbar; `/admin/settings` operator/internal copy; CRUD tabs + APIs unchanged
 - `admin-license-client-readonly-v1` — UI-only (DEC-026 Fase C): `/admin/license` Plan & features read-only; Activate/toggles hidden; navbar **Plan**; APIs/gating unchanged
@@ -332,12 +333,16 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Current recommended next (runtime/UX slice):**
 
-1. `people-management-ux-unification` remaining (invitations on instructor record — tabs v1 done; **route split deferred D4**)
+1. Product/packaging slices — `docs/product/`, `roadmap-todo.md` **P1 / Product and packaging**
 
 **Likely next:**
 
-2. Product/packaging slices — `docs/product/`, `roadmap-todo.md` **P1 / Product and packaging**
-3. `audit-log-tenant-context-foundation` (planning only)
+2. `audit-log-tenant-context-foundation` (planning only)
+3. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)** — not recommended next
+
+**Product direction (backlog — discovery/strategy, not immediate implementation):**
+
+- `competitive-product-discovery-v1` (P2; DEC-007) — **Competitive/Product Discovery:** pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros. Includes competitor research, functional comparison, driving-school value assessment, architecture, and phased implementation. Does not block People or engineering batches; no deep competitive analysis until a dedicated slice is approved.
 
 **Deferred (not next — RLS revoke-only track closed):**
 

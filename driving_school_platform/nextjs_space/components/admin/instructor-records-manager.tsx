@@ -493,15 +493,18 @@ export function InstructorRecordsManager({
             <p className="text-gray-600 mt-1 max-w-3xl">
               Instructor operational profiles are linked to app login accounts.
               Each instructor has a User account and an Instructor record with
-              license details. To grant access for a new instructor, use the{" "}
-              <strong>Onboarding</strong> tab.
+              license details. Pending invitations before registration are on{" "}
+              <strong>Onboarding</strong>; after acceptance, status appears here
+              as <strong>App access pending approval</strong>,{" "}
+              <strong>Active</strong>, or <strong>Inactive</strong>.
             </p>
           </div>
         </div>
       ) : (
         <p className="text-sm text-gray-600 max-w-3xl">
-          Instructor profiles — search by name, email, or license number. Add
-          new instructors under <strong>Onboarding</strong>.
+          Instructor profiles — post-account states only (Active, App access
+          pending approval, or Inactive). Pending invitations before
+          registration are on <strong>Onboarding</strong>.
         </p>
       )}
 
