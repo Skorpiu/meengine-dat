@@ -25,8 +25,11 @@ export const INVITATION_EMAIL_UPDATE_CODE = {
   EMAIL_UNCHANGED: "email_unchanged",
   USER_ALREADY_EXISTS: "user_already_exists",
   PENDING_INVITATION_EXISTS: "pending_invitation_exists",
+  STUDENT_EMAIL_ALREADY_IN_USE: "student_email_already_in_use",
   INVITATION_EMAIL_UPDATE_FAILED: "invitation_email_update_failed",
 } as const;
+
+const SUPPORTED_UNLINKED_INVITATION_ROLES = ["STUDENT", "INSTRUCTOR"] as const;
 
 export type InvitationEmailUpdateCode =
   (typeof INVITATION_EMAIL_UPDATE_CODE)[keyof typeof INVITATION_EMAIL_UPDATE_CODE];
@@ -65,6 +68,7 @@ async function assertNewEmailAvailable(
     organizationId: string;
     normalizedEmail: string;
     excludeInvitationId: string;
+    invitationRole: (typeof SUPPORTED_UNLINKED_INVITATION_ROLES)[number];
   },
 ): Promise<Exclude<ChangeInvitationEmailResult, { ok: true }> | null> {
   const existingUser = await tx.user.findUnique({
@@ -102,11 +106,31 @@ async function assertNewEmailAvailable(
     };
   }
 
+  if (input.invitationRole === "STUDENT") {
+    const existingStudent = await tx.student.findFirst({
+      where: {
+        organizationId: input.organizationId,
+        email: { equals: input.normalizedEmail, mode: "insensitive" },
+      },
+      select: { id: true },
+    });
+
+    if (existingStudent) {
+      return {
+        ok: false,
+        notFound: false,
+        code: INVITATION_EMAIL_UPDATE_CODE.STUDENT_EMAIL_ALREADY_IN_USE,
+        error: "A student record with this email already exists.",
+        status: 409,
+      };
+    }
+  }
+
   return null;
 }
 
 /**
- * Updates email on a pending unlinked INSTRUCTOR invitation and regenerates token.
+ * Updates email on a pending unlinked STUDENT or INSTRUCTOR invitation and regenerates token.
  */
 export async function changeInvitationEmail(input: {
   organizationId: string;
@@ -174,14 +198,18 @@ export async function changeInvitationEmail(input: {
         };
       }
 
-      if (existing.role !== "INSTRUCTOR") {
+      if (
+        !(SUPPORTED_UNLINKED_INVITATION_ROLES as readonly string[]).includes(
+          existing.role,
+        )
+      ) {
         return {
           kind: "validation" as const,
           error: {
             ok: false as const,
             notFound: false as const,
             code: INVITATION_EMAIL_UPDATE_CODE.UNSUPPORTED_INVITATION_ROLE,
-            error: "Only instructor invitations are supported for this action.",
+            error: "This invitation type is not supported for change email.",
             status: 409 as const,
           },
         };
@@ -205,6 +233,8 @@ export async function changeInvitationEmail(input: {
         organizationId: input.organizationId,
         normalizedEmail,
         excludeInvitationId: existing.id,
+        invitationRole:
+          existing.role as (typeof SUPPORTED_UNLINKED_INVITATION_ROLES)[number],
       });
       if (collision) {
         return { kind: "validation" as const, error: collision };

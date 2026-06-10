@@ -314,12 +314,13 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `invitation-email-update-v1` — analysis-only pending invitation email update
 - `invitation-email-update-policy-doc-v1` — docs-only policy + DEC-029; `docs/architecture/invitation-email-update-policy.md`
 - `invitation-email-update-unlinked-instructor-v1` — `POST /api/admin/invitations/[id]/change-email` + Instructors → Onboarding Change email (DEC-029 slice 2a); token regeneration; no auto-send; demo guard
+- `invitation-email-update-unlinked-student-v1` — same endpoint/service/dialog + Students → Onboarding Change email (DEC-029 slice 2b); org `Student.email` collision check; linked student blocked
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
 **Current recommended next (runtime/UX slice):**
 
-1. `invitation-email-update-unlinked-student-v1` — DEC-029 runtime slice 2b; explicit approval required
+1. `invitation-email-update-linked-student-v1` — DEC-029 runtime slice 2c; explicit approval required
 
 **Likely next:**
 
@@ -327,12 +328,11 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Likely next (slice parent batches; do not implement broad names directly):**
 
-3. `invitation-email-update-linked-student-v1` — DEC-029 runtime slice 2c
-4. `people-management-ux-unification` remaining (invitations on instructor record — tabs v1 done; **route split deferred D4**)
-5. Product/packaging slices — `docs/product/`, `roadmap-todo.md` **P1 / Product and packaging**
-6. `audit-log-tenant-context-foundation` (planning only)
-7. `supabase-rls-class-b-hardening-v1b` — optional RLS + REVOKE on remaining internal tables (D4 / RLS gate; separate approval)
-8. `i18n-framework-planning-v1` — deferred until dedicated batch
+3. `people-management-ux-unification` remaining (invitations on instructor record — tabs v1 done; **route split deferred D4**)
+4. Product/packaging slices — `docs/product/`, `roadmap-todo.md` **P1 / Product and packaging**
+5. `audit-log-tenant-context-foundation` (planning only)
+6. `supabase-rls-class-b-hardening-v1b` — optional RLS + REVOKE on remaining internal tables (D4 / RLS gate; separate approval)
+7. `i18n-framework-planning-v1` — deferred until dedicated batch
 
 **Daily Super-Agent:** default **Manual daily Super-Agent check** ([cursor-automations-prompts.md](../../docs/ops/cursor-automations-prompts.md)) at no extra cost; Cursor Automations only if free on current plan.
 
