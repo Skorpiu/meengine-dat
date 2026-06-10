@@ -196,10 +196,11 @@ Documented and in use (docs/rules only; no runtime change):
 - `invitation-email-update-v1` — analysis-only pending invitation email update; no runtime/schema changes.
 - `invitation-email-update-policy-doc-v1` — docs-only policy + **DEC-029**; [invitation-email-update-policy.md](./invitation-email-update-policy.md). Validated via `pnpm check`.
 - `invitation-email-update-unlinked-instructor-v1` — **Change email** on pending unlinked INSTRUCTOR invitations (DEC-029 slice 2a): `POST /api/admin/invitations/[id]/change-email`; service `lib/invitations/invitation-email-update-service.ts`; Instructors → Onboarding **Change email** modal; regenerates `tokenHash`; returns new `inviteLink` once; no auto-send; demo guard. No schema/migration/accept-route changes. Validated via `pnpm check`.
+- `invitation-email-update-unlinked-student-v1` — **Change email** on pending unlinked STUDENT invitations (DEC-029 slice 2b): same endpoint/service/dialog; Students → Onboarding **Change email**; org `Student.email` collision check (`student_email_already_in_use`); linked student invitations remain blocked. No schema/migration/accept-route changes. Validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
-1. `invitation-email-update-unlinked-student-v1` — DEC-029 runtime slice 2b: STUDENT unlinked Onboarding; explicit approval required
+1. `invitation-email-update-linked-student-v1` — DEC-029 runtime slice 2c: Profiles linked student sync; explicit approval required
 2. `tenant-operational-organization-id-not-null-migrations` — **deferred (D4):** per-table NOT NULL on six operational tables only; requires explicit approval + human `migrate deploy`; re-run `pnpm tenant:org-null-report` on target DB first
 3. `supabase-rls-class-b-hardening-v1b` — **deferred (D4):** optional RLS + REVOKE on remaining internal tables — separate approval
 4. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next

@@ -135,6 +135,23 @@ describe("POST /api/admin/invitations/[id]/change-email", () => {
     expect(body.code).toBe(INVITATION_EMAIL_UPDATE_CODE.INVITATION_NOT_FOUND);
   });
 
+  it("returns stable 409 for student_email_already_in_use", async () => {
+    h.changeInvitationEmailMock.mockResolvedValue({
+      ok: false,
+      notFound: false,
+      code: INVITATION_EMAIL_UPDATE_CODE.STUDENT_EMAIL_ALREADY_IN_USE,
+      error: "A student record with this email already exists.",
+      status: 409,
+    });
+
+    const res = await POST(req({ newEmail: "taken@school.test" }) as any, {
+      params: { id: "inv-1" },
+    });
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.code).toBe("student_email_already_in_use");
+  });
+
   it("returns stable 409 for user_already_exists", async () => {
     h.changeInvitationEmailMock.mockResolvedValue({
       ok: false,

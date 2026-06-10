@@ -44,10 +44,13 @@ describe("invitation-email-update-ui-utils", () => {
     );
   });
 
-  it("shows Change email only for instructor onboarding pending unlinked rows", () => {
+  it("shows Change email for onboarding pending unlinked rows matching role tab", () => {
     expect(
       canShowInvitationChangeEmailAction(instructorPending, "INSTRUCTOR"),
     ).toBe(true);
+    expect(canShowInvitationChangeEmailAction(studentPending, "STUDENT")).toBe(
+      true,
+    );
     expect(
       canShowInvitationChangeEmailAction(studentPending, "INSTRUCTOR"),
     ).toBe(false);
@@ -57,14 +60,20 @@ describe("invitation-email-update-ui-utils", () => {
     expect(canShowInvitationChangeEmailAction(instructorPending)).toBe(false);
     expect(
       canShowInvitationChangeEmailAction(
+        { ...studentPending, studentId: "stu-1" },
+        "STUDENT",
+      ),
+    ).toBe(false);
+    expect(
+      canShowInvitationChangeEmailAction(
         { ...instructorPending, studentId: "stu-1" },
         "INSTRUCTOR",
       ),
     ).toBe(false);
     expect(
       canShowInvitationChangeEmailAction(
-        { ...instructorPending, status: "REVOKED" },
-        "INSTRUCTOR",
+        { ...studentPending, status: "REVOKED" },
+        "STUDENT",
       ),
     ).toBe(false);
   });
@@ -87,7 +96,10 @@ describe("invitation-email-update-ui-utils", () => {
     ).toBe("Only pending invitations can be updated.");
     expect(
       changeInvitationEmailApiErrorMessage("unsupported_invitation_role", "x"),
-    ).toBe("Only instructor invitations are supported for this action.");
+    ).toBe("This invitation type is not supported for change email.");
+    expect(
+      changeInvitationEmailApiErrorMessage("student_email_already_in_use", "x"),
+    ).toBe("A student record with this email already exists.");
     expect(
       changeInvitationEmailApiErrorMessage(
         "unsupported_linked_student_invitation",

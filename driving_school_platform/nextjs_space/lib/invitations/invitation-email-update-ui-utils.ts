@@ -20,17 +20,20 @@ export function getChangeInvitationEmailWarningCopy(): string {
   return CHANGE_INVITATION_EMAIL_WARNING_LINES.join(" ");
 }
 
-/** Onboarding instructor rows only — unlinked pending INSTRUCTOR invitations. */
+/** Onboarding rows — unlinked pending STUDENT or INSTRUCTOR invitations. */
 export function canShowInvitationChangeEmailAction(
   invitation: InvitationDto,
   roleFilter?: InvitableRole,
 ): boolean {
-  return (
-    roleFilter === "INSTRUCTOR" &&
-    invitation.role === "INSTRUCTOR" &&
-    invitation.status === "PENDING" &&
-    invitation.studentId == null
-  );
+  if (
+    invitation.status !== "PENDING" ||
+    invitation.studentId != null ||
+    !roleFilter
+  ) {
+    return false;
+  }
+
+  return invitation.role === roleFilter;
 }
 
 export function changeInvitationEmailApiErrorMessage(
@@ -51,9 +54,11 @@ export function changeInvitationEmailApiErrorMessage(
     case "invitation_not_pending":
       return "Only pending invitations can be updated.";
     case "unsupported_invitation_role":
-      return "Only instructor invitations are supported for this action.";
+      return "This invitation type is not supported for change email.";
     case "unsupported_linked_student_invitation":
       return "Linked student invitations cannot be updated here.";
+    case "student_email_already_in_use":
+      return "A student record with this email already exists.";
     case "invitation_email_update_failed":
       return "Failed to update invitation email.";
     case "demo_restricted_action":

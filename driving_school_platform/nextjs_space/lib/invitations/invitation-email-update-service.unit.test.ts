@@ -5,6 +5,7 @@ const h = vi.hoisted(() => {
   const invitationFindFirstMock = vi.fn();
   const invitationUpdateMock = vi.fn();
   const userFindUniqueMock = vi.fn();
+  const studentFindFirstMock = vi.fn();
   const transactionMock = vi.fn();
 
   const txMock = {
@@ -16,6 +17,9 @@ const h = vi.hoisted(() => {
     user: {
       findUnique: userFindUniqueMock,
     },
+    student: {
+      findFirst: studentFindFirstMock,
+    },
   };
 
   return {
@@ -23,6 +27,7 @@ const h = vi.hoisted(() => {
     invitationFindFirstMock,
     invitationUpdateMock,
     userFindUniqueMock,
+    studentFindFirstMock,
     transactionMock,
     txMock,
     prismaMock: {
@@ -48,7 +53,7 @@ const baseDate = new Date("2026-05-21T12:00:00.000Z");
 const oldRawToken = "old-invite-token-value";
 const oldTokenHash = hashInvitationToken(oldRawToken);
 
-function instructorRow(overrides: Record<string, unknown> = {}) {
+function invitationRow(overrides: Record<string, unknown> = {}) {
   return {
     id: "inv-1",
     organizationId: "org-a",
@@ -96,15 +101,16 @@ beforeEach(() => {
   );
   h.queryRawMock.mockResolvedValue([{ id: "inv-1" }]);
   h.userFindUniqueMock.mockResolvedValue(null);
+  h.studentFindFirstMock.mockResolvedValue(null);
   h.invitationFindFirstMock.mockImplementation(async (args) => {
     if (args?.where?.email) {
       return null;
     }
-    return instructorRow();
+    return invitationRow();
   });
   h.invitationUpdateMock.mockImplementation(async (args) => {
     capturedUpdateData = args.data;
-    return instructorRow({
+    return invitationRow({
       email: args.data.email,
       tokenHash: args.data.tokenHash,
       expiresAt: args.data.expiresAt,
@@ -234,7 +240,7 @@ describe("changeInvitationEmail", () => {
       if (args?.where?.email) {
         return { id: "inv-other" };
       }
-      return instructorRow();
+      return invitationRow();
     });
 
     const result = await changeInvitationEmail({
@@ -252,9 +258,77 @@ describe("changeInvitationEmail", () => {
     );
   });
 
+  it("updates unlinked STUDENT pending invitation and returns new inviteLink", async () => {
+    h.invitationFindFirstMock.mockImplementation(async (args) => {
+      if (args?.where?.email) {
+        return null;
+      }
+      return invitationRow({ role: "STUDENT" });
+    });
+    h.invitationUpdateMock.mockImplementation(async (args) => {
+      capturedUpdateData = args.data;
+      return invitationRow({
+        role: "STUDENT",
+        email: args.data.email,
+        tokenHash: args.data.tokenHash,
+        expiresAt: args.data.expiresAt,
+      });
+    });
+
+    const result = await changeInvitationEmail({
+      organizationId: "org-a",
+      invitationId: "inv-1",
+      newEmail: "new@school.test",
+      baseUrl: "http://school.example.com",
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.invitation.email).toBe("new@school.test");
+    expect(result.invitation.role).toBe("STUDENT");
+    expect(capturedUpdateData?.tokenHash).not.toBe(oldTokenHash);
+    expect(h.studentFindFirstMock).toHaveBeenCalled();
+  });
+
+  it("returns 409 student_email_already_in_use when org Student.email collides", async () => {
+    h.invitationFindFirstMock.mockImplementation(async (args) => {
+      if (args?.where?.email) {
+        return null;
+      }
+      return invitationRow({ role: "STUDENT" });
+    });
+    h.studentFindFirstMock.mockResolvedValue({ id: "stu-9" });
+
+    const result = await changeInvitationEmail({
+      organizationId: "org-a",
+      invitationId: "inv-1",
+      newEmail: "taken@school.test",
+      baseUrl: "http://school.example.com",
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok || result.notFound) return;
+    expect(result.status).toBe(409);
+    expect(result.code).toBe(
+      INVITATION_EMAIL_UPDATE_CODE.STUDENT_EMAIL_ALREADY_IN_USE,
+    );
+  });
+
+  it("does not check Student.email collision for INSTRUCTOR invitations", async () => {
+    await changeInvitationEmail({
+      organizationId: "org-a",
+      invitationId: "inv-1",
+      newEmail: "new@school.test",
+      baseUrl: "http://school.example.com",
+    });
+
+    expect(h.studentFindFirstMock).not.toHaveBeenCalled();
+  });
+
   it("returns 409 invitation_not_pending for ACCEPTED invitation", async () => {
     h.invitationFindFirstMock.mockResolvedValue(
-      instructorRow({ status: "ACCEPTED" }),
+      invitationRow({ status: "ACCEPTED" }),
     );
 
     const result = await changeInvitationEmail({
@@ -274,7 +348,7 @@ describe("changeInvitationEmail", () => {
 
   it("returns 409 invitation_not_pending for REVOKED invitation", async () => {
     h.invitationFindFirstMock.mockResolvedValue(
-      instructorRow({ status: "REVOKED" }),
+      invitationRow({ status: "REVOKED" }),
     );
 
     const result = await changeInvitationEmail({
@@ -291,28 +365,9 @@ describe("changeInvitationEmail", () => {
     );
   });
 
-  it("returns 409 unsupported_invitation_role for STUDENT invitation", async () => {
-    h.invitationFindFirstMock.mockResolvedValue(
-      instructorRow({ role: "STUDENT" }),
-    );
-
-    const result = await changeInvitationEmail({
-      organizationId: "org-a",
-      invitationId: "inv-1",
-      newEmail: "new@school.test",
-      baseUrl: "http://school.example.com",
-    });
-
-    expect(result.ok).toBe(false);
-    if (result.ok || result.notFound) return;
-    expect(result.code).toBe(
-      INVITATION_EMAIL_UPDATE_CODE.UNSUPPORTED_INVITATION_ROLE,
-    );
-  });
-
   it("returns 409 unsupported_linked_student_invitation when studentId is set", async () => {
     h.invitationFindFirstMock.mockResolvedValue(
-      instructorRow({ studentId: "stu-1", role: "STUDENT" }),
+      invitationRow({ studentId: "stu-1", role: "STUDENT" }),
     );
 
     const result = await changeInvitationEmail({
