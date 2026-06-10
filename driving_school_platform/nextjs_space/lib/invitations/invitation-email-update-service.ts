@@ -21,6 +21,8 @@ export const INVITATION_EMAIL_UPDATE_CODE = {
   UNSUPPORTED_INVITATION_ROLE: "unsupported_invitation_role",
   UNSUPPORTED_LINKED_STUDENT_INVITATION:
     "unsupported_linked_student_invitation",
+  LINKED_STUDENT_NOT_FOUND: "linked_student_not_found",
+  STUDENT_ALREADY_LINKED: "student_already_linked",
   INVALID_EMAIL: "invalid_email",
   EMAIL_UNCHANGED: "email_unchanged",
   USER_ALREADY_EXISTS: "user_already_exists",
@@ -29,7 +31,9 @@ export const INVITATION_EMAIL_UPDATE_CODE = {
   INVITATION_EMAIL_UPDATE_FAILED: "invitation_email_update_failed",
 } as const;
 
-const SUPPORTED_UNLINKED_INVITATION_ROLES = ["STUDENT", "INSTRUCTOR"] as const;
+const SUPPORTED_INVITATION_ROLES = ["STUDENT", "INSTRUCTOR"] as const;
+
+type SupportedInvitationRole = (typeof SUPPORTED_INVITATION_ROLES)[number];
 
 export type InvitationEmailUpdateCode =
   (typeof INVITATION_EMAIL_UPDATE_CODE)[keyof typeof INVITATION_EMAIL_UPDATE_CODE];
@@ -42,7 +46,7 @@ export type ChangeInvitationEmailResult =
       notFound: false;
       code: InvitationEmailUpdateCode;
       error: string;
-      status: 400 | 409;
+      status: 400 | 404 | 409;
     };
 
 function isValidEmailFormat(email: string): boolean {
@@ -62,13 +66,27 @@ async function lockInvitationRowForUpdate(
   return rows.length > 0;
 }
 
+async function lockStudentRowForUpdate(
+  tx: Prisma.TransactionClient,
+  input: { organizationId: string; studentId: string },
+): Promise<boolean> {
+  const rows = await tx.$queryRaw<Array<{ id: string }>>`
+    SELECT "id"
+    FROM "students"
+    WHERE "id" = ${input.studentId} AND "organizationId" = ${input.organizationId}
+    FOR UPDATE
+  `;
+  return rows.length > 0;
+}
+
 async function assertNewEmailAvailable(
   tx: Prisma.TransactionClient,
   input: {
     organizationId: string;
     normalizedEmail: string;
     excludeInvitationId: string;
-    invitationRole: (typeof SUPPORTED_UNLINKED_INVITATION_ROLES)[number];
+    invitationRole: SupportedInvitationRole;
+    excludeStudentId?: string | null;
   },
 ): Promise<Exclude<ChangeInvitationEmailResult, { ok: true }> | null> {
   const existingUser = await tx.user.findUnique({
@@ -111,6 +129,9 @@ async function assertNewEmailAvailable(
       where: {
         organizationId: input.organizationId,
         email: { equals: input.normalizedEmail, mode: "insensitive" },
+        ...(input.excludeStudentId
+          ? { id: { not: input.excludeStudentId } }
+          : {}),
       },
       select: { id: true },
     });
@@ -130,7 +151,8 @@ async function assertNewEmailAvailable(
 }
 
 /**
- * Updates email on a pending unlinked STUDENT or INSTRUCTOR invitation and regenerates token.
+ * Updates email on a pending STUDENT or INSTRUCTOR invitation and regenerates token.
+ * Linked STUDENT invitations also sync `Student.email` while preserving `INVITED`.
  */
 export async function changeInvitationEmail(input: {
   organizationId: string;
@@ -185,21 +207,8 @@ export async function changeInvitationEmail(input: {
         };
       }
 
-      if (existing.studentId != null) {
-        return {
-          kind: "validation" as const,
-          error: {
-            ok: false as const,
-            notFound: false as const,
-            code: INVITATION_EMAIL_UPDATE_CODE.UNSUPPORTED_LINKED_STUDENT_INVITATION,
-            error: "Linked student invitations cannot be updated here.",
-            status: 409 as const,
-          },
-        };
-      }
-
       if (
-        !(SUPPORTED_UNLINKED_INVITATION_ROLES as readonly string[]).includes(
+        !(SUPPORTED_INVITATION_ROLES as readonly string[]).includes(
           existing.role,
         )
       ) {
@@ -213,6 +222,98 @@ export async function changeInvitationEmail(input: {
             status: 409 as const,
           },
         };
+      }
+
+      const role = existing.role as SupportedInvitationRole;
+      const isLinkedStudent = role === "STUDENT" && existing.studentId != null;
+
+      if (existing.studentId != null && role !== "STUDENT") {
+        return {
+          kind: "validation" as const,
+          error: {
+            ok: false as const,
+            notFound: false as const,
+            code: INVITATION_EMAIL_UPDATE_CODE.UNSUPPORTED_LINKED_STUDENT_INVITATION,
+            error: "Linked student invitations cannot be updated here.",
+            status: 409 as const,
+          },
+        };
+      }
+
+      let linkedStudentId: string | null = null;
+
+      if (isLinkedStudent) {
+        const studentLocked = await lockStudentRowForUpdate(tx, {
+          organizationId: input.organizationId,
+          studentId: existing.studentId!,
+        });
+        if (!studentLocked) {
+          return {
+            kind: "validation" as const,
+            error: {
+              ok: false as const,
+              notFound: false as const,
+              code: INVITATION_EMAIL_UPDATE_CODE.LINKED_STUDENT_NOT_FOUND,
+              error: "Linked student record not found.",
+              status: 404 as const,
+            },
+          };
+        }
+
+        const linkedStudent = await tx.student.findFirst({
+          where: {
+            id: existing.studentId!,
+            organizationId: input.organizationId,
+          },
+          select: {
+            id: true,
+            userId: true,
+            appAccessMode: true,
+            email: true,
+          },
+        });
+
+        if (!linkedStudent) {
+          return {
+            kind: "validation" as const,
+            error: {
+              ok: false as const,
+              notFound: false as const,
+              code: INVITATION_EMAIL_UPDATE_CODE.LINKED_STUDENT_NOT_FOUND,
+              error: "Linked student record not found.",
+              status: 404 as const,
+            },
+          };
+        }
+
+        if (linkedStudent.userId != null) {
+          return {
+            kind: "validation" as const,
+            error: {
+              ok: false as const,
+              notFound: false as const,
+              code: INVITATION_EMAIL_UPDATE_CODE.STUDENT_ALREADY_LINKED,
+              error:
+                "This student already has an app account. Use Student Change email instead.",
+              status: 409 as const,
+            },
+          };
+        }
+
+        if (linkedStudent.appAccessMode !== "INVITED") {
+          return {
+            kind: "validation" as const,
+            error: {
+              ok: false as const,
+              notFound: false as const,
+              code: INVITATION_EMAIL_UPDATE_CODE.INVITATION_EMAIL_UPDATE_FAILED,
+              error: "Student app access is not in a pending invitation state.",
+              status: 409 as const,
+            },
+          };
+        }
+
+        linkedStudentId = linkedStudent.id;
       }
 
       const currentEmail = normalizeInvitationEmail(existing.email);
@@ -233,8 +334,8 @@ export async function changeInvitationEmail(input: {
         organizationId: input.organizationId,
         normalizedEmail,
         excludeInvitationId: existing.id,
-        invitationRole:
-          existing.role as (typeof SUPPORTED_UNLINKED_INVITATION_ROLES)[number],
+        invitationRole: role,
+        excludeStudentId: linkedStudentId,
       });
       if (collision) {
         return { kind: "validation" as const, error: collision };
@@ -255,6 +356,13 @@ export async function changeInvitationEmail(input: {
         },
         include: INVITATION_LIST_INCLUDE,
       });
+
+      if (isLinkedStudent && linkedStudentId) {
+        await tx.student.update({
+          where: { id: linkedStudentId },
+          data: { email: normalizedEmail },
+        });
+      }
 
       const inviteLink = buildInvitationAcceptUrl({
         baseUrl: input.baseUrl,

@@ -6,6 +6,7 @@ const h = vi.hoisted(() => {
   const invitationUpdateMock = vi.fn();
   const userFindUniqueMock = vi.fn();
   const studentFindFirstMock = vi.fn();
+  const studentUpdateMock = vi.fn();
   const transactionMock = vi.fn();
 
   const txMock = {
@@ -19,6 +20,7 @@ const h = vi.hoisted(() => {
     },
     student: {
       findFirst: studentFindFirstMock,
+      update: studentUpdateMock,
     },
   };
 
@@ -28,6 +30,7 @@ const h = vi.hoisted(() => {
     invitationUpdateMock,
     userFindUniqueMock,
     studentFindFirstMock,
+    studentUpdateMock,
     transactionMock,
     txMock,
     prismaMock: {
@@ -102,6 +105,7 @@ beforeEach(() => {
   h.queryRawMock.mockResolvedValue([{ id: "inv-1" }]);
   h.userFindUniqueMock.mockResolvedValue(null);
   h.studentFindFirstMock.mockResolvedValue(null);
+  h.studentUpdateMock.mockResolvedValue({ id: "stu-1" });
   h.invitationFindFirstMock.mockImplementation(async (args) => {
     if (args?.where?.email) {
       return null;
@@ -365,9 +369,216 @@ describe("changeInvitationEmail", () => {
     );
   });
 
-  it("returns 409 unsupported_linked_student_invitation when studentId is set", async () => {
+  it("updates linked STUDENT pending invitation and syncs Student.email", async () => {
+    h.queryRawMock.mockResolvedValue([{ id: "inv-1" }, { id: "stu-1" }]);
+    h.invitationFindFirstMock.mockImplementation(async (args) => {
+      if (args?.where?.email) {
+        return null;
+      }
+      return invitationRow({ studentId: "stu-1", role: "STUDENT" });
+    });
+    h.studentFindFirstMock.mockImplementation(async (args) => {
+      if (args?.where?.id === "stu-1") {
+        return {
+          id: "stu-1",
+          userId: null,
+          appAccessMode: "INVITED",
+          email: "old@school.test",
+        };
+      }
+      if (args?.where?.email) {
+        return null;
+      }
+      return null;
+    });
+    h.invitationUpdateMock.mockImplementation(async (args) =>
+      invitationRow({
+        studentId: "stu-1",
+        role: "STUDENT",
+        email: args.data.email,
+        tokenHash: args.data.tokenHash,
+        expiresAt: args.data.expiresAt,
+      }),
+    );
+
+    const result = await changeInvitationEmail({
+      organizationId: "org-a",
+      invitationId: "inv-1",
+      newEmail: "new@school.test",
+      baseUrl: "http://school.example.com",
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.invitation.email).toBe("new@school.test");
+    expect(result.invitation.studentId).toBe("stu-1");
+    expect(h.studentUpdateMock).toHaveBeenCalledWith({
+      where: { id: "stu-1" },
+      data: { email: "new@school.test" },
+    });
+    expect(capturedUpdateData?.tokenHash).not.toBe(oldTokenHash);
+  });
+
+  it("preserves INVITED and userId null on linked STUDENT update", async () => {
+    h.queryRawMock.mockResolvedValue([{ id: "inv-1" }, { id: "stu-1" }]);
+    h.invitationFindFirstMock.mockImplementation(async (args) => {
+      if (args?.where?.email) return null;
+      return invitationRow({ studentId: "stu-1", role: "STUDENT" });
+    });
+    h.studentFindFirstMock.mockImplementation(async (args) => {
+      if (args?.where?.id === "stu-1") {
+        return {
+          id: "stu-1",
+          userId: null,
+          appAccessMode: "INVITED",
+          email: "old@school.test",
+        };
+      }
+      if (args?.where?.email) {
+        return null;
+      }
+      return null;
+    });
+
+    await changeInvitationEmail({
+      organizationId: "org-a",
+      invitationId: "inv-1",
+      newEmail: "new@school.test",
+      baseUrl: "http://school.example.com",
+    });
+
+    expect(h.studentUpdateMock).toHaveBeenCalledWith({
+      where: { id: "stu-1" },
+      data: { email: "new@school.test" },
+    });
+    expect(h.studentUpdateMock.mock.calls[0][0].data).not.toHaveProperty(
+      "appAccessMode",
+    );
+    expect(h.studentUpdateMock.mock.calls[0][0].data).not.toHaveProperty(
+      "userId",
+    );
+  });
+
+  it("allows linked STUDENT email collision check to exclude linked student", async () => {
+    h.queryRawMock.mockResolvedValue([{ id: "inv-1" }, { id: "stu-1" }]);
+    h.invitationFindFirstMock.mockImplementation(async (args) => {
+      if (args?.where?.email) return null;
+      return invitationRow({
+        studentId: "stu-1",
+        role: "STUDENT",
+        email: "old@school.test",
+      });
+    });
+    h.studentFindFirstMock.mockImplementation(async (args) => {
+      if (args?.where?.id === "stu-1") {
+        return {
+          id: "stu-1",
+          userId: null,
+          appAccessMode: "INVITED",
+          email: "old@school.test",
+        };
+      }
+      return null;
+    });
+
+    const result = await changeInvitationEmail({
+      organizationId: "org-a",
+      invitationId: "inv-1",
+      newEmail: "old@school.test",
+      baseUrl: "http://school.example.com",
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok || result.notFound) return;
+    expect(result.code).toBe(INVITATION_EMAIL_UPDATE_CODE.EMAIL_UNCHANGED);
+  });
+
+  it("returns 409 student_email_already_in_use for another org student on linked invite", async () => {
+    h.queryRawMock.mockResolvedValue([{ id: "inv-1" }, { id: "stu-1" }]);
+    h.invitationFindFirstMock.mockImplementation(async (args) => {
+      if (args?.where?.email) return null;
+      return invitationRow({ studentId: "stu-1", role: "STUDENT" });
+    });
+    h.studentFindFirstMock.mockImplementation(async (args) => {
+      if (args?.where?.id === "stu-1") {
+        return {
+          id: "stu-1",
+          userId: null,
+          appAccessMode: "INVITED",
+          email: "old@school.test",
+        };
+      }
+      if (args?.where?.email) {
+        return { id: "stu-other" };
+      }
+      return null;
+    });
+
+    const result = await changeInvitationEmail({
+      organizationId: "org-a",
+      invitationId: "inv-1",
+      newEmail: "other@school.test",
+      baseUrl: "http://school.example.com",
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok || result.notFound) return;
+    expect(result.code).toBe(
+      INVITATION_EMAIL_UPDATE_CODE.STUDENT_EMAIL_ALREADY_IN_USE,
+    );
+  });
+
+  it("returns 404 linked_student_not_found when linked student is missing", async () => {
+    h.queryRawMock.mockResolvedValue([{ id: "inv-1" }]);
+    h.invitationFindFirstMock.mockResolvedValue(
+      invitationRow({ studentId: "stu-missing", role: "STUDENT" }),
+    );
+
+    const result = await changeInvitationEmail({
+      organizationId: "org-a",
+      invitationId: "inv-1",
+      newEmail: "new@school.test",
+      baseUrl: "http://school.example.com",
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok || result.notFound) return;
+    expect(result.status).toBe(404);
+    expect(result.code).toBe(
+      INVITATION_EMAIL_UPDATE_CODE.LINKED_STUDENT_NOT_FOUND,
+    );
+  });
+
+  it("returns 409 student_already_linked when linked student has userId", async () => {
+    h.queryRawMock.mockResolvedValue([{ id: "inv-1" }, { id: "stu-1" }]);
     h.invitationFindFirstMock.mockResolvedValue(
       invitationRow({ studentId: "stu-1", role: "STUDENT" }),
+    );
+    h.studentFindFirstMock.mockResolvedValue({
+      id: "stu-1",
+      userId: "user-1",
+      appAccessMode: "APP_USER",
+      email: "old@school.test",
+    });
+
+    const result = await changeInvitationEmail({
+      organizationId: "org-a",
+      invitationId: "inv-1",
+      newEmail: "new@school.test",
+      baseUrl: "http://school.example.com",
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok || result.notFound) return;
+    expect(result.code).toBe(
+      INVITATION_EMAIL_UPDATE_CODE.STUDENT_ALREADY_LINKED,
+    );
+  });
+
+  it("returns 409 unsupported_linked_student_invitation for INSTRUCTOR with studentId", async () => {
+    h.invitationFindFirstMock.mockResolvedValue(
+      invitationRow({ studentId: "stu-1", role: "INSTRUCTOR" }),
     );
 
     const result = await changeInvitationEmail({

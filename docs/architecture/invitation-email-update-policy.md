@@ -1,7 +1,7 @@
 # Pending invitation email update — Policy (v1)
 
 **Batch:** `invitation-email-update-policy-doc-v1` (+ runtime slice `invitation-email-update-unlinked-instructor-v1`)  
-**Status:** Policy accepted (DEC-029). **Runtime slices 2a + 2b done** — unlinked INSTRUCTOR and STUDENT pending invitations (`POST /api/admin/invitations/[id]/change-email` + Onboarding UI per role tab). Slice 2c (linked student) deferred.  
+**Status:** Policy accepted (DEC-029). **Runtime slices 2a + 2b + 2c done** — unlinked INSTRUCTOR/STUDENT Onboarding + linked STUDENT Profiles/App access (`POST /api/admin/invitations/[id]/change-email`).  
 **Decision:** [DEC-029](./decision-log.md)  
 **Related:** [DEC-024](./decision-log.md) (Student Change email), [DEC-028](./decision-log.md) (Instructor Change email), [student-app-access-lifecycle-policy.md](./student-app-access-lifecycle-policy.md), [instructor-email-change-policy.md](./instructor-email-change-policy.md)
 
@@ -161,7 +161,7 @@ POST /api/admin/invitations/[id]/change-email
 Body: { "newEmail": "..." }
 ```
 
-**Scope (v1 runtime):** `PENDING` + `studentId = null` + `role = INSTRUCTOR` or `role = STUDENT` (unlinked). Linked student (`studentId` set) deferred to slice 2c.
+**Scope (v1 runtime):** `PENDING` + `role = INSTRUCTOR` (unlinked) or `role = STUDENT` (unlinked or linked with `studentId` set). Linked STUDENT syncs `Student.email`, preserves `appAccessMode = INVITED`, no `User` created.
 
 **Guards:**
 
@@ -179,14 +179,11 @@ Body: { "newEmail": "..." }
 
 ---
 
-## UI — slices 2a + 2b (implemented)
+## UI — slices 2a + 2b + 2c (implemented)
 
 - **Instructors → Onboarding** pending unlinked invitation rows: **Change email** beside **Revoke**
 - **Students → Onboarding** pending unlinked invitation rows: **Change email** beside **Revoke**
-
-## UI — slice 2c (deferred)
-
-- **Students → Profiles** linked-student rows: **Change email** (future)
+- **Students → Profiles** linked pending invitation: **Change invitation email** in App access (Edit Student + profile row)
 - Modal: current email read-only, new email, warnings:
   - “This updates the invitation email.”
   - “The previous invite link will stop working.”
@@ -204,7 +201,7 @@ Body: { "newEmail": "..." }
 | 1 | `invitation-email-update-policy-doc-v1` | **Done** — this document + DEC-029 |
 | 2a | `invitation-email-update-unlinked-instructor-v1` | **Done** — API + Onboarding UI (INSTRUCTOR); token regeneration; no auto-send |
 | 2b | `invitation-email-update-unlinked-student-v1` | **Done** — + STUDENT unlinked Onboarding; org `Student.email` collision check |
-| 2c | `invitation-email-update-linked-student-v1` | **Deferred** — + Profiles linked student sync |
+| 2c | `invitation-email-update-linked-student-v1` | **Done** — Profiles linked student sync; `Student.email` + token regeneration |
 
 **Runtime gate (2a):** `APPROVED TO IMPLEMENT: invitation-email-update-unlinked-instructor-v1`
 

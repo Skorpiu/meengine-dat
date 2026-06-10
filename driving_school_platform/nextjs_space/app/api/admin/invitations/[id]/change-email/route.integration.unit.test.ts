@@ -135,6 +135,41 @@ describe("POST /api/admin/invitations/[id]/change-email", () => {
     expect(body.code).toBe(INVITATION_EMAIL_UPDATE_CODE.INVITATION_NOT_FOUND);
   });
 
+  it("returns stable 404 for linked_student_not_found", async () => {
+    h.changeInvitationEmailMock.mockResolvedValue({
+      ok: false,
+      notFound: false,
+      code: INVITATION_EMAIL_UPDATE_CODE.LINKED_STUDENT_NOT_FOUND,
+      error: "Linked student record not found.",
+      status: 404,
+    });
+
+    const res = await POST(req({ newEmail: "new@school.test" }) as any, {
+      params: { id: "inv-1" },
+    });
+    expect(res.status).toBe(404);
+    const body = await res.json();
+    expect(body.code).toBe("linked_student_not_found");
+  });
+
+  it("returns stable 409 for student_already_linked", async () => {
+    h.changeInvitationEmailMock.mockResolvedValue({
+      ok: false,
+      notFound: false,
+      code: INVITATION_EMAIL_UPDATE_CODE.STUDENT_ALREADY_LINKED,
+      error:
+        "This student already has an app account. Use Student Change email instead.",
+      status: 409,
+    });
+
+    const res = await POST(req({ newEmail: "new@school.test" }) as any, {
+      params: { id: "inv-1" },
+    });
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.code).toBe("student_already_linked");
+  });
+
   it("returns stable 409 for student_email_already_in_use", async () => {
     h.changeInvitationEmailMock.mockResolvedValue({
       ok: false,

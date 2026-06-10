@@ -21,6 +21,7 @@ import {
   getChangeInvitationEmailWarningCopy,
   type ChangeInvitationEmailApiError,
   type ChangeInvitationEmailMutationResponse,
+  type ChangeInvitationEmailUiContext,
 } from "@/lib/invitations/invitation-email-update-ui-utils";
 import { copyTextToClipboard } from "@/lib/invitations/invitation-ui-utils";
 
@@ -41,6 +42,7 @@ type InvitationEmailChangeDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: (invitation: InvitationDto) => void;
+  context?: ChangeInvitationEmailUiContext;
 };
 
 export function InvitationEmailChangeDialog({
@@ -48,6 +50,7 @@ export function InvitationEmailChangeDialog({
   open,
   onOpenChange,
   onSuccess,
+  context = "onboarding",
 }: InvitationEmailChangeDialogProps) {
   const [newEmail, setNewEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -132,7 +135,7 @@ export function InvitationEmailChangeDialog({
         <DialogHeader>
           <DialogTitle>{CHANGE_INVITATION_EMAIL_MODAL.title}</DialogTitle>
           <DialogDescription>
-            {getChangeInvitationEmailWarningCopy()}
+            {getChangeInvitationEmailWarningCopy(context)}
           </DialogDescription>
         </DialogHeader>
 
@@ -197,7 +200,11 @@ export function InvitationEmailChangeDialog({
                 type="email"
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
-                placeholder="instructor@example.com"
+                placeholder={
+                  invitation?.role === "STUDENT"
+                    ? "student@example.com"
+                    : "instructor@example.com"
+                }
                 required
                 autoComplete="off"
               />
@@ -227,11 +234,13 @@ export function InvitationEmailChangeDialog({
 type ChangeInvitationEmailButtonProps = {
   onClick: () => void;
   disabled?: boolean;
+  label?: string;
 };
 
 export function ChangeInvitationEmailButton({
   onClick,
   disabled = false,
+  label = "Change email",
 }: ChangeInvitationEmailButtonProps) {
   return (
     <Button
@@ -243,7 +252,7 @@ export function ChangeInvitationEmailButton({
       onClick={onClick}
     >
       <Mail className="h-4 w-4 mr-1" />
-      Change email
+      {label}
     </Button>
   );
 }
