@@ -1,19 +1,20 @@
 # Tenant Operational `organizationId` NOT NULL — Readiness and D4 Gate
 
-**Latest implementation batch:** `tenant-operational-organization-id-not-null-migrations-v1`  
+**Latest deploy-record batch:** `tenant-operational-organization-id-not-null-deploy-record-v1`  
+**Implementation batch:** `tenant-operational-organization-id-not-null-migrations-v1`  
 **Prior planning batch:** `tenant-operational-organization-id-not-null-migrations-plan-v1`  
-**Status:** Migration **created** — `migrate deploy` **not run** by Cursor; human operator step required per environment.  
+**Status:** Migration **merged and deployed** on operator-validated target environment (2026-06-10). Other environments require their own gate + deploy.  
 **Decision:** [DEC-027](./decision-log.md)  
 **Prior work:** [tenant-required-operational-organization-id-audit.md](./tenant-required-operational-organization-id-audit.md)  
-**Schema baseline:** `driving_school_platform/nextjs_space/prisma/schema.prisma` (as of main `29d5cd8`).
+**Schema baseline:** `driving_school_platform/nextjs_space/prisma/schema.prisma` (as of main `1854d1b`).
 
 ---
 
 ## Purpose
 
-Record **operator-validated readiness** to apply future `NOT NULL` constraints on the six operational tables that today allow nullable `organizationId`, without requiring a backfill apply batch in the validated environment.
+Record **operator-validated readiness**, D4 gate, and **deploy evidence** for `NOT NULL` on the six operational tables (`students`, `instructors`, `vehicles`, `lessons`, `exams`, `lesson_requests`).
 
-Phase 4b migration SQL and Prisma schema are **implemented** in batch `tenant-operational-organization-id-not-null-migrations-v1`. **Deploy is not automatic** — operator must run human-controlled `pnpm exec prisma migrate deploy` on each target environment after re-validating the gate checklist.
+Migration `20260610140000_make_operational_organization_id_required` is merged on main (`1854d1b`) and **deployed by operator** on the current validated target environment. **`users.organizationId` and dual-scope tables remain nullable by design** (DEC-027). Re-run the gate battery before deploying to any **other** environment.
 
 ---
 
@@ -21,11 +22,11 @@ Phase 4b migration SQL and Prisma schema are **implemented** in batch `tenant-op
 
 | Topic | Decision |
 | ----- | -------- |
-| **Future NOT NULL candidates** | `students`, `instructors`, `vehicles`, `lessons`, `exams`, `lesson_requests` only |
+| **Operational NOT NULL (six tables)** | **Applied** on validated target env — migration `20260610140000_make_operational_organization_id_required` |
 | **`users.organizationId`** | **Remain nullable** — `PLATFORM_ADMIN` requires `organizationId: null` (`lib/platform/platform-admins.ts`) |
 | **Dual-scope tables** | **Remain nullable** — `billing_events`, `system_settings`, `feature_flags`, `configuration_history` |
-| **Backfill apply** | **Not required** in validated environment — 0 operational NULL rows, 0 proposed dry-run changes |
-| **Migrations** | **Deferred (D4)** — per-table or explicit multi-table plan; re-run null report on target DB immediately before each deploy |
+| **Backfill apply** | **Not required** — 0 operational NULL rows before and after deploy on validated env |
+| **Other environments** | Re-run gate + human `migrate deploy` per environment; validated-env deploy does not imply Production |
 
 ---
 
@@ -67,13 +68,52 @@ Database schema is up to date
 - Ambiguous: **0**
 - Apply readiness: **READY_FOR_FUTURE_APPLY_BATCH**
 
-**Operator note:** No database connection strings, hostnames, or org IDs are recorded here. Re-run reports before Production deploy or any future migration batch.
+**Operator note:** No database connection strings, hostnames, or org IDs are recorded here. Re-run reports before deploying to any other environment.
+
+---
+
+## Deploy evidence (2026-06-10)
+
+**Batch:** `tenant-operational-organization-id-not-null-deploy-record-v1`  
+**Main:** `1854d1b`  
+**Migration applied:** `20260610140000_make_operational_organization_id_required`  
+**Executor:** human operator (`pnpm exec prisma migrate deploy`) — not Cursor.
+
+### `pnpm exec prisma migrate deploy`
+
+- Applied successfully on operator-validated target environment.
+
+### `pnpm exec prisma migrate status` (post-deploy)
+
+```
+23 migrations found
+Database schema is up to date
+```
+
+### `pnpm tenant:org-null-report` (post-deploy)
+
+- Operational NULL total on six tables: **0**
+- Backfill readiness status: **`SAFE_TO_DRY_RUN`**
+- High-risk conflicts: **0**
+
+### `pnpm tenant:org-backfill:dry-run` (post-deploy)
+
+- Proposed changes: **0**
+- Conflicts: **0**
+- Ambiguous: **0**
+- Apply readiness: **`READY_FOR_FUTURE_APPLY_BATCH`**
+
+### `pnpm check` (post-deploy)
+
+- **163** test files / **1223** tests / build **OK**
+
+**Operator note:** No connection strings, hostnames, or org IDs recorded. This evidence applies to the **operator-named target environment only** — not assumed for Preview vs Production unless explicitly stated by operator.
 
 ---
 
 ## Classification reference
 
-### TENANT_REQUIRED — future NOT NULL (after D4 gate)
+### TENANT_REQUIRED — NOT NULL (migration applied on validated env)
 
 | Prisma model | Physical table |
 | ------------ | -------------- |
@@ -256,8 +296,9 @@ Before `APPROVED TO IMPLEMENT: tenant-operational-organization-id-not-null-migra
 | 3b | `tenant-operational-organization-id-not-null-readiness-review-v1` | **Done** (analysis) |
 | 3c | `tenant-operational-organization-id-not-null-readiness-doc-v1` | **Done** (DEC-027 + operator evidence) |
 | 4a | `tenant-operational-organization-id-not-null-migrations-plan-v1` | **Done** (D4 gate, operator battery, migration proposal, smoke checklist — **no migration**) |
-| 4b | `tenant-operational-organization-id-not-null-migrations-v1` | **Migration created** — human `migrate deploy` + smoke QA per environment pending |
-| 5 | `supabase-rls-tenant-policies-v1` | **Deferred** — optional after NOT NULL / backfill |
+| 4b | `tenant-operational-organization-id-not-null-migrations-v1` | **Done** — migration merged on main `1854d1b` |
+| 4c | `tenant-operational-organization-id-not-null-deploy-record-v1` | **Done** — operator deploy + post-deploy validation on target env (2026-06-10) |
+| 5 | `supabase-rls-tenant-policies-v1` | **Deferred** — optional follow-up |
 
 **Operator scripts (confirmed present in `package.json` on main `29d5cd8`):**
 

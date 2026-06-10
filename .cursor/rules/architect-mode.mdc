@@ -309,7 +309,8 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `tenant-operational-organization-id-not-null-readiness-review-v1` — analysis-only readiness review for future NOT NULL on six operational tables
 - `tenant-operational-organization-id-not-null-readiness-doc-v1` — docs-only readiness + DEC-027; report `docs/architecture/tenant-operational-organization-id-not-null-readiness.md`; operator evidence 2026-06-09: 0 operational NULLs, no backfill apply needed
 - `tenant-operational-organization-id-not-null-migrations-plan-v1` — docs-only D4 gate: GO/NO-GO checklist, operator battery, single-migration proposal, smoke tests; no schema/migration/runtime/data changes
-- `tenant-operational-organization-id-not-null-migrations-v1` — migration `20260610140000_make_operational_organization_id_required`; NOT NULL on six operational models; human `migrate deploy` pending per environment
+- `tenant-operational-organization-id-not-null-migrations-v1` — migration `20260610140000_make_operational_organization_id_required`; NOT NULL on six operational models (main `1854d1b`)
+- `tenant-operational-organization-id-not-null-deploy-record-v1` — docs-only: operator deploy recorded on validated target env (2026-06-10); post-deploy gate passed; `User`/dual-scope remain nullable
 - `people-management-instructor-email-change-policy-v1` — analysis-only Instructor change-email policy
 - `people-management-instructor-email-change-policy-doc-v1` — docs-only policy + DEC-028; `docs/architecture/instructor-email-change-policy.md`
 - `people-management-instructor-email-change-v1` — `POST /api/admin/instructors/[id]/change-email` + Edit Instructor Change email modal (DEC-028); service/tests/UI; no schema/migration
@@ -323,7 +324,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Current recommended next (runtime/UX slice):**
 
-1. **Operator:** human `migrate deploy` for `20260610140000_make_operational_organization_id_required` + smoke QA (migration file done)
+1. `supabase-rls-class-b-hardening-v1b` — optional RLS + REVOKE on remaining internal tables (**D4**); separate approval
 
 **Likely next:**
 
