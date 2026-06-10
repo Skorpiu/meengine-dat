@@ -185,6 +185,7 @@ Documented and in use (docs/rules only; no runtime change):
 - `people-management-profile-address-fields-v1` — **Address** on operational person profiles (DEC-023): migration `20260608120000_add_student_address` adds `Student.address`; `PATCH`/`POST /api/admin/students` accept `address`; DTO exposes `address` with `student.address ?? linkedUser.address` read fallback in UI; Edit Student/Instructor show address in **profile** (not App access); APP_USER dual-save syncs `User.address`; Instructor UI-only on `User.address`. No import/export/RLS/auth/lifecycle changes. Validated via `pnpm check`.
 - `people-management-student-email-change-policy-v1` — **Change email** for Students (DEC-024): `POST /api/admin/students/[id]/change-email`; transactional service `lib/students/student-email-change-service.ts`; PATCH email guard (`use_change_email_flow`); Edit Student **Change email** modal; policy by MANUAL_ONLY / INVITED / APP_USER / post-remove. No schema/migration/RLS changes. Validated via `pnpm check`.
 - `people-management-instructor-profile-invite-badge-v1` — UI-only instructor invite/profile lifecycle clarity (DEC-025): Onboarding copy explains pending invites stay pre-profile; Profiles conditional app-account subtitle (`linked` / `awaiting approval` / `inactive`); expanded instructor label guide; helpers `getInstructorProfileAppAccountSubtitle` / `formatInstructorProfileContactLine`. No `Pending invite` badge on Profiles; no API/schema/RLS changes. Validated via `pnpm check`.
+- `people-management-ux-unification-instructor-invitations-v1` — UI-only closure slice under `people-management-ux-unification` (DEC-025): refined Onboarding/Profiles copy and instructor label guide (Student vs Instructor invitation asymmetry); Profiles header clarifies post-account states; helpers reused from `lib/instructors/instructor-record-ui-utils.ts`. No `Pending invite` badge on Profiles; no API/schema/RLS changes. Validated via `pnpm check`.
 - `admin-settings-client-visibility-review-v1` — docs-only audit: `/admin/settings` is operator/internal (System Settings + Feature Flags CRUD); module gating uses License/Entitlements (DEC-026). Report: [admin-settings-client-visibility-audit.md](./admin-settings-client-visibility-audit.md). Phased next: hide Settings nav (B), License read-only (C), vehicle alerts (D). No runtime/UI/API/schema changes. Validated via `pnpm check`.
 - `admin-settings-client-visibility-hide-v1` — UI-only (DEC-026 Fase B): Settings removed from school admin navbar (`components/navigation/navbar.tsx`); `/admin/settings` retained with operator/internal header + alert copy; CRUD tabs unchanged; all settings/feature-flags/config APIs unchanged. Validated via `pnpm check`.
 - `admin-license-client-readonly-v1` — UI-only (DEC-026 Fase C): `/admin/license` reframed as **Plan & features** read-only; Activate key form and feature toggles removed from UI; consolidated Modules & features section; navbar label **Plan**; `useLicense`/APIs/gating unchanged. Validated via `pnpm check`.
@@ -212,10 +213,12 @@ Documented and in use (docs/rules only; no runtime change):
 
 ### Likely next (smallest safe slices)
 
-1. `people-management-ux-unification` remaining (invitations on instructor record — tabs v1 done; **route split deferred D4**)
-2. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next
-3. `tenant-operational-organization-id-backfill-apply-v1` — **deferred** until a future environment dry-run shows proposed changes (not needed in 2026-06-09 validated env)
-4. `audit-log-tenant-context-foundation` — planning only
-5. Product/packaging planning slices — see [roadmap-todo.md](./roadmap-todo.md) **P1 / Product and packaging** and [docs/product/](../product/)
+1. Product/packaging planning slices — see [roadmap-todo.md](./roadmap-todo.md) **P1 / Product and packaging** and [docs/product/](../product/)
+2. `audit-log-tenant-context-foundation` — planning only
+3. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next
+
+### Product direction (backlog)
+
+**Competitive/Product Discovery** (`competitive-product-discovery-v1`, P2; DEC-007): pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros. Discovery/product strategy track — competitor research, functional comparison, driving-school value assessment, architecture, phased implementation. Not immediate implementation; does not block current People or engineering work.
 
 Engineering excellence audit items (non-blocking refactors) remain tracked separately in roadmap P2+.

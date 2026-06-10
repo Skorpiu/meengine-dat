@@ -282,7 +282,7 @@ export function InvitationsManagementClient({
   const emptyListMessage = isStudentOnboarding
     ? "No pending student invitations without a profile. When a student profile already exists, use Send invitation on Students → Profiles."
     : isInstructorOnboarding
-      ? "No pending instructor invitations."
+      ? "No pending instructor invitations. After an invite is accepted, manage the instructor on Instructors → Profiles (App access pending approval or Active)."
       : "No pending invitations. Create one above.";
 
   const listTitle = isStudentOnboarding
