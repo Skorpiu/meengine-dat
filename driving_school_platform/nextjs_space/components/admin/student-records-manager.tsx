@@ -100,8 +100,15 @@ import { getStudentProfileOperationalCompactBadges } from "@/lib/students/studen
 import { resolveStudentProfileAddress } from "@/lib/students/student-profile-address-utils";
 import {
   canRevokeStudentRecordInvitation,
+  canShowLinkedStudentInvitationChangeEmailAction,
   getStudentAppAccessDetailLines,
+  mapStudentRecordPendingInvitationToDto,
 } from "@/lib/students/student-record-invitation-ui-utils";
+import type { InvitationDto } from "@/lib/invitations/invitation-dto";
+import {
+  ChangeInvitationEmailButton,
+  InvitationEmailChangeDialog,
+} from "@/components/admin/invitation-email-change-dialog";
 import { getStudentProfileRowBadges } from "@/lib/students/student-profile-label-utils";
 import { PeopleProfileLabelGuide } from "@/components/admin/people-profile-label-guide";
 import { PeopleProfileAvatar } from "@/components/people/people-profile-avatar";
@@ -266,6 +273,8 @@ export function StudentRecordsManager({
   >(null);
   const [changeEmailStudent, setChangeEmailStudent] =
     useState<StudentRecordDto | null>(null);
+  const [changeInvitationEmailStudent, setChangeInvitationEmailStudent] =
+    useState<StudentRecordDto | null>(null);
   const [linkedDetailsOverlay, setLinkedDetailsOverlay] = useState<
     Record<string, LinkedAppAccountDetails>
   >({});
@@ -394,6 +403,35 @@ export function StudentRecordsManager({
           })
         : null,
     );
+  };
+
+  const handleInvitationEmailChangeSuccess = (
+    student: StudentRecordDto,
+    invitation: InvitationDto,
+  ) => {
+    const updatedStudent: StudentRecordDto = {
+      ...student,
+      email: invitation.email,
+      pendingInvitation: student.pendingInvitation
+        ? {
+            ...student.pendingInvitation,
+            email: invitation.email,
+            expiresAt: invitation.expiresAt,
+          }
+        : null,
+    };
+
+    setStudents((prev) =>
+      prev.map((row) => (row.id === updatedStudent.id ? updatedStudent : row)),
+    );
+
+    if (editingStudent?.id === updatedStudent.id) {
+      setEditingStudent(updatedStudent);
+      setEditForm((form) => ({
+        ...form,
+        email: invitation.email,
+      }));
+    }
   };
 
   const handleRevokeInvitation = async (student: StudentRecordDto) => {
@@ -1068,16 +1106,18 @@ export function StudentRecordsManager({
           <div className="space-y-2">
             <Label>Invitation email</Label>
             <p className="text-sm font-medium text-amber-950">{inviteEmail}</p>
-            {canShowChangeStudentEmailAction(student) ? (
-              <ChangeStudentEmailButton
-                variant="app-access"
-                onClick={() => setChangeEmailStudent(student)}
+            {canShowLinkedStudentInvitationChangeEmailAction(student) ? (
+              <ChangeInvitationEmailButton
+                label="Change invitation email"
+                onClick={() => setChangeInvitationEmailStudent(student)}
               />
             ) : null}
           </div>
           <p className="text-xs text-amber-800">
-            Use <strong>Revoke invitation</strong> on the profile row to cancel
-            a pending invite. Resend is not available here.
+            Use <strong>Change invitation email</strong> to update the invite
+            and profile email together. Use <strong>Revoke invitation</strong>{" "}
+            on the profile row to cancel a pending invite. Resend is not
+            available here.
           </p>
         </CollapsibleContent>
       </Collapsible>
@@ -1376,6 +1416,20 @@ export function StudentRecordsManager({
                             Send invitation
                           </Button>
                         ) : null}
+                        {canShowLinkedStudentInvitationChangeEmailAction(
+                          student,
+                        ) ? (
+                          <ChangeInvitationEmailButton
+                            disabled={
+                              revokingInvitationId ===
+                              student.pendingInvitation?.invitationId
+                            }
+                            label="Change invitation email"
+                            onClick={() =>
+                              setChangeInvitationEmailStudent(student)
+                            }
+                          />
+                        ) : null}
                         {canRevokeStudentRecordInvitation(student) ? (
                           <Button
                             size="sm"
@@ -1550,6 +1604,29 @@ export function StudentRecordsManager({
           if (!open) setInviteStudent(null);
         }}
         onSuccess={() => loadStudents({ search: appliedSearch })}
+      />
+
+      <InvitationEmailChangeDialog
+        invitation={
+          changeInvitationEmailStudent
+            ? mapStudentRecordPendingInvitationToDto(
+                changeInvitationEmailStudent,
+              )
+            : null
+        }
+        context="linked-student"
+        open={changeInvitationEmailStudent !== null}
+        onOpenChange={(open) => {
+          if (!open) setChangeInvitationEmailStudent(null);
+        }}
+        onSuccess={(invitation) => {
+          if (changeInvitationEmailStudent) {
+            handleInvitationEmailChangeSuccess(
+              changeInvitationEmailStudent,
+              invitation,
+            );
+          }
+        }}
       />
 
       <StudentEmailChangeDialog

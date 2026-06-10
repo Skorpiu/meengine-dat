@@ -3,6 +3,7 @@ import {
   canShowInvitationChangeEmailAction,
   changeInvitationEmailApiErrorMessage,
   CHANGE_INVITATION_EMAIL_WARNING_LINES,
+  CHANGE_LINKED_STUDENT_INVITATION_EMAIL_WARNING_LINES,
   getChangeInvitationEmailWarningCopy,
 } from "./invitation-email-update-ui-utils";
 import type { InvitationDto } from "./invitation-dto";
@@ -29,6 +30,18 @@ const studentPending: InvitationDto = {
 };
 
 describe("invitation-email-update-ui-utils", () => {
+  it("includes linked-student warning copy lines", () => {
+    expect(CHANGE_LINKED_STUDENT_INVITATION_EMAIL_WARNING_LINES).toContain(
+      "This updates the pending invitation email and the student profile email.",
+    );
+    expect(CHANGE_LINKED_STUDENT_INVITATION_EMAIL_WARNING_LINES).toContain(
+      "The student remains invited; no app account is created yet.",
+    );
+    expect(getChangeInvitationEmailWarningCopy("linked-student")).toContain(
+      "student profile email",
+    );
+  });
+
   it("includes required warning copy lines", () => {
     expect(CHANGE_INVITATION_EMAIL_WARNING_LINES).toContain(
       "The previous invite link will stop working.",
@@ -100,6 +113,14 @@ describe("invitation-email-update-ui-utils", () => {
     expect(
       changeInvitationEmailApiErrorMessage("student_email_already_in_use", "x"),
     ).toBe("A student record with this email already exists.");
+    expect(
+      changeInvitationEmailApiErrorMessage("linked_student_not_found", "x"),
+    ).toBe("Linked student record not found.");
+    expect(
+      changeInvitationEmailApiErrorMessage("student_already_linked", "x"),
+    ).toBe(
+      "This student already has an app account. Use Student Change email instead.",
+    );
     expect(
       changeInvitationEmailApiErrorMessage(
         "unsupported_linked_student_invitation",

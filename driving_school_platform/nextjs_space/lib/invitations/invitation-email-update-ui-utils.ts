@@ -16,8 +16,24 @@ export const CHANGE_INVITATION_EMAIL_WARNING_LINES = [
   "Email is not sent automatically.",
 ] as const;
 
-export function getChangeInvitationEmailWarningCopy(): string {
-  return CHANGE_INVITATION_EMAIL_WARNING_LINES.join(" ");
+export const CHANGE_LINKED_STUDENT_INVITATION_EMAIL_WARNING_LINES = [
+  "This updates the pending invitation email and the student profile email.",
+  "The previous invite link will stop working.",
+  "Copy the new link after saving.",
+  "Email is not sent automatically.",
+  "The student remains invited; no app account is created yet.",
+] as const;
+
+export type ChangeInvitationEmailUiContext = "onboarding" | "linked-student";
+
+export function getChangeInvitationEmailWarningCopy(
+  context: ChangeInvitationEmailUiContext = "onboarding",
+): string {
+  const lines =
+    context === "linked-student"
+      ? CHANGE_LINKED_STUDENT_INVITATION_EMAIL_WARNING_LINES
+      : CHANGE_INVITATION_EMAIL_WARNING_LINES;
+  return lines.join(" ");
 }
 
 /** Onboarding rows — unlinked pending STUDENT or INSTRUCTOR invitations. */
@@ -57,6 +73,10 @@ export function changeInvitationEmailApiErrorMessage(
       return "This invitation type is not supported for change email.";
     case "unsupported_linked_student_invitation":
       return "Linked student invitations cannot be updated here.";
+    case "linked_student_not_found":
+      return "Linked student record not found.";
+    case "student_already_linked":
+      return "This student already has an app account. Use Student Change email instead.";
     case "student_email_already_in_use":
       return "A student record with this email already exists.";
     case "invitation_email_update_failed":

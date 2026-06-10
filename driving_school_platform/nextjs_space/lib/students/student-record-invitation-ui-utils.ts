@@ -1,3 +1,4 @@
+import type { InvitationDto } from "@/lib/invitations/invitation-dto";
 import type {
   StudentAppAccessMode,
   StudentRecordDto,
@@ -45,6 +46,44 @@ export function canRevokeStudentRecordInvitation(student: {
     student.pendingInvitation?.status === "PENDING" &&
     Boolean(student.pendingInvitation.invitationId)
   );
+}
+
+/** Profiles → App access: linked pending STUDENT invitation email update. */
+export function canShowLinkedStudentInvitationChangeEmailAction(student: {
+  appAccessMode: StudentAppAccessMode;
+  userId: string | null;
+  pendingInvitation: StudentRecordPendingInvitationDto | null;
+}): boolean {
+  return (
+    student.appAccessMode === "INVITED" &&
+    student.userId == null &&
+    student.pendingInvitation?.status === "PENDING" &&
+    Boolean(student.pendingInvitation.invitationId)
+  );
+}
+
+export function mapStudentRecordPendingInvitationToDto(
+  student: StudentRecordDto,
+): InvitationDto | null {
+  const pending = student.pendingInvitation;
+  if (!pending?.invitationId) {
+    return null;
+  }
+
+  return {
+    id: pending.invitationId,
+    studentId: student.id,
+    email: pending.email,
+    role: "STUDENT",
+    status: "PENDING",
+    expiresAt: pending.expiresAt,
+    acceptedAt: null,
+    revokedAt: null,
+    createdAt: student.createdAt,
+    updatedAt: student.updatedAt,
+    createdBy: null,
+    acceptedUser: null,
+  };
 }
 
 export function getStudentAppAccessDetailLines(

@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
   canRevokeStudentRecordInvitation,
+  canShowLinkedStudentInvitationChangeEmailAction,
   getStudentAppAccessDetailLines,
   getStudentAppAccessLabel,
   getStudentInvitedWithoutPendingHelp,
+  mapStudentRecordPendingInvitationToDto,
 } from "@/lib/students/student-record-invitation-ui-utils";
 import type { StudentRecordDto } from "@/lib/students/student-record-ui-types";
 
@@ -75,6 +77,64 @@ describe("canRevokeStudentRecordInvitation", () => {
         baseStudent({ appAccessMode: "INVITED", pendingInvitation: null }),
       ),
     ).toBe(false);
+  });
+});
+
+describe("canShowLinkedStudentInvitationChangeEmailAction", () => {
+  const invitedWithPending = baseStudent({
+    appAccessMode: "INVITED",
+    pendingInvitation: {
+      invitationId: "inv-1",
+      email: "invite@school.test",
+      expiresAt: "2099-01-01T00:00:00.000Z",
+      status: "PENDING",
+    },
+  });
+
+  it("shows for INVITED student with pending invite and no userId", () => {
+    expect(
+      canShowLinkedStudentInvitationChangeEmailAction(invitedWithPending),
+    ).toBe(true);
+  });
+
+  it("hides for APP_USER", () => {
+    expect(
+      canShowLinkedStudentInvitationChangeEmailAction(
+        baseStudent({
+          appAccessMode: "APP_USER",
+          userId: "user-1",
+          pendingInvitation: invitedWithPending.pendingInvitation,
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  it("hides without pending invitation", () => {
+    expect(
+      canShowLinkedStudentInvitationChangeEmailAction(
+        baseStudent({ appAccessMode: "INVITED", pendingInvitation: null }),
+      ),
+    ).toBe(false);
+  });
+});
+
+describe("mapStudentRecordPendingInvitationToDto", () => {
+  it("maps linked pending invitation for change-email dialog", () => {
+    const student = baseStudent({
+      appAccessMode: "INVITED",
+      pendingInvitation: {
+        invitationId: "inv-1",
+        email: "invite@school.test",
+        expiresAt: "2099-01-01T00:00:00.000Z",
+        status: "PENDING",
+      },
+    });
+
+    const dto = mapStudentRecordPendingInvitationToDto(student);
+    expect(dto?.id).toBe("inv-1");
+    expect(dto?.studentId).toBe("stu-1");
+    expect(dto?.role).toBe("STUDENT");
+    expect(dto?.status).toBe("PENDING");
   });
 });
 
