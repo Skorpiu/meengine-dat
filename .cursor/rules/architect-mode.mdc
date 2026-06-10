@@ -309,6 +309,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `tenant-operational-organization-id-not-null-readiness-review-v1` — analysis-only readiness review for future NOT NULL on six operational tables
 - `tenant-operational-organization-id-not-null-readiness-doc-v1` — docs-only readiness + DEC-027; report `docs/architecture/tenant-operational-organization-id-not-null-readiness.md`; operator evidence 2026-06-09: 0 operational NULLs, no backfill apply needed
 - `tenant-operational-organization-id-not-null-migrations-plan-v1` — docs-only D4 gate: GO/NO-GO checklist, operator battery, single-migration proposal, smoke tests; no schema/migration/runtime/data changes
+- `tenant-operational-organization-id-not-null-migrations-v1` — migration `20260610140000_make_operational_organization_id_required`; NOT NULL on six operational models; human `migrate deploy` pending per environment
 - `people-management-instructor-email-change-policy-v1` — analysis-only Instructor change-email policy
 - `people-management-instructor-email-change-policy-doc-v1` — docs-only policy + DEC-028; `docs/architecture/instructor-email-change-policy.md`
 - `people-management-instructor-email-change-v1` — `POST /api/admin/instructors/[id]/change-email` + Edit Instructor Change email modal (DEC-028); service/tests/UI; no schema/migration
@@ -322,7 +323,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Current recommended next (runtime/UX slice):**
 
-1. `tenant-operational-organization-id-not-null-migrations-v1` — `SET NOT NULL` on six operational tables (**D4**); operator GO on gate + `APPROVED TO IMPLEMENT: tenant-operational-organization-id-not-null-migrations-v1` + human `migrate deploy`
+1. **Operator:** human `migrate deploy` for `20260610140000_make_operational_organization_id_required` + smoke QA (migration file done)
 
 **Likely next:**
 

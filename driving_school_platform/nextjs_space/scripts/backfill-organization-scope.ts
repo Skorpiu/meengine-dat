@@ -13,6 +13,7 @@
 
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
+import { executeSqlBackfillNullOrganizationId } from "@/lib/tenant-operational-organization-id-sql";
 
 const prisma = new PrismaClient();
 
@@ -64,38 +65,52 @@ async function main(): Promise<void> {
 
   console.log(`✅ Using organization: ${org.name} (${org.id})\n`);
 
-  const results = await prisma.$transaction([
-    prisma.vehicle.updateMany({
+  const results = await prisma.$transaction(async (tx) => {
+    const vehicles = await executeSqlBackfillNullOrganizationId(
+      tx,
+      "vehicle",
+      org.id,
+    );
+    const lessons = await executeSqlBackfillNullOrganizationId(
+      tx,
+      "lesson",
+      org.id,
+    );
+    const exams = await executeSqlBackfillNullOrganizationId(
+      tx,
+      "exam",
+      org.id,
+    );
+    const lessonRequests = await executeSqlBackfillNullOrganizationId(
+      tx,
+      "lessonRequest",
+      org.id,
+    );
+    const systemSettings = await tx.systemSetting.updateMany({
       where: { organizationId: null },
       data: { organizationId: org.id },
-    }),
-    prisma.lesson.updateMany({
+    });
+    const configHistory = await tx.configurationHistory.updateMany({
       where: { organizationId: null },
       data: { organizationId: org.id },
-    }),
-    prisma.exam.updateMany({
+    });
+    const featureFlags = await tx.featureFlag.updateMany({
       where: { organizationId: null },
       data: { organizationId: org.id },
-    }),
-    prisma.lessonRequest.updateMany({
-      where: { organizationId: null },
-      data: { organizationId: org.id },
-    }),
-    prisma.systemSetting.updateMany({
-      where: { organizationId: null },
-      data: { organizationId: org.id },
-    }),
-    prisma.configurationHistory.updateMany({
-      where: { organizationId: null },
-      data: { organizationId: org.id },
-    }),
-    prisma.featureFlag.updateMany({
-      where: { organizationId: null },
-      data: { organizationId: org.id },
-    }),
-  ]);
+    });
 
-  const [
+    return {
+      vehicles: { count: vehicles },
+      lessons: { count: lessons },
+      exams: { count: exams },
+      lessonRequests: { count: lessonRequests },
+      systemSettings,
+      configHistory,
+      featureFlags,
+    };
+  });
+
+  const {
     vehicles,
     lessons,
     exams,
@@ -103,7 +118,7 @@ async function main(): Promise<void> {
     systemSettings,
     configHistory,
     featureFlags,
-  ] = results;
+  } = results;
 
   console.log("📌 Backfill results:");
   console.log(`- vehicles:       ${vehicles.count}`);

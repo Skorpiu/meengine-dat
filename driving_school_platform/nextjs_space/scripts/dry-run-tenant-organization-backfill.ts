@@ -8,7 +8,7 @@
  */
 
 import { loadEnvConfig } from "@next/env";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import {
   buildDryRunReport,
   effectiveOrganizationId,
@@ -32,182 +32,215 @@ async function gatherDryRunPlan(
 ): Promise<BackfillPlanRow[]> {
   const rows: BackfillPlanRow[] = [];
 
-  const instructors = await prisma.instructor.findMany({
-    where: { organizationId: null },
-    select: {
-      id: true,
-      organizationId: true,
-      user: { select: { organizationId: true } },
-    },
-  });
+  const nullInstructorIds = await prisma.$queryRaw<{ id: string }[]>(
+    Prisma.sql`SELECT id FROM instructors WHERE "organizationId" IS NULL`,
+  );
 
-  for (const row of instructors) {
-    rows.push(
-      planInstructorBackfill({
-        id: row.id,
-        organizationId: row.organizationId,
-        userOrganizationId: row.user.organizationId,
-      }),
-    );
+  if (nullInstructorIds.length > 0) {
+    const instructors = await prisma.instructor.findMany({
+      where: { id: { in: nullInstructorIds.map((row) => row.id) } },
+      select: {
+        id: true,
+        organizationId: true,
+        user: { select: { organizationId: true } },
+      },
+    });
+
+    for (const row of instructors) {
+      rows.push(
+        planInstructorBackfill({
+          id: row.id,
+          organizationId: row.organizationId as string | null,
+          userOrganizationId: row.user.organizationId,
+        }),
+      );
+    }
   }
 
   const instructorProposals = proposalsByTable(rows).instructor;
 
-  const students = await prisma.student.findMany({
-    where: { organizationId: null },
-    select: {
-      id: true,
-      organizationId: true,
-      user: { select: { organizationId: true } },
-      lessons: {
-        where: { organizationId: { not: null } },
-        select: { organizationId: true },
-      },
-    },
-  });
+  const nullStudentIds = await prisma.$queryRaw<{ id: string }[]>(
+    Prisma.sql`SELECT id FROM students WHERE "organizationId" IS NULL`,
+  );
 
-  for (const row of students) {
-    rows.push(
-      planStudentBackfill({
-        id: row.id,
-        organizationId: row.organizationId,
-        userOrganizationId: row.user?.organizationId ?? null,
-        lessonOrganizationIds: row.lessons.map((l) => l.organizationId!),
-      }),
-    );
+  if (nullStudentIds.length > 0) {
+    const students = await prisma.student.findMany({
+      where: { id: { in: nullStudentIds.map((row) => row.id) } },
+      select: {
+        id: true,
+        organizationId: true,
+        user: { select: { organizationId: true } },
+        lessons: { select: { organizationId: true } },
+      },
+    });
+
+    for (const row of students) {
+      rows.push(
+        planStudentBackfill({
+          id: row.id,
+          organizationId: row.organizationId as string | null,
+          userOrganizationId: row.user?.organizationId ?? null,
+          lessonOrganizationIds: row.lessons.map((l) => l.organizationId),
+        }),
+      );
+    }
   }
 
   const studentProposals = proposalsByTable(rows).student;
 
-  const lessons = await prisma.lesson.findMany({
-    where: { organizationId: null },
-    select: {
-      id: true,
-      organizationId: true,
-      studentId: true,
-      instructorId: true,
-      vehicleId: true,
-      student: { select: { organizationId: true } },
-      instructor: { select: { organizationId: true } },
-      vehicle: { select: { organizationId: true } },
-    },
-  });
+  const nullLessonIds = await prisma.$queryRaw<{ id: string }[]>(
+    Prisma.sql`SELECT id FROM lessons WHERE "organizationId" IS NULL`,
+  );
 
-  for (const row of lessons) {
-    const studentOrg = effectiveOrganizationId(
-      row.student?.organizationId ?? null,
-      row.studentId ? studentProposals.get(row.studentId) : undefined,
-    );
-    const instructorOrg = effectiveOrganizationId(
-      row.instructor.organizationId,
-      instructorProposals.get(row.instructorId),
-    );
-    const vehicleOrg = row.vehicle?.organizationId ?? null;
+  if (nullLessonIds.length > 0) {
+    const lessons = await prisma.lesson.findMany({
+      where: { id: { in: nullLessonIds.map((row) => row.id) } },
+      select: {
+        id: true,
+        organizationId: true,
+        studentId: true,
+        instructorId: true,
+        vehicleId: true,
+        student: { select: { organizationId: true } },
+        instructor: { select: { organizationId: true } },
+        vehicle: { select: { organizationId: true } },
+      },
+    });
 
-    rows.push(
-      planLessonBackfill({
-        id: row.id,
-        organizationId: row.organizationId,
-        studentOrganizationId: studentOrg,
-        instructorOrganizationId: instructorOrg,
-        vehicleOrganizationId: vehicleOrg,
-      }),
-    );
+    for (const row of lessons) {
+      const studentOrg = effectiveOrganizationId(
+        row.student?.organizationId ?? null,
+        row.studentId ? studentProposals.get(row.studentId) : undefined,
+      );
+      const instructorOrg = effectiveOrganizationId(
+        row.instructor.organizationId,
+        instructorProposals.get(row.instructorId),
+      );
+      const vehicleOrg = row.vehicle?.organizationId ?? null;
+
+      rows.push(
+        planLessonBackfill({
+          id: row.id,
+          organizationId: row.organizationId as string | null,
+          studentOrganizationId: studentOrg,
+          instructorOrganizationId: instructorOrg,
+          vehicleOrganizationId: vehicleOrg,
+        }),
+      );
+    }
   }
 
   const lessonProposals = proposalsByTable(rows).lesson;
 
-  const lessonRequests = await prisma.lessonRequest.findMany({
-    where: { organizationId: null },
-    select: {
-      id: true,
-      organizationId: true,
-      studentId: true,
-      student: { select: { organizationId: true } },
-    },
-  });
+  const nullLessonRequestIds = await prisma.$queryRaw<{ id: string }[]>(
+    Prisma.sql`SELECT id FROM lesson_requests WHERE "organizationId" IS NULL`,
+  );
 
-  for (const row of lessonRequests) {
-    const studentOrg = effectiveOrganizationId(
-      row.student.organizationId,
-      studentProposals.get(row.studentId),
-    );
-    rows.push(
-      planLessonRequestBackfill({
-        id: row.id,
-        organizationId: row.organizationId,
-        studentOrganizationId: studentOrg,
-      }),
-    );
+  if (nullLessonRequestIds.length > 0) {
+    const lessonRequests = await prisma.lessonRequest.findMany({
+      where: { id: { in: nullLessonRequestIds.map((row) => row.id) } },
+      select: {
+        id: true,
+        organizationId: true,
+        studentId: true,
+        student: { select: { organizationId: true } },
+      },
+    });
+
+    for (const row of lessonRequests) {
+      const studentOrg = effectiveOrganizationId(
+        row.student.organizationId,
+        studentProposals.get(row.studentId),
+      );
+      rows.push(
+        planLessonRequestBackfill({
+          id: row.id,
+          organizationId: row.organizationId as string | null,
+          studentOrganizationId: studentOrg,
+        }),
+      );
+    }
   }
 
-  const exams = await prisma.exam.findMany({
-    where: { organizationId: null },
-    select: {
-      id: true,
-      organizationId: true,
-      vehicleId: true,
-      examinerId: true,
-      vehicle: { select: { organizationId: true } },
-      examiner: { select: { organizationId: true } },
-    },
-  });
+  const nullExamIds = await prisma.$queryRaw<{ id: string }[]>(
+    Prisma.sql`SELECT id FROM exams WHERE "organizationId" IS NULL`,
+  );
 
-  for (const row of exams) {
-    const examinerOrg = effectiveOrganizationId(
-      row.examiner?.organizationId ?? null,
-      row.examinerId ? instructorProposals.get(row.examinerId) : undefined,
-    );
-    rows.push(
-      planExamBackfill({
-        id: row.id,
-        organizationId: row.organizationId,
-        vehicleOrganizationId: row.vehicle?.organizationId ?? null,
-        examinerOrganizationId: examinerOrg,
-      }),
-    );
+  if (nullExamIds.length > 0) {
+    const exams = await prisma.exam.findMany({
+      where: { id: { in: nullExamIds.map((row) => row.id) } },
+      select: {
+        id: true,
+        organizationId: true,
+        vehicleId: true,
+        examinerId: true,
+        vehicle: { select: { organizationId: true } },
+        examiner: { select: { organizationId: true } },
+      },
+    });
+
+    for (const row of exams) {
+      const examinerOrg = effectiveOrganizationId(
+        row.examiner?.organizationId ?? null,
+        row.examinerId ? instructorProposals.get(row.examinerId) : undefined,
+      );
+      rows.push(
+        planExamBackfill({
+          id: row.id,
+          organizationId: row.organizationId as string | null,
+          vehicleOrganizationId: row.vehicle?.organizationId ?? null,
+          examinerOrganizationId: examinerOrg,
+        }),
+      );
+    }
   }
 
   const examProposals = proposalsByTable(rows).exam;
 
-  const vehicles = await prisma.vehicle.findMany({
-    where: { organizationId: null },
-    select: {
-      id: true,
-      organizationId: true,
-      lessons: { select: { id: true, organizationId: true } },
-      exams: { select: { id: true, organizationId: true } },
-    },
-  });
+  const nullVehicleIds = await prisma.$queryRaw<{ id: number }[]>(
+    Prisma.sql`SELECT id FROM vehicles WHERE "organizationId" IS NULL`,
+  );
 
-  for (const row of vehicles) {
-    const relatedIds: string[] = [];
-    for (const lesson of row.lessons) {
-      const org = effectiveOrganizationId(
-        lesson.organizationId,
-        lessonProposals.get(lesson.id),
-      );
-      if (org) {
-        relatedIds.push(org);
-      }
-    }
-    for (const exam of row.exams) {
-      const org = effectiveOrganizationId(
-        exam.organizationId,
-        examProposals.get(exam.id),
-      );
-      if (org) {
-        relatedIds.push(org);
-      }
-    }
+  if (nullVehicleIds.length > 0) {
+    const vehicles = await prisma.vehicle.findMany({
+      where: { id: { in: nullVehicleIds.map((row) => row.id) } },
+      select: {
+        id: true,
+        organizationId: true,
+        lessons: { select: { id: true, organizationId: true } },
+        exams: { select: { id: true, organizationId: true } },
+      },
+    });
 
-    rows.push(
-      planVehicleBackfill({
-        id: row.id,
-        organizationId: row.organizationId,
-        relatedOrganizationIds: relatedIds,
-      }),
-    );
+    for (const row of vehicles) {
+      const relatedIds: string[] = [];
+      for (const lesson of row.lessons) {
+        const org = effectiveOrganizationId(
+          lesson.organizationId,
+          lessonProposals.get(lesson.id),
+        );
+        if (org) {
+          relatedIds.push(org);
+        }
+      }
+      for (const exam of row.exams) {
+        const org = effectiveOrganizationId(
+          exam.organizationId,
+          examProposals.get(exam.id),
+        );
+        if (org) {
+          relatedIds.push(org);
+        }
+      }
+
+      rows.push(
+        planVehicleBackfill({
+          id: row.id,
+          organizationId: row.organizationId as string | null,
+          relatedOrganizationIds: relatedIds,
+        }),
+      );
+    }
   }
 
   return rows;
