@@ -1,7 +1,7 @@
 # Supabase RLS Class-B Hardening v1b — Plan (sliced)
 
 **Batch:** `supabase-rls-class-b-hardening-v1b-plan-v1` (+ B1/B2 implementation slices)  
-**Status:** Plan **done**; B1 **merged + deployed + smoke-passed**; B2 migration **in repo** — operator `migrate deploy` human-controlled.  
+**Status:** Plan **done**; B1 **merged + deployed + smoke-passed**; B2 **merged + deployed + smoke-passed** (validated env 2026-06-10); B3 **deferred (P3 / D4)**.  
 **Prior analysis:** `supabase-rls-class-b-hardening-v1b-review` (analysis-only)  
 **Baseline main:** `f22b418`  
 **Related:** [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md), [tenant-operational-organization-id-not-null-readiness.md](./tenant-operational-organization-id-not-null-readiness.md) (D4 NOT NULL deployed on validated env)
@@ -203,24 +203,38 @@ Optional: re-run Supabase Security Advisor; confirm `accounts`, `sessions`, `ver
 
 ### B2 — `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` (mandatory after deploy)
 
-| # | Test | Expected |
-| - | ---- | -------- |
-| 1 | `pnpm exec prisma migrate status` | Database schema is up to date |
-| 2 | Login **Platform Admin** | Success |
-| 3 | Login **School Admin** (tenant host) | Success |
-| 4 | Login **Student** | Success |
-| 5 | Login **Instructor** | Success |
-| 6 | Open **`/admin/users`** | People page loads |
-| 7 | Open **`/admin/vehicles`** | Fleet page loads |
-| 8 | Open **`/admin/lessons`** | Lessons page loads |
-| 9 | Create/edit **manual Student** | Success |
-| 10 | Create/edit **Vehicle** | Success |
-| 11 | Create/edit **Lesson** | Success |
-| 12 | Student import **dry-run** | Preview succeeds (zero-write) |
-| 13 | **Invitation accept** (pending invite) | Success; no duplicate Student |
-| 14 | **Password reset** flow | Success / expected errors only |
-| 15 | **Email verification** flow | Success / expected errors only |
-| 16 | `pnpm -C driving_school_platform/nextjs_space check` | Pass |
+**Deploy evidence (2026-06-10, validated target env):**
+
+| Check | Result |
+| ----- | ------ |
+| Main merge | `dd26d18` (feature `dce55c7`) |
+| Migration | `20260610160000_supabase_rls_class_b_hardening_v1b_tenant_business_revoke` applied |
+| `pnpm exec prisma migrate deploy` | Success (operator) |
+| `pnpm exec prisma migrate status` | 25 migrations; database schema up to date |
+| `pnpm -C driving_school_platform/nextjs_space check` | 163 test files / 1223 tests / build OK |
+| Tables hardened | `students`, `instructors`, `vehicles`, `lessons`, `exams`, `lesson_requests`, `lesson_counters`, `exam_registrations`, `payments`, `notifications`, `organizations`, `organization_features` |
+| Manual B2 smoke (#2–#15 below) | **Pass** (operator-confirmed green) |
+
+Manual B2 smoke tests confirmed green by operator after deploy.
+
+| # | Test | Expected | Status (2026-06-10) |
+| - | ---- | -------- | --------------------- |
+| 1 | `pnpm exec prisma migrate status` | Database schema is up to date | **Pass** |
+| 2 | Login **Platform Admin** | Success | **Pass** |
+| 3 | Login **School Admin** (tenant host) | Success | **Pass** |
+| 4 | Login **Student** | Success | **Pass** |
+| 5 | Login **Instructor** | Success | **Pass** |
+| 6 | Open **`/admin/users`** | People page loads | **Pass** |
+| 7 | Open **`/admin/vehicles`** | Fleet page loads | **Pass** |
+| 8 | Open **`/admin/lessons`** | Lessons page loads | **Pass** |
+| 9 | Create/edit **manual Student** | Success | **Pass** |
+| 10 | Create/edit **Vehicle** | Success | **Pass** |
+| 11 | Create/edit **Lesson** | Success | **Pass** |
+| 12 | Student import **dry-run** | Preview succeeds (zero-write) | **Pass** |
+| 13 | **Invitation accept** (pending invite) | Success; no duplicate Student | **Pass** |
+| 14 | **Password reset** flow | Success / expected errors only | **Pass** |
+| 15 | **Email verification** flow | Success / expected errors only | **Pass** |
+| 16 | `pnpm -C driving_school_platform/nextjs_space check` | Pass | **Pass** |
 
 Optional: re-run Supabase Security Advisor; confirm B2 tables no longer flagged `rls_disabled_in_public`.
 
@@ -237,7 +251,7 @@ Add: forms load categories/transmission types; student/instructor create dialogs
 | v1 | `supabase-rls-class-b-hardening-v1` | **Done** — 8 tables |
 | Plan | `supabase-rls-class-b-hardening-v1b-plan-v1` | **Done** (this document) |
 | B1 | `supabase-rls-class-b-hardening-v1b-nextauth-v1` | **Done** — merged `edd73de`; deployed + smoke-passed validated env 2026-06-10 |
-| B2 | `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` | **Done (migration in repo)** — `20260610160000_supabase_rls_class_b_hardening_v1b_tenant_business_revoke`; operator deploy human-controlled |
+| B2 | `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` | **Done** — merged `dd26d18` (feature `dce55c7`); deployed + smoke-passed validated env 2026-06-10 |
 | B3 | `supabase-rls-class-b-hardening-v1b-global-reference-v1` | **Deferred (P3 / D4)** |
 | P2 | `supabase-rls-tenant-policies-v1` | **Deferred** — not part of v1b |
 
