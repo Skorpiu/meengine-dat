@@ -288,6 +288,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `supabase-rls-class-b-hardening-v1b-nextauth-deploy-record-v1` — docs-only: B1 deployed + smoke-passed validated env 2026-06-10; 24 migrations up to date; operator-confirmed green
 - `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` — migration `20260610160000_supabase_rls_class_b_hardening_v1b_tenant_business_revoke` (B2: RLS+REVOKE on 12 tenant/platform tables); merged main `dd26d18`
 - `supabase-rls-class-b-hardening-v1b-tenant-business-deploy-record-v1` — docs-only: B2 deployed + smoke-passed validated env 2026-06-10; 25 migrations up to date; operator-confirmed green
+- `supabase-rls-class-b-hardening-v1b-global-reference-v1` — migration `20260610170000_supabase_rls_class_b_hardening_v1b_global_reference` (B3: RLS+REVOKE on `categories`, `transmission_types`, `user_preferences`); baseline main `018812a`; operator deploy human-controlled; **v1b complete (31/31)**
 - `product-roadmap-and-platform-boundary-sync-v1` — docs/product hub, decision-log, DAT vs Platform, packaging; see `docs/product/`
 - `people-management-internal-tabs-v1` — internal L1/L2 tabs on `/admin/users` (Students, Instructors, App accounts); client-side invitation role filter; SSR unchanged
 - `people-management-onboarding-reframe-v1` — L2 Onboarding (manual student + new instructor + invitations); App accounts tab retained
@@ -330,7 +331,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Current recommended next (runtime/UX slice):**
 
-1. `supabase-rls-class-b-hardening-v1b-global-reference-v1` — B3: RLS+REVOKE on `categories`, `transmission_types`, `user_preferences` (**D4/P3** — explicit approval required)
+1. `supabase-rls-class-b-hardening-v1b-global-reference-deploy-record-v1` — docs-only deploy + smoke after B3 operator deploy
 
 **Likely next:**
 
