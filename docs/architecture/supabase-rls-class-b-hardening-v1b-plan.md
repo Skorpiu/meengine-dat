@@ -1,9 +1,9 @@
 # Supabase RLS Class-B Hardening v1b — Plan (sliced)
 
-**Batch:** `supabase-rls-class-b-hardening-v1b-plan-v1` (+ B1 `supabase-rls-class-b-hardening-v1b-nextauth-v1` + deploy record `supabase-rls-class-b-hardening-v1b-nextauth-deploy-record-v1`)  
-**Status:** Plan **done**; B1 **merged + deployed + smoke-passed** on validated target env (2026-06-10).  
+**Batch:** `supabase-rls-class-b-hardening-v1b-plan-v1` (+ B1/B2 implementation slices)  
+**Status:** Plan **done**; B1 **merged + deployed + smoke-passed**; B2 migration **in repo** — operator `migrate deploy` human-controlled.  
 **Prior analysis:** `supabase-rls-class-b-hardening-v1b-review` (analysis-only)  
-**Baseline main:** `edd73de` (B1 feature `d579a1f`)  
+**Baseline main:** `f22b418`  
 **Related:** [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md), [tenant-operational-organization-id-not-null-readiness.md](./tenant-operational-organization-id-not-null-readiness.md) (D4 NOT NULL deployed on validated env)
 
 ---
@@ -100,7 +100,9 @@ Grouped by planned slice below.
 
 **Approval gate:** `APPROVED TO IMPLEMENT: supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` (D4)
 
-**Prerequisite:** B1 deployed and smoke-passed on target environment (recommended sequencing).
+**Suggested migration name:** `supabase_rls_class_b_hardening_v1b_tenant_business_revoke`
+
+**Prerequisite:** B1 deployed and smoke-passed on target environment (done validated env 2026-06-10).
 
 ---
 
@@ -199,9 +201,28 @@ Manual B1 smoke tests confirmed green by operator after deploy.
 
 Optional: re-run Supabase Security Advisor; confirm `accounts`, `sessions`, `verification_tokens`, `users` no longer flagged `rls_disabled_in_public` (or grants cleaned).
 
-### B2 — tenant business revoke (after B1 stable)
+### B2 — `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` (mandatory after deploy)
 
-Add to B1 smoke: `/admin/vehicles`, `/admin/lessons`, create manual Student, create Vehicle, create Lesson, student import dry-run, `GET /api/health`.
+| # | Test | Expected |
+| - | ---- | -------- |
+| 1 | `pnpm exec prisma migrate status` | Database schema is up to date |
+| 2 | Login **Platform Admin** | Success |
+| 3 | Login **School Admin** (tenant host) | Success |
+| 4 | Login **Student** | Success |
+| 5 | Login **Instructor** | Success |
+| 6 | Open **`/admin/users`** | People page loads |
+| 7 | Open **`/admin/vehicles`** | Fleet page loads |
+| 8 | Open **`/admin/lessons`** | Lessons page loads |
+| 9 | Create/edit **manual Student** | Success |
+| 10 | Create/edit **Vehicle** | Success |
+| 11 | Create/edit **Lesson** | Success |
+| 12 | Student import **dry-run** | Preview succeeds (zero-write) |
+| 13 | **Invitation accept** (pending invite) | Success; no duplicate Student |
+| 14 | **Password reset** flow | Success / expected errors only |
+| 15 | **Email verification** flow | Success / expected errors only |
+| 16 | `pnpm -C driving_school_platform/nextjs_space check` | Pass |
+
+Optional: re-run Supabase Security Advisor; confirm B2 tables no longer flagged `rls_disabled_in_public`.
 
 ### B3 — global reference (if implemented)
 
@@ -216,7 +237,7 @@ Add: forms load categories/transmission types; student/instructor create dialogs
 | v1 | `supabase-rls-class-b-hardening-v1` | **Done** — 8 tables |
 | Plan | `supabase-rls-class-b-hardening-v1b-plan-v1` | **Done** (this document) |
 | B1 | `supabase-rls-class-b-hardening-v1b-nextauth-v1` | **Done** — merged `edd73de`; deployed + smoke-passed validated env 2026-06-10 |
-| B2 | `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` | **Deferred (D4)** — explicit approval required |
+| B2 | `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` | **Done (migration in repo)** — `20260610160000_supabase_rls_class_b_hardening_v1b_tenant_business_revoke`; operator deploy human-controlled |
 | B3 | `supabase-rls-class-b-hardening-v1b-global-reference-v1` | **Deferred (P3 / D4)** |
 | P2 | `supabase-rls-tenant-policies-v1` | **Deferred** — not part of v1b |
 
