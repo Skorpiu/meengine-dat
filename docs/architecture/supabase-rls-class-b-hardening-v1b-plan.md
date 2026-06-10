@@ -1,9 +1,9 @@
 # Supabase RLS Class-B Hardening v1b — Plan (sliced)
 
-**Batch:** `supabase-rls-class-b-hardening-v1b-plan-v1` (+ B1 implementation `supabase-rls-class-b-hardening-v1b-nextauth-v1`)  
-**Status:** Plan **done**; B1 migration **in repo** — operator `migrate deploy` human-controlled.  
+**Batch:** `supabase-rls-class-b-hardening-v1b-plan-v1` (+ B1 `supabase-rls-class-b-hardening-v1b-nextauth-v1` + deploy record `supabase-rls-class-b-hardening-v1b-nextauth-deploy-record-v1`)  
+**Status:** Plan **done**; B1 **merged + deployed + smoke-passed** on validated target env (2026-06-10).  
 **Prior analysis:** `supabase-rls-class-b-hardening-v1b-review` (analysis-only)  
-**Baseline main:** `40eb18a`  
+**Baseline main:** `edd73de` (B1 feature `d579a1f`)  
 **Related:** [supabase-rls-data-api-policy-matrix.md](./supabase-rls-data-api-policy-matrix.md), [tenant-operational-organization-id-not-null-readiness.md](./tenant-operational-organization-id-not-null-readiness.md) (D4 NOT NULL deployed on validated env)
 
 ---
@@ -170,18 +170,32 @@ Grouped by planned slice below.
 
 ### B1 — `supabase-rls-class-b-hardening-v1b-nextauth-v1` (mandatory after deploy)
 
-| # | Test | Expected |
-| - | ---- | -------- |
-| 1 | `pnpm exec prisma migrate status` | Database schema is up to date |
-| 2 | Login **Platform Admin** | Success |
-| 3 | Login **School Admin** (tenant host) | Success |
-| 4 | Login **Student** | Success |
-| 5 | Login **Instructor** | Success |
-| 6 | **Password reset** flow (request + confirm) | Success / expected errors only |
-| 7 | **Email verification** flow | Success / expected errors only |
-| 8 | **Invitation accept** (pending invite) | Success; no duplicate Student |
-| 9 | Open **`/admin/users`** (School Admin) | People page loads |
-| 10 | `pnpm -C driving_school_platform/nextjs_space check` | Pass |
+**Deploy evidence (2026-06-10, validated target env):**
+
+| Check | Result |
+| ----- | ------ |
+| Main merge | `edd73de` (feature `d579a1f`) |
+| Migration | `20260610150000_supabase_rls_class_b_hardening_v1b_nextauth` applied |
+| `pnpm exec prisma migrate deploy` | Success (operator) |
+| `pnpm exec prisma migrate status` | 24 migrations; database schema up to date |
+| `pnpm -C driving_school_platform/nextjs_space check` | 163 test files / 1223 tests / build OK |
+| Tables hardened | `accounts`, `sessions`, `verification_tokens`, `users` |
+| Manual auth smoke (#2–#9 below) | **Pass** (operator-confirmed) |
+
+Manual B1 smoke tests confirmed green by operator after deploy.
+
+| # | Test | Expected | Status (2026-06-10) |
+| - | ---- | -------- | --------------------- |
+| 1 | `pnpm exec prisma migrate status` | Database schema is up to date | **Pass** |
+| 2 | Login **Platform Admin** | Success | **Pass** |
+| 3 | Login **School Admin** (tenant host) | Success | **Pass** |
+| 4 | Login **Student** | Success | **Pass** |
+| 5 | Login **Instructor** | Success | **Pass** |
+| 6 | **Password reset** flow (request + confirm) | Success / expected errors only | **Pass** |
+| 7 | **Email verification** flow | Success / expected errors only | **Pass** |
+| 8 | **Invitation accept** (pending invite) | Success; no duplicate Student | **Pass** |
+| 9 | Open **`/admin/users`** (School Admin) | People page loads | **Pass** |
+| 10 | `pnpm -C driving_school_platform/nextjs_space check` | Pass | **Pass** |
 
 Optional: re-run Supabase Security Advisor; confirm `accounts`, `sessions`, `verification_tokens`, `users` no longer flagged `rls_disabled_in_public` (or grants cleaned).
 
@@ -201,8 +215,8 @@ Add: forms load categories/transmission types; student/instructor create dialogs
 | ----- | ----- | ------ |
 | v1 | `supabase-rls-class-b-hardening-v1` | **Done** — 8 tables |
 | Plan | `supabase-rls-class-b-hardening-v1b-plan-v1` | **Done** (this document) |
-| B1 | `supabase-rls-class-b-hardening-v1b-nextauth-v1` | **Done (migration in repo)** — `20260610150000_supabase_rls_class_b_hardening_v1b_nextauth`; operator deploy human-controlled |
-| B2 | `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` | **Deferred (D4)** |
+| B1 | `supabase-rls-class-b-hardening-v1b-nextauth-v1` | **Done** — merged `edd73de`; deployed + smoke-passed validated env 2026-06-10 |
+| B2 | `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` | **Deferred (D4)** — explicit approval required |
 | B3 | `supabase-rls-class-b-hardening-v1b-global-reference-v1` | **Deferred (P3 / D4)** |
 | P2 | `supabase-rls-tenant-policies-v1` | **Deferred** — not part of v1b |
 

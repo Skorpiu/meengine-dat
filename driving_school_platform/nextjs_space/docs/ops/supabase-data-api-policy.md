@@ -39,7 +39,7 @@ Internal tables in **`public`** must **not** be treated as a public HTTP API by 
   - `public.verification_tokens`
   - `public.users`
 
-  Operator **`migrate deploy`** is human-controlled. See [supabase-rls-class-b-hardening-v1b-plan.md](../../../../docs/architecture/supabase-rls-class-b-hardening-v1b-plan.md) (DEC-030).
+  **Deployed + smoke-passed** on validated target env (2026-06-10): operator `migrate deploy` succeeded; post-deploy 24 migrations up to date (main `edd73de`, feature `d579a1f`); B1 manual auth smoke pass (operator-confirmed). See [supabase-rls-class-b-hardening-v1b-plan.md](../../../../docs/architecture/supabase-rls-class-b-hardening-v1b-plan.md) (DEC-030).
 
 With RLS enabled and **no** policies, roles that are subject to RLS and are **not** the table owner/superuser will not get rows through PostgREST unless policies are added later.
 
