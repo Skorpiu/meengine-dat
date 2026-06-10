@@ -205,13 +205,14 @@ Documented and in use (docs/rules only; no runtime change):
 - `supabase-rls-class-b-hardening-v1b-plan-v1` — docs-only sliced plan + **DEC-030**; report [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md). B1 nextauth → B2 tenant business → B3 global reference; `supabase-rls-tenant-policies-v1` deferred P2. No migration/runtime.
 - `supabase-rls-class-b-hardening-v1b-nextauth-v1` — Prisma migration `20260610150000_supabase_rls_class_b_hardening_v1b_nextauth`: RLS + `REVOKE ALL FROM anon, authenticated` on 4 NextAuth tables (`accounts`, `sessions`, `verification_tokens`, `users`); no `CREATE POLICY`, no `FORCE ROW LEVEL SECURITY`, no `schema.prisma`/runtime changes. Merged main `edd73de` (feature `d579a1f`). Validated via `pnpm check`.
 - `supabase-rls-class-b-hardening-v1b-nextauth-deploy-record-v1` — docs-only deploy + smoke record (2026-06-10): operator `migrate deploy` succeeded on validated target env; post-deploy **24** migrations, schema up to date; `pnpm check` 163 files / 1223 tests / build OK; B1 manual auth smoke matrix **pass** (operator-confirmed). Report: [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md).
+- `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` — Prisma migration `20260610160000_supabase_rls_class_b_hardening_v1b_tenant_business_revoke`: RLS + `REVOKE ALL FROM anon, authenticated` on 12 B2 tables (`students`, `instructors`, `vehicles`, `lessons`, `exams`, `lesson_requests`, `lesson_counters`, `exam_registrations`, `payments`, `notifications`, `organizations`, `organization_features`); no `CREATE POLICY`, no `FORCE ROW LEVEL SECURITY`, no `schema.prisma`/runtime changes. Operator `migrate deploy` human-controlled. Validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
-1. `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` — **deferred (D4):** B2 SQL slice — RLS+REVOKE on 12 tenant/platform tables; requires `APPROVED TO IMPLEMENT: supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1`
+1. `supabase-rls-class-b-hardening-v1b-global-reference-v1` — **deferred (D4/P3):** B3 SQL slice — `categories`, `transmission_types`, `user_preferences` only
 2. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next
-4. `tenant-operational-organization-id-backfill-apply-v1` — **deferred** until a future environment dry-run shows proposed changes (not needed in 2026-06-09 validated env)
-5. `audit-log-tenant-context-foundation` — planning only
-6. Product/packaging planning slices — see [roadmap-todo.md](./roadmap-todo.md) **P1 / Product and packaging** and [docs/product/](../product/)
+3. `tenant-operational-organization-id-backfill-apply-v1` — **deferred** until a future environment dry-run shows proposed changes (not needed in 2026-06-09 validated env)
+4. `audit-log-tenant-context-foundation` — planning only
+5. Product/packaging planning slices — see [roadmap-todo.md](./roadmap-todo.md) **P1 / Product and packaging** and [docs/product/](../product/)
 
 Engineering excellence audit items (non-blocking refactors) remain tracked separately in roadmap P2+.

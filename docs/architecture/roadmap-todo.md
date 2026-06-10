@@ -129,8 +129,9 @@ Parent batch — always slice before implementing.
 - **Done (docs/plan):** `supabase-rls-class-b-hardening-v1b-plan-v1` — sliced v1b plan + **DEC-030**; [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md). No SQL/runtime.
 - **Done (B1 slice):** `supabase-rls-class-b-hardening-v1b-nextauth-v1` — migration `20260610150000_supabase_rls_class_b_hardening_v1b_nextauth`: RLS + REVOKE on `accounts`, `sessions`, `verification_tokens`, `users` only; merged main `edd73de` (feature `d579a1f`); no `CREATE POLICY`, no `FORCE ROW LEVEL SECURITY`, no Prisma schema/runtime changes. Validated via `pnpm check`.
 - **Done (deploy record):** `supabase-rls-class-b-hardening-v1b-nextauth-deploy-record-v1` — operator `migrate deploy` succeeded on validated target env (2026-06-10); post-deploy 24 migrations up to date; `pnpm check` 163/1223/build OK; B1 manual auth smoke matrix **pass** (operator-confirmed).
-- **Next gated code slice (recommended):** `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` (D4 — B2: 12 tenant/platform tables). Requires explicit `APPROVED TO IMPLEMENT: supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1`. **Not recommended next:** monolithic v1b (19 tables) or `people-management-ux-unification-instructor-route-split-v1`.
-- **Deferred:** `supabase-rls-class-b-hardening-v1b-global-reference-v1` (B3/P3); `supabase-rls-tenant-policies-v1` (P2 — `CREATE POLICY`; separate from v1b); `supabase-exposed-schema-review`.
+- **Done (B2 slice):** `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` — migration `20260610160000_supabase_rls_class_b_hardening_v1b_tenant_business_revoke`: RLS + REVOKE on 12 tenant/platform tables only; no `CREATE POLICY`, no `FORCE ROW LEVEL SECURITY`, no Prisma schema/runtime changes. Operator `migrate deploy` human-controlled. Validated via `pnpm check`.
+- **Next gated code slice (recommended):** `supabase-rls-class-b-hardening-v1b-global-reference-v1` (D4/P3 — B3: `categories`, `transmission_types`, `user_preferences`). **Not recommended next:** monolithic v1b or `people-management-ux-unification-instructor-route-split-v1`.
+- **Deferred:** `supabase-rls-tenant-policies-v1` (P2 — `CREATE POLICY`; separate from v1b); `supabase-exposed-schema-review`.
 
 ### tenant-required-operational-organization-id-audit
 
