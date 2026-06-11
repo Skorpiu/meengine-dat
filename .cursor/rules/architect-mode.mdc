@@ -328,21 +328,25 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `invitation-email-update-unlinked-instructor-v1` — `POST /api/admin/invitations/[id]/change-email` + Instructors → Onboarding Change email (DEC-029 slice 2a); token regeneration; no auto-send; demo guard
 - `invitation-email-update-unlinked-student-v1` — same endpoint/service/dialog + Students → Onboarding Change email (DEC-029 slice 2b); org `Student.email` collision check
 - `invitation-email-update-linked-student-v1` — linked STUDENT Profiles/App access Change invitation email; syncs `Student.email`; preserves `INVITED` (DEC-029 slice 2c)
+- `calendar-lessons-polish-v1` — analysis-only Calendar/Lessons UX audit (Schedule Map `/admin` vs Lesson Management `/admin/lessons`); no runtime
+- `calendar-lessons-polish-v1-plan-v1` — docs-only sub-slice plan (DEC-031): v1a–v1e in `roadmap-todo.md`; no runtime
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
 **Current recommended next (runtime/UX slice):**
 
-1. Product/packaging slices — `docs/product/`, `roadmap-todo.md` **P1 / Product and packaging**
+1. `calendar-lessons-polish-v1a-consistency-ui` (P1) — align `/admin/lessons` colors with Schedule Map; `Practice #N`; Title Case status; SSR `isAvailableForBooking`; no schema/API. Approval: `APPROVED TO IMPLEMENT: calendar-lessons-polish-v1a-consistency-ui`
 
 **Likely next:**
 
-2. `audit-log-tenant-context-foundation` (planning only)
-3. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)** — not recommended next
+2. `calendar-lessons-polish-v1b-edit-refresh` → v1c dashboard window → v1d vehicle warnings (P2, separate approvals)
+3. `audit-log-tenant-context-foundation` (planning only)
+4. Product/packaging slices — after Calendar/Lessons v1a
+5. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)** — not recommended next
 
-**Product direction (backlog — discovery/strategy, not immediate implementation):**
+**Product direction (backlog — deferred post-production polish):**
 
-- `competitive-product-discovery-v1` (P2; DEC-007) — **Competitive/Product Discovery:** pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros. Includes competitor research, functional comparison, driving-school value assessment, architecture, and phased implementation. Does not block People or engineering batches; no deep competitive analysis until a dedicated slice is approved.
+- `competitive-product-discovery-v1` (P2 deferred; DEC-007) — **Competitive/Product Discovery:** pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros. **Deferred until** DAT core is cohesive, polished, and in production — not next while Calendar/Lessons polish is in flight.
 
 **Deferred (not next — RLS revoke-only track closed):**
 

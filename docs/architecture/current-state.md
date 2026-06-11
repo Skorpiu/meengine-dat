@@ -210,15 +210,18 @@ Documented and in use (docs/rules only; no runtime change):
 - `supabase-rls-class-b-hardening-v1b-tenant-business-deploy-record-v1` — docs-only deploy + smoke record (2026-06-10): operator `migrate deploy` succeeded on validated target env; post-deploy **25** migrations, schema up to date; `pnpm check` 163 files / 1223 tests / build OK; B2 manual smoke matrix **pass** (operator-confirmed green). Report: [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md).
 - `supabase-rls-class-b-hardening-v1b-global-reference-v1` — Prisma migration `20260610170000_supabase_rls_class_b_hardening_v1b_global_reference`: RLS + `REVOKE ALL FROM anon, authenticated` on 3 B3 tables (`categories`, `transmission_types`, `user_preferences`); no `CREATE POLICY`, no `FORCE ROW LEVEL SECURITY`, no `schema.prisma`/runtime changes. Merged main `cdfacf2` (feature `f63f19d`). Validated via `pnpm check`.
 - `supabase-rls-class-b-hardening-v1b-global-reference-deploy-record-v1` — docs-only deploy + smoke record (2026-06-10): operator `migrate deploy` succeeded on validated target env; post-deploy **26** migrations, schema up to date; `pnpm check` 163 files / 1223 tests / build OK; B3 manual smoke matrix **pass** (operator-confirmed all green). **RLS Class-B v1b revoke-only complete (31/31 Prisma tables; B1+B2+B3 deployed + smoke green).** Report: [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md). **`supabase-rls-tenant-policies-v1` (CREATE POLICY) remains P2 separate — not next.**
+- `calendar-lessons-polish-v1` — analysis-only Calendar/Lessons operational UX audit: Schedule Map (`/admin`) vs Lesson Management (`/admin/lessons`); colors, labels, SSR seed, refresh, dashboard window gaps documented. No runtime changes.
+- `calendar-lessons-polish-v1-plan-v1` — docs-only sub-slice plan (**DEC-031**): v1a–v1e registered in [roadmap-todo.md](./roadmap-todo.md) `calendar-lessons-polish-v1`. No runtime changes.
 
 ### Likely next (smallest safe slices)
 
-1. Product/packaging planning slices — see [roadmap-todo.md](./roadmap-todo.md) **P1 / Product and packaging** and [docs/product/](../product/)
+1. **`calendar-lessons-polish-v1a-consistency-ui`** (P1) — UI + SSR mapping: align `/admin/lessons` colors with Schedule Map; `Practice #N`; Title Case status; SSR `isAvailableForBooking`. No schema/API. Approval: `APPROVED TO IMPLEMENT: calendar-lessons-polish-v1a-consistency-ui`
 2. `audit-log-tenant-context-foundation` — planning only
-3. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next
+3. Product/packaging planning slices — see [roadmap-todo.md](./roadmap-todo.md) **P1 / Product and packaging** and [docs/product/](../product/) — **after** Calendar/Lessons v1a
+4. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next
 
-### Product direction (backlog)
+### Product direction (backlog — deferred post-production polish)
 
-**Competitive/Product Discovery** (`competitive-product-discovery-v1`, P2; DEC-007): pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros. Discovery/product strategy track — competitor research, functional comparison, driving-school value assessment, architecture, phased implementation. Not immediate implementation; does not block current People or engineering work.
+**Competitive/Product Discovery** (`competitive-product-discovery-v1`, P2 deferred; DEC-007): pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros. **Deferred until** DAT core is cohesive, polished, and in production — not next while Calendar/Lessons operational polish is in flight.
 
 Engineering excellence audit items (non-blocking refactors) remain tracked separately in roadmap P2+.

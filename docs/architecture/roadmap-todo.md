@@ -185,14 +185,14 @@ Parent batch — always slice before implementing.
 | `provider-assisted-import-runbook-v1` | P2 | Full operator runbook (outline in [packaging-and-entitlements.md](../product/packaging-and-entitlements.md)) |
 | `payment-integration-product-planning-v1` | P2 | School-facing payments product spec |
 | `payments-and-balances-foundation-v1` | P2 | Technical foundation for balances/packages |
-| `competitive-product-discovery-v1` | P2 | **Competitive/Product Discovery (future):** research competitor features that may add value to DAT; discuss, mature, architect, and implement in future slices — competitor research, functional comparison, driving-school value assessment, architecture, phased implementation. Discovery/product strategy only; not deep competitive analysis; not immediate implementation. See DEC-007. |
+| `competitive-product-discovery-v1` | P2 deferred | **Competitive/Product Discovery (future):** research competitor features that may add value to DAT; discuss, mature, architect, and implement in future slices. **Deferred until** DAT core is cohesive, polished, and in production — not next while Calendar/Lessons and operational polish are in flight. See DEC-007. |
 | `i18n-framework-planning-v1` | P2 | Real i18n; switcher, fallback, plan tie-in |
 | `language-pack-pt-PT-v1` | P3 | pt-PT copy after framework |
 | `super-agent-product-strategy-protocol-v1` | — | **Done** in `cursor-operating-model.md` (this sync batch) |
 
 **Deferred explicitly:** `people-management-ux-unification-instructor-route-split-v1` (D4; not recommended next).
 
-**Product direction (backlog — not blocking current People/RLS work):** **Competitive/Product Discovery** — pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros (`competitive-product-discovery-v1`). Includes competitor research, functional comparison, driving-school value assessment, architecture, and phased implementation. Discovery/strategy track only — no runtime work until a dedicated slice is approved.
+**Product direction (backlog — deferred post-production polish):** **Competitive/Product Discovery** — pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros (`competitive-product-discovery-v1`). **Not next** while core operational UX (Calendar/Lessons polish) is in flight. Discovery/strategy track only — no runtime work until app is production-cohesive and a dedicated slice is approved.
 
 ---
 
@@ -240,10 +240,46 @@ Parent batch — always slice before implementing.
 - Role-based DTOs; minimal instructor read-only views.
 - Never select `passwordHash` except internal auth verification.
 
-### calendar/admin lessons polish
+### calendar-lessons-polish-v1
 
-- Query window limits/pagination; refetch after creation.
-- No cleanup on GET; compact schedule cards.
+**Parent track:** operational Calendar/Lessons UX polish before production — lapidar o core operacional, not large new features.
+
+**Done (analysis):** `calendar-lessons-polish-v1` — analysis-only. Two surfaces: **Schedule Map** on `/admin` (day/week/month, book/edit/delete) and **Lesson Management** on `/admin/lessons` (Recent/Current/Upcoming lists + Driving import/export). No runtime changes.
+
+**Done (docs):** `calendar-lessons-polish-v1-plan-v1` — docs-only sub-slice plan; **DEC-031**. No runtime changes.
+
+**Baseline already shipped (do not regress):**
+
+- Schedule Map type colors — Theory green, Driving blue, Theory exam yellow, Practical exam orange (`lib/schedule/schedule-map-card.ts`; demo-validated).
+- Compact schedule chips; 90-day calendar range guard (`lib/lessons/calendar-range.ts`); create refresh via `refreshKey` / `focusLessonDate` (`admin-dashboard-client.tsx`).
+- Instructor inactive warning on map + `/admin/lessons` list (after client refetch); create blocks inactive instructor (`lesson-create-service.ts`).
+
+**Analysis gaps (sliced — implement in order):**
+
+| Gap | Notes |
+| --- | ----- |
+| Theory/Driving colors inverted on `/admin/lessons` tabs vs Schedule Map | `lessons-management-client.tsx` dots vs `schedule-map-card.ts` |
+| PT label `Prática #N` in English UI baseline | `lesson-display.ts` |
+| Status badges raw lowercase enum on Lesson Management | `lessons-management-client.tsx` |
+| SSR seed omits `instructor.isAvailableForBooking` | First-paint inactive warning may fail until client refetch — `app/admin/page.tsx`, `app/instructor/page.tsx` |
+| Edit refresh/focus weaker than create | `EditLessonClient.tsx` vs `admin-dashboard-client.tsx` |
+| Dashboard `take: 50` silent cap; upcoming only until tomorrow | `lesson-queries.ts` |
+| No vehicle inactive/maintenance warning on scheduled lessons | `LESSON_LIST_VEHICLE_SELECT` lacks `status` |
+| Student lifecycle warnings | Deferred — product policy first |
+
+**Sub-slices (smallest safe order):**
+
+| Sub-slice | Priority | Type | Scope |
+| --------- | -------- | ---- | ----- |
+| `calendar-lessons-polish-v1a-consistency-ui` | **P1 — recommended next** | UI + SSR mapping | Align `/admin/lessons` tab/dot colors with Schedule Map; `Practice #N` (not `Prática`); Title Case status labels; include `isAvailableForBooking` in SSR Schedule Map seed (`app/admin/page.tsx`, `app/instructor/page.tsx`). **No** schema/migrations/API changes. |
+| `calendar-lessons-polish-v1b-edit-refresh` | P2 | UI navigation | Improve map refresh/focus after lesson edit (POST-PUT navigation). Separate — navigation/UX. |
+| `calendar-lessons-polish-v1c-dashboard-window` | P2 | Read behaviour | Evaluate “50+” indicator, temporal window, upcoming beyond tomorrow, or pagination on `/admin/lessons`. Separate — list read semantics. |
+| `calendar-lessons-polish-v1d-vehicle-warnings` | P2 | DTO + UI | Visual warning for vehicle inactive/maintenance on scheduled lessons; likely expand `LESSON_LIST_VEHICLE_SELECT` / DTO — **no migration**. |
+| `calendar-lessons-polish-v1e-student-warnings` | P3 deferred | Policy + UI | Student app-access/lifecycle warnings on lessons — requires product policy before implementation. |
+
+**Approval phrase (v1a runtime):** `APPROVED TO IMPLEMENT: calendar-lessons-polish-v1a-consistency-ui`
+
+**Deferred explicitly:** monolithic `calendar-lessons-polish-v1` runtime batch; `people-management-ux-unification-instructor-route-split-v1` (D4).
 
 ### Prisma/Prettier polish
 
