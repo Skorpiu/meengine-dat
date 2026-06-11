@@ -330,16 +330,17 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `invitation-email-update-linked-student-v1` — linked STUDENT Profiles/App access Change invitation email; syncs `Student.email`; preserves `INVITED` (DEC-029 slice 2c)
 - `calendar-lessons-polish-v1` — analysis-only Calendar/Lessons UX audit (Schedule Map `/admin` vs Lesson Management `/admin/lessons`); no runtime
 - `calendar-lessons-polish-v1-plan-v1` — docs-only sub-slice plan (DEC-031): v1a–v1e in `roadmap-todo.md`; no runtime
+- `calendar-lessons-polish-v1a-consistency-ui` — UI + SSR mapping (DEC-031): aligned `/admin/lessons` colors with Schedule Map; `Practice #N`; Title Case status; SSR `isAvailableForBooking`; helpers `lesson-type-ui-theme.ts`, `getLessonStatusDisplayLabel`; no schema/API
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
 **Current recommended next (runtime/UX slice):**
 
-1. `calendar-lessons-polish-v1a-consistency-ui` (P1) — align `/admin/lessons` colors with Schedule Map; `Practice #N`; Title Case status; SSR `isAvailableForBooking`; no schema/API. Approval: `APPROVED TO IMPLEMENT: calendar-lessons-polish-v1a-consistency-ui`
+1. `calendar-lessons-polish-v1b-edit-refresh` (P2) — map refresh/focus after lesson edit. Approval: `APPROVED TO IMPLEMENT: calendar-lessons-polish-v1b-edit-refresh`
 
 **Likely next:**
 
-2. `calendar-lessons-polish-v1b-edit-refresh` → v1c dashboard window → v1d vehicle warnings (P2, separate approvals)
+2. `calendar-lessons-polish-v1c-dashboard-window` → v1d vehicle warnings (P2, separate approvals)
 3. `audit-log-tenant-context-foundation` (planning only)
 4. Product/packaging slices — after Calendar/Lessons v1a
 5. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)** — not recommended next

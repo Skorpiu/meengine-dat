@@ -271,13 +271,13 @@ Parent batch — always slice before implementing.
 
 | Sub-slice | Priority | Type | Scope |
 | --------- | -------- | ---- | ----- |
-| `calendar-lessons-polish-v1a-consistency-ui` | **P1 — recommended next** | UI + SSR mapping | Align `/admin/lessons` tab/dot colors with Schedule Map; `Practice #N` (not `Prática`); Title Case status labels; include `isAvailableForBooking` in SSR Schedule Map seed (`app/admin/page.tsx`, `app/instructor/page.tsx`). **No** schema/migrations/API changes. |
+| `calendar-lessons-polish-v1a-consistency-ui` | — | **Done** | UI + SSR mapping: aligned `/admin/lessons` tab/dot colors with Schedule Map (`lesson-type-ui-theme.ts`); `Practice #N`; `getLessonStatusDisplayLabel` Title Case; SSR `isAvailableForBooking` on admin/instructor/student dashboard seeds; deduplicated inactive instructor warning. **No** schema/migrations/API changes. Validated via `pnpm check`. |
 | `calendar-lessons-polish-v1b-edit-refresh` | P2 | UI navigation | Improve map refresh/focus after lesson edit (POST-PUT navigation). Separate — navigation/UX. |
 | `calendar-lessons-polish-v1c-dashboard-window` | P2 | Read behaviour | Evaluate “50+” indicator, temporal window, upcoming beyond tomorrow, or pagination on `/admin/lessons`. Separate — list read semantics. |
 | `calendar-lessons-polish-v1d-vehicle-warnings` | P2 | DTO + UI | Visual warning for vehicle inactive/maintenance on scheduled lessons; likely expand `LESSON_LIST_VEHICLE_SELECT` / DTO — **no migration**. |
 | `calendar-lessons-polish-v1e-student-warnings` | P3 deferred | Policy + UI | Student app-access/lifecycle warnings on lessons — requires product policy before implementation. |
 
-**Approval phrase (v1a runtime):** `APPROVED TO IMPLEMENT: calendar-lessons-polish-v1a-consistency-ui`
+**Recommended next (v1b):** `calendar-lessons-polish-v1b-edit-refresh` — approval: `APPROVED TO IMPLEMENT: calendar-lessons-polish-v1b-edit-refresh`
 
 **Deferred explicitly:** monolithic `calendar-lessons-polish-v1` runtime batch; `people-management-ux-unification-instructor-route-split-v1` (D4).
 

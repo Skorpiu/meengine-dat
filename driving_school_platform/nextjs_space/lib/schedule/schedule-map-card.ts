@@ -1,6 +1,7 @@
 import {
   getPracticalLessonNumberLabel,
   isExamLessonType,
+  LESSON_INACTIVE_INSTRUCTOR_WARNING,
 } from "@/lib/lessons/lesson-display";
 import {
   getStudentDisplayName,
@@ -56,8 +57,9 @@ export function getScheduleLessonTypeColorClasses(lessonType: string): string {
   return "bg-gray-100 border-gray-300 text-gray-800";
 }
 
+/** @deprecated Use `LESSON_INACTIVE_INSTRUCTOR_WARNING` from `lesson-display.ts`. */
 export const SCHEDULE_MAP_INACTIVE_INSTRUCTOR_WARNING =
-  "Assigned instructor is inactive";
+  LESSON_INACTIVE_INSTRUCTOR_WARNING;
 
 export function isScheduleMapLessonInstructorInactive(
   lesson: Pick<ScheduleMapCardLesson, "instructor">,
@@ -114,7 +116,7 @@ export function getScheduleMapChipLines(
   }
 
   if (isScheduleMapLessonInstructorInactive(lesson)) {
-    lines.push(SCHEDULE_MAP_INACTIVE_INSTRUCTOR_WARNING);
+    lines.push(LESSON_INACTIVE_INSTRUCTOR_WARNING);
   }
 
   const reg = lesson.vehicle?.registrationNumber?.trim();

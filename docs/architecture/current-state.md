@@ -212,12 +212,13 @@ Documented and in use (docs/rules only; no runtime change):
 - `supabase-rls-class-b-hardening-v1b-global-reference-deploy-record-v1` — docs-only deploy + smoke record (2026-06-10): operator `migrate deploy` succeeded on validated target env; post-deploy **26** migrations, schema up to date; `pnpm check` 163 files / 1223 tests / build OK; B3 manual smoke matrix **pass** (operator-confirmed all green). **RLS Class-B v1b revoke-only complete (31/31 Prisma tables; B1+B2+B3 deployed + smoke green).** Report: [supabase-rls-class-b-hardening-v1b-plan.md](./supabase-rls-class-b-hardening-v1b-plan.md). **`supabase-rls-tenant-policies-v1` (CREATE POLICY) remains P2 separate — not next.**
 - `calendar-lessons-polish-v1` — analysis-only Calendar/Lessons operational UX audit: Schedule Map (`/admin`) vs Lesson Management (`/admin/lessons`); colors, labels, SSR seed, refresh, dashboard window gaps documented. No runtime changes.
 - `calendar-lessons-polish-v1-plan-v1` — docs-only sub-slice plan (**DEC-031**): v1a–v1e registered in [roadmap-todo.md](./roadmap-todo.md) `calendar-lessons-polish-v1`. No runtime changes.
+- `calendar-lessons-polish-v1a-consistency-ui` — UI + SSR mapping (DEC-031 slice 1): aligned `/admin/lessons` tab/dot colors with Schedule Map (`lib/lessons/lesson-type-ui-theme.ts`); `Practice #N`; Title Case status via `getLessonStatusDisplayLabel`; SSR `isAvailableForBooking` on admin/instructor/student dashboard seeds; inactive instructor warning deduplicated. No schema/migrations/API changes. Validated via `pnpm check`.
 
 ### Likely next (smallest safe slices)
 
-1. **`calendar-lessons-polish-v1a-consistency-ui`** (P1) — UI + SSR mapping: align `/admin/lessons` colors with Schedule Map; `Practice #N`; Title Case status; SSR `isAvailableForBooking`. No schema/API. Approval: `APPROVED TO IMPLEMENT: calendar-lessons-polish-v1a-consistency-ui`
+1. **`calendar-lessons-polish-v1b-edit-refresh`** (P2) — map refresh/focus after lesson edit
 2. `audit-log-tenant-context-foundation` — planning only
-3. Product/packaging planning slices — see [roadmap-todo.md](./roadmap-todo.md) **P1 / Product and packaging** and [docs/product/](../product/) — **after** Calendar/Lessons v1a
+3. Product/packaging planning slices — see [roadmap-todo.md](./roadmap-todo.md) **P1 / Product and packaging** and [docs/product/](../product/) — after Calendar/Lessons v1b or parallel if prioritized
 4. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next
 
 ### Product direction (backlog — deferred post-production polish)

@@ -94,6 +94,7 @@ export default async function StudentDashboard() {
 
       instructor: lesson.instructor
         ? {
+            isAvailableForBooking: lesson.instructor.isAvailableForBooking,
             user: {
               id: lesson.instructor.user.id,
               firstName: lesson.instructor.user.firstName,

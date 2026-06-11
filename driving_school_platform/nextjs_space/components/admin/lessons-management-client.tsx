@@ -41,10 +41,16 @@ import {
   getLessonLocationLabel,
   getLessonParticipantName,
   getLessonVehicleLabel,
+  getLessonStatusDisplayLabel,
   getPracticalLessonNumberLabel,
   isLessonInstructorInactive,
   LESSON_INACTIVE_INSTRUCTOR_WARNING,
 } from "@/lib/lessons/lesson-display";
+import {
+  getLessonManagementTabActiveClass,
+  getLessonTypeDotColorClass,
+} from "@/lib/lessons/lesson-type-ui-theme";
+import { LESSON_TYPES } from "@/lib/constants";
 
 async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
   const contentType = response.headers.get("content-type") || "";
@@ -227,13 +233,13 @@ export function LessonsManagementClient() {
             <div className="text-xs text-gray-500">{lesson.startTime}</div>
           </div>
           <div
-            className={`w-3 h-3 rounded-full ${
-              selectedView === "DRIVING"
-                ? "bg-green-500"
+            className={`w-3 h-3 rounded-full ${getLessonTypeDotColorClass(
+              isExamsTab
+                ? lesson.lessonType
                 : selectedView === "CODE"
-                  ? "bg-blue-500"
-                  : "bg-orange-500"
-            }`}
+                  ? LESSON_TYPES.THEORY
+                  : LESSON_TYPES.DRIVING,
+            )}`}
           />
           <div>
             {isExamsTab ? (
@@ -319,7 +325,7 @@ export function LessonsManagementClient() {
                       : "outline"
             }
           >
-            {lesson.status?.toLowerCase() || "scheduled"}
+            {getLessonStatusDisplayLabel(lesson.status)}
           </Badge>
         </div>
       </div>
@@ -428,7 +434,11 @@ export function LessonsManagementClient() {
           <Button
             variant={selectedView === "CODE" ? "default" : "outline"}
             onClick={() => setSelectedView("CODE")}
-            className={selectedView === "CODE" ? "bg-blue-600" : ""}
+            className={
+              selectedView === "CODE"
+                ? getLessonManagementTabActiveClass("CODE")
+                : ""
+            }
           >
             <FileText className="w-4 h-4 mr-2" />
             Code Lessons
@@ -436,7 +446,11 @@ export function LessonsManagementClient() {
           <Button
             variant={selectedView === "DRIVING" ? "default" : "outline"}
             onClick={() => setSelectedView("DRIVING")}
-            className={selectedView === "DRIVING" ? "bg-green-600" : ""}
+            className={
+              selectedView === "DRIVING"
+                ? getLessonManagementTabActiveClass("DRIVING")
+                : ""
+            }
           >
             <Car className="w-4 h-4 mr-2" />
             Driving Lessons
@@ -444,7 +458,11 @@ export function LessonsManagementClient() {
           <Button
             variant={selectedView === "EXAMS" ? "default" : "outline"}
             onClick={() => setSelectedView("EXAMS")}
-            className={selectedView === "EXAMS" ? "bg-orange-600" : ""}
+            className={
+              selectedView === "EXAMS"
+                ? getLessonManagementTabActiveClass("EXAMS")
+                : ""
+            }
           >
             <BookOpen className="w-4 h-4 mr-2" />
             Exams
