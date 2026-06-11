@@ -72,7 +72,10 @@ import { POST, GET } from "./route";
 import { verifyAuth } from "@/lib/api-utils";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
 import { expectLessonSelectSanitizesNestedUsers } from "@/lib/lessons/lesson-include-safety";
-import { ADMIN_DASHBOARD_LESSONS_LIST_LIMIT } from "@/lib/lessons/admin-dashboard-lessons-truncation";
+import {
+  ADMIN_DASHBOARD_LESSONS_LIST_LIMIT,
+  getAdminDashboardUpcomingHorizonEnd,
+} from "@/lib/lessons/admin-dashboard-lessons-truncation";
 import { LESSON_LIST_SELECT } from "@/lib/lessons/lesson-queries";
 import { sampleLessonListItemFixture } from "@/lib/lessons/lesson-response-contract-fixtures";
 import {
@@ -202,6 +205,28 @@ describe("GET /api/admin/lessons (read-only)", () => {
       expect(call[0]?.select).toEqual(LESSON_LIST_SELECT);
       expectLessonSelectSanitizesNestedUsers(call[0]?.select);
     }
+  });
+
+  it("dashboard upcoming findMany uses 7-day horizon on lessonDate", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
+
+    const res = await GET(
+      reqGet("http://localhost/api/admin/lessons?view=DRIVING") as any,
+    );
+
+    expect(res.status).toBe(200);
+    const upcomingCall = h.lessonFindManyMock.mock.calls[2]?.[0];
+    const upcomingDateFilter = upcomingCall?.where?.OR?.[1]?.lessonDate;
+    expect(upcomingDateFilter?.gt).toBeInstanceOf(Date);
+    expect(upcomingDateFilter?.lte).toBeInstanceOf(Date);
+    const todayStart = new Date(upcomingDateFilter.gt);
+    todayStart.setHours(0, 0, 0, 0);
+    const expectedEnd = getAdminDashboardUpcomingHorizonEnd(todayStart);
+    expect(upcomingDateFilter.lte.getTime()).toBe(expectedEnd.getTime());
   });
 
   it("dashboard mode truncates recent/upcoming to 50 and sets hasMore flags", async () => {

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import {
   ADMIN_DASHBOARD_LESSONS_LIST_LIMIT,
+  getAdminDashboardUpcomingHorizonEnd,
   sliceAdminDashboardLessonsWithHasMore,
 } from "@/lib/lessons/admin-dashboard-lessons-truncation";
 import { EXAM_DASHBOARD_LESSON_TYPES } from "@/lib/lessons/lesson-display";
@@ -169,7 +170,8 @@ export async function getAdminDashboardLessons(input: {
   time: AdminDashboardTimeWindow;
 }): Promise<AdminDashboardLessonsQueryResult> {
   const { organizationId, view, time } = input;
-  const { yesterday, today, tomorrow, currentTime } = time;
+  const { yesterday, today, currentTime } = time;
+  const upcomingHorizonEnd = getAdminDashboardUpcomingHorizonEnd(today);
 
   if (view === "EXAMS") {
     const [recentRaw, current, upcomingRaw] = await Promise.all([
@@ -203,7 +205,7 @@ export async function getAdminDashboardLessons(input: {
           lessonType: { in: [...EXAM_DASHBOARD_LESSON_TYPES] },
           OR: [
             { lessonDate: today, startTime: { gte: currentTime } },
-            { lessonDate: { gt: today, lte: tomorrow } },
+            { lessonDate: { gt: today, lte: upcomingHorizonEnd } },
           ],
         },
         select: LESSON_LIST_SELECT,
@@ -247,7 +249,7 @@ export async function getAdminDashboardLessons(input: {
         lessonType,
         OR: [
           { lessonDate: today, startTime: { gte: currentTime } },
-          { lessonDate: { gt: today, lte: tomorrow } },
+          { lessonDate: { gt: today, lte: upcomingHorizonEnd } },
         ],
       },
       select: LESSON_LIST_SELECT,
