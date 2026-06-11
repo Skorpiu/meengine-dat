@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -34,6 +35,7 @@ import {
   type PracticalLessonsExportFormat,
 } from "@/lib/lessons/practical-lessons-export-client";
 import { parseAdminDashboardLessonsPayload } from "@/lib/lessons/admin-dashboard-lessons-response";
+import { ADMIN_DASHBOARD_LESSONS_LIST_LIMIT } from "@/lib/lessons/admin-dashboard-lessons-truncation";
 import {
   getExamLessonTypeLabel,
   getLessonDateLabel,
@@ -101,6 +103,8 @@ export function LessonsManagementClient() {
   const [recentLessons, setRecentLessons] = useState<LessonListItem[]>([]);
   const [currentLessons, setCurrentLessons] = useState<LessonListItem[]>([]);
   const [upcomingLessons, setUpcomingLessons] = useState<LessonListItem[]>([]);
+  const [recentHasMore, setRecentHasMore] = useState(false);
+  const [upcomingHasMore, setUpcomingHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [exportingFormat, setExportingFormat] =
@@ -128,12 +132,19 @@ export function LessonsManagementClient() {
       const raw = await tryReadJson<unknown>(response);
       if (!raw) throw new Error("Failed to parse lessons response");
 
-      const { recent, current, upcoming } =
-        parseAdminDashboardLessonsPayload<LessonListItem>(raw);
+      const {
+        recent,
+        current,
+        upcoming,
+        recentHasMore: hasMoreRecent,
+        upcomingHasMore: hasMoreUpcoming,
+      } = parseAdminDashboardLessonsPayload<LessonListItem>(raw);
 
       setRecentLessons(recent);
       setCurrentLessons(current);
       setUpcomingLessons(upcoming);
+      setRecentHasMore(hasMoreRecent);
+      setUpcomingHasMore(hasMoreUpcoming);
       setLastRefresh(new Date());
     } catch (error) {
       console.error("Error fetching lessons:", error);
@@ -210,6 +221,23 @@ export function LessonsManagementClient() {
       window.removeEventListener("focus", handleFocus);
     };
   }, [fetchLessons]);
+
+  const listNoun = selectedView === "EXAMS" ? "exams" : "lessons";
+
+  const renderTruncationNotice = (hasMore: boolean) => {
+    if (!hasMore) return null;
+
+    return (
+      <p className="mt-4 text-xs text-muted-foreground border-t pt-3">
+        Showing first {ADMIN_DASHBOARD_LESSONS_LIST_LIMIT} {listNoun} in this
+        window.{" "}
+        <Link href="/admin" className="underline hover:text-foreground">
+          Open Schedule Map
+        </Link>{" "}
+        for full calendar.
+      </p>
+    );
+  };
 
   const renderLesson = (lesson: LessonListItem) => {
     const isExamsTab = selectedView === "EXAMS";
@@ -495,6 +523,7 @@ export function LessonsManagementClient() {
               ) : (
                 <div className="space-y-4">
                   {recentLessons.map(renderLesson)}
+                  {renderTruncationNotice(recentHasMore)}
                 </div>
               )}
             </CardContent>
@@ -557,6 +586,7 @@ export function LessonsManagementClient() {
               ) : (
                 <div className="space-y-4">
                   {upcomingLessons.map(renderLesson)}
+                  {renderTruncationNotice(upcomingHasMore)}
                 </div>
               )}
             </CardContent>

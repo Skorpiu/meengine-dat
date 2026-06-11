@@ -92,15 +92,13 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   ) as AdminDashboardView;
   const time = getTimeRanges();
 
-  const { recent, current, upcoming } = await getAdminDashboardLessons({
+  const dashboardLessons = await getAdminDashboardLessons({
     organizationId: orgId,
     view,
     time,
   });
 
-  return successResponse(
-    mapAdminDashboardLessonsResponse({ recent, current, upcoming }),
-  );
+  return successResponse(mapAdminDashboardLessonsResponse(dashboardLessons));
 });
 
 /**

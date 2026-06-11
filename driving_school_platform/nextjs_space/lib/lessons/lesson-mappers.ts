@@ -31,6 +31,8 @@ export type AdminDashboardLessonsBody = {
   recent: LessonListItem[];
   current: LessonListItem[];
   upcoming: LessonListItem[];
+  recentHasMore: boolean;
+  upcomingHasMore: boolean;
 };
 
 /** Admin dashboard GET data passed to `successResponse` (before `{ success, data }` envelope). */
@@ -41,6 +43,8 @@ export function mapAdminDashboardLessonsResponse(
     recent: input.recent.map(mapLessonListItem),
     current: input.current.map(mapLessonListItem),
     upcoming: input.upcoming.map(mapLessonListItem),
+    recentHasMore: input.recentHasMore,
+    upcomingHasMore: input.upcomingHasMore,
   };
 }
 

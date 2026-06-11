@@ -47,11 +47,15 @@ describe("lesson-mappers", () => {
       recent: [recent],
       current: [current],
       upcoming: [upcoming],
+      recentHasMore: false,
+      upcomingHasMore: true,
     });
 
     expect(body.recent).toEqual([recent]);
     expect(body.current).toEqual([current]);
     expect(body.upcoming).toEqual([upcoming]);
+    expect(body.recentHasMore).toBe(false);
+    expect(body.upcomingHasMore).toBe(true);
     expect(body.recent[0]?.instructor?.user).toBeDefined();
     expect(body.upcoming[0]?.category?.name).toBe("B");
   });

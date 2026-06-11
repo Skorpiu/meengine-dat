@@ -4,6 +4,10 @@
  */
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
+import {
+  ADMIN_DASHBOARD_LESSONS_LIST_LIMIT,
+  sliceAdminDashboardLessonsWithHasMore,
+} from "@/lib/lessons/admin-dashboard-lessons-truncation";
 import { EXAM_DASHBOARD_LESSON_TYPES } from "@/lib/lessons/lesson-display";
 import { LESSON_NESTED_USER_SELECT } from "@/lib/users/user-public-select";
 import { STUDENT_LESSON_OPERATIONAL_SELECT } from "@/lib/students/student-lesson-select";
@@ -128,16 +132,47 @@ export async function getAdminCalendarLessons(input: {
   });
 }
 
+const DASHBOARD_TRUNCATED_LIST_TAKE = ADMIN_DASHBOARD_LESSONS_LIST_LIMIT + 1;
+
+type DashboardLessonListRow = Prisma.LessonGetPayload<{
+  select: typeof LESSON_LIST_SELECT;
+}>;
+
+export type AdminDashboardLessonsQueryResult = {
+  recent: DashboardLessonListRow[];
+  current: DashboardLessonListRow[];
+  upcoming: DashboardLessonListRow[];
+  recentHasMore: boolean;
+  upcomingHasMore: boolean;
+};
+
+function mapTruncatedDashboardLists(
+  recentRaw: AdminDashboardLessonsQueryResult["recent"],
+  current: AdminDashboardLessonsQueryResult["current"],
+  upcomingRaw: AdminDashboardLessonsQueryResult["upcoming"],
+): AdminDashboardLessonsQueryResult {
+  const recentSlice = sliceAdminDashboardLessonsWithHasMore(recentRaw);
+  const upcomingSlice = sliceAdminDashboardLessonsWithHasMore(upcomingRaw);
+
+  return {
+    recent: recentSlice.items,
+    current,
+    upcoming: upcomingSlice.items,
+    recentHasMore: recentSlice.hasMore,
+    upcomingHasMore: upcomingSlice.hasMore,
+  };
+}
+
 export async function getAdminDashboardLessons(input: {
   organizationId: string;
   view: AdminDashboardView;
   time: AdminDashboardTimeWindow;
-}) {
+}): Promise<AdminDashboardLessonsQueryResult> {
   const { organizationId, view, time } = input;
   const { yesterday, today, tomorrow, currentTime } = time;
 
   if (view === "EXAMS") {
-    const [recent, current, upcoming] = await Promise.all([
+    const [recentRaw, current, upcomingRaw] = await Promise.all([
       prisma.lesson.findMany({
         where: {
           organizationId,
@@ -149,7 +184,7 @@ export async function getAdminDashboardLessons(input: {
         },
         select: LESSON_LIST_SELECT,
         orderBy: [{ lessonDate: "desc" }, { startTime: "desc" }],
-        take: 50,
+        take: DASHBOARD_TRUNCATED_LIST_TAKE,
       }),
       prisma.lesson.findMany({
         where: {
@@ -173,15 +208,15 @@ export async function getAdminDashboardLessons(input: {
         },
         select: LESSON_LIST_SELECT,
         orderBy: [{ lessonDate: "asc" }, { startTime: "asc" }],
-        take: 50,
+        take: DASHBOARD_TRUNCATED_LIST_TAKE,
       }),
     ]);
-    return { recent, current, upcoming };
+    return mapTruncatedDashboardLists(recentRaw, current, upcomingRaw);
   }
 
   const lessonType = view === "CODE" ? "THEORY" : "DRIVING";
 
-  const [recent, current, upcoming] = await Promise.all([
+  const [recentRaw, current, upcomingRaw] = await Promise.all([
     prisma.lesson.findMany({
       where: {
         organizationId,
@@ -193,7 +228,7 @@ export async function getAdminDashboardLessons(input: {
       },
       select: LESSON_LIST_SELECT,
       orderBy: [{ lessonDate: "desc" }, { startTime: "desc" }],
-      take: 50,
+      take: DASHBOARD_TRUNCATED_LIST_TAKE,
     }),
     prisma.lesson.findMany({
       where: {
@@ -217,11 +252,11 @@ export async function getAdminDashboardLessons(input: {
       },
       select: LESSON_LIST_SELECT,
       orderBy: [{ lessonDate: "asc" }, { startTime: "asc" }],
-      take: 50,
+      take: DASHBOARD_TRUNCATED_LIST_TAKE,
     }),
   ]);
 
-  return { recent, current, upcoming };
+  return mapTruncatedDashboardLists(recentRaw, current, upcomingRaw);
 }
 
 export async function getInstructorCalendarLessons(input: {

@@ -91,6 +91,13 @@ export function expectAdminDashboardLessonsResponseContract(
     expect(Array.isArray(data[slice])).toBe(true);
   }
 
+  if (data.recentHasMore !== undefined) {
+    expect(typeof data.recentHasMore).toBe("boolean");
+  }
+  if (data.upcomingHasMore !== undefined) {
+    expect(typeof data.upcomingHasMore).toBe("boolean");
+  }
+
   const allLessons = [
     ...(data.recent as LessonLike[]),
     ...(data.current as LessonLike[]),

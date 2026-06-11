@@ -31,6 +31,8 @@ describe("lesson response DTO contract (mapper level)", () => {
       recent: [lesson as never],
       current: [],
       upcoming: [],
+      recentHasMore: true,
+      upcomingHasMore: false,
     });
     const envelope = { success: true, data };
     expectAdminDashboardLessonsResponseContract(
@@ -39,5 +41,7 @@ describe("lesson response DTO contract (mapper level)", () => {
     expect(data.recent).toHaveLength(1);
     expect(data.current).toEqual([]);
     expect(data.upcoming).toEqual([]);
+    expect(data.recentHasMore).toBe(true);
+    expect(data.upcomingHasMore).toBe(false);
   });
 });
