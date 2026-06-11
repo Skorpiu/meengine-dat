@@ -213,13 +213,15 @@ Documented and in use (docs/rules only; no runtime change):
 - `calendar-lessons-polish-v1` — analysis-only Calendar/Lessons operational UX audit: Schedule Map (`/admin`) vs Lesson Management (`/admin/lessons`); colors, labels, SSR seed, refresh, dashboard window gaps documented. No runtime changes.
 - `calendar-lessons-polish-v1-plan-v1` — docs-only sub-slice plan (**DEC-031**): v1a–v1e registered in [roadmap-todo.md](./roadmap-todo.md) `calendar-lessons-polish-v1`. No runtime changes.
 - `calendar-lessons-polish-v1a-consistency-ui` — UI + SSR mapping (DEC-031 slice 1): aligned `/admin/lessons` tab/dot colors with Schedule Map (`lib/lessons/lesson-type-ui-theme.ts`); `Practice #N`; Title Case status via `getLessonStatusDisplayLabel`; SSR `isAvailableForBooking` on admin/instructor/student dashboard seeds; inactive instructor warning deduplicated. No schema/migrations/API changes. Validated via `pnpm check`.
+- `calendar-lessons-polish-v1b-edit-refresh` — UI navigation (DEC-031 slice 2): after lesson/exam edit, return to admin/instructor dashboard with Schedule Map refresh + date focus via `?focusDate=YYYY-MM-DD&scheduleRefresh=1`; helpers `lib/schedule/schedule-map-navigation.ts`; shared hook `hooks/use-schedule-dashboard-controls.ts`; cancel/back unchanged (no query params). No schema/migrations/API/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (165 files / 1232 tests / build OK).
 
 ### Likely next (smallest safe slices)
 
-1. **`calendar-lessons-polish-v1b-edit-refresh`** (P2) — map refresh/focus after lesson edit
-2. `audit-log-tenant-context-foundation` — planning only
-3. Product/packaging planning slices — see [roadmap-todo.md](./roadmap-todo.md) **P1 / Product and packaging** and [docs/product/](../product/) — after Calendar/Lessons v1b or parallel if prioritized
-4. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next
+1. **`calendar-lessons-polish-v1c-dashboard-window`** (P2) — dashboard temporal window / pagination / list read semantics on `/admin/lessons` (separate from v1b navigation polish)
+2. `calendar-lessons-polish-v1d-vehicle-warnings` → `calendar-lessons-polish-v1e-student-warnings` (P2/P3, separate approvals)
+3. `audit-log-tenant-context-foundation` — planning only
+4. Product/packaging planning slices — see [roadmap-todo.md](./roadmap-todo.md) **P1 / Product and packaging** and [docs/product/](../product/) — after Calendar/Lessons v1c or parallel if prioritized
+5. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next
 
 ### Product direction (backlog — deferred post-production polish)
 
