@@ -6,6 +6,7 @@ import {
   getLessonInstructorName,
   getLessonLocationLabel,
   getLessonParticipantName,
+  getLessonStatusDisplayLabel,
   getLessonVehicleLabel,
   getPracticalLessonNumberLabel,
   isExamLessonType,
@@ -103,7 +104,16 @@ describe("lesson-display", () => {
         lessonType: LESSON_TYPES.DRIVING,
         practicalLessonNumber: 1,
       }),
-    ).toBe("Prática #1");
+    ).toBe("Practice #1");
+  });
+
+  it("getLessonStatusDisplayLabel maps enums to Title Case", () => {
+    expect(getLessonStatusDisplayLabel("SCHEDULED")).toBe("Scheduled");
+    expect(getLessonStatusDisplayLabel("IN_PROGRESS")).toBe("In Progress");
+    expect(getLessonStatusDisplayLabel("COMPLETED")).toBe("Completed");
+    expect(getLessonStatusDisplayLabel("CANCELLED")).toBe("Cancelled");
+    expect(getLessonStatusDisplayLabel("PENDING")).toBe("Pending");
+    expect(getLessonStatusDisplayLabel(null)).toBe("Scheduled");
   });
 
   it("getPracticalLessonNumberLabel returns null for non-DRIVING or missing number", () => {

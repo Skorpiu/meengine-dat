@@ -96,5 +96,23 @@ export function getPracticalLessonNumberLabel(lesson: {
   ) {
     return null;
   }
-  return `Prática #${lesson.practicalLessonNumber}`;
+  return `Practice #${lesson.practicalLessonNumber}`;
+}
+
+/** Title Case status label for Lesson Management (matches LessonForm edit labels). */
+export function getLessonStatusDisplayLabel(status?: string | null): string {
+  switch (status) {
+    case "SCHEDULED":
+      return "Scheduled";
+    case "IN_PROGRESS":
+      return "In Progress";
+    case "COMPLETED":
+      return "Completed";
+    case "CANCELLED":
+      return "Cancelled";
+    case "PENDING":
+      return "Pending";
+    default:
+      return status?.trim() ? status : "Scheduled";
+  }
 }
