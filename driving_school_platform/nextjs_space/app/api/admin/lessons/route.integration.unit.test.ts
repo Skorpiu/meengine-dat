@@ -72,6 +72,7 @@ import { POST, GET } from "./route";
 import { verifyAuth } from "@/lib/api-utils";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
 import { expectLessonSelectSanitizesNestedUsers } from "@/lib/lessons/lesson-include-safety";
+import { ADMIN_DASHBOARD_LESSONS_LIST_LIMIT } from "@/lib/lessons/admin-dashboard-lessons-truncation";
 import { LESSON_LIST_SELECT } from "@/lib/lessons/lesson-queries";
 import { sampleLessonListItemFixture } from "@/lib/lessons/lesson-response-contract-fixtures";
 import {
@@ -179,17 +180,59 @@ describe("GET /api/admin/lessons (read-only)", () => {
     expect(Object.keys(body.data).sort()).toEqual([
       "current",
       "recent",
+      "recentHasMore",
       "upcoming",
+      "upcomingHasMore",
     ]);
     expect(body.data).toMatchObject({
       recent: [],
       current: [],
       upcoming: [],
+      recentHasMore: false,
+      upcomingHasMore: false,
     });
+    const truncatedCalls = h.lessonFindManyMock.mock.calls.filter(
+      (call) => call[0]?.take != null,
+    );
+    expect(truncatedCalls).toHaveLength(2);
+    for (const call of truncatedCalls) {
+      expect(call[0]?.take).toBe(ADMIN_DASHBOARD_LESSONS_LIST_LIMIT + 1);
+    }
     for (const call of h.lessonFindManyMock.mock.calls) {
       expect(call[0]?.select).toEqual(LESSON_LIST_SELECT);
       expectLessonSelectSanitizesNestedUsers(call[0]?.select);
     }
+  });
+
+  it("dashboard mode truncates recent/upcoming to 50 and sets hasMore flags", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
+
+    const fixture = sampleLessonListItemFixture();
+    const overLimitRows = Array.from({ length: 51 }, (_, index) => ({
+      ...fixture,
+      id: `lesson-${index}`,
+    }));
+
+    h.lessonFindManyMock
+      .mockResolvedValueOnce(overLimitRows)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce(overLimitRows);
+
+    const res = await GET(
+      reqGet("http://localhost/api/admin/lessons?view=DRIVING") as any,
+    );
+
+    expect(res.status).toBe(200);
+    const body: any = await res.json();
+    expect(body.data.recent).toHaveLength(ADMIN_DASHBOARD_LESSONS_LIST_LIMIT);
+    expect(body.data.upcoming).toHaveLength(ADMIN_DASHBOARD_LESSONS_LIST_LIMIT);
+    expect(body.data.recentHasMore).toBe(true);
+    expect(body.data.upcomingHasMore).toBe(true);
+    expectAdminDashboardLessonsResponseContract(body);
   });
 
   it("calendar from/to uses findMany once, returns lessons, and does not delete", async () => {

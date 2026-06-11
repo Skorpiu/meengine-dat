@@ -251,7 +251,7 @@ Parent batch — always slice before implementing.
 **Baseline already shipped (do not regress):**
 
 - Schedule Map type colors — Theory green, Driving blue, Theory exam yellow, Practical exam orange (`lib/schedule/schedule-map-card.ts`; demo-validated).
-- Compact schedule chips; 90-day calendar range guard (`lib/lessons/calendar-range.ts`); create refresh via `refreshKey` / `focusLessonDate` (`use-schedule-dashboard-controls.ts`); edit return refresh/focus via `focusDate` + `scheduleRefresh` query params (`schedule-map-navigation.ts`, `EditLessonClient.tsx`).
+- Compact schedule chips; 90-day calendar range guard (`lib/lessons/calendar-range.ts`); create refresh via `refreshKey` / `focusLessonDate` (`use-schedule-dashboard-controls.ts`); edit return refresh/focus via `focusDate` + `scheduleRefresh` query params (`schedule-map-navigation.ts`, `EditLessonClient.tsx`); dashboard list truncation via `take: 51` + `recentHasMore` / `upcomingHasMore` (`admin-dashboard-lessons-truncation.ts`, `lesson-queries.ts`).
 - Instructor inactive warning on map + `/admin/lessons` list (after client refetch); create blocks inactive instructor (`lesson-create-service.ts`).
 
 **Analysis gaps (sliced — implement in order):**
@@ -263,7 +263,8 @@ Parent batch — always slice before implementing.
 | Status badges raw lowercase enum on Lesson Management | `lessons-management-client.tsx` |
 | SSR seed omits `instructor.isAvailableForBooking` | First-paint inactive warning may fail until client refetch — `app/admin/page.tsx`, `app/instructor/page.tsx` |
 | ~~Edit refresh/focus weaker than create~~ | **Resolved in v1b** — `EditLessonClient.tsx` + `schedule-map-navigation.ts` |
-| Dashboard `take: 50` silent cap; upcoming only until tomorrow | `lesson-queries.ts` |
+| ~~Dashboard `take: 50` silent cap~~ | **Resolved in v1c-a** — `admin-dashboard-lessons-truncation.ts`; `recentHasMore` / `upcomingHasMore` |
+| Upcoming only until tomorrow | **v1c-b** — extend horizon in `lesson-queries.ts` |
 | No vehicle inactive/maintenance warning on scheduled lessons | `LESSON_LIST_VEHICLE_SELECT` lacks `status` |
 | Student lifecycle warnings | Deferred — product policy first |
 
@@ -273,11 +274,14 @@ Parent batch — always slice before implementing.
 | --------- | -------- | ---- | ----- |
 | `calendar-lessons-polish-v1a-consistency-ui` | — | **Done** | UI + SSR mapping: aligned `/admin/lessons` tab/dot colors with Schedule Map (`lesson-type-ui-theme.ts`); `Practice #N`; `getLessonStatusDisplayLabel` Title Case; SSR `isAvailableForBooking` on admin/instructor/student dashboard seeds; deduplicated inactive instructor warning. **No** schema/migrations/API changes. Validated via `pnpm check`. |
 | `calendar-lessons-polish-v1b-edit-refresh` | — | **Done** | UI navigation: edit lesson/exam returns to dashboard with Schedule Map refresh + date focus via `?focusDate=YYYY-MM-DD&scheduleRefresh=1`; `lib/schedule/schedule-map-navigation.ts`; `hooks/use-schedule-dashboard-controls.ts`; admin/instructor dashboards consume params and clean URL; cancel/back without params. **No** schema/migrations/API changes. Validated via `pnpm check` (165/1232/build OK). |
-| `calendar-lessons-polish-v1c-dashboard-window` | P2 | Read behaviour | Evaluate “50+” indicator, temporal window, upcoming beyond tomorrow, or pagination on `/admin/lessons`. Separate — list read semantics. |
+| `calendar-lessons-polish-v1c-a-truncation-indicator` | — | **Done** | Honest truncation on `/admin/lessons` Recent/Upcoming: `take: 51`, max 50 UI items; additive `recentHasMore` / `upcomingHasMore`; `admin-dashboard-lessons-truncation.ts`; discrete notice + Schedule Map link; parser defaults `false`; `current` and temporal window unchanged. **No** schema/migrations/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (166/1237/build OK). |
+| `calendar-lessons-polish-v1c-b-upcoming-horizon` | P2 | Read behaviour | Extend Upcoming window beyond tomorrow on `/admin/lessons` (e.g. +7 days). Separate — alters operational list semantics. Pagination/load-more deferred. |
 | `calendar-lessons-polish-v1d-vehicle-warnings` | P2 | DTO + UI | Visual warning for vehicle inactive/maintenance on scheduled lessons; likely expand `LESSON_LIST_VEHICLE_SELECT` / DTO — **no migration**. |
 | `calendar-lessons-polish-v1e-student-warnings` | P3 deferred | Policy + UI | Student app-access/lifecycle warnings on lessons — requires product policy before implementation. |
 
-**Recommended next (v1c):** `calendar-lessons-polish-v1c-dashboard-window` — approval: `APPROVED TO IMPLEMENT: calendar-lessons-polish-v1c-dashboard-window`
+**Recommended next (v1c-b):** `calendar-lessons-polish-v1c-b-upcoming-horizon` — approval: `APPROVED TO IMPLEMENT: calendar-lessons-polish-v1c-b-upcoming-horizon`
+
+**v1c parent track:** v1c-a truncation **done**; v1c-b horizon **next**; pagination/load-more **deferred** within v1c.
 
 **v1d / v1e (future, separate):** `calendar-lessons-polish-v1d-vehicle-warnings` (DTO + UI); `calendar-lessons-polish-v1e-student-warnings` (P3 deferred — product policy first).
 

@@ -16,6 +16,29 @@ describe("parseAdminDashboardLessonsPayload", () => {
       recent: [{ id: "r1" }],
       current: [{ id: "c1" }],
       upcoming: [{ id: "u1" }],
+      recentHasMore: false,
+      upcomingHasMore: false,
+    });
+  });
+
+  it("reads recentHasMore and upcomingHasMore when present", () => {
+    const payload = {
+      success: true,
+      data: {
+        recent: [{ id: "r1" }],
+        current: [],
+        upcoming: [{ id: "u1" }],
+        recentHasMore: true,
+        upcomingHasMore: false,
+      },
+    };
+
+    expect(parseAdminDashboardLessonsPayload(payload)).toEqual({
+      recent: [{ id: "r1" }],
+      current: [],
+      upcoming: [{ id: "u1" }],
+      recentHasMore: true,
+      upcomingHasMore: false,
     });
   });
 
@@ -30,6 +53,8 @@ describe("parseAdminDashboardLessonsPayload", () => {
       recent: [{ id: "legacy-r" }],
       current: [],
       upcoming: [{ id: "legacy-u" }],
+      recentHasMore: false,
+      upcomingHasMore: false,
     });
   });
 
@@ -38,6 +63,8 @@ describe("parseAdminDashboardLessonsPayload", () => {
       recent: [],
       current: [],
       upcoming: [],
+      recentHasMore: false,
+      upcomingHasMore: false,
     });
     expect(
       parseAdminDashboardLessonsPayload({ success: true, data: {} }),
@@ -45,6 +72,8 @@ describe("parseAdminDashboardLessonsPayload", () => {
       recent: [],
       current: [],
       upcoming: [],
+      recentHasMore: false,
+      upcomingHasMore: false,
     });
   });
 });
