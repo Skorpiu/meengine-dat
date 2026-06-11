@@ -4,18 +4,19 @@ Short manual pass to confirm core surfaces load and role paths are not obviously
 
 For release ordering, env, migrations, and rollback, see **[release-checklist.md](./release-checklist.md)** and the linked ops docs below instead of duplicating them here. For a **first** hosted deploy on Vercel, start with **[first-deploy-smoke.md](./first-deploy-smoke.md)** then return here for depth. A **date-neutral** summary of the first successful production smoke (no secrets) lives in **[production-smoke-baseline.md](./production-smoke-baseline.md)**—re-run checks on every release; do not treat that file as live status.
 
-| Topic                                          | Doc                                                              |
-| ---------------------------------------------- | ---------------------------------------------------------------- |
-| Preconditions, deploy order, rollback          | [release-checklist.md](./release-checklist.md)                   |
-| Local gate (`pnpm … check`), health JSON       | [deployment-readiness.md](./deployment-readiness.md)             |
-| Environment variables                          | [environment-variables.md](./environment-variables.md)           |
-| Vercel project settings                        | [vercel-deployment.md](./vercel-deployment.md)                   |
-| Prisma + Supabase migrations                   | [supabase-prisma-migrations.md](./supabase-prisma-migrations.md) |
-| Optional GitLab Runner                         | [gitlab-runner-docker.md](./gitlab-runner-docker.md)             |
-| First Vercel deploy (ordered minimal pass)     | [first-deploy-smoke.md](./first-deploy-smoke.md)                 |
-| Tenant vs platform hostname (production)       | [production-host-split.md](./production-host-split.md)           |
-| PLATFORM_ADMIN account (script, operators)     | [platform-admin-runbook.md](./platform-admin-runbook.md)         |
-| Production smoke baseline (record, no secrets) | [production-smoke-baseline.md](./production-smoke-baseline.md)   |
+| Topic                                          | Doc                                                                                              |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Preconditions, deploy order, rollback          | [release-checklist.md](./release-checklist.md)                                                   |
+| Local gate (`pnpm … check`), health JSON       | [deployment-readiness.md](./deployment-readiness.md)                                             |
+| Environment variables                          | [environment-variables.md](./environment-variables.md)                                           |
+| Vercel project settings                        | [vercel-deployment.md](./vercel-deployment.md)                                                   |
+| Prisma + Supabase migrations                   | [supabase-prisma-migrations.md](./supabase-prisma-migrations.md)                                 |
+| Optional GitLab Runner                         | [gitlab-runner-docker.md](./gitlab-runner-docker.md)                                             |
+| First Vercel deploy (ordered minimal pass)     | [first-deploy-smoke.md](./first-deploy-smoke.md)                                                 |
+| Tenant vs platform hostname (production)       | [production-host-split.md](./production-host-split.md)                                           |
+| PLATFORM_ADMIN account (script, operators)     | [platform-admin-runbook.md](./platform-admin-runbook.md)                                         |
+| Production smoke baseline (record, no secrets) | [production-smoke-baseline.md](./production-smoke-baseline.md)                                   |
+| Controlled first B2B client cutline            | [production-readiness-cutline.md](../../../../docs/architecture/production-readiness-cutline.md) |
 
 ---
 
@@ -62,12 +63,15 @@ Use a **known non-production test account** if your environment has one (seeded 
 
 Adjust URLs if your app’s routing differs; current App Router examples:
 
-| Role / intent       | Example path  | Expect                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Admin               | `/admin`      | Dashboard loads for an admin-capable test user.                                                                                                                                                                                                                                                                                                                                                                                  |
-| Instructor          | `/instructor` | Instructor dashboard loads for an instructor test user.                                                                                                                                                                                                                                                                                                                                                                          |
-| Student             | `/student`    | Student dashboard loads for a student test user.                                                                                                                                                                                                                                                                                                                                                                                 |
-| Platform (elevated) | `/platform`   | On **split-host production**, test on the **platform hostname** (see [production-host-split.md](./production-host-split.md)); not via `/platform` on the tenant host as the expected path. Loads **only** for a user authorized for that surface; others should not see full privileged UI (redirect, forbidden, or empty state—not a crash). **PLATFORM_ADMIN** is not a tenant user—do not use demo/example passwords in docs. |
+| Role / intent       | Example path     | Expect                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Admin               | `/admin`         | Schedule Map dashboard loads. Navbar includes People, Lessons, Vehicles, **Plan** — **not** Settings (DEC-026).                                                                                                                                                                                                                                                                                                                  |
+| Admin People        | `/admin/users`   | People IA: Students (Profiles + Onboarding), Instructors (Profiles + Onboarding).                                                                                                                                                                                                                                                                                                                                                |
+| Admin Lessons       | `/admin/lessons` | Lesson Management lists; aligned type colors; truncation notice when applicable; vehicle/instructor warnings display-only (v1a–v1d).                                                                                                                                                                                                                                                                                             |
+| Admin Plan          | `/admin/license` | Read-only Plan & features (no Activate/toggles in school admin UI).                                                                                                                                                                                                                                                                                                                                                              |
+| Instructor          | `/instructor`    | Instructor dashboard loads for an instructor test user.                                                                                                                                                                                                                                                                                                                                                                          |
+| Student             | `/student`       | Student dashboard loads for a student test user.                                                                                                                                                                                                                                                                                                                                                                                 |
+| Platform (elevated) | `/platform`      | On **split-host production**, test on the **platform hostname** (see [production-host-split.md](./production-host-split.md)); not via `/platform` on the tenant host as the expected path. Loads **only** for a user authorized for that surface; others should not see full privileged UI (redirect, forbidden, or empty state—not a crash). **PLATFORM_ADMIN** is not a tenant user—do not use demo/example passwords in docs. |
 
 If a user lacks a role, confirm **access denied or redirect** rather than a broken page.
 
@@ -77,7 +81,7 @@ If a user lacks a role, confirm **access denied or redirect** rather than a brok
 
 Baseline product does **not** integrate real billing providers; keep checks shallow.
 
-1. **License** — as an admin test user, open `/admin/license` (or your team’s equivalent); page loads.
+1. **Plan (license)** — as an admin test user, open `/admin/license` (navbar **Plan**); read-only Plan & features page loads.
 2. **Feature-gated surface** — open a route that depends on license or entitlements (for example an admin lesson list at `/admin/lessons`); confirm the UI renders or shows an expected empty or “not available” state **without** a client-side crash loop.
 3. **Webhooks** — **do not** exercise real payment-provider webhooks in smoke; providers are not integrated for live validation. When they are, extend this checklist separately.
 
@@ -95,13 +99,13 @@ Baseline product does **not** integrate real billing providers; keep checks shal
 
 These paths match the current App Router layout for naming only; if routes move, update this table in the same doc.
 
-| Path                                            | Notes                                                                                                                                 |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                                             | Landing                                                                                                                               |
-| `/auth/login`                                   | Login                                                                                                                                 |
-| `/auth/register`                                | Registration (optional smoke)                                                                                                         |
-| `/admin`, `/admin/lessons`, `/admin/license`, … | Admin area                                                                                                                            |
-| `/instructor`                                   | Instructor home                                                                                                                       |
-| `/student`                                      | Student home                                                                                                                          |
-| `/platform`                                     | Platform / elevated surface (use **platform host** in split-host production — [production-host-split.md](./production-host-split.md)) |
-| `/api/health`                                   | Liveness JSON                                                                                                                         |
+| Path                                                                            | Notes                                                                                                                                 |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                                                                             | Landing                                                                                                                               |
+| `/auth/login`                                                                   | Login                                                                                                                                 |
+| `/auth/register`                                                                | Registration (optional smoke)                                                                                                         |
+| `/admin`, `/admin/users`, `/admin/lessons`, `/admin/vehicles`, `/admin/license` | School admin area (Settings `/admin/settings` — operator/internal direct URL only, not navbar)                                        |
+| `/instructor`                                                                   | Instructor home                                                                                                                       |
+| `/student`                                                                      | Student home                                                                                                                          |
+| `/platform`                                                                     | Platform / elevated surface (use **platform host** in split-host production — [production-host-split.md](./production-host-split.md)) |
+| `/api/health`                                                                   | Liveness JSON                                                                                                                         |

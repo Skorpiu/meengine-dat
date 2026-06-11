@@ -135,9 +135,23 @@ Documented and in use (docs/rules only; no runtime change):
 
 ---
 
+## Production cutline (DEC-032)
+
+**Baseline:** main `5f41082` · `pnpm check` 167 test files / 1255 tests / build OK · Calendar/Lessons v1d closed.
+
+**Path:** Controlled first **B2B client** production under invite-only, `PUBLIC_SIGNUP_ENABLED=false`, no live billing assumptions. DAT core is **production-ready enough** for that scope.
+
+**Cutline doc:** [production-readiness-cutline.md](./production-readiness-cutline.md) (`production-readiness-cutline-doc-v1`).
+
+**Analysis approved:** `production-readiness-cutline-review-v1` (analysis-only).
+
+**Do not open next:** `calendar-lessons-polish-v1e-student-warnings`, mobile/tablet review, Competitive/Product Discovery, audit log runtime, billing/checkout.
+
+---
+
 ## Current recommended next phase
 
-**DAT_3.7** — UX and operational polish (see [roadmap-todo.md](./roadmap-todo.md)).
+**Production path** — controlled first B2B client (see [production-readiness-cutline.md](./production-readiness-cutline.md) and [roadmap-todo.md](./roadmap-todo.md)).
 
 ### Done (v1)
 
@@ -217,13 +231,21 @@ Documented and in use (docs/rules only; no runtime change):
 - `calendar-lessons-polish-v1c-a-truncation-indicator` — read behaviour (DEC-031 slice 3a): honest truncation on `/admin/lessons` Recent/Upcoming — `getAdminDashboardLessons` uses `take: 51`, returns max 50 items; additive API flags `recentHasMore` / `upcomingHasMore`; helper `admin-dashboard-lessons-truncation.ts`; UI notice + link to Schedule Map when truncated; parser backward-compatible (defaults `false`); `current` and temporal window unchanged; Schedule Map unchanged. No schema/migrations/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (166 files / 1237 tests / build OK).
 - `calendar-lessons-polish-v1c-b-upcoming-horizon` — read behaviour (DEC-031 slice 3b): Upcoming on `/admin/lessons` covers today remaining + next 7 days (`ADMIN_DASHBOARD_UPCOMING_HORIZON_DAYS`); `getAdminDashboardUpcomingHorizonEnd`; v1c-a truncation preserved (`take: 51`, max 50 UI, `upcomingHasMore`); UI copy updated; Recent/Current/Schedule Map unchanged. No schema/migrations/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (167 files / 1245 tests / build OK).
 - `calendar-lessons-polish-v1d-vehicle-warnings` — display-only (DEC-031 slice 4): vehicle operational warnings on Schedule Map + `/admin/lessons` using persisted nested `vehicle.{isActive,underMaintenance,status}` on `LESSON_LIST_VEHICLE_SELECT`; helpers `getLessonVehicleWarning` / `isLessonVehicleProblematic`; red chip styling mirrors inactive instructor; no create/update blocking; expiry/service warnings deferred. No schema/migrations/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (167 files / 1255 tests / build OK).
+- `production-readiness-cutline-review-v1` — analysis-only production cutline after v1d; no runtime/schema changes.
+- `production-readiness-cutline-doc-v1` — docs-only cutline + DEC-032 + memory/smoke sync; [production-readiness-cutline.md](./production-readiness-cutline.md). No runtime/schema changes.
 
-### Likely next (smallest safe slices)
+### Likely next (production path)
 
-1. **`calendar-lessons-polish-v1e-student-warnings`** (P3 deferred) — product policy first; separate approval when ready
-2. `audit-log-tenant-context-foundation` — planning only
-3. Product/packaging planning slices — see [roadmap-todo.md](./roadmap-todo.md) **P1 / Product and packaging** and [docs/product/](../product/)
-4. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next
+1. **Operator: deploy + smoke first B2B client** — human gate on target env (`migrate deploy`, smoke, invite QA); see [production-readiness-cutline.md](./production-readiness-cutline.md)
+2. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
+3. `production-first-client-onboarding-record-v1` — operator evidence doc after go-live
+4. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains after cutline batch minimal sync
+
+### Deferred (not next)
+
+- **`calendar-lessons-polish-v1e-student-warnings`** (P3) — product policy first
+- `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)**
+- Audit log runtime/migration — P2 unless compliance requires earlier
 
 ### Product direction (backlog — deferred post-production polish)
 

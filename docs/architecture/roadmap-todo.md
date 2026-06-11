@@ -15,6 +15,55 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 ---
 
+## P0 / Controlled production (first B2B client)
+
+**Cutline:** [production-readiness-cutline.md](./production-readiness-cutline.md) (**DEC-032**). DAT core is production-ready for **invite-only**, no public signup, no live billing. P0 here is **operational discipline**, not new features.
+
+| Item | Notes |
+| ---- | ----- |
+| **Credential policy (operational)** | Never expose `PLATFORM_ADMIN` / `SUPER_ADMIN` secrets in docs, git, or client handoff; scoped accounts + vault |
+| **Target env deploy discipline** | Per environment: `prisma migrate status` / `migrate deploy`, `pnpm check` green, post-deploy smoke |
+| **`PUBLIC_SIGNUP_ENABLED=false`** | Mandatory on first B2B client production (unset or explicit `false`) |
+
+---
+
+## P1 / Production path (post–Calendar v1d)
+
+| Slice | Status | Notes |
+| ----- | ------ | ----- |
+| `production-readiness-cutline-review-v1` | **Done (analysis)** | Analysis-only; approved |
+| `production-readiness-cutline-doc-v1` | **Done (docs)** | Cutline + DEC-032 + minimal smoke sync |
+| `production-smoke-runbook-sync-v1` | Pending | Residual runbook alignment if drift remains |
+| `audit-log-tenant-context-foundation-plan-v1` | Pending | Design doc + write-path contract only — **no migration** |
+| **First-client operator smoke** | Pending | Human gate: People, Schedule Map, invites, lessons, import dry-run on **target env** |
+
+---
+
+## P2 / Post-production or non-blocking
+
+| Slice | Notes |
+| ----- | ----- |
+| Audit log runtime implementation | Migration `organizationId`, write paths, tenant queries — P2 unless compliance pulls earlier |
+| Demo DB separation | Recommended for public portfolio; lower urgency with dedicated client tenant |
+| `lesson-student-nullability-policy-review-v1` | Policy doc + validation gap grep |
+| `mobile-tablet-readiness-review-v1` | **Deferred/penultimate** — before Competitive/Product Discovery |
+| Engineering Excellence Audit | Refactors, route consistency, optional E2E CI |
+| Billing / checkout / PSP | Explicit product scope only; not in baseline |
+| `supabase-rls-tenant-policies-v1` | Only if Data API tenant access is product-required |
+
+---
+
+## P3 / Deferred
+
+| Slice | Notes |
+| ----- | ----- |
+| `calendar-lessons-polish-v1e-student-warnings` | Product policy first |
+| `competitive-product-discovery-v1` | After production + cohesion + mobile (DEC-007) |
+| i18n / `language-pack-pt-PT-v1` | After i18n framework |
+| `people-management-ux-unification-instructor-route-split-v1` | D4; tabs-first stands |
+
+---
+
 ## P1 / DAT_3.7 start
 
 ### student-record-delete-policy-and-action
@@ -280,7 +329,7 @@ Parent batch — always slice before implementing.
 | `calendar-lessons-polish-v1d-vehicle-warnings` | — | **Done** | Display-only vehicle warnings on Schedule Map + `/admin/lessons`; `LESSON_LIST_VEHICLE_SELECT` adds `isActive`, `underMaintenance`, `status`; helpers in `lesson-display.ts` + `schedule-map-card.ts`; persisted fields only (not derived fleet status); no create/update blocking. **No** schema/migrations/auth/RLS/billing/demo-guard changes. |
 | `calendar-lessons-polish-v1e-student-warnings` | P3 deferred | Policy + UI | Student app-access/lifecycle warnings on lessons — requires product policy before implementation. |
 
-**Recommended next:** `calendar-lessons-polish-v1e-student-warnings` (P3 deferred — product policy first; separate approval when ready).
+**Recommended next (Calendar track):** none — v1a–v1d **done**; v1e **P3 deferred**. Production path: [production-readiness-cutline.md](./production-readiness-cutline.md).
 
 **v1c parent track:** v1c-a truncation **done**; v1c-b horizon **done**; pagination/load-more **deferred** within v1c.
 
