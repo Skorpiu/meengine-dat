@@ -251,7 +251,7 @@ Parent batch — always slice before implementing.
 **Baseline already shipped (do not regress):**
 
 - Schedule Map type colors — Theory green, Driving blue, Theory exam yellow, Practical exam orange (`lib/schedule/schedule-map-card.ts`; demo-validated).
-- Compact schedule chips; 90-day calendar range guard (`lib/lessons/calendar-range.ts`); create refresh via `refreshKey` / `focusLessonDate` (`admin-dashboard-client.tsx`).
+- Compact schedule chips; 90-day calendar range guard (`lib/lessons/calendar-range.ts`); create refresh via `refreshKey` / `focusLessonDate` (`use-schedule-dashboard-controls.ts`); edit return refresh/focus via `focusDate` + `scheduleRefresh` query params (`schedule-map-navigation.ts`, `EditLessonClient.tsx`).
 - Instructor inactive warning on map + `/admin/lessons` list (after client refetch); create blocks inactive instructor (`lesson-create-service.ts`).
 
 **Analysis gaps (sliced — implement in order):**
@@ -262,7 +262,7 @@ Parent batch — always slice before implementing.
 | PT label `Prática #N` in English UI baseline | `lesson-display.ts` |
 | Status badges raw lowercase enum on Lesson Management | `lessons-management-client.tsx` |
 | SSR seed omits `instructor.isAvailableForBooking` | First-paint inactive warning may fail until client refetch — `app/admin/page.tsx`, `app/instructor/page.tsx` |
-| Edit refresh/focus weaker than create | `EditLessonClient.tsx` vs `admin-dashboard-client.tsx` |
+| ~~Edit refresh/focus weaker than create~~ | **Resolved in v1b** — `EditLessonClient.tsx` + `schedule-map-navigation.ts` |
 | Dashboard `take: 50` silent cap; upcoming only until tomorrow | `lesson-queries.ts` |
 | No vehicle inactive/maintenance warning on scheduled lessons | `LESSON_LIST_VEHICLE_SELECT` lacks `status` |
 | Student lifecycle warnings | Deferred — product policy first |
@@ -272,12 +272,14 @@ Parent batch — always slice before implementing.
 | Sub-slice | Priority | Type | Scope |
 | --------- | -------- | ---- | ----- |
 | `calendar-lessons-polish-v1a-consistency-ui` | — | **Done** | UI + SSR mapping: aligned `/admin/lessons` tab/dot colors with Schedule Map (`lesson-type-ui-theme.ts`); `Practice #N`; `getLessonStatusDisplayLabel` Title Case; SSR `isAvailableForBooking` on admin/instructor/student dashboard seeds; deduplicated inactive instructor warning. **No** schema/migrations/API changes. Validated via `pnpm check`. |
-| `calendar-lessons-polish-v1b-edit-refresh` | P2 | UI navigation | Improve map refresh/focus after lesson edit (POST-PUT navigation). Separate — navigation/UX. |
+| `calendar-lessons-polish-v1b-edit-refresh` | — | **Done** | UI navigation: edit lesson/exam returns to dashboard with Schedule Map refresh + date focus via `?focusDate=YYYY-MM-DD&scheduleRefresh=1`; `lib/schedule/schedule-map-navigation.ts`; `hooks/use-schedule-dashboard-controls.ts`; admin/instructor dashboards consume params and clean URL; cancel/back without params. **No** schema/migrations/API changes. Validated via `pnpm check` (165/1232/build OK). |
 | `calendar-lessons-polish-v1c-dashboard-window` | P2 | Read behaviour | Evaluate “50+” indicator, temporal window, upcoming beyond tomorrow, or pagination on `/admin/lessons`. Separate — list read semantics. |
 | `calendar-lessons-polish-v1d-vehicle-warnings` | P2 | DTO + UI | Visual warning for vehicle inactive/maintenance on scheduled lessons; likely expand `LESSON_LIST_VEHICLE_SELECT` / DTO — **no migration**. |
 | `calendar-lessons-polish-v1e-student-warnings` | P3 deferred | Policy + UI | Student app-access/lifecycle warnings on lessons — requires product policy before implementation. |
 
-**Recommended next (v1b):** `calendar-lessons-polish-v1b-edit-refresh` — approval: `APPROVED TO IMPLEMENT: calendar-lessons-polish-v1b-edit-refresh`
+**Recommended next (v1c):** `calendar-lessons-polish-v1c-dashboard-window` — approval: `APPROVED TO IMPLEMENT: calendar-lessons-polish-v1c-dashboard-window`
+
+**v1d / v1e (future, separate):** `calendar-lessons-polish-v1d-vehicle-warnings` (DTO + UI); `calendar-lessons-polish-v1e-student-warnings` (P3 deferred — product policy first).
 
 **Deferred explicitly:** monolithic `calendar-lessons-polish-v1` runtime batch; `people-management-ux-unification-instructor-route-split-v1` (D4).
 

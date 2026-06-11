@@ -19,6 +19,7 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { lessonFormEditCardClass } from "@/components/lessons/lesson-form-styles";
+import { buildScheduleReturnHref } from "@/lib/schedule/schedule-map-navigation";
 
 async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
   const contentType = response.headers.get("content-type") || "";
@@ -146,7 +147,7 @@ export function EditLessonClient({
 
       if (response.ok) {
         toast.success("Lesson updated successfully!");
-        router.push(backHref);
+        router.push(buildScheduleReturnHref(backHref, payload.lessonDate));
       } else {
         toast.error(data?.error || "Failed to update lesson");
       }

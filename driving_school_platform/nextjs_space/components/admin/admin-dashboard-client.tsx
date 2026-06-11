@@ -1,15 +1,14 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   ScheduleMap,
   type Lesson as ScheduleLesson,
-  type ScheduleMapRefetch,
 } from "@/components/schedule/schedule-map";
 import { BookLessonDialog } from "./book-lesson-dialog";
 import { BookExamDialog } from "./book-exam-dialog";
-import type { LessonBookingSuccessMeta } from "@/components/lessons/lesson-booking-meta";
+import { useScheduleDashboardControls } from "@/hooks/use-schedule-dashboard-controls";
 
 interface AdminDashboardClientProps {
   lessons: ScheduleLesson[];
@@ -20,35 +19,21 @@ export function AdminDashboardClient({
 }: AdminDashboardClientProps) {
   const [bookLessonOpen, setBookLessonOpen] = useState(false);
   const [bookExamOpen, setBookExamOpen] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [focusLessonDate, setFocusLessonDate] = useState<string | null>(null);
-  const scheduleRefetchRef = useRef<ScheduleMapRefetch | null>(null);
+  const {
+    refreshKey,
+    focusLessonDate,
+    registerScheduleRefetch,
+    refreshSchedule,
+    handleLessonBooked,
+  } = useScheduleDashboardControls();
 
-  const registerScheduleRefetch = useCallback((refetch: ScheduleMapRefetch) => {
-    scheduleRefetchRef.current = refetch;
-  }, []);
-
-  const refreshSchedule = useCallback(
-    async (meta?: LessonBookingSuccessMeta) => {
-      if (meta?.lessonDate) {
-        setFocusLessonDate(meta.lessonDate);
-      }
-      setRefreshKey((k) => k + 1);
-      await scheduleRefetchRef.current?.(
-        meta?.lessonDate ? { focusDate: meta.lessonDate } : undefined,
-      );
-    },
-    [],
-  );
-
-  const handleLessonBooked = useCallback(
-    async (meta?: LessonBookingSuccessMeta) => {
-      setBookLessonOpen(false);
-      setBookExamOpen(false);
-      await refreshSchedule(meta);
-    },
-    [refreshSchedule],
-  );
+  const onLessonBooked = async (
+    meta?: Parameters<typeof handleLessonBooked>[0],
+  ) => {
+    setBookLessonOpen(false);
+    setBookExamOpen(false);
+    await handleLessonBooked(meta);
+  };
 
   return (
     <>
@@ -78,13 +63,13 @@ export function AdminDashboardClient({
       <BookLessonDialog
         open={bookLessonOpen}
         onOpenChange={setBookLessonOpen}
-        onSuccess={handleLessonBooked}
+        onSuccess={onLessonBooked}
       />
 
       <BookExamDialog
         open={bookExamOpen}
         onOpenChange={setBookExamOpen}
-        onSuccess={handleLessonBooked}
+        onSuccess={onLessonBooked}
       />
     </>
   );
