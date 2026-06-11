@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
+  LESSON_VEHICLE_INACTIVE_WARNING,
+  LESSON_VEHICLE_MAINTENANCE_WARNING,
+} from "@/lib/lessons/lesson-display";
+import {
   SCHEDULE_MAP_LESSON_TYPE_COLOR_CLASSES,
   SCHEDULE_MAP_INACTIVE_INSTRUCTOR_WARNING,
   getScheduleLessonTypeColorClasses,
@@ -7,6 +11,7 @@ import {
   getScheduleMapChipLines,
   getScheduleMapLessonColorClasses,
   isScheduleMapLessonInstructorInactive,
+  isScheduleMapLessonVehicleProblematic,
 } from "./schedule-map-card";
 
 describe("schedule-map-card", () => {
@@ -85,6 +90,16 @@ describe("schedule-map-card", () => {
         }),
       ).toContain("red");
     });
+
+    it("problematic vehicle uses warning red styling", () => {
+      expect(
+        getScheduleMapLessonColorClasses({
+          lessonType: "DRIVING",
+          status: "SCHEDULED",
+          vehicleProblematic: true,
+        }),
+      ).toContain("red");
+    });
   });
 
   it("detects inactive assigned instructor", () => {
@@ -98,6 +113,49 @@ describe("schedule-map-card", () => {
         instructor: { isAvailableForBooking: true, user: {} },
       }),
     ).toBe(false);
+  });
+
+  it("adds vehicle maintenance warning to chip lines", () => {
+    const lines = getScheduleMapChipLines({
+      lessonType: "DRIVING",
+      startTime: "09:00",
+      student: { user: { firstName: "Ana", lastName: "Silva" } },
+      vehicle: {
+        registrationNumber: "AB-12-CD",
+        isActive: true,
+        underMaintenance: true,
+        status: "AVAILABLE",
+      },
+    });
+
+    expect(lines).toContain(LESSON_VEHICLE_MAINTENANCE_WARNING);
+    expect(
+      isScheduleMapLessonVehicleProblematic({
+        vehicle: { underMaintenance: true },
+      }),
+    ).toBe(true);
+  });
+
+  it("prefers instructor warning over vehicle warning in compact chip lines", () => {
+    const lines = getScheduleMapChipLines({
+      lessonType: "DRIVING",
+      startTime: "09:00",
+      student: { user: { firstName: "Ana", lastName: "Silva" } },
+      instructor: {
+        isAvailableForBooking: false,
+        user: { firstName: "João", lastName: "Costa" },
+      },
+      vehicle: {
+        registrationNumber: "AB-12-CD",
+        isActive: false,
+        underMaintenance: false,
+        status: "AVAILABLE",
+      },
+    });
+
+    expect(lines).toContain(SCHEDULE_MAP_INACTIVE_INSTRUCTOR_WARNING);
+    expect(lines).not.toContain(LESSON_VEHICLE_MAINTENANCE_WARNING);
+    expect(lines).not.toContain(LESSON_VEHICLE_INACTIVE_WARNING);
   });
 
   it("adds inactive instructor warning to chip lines", () => {

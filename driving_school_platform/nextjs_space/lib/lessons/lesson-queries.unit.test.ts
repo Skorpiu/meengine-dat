@@ -46,6 +46,9 @@ describe("LESSON_LIST_SELECT", () => {
       registrationNumber: true,
       make: true,
       model: true,
+      isActive: true,
+      underMaintenance: true,
+      status: true,
     });
     expect(LESSON_LIST_SELECT.category.select).toEqual({
       id: true,

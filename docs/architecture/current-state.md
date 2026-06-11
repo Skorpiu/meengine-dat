@@ -216,17 +216,19 @@ Documented and in use (docs/rules only; no runtime change):
 - `calendar-lessons-polish-v1b-edit-refresh` — UI navigation (DEC-031 slice 2): after lesson/exam edit, return to admin/instructor dashboard with Schedule Map refresh + date focus via `?focusDate=YYYY-MM-DD&scheduleRefresh=1`; helpers `lib/schedule/schedule-map-navigation.ts`; shared hook `hooks/use-schedule-dashboard-controls.ts`; cancel/back unchanged (no query params). No schema/migrations/API/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (165 files / 1232 tests / build OK).
 - `calendar-lessons-polish-v1c-a-truncation-indicator` — read behaviour (DEC-031 slice 3a): honest truncation on `/admin/lessons` Recent/Upcoming — `getAdminDashboardLessons` uses `take: 51`, returns max 50 items; additive API flags `recentHasMore` / `upcomingHasMore`; helper `admin-dashboard-lessons-truncation.ts`; UI notice + link to Schedule Map when truncated; parser backward-compatible (defaults `false`); `current` and temporal window unchanged; Schedule Map unchanged. No schema/migrations/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (166 files / 1237 tests / build OK).
 - `calendar-lessons-polish-v1c-b-upcoming-horizon` — read behaviour (DEC-031 slice 3b): Upcoming on `/admin/lessons` covers today remaining + next 7 days (`ADMIN_DASHBOARD_UPCOMING_HORIZON_DAYS`); `getAdminDashboardUpcomingHorizonEnd`; v1c-a truncation preserved (`take: 51`, max 50 UI, `upcomingHasMore`); UI copy updated; Recent/Current/Schedule Map unchanged. No schema/migrations/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (167 files / 1245 tests / build OK).
+- `calendar-lessons-polish-v1d-vehicle-warnings` — display-only (DEC-031 slice 4): vehicle operational warnings on Schedule Map + `/admin/lessons` using persisted nested `vehicle.{isActive,underMaintenance,status}` on `LESSON_LIST_VEHICLE_SELECT`; helpers `getLessonVehicleWarning` / `isLessonVehicleProblematic`; red chip styling mirrors inactive instructor; no create/update blocking; expiry/service warnings deferred. No schema/migrations/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (167 files / 1255 tests / build OK).
 
 ### Likely next (smallest safe slices)
 
-1. **`calendar-lessons-polish-v1d-vehicle-warnings`** (P2) — visual warning for vehicle inactive/maintenance on scheduled lessons; approval: `APPROVED TO IMPLEMENT: calendar-lessons-polish-v1d-vehicle-warnings`
-2. `calendar-lessons-polish-v1e-student-warnings` (P3, separate approval — product policy first)
-3. `audit-log-tenant-context-foundation` — planning only
-4. Product/packaging planning slices — see [roadmap-todo.md](./roadmap-todo.md) **P1 / Product and packaging** and [docs/product/](../product/) — after Calendar/Lessons v1d or parallel if prioritized
-5. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next
+1. **`calendar-lessons-polish-v1e-student-warnings`** (P3 deferred) — product policy first; separate approval when ready
+2. `audit-log-tenant-context-foundation` — planning only
+3. Product/packaging planning slices — see [roadmap-todo.md](./roadmap-todo.md) **P1 / Product and packaging** and [docs/product/](../product/)
+4. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next
 
 ### Product direction (backlog — deferred post-production polish)
 
-**Competitive/Product Discovery** (`competitive-product-discovery-v1`, P2 deferred; DEC-007): pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros. **Deferred until** DAT core is cohesive, polished, and in production — not next while Calendar/Lessons operational polish is in flight.
+**Penultimate (before Competitive/Product Discovery):** `mobile-tablet-readiness-review-v1` — responsive UX review for admin/instructor/student; Schedule Map on small screens; touch targets; forms/tables/dialogs; mobile performance/INP; PWA/installable readiness (manifest/icons/theme-color; service worker/offline only if justified); Playwright mobile viewport smoke. **Deferred until** DAT core is solid, cohesive, and in production.
+
+**Competitive/Product Discovery** (`competitive-product-discovery-v1`, P2 deferred; DEC-007): pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros. **Deferred until** DAT core is cohesive, polished, and in production — after `mobile-tablet-readiness-review-v1`.
 
 Engineering excellence audit items (non-blocking refactors) remain tracked separately in roadmap P2+.

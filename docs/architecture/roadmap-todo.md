@@ -185,14 +185,15 @@ Parent batch — always slice before implementing.
 | `provider-assisted-import-runbook-v1` | P2 | Full operator runbook (outline in [packaging-and-entitlements.md](../product/packaging-and-entitlements.md)) |
 | `payment-integration-product-planning-v1` | P2 | School-facing payments product spec |
 | `payments-and-balances-foundation-v1` | P2 | Technical foundation for balances/packages |
-| `competitive-product-discovery-v1` | P2 deferred | **Competitive/Product Discovery (future):** research competitor features that may add value to DAT; discuss, mature, architect, and implement in future slices. **Deferred until** DAT core is cohesive, polished, and in production — not next while Calendar/Lessons and operational polish are in flight. See DEC-007. |
+| `mobile-tablet-readiness-review-v1` | P2 deferred | **Mobile/tablet readiness (penultimate pre-discovery):** responsive UX review for admin/instructor/student; Schedule Map on small screens; touch targets; forms/tables/lists/dialogs; mobile performance/INP; PWA/installable readiness (manifest/icons/theme-color; service worker/offline only if justified); Playwright mobile viewport smoke/e2e review. **Deferred until** DAT core is solid, cohesive, and in production — **before** `competitive-product-discovery-v1`. Analysis/planning only until approved slice. |
+| `competitive-product-discovery-v1` | P2 deferred | **Competitive/Product Discovery (future):** research competitor features that may add value to DAT; discuss, mature, architect, and implement in future slices. **Deferred until** DAT core is cohesive, polished, and in production — **after** `mobile-tablet-readiness-review-v1`. See DEC-007. |
 | `i18n-framework-planning-v1` | P2 | Real i18n; switcher, fallback, plan tie-in |
 | `language-pack-pt-PT-v1` | P3 | pt-PT copy after framework |
 | `super-agent-product-strategy-protocol-v1` | — | **Done** in `cursor-operating-model.md` (this sync batch) |
 
 **Deferred explicitly:** `people-management-ux-unification-instructor-route-split-v1` (D4; not recommended next).
 
-**Product direction (backlog — deferred post-production polish):** **Competitive/Product Discovery** — pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros (`competitive-product-discovery-v1`). **Not next** while core operational UX (Calendar/Lessons polish) is in flight. Discovery/strategy track only — no runtime work until app is production-cohesive and a dedicated slice is approved.
+**Product direction (backlog — deferred post-production polish):** **Mobile/tablet readiness** (`mobile-tablet-readiness-review-v1`) — penultimate phase before discovery; responsive/PWA review when DAT core is production-solid. **Competitive/Product Discovery** (`competitive-product-discovery-v1`) — after mobile/tablet readiness. Discovery/strategy track only — no runtime work until app is production-cohesive and a dedicated slice is approved.
 
 ---
 
@@ -265,7 +266,7 @@ Parent batch — always slice before implementing.
 | ~~Edit refresh/focus weaker than create~~ | **Resolved in v1b** — `EditLessonClient.tsx` + `schedule-map-navigation.ts` |
 | ~~Dashboard `take: 50` silent cap~~ | **Resolved in v1c-a** — `admin-dashboard-lessons-truncation.ts`; `recentHasMore` / `upcomingHasMore` |
 | ~~Upcoming only until tomorrow~~ | **Resolved in v1c-b** — `ADMIN_DASHBOARD_UPCOMING_HORIZON_DAYS = 7` in `admin-dashboard-lessons-truncation.ts` |
-| No vehicle inactive/maintenance warning on scheduled lessons | `LESSON_LIST_VEHICLE_SELECT` lacks `status` |
+| ~~No vehicle inactive/maintenance warning on scheduled lessons~~ | **Resolved in v1d** — `LESSON_LIST_VEHICLE_SELECT` + `getLessonVehicleWarning` |
 | Student lifecycle warnings | Deferred — product policy first |
 
 **Sub-slices (smallest safe order):**
@@ -276,14 +277,14 @@ Parent batch — always slice before implementing.
 | `calendar-lessons-polish-v1b-edit-refresh` | — | **Done** | UI navigation: edit lesson/exam returns to dashboard with Schedule Map refresh + date focus via `?focusDate=YYYY-MM-DD&scheduleRefresh=1`; `lib/schedule/schedule-map-navigation.ts`; `hooks/use-schedule-dashboard-controls.ts`; admin/instructor dashboards consume params and clean URL; cancel/back without params. **No** schema/migrations/API changes. Validated via `pnpm check` (165/1232/build OK). |
 | `calendar-lessons-polish-v1c-a-truncation-indicator` | — | **Done** | Honest truncation on `/admin/lessons` Recent/Upcoming: `take: 51`, max 50 UI items; additive `recentHasMore` / `upcomingHasMore`; `admin-dashboard-lessons-truncation.ts`; discrete notice + Schedule Map link; parser defaults `false`; `current` and temporal window unchanged. **No** schema/migrations/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (166/1237/build OK). |
 | `calendar-lessons-polish-v1c-b-upcoming-horizon` | — | **Done** | Upcoming on `/admin/lessons`: today remaining + next 7 days (`ADMIN_DASHBOARD_UPCOMING_HORIZON_DAYS`); `getAdminDashboardUpcomingHorizonEnd`; v1c-a truncation preserved; UI copy updated; Recent/Current/Schedule Map unchanged. **No** schema/migrations/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (167/1245/build OK). |
-| `calendar-lessons-polish-v1d-vehicle-warnings` | P2 | DTO + UI | Visual warning for vehicle inactive/maintenance on scheduled lessons; likely expand `LESSON_LIST_VEHICLE_SELECT` / DTO — **no migration**. |
+| `calendar-lessons-polish-v1d-vehicle-warnings` | — | **Done** | Display-only vehicle warnings on Schedule Map + `/admin/lessons`; `LESSON_LIST_VEHICLE_SELECT` adds `isActive`, `underMaintenance`, `status`; helpers in `lesson-display.ts` + `schedule-map-card.ts`; persisted fields only (not derived fleet status); no create/update blocking. **No** schema/migrations/auth/RLS/billing/demo-guard changes. |
 | `calendar-lessons-polish-v1e-student-warnings` | P3 deferred | Policy + UI | Student app-access/lifecycle warnings on lessons — requires product policy before implementation. |
 
-**Recommended next (v1d):** `calendar-lessons-polish-v1d-vehicle-warnings` — approval: `APPROVED TO IMPLEMENT: calendar-lessons-polish-v1d-vehicle-warnings`
+**Recommended next:** `calendar-lessons-polish-v1e-student-warnings` (P3 deferred — product policy first; separate approval when ready).
 
 **v1c parent track:** v1c-a truncation **done**; v1c-b horizon **done**; pagination/load-more **deferred** within v1c.
 
-**v1d / v1e (future, separate):** `calendar-lessons-polish-v1d-vehicle-warnings` (DTO + UI); `calendar-lessons-polish-v1e-student-warnings` (P3 deferred — product policy first).
+**v1d:** **done** — vehicle warnings (display-only). **v1e:** deferred — product policy first.
 
 **Deferred explicitly:** monolithic `calendar-lessons-polish-v1` runtime batch; `people-management-ux-unification-instructor-route-split-v1` (D4).
 

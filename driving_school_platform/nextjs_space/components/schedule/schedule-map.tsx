@@ -52,10 +52,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { LESSON_INACTIVE_INSTRUCTOR_WARNING } from "@/lib/lessons/lesson-display";
 import {
   getScheduleMapChipLines,
   getScheduleMapLessonColorClasses,
+  getScheduleMapLessonVehicleWarning,
   isScheduleMapLessonInstructorInactive,
+  isScheduleMapLessonVehicleProblematic,
 } from "@/lib/schedule/schedule-map-card";
 import { getStudentDisplayName } from "@/lib/students/student-display";
 import type { ScheduleMapStudentPayload } from "@/lib/students/schedule-lesson-student";
@@ -112,6 +115,9 @@ export interface Lesson {
     registrationNumber?: string;
     make?: string;
     model?: string;
+    isActive?: boolean;
+    underMaintenance?: boolean;
+    status?: string;
   } | null;
   category?: {
     name: string;
@@ -137,6 +143,32 @@ interface ScheduleMapProps {
   refreshKey?: number;
   /** When set (e.g. after booking), moves the calendar to that lesson date before refetch. */
   focusLessonDate?: string | null;
+}
+
+function ScheduleMapExpandedOperationalWarnings({
+  lesson,
+}: {
+  lesson: Lesson;
+}) {
+  const instructorWarning = isScheduleMapLessonInstructorInactive(lesson)
+    ? LESSON_INACTIVE_INSTRUCTOR_WARNING
+    : null;
+  const vehicleWarning = getScheduleMapLessonVehicleWarning(lesson);
+
+  if (!instructorWarning && !vehicleWarning) return null;
+
+  return (
+    <div className="space-y-1">
+      {instructorWarning ? (
+        <div className="text-xs font-medium text-red-700">
+          {instructorWarning}
+        </div>
+      ) : null}
+      {vehicleWarning ? (
+        <div className="text-xs font-medium text-red-700">{vehicleWarning}</div>
+      ) : null}
+    </div>
+  );
 }
 
 function ScheduleLessonChipBody({
@@ -586,6 +618,7 @@ export function ScheduleMap({
       lessonType: lesson.lessonType,
       status: lesson.status,
       instructorInactive: isScheduleMapLessonInstructorInactive(lesson),
+      vehicleProblematic: isScheduleMapLessonVehicleProblematic(lesson),
     });
 
   const dates = getDateRange();
@@ -842,6 +875,9 @@ export function ScheduleMap({
                                         {lesson.vehicle.registrationNumber}
                                       </div>
                                     )}
+                                    <ScheduleMapExpandedOperationalWarnings
+                                      lesson={lesson}
+                                    />
                                     {lesson.category && (
                                       <div>
                                         <span className="font-medium">
@@ -1009,6 +1045,9 @@ export function ScheduleMap({
                                         {lesson.vehicle.registrationNumber}
                                       </div>
                                     )}
+                                    <ScheduleMapExpandedOperationalWarnings
+                                      lesson={lesson}
+                                    />
                                     {lesson.category && (
                                       <div>
                                         <span className="font-medium">
@@ -1257,6 +1296,9 @@ export function ScheduleMap({
                                             {lesson.vehicle.model})
                                           </div>
                                         )}
+                                        <ScheduleMapExpandedOperationalWarnings
+                                          lesson={lesson}
+                                        />
                                         {lesson.category && (
                                           <div className="text-xs">
                                             <span className="font-medium">
@@ -1379,6 +1421,9 @@ export function ScheduleMap({
                                               {lesson.vehicle.model})
                                             </div>
                                           )}
+                                          <ScheduleMapExpandedOperationalWarnings
+                                            lesson={lesson}
+                                          />
                                           {lesson.category && (
                                             <div className="text-xs">
                                               <span className="font-medium">

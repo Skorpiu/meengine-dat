@@ -8,9 +8,14 @@ import {
   getLessonParticipantName,
   getLessonStatusDisplayLabel,
   getLessonVehicleLabel,
+  getLessonVehicleWarning,
   getPracticalLessonNumberLabel,
   isExamLessonType,
   isLessonInstructorInactive,
+  isLessonVehicleProblematic,
+  LESSON_VEHICLE_INACTIVE_WARNING,
+  LESSON_VEHICLE_MAINTENANCE_WARNING,
+  LESSON_VEHICLE_OUT_OF_SERVICE_WARNING,
 } from "./lesson-display";
 import { LESSON_TYPES } from "@/lib/constants";
 
@@ -64,6 +69,64 @@ describe("lesson-display", () => {
         schoolStudentId: "26001",
       }),
     ).toBe("João Silva");
+  });
+
+  describe("vehicle operational warnings", () => {
+    const healthyVehicle = {
+      isActive: true,
+      underMaintenance: false,
+      status: "AVAILABLE",
+    };
+
+    it("returns no warning for healthy or missing vehicle", () => {
+      expect(getLessonVehicleWarning(healthyVehicle)).toBeNull();
+      expect(isLessonVehicleProblematic(healthyVehicle)).toBe(false);
+      expect(getLessonVehicleWarning(null)).toBeNull();
+      expect(getLessonVehicleWarning(undefined)).toBeNull();
+    });
+
+    it("warns when vehicle is inactive", () => {
+      expect(
+        getLessonVehicleWarning({ ...healthyVehicle, isActive: false }),
+      ).toBe(LESSON_VEHICLE_INACTIVE_WARNING);
+    });
+
+    it("warns when vehicle is under maintenance", () => {
+      expect(
+        getLessonVehicleWarning({ ...healthyVehicle, underMaintenance: true }),
+      ).toBe(LESSON_VEHICLE_MAINTENANCE_WARNING);
+    });
+
+    it("warns when vehicle status is MAINTENANCE", () => {
+      expect(
+        getLessonVehicleWarning({ ...healthyVehicle, status: "MAINTENANCE" }),
+      ).toBe(LESSON_VEHICLE_MAINTENANCE_WARNING);
+    });
+
+    it("warns when vehicle status is OUT_OF_SERVICE", () => {
+      expect(
+        getLessonVehicleWarning({
+          ...healthyVehicle,
+          status: "OUT_OF_SERVICE",
+        }),
+      ).toBe(LESSON_VEHICLE_OUT_OF_SERVICE_WARNING);
+    });
+
+    it("does not warn when vehicle status is IN_USE", () => {
+      expect(
+        getLessonVehicleWarning({ ...healthyVehicle, status: "IN_USE" }),
+      ).toBeNull();
+    });
+
+    it("prioritizes inactive over maintenance and out of service", () => {
+      expect(
+        getLessonVehicleWarning({
+          isActive: false,
+          underMaintenance: true,
+          status: "OUT_OF_SERVICE",
+        }),
+      ).toBe(LESSON_VEHICLE_INACTIVE_WARNING);
+    });
   });
 
   it("getLessonVehicleLabel prefers registration number", () => {

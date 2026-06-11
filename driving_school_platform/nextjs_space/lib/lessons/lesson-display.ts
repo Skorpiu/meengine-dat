@@ -47,6 +47,44 @@ export function isLessonInstructorInactive(
   return instructor?.isAvailableForBooking === false;
 }
 
+export const LESSON_VEHICLE_INACTIVE_WARNING = "Assigned vehicle is inactive";
+
+export const LESSON_VEHICLE_MAINTENANCE_WARNING =
+  "Assigned vehicle is under maintenance";
+
+export const LESSON_VEHICLE_OUT_OF_SERVICE_WARNING =
+  "Assigned vehicle is out of service";
+
+export type LessonVehicleWarningSource = {
+  isActive?: boolean | null;
+  underMaintenance?: boolean | null;
+  status?: string | null;
+} | null;
+
+/** Persisted vehicle fields on the lesson nested select — not derived fleet status. */
+export function getLessonVehicleWarning(
+  vehicle?: LessonVehicleWarningSource,
+): string | null {
+  if (!vehicle) return null;
+  if (vehicle.isActive === false) return LESSON_VEHICLE_INACTIVE_WARNING;
+  if (vehicle.underMaintenance === true) {
+    return LESSON_VEHICLE_MAINTENANCE_WARNING;
+  }
+  if (vehicle.status === "MAINTENANCE") {
+    return LESSON_VEHICLE_MAINTENANCE_WARNING;
+  }
+  if (vehicle.status === "OUT_OF_SERVICE") {
+    return LESSON_VEHICLE_OUT_OF_SERVICE_WARNING;
+  }
+  return null;
+}
+
+export function isLessonVehicleProblematic(
+  vehicle?: LessonVehicleWarningSource,
+): boolean {
+  return getLessonVehicleWarning(vehicle) != null;
+}
+
 export function getLessonVehicleLabel(
   vehicle?: {
     registrationNumber?: string | null;

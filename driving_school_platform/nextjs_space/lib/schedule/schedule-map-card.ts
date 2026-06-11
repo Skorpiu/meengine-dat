@@ -1,6 +1,8 @@
 import {
+  getLessonVehicleWarning,
   getPracticalLessonNumberLabel,
   isExamLessonType,
+  isLessonVehicleProblematic,
   LESSON_INACTIVE_INSTRUCTOR_WARNING,
 } from "@/lib/lessons/lesson-display";
 import {
@@ -33,6 +35,9 @@ export type ScheduleMapCardLesson = {
     registrationNumber?: string | null;
     make?: string | null;
     model?: string | null;
+    isActive?: boolean | null;
+    underMaintenance?: boolean | null;
+    status?: string | null;
   } | null;
   category?: { name?: string | null };
 };
@@ -69,17 +74,30 @@ export function isScheduleMapLessonInstructorInactive(
   return instructor.isAvailableForBooking === false;
 }
 
-/** Schedule Map card color: status overrides, inactive instructor warning, then lesson type. */
+export function getScheduleMapLessonVehicleWarning(
+  lesson: Pick<ScheduleMapCardLesson, "vehicle">,
+): string | null {
+  return getLessonVehicleWarning(lesson.vehicle);
+}
+
+export function isScheduleMapLessonVehicleProblematic(
+  lesson: Pick<ScheduleMapCardLesson, "vehicle">,
+): boolean {
+  return isLessonVehicleProblematic(lesson.vehicle);
+}
+
+/** Schedule Map card color: status overrides, operational warnings, then lesson type. */
 export function getScheduleMapLessonColorClasses(input: {
   lessonType: string;
   status?: string | null;
   instructorInactive?: boolean;
+  vehicleProblematic?: boolean;
 }): string {
   if (input.status === "COMPLETED")
     return "bg-green-100 border-green-300 text-green-800";
   if (input.status === "CANCELLED")
     return "bg-red-100 border-red-300 text-red-800";
-  if (input.instructorInactive) {
+  if (input.instructorInactive || input.vehicleProblematic) {
     return "bg-red-50 border-red-400 text-red-900 ring-1 ring-red-300";
   }
   return getScheduleLessonTypeColorClasses(input.lessonType);
@@ -117,6 +135,11 @@ export function getScheduleMapChipLines(
 
   if (isScheduleMapLessonInstructorInactive(lesson)) {
     lines.push(LESSON_INACTIVE_INSTRUCTOR_WARNING);
+  } else {
+    const vehicleWarning = getScheduleMapLessonVehicleWarning(lesson);
+    if (vehicleWarning) {
+      lines.push(vehicleWarning);
+    }
   }
 
   const reg = lesson.vehicle?.registrationNumber?.trim();

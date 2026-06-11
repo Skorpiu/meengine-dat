@@ -45,6 +45,7 @@ import {
   getLessonVehicleLabel,
   getLessonStatusDisplayLabel,
   getPracticalLessonNumberLabel,
+  getLessonVehicleWarning,
   isLessonInstructorInactive,
   LESSON_INACTIVE_INSTRUCTOR_WARNING,
 } from "@/lib/lessons/lesson-display";
@@ -83,6 +84,9 @@ type LessonListItem = {
     registrationNumber?: string | null;
     make?: string | null;
     model?: string | null;
+    isActive?: boolean | null;
+    underMaintenance?: boolean | null;
+    status?: string | null;
   } | null;
 
   student?: {
@@ -244,6 +248,7 @@ export function LessonsManagementClient() {
     const studentName = getLessonParticipantName(lesson.student);
     const instructorName = getLessonInstructorName(lesson.instructor);
     const instructorInactive = isLessonInstructorInactive(lesson.instructor);
+    const vehicleWarning = getLessonVehicleWarning(lesson.vehicle);
     const locationLabel = getLessonLocationLabel(lesson);
     const vehicleLabel = getLessonVehicleLabel(lesson.vehicle);
     const practicalLabel = getPracticalLessonNumberLabel(lesson);
@@ -297,6 +302,11 @@ export function LessonsManagementClient() {
                 {vehicleLabel ? (
                   <div className="text-sm text-gray-500">
                     Vehicle: {vehicleLabel}
+                    {vehicleWarning ? (
+                      <span className="ml-2 text-xs font-medium text-red-700">
+                        ({vehicleWarning})
+                      </span>
+                    ) : null}
                   </div>
                 ) : null}
               </>
@@ -322,7 +332,15 @@ export function LessonsManagementClient() {
                 ) : null}
                 <div className="text-sm text-gray-500">
                   {selectedView === "DRIVING" && vehicleLabel ? (
-                    <>Vehicle: {vehicleLabel} • </>
+                    <>
+                      Vehicle: {vehicleLabel}
+                      {vehicleWarning ? (
+                        <span className="ml-2 text-xs font-medium text-red-700">
+                          ({vehicleWarning})
+                        </span>
+                      ) : null}
+                      {" • "}
+                    </>
                   ) : null}
                   {lesson.category?.name}
                 </div>

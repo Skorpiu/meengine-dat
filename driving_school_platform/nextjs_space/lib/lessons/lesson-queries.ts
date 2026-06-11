@@ -31,6 +31,9 @@ export const LESSON_LIST_VEHICLE_SELECT = {
   registrationNumber: true,
   make: true,
   model: true,
+  isActive: true,
+  underMaintenance: true,
+  status: true,
 } satisfies Prisma.VehicleSelect;
 
 export const LESSON_LIST_CATEGORY_SELECT = {

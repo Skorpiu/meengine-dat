@@ -334,23 +334,24 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `calendar-lessons-polish-v1b-edit-refresh` — UI navigation (DEC-031): edit lesson/exam returns to dashboard with Schedule Map refresh + date focus via `?focusDate=YYYY-MM-DD&scheduleRefresh=1`; `lib/schedule/schedule-map-navigation.ts`; `hooks/use-schedule-dashboard-controls.ts`; cancel/back without params; no schema/API
 - `calendar-lessons-polish-v1c-a-truncation-indicator` — read behaviour (DEC-031): `/admin/lessons` Recent/Upcoming honest truncation — `take: 51`, max 50 UI items; additive `recentHasMore` / `upcomingHasMore`; `admin-dashboard-lessons-truncation.ts`; UI notice + Schedule Map link; temporal window unchanged; no schema/API
 - `calendar-lessons-polish-v1c-b-upcoming-horizon` — read behaviour (DEC-031): Upcoming on `/admin/lessons` = today remaining + next 7 days (`ADMIN_DASHBOARD_UPCOMING_HORIZON_DAYS`); v1c-a truncation preserved; Recent/Current/Schedule Map unchanged; no schema/API
+- `calendar-lessons-polish-v1d-vehicle-warnings` — display-only (DEC-031): vehicle warnings on Schedule Map + `/admin/lessons`; `LESSON_LIST_VEHICLE_SELECT` + `getLessonVehicleWarning`; persisted fields only; no create/update blocking; no schema/API
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
 **Current recommended next (runtime/UX slice):**
 
-1. `calendar-lessons-polish-v1d-vehicle-warnings` (P2) — visual warning for vehicle inactive/maintenance on scheduled lessons. Approval: `APPROVED TO IMPLEMENT: calendar-lessons-polish-v1d-vehicle-warnings`
+1. `calendar-lessons-polish-v1e-student-warnings` (P3 deferred) — product policy first; separate approval when ready
 
 **Likely next:**
 
-2. `calendar-lessons-polish-v1e-student-warnings` (P3, separate approval — product policy first)
-3. `audit-log-tenant-context-foundation` (planning only)
-4. Product/packaging slices — after Calendar/Lessons v1d
-5. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)** — not recommended next
+2. `audit-log-tenant-context-foundation` (planning only)
+3. Product/packaging slices
+4. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)** — not recommended next
 
 **Product direction (backlog — deferred post-production polish):**
 
-- `competitive-product-discovery-v1` (P2 deferred; DEC-007) — **Competitive/Product Discovery:** pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros. **Deferred until** DAT core is cohesive, polished, and in production — not next while Calendar/Lessons polish is in flight.
+- `mobile-tablet-readiness-review-v1` (P2 deferred) — penultimate: responsive/PWA review when DAT core is production-solid; **before** Competitive/Product Discovery
+- `competitive-product-discovery-v1` (P2 deferred; DEC-007) — **after** mobile/tablet readiness; **Deferred until** DAT core is cohesive, polished, and in production
 
 **Deferred (not next — RLS revoke-only track closed):**
 
