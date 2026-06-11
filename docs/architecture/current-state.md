@@ -215,13 +215,14 @@ Documented and in use (docs/rules only; no runtime change):
 - `calendar-lessons-polish-v1a-consistency-ui` — UI + SSR mapping (DEC-031 slice 1): aligned `/admin/lessons` tab/dot colors with Schedule Map (`lib/lessons/lesson-type-ui-theme.ts`); `Practice #N`; Title Case status via `getLessonStatusDisplayLabel`; SSR `isAvailableForBooking` on admin/instructor/student dashboard seeds; inactive instructor warning deduplicated. No schema/migrations/API changes. Validated via `pnpm check`.
 - `calendar-lessons-polish-v1b-edit-refresh` — UI navigation (DEC-031 slice 2): after lesson/exam edit, return to admin/instructor dashboard with Schedule Map refresh + date focus via `?focusDate=YYYY-MM-DD&scheduleRefresh=1`; helpers `lib/schedule/schedule-map-navigation.ts`; shared hook `hooks/use-schedule-dashboard-controls.ts`; cancel/back unchanged (no query params). No schema/migrations/API/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (165 files / 1232 tests / build OK).
 - `calendar-lessons-polish-v1c-a-truncation-indicator` — read behaviour (DEC-031 slice 3a): honest truncation on `/admin/lessons` Recent/Upcoming — `getAdminDashboardLessons` uses `take: 51`, returns max 50 items; additive API flags `recentHasMore` / `upcomingHasMore`; helper `admin-dashboard-lessons-truncation.ts`; UI notice + link to Schedule Map when truncated; parser backward-compatible (defaults `false`); `current` and temporal window unchanged; Schedule Map unchanged. No schema/migrations/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (166 files / 1237 tests / build OK).
+- `calendar-lessons-polish-v1c-b-upcoming-horizon` — read behaviour (DEC-031 slice 3b): Upcoming on `/admin/lessons` covers today remaining + next 7 days (`ADMIN_DASHBOARD_UPCOMING_HORIZON_DAYS`); `getAdminDashboardUpcomingHorizonEnd`; v1c-a truncation preserved (`take: 51`, max 50 UI, `upcomingHasMore`); UI copy updated; Recent/Current/Schedule Map unchanged. No schema/migrations/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (167 files / 1245 tests / build OK).
 
 ### Likely next (smallest safe slices)
 
-1. **`calendar-lessons-polish-v1c-b-upcoming-horizon`** (P2) — extend Upcoming window beyond tomorrow on `/admin/lessons` (separate operational-semantics slice; v1c-a truncation done)
-2. `calendar-lessons-polish-v1d-vehicle-warnings` → `calendar-lessons-polish-v1e-student-warnings` (P2/P3, separate approvals)
+1. **`calendar-lessons-polish-v1d-vehicle-warnings`** (P2) — visual warning for vehicle inactive/maintenance on scheduled lessons; approval: `APPROVED TO IMPLEMENT: calendar-lessons-polish-v1d-vehicle-warnings`
+2. `calendar-lessons-polish-v1e-student-warnings` (P3, separate approval — product policy first)
 3. `audit-log-tenant-context-foundation` — planning only
-4. Product/packaging planning slices — see [roadmap-todo.md](./roadmap-todo.md) **P1 / Product and packaging** and [docs/product/](../product/) — after Calendar/Lessons v1c-b or parallel if prioritized
+4. Product/packaging planning slices — see [roadmap-todo.md](./roadmap-todo.md) **P1 / Product and packaging** and [docs/product/](../product/) — after Calendar/Lessons v1d or parallel if prioritized
 5. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4):** separate `/admin/instructors` route — **not** recommended next
 
 ### Product direction (backlog — deferred post-production polish)

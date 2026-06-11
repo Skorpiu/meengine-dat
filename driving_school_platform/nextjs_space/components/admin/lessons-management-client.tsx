@@ -570,7 +570,7 @@ export function LessonsManagementClient() {
               </CardTitle>
               <CardDescription>
                 {selectedView === "EXAMS" ? "Exams" : "Lessons"} scheduled for
-                today (not yet occurred) and tomorrow
+                today (not yet occurred) and the next 7 days
               </CardDescription>
             </CardHeader>
             <CardContent>
