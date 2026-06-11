@@ -1,9 +1,9 @@
 # Signup Hardening Plan
 
-**Status:** Phased plan — phase-1 signup controls **implemented**; invite / verification / rate limit / captcha **pending**.  
-**Branch context:** `auth-surface-doc-status` (documentation consolidation).  
-**Invite-only design:** [invite-only-foundation-plan.md](./invite-only-foundation-plan.md) — copy-link **implemented**; automatic email **pending**.  
-**Email provider evaluation:** [email-provider-evaluation.md](./email-provider-evaluation.md) — **password reset** and **email verification** depend on future provider integration (not implemented).  
+**Status:** Phased plan — phase-1 signup controls **implemented**; invite-only copy-link **implemented**; **Postmark + password reset + email verification** **implemented** (DAT_3.5). Remaining: distributed signup rate limit, captcha, optional auto-send invite email polish for public self-serve.  
+**Production cutline:** [production-readiness-cutline.md](../../../../docs/architecture/production-readiness-cutline.md) — controlled B2B uses invite-only + `PUBLIC_SIGNUP_ENABLED=false`; remaining rows below are **not** blocking that path.  
+**Invite-only design:** [invite-only-foundation-plan.md](./invite-only-foundation-plan.md) — copy-link **implemented**.  
+**Email:** [email-provider-postmark-runbook.md](../ops/email-provider-postmark-runbook.md), [auth-email-production-readiness-checklist.md](../ops/auth-email-production-readiness-checklist.md).  
 **Related audits:** [engineering-excellence-audit.md](./engineering-excellence-audit.md) (EEA-007), [dat-production-readiness-gaps.md](../ops/dat-production-readiness-gaps.md), [release-checklist.md](../ops/release-checklist.md).
 
 ---
@@ -12,15 +12,16 @@
 
 Snapshot of the **auth / public signup surface** as implemented in code (not aspirational).
 
-| Control                               | Status          | Notes                                                                                                                                                                                           |
-| ------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Demo signup disabled**              | **Implemented** | `Organization.isDemo` → **403** `demo_signup_disabled` on `POST /api/signup` (always, even if public signup env is on).                                                                         |
-| **Public signup disabled by default** | **Implemented** | Non-demo orgs blocked unless env opt-in; **403** `public_signup_disabled`.                                                                                                                      |
-| **Env explicit opt-in**               | **Implemented** | `PUBLIC_SIGNUP_ENABLED` — only trimmed case-insensitive `"true"` enables; see [`lib/signup/signup-policy.ts`](../../lib/signup/signup-policy.ts).                                               |
-| **Email verification**                | **Pending**     | `isEmailVerified` still set `true` on create; no provider, tokens, or login gate. Depends on [email-provider-evaluation.md](./email-provider-evaluation.md) implementation batches.             |
-| **Distributed rate limit**            | **Pending**     | Signup not throttled; in-memory `lib/rate-limit.ts` must not be used as production signup defense on serverless.                                                                                |
-| **Invite-only foundation**            | **Partial**     | Copy-link mode: admin UI on `/admin/users`, APIs, public accept page. **Email send pending** — see [email-provider-evaluation.md](./email-provider-evaluation.md). `inviteLink` only on create. |
-| **Captcha / Turnstile**               | **Pending**     | Not on `/auth/register` or signup API.                                                                                                                                                          |
+| Control                               | Status          | Notes                                                                                                                                                                                            |
+| ------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Demo signup disabled**              | **Implemented** | `Organization.isDemo` → **403** `demo_signup_disabled` on `POST /api/signup` (always, even if public signup env is on).                                                                          |
+| **Public signup disabled by default** | **Implemented** | Non-demo orgs blocked unless env opt-in; **403** `public_signup_disabled`.                                                                                                                       |
+| **Env explicit opt-in**               | **Implemented** | `PUBLIC_SIGNUP_ENABLED` — only trimmed case-insensitive `"true"` enables; see [`lib/signup/signup-policy.ts`](../../lib/signup/signup-policy.ts).                                                |
+| **Password reset (Postmark)**         | **Implemented** | DAT_3.5; production Postmark validated. See [auth-email-production-readiness-checklist.md](../ops/auth-email-production-readiness-checklist.md).                                                 |
+| **Email verification**                | **Implemented** | DAT_3.5; request/confirm flow + Postmark. Auth rate-limit foundation on sensitive auth routes. Not a blocker for invite-only B2B (`PUBLIC_SIGNUP_ENABLED=false`).                                |
+| **Distributed rate limit (signup)**   | **Pending**     | Public `POST /api/signup` not throttled with distributed store; in-memory `lib/rate-limit.ts` must not be used as production signup defense on serverless. **Not required for invite-only B2B.** |
+| **Invite-only foundation**            | **Implemented** | Copy-link: People → Onboarding, APIs, `/invitations/accept`. `inviteLink` on create; manual smoke [invitation-copy-link-smoke.md](../ops/invitation-copy-link-smoke.md).                         |
+| **Captcha / Turnstile**               | **Pending**     | Not on `/auth/register` or signup API. **Not required for invite-only B2B.**                                                                                                                     |
 
 ### Production and product guidance
 

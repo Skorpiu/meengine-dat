@@ -335,18 +335,25 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `calendar-lessons-polish-v1c-a-truncation-indicator` — read behaviour (DEC-031): `/admin/lessons` Recent/Upcoming honest truncation — `take: 51`, max 50 UI items; additive `recentHasMore` / `upcomingHasMore`; `admin-dashboard-lessons-truncation.ts`; UI notice + Schedule Map link; temporal window unchanged; no schema/API
 - `calendar-lessons-polish-v1c-b-upcoming-horizon` — read behaviour (DEC-031): Upcoming on `/admin/lessons` = today remaining + next 7 days (`ADMIN_DASHBOARD_UPCOMING_HORIZON_DAYS`); v1c-a truncation preserved; Recent/Current/Schedule Map unchanged; no schema/API
 - `calendar-lessons-polish-v1d-vehicle-warnings` — display-only (DEC-031): vehicle warnings on Schedule Map + `/admin/lessons`; `LESSON_LIST_VEHICLE_SELECT` + `getLessonVehicleWarning`; persisted fields only; no create/update blocking; no schema/API
+- `production-readiness-cutline-review-v1` — analysis-only production cutline after v1d; no runtime
+- `production-readiness-cutline-doc-v1` — docs-only cutline + DEC-032 + memory/smoke sync; `docs/architecture/production-readiness-cutline.md`
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
-**Current recommended next (runtime/UX slice):**
+**Production cutline (DEC-032):** Controlled first B2B client — invite-only, `PUBLIC_SIGNUP_ENABLED=false`, no live billing. See `docs/architecture/production-readiness-cutline.md`.
 
-1. `calendar-lessons-polish-v1e-student-warnings` (P3 deferred) — product policy first; separate approval when ready
+**Current recommended next:**
 
-**Likely next:**
+1. **Operator: deploy + smoke first B2B client** — human gate on target env (after cutline doc merged)
+2. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
 
-2. `audit-log-tenant-context-foundation` (planning only)
-3. Product/packaging slices
-4. `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)** — not recommended next
+**Do not open next:** `calendar-lessons-polish-v1e-student-warnings`, `mobile-tablet-readiness-review-v1`, `competitive-product-discovery-v1`, audit log runtime/migration, billing/checkout, instructor route split (D4).
+
+**Likely next after operator smoke:**
+
+3. `production-first-client-onboarding-record-v1` — operator evidence doc
+4. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
+5. `lesson-student-nullability-policy-review-v1` — policy docs (P2)
 
 **Product direction (backlog — deferred post-production polish):**
 
