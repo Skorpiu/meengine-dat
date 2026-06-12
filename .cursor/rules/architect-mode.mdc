@@ -337,6 +337,8 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `calendar-lessons-polish-v1d-vehicle-warnings` — display-only (DEC-031): vehicle warnings on Schedule Map + `/admin/lessons`; `LESSON_LIST_VEHICLE_SELECT` + `getLessonVehicleWarning`; persisted fields only; no create/update blocking; no schema/API
 - `production-readiness-cutline-review-v1` — analysis-only production cutline after v1d; no runtime
 - `production-readiness-cutline-doc-v1` — docs-only cutline + DEC-032 + memory/smoke sync; `docs/architecture/production-readiness-cutline.md`
+- `calendar-lessons-edit-flow-refresh-fix-v1` — analysis-only P1 blocker from first B2B operator smoke (edit PUT omitted instructor/student; wrong form default)
+- `calendar-lessons-edit-persistence-refresh-fix-v1` — PUT edit persists instructor (User.id) + student (DEC-033); `lesson-update-request-body.ts`; EditLessonClient fix; v1b refresh unchanged; no schema/migration
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
@@ -344,16 +346,17 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Current recommended next:**
 
-1. **Operator: deploy + smoke first B2B client** — human gate on target env (after cutline doc merged)
-2. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
+1. **Operator: re-smoke lesson edit on target env** — deploy persistence fix; confirm instructor/student persist + Schedule Map reflects changes
+2. `calendar-lessons-edit-modal-ux-v1` — modal edit UX (after persistence smoke green)
 
-**Do not open next:** `calendar-lessons-polish-v1e-student-warnings`, `mobile-tablet-readiness-review-v1`, `competitive-product-discovery-v1`, audit log runtime/migration, billing/checkout, instructor route split (D4).
+**Do not open next:** `calendar-lessons-polish-v1e-student-warnings`, `mobile-tablet-readiness-review-v1`, `competitive-product-discovery-v1`, audit log runtime/migration, billing/checkout, instructor route split (D4), `production-smoke-e2e-automation-v1` until manual edit smoke green.
 
-**Likely next after operator smoke:**
+**Likely next after edit smoke:**
 
 3. `production-first-client-onboarding-record-v1` — operator evidence doc
-4. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
-5. `lesson-student-nullability-policy-review-v1` — policy docs (P2)
+4. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
+5. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
+6. `lesson-student-nullability-policy-review-v1` — policy docs (P2)
 
 **Product direction (backlog — deferred post-production polish):**
 
