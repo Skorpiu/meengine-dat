@@ -195,7 +195,7 @@ describe("schedule-map-card", () => {
       student: { firstName: "João", lastName: "Silva" },
     });
 
-    expect(lines[0]).toBe("Practice #2 · 09:00");
+    expect(lines[0]).toBe("Practice No. 2 · 09:00");
   });
 
   it("prefers instructor name when requested", () => {

@@ -65,3 +65,47 @@ export async function getNextPracticalLessonNumber(
 
   return Math.max(maxAssigned, drivingCount) + 1;
 }
+
+export type PracticalLessonNumberReassignInput = {
+  organizationId: string;
+  lessonType: string;
+  existingStudentId: string | null;
+  nextStudentId: string | undefined;
+};
+
+/** True when a DRIVING lesson edit changes operational student and needs a new number. */
+export function shouldReassignPracticalLessonNumberOnStudentChange(
+  input: Pick<
+    PracticalLessonNumberReassignInput,
+    "lessonType" | "existingStudentId" | "nextStudentId"
+  >,
+): boolean {
+  if (!shouldAssignPracticalLessonNumber(input.lessonType)) {
+    return false;
+  }
+  if (input.nextStudentId === undefined) {
+    return false;
+  }
+  return input.nextStudentId !== input.existingStudentId;
+}
+
+/**
+ * Next practical lesson number when student changes on edit; undefined when unchanged.
+ * Call before `lesson.update` while the row still belongs to the previous student.
+ */
+export async function resolvePracticalLessonNumberOnStudentChange(
+  input: PracticalLessonNumberReassignInput,
+  db: PracticalLessonCounterDb = prisma,
+): Promise<number | undefined> {
+  if (!shouldReassignPracticalLessonNumberOnStudentChange(input)) {
+    return undefined;
+  }
+
+  return getNextPracticalLessonNumber(
+    {
+      organizationId: input.organizationId,
+      studentId: input.nextStudentId!,
+    },
+    db,
+  );
+}

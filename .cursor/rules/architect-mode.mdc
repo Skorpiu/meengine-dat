@@ -339,6 +339,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `production-readiness-cutline-doc-v1` — docs-only cutline + DEC-032 + memory/smoke sync; `docs/architecture/production-readiness-cutline.md`
 - `calendar-lessons-edit-flow-refresh-fix-v1` — analysis-only P1 blocker from first B2B operator smoke (edit PUT omitted instructor/student; wrong form default)
 - `calendar-lessons-edit-persistence-refresh-fix-v1` — PUT edit persists instructor (User.id) + student (DEC-033); `lesson-update-request-body.ts`; EditLessonClient fix; v1b refresh unchanged; no schema/migration
+- `calendar-lessons-edit-practical-number-reassign-v1` — DRIVING edit recalculates `practicalLessonNumber` on student change (DEC-034); `resolvePracticalLessonNumberOnStudentChange`; `Practice No. N` label; no schema/migration
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
@@ -346,10 +347,10 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Current recommended next:**
 
-1. **Operator: re-smoke lesson edit on target env** — deploy persistence fix; confirm instructor/student persist + Schedule Map reflects changes
-2. `calendar-lessons-edit-modal-ux-v1` — modal edit UX (after persistence smoke green)
+1. **Operator: manual smoke lesson edit + practical number reassign** — DRIVING A→B shows `Practice No. 1` (or next); instructor-only edit preserves number
+2. `calendar-lessons-edit-modal-ux-v1` — modal edit UX (after practical-number smoke green)
 
-**Do not open next:** `calendar-lessons-polish-v1e-student-warnings`, `mobile-tablet-readiness-review-v1`, `competitive-product-discovery-v1`, audit log runtime/migration, billing/checkout, instructor route split (D4), `production-smoke-e2e-automation-v1` until manual edit smoke green.
+**Do not open next:** `calendar-lessons-polish-v1e-student-warnings`, `mobile-tablet-readiness-review-v1`, `competitive-product-discovery-v1`, audit log runtime/migration, billing/checkout, instructor route split (D4), `production-smoke-e2e-automation-v1` until manual edit smoke green (persistence + practical number).
 
 **Likely next after edit smoke:**
 

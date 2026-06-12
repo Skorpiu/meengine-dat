@@ -97,6 +97,9 @@ export const LESSON_DETAIL_ACCESS_SELECT = {
   id: true,
   lessonDate: true,
   endTime: true,
+  studentId: true,
+  lessonType: true,
+  practicalLessonNumber: true,
   instructor: { select: { userId: true } },
 } satisfies Prisma.LessonSelect;
 
