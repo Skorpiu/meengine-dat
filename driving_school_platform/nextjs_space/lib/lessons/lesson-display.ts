@@ -134,7 +134,7 @@ export function getPracticalLessonNumberLabel(lesson: {
   ) {
     return null;
   }
-  return `Practice #${lesson.practicalLessonNumber}`;
+  return `Practice No. ${lesson.practicalLessonNumber}`;
 }
 
 /** Title Case status label for Lesson Management (matches LessonForm edit labels). */

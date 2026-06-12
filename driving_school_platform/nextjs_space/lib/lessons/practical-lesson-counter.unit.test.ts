@@ -2,7 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   countExistingPracticalLessonsForStudent,
   getNextPracticalLessonNumber,
+  resolvePracticalLessonNumberOnStudentChange,
   shouldAssignPracticalLessonNumber,
+  shouldReassignPracticalLessonNumberOnStudentChange,
 } from "./practical-lesson-counter";
 import { LESSON_TYPES } from "@/lib/constants";
 
@@ -79,6 +81,92 @@ describe("practical-lesson-counter", () => {
       await expect(
         getNextPracticalLessonNumber(scope, db as never),
       ).resolves.toBe(6);
+    });
+  });
+
+  describe("shouldReassignPracticalLessonNumberOnStudentChange", () => {
+    it("returns true for DRIVING when next student differs", () => {
+      expect(
+        shouldReassignPracticalLessonNumberOnStudentChange({
+          lessonType: LESSON_TYPES.DRIVING,
+          existingStudentId: "stu-a",
+          nextStudentId: "stu-b",
+        }),
+      ).toBe(true);
+    });
+
+    it("returns false when student is unchanged or omitted", () => {
+      expect(
+        shouldReassignPracticalLessonNumberOnStudentChange({
+          lessonType: LESSON_TYPES.DRIVING,
+          existingStudentId: "stu-a",
+          nextStudentId: "stu-a",
+        }),
+      ).toBe(false);
+      expect(
+        shouldReassignPracticalLessonNumberOnStudentChange({
+          lessonType: LESSON_TYPES.DRIVING,
+          existingStudentId: "stu-a",
+          nextStudentId: undefined,
+        }),
+      ).toBe(false);
+    });
+
+    it("returns false for non-DRIVING lesson types", () => {
+      expect(
+        shouldReassignPracticalLessonNumberOnStudentChange({
+          lessonType: LESSON_TYPES.THEORY,
+          existingStudentId: "stu-a",
+          nextStudentId: "stu-b",
+        }),
+      ).toBe(false);
+    });
+  });
+
+  describe("resolvePracticalLessonNumberOnStudentChange", () => {
+    const countMock = vi.fn();
+    const aggregateMock = vi.fn();
+    const db = {
+      lesson: {
+        count: countMock,
+        aggregate: aggregateMock,
+      },
+    };
+
+    beforeEach(() => {
+      vi.resetAllMocks();
+    });
+
+    it("returns undefined when student does not change", async () => {
+      await expect(
+        resolvePracticalLessonNumberOnStudentChange(
+          {
+            organizationId: "org-1",
+            lessonType: LESSON_TYPES.DRIVING,
+            existingStudentId: "stu-a",
+            nextStudentId: "stu-a",
+          },
+          db as never,
+        ),
+      ).resolves.toBeUndefined();
+      expect(countMock).not.toHaveBeenCalled();
+    });
+
+    it("delegates to getNext when DRIVING student changes", async () => {
+      countMock.mockResolvedValue(2);
+      aggregateMock.mockResolvedValue({ _max: { practicalLessonNumber: 2 } });
+
+      await expect(
+        resolvePracticalLessonNumberOnStudentChange(
+          {
+            organizationId: "org-1",
+            lessonType: LESSON_TYPES.DRIVING,
+            existingStudentId: "stu-a",
+            nextStudentId: "stu-b",
+          },
+          db as never,
+        ),
+      ).resolves.toBe(3);
     });
   });
 

@@ -7,6 +7,7 @@ const h = vi.hoisted(() => {
   const instructorFindFirstMock = vi.fn();
   const vehicleFindFirstMock = vi.fn();
   const studentFindFirstMock = vi.fn();
+  const resolvePracticalLessonNumberOnStudentChangeMock = vi.fn();
 
   return {
     lessonFindFirstMock,
@@ -15,6 +16,7 @@ const h = vi.hoisted(() => {
     instructorFindFirstMock,
     vehicleFindFirstMock,
     studentFindFirstMock,
+    resolvePracticalLessonNumberOnStudentChangeMock,
     prismaMock: {
       lesson: {
         findFirst: lessonFindFirstMock,
@@ -32,6 +34,11 @@ vi.mock("@/lib/db", () => ({
   prisma: h.prismaMock,
 }));
 
+vi.mock("@/lib/lessons/practical-lesson-counter", () => ({
+  resolvePracticalLessonNumberOnStudentChange: (...args: unknown[]) =>
+    h.resolvePracticalLessonNumberOnStudentChangeMock(...args),
+}));
+
 import {
   deleteAdminLesson,
   updateAdminLesson,
@@ -40,6 +47,7 @@ import {
 const INSTRUCTOR_USER_ID = "11111111-1111-1111-1111-111111111111";
 const INSTRUCTOR_ROW_ID = "instructor-row-1";
 const STUDENT_ID = "22222222-2222-2222-2222-222222222222";
+const OTHER_STUDENT_ID = "44444444-4444-4444-4444-444444444444";
 const OTHER_INSTRUCTOR_USER_ID = "33333333-3333-3333-3333-333333333333";
 const LESSON_ID = "lesson-1";
 
@@ -48,6 +56,9 @@ function futureLessonRow(overrides: Record<string, unknown> = {}) {
     id: LESSON_ID,
     lessonDate: new Date("2030-06-01T00:00:00.000Z"),
     endTime: "23:59",
+    studentId: STUDENT_ID,
+    lessonType: "DRIVING",
+    practicalLessonNumber: 3,
     instructor: { userId: INSTRUCTOR_USER_ID },
     ...overrides,
   };
@@ -56,6 +67,9 @@ function futureLessonRow(overrides: Record<string, unknown> = {}) {
 beforeEach(() => {
   vi.resetAllMocks();
   h.lessonFindFirstMock.mockResolvedValue(futureLessonRow());
+  h.resolvePracticalLessonNumberOnStudentChangeMock.mockResolvedValue(
+    undefined,
+  );
   h.lessonUpdateMock.mockResolvedValue({ id: LESSON_ID, status: "SCHEDULED" });
   h.lessonDeleteManyMock.mockResolvedValue({ count: 1 });
   h.instructorFindFirstMock.mockResolvedValue({
@@ -169,6 +183,145 @@ describe("updateAdminLesson", () => {
       status: 403,
     });
     expect(h.instructorFindFirstMock).not.toHaveBeenCalled();
+    expect(h.lessonUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it("recalculates practicalLessonNumber when DRIVING student changes", async () => {
+    h.resolvePracticalLessonNumberOnStudentChangeMock.mockResolvedValueOnce(1);
+    h.studentFindFirstMock.mockResolvedValueOnce({ id: OTHER_STUDENT_ID });
+
+    const result = await updateAdminLesson({
+      organizationId: "org-1",
+      lessonId: LESSON_ID,
+      actor: { id: "admin-1", role: "SUPER_ADMIN" },
+      payload: { studentId: OTHER_STUDENT_ID },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(
+      h.resolvePracticalLessonNumberOnStudentChangeMock,
+    ).toHaveBeenCalledWith({
+      organizationId: "org-1",
+      lessonType: "DRIVING",
+      existingStudentId: STUDENT_ID,
+      nextStudentId: OTHER_STUDENT_ID,
+    });
+    expect(h.lessonUpdateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          studentId: OTHER_STUDENT_ID,
+          practicalLessonNumber: 1,
+        }),
+      }),
+    );
+  });
+
+  it("assigns next counter value when new student already has DRIVING lessons", async () => {
+    h.resolvePracticalLessonNumberOnStudentChangeMock.mockResolvedValueOnce(3);
+    h.studentFindFirstMock.mockResolvedValueOnce({ id: OTHER_STUDENT_ID });
+
+    const result = await updateAdminLesson({
+      organizationId: "org-1",
+      lessonId: LESSON_ID,
+      actor: { id: "admin-1", role: "SUPER_ADMIN" },
+      payload: { studentId: OTHER_STUDENT_ID },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(h.lessonUpdateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ practicalLessonNumber: 3 }),
+      }),
+    );
+  });
+
+  it("preserves practicalLessonNumber when DRIVING student is unchanged", async () => {
+    const result = await updateAdminLesson({
+      organizationId: "org-1",
+      lessonId: LESSON_ID,
+      actor: { id: "admin-1", role: "SUPER_ADMIN" },
+      payload: { studentId: STUDENT_ID },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(
+      h.resolvePracticalLessonNumberOnStudentChangeMock,
+    ).toHaveBeenCalledWith({
+      organizationId: "org-1",
+      lessonType: "DRIVING",
+      existingStudentId: STUDENT_ID,
+      nextStudentId: STUDENT_ID,
+    });
+    const updateData = h.lessonUpdateMock.mock.calls[0]?.[0]?.data;
+    expect(updateData).not.toHaveProperty("practicalLessonNumber");
+  });
+
+  it("preserves practicalLessonNumber when only instructor or schedule fields change", async () => {
+    const result = await updateAdminLesson({
+      organizationId: "org-1",
+      lessonId: LESSON_ID,
+      actor: { id: "admin-1", role: "SUPER_ADMIN" },
+      payload: {
+        startTime: "10:00",
+        endTime: "11:00",
+        instructorId: INSTRUCTOR_USER_ID,
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(
+      h.resolvePracticalLessonNumberOnStudentChangeMock,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({ nextStudentId: undefined }),
+    );
+    const updateData = h.lessonUpdateMock.mock.calls[0]?.[0]?.data;
+    expect(updateData).not.toHaveProperty("practicalLessonNumber");
+  });
+
+  it("does not assign practicalLessonNumber for non-DRIVING lessons", async () => {
+    h.lessonFindFirstMock.mockResolvedValue(
+      futureLessonRow({ lessonType: "THEORY", practicalLessonNumber: null }),
+    );
+    h.studentFindFirstMock.mockResolvedValueOnce({ id: OTHER_STUDENT_ID });
+
+    const result = await updateAdminLesson({
+      organizationId: "org-1",
+      lessonId: LESSON_ID,
+      actor: { id: "admin-1", role: "SUPER_ADMIN" },
+      payload: { studentId: OTHER_STUDENT_ID },
+    });
+
+    expect(result.ok).toBe(true);
+    const updateData = h.lessonUpdateMock.mock.calls[0]?.[0]?.data;
+    expect(updateData).not.toHaveProperty("practicalLessonNumber");
+  });
+
+  it("blocks past lessons before practical number recalculation", async () => {
+    h.lessonFindFirstMock.mockResolvedValue({
+      id: LESSON_ID,
+      lessonDate: new Date("2020-01-01"),
+      endTime: "08:00",
+      studentId: STUDENT_ID,
+      lessonType: "DRIVING",
+      practicalLessonNumber: 3,
+      instructor: { userId: INSTRUCTOR_USER_ID },
+    });
+
+    const result = await updateAdminLesson({
+      organizationId: "org-1",
+      lessonId: LESSON_ID,
+      actor: { id: "admin-1", role: "SUPER_ADMIN" },
+      payload: { studentId: OTHER_STUDENT_ID },
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBe("Cannot modify a lesson that already ended");
+      expect(result.status).toBe(400);
+    }
+    expect(
+      h.resolvePracticalLessonNumberOnStudentChangeMock,
+    ).not.toHaveBeenCalled();
     expect(h.lessonUpdateMock).not.toHaveBeenCalled();
   });
 

@@ -14,6 +14,7 @@ import {
   LESSON_DETAIL_SELECT,
   type LessonDetailItem,
 } from "@/lib/lessons/lesson-queries";
+import { resolvePracticalLessonNumberOnStudentChange } from "@/lib/lessons/practical-lesson-counter";
 import { findOperationalStudentInOrg } from "@/lib/students/student-lesson-resolve";
 
 export type UpdateAdminLessonPayload = {
@@ -158,6 +159,14 @@ export async function updateAdminLesson(input: {
     resolvedStudentId = student.id;
   }
 
+  const practicalLessonNumber =
+    await resolvePracticalLessonNumberOnStudentChange({
+      organizationId: orgId,
+      lessonType: existingLesson.lessonType,
+      existingStudentId: existingLesson.studentId,
+      nextStudentId: resolvedStudentId,
+    });
+
   let durationMinutes: number | undefined;
   if (startTime && endTime) {
     const [startHour, startMin] = startTime.split(":").map(Number);
@@ -188,6 +197,7 @@ export async function updateAdminLesson(input: {
         instructorId: resolvedInstructorId,
       }),
       ...(resolvedStudentId !== undefined && { studentId: resolvedStudentId }),
+      ...(practicalLessonNumber !== undefined && { practicalLessonNumber }),
     },
     select: LESSON_DETAIL_SELECT,
   });

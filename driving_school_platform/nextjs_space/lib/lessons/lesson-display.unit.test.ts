@@ -167,7 +167,7 @@ describe("lesson-display", () => {
         lessonType: LESSON_TYPES.DRIVING,
         practicalLessonNumber: 1,
       }),
-    ).toBe("Practice #1");
+    ).toBe("Practice No. 1");
   });
 
   it("getLessonStatusDisplayLabel maps enums to Title Case", () => {
