@@ -140,6 +140,8 @@ interface ScheduleMapProps {
   onLessonsUpdate?: () => void | Promise<void>;
   /** Parent can call this to refetch immediately after booking (e.g. lesson create). */
   onRegisterRefetch?: (refetch: ScheduleMapRefetch) => void;
+  /** When provided, opens edit in parent (e.g. modal) instead of navigating away. */
+  onEditLesson?: (lessonId: string) => void;
   refreshKey?: number;
   /** When set (e.g. after booking), moves the calendar to that lesson date before refetch. */
   focusLessonDate?: string | null;
@@ -197,6 +199,7 @@ export function ScheduleMap({
   userRole = "student",
   onLessonsUpdate,
   onRegisterRefetch,
+  onEditLesson,
   refreshKey = 0,
   focusLessonDate = null,
 }: ScheduleMapProps) {
@@ -439,7 +442,11 @@ export function ScheduleMap({
   };
 
   const handleEditLesson = (lessonId: string) => {
-    // Navigate to edit page or open edit modal
+    if (onEditLesson) {
+      onEditLesson(lessonId);
+      return;
+    }
+
     router.push(`/admin/lessons/edit/${lessonId}`);
   };
 
