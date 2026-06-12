@@ -96,6 +96,7 @@ Re-run after deploys or demo persona changes. Supply credentials only through yo
 
 ## Related
 
+- [production-smoke-e2e.md](./production-smoke-e2e.md) — automated read-only production smoke (DEC-036; `DAT_SMOKE_*`).
 - [production-smoke-baseline.md](./production-smoke-baseline.md) — manual hosted smoke checklist.
 - [smoke-test-checklist.md](./smoke-test-checklist.md) — per-deploy re-smoke.
 - [client-demo-runbook.md](./client-demo-runbook.md) — Demo School Admin persona.

@@ -37,10 +37,12 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `calendar-lessons-edit-persistence-refresh-fix-v1` | **Done** | DEC-033: PUT persists instructor (User.id) + student; `lesson-update-request-body.ts`; edit form fix; no schema/migration |
 | `calendar-lessons-edit-practical-number-reassign-v1` | **Done** | DEC-034: DRIVING edit recalculates `practicalLessonNumber` when `studentId` changes; `Practice No. N` label; no schema/migration |
 | `calendar-lessons-edit-modal-ux-v1` | **Done** | DEC-035: Dialog edit in Schedule Map; admin + instructor dashboards; fallback page retained; no schema/API |
-| `production-smoke-e2e-automation-v1` | Pending | Next major engineering task after modal edit manual smoke green |
+| `production-smoke-e2e-readonly-v1` | **Done** | DEC-036: hybrid API + Playwright read-only smoke; env guards; `pnpm e2e:smoke:api` / `e2e:smoke:readonly` / `e2e:smoke:prod`; runbook [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md); no mutations; not in `pnpm check`/CI default |
+| `production-smoke-e2e-lesson-mutations-v1` | Pending | After dedicated smoke tenant provisioned; create/edit/modal/practical number |
+| `production-smoke-e2e-testids-v1` | Pending (optional) | UI `data-testid` if selectors fragile in mutation slice |
 | `production-smoke-runbook-sync-v1` | Pending | Residual runbook alignment if drift remains |
 | `audit-log-tenant-context-foundation-plan-v1` | Pending | Design doc + write-path contract only — **no migration** |
-| **First-client operator smoke (re-run lessons edit)** | Pending | Human gate after persistence fix deploy |
+| **First-client operator smoke (re-run lessons edit)** | **Done (operator)** | Manual smoke green after modal edit deploy (main `a9549bf`) |
 
 ---
 

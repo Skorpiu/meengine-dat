@@ -40,6 +40,9 @@
     "predev": "pnpm -s env:check",
     "test:e2e": "playwright test",
     "test:e2e:demo": "playwright test e2e/demo-smoke.spec.ts",
+    "e2e:smoke:api": "tsx scripts/smoke-production-api.ts",
+    "e2e:smoke:readonly": "playwright test e2e/production-smoke/ --grep @readonly",
+    "e2e:smoke:prod": "tsx scripts/smoke-production-api.ts && playwright test e2e/production-smoke/ --grep @readonly",
     "check": "pnpm -s lint && pnpm -s typecheck && pnpm -s test:run && pnpm -s build",
     "fix": "prettier --write . && eslint --fix .",
     "prepare": "cd ../.. && husky driving_school_platform/nextjs_space/.husky"

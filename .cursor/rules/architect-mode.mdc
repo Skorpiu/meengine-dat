@@ -341,6 +341,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `calendar-lessons-edit-persistence-refresh-fix-v1` — PUT edit persists instructor (User.id) + student (DEC-033); `lesson-update-request-body.ts`; EditLessonClient fix; v1b refresh unchanged; no schema/migration
 - `calendar-lessons-edit-practical-number-reassign-v1` — DRIVING edit recalculates `practicalLessonNumber` on student change (DEC-034); `resolvePracticalLessonNumberOnStudentChange`; `Practice No. N` label; no schema/migration
 - `calendar-lessons-edit-modal-ux-v1` — Schedule Map edit opens in Dialog (DEC-035); `EditLessonDialog` + `useEditLessonForm`; admin + instructor dashboards; fallback `/admin/lessons/edit/[id]` retained; no schema/API/persistence changes
+- `production-smoke-e2e-readonly-v1` — hybrid read-only automated smoke (DEC-036); `pnpm e2e:smoke:api` / `e2e:smoke:readonly` / `e2e:smoke:prod`; production opt-in guards; not in `pnpm check`/CI default; runbook `docs/ops/production-smoke-e2e.md`
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
@@ -348,12 +349,12 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Current recommended next:**
 
-1. **Operator: manual smoke modal edit** — admin + instructor Schedule Map; fallback page; create/delete/book dialogs unchanged
-2. `production-smoke-e2e-automation-v1` — next major engineering task after modal manual smoke green
+1. **Operator: provision dedicated smoke tenant** — `DAT_SMOKE_*` credentials for hosted mutation smoke
+2. `production-smoke-e2e-lesson-mutations-v1` — lesson create/edit/modal/practical number (smoke tenant only; after provisioning)
 
 **Do not open next:** `calendar-lessons-polish-v1e-student-warnings`, `mobile-tablet-readiness-review-v1`, `competitive-product-discovery-v1`, audit log runtime/migration, billing/checkout, instructor route split (D4).
 
-**Likely next after modal smoke:**
+**Likely next after mutation smoke slice:**
 
 3. `production-first-client-onboarding-record-v1` — operator evidence doc
 4. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
