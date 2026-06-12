@@ -3,7 +3,7 @@
  * Callers handle HTTP auth, tenant, demo guards, and vehicle feature gates.
  */
 import { prisma } from "@/lib/db";
-import { HTTP_STATUS } from "@/lib/constants";
+import { HTTP_STATUS, USER_ROLES } from "@/lib/constants";
 import type { LessonStatus } from "@prisma/client";
 import {
   assertInstructorCanMutateLesson,
@@ -14,6 +14,7 @@ import {
   LESSON_DETAIL_SELECT,
   type LessonDetailItem,
 } from "@/lib/lessons/lesson-queries";
+import { findOperationalStudentInOrg } from "@/lib/students/student-lesson-resolve";
 
 export type UpdateAdminLessonPayload = {
   lessonDate?: string;
@@ -21,6 +22,10 @@ export type UpdateAdminLessonPayload = {
   endTime?: string;
   status?: string;
   vehicleId?: number | null;
+  /** Instructor User.id — resolved to Instructor.id before persist. */
+  instructorId?: string;
+  /** Operational Student.id. */
+  studentId?: string;
 };
 
 type LessonMutationActor = {
@@ -46,7 +51,15 @@ export async function updateAdminLesson(input: {
   payload: UpdateAdminLessonPayload;
 }): Promise<UpdateAdminLessonResult> {
   const { organizationId: orgId, lessonId: id, actor, payload } = input;
-  const { lessonDate, startTime, endTime, status, vehicleId } = payload;
+  const {
+    lessonDate,
+    startTime,
+    endTime,
+    status,
+    vehicleId,
+    instructorId: instructorUserId,
+    studentId,
+  } = payload;
 
   const existingLesson = await prisma.lesson.findFirst({
     where: { id, organizationId: orgId },
@@ -74,6 +87,18 @@ export async function updateAdminLesson(input: {
     };
   }
 
+  if (
+    actor.role === USER_ROLES.INSTRUCTOR &&
+    instructorUserId &&
+    instructorUserId !== actor.id
+  ) {
+    return {
+      ok: false,
+      error: "Forbidden",
+      status: HTTP_STATUS.FORBIDDEN,
+    };
+  }
+
   if (vehicleId) {
     const vehicle = await prisma.vehicle.findFirst({
       where: { id: vehicleId, organizationId: orgId },
@@ -87,6 +112,50 @@ export async function updateAdminLesson(input: {
         status: HTTP_STATUS.NOT_FOUND,
       };
     }
+  }
+
+  let resolvedInstructorId: string | undefined;
+  if (instructorUserId) {
+    const instructor = await prisma.instructor.findFirst({
+      where: { userId: instructorUserId, organizationId: orgId },
+      select: { id: true, isAvailableForBooking: true },
+    });
+
+    if (!instructor) {
+      return {
+        ok: false,
+        error: "Instructor not found",
+        status: HTTP_STATUS.NOT_FOUND,
+      };
+    }
+
+    if (!instructor.isAvailableForBooking) {
+      return {
+        ok: false,
+        error: "instructor_not_available_for_booking",
+        status: HTTP_STATUS.CONFLICT,
+      };
+    }
+
+    resolvedInstructorId = instructor.id;
+  }
+
+  let resolvedStudentId: string | undefined;
+  if (studentId) {
+    const student = await findOperationalStudentInOrg({
+      organizationId: orgId,
+      studentId,
+    });
+
+    if (!student) {
+      return {
+        ok: false,
+        error: "Student not found",
+        status: HTTP_STATUS.NOT_FOUND,
+      };
+    }
+
+    resolvedStudentId = student.id;
   }
 
   let durationMinutes: number | undefined;
@@ -115,6 +184,10 @@ export async function updateAdminLesson(input: {
       ...(durationMinutes && { durationMinutes }),
       ...(status && { status: status as LessonStatus }),
       ...(vehicleId !== undefined && { vehicleId: vehicleId || null }),
+      ...(resolvedInstructorId !== undefined && {
+        instructorId: resolvedInstructorId,
+      }),
+      ...(resolvedStudentId !== undefined && { studentId: resolvedStudentId }),
     },
     select: LESSON_DETAIL_SELECT,
   });

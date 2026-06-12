@@ -33,9 +33,13 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | ----- | ------ | ----- |
 | `production-readiness-cutline-review-v1` | **Done (analysis)** | Analysis-only; approved |
 | `production-readiness-cutline-doc-v1` | **Done (docs)** | Cutline + DEC-032 + minimal smoke sync |
+| `calendar-lessons-edit-flow-refresh-fix-v1` | **Done (analysis)** | P1 blocker from operator smoke: PUT omitted instructor/student; wrong edit form default; v1b refresh OK |
+| `calendar-lessons-edit-persistence-refresh-fix-v1` | **Done** | DEC-033: PUT persists instructor (User.id) + student; `lesson-update-request-body.ts`; edit form fix; no schema/migration |
+| `calendar-lessons-edit-modal-ux-v1` | Pending | Modal/drawer edit in Schedule Map — after persistence fix + manual smoke |
+| `production-smoke-e2e-automation-v1` | Pending | Deferred until edit persistence fix merged + manual smoke green |
 | `production-smoke-runbook-sync-v1` | Pending | Residual runbook alignment if drift remains |
 | `audit-log-tenant-context-foundation-plan-v1` | Pending | Design doc + write-path contract only — **no migration** |
-| **First-client operator smoke** | Pending | Human gate: People, Schedule Map, invites, lessons, import dry-run on **target env** |
+| **First-client operator smoke (re-run lessons edit)** | Pending | Human gate after persistence fix deploy |
 
 ---
 

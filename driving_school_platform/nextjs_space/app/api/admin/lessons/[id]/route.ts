@@ -12,6 +12,7 @@ import {
   withErrorHandling,
 } from "@/lib/api-utils";
 import { HTTP_STATUS, API_MESSAGES, USER_ROLES } from "@/lib/constants";
+import type { UpdateAdminLessonPayload } from "@/lib/lessons/lesson-update-delete-service";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
 import { checkFeatureAccess } from "@/lib/middleware/feature-check";
 import { decideDemoRouteMutation } from "@/lib/demo/demo-route-guard";
@@ -115,7 +116,36 @@ export const PUT = withErrorHandling(
     }
 
     const body = await request.json();
-    const { lessonDate, startTime, endTime, status, vehicleId } = body;
+    const {
+      lessonDate,
+      startTime,
+      endTime,
+      status,
+      vehicleId,
+      instructorId: bodyInstructorId,
+      studentId,
+    } = body;
+
+    if (
+      user.role === USER_ROLES.INSTRUCTOR &&
+      bodyInstructorId &&
+      bodyInstructorId !== user.id
+    ) {
+      return errorResponse("Forbidden", HTTP_STATUS.FORBIDDEN);
+    }
+
+    const updatePayload: UpdateAdminLessonPayload = {
+      lessonDate,
+      startTime,
+      endTime,
+      status,
+      vehicleId,
+      studentId,
+    };
+
+    if (bodyInstructorId) {
+      updatePayload.instructorId = bodyInstructorId;
+    }
 
     if (vehicleId) {
       const featureCheck = await checkFeatureAccess(
@@ -134,7 +164,7 @@ export const PUT = withErrorHandling(
       organizationId: orgId,
       lessonId: params.id,
       actor: { id: user.id, role: user.role },
-      payload: { lessonDate, startTime, endTime, status, vehicleId },
+      payload: updatePayload,
     });
 
     if (!result.ok) {

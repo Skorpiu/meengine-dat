@@ -233,13 +233,17 @@ Documented and in use (docs/rules only; no runtime change):
 - `calendar-lessons-polish-v1d-vehicle-warnings` — display-only (DEC-031 slice 4): vehicle operational warnings on Schedule Map + `/admin/lessons` using persisted nested `vehicle.{isActive,underMaintenance,status}` on `LESSON_LIST_VEHICLE_SELECT`; helpers `getLessonVehicleWarning` / `isLessonVehicleProblematic`; red chip styling mirrors inactive instructor; no create/update blocking; expiry/service warnings deferred. No schema/migrations/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (167 files / 1255 tests / build OK).
 - `production-readiness-cutline-review-v1` — analysis-only production cutline after v1d; no runtime/schema changes.
 - `production-readiness-cutline-doc-v1` — docs-only cutline + DEC-032 + memory/smoke sync; [production-readiness-cutline.md](./production-readiness-cutline.md). No runtime/schema changes.
+- `calendar-lessons-edit-flow-refresh-fix-v1` — analysis-only P1 blocker from first B2B operator smoke: edit PUT omitted instructor/student; edit form `instructorUserId` used wrong id type; Schedule Map refresh v1b OK for persisted fields.
+- `calendar-lessons-edit-persistence-refresh-fix-v1` — runtime fix (DEC-033): `PUT /api/admin/lessons/[id]` accepts/persists `instructorId` (User.id → Instructor.id) and `studentId`; `buildAdminLessonUpdateRequestBody`; `EditLessonClient` fixed defaults + full PUT body; instructor role cannot reassign instructor; booking availability enforced on instructor change. Schedule Map v1b refresh unchanged. No schema/migration/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (168 files / 1271 tests / build OK).
 
 ### Likely next (production path)
 
-1. **Operator: deploy + smoke first B2B client** — human gate on target env (`migrate deploy`, smoke, invite QA); see [production-readiness-cutline.md](./production-readiness-cutline.md)
-2. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
+1. **Operator: re-smoke lesson edit on target env** — confirm instructor/student persist + Schedule Map reflects changes after `calendar-lessons-edit-persistence-refresh-fix-v1` deploy
+2. `calendar-lessons-edit-modal-ux-v1` — modal/drawer edit in Schedule Map context (UX slice; after persistence green)
 3. `production-first-client-onboarding-record-v1` — operator evidence doc after go-live
-4. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains after cutline batch minimal sync
+4. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
+5. `production-smoke-e2e-automation-v1` — deferred until manual edit-flow smoke confirms fix
+6. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
 
 ### Deferred (not next)
 

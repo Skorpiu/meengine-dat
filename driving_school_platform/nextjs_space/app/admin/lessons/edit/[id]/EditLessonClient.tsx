@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { lessonFormEditCardClass } from "@/components/lessons/lesson-form-styles";
 import { buildScheduleReturnHref } from "@/lib/schedule/schedule-map-navigation";
+import { buildAdminLessonUpdateRequestBody } from "@/lib/lessons/lesson-update-request-body";
 
 async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
   const contentType = response.headers.get("content-type") || "";
@@ -128,13 +129,7 @@ export function EditLessonClient({
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          lessonDate: payload.lessonDate,
-          startTime: payload.startTime,
-          endTime: payload.endTime,
-          status: payload.status,
-          vehicleId: payload.vehicleId ? parseInt(payload.vehicleId) : null,
-        }),
+        body: JSON.stringify(buildAdminLessonUpdateRequestBody(payload)),
       });
 
       if (response.status === 401 || response.status === 403) {
@@ -215,7 +210,11 @@ export function EditLessonClient({
             mode="edit"
             initialLesson={lesson}
             userRole={userRole === "SUPER_ADMIN" ? "SUPER_ADMIN" : "INSTRUCTOR"}
-            instructorUserId={lesson.instructorId}
+            instructorUserId={
+              userRole === "INSTRUCTOR"
+                ? lesson.instructor?.user?.id
+                : undefined
+            }
             onSubmit={handleSubmit}
             onCancel={handleCancel}
             submitButtonText="Update Lesson"

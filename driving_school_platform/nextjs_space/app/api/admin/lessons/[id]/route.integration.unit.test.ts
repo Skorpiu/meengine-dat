@@ -6,6 +6,8 @@ const h = vi.hoisted(() => {
   const lessonDeleteManyMock = vi.fn();
   const organizationFindUniqueMock = vi.fn();
   const vehicleFindFirstMock = vi.fn();
+  const instructorFindFirstMock = vi.fn();
+  const studentFindFirstMock = vi.fn();
 
   const prismaMock = {
     lesson: {
@@ -15,6 +17,8 @@ const h = vi.hoisted(() => {
     },
     organization: { findUnique: organizationFindUniqueMock },
     vehicle: { findFirst: vehicleFindFirstMock },
+    instructor: { findFirst: instructorFindFirstMock },
+    student: { findFirst: studentFindFirstMock },
   };
 
   return {
@@ -24,6 +28,8 @@ const h = vi.hoisted(() => {
     lessonDeleteManyMock,
     organizationFindUniqueMock,
     vehicleFindFirstMock,
+    instructorFindFirstMock,
+    studentFindFirstMock,
   };
 });
 
@@ -66,6 +72,10 @@ const guardTenantMock = guardTenantAuthenticatedRoute as unknown as ReturnType<
 >;
 
 const UUID_A = "11111111-1111-1111-1111-111111111111";
+const UUID_B = "22222222-2222-2222-2222-222222222222";
+const UUID_C = "33333333-3333-3333-3333-333333333333";
+const INSTRUCTOR_ROW_ID = "instructor-row-1";
+const STUDENT_ROW_ID = "student-row-1";
 const LESSON_ID = "lesson-abc";
 
 function futureLessonRow(overrides: Record<string, unknown> = {}) {
@@ -90,6 +100,11 @@ beforeEach(() => {
   h.lessonFindFirstMock.mockResolvedValue(futureLessonRow());
   h.lessonUpdateMock.mockResolvedValue({ id: LESSON_ID, status: "SCHEDULED" });
   h.lessonDeleteManyMock.mockResolvedValue({ count: 1 });
+  h.instructorFindFirstMock.mockResolvedValue({
+    id: INSTRUCTOR_ROW_ID,
+    isAvailableForBooking: true,
+  });
+  h.studentFindFirstMock.mockResolvedValue({ id: STUDENT_ROW_ID });
 });
 
 describe("GET /api/admin/lessons/[id]", () => {
@@ -163,6 +178,111 @@ describe("PUT /api/admin/lessons/[id]", () => {
       h.lessonUpdateMock.mock.calls[0]?.[0]?.select,
     );
     expect(body.data.lesson.startTime).toBe("10:00");
+  });
+
+  it("updates instructorId and studentId for admin", async () => {
+    h.lessonUpdateMock.mockResolvedValue(
+      sampleLessonDetailFixture({
+        id: LESSON_ID,
+        instructorId: INSTRUCTOR_ROW_ID,
+        studentId: STUDENT_ROW_ID,
+        instructor: {
+          id: INSTRUCTOR_ROW_ID,
+          userId: UUID_C,
+          user: { id: UUID_C, firstName: "New", lastName: "Instructor" },
+        },
+        student: {
+          id: STUDENT_ROW_ID,
+          userId: UUID_B,
+          firstName: "New",
+          lastName: "Student",
+          schoolStudentId: "26002",
+          user: { id: UUID_B, firstName: "New", lastName: "Student" },
+        },
+      }),
+    );
+
+    const res = await PUT(
+      new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          startTime: "10:00",
+          endTime: "11:00",
+          instructorId: UUID_C,
+          studentId: STUDENT_ROW_ID,
+        }),
+      }) as any,
+      { params: { id: LESSON_ID } } as any,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expectAdminLessonPutResponseContract(body);
+    expect(h.instructorFindFirstMock).toHaveBeenCalledWith({
+      where: { userId: UUID_C, organizationId: "org1" },
+      select: { id: true, isAvailableForBooking: true },
+    });
+    expect(h.lessonUpdateMock.mock.calls[0]?.[0]?.data).toEqual(
+      expect.objectContaining({
+        instructorId: INSTRUCTOR_ROW_ID,
+        studentId: STUDENT_ROW_ID,
+      }),
+    );
+    expect(body.data.lesson.instructor.user.firstName).toBe("New");
+    expect(body.data.lesson.student.firstName).toBe("New");
+  });
+
+  it("returns 404 when instructor is not in organization", async () => {
+    h.instructorFindFirstMock.mockResolvedValue(null);
+
+    const res = await PUT(
+      new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ instructorId: UUID_C }),
+      }) as any,
+      { params: { id: LESSON_ID } } as any,
+    );
+
+    expect(res.status).toBe(404);
+    expect(h.lessonUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 404 when student is not in organization", async () => {
+    h.studentFindFirstMock.mockResolvedValue(null);
+
+    const res = await PUT(
+      new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ studentId: STUDENT_ROW_ID }),
+      }) as any,
+      { params: { id: LESSON_ID } } as any,
+    );
+
+    expect(res.status).toBe(404);
+    expect(h.lessonUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it("forbids instructor role from assigning another instructor", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "INSTRUCTOR",
+      organizationId: "org1",
+    });
+
+    const res = await PUT(
+      new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ instructorId: UUID_C }),
+      }) as any,
+      { params: { id: LESSON_ID } } as any,
+    );
+
+    expect(res.status).toBe(403);
+    expect(h.lessonUpdateMock).not.toHaveBeenCalled();
   });
 
   it("returns 404 when lesson not found", async () => {
