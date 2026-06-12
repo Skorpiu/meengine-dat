@@ -237,11 +237,12 @@ Documented and in use (docs/rules only; no runtime change):
 - `calendar-lessons-edit-persistence-refresh-fix-v1` — runtime fix (DEC-033): `PUT /api/admin/lessons/[id]` accepts/persists `instructorId` (User.id → Instructor.id) and `studentId`; `buildAdminLessonUpdateRequestBody`; `EditLessonClient` fixed defaults + full PUT body; instructor role cannot reassign instructor; booking availability enforced on instructor change. Schedule Map v1b refresh unchanged. No schema/migration/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (168 files / 1271 tests / build OK).
 - `calendar-lessons-edit-practical-number-reassign-v1` — runtime fix (DEC-034): DRIVING lesson edit recalculates `practicalLessonNumber` when operational `studentId` changes via `resolvePracticalLessonNumberOnStudentChange` / `getNextPracticalLessonNumber`; `LESSON_DETAIL_ACCESS_SELECT` extended; display `Practice No. N`. No renumber of other lessons; no schema/migration/auth/RLS/billing/demo-guard changes.
 - `calendar-lessons-edit-modal-ux-v1` — UI-only (DEC-035): Schedule Map edit opens in `EditLessonDialog` on admin + instructor dashboards; shared `useEditLessonForm` hook; GET/PUT unchanged; modal success uses `handleLessonBooked`; `/admin/lessons/edit/[id]` fallback + v1b return preserved. No persistence/numbering/schema/auth/API changes.
+- `production-smoke-e2e-readonly-v1` — test infra (DEC-036): hybrid read-only automated smoke — `pnpm e2e:smoke:api`, `e2e:smoke:readonly`, `e2e:smoke:prod`; env guards (`DAT_E2E_ALLOW_PRODUCTION`, `DAT_SMOKE_ALLOWED_HOSTS`); API health + signup blocked + Playwright auth/page loads; zero persisted writes; not in `pnpm check`/CI default. Runbook: `driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md`.
 
 ### Likely next (production path)
 
-1. **Operator: manual smoke modal edit** — admin + instructor Schedule Map; fallback page; practical number unchanged (DEC-034)
-2. `production-smoke-e2e-automation-v1` — next major engineering task after modal manual smoke green
+1. **Operator: provision dedicated smoke tenant** — credentials for `DAT_SMOKE_*`; then lesson mutation automation
+2. `production-smoke-e2e-lesson-mutations-v1` — create/edit/modal/practical number (smoke tenant only)
 3. `production-first-client-onboarding-record-v1` — operator evidence doc after go-live
 4. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
 5. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
