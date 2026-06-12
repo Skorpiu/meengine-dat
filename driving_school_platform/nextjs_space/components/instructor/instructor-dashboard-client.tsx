@@ -8,6 +8,7 @@ import {
 } from "@/components/schedule/schedule-map";
 import { BookLessonDialog } from "@/components/instructor/book-lesson-dialog-instructor";
 import { BookExamDialog } from "@/components/instructor/book-exam-dialog-instructor";
+import { EditLessonDialog } from "@/components/admin/edit-lesson-dialog";
 import { useScheduleDashboardControls } from "@/hooks/use-schedule-dashboard-controls";
 
 interface InstructorDashboardClientProps {
@@ -21,6 +22,8 @@ export function InstructorDashboardClient({
 }: InstructorDashboardClientProps) {
   const [bookLessonOpen, setBookLessonOpen] = useState(false);
   const [bookExamOpen, setBookExamOpen] = useState(false);
+  const [isEditLessonDialogOpen, setIsEditLessonDialogOpen] = useState(false);
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
   const {
     refreshKey,
     focusLessonDate,
@@ -29,12 +32,26 @@ export function InstructorDashboardClient({
     handleLessonBooked,
   } = useScheduleDashboardControls();
 
-  const onLessonBooked = async (
+  const onScheduleMutationSuccess = async (
     meta?: Parameters<typeof handleLessonBooked>[0],
   ) => {
     setBookLessonOpen(false);
     setBookExamOpen(false);
+    setIsEditLessonDialogOpen(false);
+    setEditingLessonId(null);
     await handleLessonBooked(meta);
+  };
+
+  const handleEditLesson = (lessonId: string) => {
+    setEditingLessonId(lessonId);
+    setIsEditLessonDialogOpen(true);
+  };
+
+  const handleEditLessonOpenChange = (open: boolean) => {
+    setIsEditLessonDialogOpen(open);
+    if (!open) {
+      setEditingLessonId(null);
+    }
   };
 
   return (
@@ -57,6 +74,7 @@ export function InstructorDashboardClient({
           userRole="instructor"
           onLessonsUpdate={refreshSchedule}
           onRegisterRefetch={registerScheduleRefetch}
+          onEditLesson={handleEditLesson}
           refreshKey={refreshKey}
           focusLessonDate={focusLessonDate}
         />
@@ -65,15 +83,24 @@ export function InstructorDashboardClient({
       <BookLessonDialog
         open={bookLessonOpen}
         onOpenChange={setBookLessonOpen}
-        onSuccess={onLessonBooked}
+        onSuccess={onScheduleMutationSuccess}
         instructorUserId={instructorUserId}
       />
 
       <BookExamDialog
         open={bookExamOpen}
         onOpenChange={setBookExamOpen}
-        onSuccess={onLessonBooked}
+        onSuccess={onScheduleMutationSuccess}
         instructorUserId={instructorUserId}
+      />
+
+      <EditLessonDialog
+        open={isEditLessonDialogOpen}
+        lessonId={editingLessonId}
+        userRole="INSTRUCTOR"
+        userId={instructorUserId}
+        onOpenChange={handleEditLessonOpenChange}
+        onSuccess={onScheduleMutationSuccess}
       />
     </>
   );

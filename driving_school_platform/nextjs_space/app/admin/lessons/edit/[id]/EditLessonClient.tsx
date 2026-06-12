@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -13,32 +13,15 @@ import {
   LessonForm,
   type LessonFormPayload,
 } from "@/components/lessons/LessonForm";
-import { Lesson } from "@/lib/types";
-import toast from "react-hot-toast";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { lessonFormEditCardClass } from "@/components/lessons/lesson-form-styles";
 import { buildScheduleReturnHref } from "@/lib/schedule/schedule-map-navigation";
-import { buildAdminLessonUpdateRequestBody } from "@/lib/lessons/lesson-update-request-body";
-
-async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
-  const contentType = response.headers.get("content-type") || "";
-  if (!contentType.toLowerCase().includes("application/json")) return null;
-  try {
-    return (await response.json()) as T;
-  } catch {
-    return null;
-  }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function hasData(value: unknown): value is { data: unknown } {
-  return isRecord(value) && "data" in value;
-}
+import {
+  useEditLessonForm,
+  type EditLessonAccessDeniedReason,
+} from "@/hooks/use-edit-lesson-form";
 
 interface EditLessonClientProps {
   lessonId: string;
@@ -52,104 +35,35 @@ export function EditLessonClient({
   userId,
 }: EditLessonClientProps) {
   const router = useRouter();
-  const [lesson, setLesson] = useState<Lesson | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Compute back href based on user role
   const backHref = userRole === "SUPER_ADMIN" ? "/admin" : "/instructor";
 
-  const fetchLesson = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await fetch(`/api/admin/lessons/${lessonId}`, {
-        credentials: "include",
-        cache: "no-store",
-      });
-
-      if (response.status === 401 || response.status === 403) {
-        toast.error("Unauthorized access");
-        router.push(backHref);
-        return;
-      }
-
-      if (response.status === 404) {
-        setError("Lesson not found");
-        toast.error("Lesson not found");
+  const handleAccessDenied = useCallback(
+    (reason: EditLessonAccessDeniedReason) => {
+      if (reason === "not_found") {
         setTimeout(() => {
           router.push(backHref);
         }, 2000);
         return;
       }
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch lesson");
-      }
+      router.push(backHref);
+    },
+    [backHref, router],
+  );
 
-      const result = await tryReadJson<unknown>(response);
-      if (!result) throw new Error("Failed to parse lesson response");
-
-      // Handle both response formats: { data: lesson } or lesson directly
-      const lessonDataUnknown =
-        hasData(result) && result.data != null ? result.data : result;
-      if (!lessonDataUnknown || !isRecord(lessonDataUnknown)) {
-        throw new Error("Invalid lesson response shape");
-      }
-      const lessonData = lessonDataUnknown as unknown as Lesson;
-
-      // Verify instructor ownership if user is an instructor
-      if (
-        userRole === "INSTRUCTOR" &&
-        lessonData?.instructor?.user?.id !== userId
-      ) {
-        toast.error("You can only edit your own lessons");
-        router.push(backHref);
-        return;
-      }
-
-      setLesson(lessonData);
-    } catch (err) {
-      console.error("Error fetching lesson:", err);
-      setError("Failed to load lesson");
-      toast.error("Failed to load lesson");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [backHref, lessonId, router, userId, userRole]);
-
-  useEffect(() => {
-    void fetchLesson();
-  }, [fetchLesson]);
+  const { lesson, isLoading, error, submit } = useEditLessonForm({
+    lessonId,
+    userRole,
+    userId,
+    enabled: true,
+    onAccessDenied: handleAccessDenied,
+  });
 
   const handleSubmit = async (payload: LessonFormPayload) => {
-    try {
-      const response = await fetch(`/api/admin/lessons/${lessonId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(buildAdminLessonUpdateRequestBody(payload)),
-      });
+    const ok = await submit(payload);
+    if (!ok) return;
 
-      if (response.status === 401 || response.status === 403) {
-        toast.error("Unauthorized access");
-        router.push(backHref);
-        return;
-      }
-
-      const data = await tryReadJson<{ error?: string }>(response);
-
-      if (response.ok) {
-        toast.success("Lesson updated successfully!");
-        router.push(buildScheduleReturnHref(backHref, payload.lessonDate));
-      } else {
-        toast.error(data?.error || "Failed to update lesson");
-      }
-    } catch (error) {
-      console.error("Error updating lesson:", error);
-      toast.error("An error occurred while updating the lesson");
-    }
+    router.push(buildScheduleReturnHref(backHref, payload.lessonDate));
   };
 
   const handleCancel = () => {

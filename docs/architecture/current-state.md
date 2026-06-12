@@ -236,15 +236,15 @@ Documented and in use (docs/rules only; no runtime change):
 - `calendar-lessons-edit-flow-refresh-fix-v1` — analysis-only P1 blocker from first B2B operator smoke: edit PUT omitted instructor/student; edit form `instructorUserId` used wrong id type; Schedule Map refresh v1b OK for persisted fields.
 - `calendar-lessons-edit-persistence-refresh-fix-v1` — runtime fix (DEC-033): `PUT /api/admin/lessons/[id]` accepts/persists `instructorId` (User.id → Instructor.id) and `studentId`; `buildAdminLessonUpdateRequestBody`; `EditLessonClient` fixed defaults + full PUT body; instructor role cannot reassign instructor; booking availability enforced on instructor change. Schedule Map v1b refresh unchanged. No schema/migration/auth/RLS/billing/demo-guard changes. Validated via `pnpm check` (168 files / 1271 tests / build OK).
 - `calendar-lessons-edit-practical-number-reassign-v1` — runtime fix (DEC-034): DRIVING lesson edit recalculates `practicalLessonNumber` when operational `studentId` changes via `resolvePracticalLessonNumberOnStudentChange` / `getNextPracticalLessonNumber`; `LESSON_DETAIL_ACCESS_SELECT` extended; display `Practice No. N`. No renumber of other lessons; no schema/migration/auth/RLS/billing/demo-guard changes.
+- `calendar-lessons-edit-modal-ux-v1` — UI-only (DEC-035): Schedule Map edit opens in `EditLessonDialog` on admin + instructor dashboards; shared `useEditLessonForm` hook; GET/PUT unchanged; modal success uses `handleLessonBooked`; `/admin/lessons/edit/[id]` fallback + v1b return preserved. No persistence/numbering/schema/auth/API changes.
 
 ### Likely next (production path)
 
-1. **Operator: manual smoke lesson edit + practical number reassign** — move DRIVING lesson A→B; confirm `Practice No. 1` / next sequence; instructor-only edit preserves number
-2. `calendar-lessons-edit-modal-ux-v1` — modal/drawer edit in Schedule Map context (UX slice; after practical-number smoke green)
+1. **Operator: manual smoke modal edit** — admin + instructor Schedule Map; fallback page; practical number unchanged (DEC-034)
+2. `production-smoke-e2e-automation-v1` — next major engineering task after modal manual smoke green
 3. `production-first-client-onboarding-record-v1` — operator evidence doc after go-live
 4. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
-5. `production-smoke-e2e-automation-v1` — deferred until manual edit-flow smoke confirms persistence + practical number
-6. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
+5. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
 
 ### Deferred (not next)
 

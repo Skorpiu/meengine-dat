@@ -252,7 +252,10 @@ export default async function AdminDashboard() {
         </div>
 
         {/* Schedule Map with Booking Controls */}
-        <AdminDashboardClient lessons={scheduledLessonsForMap} />
+        <AdminDashboardClient
+          lessons={scheduledLessonsForMap}
+          adminUserId={session.user.id}
+        />
       </div>
     </div>
   );
