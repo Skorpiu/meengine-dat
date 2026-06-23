@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import {
+  isInstructorLicenseExpiryTodayOrFuture,
+  normalizeInstructorLicenseNumber,
+  parseInstructorLicenseExpiryDate,
+} from "@/lib/instructors/instructor-license-utils";
+import {
   INVITATION_LIST_INCLUDE,
   mapInvitationDto,
   type InvitationDto,
@@ -26,6 +31,8 @@ export type CreateInvitationInput = {
   baseUrl: string;
   expiresInDays?: number;
   studentId?: string;
+  instructorLicenseNumber?: string;
+  instructorLicenseExpiry?: string;
   tx?: Prisma.TransactionClient;
 };
 
@@ -41,6 +48,9 @@ export type CreateInvitationResult =
       error: string;
       code:
         | "invalid_role"
+        | "invalid_instructor_license"
+        | "instructor_license_exists"
+        | "instructor_license_pending_invitation"
         | "pending_invitation_exists"
         | "user_already_exists"
         | "invalid_email";
@@ -115,6 +125,80 @@ export async function createInvitation(
     };
   }
 
+  let instructorLicenseNumber: string | undefined;
+  let instructorLicenseExpiry: Date | undefined;
+
+  if (input.role === "INSTRUCTOR") {
+    const licenseNumber = normalizeInstructorLicenseNumber(
+      input.instructorLicenseNumber ?? "",
+    );
+    const licenseExpiryStr = input.instructorLicenseExpiry?.trim() ?? "";
+
+    if (!licenseNumber || !licenseExpiryStr) {
+      return {
+        ok: false,
+        error: "Instructor license number and expiration date are required",
+        code: "invalid_instructor_license",
+        status: 400,
+      };
+    }
+
+    if (!isInstructorLicenseExpiryTodayOrFuture(licenseExpiryStr)) {
+      return {
+        ok: false,
+        error:
+          "Instructor license expiration date must be today or in the future",
+        code: "invalid_instructor_license",
+        status: 400,
+      };
+    }
+
+    const parsedExpiry = parseInstructorLicenseExpiryDate(licenseExpiryStr);
+    if (!parsedExpiry) {
+      return {
+        ok: false,
+        error: "Invalid instructor license expiration date",
+        code: "invalid_instructor_license",
+        status: 400,
+      };
+    }
+
+    const existingInstructor = await db.instructor.findFirst({
+      where: { instructorLicenseNumber: licenseNumber },
+      select: { id: true },
+    });
+
+    if (existingInstructor) {
+      return {
+        ok: false,
+        error: "An instructor with this license number already exists",
+        code: "instructor_license_exists",
+        status: 409,
+      };
+    }
+
+    const existingPendingLicense = await db.userInvitation.findFirst({
+      where: {
+        status: "PENDING",
+        role: "INSTRUCTOR",
+        instructorLicenseNumber: licenseNumber,
+      },
+      select: { id: true },
+    });
+
+    if (existingPendingLicense) {
+      return {
+        ok: false,
+        error: "A pending invitation already exists for this license number",
+        code: "instructor_license_pending_invitation",
+        status: 409,
+      };
+    }
+
+    instructorLicenseNumber = licenseNumber;
+    instructorLicenseExpiry = parsedExpiry;
+  }
+
   const organization = await db.organization.findUnique({
     where: { id: input.organizationId },
     select: { name: true },
@@ -137,6 +221,12 @@ export async function createInvitation(
       expiresAt,
       createdByUserId: input.createdByUserId,
       ...(input.studentId ? { studentId: input.studentId } : {}),
+      ...(instructorLicenseNumber
+        ? {
+            instructorLicenseNumber,
+            instructorLicenseExpiry,
+          }
+        : {}),
     },
     include: INVITATION_LIST_INCLUDE,
   });

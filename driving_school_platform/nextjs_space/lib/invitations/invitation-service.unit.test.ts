@@ -8,6 +8,7 @@ const h = vi.hoisted(() => {
   const countMock = vi.fn();
   const userFindUniqueMock = vi.fn();
   const organizationFindUniqueMock = vi.fn();
+  const instructorFindFirstMock = vi.fn();
   const studentFindFirstMock = vi.fn();
   const studentUpdateMock = vi.fn();
   const transactionMock = vi.fn();
@@ -34,6 +35,7 @@ const h = vi.hoisted(() => {
     countMock,
     userFindUniqueMock,
     organizationFindUniqueMock,
+    instructorFindFirstMock,
     studentFindFirstMock,
     studentUpdateMock,
     transactionMock,
@@ -44,6 +46,9 @@ const h = vi.hoisted(() => {
       },
       organization: {
         findUnique: organizationFindUniqueMock,
+      },
+      instructor: {
+        findFirst: instructorFindFirstMock,
       },
       userInvitation: {
         findFirst: findFirstMock,
@@ -109,6 +114,7 @@ beforeEach(() => {
     async (fn: (tx: typeof h.txMock) => unknown) => fn(h.txMock),
   );
   h.organizationFindUniqueMock.mockResolvedValue({ name: "Demo School" });
+  h.instructorFindFirstMock.mockResolvedValue(null);
 });
 
 describe("createInvitation", () => {
@@ -201,6 +207,8 @@ describe("createInvitation", () => {
       email: "student@school.test",
       role: "INSTRUCTOR",
       baseUrl: "https://school.example.com/",
+      instructorLicenseNumber: "LIC-12345",
+      instructorLicenseExpiry: "2027-06-15",
     });
 
     expect(result.ok).toBe(true);
@@ -216,7 +224,83 @@ describe("createInvitation", () => {
       /^[a-f0-9]{64}$/,
     );
     expect(h.createMock.mock.calls[0][0].data.role).toBe("INSTRUCTOR");
+    expect(h.createMock.mock.calls[0][0].data.instructorLicenseNumber).toBe(
+      "LIC-12345",
+    );
+    expect(
+      h.createMock.mock.calls[0][0].data.instructorLicenseExpiry,
+    ).toBeInstanceOf(Date);
     expect(result.organizationName).toBe("Demo School");
+  });
+
+  it("persists instructor license fields for INSTRUCTOR invitations", async () => {
+    h.createMock.mockResolvedValue(
+      sampleRow({
+        role: "INSTRUCTOR",
+        email: "inst@school.test",
+        instructorLicenseNumber: "LIC-999",
+        instructorLicenseExpiry: new Date("2028-01-01T00:00:00.000Z"),
+      }),
+    );
+
+    const result = await createInvitation({
+      organizationId: "org-a",
+      createdByUserId: "admin-1",
+      email: "inst@school.test",
+      role: "INSTRUCTOR",
+      baseUrl: "https://school.example.com",
+      instructorLicenseNumber: "LIC-999",
+      instructorLicenseExpiry: "2028-01-01",
+    });
+
+    expect(result.ok).toBe(true);
+    expect(h.instructorFindFirstMock).toHaveBeenCalledWith({
+      where: { instructorLicenseNumber: "LIC-999" },
+      select: { id: true },
+    });
+    expect(h.createMock.mock.calls[0][0].data).toMatchObject({
+      instructorLicenseNumber: "LIC-999",
+    });
+  });
+
+  it("blocks INSTRUCTOR invitation when license number already exists", async () => {
+    h.instructorFindFirstMock.mockResolvedValue({ id: "inst-existing" });
+
+    const result = await createInvitation({
+      organizationId: "org-a",
+      createdByUserId: "admin-1",
+      email: "inst@school.test",
+      role: "INSTRUCTOR",
+      baseUrl: "https://school.example.com",
+      instructorLicenseNumber: "LIC-DUP",
+      instructorLicenseExpiry: "2028-01-01",
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "An instructor with this license number already exists",
+      code: "instructor_license_exists",
+      status: 409,
+    });
+    expect(h.createMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks INSTRUCTOR invitation without license fields", async () => {
+    const result = await createInvitation({
+      organizationId: "org-a",
+      createdByUserId: "admin-1",
+      email: "inst@school.test",
+      role: "INSTRUCTOR",
+      baseUrl: "https://school.example.com",
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Instructor license number and expiration date are required",
+      code: "invalid_instructor_license",
+      status: 400,
+    });
+    expect(h.createMock).not.toHaveBeenCalled();
   });
 
   it("uses transactional client when tx is provided", async () => {

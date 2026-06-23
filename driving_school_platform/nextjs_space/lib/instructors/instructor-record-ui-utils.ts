@@ -1,3 +1,4 @@
+import { isInvitePendingInstructorLicenseNumber } from "@/lib/instructors/instructor-license-utils";
 import type { InstructorRecordUserDto } from "@/lib/instructors/instructor-record-ui-types";
 import {
   PEOPLE_APP_ACCESS_SECTION_THEME,
@@ -193,8 +194,9 @@ export function filterInstructorRecordUsersBySearch(
 export function hasOperationalInstructorRecord(
   user: InstructorRecordUserDto,
 ): boolean {
-  return Boolean(
-    user.instructor?.instructorLicenseNumber &&
-      user.instructor?.instructorLicenseExpiry,
-  );
+  const licenseNumber = user.instructor?.instructorLicenseNumber;
+  if (!licenseNumber || isInvitePendingInstructorLicenseNumber(licenseNumber)) {
+    return false;
+  }
+  return Boolean(user.instructor?.instructorLicenseExpiry);
 }

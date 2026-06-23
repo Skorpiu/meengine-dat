@@ -111,6 +111,19 @@ describe("hasOperationalInstructorRecord", () => {
     expect(hasOperationalInstructorRecord(baseInstructor())).toBe(true);
   });
 
+  it("is false for INVITE-PENDING placeholder license numbers", () => {
+    expect(
+      hasOperationalInstructorRecord(
+        baseInstructor({
+          instructor: {
+            ...baseInstructor().instructor!,
+            instructorLicenseNumber: "INVITE-PENDING-cmqqq1l1",
+          },
+        }),
+      ),
+    ).toBe(false);
+  });
+
   it("is false without instructor row", () => {
     expect(
       hasOperationalInstructorRecord(baseInstructor({ instructor: null })),

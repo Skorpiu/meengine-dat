@@ -29,6 +29,9 @@ export type InviteExistingStudentRecordResult =
         | "missing_email"
         | "invalid_email"
         | "invalid_role"
+        | "invalid_instructor_license"
+        | "instructor_license_exists"
+        | "instructor_license_pending_invitation"
         | "pending_invitation_exists"
         | "user_already_exists";
       status: number;

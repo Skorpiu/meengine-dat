@@ -75,6 +75,7 @@ import {
   getInstructorRecordDisplayName,
   hasOperationalInstructorRecord,
 } from "@/lib/instructors/instructor-record-ui-utils";
+import { isInvitePendingInstructorLicenseNumber } from "@/lib/instructors/instructor-license-utils";
 import { PeopleProfileLabelGuide } from "@/components/admin/people-profile-label-guide";
 import { PeopleProfileAvatar } from "@/components/people/people-profile-avatar";
 import {
@@ -542,6 +543,10 @@ export function InstructorRecordsManager({
                 <div className="space-y-3">
                   {visibleInstructors.map((user) => {
                     const hasRecord = hasOperationalInstructorRecord(user);
+                    const hasPlaceholderLicense =
+                      isInvitePendingInstructorLicenseNumber(
+                        user.instructor?.instructorLicenseNumber,
+                      );
                     const statusBadge = getInstructorPeopleStatusBadge(user);
                     return (
                       <div
@@ -610,6 +615,14 @@ export function InstructorRecordsManager({
                                   </div>
                                 ) : null}
                               </div>
+                            ) : hasPlaceholderLicense ? (
+                              <Alert variant="destructive" className="py-2">
+                                <AlertDescription className="text-sm">
+                                  License data needs correction. Use{" "}
+                                  {INSTRUCTOR_PROFILE_ROW_EDIT_LABEL} to enter
+                                  the real license number and expiration date.
+                                </AlertDescription>
+                              </Alert>
                             ) : (
                               <Alert variant="destructive" className="py-2">
                                 <AlertDescription className="text-sm">

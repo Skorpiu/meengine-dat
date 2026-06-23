@@ -239,6 +239,7 @@ Documented and in use (docs/rules only; no runtime change):
 - `calendar-lessons-edit-modal-ux-v1` — UI-only (DEC-035): Schedule Map edit opens in `EditLessonDialog` on admin + instructor dashboards; shared `useEditLessonForm` hook; GET/PUT unchanged; modal success uses `handleLessonBooked`; `/admin/lessons/edit/[id]` fallback + v1b return preserved. No persistence/numbering/schema/auth/API changes.
 - `production-smoke-e2e-readonly-v1` — test infra (DEC-036): hybrid read-only automated smoke — `pnpm e2e:smoke:api`, `e2e:smoke:readonly`, `e2e:smoke:prod`; env guards (`DAT_E2E_ALLOW_PRODUCTION`, `DAT_SMOKE_ALLOWED_HOSTS`); API health + signup blocked + Playwright auth/page loads; zero persisted writes; not in `pnpm check`/CI default. Runbook: `driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md`.
 - `instructor-invite-auto-approve-v1` — auth/invitations fix (DEC-037): invitation accept sets `isApproved=true` for all invited roles (including INSTRUCTOR); public signup policy unchanged; no schema/migration/RLS changes. Validated via `pnpm check`.
+- `instructor-invite-license-fields-v1` — People/invitations data integrity (DEC-038): INSTRUCTOR invite requires license number + expiration date; stored on `UserInvitation`; accept uses stored values (no `INVITE-PENDING-*`); placeholder detection in Profiles; migration `20260623120000_add_instructor_license_fields_to_invitations`; DEC-037 and public signup unchanged. Validated via `pnpm check`.
 
 ### Likely next (production path)
 

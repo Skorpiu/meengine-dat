@@ -10,6 +10,7 @@ const h = vi.hoisted(() => {
   const studentFindFirst = vi.fn();
   const studentUpdate = vi.fn();
   const instructorCreate = vi.fn();
+  const instructorFindFirst = vi.fn();
   const transaction = vi.fn();
 
   const prismaMock = {
@@ -27,7 +28,7 @@ const h = vi.hoisted(() => {
       findFirst: studentFindFirst,
       update: studentUpdate,
     },
-    instructor: { create: instructorCreate },
+    instructor: { create: instructorCreate, findFirst: instructorFindFirst },
     $transaction: transaction,
   };
 
@@ -42,6 +43,7 @@ const h = vi.hoisted(() => {
     studentFindFirst,
     studentUpdate,
     instructorCreate,
+    instructorFindFirst,
     transaction,
   };
 });
@@ -95,7 +97,17 @@ function setupSuccessfulTransaction(role: "STUDENT" | "INSTRUCTOR") {
   h.transaction.mockImplementation(
     async (fn: (tx: typeof h.prismaMock) => unknown) => fn(h.prismaMock),
   );
-  h.userInvitationFindUnique.mockResolvedValue(pendingInvitation({ role }));
+  h.userInvitationFindUnique.mockResolvedValue(
+    pendingInvitation({
+      role,
+      ...(role === "INSTRUCTOR"
+        ? {
+            instructorLicenseNumber: "LIC-ACCEPT-1",
+            instructorLicenseExpiry: new Date("2028-06-15T00:00:00.000Z"),
+          }
+        : {}),
+    }),
+  );
   h.userCreate.mockResolvedValue({
     id: "user-1",
     email: "student@school.test",
@@ -116,6 +128,7 @@ function setupSuccessfulTransaction(role: "STUDENT" | "INSTRUCTOR") {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  h.instructorFindFirst.mockResolvedValue(null);
 });
 
 describe("getInvitationByToken", () => {
@@ -201,7 +214,12 @@ describe("acceptInvitation", () => {
   it("approves users created through invitation acceptance (instructor)", async () => {
     setupSuccessfulTransaction("INSTRUCTOR");
     h.userInvitationFindUnique.mockResolvedValue(
-      pendingInvitation({ role: "INSTRUCTOR", email: "inst@school.test" }),
+      pendingInvitation({
+        role: "INSTRUCTOR",
+        email: "inst@school.test",
+        instructorLicenseNumber: "LIC-ACCEPT-1",
+        instructorLicenseExpiry: new Date("2028-06-15T00:00:00.000Z"),
+      }),
     );
     h.userCreate.mockResolvedValue({
       id: "user-2",
@@ -219,9 +237,53 @@ describe("acceptInvitation", () => {
     });
 
     expect(result.ok).toBe(true);
-    expect(h.instructorCreate).toHaveBeenCalled();
+    expect(h.instructorCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        instructorLicenseNumber: "LIC-ACCEPT-1",
+        instructorLicenseExpiry: new Date("2028-06-15T00:00:00.000Z"),
+      }),
+    });
+    expect(
+      h.instructorCreate.mock.calls[0][0].data.instructorLicenseNumber,
+    ).not.toMatch(/^INVITE-PENDING-/);
     expect(h.studentCreate).not.toHaveBeenCalled();
     expect(h.userCreate.mock.calls[0][0].data.isApproved).toBe(true);
+  });
+
+  it("fails legacy INSTRUCTOR invitation without stored license fields", async () => {
+    h.userFindUnique.mockResolvedValue(null);
+    h.transaction.mockImplementation(
+      async (fn: (tx: typeof h.prismaMock) => unknown) => fn(h.prismaMock),
+    );
+    h.userInvitationFindUnique.mockResolvedValue(
+      pendingInvitation({
+        role: "INSTRUCTOR",
+        email: "legacy@school.test",
+        instructorLicenseNumber: null,
+        instructorLicenseExpiry: null,
+      }),
+    );
+    h.userCreate.mockResolvedValue({
+      id: "user-legacy",
+      email: "legacy@school.test",
+      role: "INSTRUCTOR",
+      firstName: "Legacy",
+      lastName: "Invite",
+    });
+
+    const result = await acceptInvitation({
+      token: rawToken,
+      password: "SecurePass1!",
+      firstName: "Legacy",
+      lastName: "Invite",
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.code).toBe("instructor_license_missing");
+      expect(result.error).toContain("revoke");
+    }
+    expect(h.instructorCreate).not.toHaveBeenCalled();
   });
 
   it("blocks expired invitations", async () => {

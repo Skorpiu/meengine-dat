@@ -644,10 +644,12 @@ model UserInvitation {
   acceptedAt      DateTime?
   revokedAt       DateTime?
   createdByUserId String?
-  acceptedUserId  String?
-  studentId       String?
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
+  acceptedUserId          String?
+  studentId               String?
+  instructorLicenseNumber String?
+  instructorLicenseExpiry DateTime?
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdBy    User?        @relation("UserInvitationCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
