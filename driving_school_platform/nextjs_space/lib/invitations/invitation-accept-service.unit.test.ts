@@ -195,9 +195,10 @@ describe("acceptInvitation", () => {
     expect(h.userCreate.mock.calls[0][0].data.emailVerified).toBeInstanceOf(
       Date,
     );
+    expect(h.userCreate.mock.calls[0][0].data.isApproved).toBe(true);
   });
 
-  it("creates instructor profile for instructor invites", async () => {
+  it("approves users created through invitation acceptance (instructor)", async () => {
     setupSuccessfulTransaction("INSTRUCTOR");
     h.userInvitationFindUnique.mockResolvedValue(
       pendingInvitation({ role: "INSTRUCTOR", email: "inst@school.test" }),
@@ -220,6 +221,7 @@ describe("acceptInvitation", () => {
     expect(result.ok).toBe(true);
     expect(h.instructorCreate).toHaveBeenCalled();
     expect(h.studentCreate).not.toHaveBeenCalled();
+    expect(h.userCreate.mock.calls[0][0].data.isApproved).toBe(true);
   });
 
   it("blocks expired invitations", async () => {

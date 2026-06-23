@@ -266,7 +266,8 @@ export async function acceptInvitation(
           // Invite link sent to this email proves control; skip separate verification.
           isEmailVerified: true,
           emailVerified: new Date(),
-          isApproved: role !== "INSTRUCTOR",
+          // School Admin invitation is the approval boundary (DEC-037).
+          isApproved: true,
         },
       });
 

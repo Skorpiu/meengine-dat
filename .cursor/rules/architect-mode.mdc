@@ -342,6 +342,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `calendar-lessons-edit-practical-number-reassign-v1` — DRIVING edit recalculates `practicalLessonNumber` on student change (DEC-034); `resolvePracticalLessonNumberOnStudentChange`; `Practice No. N` label; no schema/migration
 - `calendar-lessons-edit-modal-ux-v1` — Schedule Map edit opens in Dialog (DEC-035); `EditLessonDialog` + `useEditLessonForm`; admin + instructor dashboards; fallback `/admin/lessons/edit/[id]` retained; no schema/API/persistence changes
 - `production-smoke-e2e-readonly-v1` — hybrid read-only automated smoke (DEC-036); `pnpm e2e:smoke:api` / `e2e:smoke:readonly` / `e2e:smoke:prod`; production opt-in guards; not in `pnpm check`/CI default; runbook `docs/ops/production-smoke-e2e.md`
+- `instructor-invite-auto-approve-v1` — invitation accept sets `isApproved=true` for all invited roles including INSTRUCTOR (DEC-037); public signup policy unchanged; no schema/migration/RLS
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
