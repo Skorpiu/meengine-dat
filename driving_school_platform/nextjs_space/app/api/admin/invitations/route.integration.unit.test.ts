@@ -194,6 +194,46 @@ describe("Admin Invitations API", () => {
     expect(h.attemptInvitationEmailDeliveryMock).not.toHaveBeenCalled();
   });
 
+  it("POST rejects INSTRUCTOR invitation without license fields", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+
+    const res = await POST(
+      req("POST", "http://school.example.com/api/admin/invitations", {
+        email: "inst@school.test",
+        role: "INSTRUCTOR",
+      }) as any,
+    );
+    expect(res.status).toBe(400);
+    expect(h.createInvitationMock).not.toHaveBeenCalled();
+    expect(h.attemptInvitationEmailDeliveryMock).not.toHaveBeenCalled();
+  });
+
+  it("POST creates INSTRUCTOR invitation with license fields", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+
+    const res = await POST(
+      req("POST", "http://school.example.com/api/admin/invitations", {
+        email: "inst@school.test",
+        role: "INSTRUCTOR",
+        instructorLicenseNumber: "LIC-12345",
+        instructorLicenseExpiry: "2027-06-15",
+      }) as any,
+    );
+    expect(res.status).toBe(201);
+
+    expect(h.createInvitationMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        role: "INSTRUCTOR",
+        instructorLicenseNumber: "LIC-12345",
+        instructorLicenseExpiry: "2027-06-15",
+      }),
+    );
+  });
+
   it("POST rejects forbidden roles via zod", async () => {
     getServerSessionMock.mockResolvedValue({
       user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },

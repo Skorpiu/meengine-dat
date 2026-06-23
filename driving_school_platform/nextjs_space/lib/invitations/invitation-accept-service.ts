@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import type { UserInvitation } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { normalizeInstructorLicenseNumber } from "@/lib/instructors/instructor-license-utils";
 import {
   INVITATION_LIST_INCLUDE,
   mapInvitationDto,
@@ -18,9 +19,6 @@ import {
 
 const BCRYPT_COST = 12;
 
-/** Placeholder until School Admin completes instructor license data. */
-const INVITE_INSTRUCTOR_LICENSE_YEARS = 5;
-
 export type InvitationAcceptErrorCode =
   | "invalid_token"
   | "invitation_expired"
@@ -30,7 +28,9 @@ export type InvitationAcceptErrorCode =
   | "user_already_exists"
   | "invalid_invitation_role"
   | "student_already_linked"
-  | "student_record_not_found";
+  | "student_record_not_found"
+  | "instructor_license_missing"
+  | "instructor_license_exists";
 
 export type InvitationAcceptFailure = {
   ok: false;
@@ -134,6 +134,10 @@ function validateInvitationForAccept(
       student_already_linked:
         "This student record is already linked to an account.",
       student_record_not_found: "This invitation is no longer valid",
+      instructor_license_missing:
+        "This invitation is missing instructor license details. Ask your school admin to revoke it and create a new invitation with license number and expiration date.",
+      instructor_license_exists:
+        "An instructor with this license number already exists. Ask your school admin for a new invitation.",
     };
     const code = acceptBlockCode(decision.reason);
     const status =
@@ -157,11 +161,6 @@ function mapAcceptPreview(
     organizationName: invitation.organization.name,
     expiresAt: invitation.expiresAt.toISOString(),
   };
-}
-
-function buildInviteInstructorLicensePlaceholder(invitationId: string): string {
-  const suffix = invitationId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 24);
-  return `INVITE-PENDING-${suffix}`;
 }
 
 export async function getInvitationByToken(input: {
@@ -313,18 +312,29 @@ export async function acceptInvitation(
           });
         }
       } else {
-        const licenseExpiry = new Date();
-        licenseExpiry.setFullYear(
-          licenseExpiry.getFullYear() + INVITE_INSTRUCTOR_LICENSE_YEARS,
+        const licenseNumber = normalizeInstructorLicenseNumber(
+          current.instructorLicenseNumber ?? "",
         );
+        const licenseExpiry = current.instructorLicenseExpiry;
+
+        if (!licenseNumber || !licenseExpiry) {
+          throw new Error("INVITATION_ACCEPT_instructor_license_missing");
+        }
+
+        const conflictingInstructor = await tx.instructor.findFirst({
+          where: { instructorLicenseNumber: licenseNumber },
+          select: { id: true },
+        });
+
+        if (conflictingInstructor) {
+          throw new Error("INVITATION_ACCEPT_instructor_license_exists");
+        }
 
         await tx.instructor.create({
           data: {
             userId: user.id,
             organizationId: current.organizationId,
-            instructorLicenseNumber: buildInviteInstructorLicensePlaceholder(
-              current.id,
-            ),
+            instructorLicenseNumber: licenseNumber,
             instructorLicenseExpiry: licenseExpiry,
             instructorIdNumber: `INS-${Date.now()}`,
             employmentType: "FULL_TIME",
@@ -388,10 +398,15 @@ export async function acceptInvitation(
           student_already_linked:
             "This student record is already linked to an account.",
           student_record_not_found: "This invitation is no longer valid",
+          instructor_license_missing:
+            "This invitation is missing instructor license details. Ask your school admin to revoke it and create a new invitation with license number and expiration date.",
+          instructor_license_exists:
+            "An instructor with this license number already exists. Ask your school admin for a new invitation.",
         };
         const status =
           code === "invitation_already_accepted" ||
-          code === "student_already_linked"
+          code === "student_already_linked" ||
+          code === "instructor_license_exists"
             ? 409
             : code === "invitation_expired" || code === "invitation_revoked"
               ? 410

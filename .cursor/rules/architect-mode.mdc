@@ -343,6 +343,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `calendar-lessons-edit-modal-ux-v1` — Schedule Map edit opens in Dialog (DEC-035); `EditLessonDialog` + `useEditLessonForm`; admin + instructor dashboards; fallback `/admin/lessons/edit/[id]` retained; no schema/API/persistence changes
 - `production-smoke-e2e-readonly-v1` — hybrid read-only automated smoke (DEC-036); `pnpm e2e:smoke:api` / `e2e:smoke:readonly` / `e2e:smoke:prod`; production opt-in guards; not in `pnpm check`/CI default; runbook `docs/ops/production-smoke-e2e.md`
 - `instructor-invite-auto-approve-v1` — invitation accept sets `isApproved=true` for all invited roles including INSTRUCTOR (DEC-037); public signup policy unchanged; no schema/migration/RLS
+- `instructor-invite-license-fields-v1` — INSTRUCTOR invite collects license number + expiry on `UserInvitation`; accept uses real license data, no `INVITE-PENDING-*` (DEC-038); migration `20260623120000_add_instructor_license_fields_to_invitations`; placeholder Profiles warning; DEC-037/public signup unchanged
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 

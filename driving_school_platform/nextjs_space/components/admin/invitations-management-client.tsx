@@ -97,6 +97,8 @@ export function InvitationsManagementClient({
   const [expiresInDays, setExpiresInDays] = useState(
     String(DEFAULT_EXPIRES_IN_DAYS),
   );
+  const [instructorLicenseNumber, setInstructorLicenseNumber] = useState("");
+  const [instructorLicenseExpiry, setInstructorLicenseExpiry] = useState("");
   const [createLoading, setCreateLoading] = useState(false);
 
   const [createdInviteLink, setCreatedInviteLink] = useState<string | null>(
@@ -171,6 +173,21 @@ export function InvitationsManagementClient({
     setCreatedInviteLink(null);
 
     const days = Number.parseInt(expiresInDays, 10);
+    const isInstructorInvite =
+      createRole === "INSTRUCTOR" || isInstructorOnboarding;
+
+    if (isInstructorInvite) {
+      if (!instructorLicenseNumber.trim()) {
+        toast.error("Instructor license number is required");
+        setCreateLoading(false);
+        return;
+      }
+      if (!instructorLicenseExpiry) {
+        toast.error("Instructor license expiration date is required");
+        setCreateLoading(false);
+        return;
+      }
+    }
 
     try {
       const response = await fetch("/api/admin/invitations", {
@@ -180,6 +197,12 @@ export function InvitationsManagementClient({
           email: email.trim(),
           role: createRole,
           expiresInDays: Number.isFinite(days) ? days : DEFAULT_EXPIRES_IN_DAYS,
+          ...(isInstructorInvite
+            ? {
+                instructorLicenseNumber: instructorLicenseNumber.trim(),
+                instructorLicenseExpiry,
+              }
+            : {}),
         }),
       });
 
@@ -203,6 +226,8 @@ export function InvitationsManagementClient({
       setCreatedInviteLink(created.inviteLink);
       setLinkCopied(false);
       setEmail("");
+      setInstructorLicenseNumber("");
+      setInstructorLicenseExpiry("");
       toast.success(
         "Invitation created. Copy the link and share it privately.",
       );
@@ -282,7 +307,7 @@ export function InvitationsManagementClient({
   const emptyListMessage = isStudentOnboarding
     ? "No pending student invitations without a profile. When a student profile already exists, use Send invitation on Students → Profiles."
     : isInstructorOnboarding
-      ? "No pending instructor invitations. After an invite is accepted, manage the instructor on Instructors → Profiles (App access pending approval or Active)."
+      ? "No pending instructor invitations. After an invite is accepted, manage the instructor on Instructors → Profiles."
       : "No pending invitations. Create one above.";
 
   const listTitle = isStudentOnboarding
@@ -307,12 +332,13 @@ export function InvitationsManagementClient({
     </>
   ) : isInstructorOnboarding ? (
     <>
-      Invite instructors who should register themselves by email. Pending
-      instructor invitations stay here in <strong>Onboarding</strong> until the
-      invite is accepted. After acceptance, the instructor appears on{" "}
-      <strong>Instructors → Profiles</strong> as{" "}
-      <strong>App access pending approval</strong> or <strong>Active</strong> —
-      not as a pending invite on the profile row. Invite links are{" "}
+      Invite instructors who should register themselves by email. Enter their{" "}
+      <strong>license number</strong> and <strong>expiration date</strong>{" "}
+      before sending the invite. Pending instructor invitations stay here in{" "}
+      <strong>Onboarding</strong> until the invite is accepted. After
+      acceptance, the instructor appears on{" "}
+      <strong>Instructors → Profiles</strong> as <strong>Active</strong> — not
+      as a pending invite on the profile row. Invite links are{" "}
       <strong>sensitive</strong> — copy when shown once after creation. Lists
       never show links or tokens.
     </>
@@ -402,6 +428,38 @@ export function InvitationsManagementClient({
               />
             </div>
           </div>
+          {(isInstructorOnboarding || createRole === "INSTRUCTOR") && (
+            <div className="space-y-4 rounded-lg border border-green-200 bg-green-50 p-4">
+              <h4 className="font-medium text-green-900">Instructor license</h4>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="invite-instructor-license-number">
+                    License number *
+                  </Label>
+                  <Input
+                    id="invite-instructor-license-number"
+                    value={instructorLicenseNumber}
+                    onChange={(e) => setInstructorLicenseNumber(e.target.value)}
+                    disabled={formBusy}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="invite-instructor-license-expiry">
+                    License expiration date *
+                  </Label>
+                  <Input
+                    id="invite-instructor-license-expiry"
+                    type="date"
+                    value={instructorLicenseExpiry}
+                    onChange={(e) => setInstructorLicenseExpiry(e.target.value)}
+                    disabled={formBusy}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          )}
           <Button type="submit" disabled={formBusy}>
             {createLoading ? "Creating…" : "Create invitation"}
           </Button>

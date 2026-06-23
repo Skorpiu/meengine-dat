@@ -162,6 +162,12 @@ export function invitationApiErrorMessage(
         : "An account with this email already exists. Try signing in instead.";
     case "pending_invitation_exists":
       return "A pending invitation already exists for this email. Revoke it or wait until it expires.";
+    case "instructor_license_exists":
+      return "An instructor with this license number already exists.";
+    case "instructor_license_pending_invitation":
+      return "A pending invitation already exists for this license number. Revoke it or use a different license number.";
+    case "invalid_instructor_license":
+      return fallback;
     case "demo_mutation_disabled":
     case "demo_restricted_action":
       return fallback;

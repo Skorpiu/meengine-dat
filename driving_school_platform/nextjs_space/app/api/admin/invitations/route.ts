@@ -93,6 +93,12 @@ export async function POST(request: NextRequest) {
       role: validation.data.role,
       baseUrl: new URL(request.url).origin,
       expiresInDays: validation.data.expiresInDays,
+      ...(validation.data.role === "INSTRUCTOR"
+        ? {
+            instructorLicenseNumber: validation.data.instructorLicenseNumber,
+            instructorLicenseExpiry: validation.data.instructorLicenseExpiry,
+          }
+        : {}),
     });
 
     if (!result.ok) {
