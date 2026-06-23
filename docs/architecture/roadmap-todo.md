@@ -38,6 +38,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `calendar-lessons-edit-practical-number-reassign-v1` | **Done** | DEC-034: DRIVING edit recalculates `practicalLessonNumber` when `studentId` changes; `Practice No. N` label; no schema/migration |
 | `calendar-lessons-edit-modal-ux-v1` | **Done** | DEC-035: Dialog edit in Schedule Map; admin + instructor dashboards; fallback page retained; no schema/API |
 | `production-smoke-e2e-readonly-v1` | **Done** | DEC-036: hybrid API + Playwright read-only smoke; env guards; `pnpm e2e:smoke:api` / `e2e:smoke:readonly` / `e2e:smoke:prod`; runbook [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md); no mutations; not in `pnpm check`/CI default |
+| `instructor-invite-auto-approve-v1` | **Done** | DEC-037: invitation accept sets `isApproved=true` for all invited roles (including INSTRUCTOR); public signup unchanged; no schema/migration/RLS |
 | `production-smoke-e2e-lesson-mutations-v1` | Pending | After dedicated smoke tenant provisioned; create/edit/modal/practical number |
 | `production-smoke-e2e-testids-v1` | Pending (optional) | UI `data-testid` if selectors fragile in mutation slice |
 | `production-smoke-runbook-sync-v1` | Pending | Residual runbook alignment if drift remains |
