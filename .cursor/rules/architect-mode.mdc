@@ -344,12 +344,12 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `production-smoke-e2e-readonly-v1` — hybrid read-only automated smoke (DEC-036); `pnpm e2e:smoke:api` / `e2e:smoke:readonly` / `e2e:smoke:prod`; production opt-in guards; not in `pnpm check`/CI default; runbook `docs/ops/production-smoke-e2e.md`
 - `instructor-invite-auto-approve-v1` — invitation accept sets `isApproved=true` for all invited roles including INSTRUCTOR (DEC-037); public signup policy unchanged; no schema/migration/RLS
 - `instructor-invite-license-fields-v1` — INSTRUCTOR invite collects license number + expiry on `UserInvitation`; accept uses real license data, no `INVITE-PENDING-*` (DEC-038); migration `20260623120000_add_instructor_license_fields_to_invitations`; placeholder Profiles warning; DEC-037/public signup unchanged
-- `production-smoke-e2e-fixture-preflight-v1` — zero-write fixture preflight (DEC-039); `pnpm e2e:smoke:fixture-preflight`; explicit `DAT_SMOKE_ORG_ID` + fixture IDs; temporary A Conquistadora smoke tenant on www.meengine.io; no mutations
+- `production-smoke-e2e-fixture-preflight-v1` — zero-write fixture preflight (DEC-039); `pnpm e2e:smoke:fixture-preflight`; explicit `DAT_SMOKE_ORG_ID` + fixture IDs; temporary A Conquistadora smoke tenant on www.meengine.io; hosted green
+- `production-smoke-e2e-lesson-mutations-v1` — lesson mutation smoke (DEC-040); `pnpm e2e:smoke:mutations`; dual opt-in `DAT_E2E_ALLOW_PRODUCTION_MUTATIONS`; API-first create + update; no cleanup; not in `pnpm check`/CI
 
 **Current recommended next:**
 
-1. `production-smoke-e2e-lesson-mutations-v1` — lesson create/edit/modal/practical number (after fixture preflight green + future `DAT_E2E_ALLOW_PRODUCTION_MUTATIONS`)
-2. `production-smoke-e2e-testids-v1` — optional UI testids if mutation selectors prove fragile
+1. `production-smoke-e2e-testids-v1` — optional UI testids if mutation selectors prove fragile
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
@@ -359,10 +359,10 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Likely next after mutation smoke slice:**
 
-3. `production-first-client-onboarding-record-v1` — operator evidence doc
-4. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
-5. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
-6. `lesson-student-nullability-policy-review-v1` — policy docs (P2)
+2. `production-first-client-onboarding-record-v1` — operator evidence doc
+3. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
+4. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
+5. `lesson-student-nullability-policy-review-v1` — policy docs (P2)
 
 **Product direction (backlog — deferred post-production polish):**
 
