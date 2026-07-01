@@ -1,13 +1,21 @@
 /**
- * Production smoke target guards (read-only suite).
+ * Production smoke target guards (read-only + fixture preflight suites).
  * Never log secrets — only protocol + hostname.
  */
+
+import {
+  parseSmokeFixtureExpectedFromEnv,
+  type SmokeFixtureConfig,
+  type SmokeFixtureExpected,
+} from "./smoke-fixture-preflight";
 
 export type SmokeTargetSummary = {
   baseUrl: string;
   host: string;
   protocol: string;
 };
+
+export type { SmokeFixtureConfig, SmokeFixtureExpected };
 
 function stripTrailingSlash(url: string): string {
   return url.replace(/\/+$/, "");
@@ -93,5 +101,78 @@ export function assertSmokeTargetAllowed(): SmokeTargetSummary {
     );
   }
 
+  return summary;
+}
+
+function requireNonEmptyEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(
+      `Missing required env var ${name} for smoke fixture preflight.`,
+    );
+  }
+  return value;
+}
+
+function parsePositiveIntEnv(name: string): number {
+  const raw = requireNonEmptyEnv(name);
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error(`${name} must be a positive integer (got "${raw}").`);
+  }
+  return parsed;
+}
+
+/**
+ * Parse smoke fixture IDs from env. Returns null when any required ID is missing.
+ */
+export function parseSmokeFixtureConfigFromEnv(): SmokeFixtureConfig | null {
+  const organizationId = process.env.DAT_SMOKE_ORG_ID?.trim();
+  const studentId = process.env.DAT_SMOKE_STUDENT_ID?.trim();
+  const instructorUserId = process.env.DAT_SMOKE_INSTRUCTOR_USER_ID?.trim();
+  const vehicleIdRaw = process.env.DAT_SMOKE_VEHICLE_ID?.trim();
+
+  if (!organizationId || !studentId || !instructorUserId || !vehicleIdRaw) {
+    return null;
+  }
+
+  const vehicleId = Number.parseInt(vehicleIdRaw, 10);
+  if (!Number.isFinite(vehicleId) || vehicleId <= 0) {
+    return null;
+  }
+
+  return {
+    organizationId,
+    studentId,
+    instructorUserId,
+    vehicleId,
+    expected: parseSmokeFixtureExpectedFromEnv(),
+  };
+}
+
+/**
+ * Assert fixture preflight env vars are present. Throws with actionable message.
+ */
+export function assertSmokeFixtureEnvVars(): SmokeFixtureConfig {
+  const organizationId = requireNonEmptyEnv("DAT_SMOKE_ORG_ID");
+  const studentId = requireNonEmptyEnv("DAT_SMOKE_STUDENT_ID");
+  const instructorUserId = requireNonEmptyEnv("DAT_SMOKE_INSTRUCTOR_USER_ID");
+  const vehicleId = parsePositiveIntEnv("DAT_SMOKE_VEHICLE_ID");
+
+  return {
+    organizationId,
+    studentId,
+    instructorUserId,
+    vehicleId,
+    expected: parseSmokeFixtureExpectedFromEnv(),
+  };
+}
+
+/**
+ * Hosted fixture preflight requires production opt-in and explicit fixture IDs.
+ */
+export function assertSmokeFixturePreflightAllowed(): SmokeTargetSummary {
+  const summary = assertSmokeTargetAllowed();
+  assertSmokeFixtureEnvVars();
   return summary;
 }
