@@ -11,6 +11,7 @@ import {
   PEOPLE_L1_TAB_VALUES,
   PEOPLE_PAGE_HEADER_DESCRIPTION,
 } from "@/lib/people/people-management-ui";
+import { SMOKE_TESTIDS } from "@/lib/smoke/smoke-testids";
 
 type CategoryOption = {
   id: number;
@@ -59,7 +60,7 @@ export function UsersManagementClient({
 }: Props) {
   return (
     <>
-      <div className="mb-8">
+      <div className="mb-8" data-testid={SMOKE_TESTIDS.peoplePage}>
         <h1 className="text-3xl font-bold text-gray-900">People</h1>
         <p className="text-gray-600 mt-2 max-w-3xl">
           {PEOPLE_PAGE_HEADER_DESCRIPTION}

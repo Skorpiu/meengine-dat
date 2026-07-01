@@ -113,8 +113,9 @@ export function validateSmokeMutationInstructorReadiness(
       name: "instructor_category_readiness",
       ok: true,
       detail:
-        "WARN: Instructor qualified categories are not exposed by the deployed booking endpoint; " +
-        "proceeding because POST /api/admin/lessons enforces category readiness and fails without creating a lesson.",
+        "WARN: Instructor qualified categories are not exposed by GET /api/admin/instructors/all?forBooking=true; " +
+        "deploy production-smoke-e2e-testids-v1 (or later) for pre-POST hard-fail. " +
+        "POST /api/admin/lessons remains the authoritative safety boundary.",
     });
   } else {
     const hasRequiredCategory = profile.qualifiedCategoryNames.some(
@@ -131,7 +132,7 @@ export function validateSmokeMutationInstructorReadiness(
         ok: false,
         detail:
           `Smoke fixture instructor is not qualified for category ${requiredCategory}. ` +
-          `Assign category ${requiredCategory} to instructor fixture before running production mutations. ` +
+          `Assign category ${requiredCategory} via People → Instructors → Edit Instructor (Qualified license categories). ` +
           `Qualified categories exposed: ${exposed}.`,
       });
     } else {

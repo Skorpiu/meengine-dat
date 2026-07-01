@@ -111,7 +111,7 @@ describe("validateSmokeMutationInstructorReadiness", () => {
       "Smoke fixture instructor is not qualified for category B",
     );
     expect(categoryResult?.detail).toContain(
-      "Assign category B to instructor fixture before running production mutations",
+      "Assign category B via People → Instructors → Edit Instructor",
     );
     expect(summarizeSmokeMutationReadiness(results).ok).toBe(false);
   });
@@ -137,7 +137,7 @@ describe("validateSmokeMutationInstructorReadiness", () => {
     expect(categoryResult?.ok).toBe(true);
     expect(categoryResult?.detail).toContain("WARN:");
     expect(categoryResult?.detail).toContain(
-      "POST /api/admin/lessons enforces category readiness",
+      "POST /api/admin/lessons remains the authoritative safety boundary",
     );
     expect(summarizeSmokeMutationReadiness(results).ok).toBe(true);
   });

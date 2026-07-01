@@ -242,13 +242,14 @@ Documented and in use (docs/rules only; no runtime change):
 - `instructor-invite-license-fields-v1` — People/invitations data integrity (DEC-038): INSTRUCTOR invite requires license number + expiration date; stored on `UserInvitation`; accept uses stored values (no `INVITE-PENDING-*`); placeholder detection in Profiles; migration `20260623120000_add_instructor_license_fields_to_invitations`; DEC-037 and public signup unchanged. Validated via `pnpm check`.
 - `production-smoke-e2e-fixture-preflight-v1` — zero-write smoke fixture preflight (DEC-039): `pnpm e2e:smoke:fixture-preflight`; explicit `DAT_SMOKE_ORG_ID` + student/instructor/vehicle IDs + optional `DAT_SMOKE_EXPECTED_*`; admin login + read-only admin API checks; temporary `A Conquistadora` smoke tenant on `www.meengine.io`; hosted green.
 - `production-smoke-e2e-lesson-mutations-v1` — lesson mutation smoke (DEC-040): `pnpm e2e:smoke:mutations`; dual opt-in `DAT_E2E_ALLOW_PRODUCTION_MUTATIONS`; API-first create + time-shift update; fixture preflight inside spec; immutable smoke trail (no delete/cleanup); not in `pnpm check`/CI.
+- `instructor-qualified-categories-management-v1` — School Admin can view/edit instructor qualified license categories via People → Edit Instructor; PATCH `/api/admin/instructors/[id]`; M2M `_InstructorCategories`; no migration. Validated via `pnpm check`.
+- `production-smoke-e2e-testids-v1` — smoke testids + booking readiness metadata (DEC-041): `lib/smoke/smoke-testids.ts`; `qualifiedCategoryNames` / `instructorLicenseExpiry` on `GET /api/admin/instructors/all?forBooking=true`; fixture preflight category B hard-fail when exposed; improved readiness messages; not in `pnpm check`/CI.
 
 ### Likely next (production path)
 
-1. `production-smoke-e2e-testids-v1` — optional UI testids if mutation selectors prove fragile
-2. `production-first-client-onboarding-record-v1` — operator evidence doc after go-live
-3. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
-4. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
+1. `production-first-client-onboarding-record-v1` — operator evidence doc after go-live
+2. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
+3. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
 
 ### Deferred (not next)
 

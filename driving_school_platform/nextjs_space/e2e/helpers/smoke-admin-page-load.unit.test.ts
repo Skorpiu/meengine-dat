@@ -5,9 +5,19 @@ import {
   summarizeSmokeAdminScheduleMapPageMarkers,
   summarizeSmokeOptionalUiNavigation,
 } from "./smoke-admin-page-load";
+import { SMOKE_TESTIDS } from "@/lib/smoke/smoke-testids";
 
 describe("summarizeSmokeAdminLessonsPageMarkers", () => {
-  it("prefers lessons heading when present", () => {
+  it("prefers lesson management test id when present", () => {
+    const result = summarizeSmokeAdminLessonsPageMarkers({
+      lessonManagementTestId: true,
+      lessonsHeading: true,
+    });
+    expect(result.ok).toBe(true);
+    expect(result.detail).toContain(SMOKE_TESTIDS.lessonManagement);
+  });
+
+  it("prefers lessons heading when test id is absent", () => {
     const result = summarizeSmokeAdminLessonsPageMarkers({
       lessonsHeading: true,
       drivingTab: true,
@@ -56,6 +66,15 @@ describe("summarizeSmokeOptionalUiNavigation", () => {
 });
 
 describe("summarizeSmokeAdminScheduleMapPageMarkers", () => {
+  it("prefers schedule map test id when present", () => {
+    const result = summarizeSmokeAdminScheduleMapPageMarkers({
+      scheduleMapTestId: true,
+      scheduleMapLabel: true,
+    });
+    expect(result.ok).toBe(true);
+    expect(result.detail).toContain(SMOKE_TESTIDS.scheduleMap);
+  });
+
   it("passes when lesson start time marker is visible", () => {
     const result = summarizeSmokeAdminScheduleMapPageMarkers(
       { lessonStartTimeVisible: true, scheduleMapLabel: true },

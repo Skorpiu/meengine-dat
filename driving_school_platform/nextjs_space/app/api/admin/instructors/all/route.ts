@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { guardTenantAuthenticatedRoute } from "@/lib/tenant";
+import { mapInstructorUsersToBookingList } from "@/lib/instructors/instructor-booking-list";
 
 function parseForBookingParam(value: string | null): boolean {
   if (value === null || value === "") {
@@ -20,7 +21,8 @@ function parseForBookingParam(value: string | null): boolean {
  * GET handler - Fetch all instructors
  * Accessible by SUPER_ADMIN roles only
  *
- * Query: `forBooking=true` returns only instructors with isAvailableForBooking=true.
+ * Query: `forBooking=true` returns only instructors with isAvailableForBooking=true
+ * and exposes booking-readiness metadata (`qualifiedCategoryNames`, `instructorLicenseExpiry`).
  * Default (forBooking=false) returns all tenant instructors for historical filters.
  */
 export async function GET(request: NextRequest) {
@@ -72,9 +74,19 @@ export async function GET(request: NextRequest) {
         lastName: true,
         email: true,
         instructor: {
-          select: {
-            isAvailableForBooking: true,
-          },
+          select: forBooking
+            ? {
+                isAvailableForBooking: true,
+                instructorLicenseExpiry: true,
+                qualifiedCategories: {
+                  where: { isActive: true },
+                  select: { name: true },
+                  orderBy: { name: "asc" },
+                },
+              }
+            : {
+                isAvailableForBooking: true,
+              },
         },
       },
       orderBy: {
@@ -82,17 +94,9 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const instructors = instructorUsers.map((user) => ({
-      id: user.id,
-      userId: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      name:
-        `${user.firstName} ${user.lastName}`.trim() ||
-        user.email ||
-        "Instructor",
-      isAvailableForBooking: user.instructor?.isAvailableForBooking ?? false,
-    }));
+    const instructors = mapInstructorUsersToBookingList(instructorUsers, {
+      includeBookingMetadata: forBooking,
+    });
 
     return NextResponse.json(
       { instructors },

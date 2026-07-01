@@ -9,6 +9,7 @@ import type { Lesson as ScheduleLesson } from "@/components/schedule/schedule-ma
 import { getDrivingSchoolName } from "@/lib/config/features";
 import { LESSON_LIST_SELECT } from "@/lib/lessons/lesson-queries";
 import { mapLessonStudentForScheduleMap } from "@/lib/students/schedule-lesson-student";
+import { SMOKE_TESTIDS } from "@/lib/smoke/smoke-testids";
 import { Users, Car, Calendar, TrendingUp, CheckCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -111,7 +112,10 @@ export default async function AdminDashboard() {
     <div className="min-h-screen bg-gray-50">
       <Navbar currentPage="admin" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+        data-testid={SMOKE_TESTIDS.adminDashboard}
+      >
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">

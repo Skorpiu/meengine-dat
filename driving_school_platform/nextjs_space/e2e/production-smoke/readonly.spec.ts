@@ -10,6 +10,7 @@ import {
   loginWithCredentials,
   logoutFromApp,
 } from "../helpers/auth";
+import { SMOKE_TESTIDS } from "@/lib/smoke/smoke-testids";
 
 const adminEmail = process.env.DAT_SMOKE_ADMIN_EMAIL?.trim();
 const adminPassword = process.env.DAT_SMOKE_ADMIN_PASSWORD;
@@ -47,13 +48,11 @@ test.describe("Production smoke (read-only)", () => {
     await loginWithCredentials(page, adminEmail!, adminPassword!);
 
     await expect(page).toHaveURL(/\/admin(?:\/|$|\?)/i);
-    await expect(page.getByText(/admin dashboard/i)).toBeVisible();
+    await expect(page.getByTestId(SMOKE_TESTIDS.adminDashboard)).toBeVisible();
     await assertNoFatalPageErrors(page);
 
     await page.goto("/admin/users");
-    await expect(
-      page.getByRole("heading", { name: /^people$/i }),
-    ).toBeVisible();
+    await expect(page.getByTestId(SMOKE_TESTIDS.peoplePage)).toBeVisible();
     await expect(page.getByRole("tab", { name: /^students$/i })).toBeVisible();
     await expect(
       page.getByRole("tab", { name: /^instructors$/i }),

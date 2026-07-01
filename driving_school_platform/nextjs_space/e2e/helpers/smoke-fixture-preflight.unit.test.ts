@@ -158,6 +158,68 @@ describe("validateSmokeFixtureInstructor", () => {
     expect(emailResult?.ok).toBe(false);
     expect(summarizeSmokeFixtureResults(results).ok).toBe(false);
   });
+
+  it("passes when instructor is qualified for category B", () => {
+    const results = validateSmokeFixtureInstructor(
+      [
+        {
+          id: "instructor-user-1",
+          email: "afilipa.lab@gmail.com",
+          isAvailableForBooking: true,
+          qualifiedCategoryNames: ["B", "A1"],
+          instructorLicenseExpiry: "2030-12-31",
+        },
+      ],
+      baseConfig,
+    );
+
+    const categoryResult = results.find(
+      (result) => result.name === "instructor_category_readiness",
+    );
+    expect(categoryResult?.ok).toBe(true);
+    expect(summarizeSmokeFixtureResults(results).ok).toBe(true);
+  });
+
+  it("fails when instructor lacks required category B", () => {
+    const results = validateSmokeFixtureInstructor(
+      [
+        {
+          id: "instructor-user-1",
+          isAvailableForBooking: true,
+          qualifiedCategoryNames: ["A"],
+          instructorLicenseExpiry: "2030-12-31",
+        },
+      ],
+      baseConfig,
+    );
+
+    const categoryResult = results.find(
+      (result) => result.name === "instructor_category_readiness",
+    );
+    expect(categoryResult?.ok).toBe(false);
+    expect(categoryResult?.detail).toContain("category B");
+    expect(categoryResult?.detail).toContain("Edit Instructor");
+    expect(summarizeSmokeFixtureResults(results).ok).toBe(false);
+  });
+
+  it("warns when qualified categories are not exposed by booking endpoint", () => {
+    const results = validateSmokeFixtureInstructor(
+      [
+        {
+          id: "instructor-user-1",
+          isAvailableForBooking: true,
+        },
+      ],
+      baseConfig,
+    );
+
+    const categoryResult = results.find(
+      (result) => result.name === "instructor_category_readiness",
+    );
+    expect(categoryResult?.ok).toBe(true);
+    expect(categoryResult?.detail).toContain("WARN:");
+    expect(summarizeSmokeFixtureResults(results).ok).toBe(true);
+  });
 });
 
 describe("validateSmokeFixtureVehicle", () => {
@@ -293,6 +355,8 @@ describe("runSmokeFixturePreflight", () => {
             {
               id: "instructor-user-1",
               isAvailableForBooking: true,
+              qualifiedCategoryNames: ["B"],
+              instructorLicenseExpiry: "2030-12-31",
             },
           ],
         });
@@ -349,6 +413,8 @@ describe("runSmokeFixturePreflight", () => {
             {
               id: "instructor-user-1",
               isAvailableForBooking: true,
+              qualifiedCategoryNames: ["B"],
+              instructorLicenseExpiry: "2030-12-31",
             },
           ],
         });
@@ -392,6 +458,8 @@ describe("runSmokeFixturePreflight", () => {
             {
               id: "instructor-user-1",
               isAvailableForBooking: true,
+              qualifiedCategoryNames: ["B"],
+              instructorLicenseExpiry: "2030-12-31",
             },
           ],
         });

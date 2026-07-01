@@ -2,6 +2,12 @@
  * Zero-write production smoke fixture preflight (authenticated admin APIs only).
  */
 
+import {
+  resolveSmokeExpectedLessonCategory,
+  validateSmokeMutationInstructorReadiness,
+  type SmokeInstructorBookingReadinessProfile,
+} from "./smoke-mutation-readiness";
+
 export type SmokeFixtureExpected = {
   studentEmail?: string;
   studentSchoolId?: string;
@@ -43,6 +49,10 @@ export type SmokeFixtureInstructorPayload = {
   firstName?: string | null;
   lastName?: string | null;
   isAvailableForBooking?: boolean;
+  /** Present when booking endpoint exposes category metadata (`forBooking=true`). */
+  qualifiedCategoryNames?: string[];
+  /** Present when booking endpoint exposes license expiry metadata. */
+  instructorLicenseExpiry?: string | null;
 };
 
 export type SmokeFixtureVehiclePayload = {
@@ -139,6 +149,33 @@ export function parseSmokeFixtureInstructors(
         typeof row.isAvailableForBooking === "boolean"
           ? row.isAvailableForBooking
           : undefined,
+      ...(function parseBookingMetadata() {
+        const payload: Pick<
+          SmokeFixtureInstructorPayload,
+          "qualifiedCategoryNames" | "instructorLicenseExpiry"
+        > = {};
+
+        if ("qualifiedCategoryNames" in row) {
+          payload.qualifiedCategoryNames = Array.isArray(
+            row.qualifiedCategoryNames,
+          )
+            ? row.qualifiedCategoryNames.filter(
+                (name): name is string => typeof name === "string",
+              )
+            : [];
+        }
+
+        if ("instructorLicenseExpiry" in row) {
+          payload.instructorLicenseExpiry =
+            typeof row.instructorLicenseExpiry === "string"
+              ? row.instructorLicenseExpiry
+              : row.instructorLicenseExpiry === null
+                ? null
+                : null;
+        }
+
+        return payload;
+      })(),
     }));
 }
 
@@ -349,6 +386,29 @@ export function validateSmokeFixtureInstructor(
       });
     }
   }
+
+  const readinessProfile: SmokeInstructorBookingReadinessProfile = {
+    id: instructor.id,
+    isAvailableForBooking: instructor.isAvailableForBooking,
+    ...(instructor.qualifiedCategoryNames !== undefined
+      ? { qualifiedCategoryNames: instructor.qualifiedCategoryNames }
+      : {}),
+    ...(instructor.instructorLicenseExpiry !== undefined
+      ? { instructorLicenseExpiry: instructor.instructorLicenseExpiry }
+      : {}),
+  };
+
+  const readinessResults = validateSmokeMutationInstructorReadiness(
+    readinessProfile,
+    config.instructorUserId,
+    resolveSmokeExpectedLessonCategory(),
+  );
+
+  results.push(
+    ...readinessResults.filter(
+      (result) => result.name !== "instructor_fixture",
+    ),
+  );
 
   return results;
 }
