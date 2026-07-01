@@ -54,6 +54,7 @@ import {
   getLessonTypeDotColorClass,
 } from "@/lib/lessons/lesson-type-ui-theme";
 import { LESSON_TYPES } from "@/lib/constants";
+import { SMOKE_TESTIDS } from "@/lib/smoke/smoke-testids";
 
 async function tryReadJson<T = unknown>(response: Response): Promise<T | null> {
   const contentType = response.headers.get("content-type") || "";
@@ -398,7 +399,7 @@ export function LessonsManagementClient() {
     >
       <>
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8" data-testid={SMOKE_TESTIDS.lessonManagement}>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
@@ -492,6 +493,7 @@ export function LessonsManagementClient() {
           <Button
             variant={selectedView === "DRIVING" ? "default" : "outline"}
             onClick={() => setSelectedView("DRIVING")}
+            data-testid={SMOKE_TESTIDS.lessonManagementDrivingTab}
             className={
               selectedView === "DRIVING"
                 ? getLessonManagementTabActiveClass("DRIVING")

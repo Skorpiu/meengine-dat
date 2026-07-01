@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { assertNoFatalPageErrors } from "./auth";
+import { SMOKE_TESTIDS } from "@/lib/smoke/smoke-testids";
 
 export type SmokeAdminPageLoadResult = {
   ok: boolean;
@@ -10,6 +11,8 @@ export const SMOKE_OPTIONAL_UI_NAV_TIMEOUT_MS = 15_000;
 export const SMOKE_OPTIONAL_UI_MARKER_TIMEOUT_MS = 10_000;
 
 export type SmokeAdminLessonsPageMarkers = {
+  lessonManagementTestId?: boolean;
+  drivingTabTestId?: boolean;
   lessonsHeading?: boolean;
   mainLandmark?: boolean;
   drivingTab?: boolean;
@@ -19,6 +22,8 @@ export type SmokeAdminLessonsPageMarkers = {
 };
 
 export type SmokeAdminScheduleMapPageMarkers = {
+  scheduleMapTestId?: boolean;
+  adminDashboardTestId?: boolean;
   scheduleMapLabel?: boolean;
   adminDashboardCopy?: boolean;
   lessonStartTimeVisible?: boolean;
@@ -52,6 +57,18 @@ export function summarizeSmokeOptionalUiNavigation(
 export function summarizeSmokeAdminLessonsPageMarkers(
   markers: SmokeAdminLessonsPageMarkers,
 ): SmokeAdminPageLoadResult {
+  if (markers.lessonManagementTestId) {
+    return {
+      ok: true,
+      detail: `Admin lessons page loaded (${SMOKE_TESTIDS.lessonManagement})`,
+    };
+  }
+  if (markers.drivingTabTestId) {
+    return {
+      ok: true,
+      detail: `Admin lessons page loaded (${SMOKE_TESTIDS.lessonManagementDrivingTab})`,
+    };
+  }
   if (markers.lessonsHeading) {
     return {
       ok: true,
@@ -114,6 +131,19 @@ export function summarizeSmokeAdminScheduleMapPageMarkers(
     };
   }
 
+  if (markers.scheduleMapTestId) {
+    return {
+      ok: true,
+      detail: `Schedule Map loaded (${SMOKE_TESTIDS.scheduleMap})`,
+    };
+  }
+  if (markers.adminDashboardTestId) {
+    return {
+      ok: true,
+      detail: `Schedule Map loaded (${SMOKE_TESTIDS.adminDashboard})`,
+    };
+  }
+
   if (markers.scheduleMapLabel) {
     return {
       ok: true,
@@ -146,6 +176,12 @@ async function collectSmokeAdminLessonsPageMarkers(
   page: Page,
 ): Promise<SmokeAdminLessonsPageMarkers> {
   return {
+    lessonManagementTestId: await isLocatorVisible(
+      page.getByTestId(SMOKE_TESTIDS.lessonManagement),
+    ),
+    drivingTabTestId: await isLocatorVisible(
+      page.getByTestId(SMOKE_TESTIDS.lessonManagementDrivingTab),
+    ),
     lessonsHeading: await isLocatorVisible(
       page.getByRole("heading", {
         name: /lesson|schedule|aulas|gestão|premium feature/i,
@@ -184,6 +220,12 @@ async function collectSmokeAdminScheduleMapPageMarkers(
   }
 
   return {
+    scheduleMapTestId: await isLocatorVisible(
+      page.getByTestId(SMOKE_TESTIDS.scheduleMap),
+    ),
+    adminDashboardTestId: await isLocatorVisible(
+      page.getByTestId(SMOKE_TESTIDS.adminDashboard),
+    ),
     scheduleMapLabel: await isLocatorVisible(page.getByText(/schedule map/i)),
     adminDashboardCopy: await isLocatorVisible(
       page.getByText(/admin dashboard/i),

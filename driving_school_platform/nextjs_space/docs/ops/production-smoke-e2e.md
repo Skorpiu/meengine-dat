@@ -2,7 +2,7 @@
 
 Automated smoke for controlled B2B production readiness. Complements manual checklists ([smoke-test-checklist.md](./smoke-test-checklist.md), [production-smoke-baseline.md](./production-smoke-baseline.md)).
 
-**Decisions:** [DEC-036](../../../../docs/architecture/decision-log.md) (read-only v1a); [DEC-039](../../../../docs/architecture/decision-log.md) (fixture preflight); [DEC-040](../../../../docs/architecture/decision-log.md) (lesson mutation smoke v1).
+**Decisions:** [DEC-036](../../../../docs/architecture/decision-log.md) (read-only v1a); [DEC-039](../../../../docs/architecture/decision-log.md) (fixture preflight); [DEC-040](../../../../docs/architecture/decision-log.md) (lesson mutation smoke v1); [DEC-041](../../../../docs/architecture/decision-log.md) (smoke testids + booking readiness metadata).
 
 ---
 
@@ -75,12 +75,14 @@ After admin login, authenticated **read-only** API checks:
 - Admin pages `/admin` and `/admin/lessons` load (smoke-level UI only — see below)
 - Student exists at `DAT_SMOKE_STUDENT_ID` (tenant-scoped GET)
 - Instructor user exists and is available for booking (`/api/admin/instructors/all?forBooking=true`)
+- Instructor fixture is qualified for expected DRIVING category (default **B**) when booking endpoint exposes `qualifiedCategoryNames`
+- Instructor license expiry is valid when booking endpoint exposes `instructorLicenseExpiry`
 - Vehicle exists, active, `AVAILABLE`, not under maintenance (`GET /api/admin/vehicles`)
 - Expected email / school ID / registration when `DAT_SMOKE_EXPECTED_*` vars are set
 
 ### UI vs API authority
 
-Fixture preflight performs light **smoke-level** page-load checks on `/admin` and `/admin/lessons` (not redirected to login, no fatal page errors). Exact headings, tab labels, or copy are **not** safety gates — when no stable UI marker is found, the spec logs **WARN** and continues.
+Fixture preflight performs light **smoke-level** page-load checks on `/admin` and `/admin/lessons` (not redirected to login, no fatal page errors). Stable `data-testid` markers (see [Smoke testids](#smoke-testids-dec-041)) are preferred when present; legacy heading/copy markers remain as fallback. When no stable UI marker is found, the spec logs **WARN** and continues.
 
 **Authoritative fixture validation** is the authenticated API preflight (`runSmokeFixturePreflight`): org session, student/instructor/vehicle IDs, vehicle status, and expected identity metadata.
 
@@ -110,7 +112,7 @@ When `VEHICLE_MANAGEMENT` is not reported by config but the smoke vehicle passes
 
 After admin login and internal fixture preflight:
 
-0. **Mutation readiness** (zero-write, best-effort): when `GET /api/admin/instructors/all?forBooking=true` exposes `qualifiedCategoryNames` / `instructorLicenseExpiry`, validate category and license before POST. When those fields are **not** exposed by the **deployed** API (current production default), readiness logs **WARN** and proceeds — **`POST /api/admin/lessons` remains the authoritative safety boundary** (HTTP 400, no lesson created if the instructor lacks qualified categories).
+0. **Mutation readiness** (zero-write): `GET /api/admin/instructors/all?forBooking=true` exposes `qualifiedCategoryNames` and `instructorLicenseExpiry` for booking-ready instructors. Preflight and mutation readiness **hard-fail before POST** when category **B** (or `DAT_SMOKE_EXPECTED_LESSON_CATEGORY`) is missing or license is expired. When those fields are **not** exposed by an older deployed API, readiness logs **WARN** and proceeds — **`POST /api/admin/lessons` remains the authoritative safety boundary**.
 1. Create one future **DRIVING** lesson via `POST /api/admin/lessons` using explicit fixture IDs.
 2. Unique slot derived from `DAT_SMOKE_RUN_ID` (or auto timestamp label) on **tomorrow** in a business-hour window.
 3. Verify via `GET /api/admin/lessons/[id]` and calendar `GET /api/admin/lessons?from=&to=`.
@@ -130,37 +132,41 @@ After admin login and internal fixture preflight:
 
 Hosted mutation smoke uses a **120s** test timeout; optional UI `page.goto` uses **15s** per navigation. UI timeouts do **not** fail the mutation smoke when API create/update/readback passed.
 
-**Future hardening (deferred):** `production-smoke-e2e-testids-v1` — stable `data-testid` selectors for Schedule Map and Lesson Management UI assertions.
+**Smoke testids (DEC-041):** stable `data-testid` selectors on admin surfaces for optional UI assertions. Constants: `lib/smoke/smoke-testids.ts`.
+
+| `data-testid`                         | Surface                 |
+| ------------------------------------- | ----------------------- |
+| `smoke-admin-dashboard`               | `/admin` main content   |
+| `smoke-schedule-map`                  | Schedule Map card       |
+| `smoke-lesson-management`             | `/admin/lessons` header |
+| `smoke-lesson-management-driving-tab` | Driving Lessons tab     |
+| `smoke-people-page`                   | `/admin/users` header   |
+
+Mutation smoke UI checks prefer these testids; API create/update/readback remains the hard gate.
 
 ### Mutation fixture instructor requirements
 
 Production mutation smoke expects the fixture instructor to be bookable for **category `B`** (current smoke tenant default).
 
-| Check                                                         | When exposed by deployed API         | When not exposed                          |
+| Check                                                         | When exposed by deployed API         | When not exposed (legacy API)             |
 | ------------------------------------------------------------- | ------------------------------------ | ----------------------------------------- |
 | Qualified category `B` (`DAT_SMOKE_EXPECTED_LESSON_CATEGORY`) | Hard-fail **before POST** if missing | **WARN**, proceed — backend POST enforces |
 | Instructor license expiry                                     | Hard-fail if expired                 | **WARN**, proceed — backend enforces      |
 
+**Assign categories in admin UI:** People → Instructors → Profiles → **Edit Instructor** → **Qualified license categories** (`instructor-qualified-categories-management-v1`). No operator SQL required for routine smoke fixture maintenance.
+
 **Authoritative safety boundary:** `POST /api/admin/lessons`. If the instructor fixture still lacks category **B**, mutation smoke fails at POST with HTTP **400** and **no lesson is created** (e.g. `Instructor has no qualified categories for driving lessons…`).
 
-### Instructor qualified categories — operational gap (smoke fixture)
+### Booking endpoint metadata (`forBooking=true`)
 
-Instructor **qualified categories** (`_InstructorCategories` / `Instructor.qualifiedCategories`) are required for DRIVING lesson creation but are **not manageable through the current admin UI** (Edit Instructor covers profile, license, and app access only).
+When `GET /api/admin/instructors/all?forBooking=true`, each instructor row may include:
 
-For the temporary **A Conquistadora** smoke fixture, category **B** may be linked by **controlled operator SQL** on the validated smoke tenant (example pattern — adjust IDs for your env):
+| Field                     | Type             | Purpose                                    |
+| ------------------------- | ---------------- | ------------------------------------------ |
+| `qualifiedCategoryNames`  | `string[]`       | Active qualified categories (may be empty) |
+| `instructorLicenseExpiry` | `string \| null` | ISO date `YYYY-MM-DD`                      |
 
-```sql
--- Resolve category B id and instructor record id for the smoke tenant first.
-INSERT INTO "_InstructorCategories" ("A", "B")
-SELECT '<instructor-record-id>', c.id
-FROM categories c
-WHERE c.name = 'B'
-ON CONFLICT DO NOTHING;
-```
-
-**Follow-up product batch (required):** `instructor-qualified-categories-management-v1` — admin UI to assign qualified categories without operator SQL.
-
-**Future optional hardening (deferred):** expose instructor `qualifiedCategoryNames` and `instructorLicenseExpiry` on a stable read-only admin fixture API after deployment, so pre-POST readiness can hard-fail without depending on POST probing.
+These fields are **not** returned when `forBooking=false` (historical filter lists).
 
 ### Cleanup policy (v1)
 
@@ -177,7 +183,7 @@ ON CONFLICT DO NOTHING;
 
 ## Out of scope (deferred)
 
-- Edit modal UI automation (API-first mutations in v1; testids slice if needed)
+- Edit modal UI automation (API-first mutations in v1)
 - Invite accept, Postmark/email sends
 - Delete / cleanup (immutable smoke trail in v1)
 - Billing, import/export apply

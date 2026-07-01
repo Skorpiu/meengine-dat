@@ -60,6 +60,7 @@ import {
   isScheduleMapLessonInstructorInactive,
   isScheduleMapLessonVehicleProblematic,
 } from "@/lib/schedule/schedule-map-card";
+import { SMOKE_TESTIDS } from "@/lib/smoke/smoke-testids";
 import { getStudentDisplayName } from "@/lib/students/student-display";
 import type { ScheduleMapStudentPayload } from "@/lib/students/schedule-lesson-student";
 
@@ -653,6 +654,7 @@ export function ScheduleMap({
     <>
       <Card
         className="schedule-map-container"
+        data-testid={SMOKE_TESTIDS.scheduleMap}
         onClick={() => setSelectedLesson(null)}
       >
         <CardHeader>
