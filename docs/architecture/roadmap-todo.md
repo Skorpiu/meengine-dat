@@ -40,7 +40,8 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `production-smoke-e2e-readonly-v1` | **Done** | DEC-036: hybrid API + Playwright read-only smoke; env guards; `pnpm e2e:smoke:api` / `e2e:smoke:readonly` / `e2e:smoke:prod`; runbook [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md); no mutations; not in `pnpm check`/CI default |
 | `instructor-invite-auto-approve-v1` | **Done** | DEC-037: invitation accept sets `isApproved=true` for all invited roles (including INSTRUCTOR); public signup unchanged; no schema/migration/RLS |
 | `instructor-invite-license-fields-v1` | **Done** | DEC-038: INSTRUCTOR invite collects license number + expiry; stored on `UserInvitation`; accept uses real data; no `INVITE-PENDING-*`; migration `20260623120000_add_instructor_license_fields_to_invitations` |
-| `production-smoke-e2e-lesson-mutations-v1` | Pending | After dedicated smoke tenant provisioned; create/edit/modal/practical number |
+| `production-smoke-e2e-fixture-preflight-v1` | **Done** | DEC-039: zero-write fixture preflight; `pnpm e2e:smoke:fixture-preflight`; explicit org/student/instructor/vehicle IDs; temporary A Conquistadora smoke tenant on www.meengine.io |
+| `production-smoke-e2e-lesson-mutations-v1` | Pending | After fixture preflight green; create/edit/modal/practical number; requires future `DAT_E2E_ALLOW_PRODUCTION_MUTATIONS` |
 | `production-smoke-e2e-testids-v1` | Pending (optional) | UI `data-testid` if selectors fragile in mutation slice |
 | `production-smoke-runbook-sync-v1` | Pending | Residual runbook alignment if drift remains |
 | `audit-log-tenant-context-foundation-plan-v1` | Pending | Design doc + write-path contract only — **no migration** |
