@@ -15,6 +15,7 @@ export type InstructorEditForm = {
   address: string;
   instructorLicenseNumber: string;
   instructorLicenseExpiry: string;
+  selectedCategories: string[];
 };
 
 export function formatInstructorLicenseExpiryInputValue(
@@ -24,6 +25,32 @@ export function formatInstructorLicenseExpiryInputValue(
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return "";
   return date.toISOString().slice(0, 10);
+}
+
+export function formatInstructorQualifiedCategoriesLabel(
+  categories: { name: string }[] | null | undefined,
+): string {
+  if (!categories || categories.length === 0) {
+    return "—";
+  }
+  return categories.map((category) => category.name).join(", ");
+}
+
+function sortedCategoryNames(names: string[]): string[] {
+  return [...names]
+    .map((name) => name.trim())
+    .filter(Boolean)
+    .sort();
+}
+
+export function instructorQualifiedCategoryNamesEqual(
+  left: string[],
+  right: string[],
+): boolean {
+  const a = sortedCategoryNames(left);
+  const b = sortedCategoryNames(right);
+  if (a.length !== b.length) return false;
+  return a.every((name, index) => name === b[index]);
 }
 
 export function toInstructorEditForm(
@@ -39,6 +66,9 @@ export function toInstructorEditForm(
     instructorLicenseExpiry: formatInstructorLicenseExpiryInputValue(
       user.instructor?.instructorLicenseExpiry,
     ),
+    selectedCategories:
+      user.instructor?.qualifiedCategories?.map((category) => category.name) ??
+      [],
   };
 }
 
@@ -60,7 +90,16 @@ export function buildInstructorUserUpdateBody(input: {
   };
 }
 
-export function hasInstructorEditFormChanges(
+/** Body for PATCH /api/admin/instructors/[id] — operational qualified categories only. */
+export function buildInstructorQualifiedCategoriesPatchBody(input: {
+  form: InstructorEditForm;
+}): { qualifiedCategoryNames: string[] } {
+  return {
+    qualifiedCategoryNames: [...input.form.selectedCategories],
+  };
+}
+
+export function hasInstructorProfileFormChanges(
   form: InstructorEditForm,
   original: InstructorEditForm,
 ): boolean {
@@ -75,9 +114,42 @@ export function hasInstructorEditFormChanges(
   );
 }
 
+export function hasInstructorQualifiedCategoryChanges(
+  form: InstructorEditForm,
+  original: InstructorEditForm,
+): boolean {
+  return !instructorQualifiedCategoryNamesEqual(
+    form.selectedCategories,
+    original.selectedCategories,
+  );
+}
+
+export function hasInstructorEditFormChanges(
+  form: InstructorEditForm,
+  original: InstructorEditForm,
+): boolean {
+  return (
+    hasInstructorProfileFormChanges(form, original) ||
+    hasInstructorQualifiedCategoryChanges(form, original)
+  );
+}
+
 /** Login email is read-only in App access — never part of the editable form payload. */
 export function shouldShowLoginEmailInAppAccessSection(
   email: string | null | undefined,
 ): boolean {
   return Boolean(email?.trim());
+}
+
+export function instructorQualifiedCategoriesApiErrorMessage(
+  code: string | undefined,
+  fallback: string,
+): string {
+  if (code === "category_not_found") {
+    return "One or more selected license categories are invalid or inactive.";
+  }
+  if (code === "invalid_request_body") {
+    return "Invalid qualified categories request.";
+  }
+  return fallback;
 }

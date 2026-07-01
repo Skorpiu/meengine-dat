@@ -1,8 +1,13 @@
 import { describe, it, expect } from "vitest";
 import {
+  buildInstructorQualifiedCategoriesPatchBody,
   buildInstructorUserUpdateBody,
   formatInstructorLicenseExpiryInputValue,
+  formatInstructorQualifiedCategoriesLabel,
   hasInstructorEditFormChanges,
+  hasInstructorProfileFormChanges,
+  hasInstructorQualifiedCategoryChanges,
+  instructorQualifiedCategoriesApiErrorMessage,
   INSTRUCTOR_PROFILE_ROW_DELETE_LABEL,
   INSTRUCTOR_PROFILE_ROW_EDIT_LABEL,
   INSTRUCTOR_PROFILES_LEGACY_ROW_EDIT_LABEL,
@@ -27,6 +32,7 @@ const baseInstructor = (
     instructorIdNumber: "INS-001",
     instructorLicenseNumber: "LIC-001",
     instructorLicenseExpiry: "2027-06-15",
+    qualifiedCategories: [{ id: 2, name: "B" }],
   },
   ...overrides,
 });
@@ -56,8 +62,20 @@ describe("formatInstructorLicenseExpiryInputValue", () => {
   });
 });
 
+describe("formatInstructorQualifiedCategoriesLabel", () => {
+  it("joins category names", () => {
+    expect(
+      formatInstructorQualifiedCategoriesLabel([{ name: "B" }, { name: "A1" }]),
+    ).toBe("B, A1");
+  });
+
+  it("returns em dash when empty", () => {
+    expect(formatInstructorQualifiedCategoriesLabel([])).toBe("—");
+  });
+});
+
 describe("toInstructorEditForm", () => {
-  it("maps user and instructor fields without email", () => {
+  it("maps user, instructor, and qualified categories without email", () => {
     const form = toInstructorEditForm(baseInstructor());
     expect(form).toEqual({
       firstName: "Ana",
@@ -66,6 +84,7 @@ describe("toInstructorEditForm", () => {
       address: "Rua A 1",
       instructorLicenseNumber: "LIC-001",
       instructorLicenseExpiry: "2027-06-15",
+      selectedCategories: ["B"],
     });
     expect(form).not.toHaveProperty("email");
   });
@@ -95,6 +114,17 @@ describe("buildInstructorUserUpdateBody", () => {
   });
 });
 
+describe("buildInstructorQualifiedCategoriesPatchBody", () => {
+  it("builds PATCH payload from selected categories", () => {
+    const form = toInstructorEditForm(baseInstructor());
+    expect(
+      buildInstructorQualifiedCategoriesPatchBody({
+        form: { ...form, selectedCategories: ["B", "C1"] },
+      }),
+    ).toEqual({ qualifiedCategoryNames: ["B", "C1"] });
+  });
+});
+
 describe("hasInstructorEditFormChanges", () => {
   it("detects no changes when equal", () => {
     const form = toInstructorEditForm(baseInstructor());
@@ -104,11 +134,32 @@ describe("hasInstructorEditFormChanges", () => {
   it("detects license change", () => {
     const form = toInstructorEditForm(baseInstructor());
     expect(
-      hasInstructorEditFormChanges(
+      hasInstructorProfileFormChanges(
         { ...form, instructorLicenseNumber: "LIC-002" },
         form,
       ),
     ).toBe(true);
+  });
+
+  it("detects qualified category change", () => {
+    const form = toInstructorEditForm(baseInstructor());
+    expect(
+      hasInstructorQualifiedCategoryChanges(
+        { ...form, selectedCategories: ["B", "A1"] },
+        form,
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("instructorQualifiedCategoriesApiErrorMessage", () => {
+  it("maps category_not_found", () => {
+    expect(
+      instructorQualifiedCategoriesApiErrorMessage(
+        "category_not_found",
+        "fallback",
+      ),
+    ).toContain("invalid or inactive");
   });
 });
 

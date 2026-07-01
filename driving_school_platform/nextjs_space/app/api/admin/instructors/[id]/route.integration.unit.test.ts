@@ -4,6 +4,10 @@ vi.mock("@/lib/instructors/instructor-record-delete", () => ({
   deleteInstructorRecordIfEligible: vi.fn(),
 }));
 
+vi.mock("@/lib/instructors/instructor-record-qualified-categories", () => ({
+  updateInstructorQualifiedCategories: vi.fn(),
+}));
+
 vi.mock("next-auth", () => ({
   getServerSession: vi.fn(),
 }));
@@ -23,8 +27,9 @@ vi.mock("@/lib/users/user-route-access", async () => {
   };
 });
 
-import { DELETE } from "./route";
+import { DELETE, PATCH } from "./route";
 import { deleteInstructorRecordIfEligible } from "@/lib/instructors/instructor-record-delete";
+import { updateInstructorQualifiedCategories } from "@/lib/instructors/instructor-record-qualified-categories";
 import { getServerSession } from "next-auth";
 import {
   assertUserTenantHost,
@@ -42,11 +47,17 @@ const rejectDemoMock =
   rejectDemoUserManagementMutation as unknown as ReturnType<typeof vi.fn>;
 const deleteInstructorMock =
   deleteInstructorRecordIfEligible as unknown as ReturnType<typeof vi.fn>;
+const updateQualifiedCategoriesMock =
+  updateInstructorQualifiedCategories as unknown as ReturnType<typeof vi.fn>;
 
 const routeContext = { params: { id: "inst-1" } };
 
-function req(method: string, url: string): Request {
-  return new Request(url, { method });
+function req(method: string, url: string, body?: unknown): Request {
+  return new Request(url, {
+    method,
+    headers: body ? { "Content-Type": "application/json" } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  });
 }
 
 beforeEach(() => {
@@ -54,6 +65,13 @@ beforeEach(() => {
   assertUserTenantHostMock.mockResolvedValue(null);
   rejectDemoMock.mockResolvedValue(null);
   deleteInstructorMock.mockResolvedValue({ ok: true });
+  updateQualifiedCategoriesMock.mockResolvedValue({
+    ok: true,
+    instructor: {
+      id: "inst-1",
+      qualifiedCategories: [{ id: 2, name: "B" }],
+    },
+  });
 });
 
 describe("DELETE /api/admin/instructors/[id]", () => {
@@ -196,5 +214,111 @@ describe("DELETE /api/admin/instructors/[id]", () => {
       const body = await res.json();
       expect(body.code).toBe(code);
     }
+  });
+});
+
+describe("PATCH /api/admin/instructors/[id]", () => {
+  it("returns 200 when qualified categories update succeeds", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+
+    const res = await PATCH(
+      req("PATCH", "http://school.example.com/api/admin/instructors/inst-1", {
+        qualifiedCategoryNames: ["B"],
+      }) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(body.data.instructor.qualifiedCategories).toEqual([
+      { id: 2, name: "B" },
+    ]);
+    expect(updateQualifiedCategoriesMock).toHaveBeenCalledWith({
+      organizationId: "org-a",
+      instructorId: "inst-1",
+      qualifiedCategoryNames: ["B"],
+    });
+  });
+
+  it("returns 400 for invalid request body", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+
+    const res = await PATCH(
+      req("PATCH", "http://school.example.com/api/admin/instructors/inst-1", {
+        qualifiedCategoryNames: "B",
+      }) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(400);
+    expect(updateQualifiedCategoriesMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 404 when instructor is missing or cross-tenant", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    updateQualifiedCategoriesMock.mockResolvedValue({
+      ok: false,
+      notFound: true,
+    });
+
+    const res = await PATCH(
+      req("PATCH", "http://school.example.com/api/admin/instructors/inst-9", {
+        qualifiedCategoryNames: [],
+      }) as any,
+      { params: { id: "inst-9" } },
+    );
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 400 when category is unknown or inactive", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    updateQualifiedCategoriesMock.mockResolvedValue({
+      ok: false,
+      error: "category_not_found",
+      categoryName: "ZZZ",
+    });
+
+    const res = await PATCH(
+      req("PATCH", "http://school.example.com/api/admin/instructors/inst-1", {
+        qualifiedCategoryNames: ["ZZZ"],
+      }) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe("category_not_found");
+    expect(body.categoryName).toBe("ZZZ");
+  });
+
+  it("returns 403 for demo org", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-demo" },
+    });
+    rejectDemoMock.mockResolvedValue(
+      new Response(JSON.stringify({ error: "demo_restricted_action" }), {
+        status: 403,
+      }),
+    );
+
+    const res = await PATCH(
+      req("PATCH", "http://school.example.com/api/admin/instructors/inst-1", {
+        qualifiedCategoryNames: ["B"],
+      }) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(403);
+    expect(updateQualifiedCategoriesMock).not.toHaveBeenCalled();
   });
 });

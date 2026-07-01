@@ -153,7 +153,7 @@ Production mutation smoke expects the fixture instructor to be bookable for **ca
 | Qualified category `B` (`DAT_SMOKE_EXPECTED_LESSON_CATEGORY`) | Hard-fail **before POST** if missing | **WARN**, proceed — backend POST enforces |
 | Instructor license expiry                                     | Hard-fail if expired                 | **WARN**, proceed — backend enforces      |
 
-**Assign categories in admin UI:** People → Instructors → Profiles → **Edit Instructor** → **Qualified license categories** (`instructor-qualified-categories-management-v1`). No operator SQL required for routine smoke fixture maintenance.
+**Assign categories in admin UI:** People → Instructors → Profiles → **Edit Instructor** → **Qualified license categories** (`instructor-qualified-categories-management-v1b`). No operator SQL required for routine smoke fixture maintenance.
 
 **Authoritative safety boundary:** `POST /api/admin/lessons`. If the instructor fixture still lacks category **B**, mutation smoke fails at POST with HTTP **400** and **no lesson is created** (e.g. `Instructor has no qualified categories for driving lessons…`).
 
