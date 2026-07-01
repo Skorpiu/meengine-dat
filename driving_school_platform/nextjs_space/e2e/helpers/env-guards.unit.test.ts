@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  assertProductionMutationsAllowed,
   assertSmokeFixtureEnvVars,
   assertSmokeFixturePreflightAllowed,
   assertSmokeTargetAllowed,
@@ -20,6 +21,8 @@ const SMOKE_ENV_VARS = [
   "DAT_SMOKE_EXPECTED_STUDENT_SCHOOL_ID",
   "DAT_SMOKE_EXPECTED_VEHICLE_REGISTRATION",
   "DAT_SMOKE_EXPECTED_INSTRUCTOR_EMAIL",
+  "DAT_SMOKE_RUN_ID",
+  "DAT_E2E_ALLOW_PRODUCTION_MUTATIONS",
   "E2E_SKIP_WEB_SERVER",
   "E2E_BASE_URL",
   "PLAYWRIGHT_BASE_URL",
@@ -170,5 +173,65 @@ describe("assertSmokeFixturePreflightAllowed", () => {
     expect(() => assertSmokeFixturePreflightAllowed()).toThrow(
       /DAT_SMOKE_ORG_ID/,
     );
+  });
+});
+
+describe("assertProductionMutationsAllowed", () => {
+  beforeEach(() => {
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("allows local host when mutation opt-in and fixture IDs are set", () => {
+    process.env.DAT_SMOKE_BASE_URL = "http://localhost:3000";
+    process.env.DAT_E2E_ALLOW_PRODUCTION_MUTATIONS = "true";
+    process.env.DAT_SMOKE_ORG_ID = "org-smoke-1";
+    process.env.DAT_SMOKE_STUDENT_ID = "student-1";
+    process.env.DAT_SMOKE_INSTRUCTOR_USER_ID = "instructor-user-1";
+    process.env.DAT_SMOKE_VEHICLE_ID = "90";
+
+    expect(assertProductionMutationsAllowed().host).toBe("localhost");
+  });
+
+  it("requires mutation opt-in even on localhost", () => {
+    process.env.DAT_SMOKE_BASE_URL = "http://localhost:3000";
+    process.env.DAT_SMOKE_ORG_ID = "org-smoke-1";
+    process.env.DAT_SMOKE_STUDENT_ID = "student-1";
+    process.env.DAT_SMOKE_INSTRUCTOR_USER_ID = "instructor-user-1";
+    process.env.DAT_SMOKE_VEHICLE_ID = "90";
+
+    expect(() => assertProductionMutationsAllowed()).toThrow(
+      /DAT_E2E_ALLOW_PRODUCTION_MUTATIONS=true/,
+    );
+  });
+
+  it("requires production and mutation opt-in for hosted targets", () => {
+    process.env.DAT_SMOKE_BASE_URL = "https://www.meengine.io";
+    process.env.DAT_SMOKE_ALLOWED_HOSTS = "www.meengine.io";
+    process.env.DAT_E2E_ALLOW_PRODUCTION_MUTATIONS = "true";
+    process.env.DAT_SMOKE_ORG_ID = "org-smoke-1";
+    process.env.DAT_SMOKE_STUDENT_ID = "student-1";
+    process.env.DAT_SMOKE_INSTRUCTOR_USER_ID = "instructor-user-1";
+    process.env.DAT_SMOKE_VEHICLE_ID = "90";
+
+    expect(() => assertProductionMutationsAllowed()).toThrow(
+      /DAT_E2E_ALLOW_PRODUCTION=true/,
+    );
+  });
+
+  it("passes for hosted target with dual opt-in and fixture IDs", () => {
+    process.env.DAT_SMOKE_BASE_URL = "https://www.meengine.io";
+    process.env.DAT_SMOKE_ALLOWED_HOSTS = "www.meengine.io";
+    process.env.DAT_E2E_ALLOW_PRODUCTION = "true";
+    process.env.DAT_E2E_ALLOW_PRODUCTION_MUTATIONS = "true";
+    process.env.DAT_SMOKE_ORG_ID = "org-smoke-1";
+    process.env.DAT_SMOKE_STUDENT_ID = "student-1";
+    process.env.DAT_SMOKE_INSTRUCTOR_USER_ID = "instructor-user-1";
+    process.env.DAT_SMOKE_VEHICLE_ID = "90";
+
+    expect(assertProductionMutationsAllowed().host).toBe("www.meengine.io");
   });
 });

@@ -176,3 +176,30 @@ export function assertSmokeFixturePreflightAllowed(): SmokeTargetSummary {
   assertSmokeFixtureEnvVars();
   return summary;
 }
+
+function assertProductionMutationsOptIn(): void {
+  if (
+    process.env.DAT_E2E_ALLOW_PRODUCTION_MUTATIONS?.trim().toLowerCase() !==
+    "true"
+  ) {
+    throw new Error(
+      [
+        "Production smoke lesson mutations require explicit opt-in.",
+        "Set DAT_E2E_ALLOW_PRODUCTION_MUTATIONS=true",
+        "(in addition to hosted DAT_E2E_ALLOW_PRODUCTION=true when not on localhost).",
+      ].join(" "),
+    );
+  }
+}
+
+/**
+ * Lesson mutation smoke requires target guard, mutation opt-in, and fixture IDs.
+ * Does not affect readonly or fixture-preflight suites.
+ */
+export function assertProductionMutationsAllowed(): SmokeTargetSummary {
+  const summary = assertSmokeTargetAllowed();
+  assertProductionMutationsOptIn();
+  assertSmokeFixtureEnvVars();
+  console.log("Smoke mutations: dual opt-in confirmed");
+  return summary;
+}

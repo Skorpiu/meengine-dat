@@ -8,6 +8,7 @@ import {
   summarizeSmokeFixtureResults,
 } from "../helpers/smoke-fixture-preflight";
 import { assertNoFatalPageErrors, loginWithCredentials } from "../helpers/auth";
+import { assertSmokeAdminLessonsPageLoaded } from "../helpers/smoke-admin-page-load";
 
 const adminEmail = process.env.DAT_SMOKE_ADMIN_EMAIL?.trim();
 const adminPassword = process.env.DAT_SMOKE_ADMIN_PASSWORD;
@@ -35,10 +36,12 @@ test.describe("Production smoke (fixture preflight)", () => {
     await assertNoFatalPageErrors(page);
 
     await page.goto("/admin/lessons");
-    await expect(
-      page.getByRole("heading", { name: /lesson management/i }),
-    ).toBeVisible();
-    await assertNoFatalPageErrors(page);
+    const lessonsPageLoad = await assertSmokeAdminLessonsPageLoaded(page);
+    if (lessonsPageLoad.detail.includes("WARN:")) {
+      console.warn(`Smoke fixture preflight UI: ${lessonsPageLoad.detail}`);
+    } else {
+      console.log(`Smoke fixture preflight UI: ${lessonsPageLoad.detail}`);
+    }
 
     const results = await runSmokeFixturePreflight(async (path, init) => {
       const response = await page.request.get(path, {
