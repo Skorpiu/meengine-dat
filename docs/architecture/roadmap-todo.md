@@ -42,7 +42,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `instructor-invite-license-fields-v1` | **Done** | DEC-038: INSTRUCTOR invite collects license number + expiry; stored on `UserInvitation`; accept uses real data; no `INVITE-PENDING-*`; migration `20260623120000_add_instructor_license_fields_to_invitations` |
 | `production-smoke-e2e-fixture-preflight-v1` | **Done** | DEC-039: zero-write fixture preflight; `pnpm e2e:smoke:fixture-preflight`; explicit org/student/instructor/vehicle IDs; temporary A Conquistadora smoke tenant on www.meengine.io |
 | `production-smoke-e2e-lesson-mutations-v1` | **Done** | DEC-040: API-first DRIVING create + time update; `pnpm e2e:smoke:mutations`; dual opt-in; no cleanup; not in `pnpm check`/CI |
-| `instructor-qualified-categories-management-v1` | **Done** | School Admin qualified categories on Edit Instructor; PATCH admin instructor; M2M `_InstructorCategories`; no migration |
+| `instructor-qualified-categories-management-v1b` | **Done** | School Admin qualified categories on Edit Instructor; PATCH admin instructor; M2M `_InstructorCategories`; no migration |
 | `production-smoke-e2e-testids-v1` | **Done** | DEC-041: smoke `data-testid` markers; booking endpoint exposes `qualifiedCategoryNames` + `instructorLicenseExpiry` when `forBooking=true`; preflight category B validation |
 | `production-smoke-runbook-sync-v1` | Pending | Residual runbook alignment if drift remains |
 | `audit-log-tenant-context-foundation-plan-v1` | Pending | Design doc + write-path contract only — **no migration** |

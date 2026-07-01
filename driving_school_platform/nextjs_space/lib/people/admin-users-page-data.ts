@@ -10,7 +10,15 @@ const adminUsersPageInclude = {
       transmissionType: true,
     },
   },
-  instructor: true,
+  instructor: {
+    include: {
+      qualifiedCategories: {
+        where: { isActive: true },
+        select: { id: true, name: true },
+        orderBy: { name: "asc" as const },
+      },
+    },
+  },
 } satisfies Prisma.UserInclude;
 
 export type AdminUsersPageUser = ReturnType<typeof serializeAdminUsersPageUser>;

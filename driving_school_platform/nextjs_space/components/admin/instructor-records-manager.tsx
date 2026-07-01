@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
@@ -34,8 +35,12 @@ import {
 import { Edit2, ChevronRight, Search, Trash2, UserCog } from "lucide-react";
 import type { InstructorRecordUserDto } from "@/lib/instructors/instructor-record-ui-types";
 import {
+  buildInstructorQualifiedCategoriesPatchBody,
   buildInstructorUserUpdateBody,
-  hasInstructorEditFormChanges,
+  formatInstructorQualifiedCategoriesLabel,
+  hasInstructorProfileFormChanges,
+  hasInstructorQualifiedCategoryChanges,
+  instructorQualifiedCategoriesApiErrorMessage,
   INSTRUCTOR_PROFILE_ROW_DELETE_LABEL,
   INSTRUCTOR_PROFILE_ROW_EDIT_LABEL,
   toInstructorEditForm,
@@ -92,8 +97,14 @@ import { canShowChangeInstructorEmailAction } from "@/lib/instructors/instructor
 
 const INSTRUCTOR_PAGE_SIZE = 15;
 
+type CategoryOption = {
+  id: number;
+  name: string;
+};
+
 type InstructorRecordsManagerProps = {
   users: InstructorRecordUserDto[];
+  categories?: CategoryOption[];
   embedded?: boolean;
 };
 
@@ -138,6 +149,7 @@ async function tryReadJson<T>(response: Response): Promise<T | null> {
 
 export function InstructorRecordsManager({
   users,
+  categories = [],
   embedded = false,
 }: InstructorRecordsManagerProps) {
   const router = useRouter();
@@ -255,37 +267,91 @@ export function InstructorRecordsManager({
     e.preventDefault();
     if (!editingUser || !editForm || !editOriginal) return;
 
-    if (!hasInstructorEditFormChanges(editForm, editOriginal)) {
+    const needsProfileUpdate = hasInstructorProfileFormChanges(
+      editForm,
+      editOriginal,
+    );
+    const needsCategoriesUpdate = hasInstructorQualifiedCategoryChanges(
+      editForm,
+      editOriginal,
+    );
+
+    if (!needsProfileUpdate && !needsCategoriesUpdate) {
       toast.error("No changes to save.");
       return;
     }
 
-    if (!editForm.instructorLicenseNumber.trim()) {
-      toast.error("Instructor license number is required.");
-      return;
+    if (needsProfileUpdate) {
+      if (!editForm.instructorLicenseNumber.trim()) {
+        toast.error("Instructor license number is required.");
+        return;
+      }
+      if (!editForm.instructorLicenseExpiry) {
+        toast.error("Instructor license expiry is required.");
+        return;
+      }
     }
-    if (!editForm.instructorLicenseExpiry) {
-      toast.error("Instructor license expiry is required.");
+
+    const instructorId = editingUser.instructor?.id;
+    if (needsCategoriesUpdate && !instructorId) {
+      toast.error(
+        "Cannot update qualified categories without an operational instructor record.",
+      );
       return;
     }
 
     setEditLoading(true);
     try {
-      const response = await fetch("/api/users/update", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          buildInstructorUserUpdateBody({
-            userId: editingUser.id,
-            form: editForm,
-          }),
-        ),
-      });
-      const data = await tryReadJson<{ error?: string }>(response);
+      if (needsProfileUpdate) {
+        const response = await fetch("/api/users/update", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            buildInstructorUserUpdateBody({
+              userId: editingUser.id,
+              form: editForm,
+            }),
+          ),
+        });
+        const data = await tryReadJson<{ error?: string }>(response);
 
-      if (!response.ok) {
-        toast.error(data?.error || "Failed to update instructor.");
-        return;
+        if (!response.ok) {
+          toast.error(data?.error || "Failed to update instructor.");
+          return;
+        }
+      }
+
+      if (needsCategoriesUpdate && instructorId) {
+        const patchResponse = await fetch(
+          `/api/admin/instructors/${encodeURIComponent(instructorId)}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(
+              buildInstructorQualifiedCategoriesPatchBody({ form: editForm }),
+            ),
+          },
+        );
+        const patchData = await tryReadJson<{
+          error?: string;
+          code?: string;
+        }>(patchResponse);
+
+        if (!patchResponse.ok) {
+          toast.error(
+            instructorQualifiedCategoriesApiErrorMessage(
+              patchData?.code ?? patchData?.error,
+              patchData?.error ||
+                "Failed to update instructor qualified categories.",
+            ),
+          );
+          if (needsProfileUpdate) {
+            toast.error(
+              "Instructor profile was saved, but qualified categories could not be updated.",
+            );
+          }
+          return;
+        }
       }
 
       toast.success("Instructor updated.");
@@ -296,6 +362,16 @@ export function InstructorRecordsManager({
     } finally {
       setEditLoading(false);
     }
+  };
+
+  const toggleQualifiedCategory = (categoryName: string) => {
+    setEditForm((prev) => {
+      if (!prev) return prev;
+      const selected = prev.selectedCategories.includes(categoryName)
+        ? prev.selectedCategories.filter((name) => name !== categoryName)
+        : [...prev.selectedCategories, categoryName];
+      return { ...prev, selectedCategories: selected };
+    });
   };
 
   const handleDeleteConfirm = async () => {
@@ -606,6 +682,14 @@ export function InstructorRecordsManager({
                                     user.instructor?.instructorLicenseExpiry,
                                   )}
                                 </div>
+                                <div>
+                                  Qualified:{" "}
+                                  <span className="font-medium">
+                                    {formatInstructorQualifiedCategoriesLabel(
+                                      user.instructor?.qualifiedCategories,
+                                    )}
+                                  </span>
+                                </div>
                                 {user.instructor?.instructorIdNumber ? (
                                   <div className="text-xs text-gray-500">
                                     Instructor ID:{" "}
@@ -831,6 +915,46 @@ export function InstructorRecordsManager({
                           />
                         </div>
                       </div>
+                      {editingUser.instructor?.id && categories.length > 0 ? (
+                        <div className="space-y-2">
+                          <Label>Qualified license categories</Label>
+                          <p className="text-xs text-gray-500">
+                            Required for practical (driving) lessons. Select
+                            every license category this instructor is qualified
+                            to teach.
+                          </p>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto p-2 bg-white rounded border">
+                            {categories.map((category) => (
+                              <div
+                                key={category.id}
+                                className="flex items-center space-x-2"
+                              >
+                                <Checkbox
+                                  id={`edit-instructor-cat-${category.id}`}
+                                  checked={editForm.selectedCategories.includes(
+                                    category.name,
+                                  )}
+                                  onCheckedChange={() =>
+                                    toggleQualifiedCategory(category.name)
+                                  }
+                                />
+                                <label
+                                  htmlFor={`edit-instructor-cat-${category.id}`}
+                                  className="text-sm font-medium leading-none cursor-pointer"
+                                >
+                                  {category.name}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                          {editForm.selectedCategories.length === 0 ? (
+                            <p className="text-xs text-amber-700">
+                              No categories selected — practical driving lessons
+                              cannot be booked for this instructor.
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : null}
                       {editingUser.instructor?.instructorIdNumber ? (
                         <div className="space-y-1">
                           <Label>Instructor ID</Label>

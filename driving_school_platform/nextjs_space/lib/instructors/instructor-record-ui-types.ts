@@ -2,12 +2,18 @@
  * UI DTO for instructor rows on /admin/users (sourced from User + Instructor include).
  */
 
+export type InstructorQualifiedCategoryDto = {
+  id: number;
+  name: string;
+};
+
 export type InstructorOperationalDto = {
   id?: string;
   instructorIdNumber?: string | null;
   instructorLicenseNumber?: string | null;
   instructorLicenseExpiry?: string | Date | null;
   isAvailableForBooking?: boolean;
+  qualifiedCategories?: InstructorQualifiedCategoryDto[];
 };
 
 export type InstructorRecordUserDto = {

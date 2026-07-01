@@ -44,6 +44,7 @@ interface User {
     instructorIdNumber?: string | null;
     instructorLicenseNumber?: string | null;
     instructorLicenseExpiry?: string | Date | null;
+    qualifiedCategories?: { id: number; name: string }[];
   } | null;
 }
 
@@ -134,7 +135,11 @@ export function UsersManagementClient({
               <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
             </TabsList>
             <TabsContent value="profiles">
-              <InstructorRecordsManager users={users} embedded />
+              <InstructorRecordsManager
+                users={users}
+                categories={categories}
+                embedded
+              />
             </TabsContent>
             <TabsContent value="onboarding" className="space-y-6">
               <p className="text-sm text-gray-600 max-w-3xl">

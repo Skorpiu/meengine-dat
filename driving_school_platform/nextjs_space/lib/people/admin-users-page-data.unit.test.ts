@@ -109,6 +109,17 @@ describe("loadAdminUsersPageData", () => {
     );
   });
 
+  it("includes active qualified categories on instructor SSR include", async () => {
+    await loadAdminUsersPageData("org-a");
+
+    const include = h.userFindManyMock.mock.calls[0]?.[0]?.include;
+    expect(include.instructor.include.qualifiedCategories).toEqual({
+      where: { isActive: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    });
+  });
+
   it("serializes instructor decimal fields to numbers", () => {
     const serialized = serializeAdminUsersPageUser({
       id: "u1",
