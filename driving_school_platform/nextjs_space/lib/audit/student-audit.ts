@@ -16,6 +16,8 @@ export type StudentProfileAuditAction =
   | "student.update"
   | "student.email.change";
 
+export type StudentDeleteAuditAction = "student.delete";
+
 export type StudentEmailChangePolicyMode =
   | "APP_USER"
   | "INVITED"
@@ -93,6 +95,18 @@ export function buildStudentEmailChangeAuditMetadata(input: {
   };
 }
 
+export function buildStudentDeleteAuditMetadata(input: {
+  appAccessMode: string;
+  hadLinkedUser: boolean;
+  hadLessons: boolean;
+}): Record<string, unknown> {
+  return {
+    appAccessMode: input.appAccessMode,
+    hadLinkedUser: input.hadLinkedUser,
+    hadLessons: input.hadLessons,
+  };
+}
+
 export function buildStudentAppAccessRemoveAuditMetadata(input: {
   appAccessMode: string;
 }): Record<string, unknown> {
@@ -167,6 +181,35 @@ export async function writeStudentEmailChangeAuditEvent(
         policyMode: input.policyMode,
         hasLinkedUser: input.hasLinkedUser,
         invitationRevoked: input.invitationRevoked,
+      }),
+      ...input.requestContext,
+    },
+    input.options,
+  );
+}
+
+export async function writeStudentDeleteAuditEvent(
+  input: WriteStudentAuditEventBase & {
+    appAccessMode: string;
+    hadLinkedUser: boolean;
+    lessonsCount: number;
+    linkedUserId?: string | null;
+  },
+) {
+  return writeAuditEvent(
+    {
+      organizationId: input.organizationId,
+      actorUserId: input.actor.userId,
+      actorRole: input.actor.role,
+      actorEmail: input.actor.email ?? null,
+      action: "student.delete",
+      entityType: STUDENT_AUDIT_ENTITY_TYPE,
+      entityId: input.studentId,
+      targetUserId: input.linkedUserId ?? null,
+      metadata: buildStudentDeleteAuditMetadata({
+        appAccessMode: input.appAccessMode,
+        hadLinkedUser: input.hadLinkedUser,
+        hadLessons: input.lessonsCount > 0,
       }),
       ...input.requestContext,
     },

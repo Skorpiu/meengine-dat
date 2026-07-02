@@ -40,8 +40,15 @@ type DeleteEligibilityRow = Prisma.StudentGetPayload<{
   select: typeof STUDENT_DELETE_ELIGIBILITY_SELECT;
 }>;
 
+export type StudentDeleteAuditSnapshot = {
+  appAccessMode: string;
+  hadLinkedUser: boolean;
+  lessonsCount: number;
+  linkedUserId: string | null;
+};
+
 export type DeleteStudentRecordResult =
-  | { ok: true }
+  | { ok: true; audit: StudentDeleteAuditSnapshot }
   | { ok: false; notFound: true }
   | {
       ok: false;
@@ -94,7 +101,15 @@ async function evaluateRowForDelete(
   }
 
   await tx.student.delete({ where: { id: row.id } });
-  return { ok: true };
+  return {
+    ok: true,
+    audit: {
+      appAccessMode: row.appAccessMode,
+      hadLinkedUser: row.userId != null,
+      lessonsCount: row._count.lessons,
+      linkedUserId: row.userId,
+    },
+  };
 }
 
 /**

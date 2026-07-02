@@ -15,6 +15,7 @@ import type { UserRole } from "@prisma/client";
 import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
 import {
   collectStudentProfileUpdateChangedFields,
+  writeStudentDeleteAuditEvent,
   writeStudentProfileUpdateAuditEvent,
 } from "@/lib/audit/student-audit";
 import { deleteStudentRecordIfEligible } from "@/lib/students/student-record-delete";
@@ -314,6 +315,17 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
         { status: HTTP_STATUS.CONFLICT },
       );
     }
+
+    await writeStudentDeleteAuditEvent({
+      organizationId: auth.organizationId,
+      actor: auth.actor,
+      studentId: context.params.id,
+      appAccessMode: result.audit.appAccessMode,
+      hadLinkedUser: result.audit.hadLinkedUser,
+      lessonsCount: result.audit.lessonsCount,
+      linkedUserId: result.audit.linkedUserId,
+      requestContext: extractAuditRequestContext(request),
+    });
 
     return successResponse({ deleted: true });
   } catch (error) {
