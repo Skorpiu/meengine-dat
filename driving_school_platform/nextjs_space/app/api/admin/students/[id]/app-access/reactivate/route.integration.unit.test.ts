@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const h = vi.hoisted(() => ({
   reactivateStudentAppAccessMock: vi.fn(),
+  writeStudentAppAccessReactivateAuditEventMock: vi.fn(),
 }));
 
 vi.mock("@/lib/students/student-app-access-lifecycle-service", async () => {
@@ -14,6 +15,11 @@ vi.mock("@/lib/students/student-app-access-lifecycle-service", async () => {
       h.reactivateStudentAppAccessMock(...args),
   };
 });
+
+vi.mock("@/lib/audit/student-audit", () => ({
+  writeStudentAppAccessReactivateAuditEvent:
+    h.writeStudentAppAccessReactivateAuditEventMock,
+}));
 
 vi.mock("next-auth", () => ({
   getServerSession: vi.fn(),
@@ -85,13 +91,22 @@ function req(): Request {
 beforeEach(() => {
   vi.resetAllMocks();
   getServerSessionMock.mockResolvedValue({
-    user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    user: {
+      id: "admin-1",
+      role: "SUPER_ADMIN",
+      organizationId: "org-a",
+      email: "admin@school.test",
+    },
   });
   assertUserTenantHostMock.mockResolvedValue(null);
   rejectDemoMock.mockResolvedValue(null);
   h.reactivateStudentAppAccessMock.mockResolvedValue({
     ok: true,
     student: studentDto,
+  });
+  h.writeStudentAppAccessReactivateAuditEventMock.mockResolvedValue({
+    ok: true,
+    id: "audit-1",
   });
 });
 
@@ -103,6 +118,27 @@ describe("POST /api/admin/students/[id]/app-access/reactivate", () => {
     const body = await res.json();
     expect(body.success).toBe(true);
     expect(body.data.student).toEqual(studentDto);
+    expect(
+      h.writeStudentAppAccessReactivateAuditEventMock,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        actor: {
+          userId: "admin-1",
+          role: "SUPER_ADMIN",
+          email: "admin@school.test",
+        },
+        studentId: "stu-1",
+        appAccessMode: "APP_USER",
+        linkedUserId: "user-1",
+      }),
+    );
+
+    const auditPayload = JSON.stringify(
+      h.writeStudentAppAccessReactivateAuditEventMock.mock.calls[0]?.[0],
+    );
+    expect(auditPayload).not.toContain("password");
+    expect(auditPayload).not.toContain("tokenHash");
   });
 
   it("returns 401 for non SUPER_ADMIN", async () => {
@@ -164,5 +200,31 @@ describe("POST /api/admin/students/[id]/app-access/reactivate", () => {
     const res = await POST(req() as any, { params: { id: "stu-1" } });
     expect(res.status).toBe(403);
     expect(h.reactivateStudentAppAccessMock).not.toHaveBeenCalled();
+  });
+
+  it("POST does not emit audit when reactivate fails", async () => {
+    h.reactivateStudentAppAccessMock.mockResolvedValue({
+      ok: false,
+      notFound: true,
+    });
+
+    const res = await POST(req() as any, { params: { id: "missing" } });
+    expect(res.status).toBe(404);
+    expect(
+      h.writeStudentAppAccessReactivateAuditEventMock,
+    ).not.toHaveBeenCalled();
+  });
+
+  it("POST still returns 200 when audit write fails", async () => {
+    h.writeStudentAppAccessReactivateAuditEventMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+
+    const res = await POST(req() as any, { params: { id: "stu-1" } });
+
+    expect(res.status).toBe(200);
+    expect(h.writeStudentAppAccessReactivateAuditEventMock).toHaveBeenCalled();
+    expect(h.reactivateStudentAppAccessMock).toHaveBeenCalled();
   });
 });

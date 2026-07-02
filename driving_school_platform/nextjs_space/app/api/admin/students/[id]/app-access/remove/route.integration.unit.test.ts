@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const h = vi.hoisted(() => ({
   removeStudentAppAccessMock: vi.fn(),
+  writeStudentAppAccessRemoveAuditEventMock: vi.fn(),
 }));
 
 vi.mock("@/lib/students/student-app-access-lifecycle-service", async () => {
@@ -14,6 +15,11 @@ vi.mock("@/lib/students/student-app-access-lifecycle-service", async () => {
       h.removeStudentAppAccessMock(...args),
   };
 });
+
+vi.mock("@/lib/audit/student-audit", () => ({
+  writeStudentAppAccessRemoveAuditEvent:
+    h.writeStudentAppAccessRemoveAuditEventMock,
+}));
 
 vi.mock("next-auth", () => ({
   getServerSession: vi.fn(),
@@ -80,13 +86,22 @@ function req(): Request {
 beforeEach(() => {
   vi.resetAllMocks();
   getServerSessionMock.mockResolvedValue({
-    user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    user: {
+      id: "admin-1",
+      role: "SUPER_ADMIN",
+      organizationId: "org-a",
+      email: "admin@school.test",
+    },
   });
   assertUserTenantHostMock.mockResolvedValue(null);
   rejectDemoMock.mockResolvedValue(null);
   h.removeStudentAppAccessMock.mockResolvedValue({
     ok: true,
     student: studentDto,
+  });
+  h.writeStudentAppAccessRemoveAuditEventMock.mockResolvedValue({
+    ok: true,
+    id: "audit-1",
   });
 });
 
@@ -102,6 +117,18 @@ describe("POST /api/admin/students/[id]/app-access/remove", () => {
       organizationId: "org-a",
       studentId: "stu-1",
     });
+    expect(h.writeStudentAppAccessRemoveAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        actor: {
+          userId: "admin-1",
+          role: "SUPER_ADMIN",
+          email: "admin@school.test",
+        },
+        studentId: "stu-1",
+        appAccessMode: "MANUAL_ONLY",
+      }),
+    );
   });
 
   it("returns 401 for non SUPER_ADMIN", async () => {
@@ -147,5 +174,29 @@ describe("POST /api/admin/students/[id]/app-access/remove", () => {
     const res = await POST(req() as any, { params: { id: "stu-1" } });
     expect(res.status).toBe(403);
     expect(h.removeStudentAppAccessMock).not.toHaveBeenCalled();
+  });
+
+  it("POST does not emit audit when remove fails", async () => {
+    h.removeStudentAppAccessMock.mockResolvedValue({
+      ok: false,
+      notFound: true,
+    });
+
+    const res = await POST(req() as any, { params: { id: "missing" } });
+    expect(res.status).toBe(404);
+    expect(h.writeStudentAppAccessRemoveAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("POST still returns 200 when audit write fails", async () => {
+    h.writeStudentAppAccessRemoveAuditEventMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+
+    const res = await POST(req() as any, { params: { id: "stu-1" } });
+
+    expect(res.status).toBe(200);
+    expect(h.writeStudentAppAccessRemoveAuditEventMock).toHaveBeenCalled();
+    expect(h.removeStudentAppAccessMock).toHaveBeenCalled();
   });
 });
