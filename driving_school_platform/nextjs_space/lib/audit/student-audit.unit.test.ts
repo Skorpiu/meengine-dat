@@ -12,8 +12,13 @@ vi.mock("@/lib/audit/audit-log-service", () => ({
 import {
   buildStudentAppAccessReactivateAuditMetadata,
   buildStudentAppAccessRemoveAuditMetadata,
+  buildStudentEmailChangeAuditMetadata,
+  buildStudentProfileUpdateAuditMetadata,
+  collectStudentProfileUpdateChangedFields,
   writeStudentAppAccessReactivateAuditEvent,
   writeStudentAppAccessRemoveAuditEvent,
+  writeStudentEmailChangeAuditEvent,
+  writeStudentProfileUpdateAuditEvent,
 } from "@/lib/audit/student-audit";
 import { UserRole } from "@prisma/client";
 
@@ -26,6 +31,109 @@ const actor = {
 beforeEach(() => {
   vi.resetAllMocks();
   h.writeAuditEventMock.mockResolvedValue({ ok: true, id: "audit_1" });
+});
+
+describe("collectStudentProfileUpdateChangedFields", () => {
+  it("lists patch body keys only, collapsing school id parts", () => {
+    expect(
+      collectStudentProfileUpdateChangedFields({
+        firstName: "Maria",
+        address: "Street 1",
+        yearSuffix: "26",
+        sequenceNumber: 12,
+      }),
+    ).toEqual(["firstName", "address", "schoolStudentId"]);
+  });
+});
+
+describe("buildStudentProfileUpdateAuditMetadata", () => {
+  it("includes changed field names and appAccessMode without values", () => {
+    expect(
+      buildStudentProfileUpdateAuditMetadata({
+        changedFields: ["firstName", "phoneNumber"],
+        appAccessMode: "MANUAL_ONLY",
+      }),
+    ).toEqual({
+      changedFields: ["firstName", "phoneNumber"],
+      appAccessMode: "MANUAL_ONLY",
+    });
+  });
+});
+
+describe("buildStudentEmailChangeAuditMetadata", () => {
+  it("includes policy flags without email values", () => {
+    expect(
+      buildStudentEmailChangeAuditMetadata({
+        policyMode: "INVITED",
+        hasLinkedUser: false,
+        invitationRevoked: true,
+      }),
+    ).toEqual({
+      policyMode: "INVITED",
+      hasLinkedUser: false,
+      invitationRevoked: true,
+    });
+  });
+});
+
+describe("writeStudentProfileUpdateAuditEvent", () => {
+  it("writes student.update with field names only", async () => {
+    await writeStudentProfileUpdateAuditEvent({
+      organizationId: "org-a",
+      actor,
+      studentId: "stu-1",
+      changedFields: ["firstName", "categoryName"],
+      appAccessMode: "APP_USER",
+      linkedUserId: "user-1",
+    });
+
+    expect(h.writeAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "student.update",
+        entityType: "Student",
+        entityId: "stu-1",
+        targetUserId: "user-1",
+        metadata: {
+          changedFields: ["firstName", "categoryName"],
+          appAccessMode: "APP_USER",
+        },
+      }),
+      undefined,
+    );
+
+    const payload = h.writeAuditEventMock.mock.calls[0]?.[0] as {
+      metadata?: Record<string, unknown>;
+    };
+    expect(JSON.stringify(payload.metadata)).not.toContain("Maria");
+    expect(JSON.stringify(payload.metadata)).not.toContain("@");
+  });
+});
+
+describe("writeStudentEmailChangeAuditEvent", () => {
+  it("writes student.email.change with policy flags only", async () => {
+    await writeStudentEmailChangeAuditEvent({
+      organizationId: "org-a",
+      actor,
+      studentId: "stu-1",
+      policyMode: "APP_USER",
+      hasLinkedUser: true,
+      invitationRevoked: false,
+      linkedUserId: "user-1",
+    });
+
+    expect(h.writeAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "student.email.change",
+        targetUserId: "user-1",
+        metadata: {
+          policyMode: "APP_USER",
+          hasLinkedUser: true,
+          invitationRevoked: false,
+        },
+      }),
+      undefined,
+    );
+  });
 });
 
 describe("buildStudentAppAccessRemoveAuditMetadata", () => {

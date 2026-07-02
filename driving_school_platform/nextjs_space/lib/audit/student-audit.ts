@@ -1,3 +1,4 @@
+import type { PatchStudentRecordBody } from "@/lib/students/student-record-validation";
 import type { UserRole } from "@prisma/client";
 import {
   writeAuditEvent,
@@ -10,6 +11,15 @@ export const STUDENT_AUDIT_ENTITY_TYPE = "Student";
 export type StudentAppAccessAuditAction =
   | "student.app_access.remove"
   | "student.app_access.reactivate";
+
+export type StudentProfileAuditAction =
+  | "student.update"
+  | "student.email.change";
+
+export type StudentEmailChangePolicyMode =
+  | "APP_USER"
+  | "INVITED"
+  | "MANUAL_ONLY";
 
 export type StudentAuditActor = {
   userId: string;
@@ -24,6 +34,64 @@ type WriteStudentAuditEventBase = {
   requestContext?: AuditRequestContext;
   options?: WriteAuditEventOptions;
 };
+
+export function collectStudentProfileUpdateChangedFields(
+  data: PatchStudentRecordBody,
+): string[] {
+  const fields: string[] = [];
+
+  if (data.firstName !== undefined) {
+    fields.push("firstName");
+  }
+  if (data.lastName !== undefined) {
+    fields.push("lastName");
+  }
+  if (data.phoneNumber !== undefined) {
+    fields.push("phoneNumber");
+  }
+  if (data.address !== undefined) {
+    fields.push("address");
+  }
+  if (data.email !== undefined) {
+    fields.push("email");
+  }
+  if (data.enrollmentDate !== undefined) {
+    fields.push("enrollmentDate");
+  }
+  if (data.yearSuffix !== undefined && data.sequenceNumber !== undefined) {
+    fields.push("schoolStudentId");
+  }
+  if (data.categoryName !== undefined) {
+    fields.push("categoryName");
+  }
+  if (data.transmissionTypeName !== undefined) {
+    fields.push("transmissionTypeName");
+  }
+
+  return fields;
+}
+
+export function buildStudentProfileUpdateAuditMetadata(input: {
+  changedFields: string[];
+  appAccessMode: string;
+}): Record<string, unknown> {
+  return {
+    changedFields: input.changedFields,
+    appAccessMode: input.appAccessMode,
+  };
+}
+
+export function buildStudentEmailChangeAuditMetadata(input: {
+  policyMode: StudentEmailChangePolicyMode;
+  hasLinkedUser: boolean;
+  invitationRevoked: boolean;
+}): Record<string, unknown> {
+  return {
+    policyMode: input.policyMode,
+    hasLinkedUser: input.hasLinkedUser,
+    invitationRevoked: input.invitationRevoked,
+  };
+}
 
 export function buildStudentAppAccessRemoveAuditMetadata(input: {
   appAccessMode: string;
@@ -48,6 +116,62 @@ export function buildStudentAppAccessReactivateAuditMetadata(input: {
   }
 
   return metadata;
+}
+
+export async function writeStudentProfileUpdateAuditEvent(
+  input: WriteStudentAuditEventBase & {
+    changedFields: string[];
+    appAccessMode: string;
+    linkedUserId?: string | null;
+  },
+) {
+  return writeAuditEvent(
+    {
+      organizationId: input.organizationId,
+      actorUserId: input.actor.userId,
+      actorRole: input.actor.role,
+      actorEmail: input.actor.email ?? null,
+      action: "student.update",
+      entityType: STUDENT_AUDIT_ENTITY_TYPE,
+      entityId: input.studentId,
+      targetUserId: input.linkedUserId ?? null,
+      metadata: buildStudentProfileUpdateAuditMetadata({
+        changedFields: input.changedFields,
+        appAccessMode: input.appAccessMode,
+      }),
+      ...input.requestContext,
+    },
+    input.options,
+  );
+}
+
+export async function writeStudentEmailChangeAuditEvent(
+  input: WriteStudentAuditEventBase & {
+    policyMode: StudentEmailChangePolicyMode;
+    hasLinkedUser: boolean;
+    invitationRevoked: boolean;
+    linkedUserId?: string | null;
+  },
+) {
+  return writeAuditEvent(
+    {
+      organizationId: input.organizationId,
+      actorUserId: input.actor.userId,
+      actorRole: input.actor.role,
+      actorEmail: input.actor.email ?? null,
+      action: "student.email.change",
+      entityType: STUDENT_AUDIT_ENTITY_TYPE,
+      entityId: input.studentId,
+      targetUserId: input.linkedUserId ?? null,
+      metadata: buildStudentEmailChangeAuditMetadata({
+        policyMode: input.policyMode,
+        hasLinkedUser: input.hasLinkedUser,
+        invitationRevoked: input.invitationRevoked,
+      }),
+      ...input.requestContext,
+    },
+    input.options,
+  );
 }
 
 export async function writeStudentAppAccessRemoveAuditEvent(

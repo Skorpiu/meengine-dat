@@ -11,6 +11,12 @@ import {
 } from "@/lib/users/user-route-access";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import type { UserRole } from "@prisma/client";
+import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
+import {
+  collectStudentProfileUpdateChangedFields,
+  writeStudentProfileUpdateAuditEvent,
+} from "@/lib/audit/student-audit";
 import { deleteStudentRecordIfEligible } from "@/lib/students/student-record-delete";
 import {
   findStudentBySchoolIdInOrg,
@@ -35,10 +41,13 @@ export const dynamic = "force-dynamic";
 
 type RouteContext = { params: { id: string } };
 
-async function requireSuperAdminTenant(
-  request: NextRequest,
-): Promise<
-  { ok: true; organizationId: string } | { ok: false; response: NextResponse }
+async function requireSuperAdminTenant(request: NextRequest): Promise<
+  | {
+      ok: true;
+      organizationId: string;
+      actor: { userId: string; role: UserRole; email?: string | null };
+    }
+  | { ok: false; response: NextResponse }
 > {
   const session = await getServerSession(authOptions);
 
@@ -62,7 +71,15 @@ async function requireSuperAdminTenant(
     return { ok: false, response: tenantDenied };
   }
 
-  return { ok: true, organizationId: orgId };
+  return {
+    ok: true,
+    organizationId: orgId,
+    actor: {
+      userId: session.user.id,
+      role: session.user.role,
+      email: session.user.email,
+    },
+  };
 }
 
 export async function GET(request: NextRequest, context: RouteContext) {
@@ -112,6 +129,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     const data = validation.data;
+    const changedFields = collectStudentProfileUpdateChangedFields(data);
     const updateData: Prisma.StudentUpdateInput = {};
 
     if (data.firstName !== undefined) {
@@ -235,6 +253,16 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       if (!student) {
         return errorResponse("Student not found", HTTP_STATUS.NOT_FOUND);
       }
+
+      await writeStudentProfileUpdateAuditEvent({
+        organizationId: auth.organizationId,
+        actor: auth.actor,
+        studentId: context.params.id,
+        changedFields,
+        appAccessMode: student.appAccessMode,
+        linkedUserId: student.userId,
+        requestContext: extractAuditRequestContext(request),
+      });
 
       return successResponse({ student });
     } catch (error) {

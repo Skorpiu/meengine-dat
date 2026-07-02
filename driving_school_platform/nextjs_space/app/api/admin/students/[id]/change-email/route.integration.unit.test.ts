@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const h = vi.hoisted(() => ({
   changeStudentEmailMock: vi.fn(),
+  writeStudentEmailChangeAuditEventMock: vi.fn(),
 }));
 
 vi.mock("@/lib/students/student-email-change-service", async () => {
@@ -14,6 +15,10 @@ vi.mock("@/lib/students/student-email-change-service", async () => {
       h.changeStudentEmailMock(...args),
   };
 });
+
+vi.mock("@/lib/audit/student-audit", () => ({
+  writeStudentEmailChangeAuditEvent: h.writeStudentEmailChangeAuditEventMock,
+}));
 
 vi.mock("next-auth", () => ({
   getServerSession: vi.fn(),
@@ -85,13 +90,27 @@ function req(body?: unknown): Request {
 beforeEach(() => {
   vi.resetAllMocks();
   getServerSessionMock.mockResolvedValue({
-    user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    user: {
+      id: "admin-1",
+      role: "SUPER_ADMIN",
+      organizationId: "org-a",
+      email: "admin@school.test",
+    },
   });
   assertUserTenantHostMock.mockResolvedValue(null);
   rejectDemoMock.mockResolvedValue(null);
   h.changeStudentEmailMock.mockResolvedValue({
     ok: true,
     student: studentDto,
+    audit: {
+      policyMode: "MANUAL_ONLY",
+      hasLinkedUser: false,
+      invitationRevoked: false,
+    },
+  });
+  h.writeStudentEmailChangeAuditEventMock.mockResolvedValue({
+    ok: true,
+    id: "audit-1",
   });
 });
 
@@ -110,6 +129,26 @@ describe("POST /api/admin/students/[id]/change-email", () => {
       studentId: "stu-1",
       newEmail: "new@school.test",
     });
+    expect(h.writeStudentEmailChangeAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        actor: {
+          userId: "admin-1",
+          role: "SUPER_ADMIN",
+          email: "admin@school.test",
+        },
+        studentId: "stu-1",
+        policyMode: "MANUAL_ONLY",
+        hasLinkedUser: false,
+        invitationRevoked: false,
+      }),
+    );
+
+    const auditPayload = JSON.stringify(
+      h.writeStudentEmailChangeAuditEventMock.mock.calls[0]?.[0],
+    );
+    expect(auditPayload).not.toContain("new@school.test");
+    expect(auditPayload).not.toContain("password");
   });
 
   it("returns 401 for non SUPER_ADMIN", async () => {
@@ -155,5 +194,30 @@ describe("POST /api/admin/students/[id]/change-email", () => {
     });
     expect(res.status).toBe(400);
     expect(h.changeStudentEmailMock).not.toHaveBeenCalled();
+  });
+
+  it("POST does not emit audit when change-email fails", async () => {
+    h.changeStudentEmailMock.mockResolvedValue({ ok: false, notFound: true });
+
+    const res = await POST(req({ newEmail: "new@school.test" }) as any, {
+      params: { id: "stu-9" },
+    });
+    expect(res.status).toBe(404);
+    expect(h.writeStudentEmailChangeAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("POST still returns 200 when audit write fails", async () => {
+    h.writeStudentEmailChangeAuditEventMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+
+    const res = await POST(req({ newEmail: "new@school.test" }) as any, {
+      params: { id: "stu-1" },
+    });
+
+    expect(res.status).toBe(200);
+    expect(h.writeStudentEmailChangeAuditEventMock).toHaveBeenCalled();
+    expect(h.changeStudentEmailMock).toHaveBeenCalled();
   });
 });
