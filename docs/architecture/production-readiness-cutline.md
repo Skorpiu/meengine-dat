@@ -45,7 +45,7 @@ Controlled production deployment for a **first B2B driving-school client** using
 | **Instructor UX** | Solid | Dashboard, Schedule Map, lesson management, inactive-instructor warnings, booking enforcement. |
 | **Student UX** | Functional | Dashboard + lessons; less polished than admin — **acceptable** for first B2B client where school staff drive operations. |
 | **Import/export** | Ready | Students + practical lessons: export, dry-run, apply UI; demo guards on apply. |
-| **Docs/runbooks** | Sync in progress | Release checklist, smoke, demo runbooks exist. This cutline + smoke sync (`production-smoke-runbook-sync-v1`) close known drift. |
+| **Docs/runbooks** | Ready (baseline) | Release checklist, smoke, demo runbooks exist. First-client onboarding record (DEC-043) added. Residual drift: `production-smoke-runbook-sync-v1` if needed. |
 | **Observability/audit** | Gap (planned) | `AuditLog` model exists (RLS hardened) but **no application write paths** today. Planning P1; implementation P2. |
 | **Deployment/CI/QA** | Ready (gate) | GitLab CI = `pnpm check`. Operator deploy + smoke required per environment before client go-live. |
 
@@ -103,7 +103,7 @@ Controlled production deployment for a **first B2B driving-school client** using
 | 2 | `production-smoke-runbook-sync-v1` (or residual sync) | Docs — minimal sync included in step 1 where small |
 | 3 | **Operator: deploy + smoke first client** | Human gate — migrate deploy, smoke, invite QA on **target env** |
 | 4 | `audit-log-tenant-context-foundation-plan-v1` | Docs — planning only |
-| 5 | `production-first-client-onboarding-record-v1` | Docs — operator evidence post go-live |
+| 5 | `production-first-client-onboarding-record-v1` | Docs — **done** — [first-client-onboarding-record.md](./first-client-onboarding-record.md) (DEC-043) |
 | 6 | `lesson-student-nullability-policy-review-v1` | Docs — policy hygiene |
 
 After stable production: `mobile-tablet-readiness-review-v1` → `competitive-product-discovery-v1`.
@@ -153,6 +153,7 @@ See [production-smoke-baseline.md](../../driving_school_platform/nextjs_space/do
 
 ## Related
 
+- [first-client-onboarding-record.md](./first-client-onboarding-record.md) — controlled first B2B client checklist + evidence template (DEC-043)
 - [dat-production-readiness-gaps.md](../../driving_school_platform/nextjs_space/docs/ops/dat-production-readiness-gaps.md) — portfolio/demo gaps (partially superseded by this cutline for B2B path)
 - [preview-qa-runbook.md](../ops/preview-qa-runbook.md) — Preview validation before production merge
 - [command-batteries.md](../ops/command-batteries.md) — deploy and smoke commands
