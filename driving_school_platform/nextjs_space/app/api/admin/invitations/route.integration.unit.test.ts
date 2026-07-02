@@ -4,6 +4,7 @@ const h = vi.hoisted(() => {
   const listInvitationsMock = vi.fn();
   const createInvitationMock = vi.fn();
   const attemptInvitationEmailDeliveryMock = vi.fn();
+  const writeInvitationAuditEventMock = vi.fn();
   const sendEmailMock = vi.fn();
   const buildInvitationEmailMock = vi.fn();
 
@@ -11,6 +12,7 @@ const h = vi.hoisted(() => {
     listInvitationsMock,
     createInvitationMock,
     attemptInvitationEmailDeliveryMock,
+    writeInvitationAuditEventMock,
     sendEmailMock,
     buildInvitationEmailMock,
   };
@@ -23,6 +25,10 @@ vi.mock("@/lib/invitations/invitation-service", () => ({
 
 vi.mock("@/lib/invitations/invitation-email-delivery", () => ({
   attemptInvitationEmailDelivery: h.attemptInvitationEmailDeliveryMock,
+}));
+
+vi.mock("@/lib/audit/invitation-audit", () => ({
+  writeInvitationAuditEvent: h.writeInvitationAuditEventMock,
 }));
 
 vi.mock("next-auth", () => ({
@@ -105,6 +111,10 @@ beforeEach(() => {
     provider: "noop",
     noop: true,
   });
+  h.writeInvitationAuditEventMock.mockResolvedValue({
+    ok: true,
+    id: "audit-1",
+  });
   assertUserTenantHostMock.mockResolvedValue(null);
   rejectDemoUserManagementMutationMock.mockResolvedValue(null);
 });
@@ -167,6 +177,27 @@ describe("Admin Invitations API", () => {
       invitation: invitationDto,
       organizationName: "Demo School",
     });
+    expect(h.writeInvitationAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "invitation.create",
+        organizationId: "org-a",
+        actor: expect.objectContaining({
+          userId: "admin-1",
+          role: "SUPER_ADMIN",
+        }),
+        invitation: invitationDto,
+        requestContext: expect.objectContaining({
+          requestMethod: "POST",
+          requestPath: "/api/admin/invitations",
+        }),
+      }),
+    );
+
+    const auditPayload = JSON.stringify(
+      h.writeInvitationAuditEventMock.mock.calls[0]?.[0],
+    );
+    expect(auditPayload).not.toContain("tokenHash");
+    expect(auditPayload).not.toContain("password");
   });
 
   it("POST blocks demo org mutations", async () => {
@@ -192,6 +223,7 @@ describe("Admin Invitations API", () => {
     expect(res.status).toBe(403);
     expect(h.createInvitationMock).not.toHaveBeenCalled();
     expect(h.attemptInvitationEmailDeliveryMock).not.toHaveBeenCalled();
+    expect(h.writeInvitationAuditEventMock).not.toHaveBeenCalled();
   });
 
   it("POST rejects INSTRUCTOR invitation without license fields", async () => {
@@ -352,5 +384,53 @@ describe("Admin Invitations API", () => {
     const json = await res.json();
     expect(json.inviteLink).toBe(inviteLink);
     expect(json.emailDelivery.errorCode).toBe("PROVIDER_UNKNOWN");
+  });
+
+  it("POST does not audit when createInvitation fails", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    h.createInvitationMock.mockResolvedValue({
+      ok: false,
+      error: "A pending invitation already exists for this email",
+      code: "pending_invitation_exists",
+      status: 409,
+    });
+
+    const res = await POST(
+      req("POST", "http://school.example.com/api/admin/invitations", {
+        email: "student@school.test",
+        role: "STUDENT",
+      }) as any,
+    );
+
+    expect(res.status).toBe(409);
+    expect(h.writeInvitationAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("POST still returns 201 when audit write fails", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
+    });
+    h.writeInvitationAuditEventMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+
+    const res = await POST(
+      req("POST", "http://school.example.com/api/admin/invitations", {
+        email: "student@school.test",
+        role: "STUDENT",
+      }) as any,
+    );
+
+    expect(res.status).toBe(201);
+    expect(h.writeInvitationAuditEventMock).toHaveBeenCalled();
+    expect(h.attemptInvitationEmailDeliveryMock).toHaveBeenCalled();
   });
 });

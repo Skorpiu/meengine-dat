@@ -2,11 +2,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const h = vi.hoisted(() => {
   const revokeInvitationMock = vi.fn();
-  return { revokeInvitationMock };
+  const writeInvitationAuditEventMock = vi.fn();
+  return { revokeInvitationMock, writeInvitationAuditEventMock };
 });
 
 vi.mock("@/lib/invitations/invitation-service", () => ({
   revokeInvitation: h.revokeInvitationMock,
+}));
+
+vi.mock("@/lib/audit/invitation-audit", () => ({
+  writeInvitationAuditEvent: h.writeInvitationAuditEventMock,
 }));
 
 vi.mock("next-auth", () => ({
@@ -65,6 +70,10 @@ beforeEach(() => {
     ok: true,
     invitation: revokedDto,
   });
+  h.writeInvitationAuditEventMock.mockResolvedValue({
+    ok: true,
+    id: "audit-1",
+  });
   assertUserTenantHostMock.mockResolvedValue(null);
   rejectDemoUserManagementMutationMock.mockResolvedValue(null);
 });
@@ -94,6 +103,27 @@ describe("Admin Invitation Revoke API", () => {
       invitationId: "inv-1",
       revokedByUserId: "admin-1",
     });
+    expect(h.writeInvitationAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "invitation.revoke",
+        organizationId: "org-a",
+        actor: expect.objectContaining({
+          userId: "admin-1",
+          role: "SUPER_ADMIN",
+        }),
+        invitation: revokedDto,
+        requestContext: expect.objectContaining({
+          requestMethod: "POST",
+          requestPath: "/api/admin/invitations/inv-1/revoke",
+        }),
+      }),
+    );
+
+    const auditPayload = JSON.stringify(
+      h.writeInvitationAuditEventMock.mock.calls[0]?.[0],
+    );
+    expect(auditPayload).not.toContain("tokenHash");
+    expect(auditPayload).not.toContain("password");
   });
 
   it("POST blocks demo org revoke", async () => {
@@ -121,6 +151,7 @@ describe("Admin Invitation Revoke API", () => {
     );
     expect(res.status).toBe(403);
     expect(h.revokeInvitationMock).not.toHaveBeenCalled();
+    expect(h.writeInvitationAuditEventMock).not.toHaveBeenCalled();
   });
 
   it("POST surfaces not_found when service cannot scope invitation", async () => {
@@ -149,5 +180,34 @@ describe("Admin Invitation Revoke API", () => {
       invitationId: "inv-other",
       revokedByUserId: "admin-1",
     });
+    expect(h.writeInvitationAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("POST still returns 200 when audit write fails", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
+    });
+    h.writeInvitationAuditEventMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+
+    const res = await POST(
+      new Request(
+        "http://school.example.com/api/admin/invitations/inv-1/revoke",
+        {
+          method: "POST",
+        },
+      ) as any,
+      { params: { id: "inv-1" } },
+    );
+
+    expect(res.status).toBe(200);
+    expect(h.writeInvitationAuditEventMock).toHaveBeenCalled();
   });
 });
