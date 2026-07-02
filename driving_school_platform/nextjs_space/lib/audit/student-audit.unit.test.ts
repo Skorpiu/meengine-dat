@@ -12,11 +12,13 @@ vi.mock("@/lib/audit/audit-log-service", () => ({
 import {
   buildStudentAppAccessReactivateAuditMetadata,
   buildStudentAppAccessRemoveAuditMetadata,
+  buildStudentDeleteAuditMetadata,
   buildStudentEmailChangeAuditMetadata,
   buildStudentProfileUpdateAuditMetadata,
   collectStudentProfileUpdateChangedFields,
   writeStudentAppAccessReactivateAuditEvent,
   writeStudentAppAccessRemoveAuditEvent,
+  writeStudentDeleteAuditEvent,
   writeStudentEmailChangeAuditEvent,
   writeStudentProfileUpdateAuditEvent,
 } from "@/lib/audit/student-audit";
@@ -161,6 +163,62 @@ describe("buildStudentAppAccessReactivateAuditMetadata", () => {
       appAccessMode: "APP_USER",
       linkedUserId: "user-1",
     });
+  });
+});
+
+describe("buildStudentDeleteAuditMetadata", () => {
+  it("includes policy flags without PII", () => {
+    expect(
+      buildStudentDeleteAuditMetadata({
+        appAccessMode: "MANUAL_ONLY",
+        hadLinkedUser: false,
+        hadLessons: false,
+      }),
+    ).toEqual({
+      appAccessMode: "MANUAL_ONLY",
+      hadLinkedUser: false,
+      hadLessons: false,
+    });
+  });
+});
+
+describe("writeStudentDeleteAuditEvent", () => {
+  it("writes student.delete with tenant scope and flags only", async () => {
+    await writeStudentDeleteAuditEvent({
+      organizationId: "org-a",
+      actor,
+      studentId: "stu-1",
+      appAccessMode: "MANUAL_ONLY",
+      hadLinkedUser: false,
+      lessonsCount: 0,
+      linkedUserId: null,
+      requestContext: { requestId: "req-del-1" },
+    });
+
+    expect(h.writeAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        action: "student.delete",
+        entityType: "Student",
+        entityId: "stu-1",
+        targetUserId: null,
+        metadata: {
+          appAccessMode: "MANUAL_ONLY",
+          hadLinkedUser: false,
+          hadLessons: false,
+        },
+        requestId: "req-del-1",
+      }),
+      undefined,
+    );
+
+    const payload = h.writeAuditEventMock.mock.calls[0]?.[0] as {
+      metadata?: Record<string, unknown>;
+      actorEmail?: string;
+    };
+    expect(JSON.stringify(payload.metadata)).not.toContain("@");
+    expect(JSON.stringify(payload.metadata)).not.toContain("João");
+    expect(payload.actorEmail).toBe("admin@school.test");
   });
 });
 

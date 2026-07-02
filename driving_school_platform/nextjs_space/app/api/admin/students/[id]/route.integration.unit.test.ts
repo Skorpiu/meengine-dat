@@ -6,6 +6,7 @@ const h = vi.hoisted(() => {
   const categoryFindFirstMock = vi.fn();
   const transmissionFindFirstMock = vi.fn();
   const writeStudentProfileUpdateAuditEventMock = vi.fn();
+  const writeStudentDeleteAuditEventMock = vi.fn();
 
   const prismaMock = {
     student: {
@@ -27,6 +28,7 @@ const h = vi.hoisted(() => {
     categoryFindFirstMock,
     transmissionFindFirstMock,
     writeStudentProfileUpdateAuditEventMock,
+    writeStudentDeleteAuditEventMock,
   };
 });
 
@@ -38,6 +40,7 @@ vi.mock("@/lib/audit/student-audit", async () => {
     ...actual,
     writeStudentProfileUpdateAuditEvent:
       h.writeStudentProfileUpdateAuditEventMock,
+    writeStudentDeleteAuditEvent: h.writeStudentDeleteAuditEventMock,
   };
 });
 
@@ -132,10 +135,22 @@ beforeEach(() => {
   });
   assertUserTenantHostMock.mockResolvedValue(null);
   rejectDemoMock.mockResolvedValue(null);
-  deleteStudentMock.mockResolvedValue({ ok: true });
+  deleteStudentMock.mockResolvedValue({
+    ok: true,
+    audit: {
+      appAccessMode: "MANUAL_ONLY",
+      hadLinkedUser: false,
+      lessonsCount: 0,
+      linkedUserId: null,
+    },
+  });
   h.writeStudentProfileUpdateAuditEventMock.mockResolvedValue({
     ok: true,
     id: "audit-1",
+  });
+  h.writeStudentDeleteAuditEventMock.mockResolvedValue({
+    ok: true,
+    id: "audit-delete-1",
   });
 });
 
@@ -503,9 +518,22 @@ describe("PATCH /api/admin/students/[id]", () => {
 describe("DELETE /api/admin/students/[id]", () => {
   it("deletes eligible student and returns success envelope", async () => {
     getServerSessionMock.mockResolvedValue({
-      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
     });
-    deleteStudentMock.mockResolvedValue({ ok: true });
+    deleteStudentMock.mockResolvedValue({
+      ok: true,
+      audit: {
+        appAccessMode: "MANUAL_ONLY",
+        hadLinkedUser: false,
+        lessonsCount: 0,
+        linkedUserId: null,
+      },
+    });
 
     const res = await DELETE(
       req(
@@ -523,6 +551,21 @@ describe("DELETE /api/admin/students/[id]", () => {
       organizationId: "org-a",
       studentId: "stu-1",
     });
+    expect(h.writeStudentDeleteAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        actor: {
+          userId: "admin-1",
+          role: "SUPER_ADMIN",
+          email: "admin@school.test",
+        },
+        studentId: "stu-1",
+        appAccessMode: "MANUAL_ONLY",
+        hadLinkedUser: false,
+        lessonsCount: 0,
+        linkedUserId: null,
+      }),
+    );
   });
 
   it("returns 404 when student not in organization", async () => {
@@ -540,6 +583,7 @@ describe("DELETE /api/admin/students/[id]", () => {
     );
 
     expect(res.status).toBe(404);
+    expect(h.writeStudentDeleteAuditEventMock).not.toHaveBeenCalled();
   });
 
   it("returns 409 with stable code when delete blocked", async () => {
@@ -565,6 +609,7 @@ describe("DELETE /api/admin/students/[id]", () => {
     const body = await res.json();
     expect(body.code).toBe("student_has_lessons");
     expect(body.codes).toEqual(["student_has_lessons"]);
+    expect(h.writeStudentDeleteAuditEventMock).not.toHaveBeenCalled();
   });
 
   it("returns 401 for non-SUPER_ADMIN", async () => {
@@ -582,6 +627,7 @@ describe("DELETE /api/admin/students/[id]", () => {
 
     expect(res.status).toBe(401);
     expect(deleteStudentMock).not.toHaveBeenCalled();
+    expect(h.writeStudentDeleteAuditEventMock).not.toHaveBeenCalled();
   });
 
   it("blocks demo org via user-management guard", async () => {
@@ -608,5 +654,42 @@ describe("DELETE /api/admin/students/[id]", () => {
 
     expect(res.status).toBe(403);
     expect(deleteStudentMock).not.toHaveBeenCalled();
+    expect(h.writeStudentDeleteAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("DELETE still returns 200 when audit write fails", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
+    });
+    deleteStudentMock.mockResolvedValue({
+      ok: true,
+      audit: {
+        appAccessMode: "MANUAL_ONLY",
+        hadLinkedUser: false,
+        lessonsCount: 0,
+        linkedUserId: null,
+      },
+    });
+    h.writeStudentDeleteAuditEventMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+
+    const res = await DELETE(
+      req(
+        "DELETE",
+        "http://school.example.com/api/admin/students/stu-1",
+      ) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(200);
+    expect(h.writeStudentDeleteAuditEventMock).toHaveBeenCalled();
+    expect(deleteStudentMock).toHaveBeenCalled();
   });
 });

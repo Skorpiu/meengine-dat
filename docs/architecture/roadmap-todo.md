@@ -55,6 +55,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `audit-log-write-paths-lessons-v1` | **Done** | Lesson create + update audit wiring; `lib/audit/lesson-audit.ts`; `POST /api/admin/lessons`, `PUT /api/admin/lessons/[id]`; tests |
 | `audit-log-write-paths-students-v1` | **Done** | Student app-access remove + reactivate audit wiring; `lib/audit/student-audit.ts`; tests |
 | `audit-log-write-paths-student-profile-v1` | **Done** | Student profile PATCH + change-email audit wiring; field names/flags only; tests |
+| `audit-log-write-paths-student-delete-v1` | **Done** | Student hard-delete audit wiring; `DELETE /api/admin/students/[id]` (`student.delete`); policy flags only; tests |
 | **First-client operator smoke (re-run lessons edit)** | **Done (operator)** | Manual smoke green after modal edit deploy (main `a9549bf`) |
 
 ---
@@ -63,7 +64,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Notes |
 | ----- | ----- |
-| Audit log runtime implementation | **Invitations + people + lessons + student app-access + profile/update done** — expand to delete/invite/import in future slices |
+| Audit log runtime implementation | **Invitations + people + lessons + student app-access + profile/update + delete done** — expand to invite/import in future slices |
 | Demo DB separation | Recommended for public portfolio; lower urgency with dedicated client tenant |
 | `lesson-student-nullability-policy-review-v1` | Policy doc + validation gap grep |
 | `mobile-tablet-readiness-review-v1` | **Deferred/penultimate** — before Competitive/Product Discovery |

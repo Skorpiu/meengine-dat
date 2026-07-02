@@ -64,7 +64,15 @@ describe("deleteStudentRecordIfEligible", () => {
       studentId: "stu-1",
     });
 
-    expect(result).toEqual({ ok: true });
+    expect(result).toEqual({
+      ok: true,
+      audit: {
+        appAccessMode: "MANUAL_ONLY",
+        hadLinkedUser: false,
+        lessonsCount: 0,
+        linkedUserId: null,
+      },
+    });
     expect(h.queryRawMock).toHaveBeenCalled();
     expect(h.deleteMock).toHaveBeenCalledWith({ where: { id: "stu-1" } });
     expect(h.findFirstMock).toHaveBeenCalledWith(
