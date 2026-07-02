@@ -192,6 +192,13 @@ describe("changeStudentEmail", () => {
     });
 
     expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.audit).toEqual({
+        policyMode: "MANUAL_ONLY",
+        hasLinkedUser: false,
+        invitationRevoked: false,
+      });
+    }
     expect(h.studentUpdateMock).toHaveBeenCalledWith(
       expect.objectContaining({
         data: { email: "new@school.test" },
@@ -222,6 +229,10 @@ describe("changeStudentEmail", () => {
     });
 
     expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.audit.invitationRevoked).toBe(true);
+      expect(result.audit.policyMode).toBe("INVITED");
+    }
     expect(h.invitationUpdateManyMock).toHaveBeenCalled();
     expect(h.studentUpdateMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -262,6 +273,13 @@ describe("changeStudentEmail", () => {
     });
 
     expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.audit).toEqual({
+        policyMode: "APP_USER",
+        hasLinkedUser: true,
+        invitationRevoked: false,
+      });
+    }
     expect(h.sessionDeleteManyMock).toHaveBeenCalledWith({
       where: { userId: "user-1" },
     });

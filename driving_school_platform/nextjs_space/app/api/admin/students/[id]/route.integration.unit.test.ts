@@ -5,6 +5,7 @@ const h = vi.hoisted(() => {
   const updateMock = vi.fn();
   const categoryFindFirstMock = vi.fn();
   const transmissionFindFirstMock = vi.fn();
+  const writeStudentProfileUpdateAuditEventMock = vi.fn();
 
   const prismaMock = {
     student: {
@@ -25,6 +26,18 @@ const h = vi.hoisted(() => {
     updateMock,
     categoryFindFirstMock,
     transmissionFindFirstMock,
+    writeStudentProfileUpdateAuditEventMock,
+  };
+});
+
+vi.mock("@/lib/audit/student-audit", async () => {
+  const actual = await vi.importActual<
+    typeof import("@/lib/audit/student-audit")
+  >("@/lib/audit/student-audit");
+  return {
+    ...actual,
+    writeStudentProfileUpdateAuditEvent:
+      h.writeStudentProfileUpdateAuditEventMock,
   };
 });
 
@@ -120,6 +133,10 @@ beforeEach(() => {
   assertUserTenantHostMock.mockResolvedValue(null);
   rejectDemoMock.mockResolvedValue(null);
   deleteStudentMock.mockResolvedValue({ ok: true });
+  h.writeStudentProfileUpdateAuditEventMock.mockResolvedValue({
+    ok: true,
+    id: "audit-1",
+  });
 });
 
 describe("GET /api/admin/students/[id]", () => {
@@ -161,7 +178,12 @@ describe("GET /api/admin/students/[id]", () => {
 describe("PATCH /api/admin/students/[id]", () => {
   it("updates operational fields", async () => {
     getServerSessionMock.mockResolvedValue({
-      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
     });
     h.findFirstMock.mockResolvedValue({ id: "stu-1" });
 
@@ -178,6 +200,19 @@ describe("PATCH /api/admin/students/[id]", () => {
     expect(updateArg.data.firstName).toBe("Maria");
     expect(updateArg.data.userId).toBeUndefined();
     expect(updateArg.data.appAccessMode).toBeUndefined();
+    expect(h.writeStudentProfileUpdateAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        actor: {
+          userId: "admin-1",
+          role: "SUPER_ADMIN",
+          email: "admin@school.test",
+        },
+        studentId: "stu-1",
+        changedFields: ["firstName", "phoneNumber"],
+        appAccessMode: "MANUAL_ONLY",
+      }),
+    );
   });
 
   it("regenerates schoolStudentId when yearSuffix and sequenceNumber change", async () => {
@@ -417,6 +452,51 @@ describe("PATCH /api/admin/students/[id]", () => {
     const body = await res.json();
     expect(body.code).toBe("use_change_email_flow");
     expect(h.updateMock).not.toHaveBeenCalled();
+    expect(h.writeStudentProfileUpdateAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("PATCH does not emit audit when update fails", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    h.findFirstMock.mockResolvedValue(null);
+
+    const res = await PATCH(
+      req("PATCH", "http://school.example.com/api/admin/students/stu-9", {
+        firstName: "Maria",
+      }) as any,
+      { params: { id: "stu-9" } },
+    );
+
+    expect(res.status).toBe(404);
+    expect(h.writeStudentProfileUpdateAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("PATCH still returns 200 when audit write fails", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
+    });
+    h.findFirstMock.mockResolvedValue({ id: "stu-1" });
+    h.writeStudentProfileUpdateAuditEventMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+
+    const res = await PATCH(
+      req("PATCH", "http://school.example.com/api/admin/students/stu-1", {
+        firstName: "Maria",
+      }) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(200);
+    expect(h.writeStudentProfileUpdateAuditEventMock).toHaveBeenCalled();
+    expect(h.updateMock).toHaveBeenCalled();
   });
 });
 

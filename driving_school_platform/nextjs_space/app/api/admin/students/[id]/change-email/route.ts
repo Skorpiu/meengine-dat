@@ -16,16 +16,22 @@ import {
 } from "@/lib/users/user-route-access";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import type { UserRole } from "@prisma/client";
+import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
+import { writeStudentEmailChangeAuditEvent } from "@/lib/audit/student-audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type RouteContext = { params: { id: string } };
 
-async function requireSuperAdminTenant(
-  request: NextRequest,
-): Promise<
-  { ok: true; organizationId: string } | { ok: false; response: NextResponse }
+async function requireSuperAdminTenant(request: NextRequest): Promise<
+  | {
+      ok: true;
+      organizationId: string;
+      actor: { userId: string; role: UserRole; email?: string | null };
+    }
+  | { ok: false; response: NextResponse }
 > {
   const session = await getServerSession(authOptions);
 
@@ -49,7 +55,15 @@ async function requireSuperAdminTenant(
     return { ok: false, response: tenantDenied };
   }
 
-  return { ok: true, organizationId: orgId };
+  return {
+    ok: true,
+    organizationId: orgId,
+    actor: {
+      userId: session.user.id,
+      role: session.user.role,
+      email: session.user.email,
+    },
+  };
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
@@ -95,6 +109,17 @@ export async function POST(request: NextRequest, context: RouteContext) {
         { status: result.status },
       );
     }
+
+    await writeStudentEmailChangeAuditEvent({
+      organizationId: auth.organizationId,
+      actor: auth.actor,
+      studentId: context.params.id,
+      policyMode: result.audit.policyMode,
+      hasLinkedUser: result.audit.hasLinkedUser,
+      invitationRevoked: result.audit.invitationRevoked,
+      linkedUserId: result.student.userId,
+      requestContext: extractAuditRequestContext(request),
+    });
 
     return successResponse({ student: result.student });
   } catch (error) {

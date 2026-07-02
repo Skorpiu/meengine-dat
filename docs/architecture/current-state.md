@@ -255,16 +255,17 @@ Documented and in use (docs/rules only; no runtime change):
 - `audit-log-write-paths-people-v1` — wired `lib/audit/people-audit.ts` into `PATCH /api/admin/instructors/[id]` (`instructor.qualified_categories.update`) and `POST /api/admin/instructors/[id]/deactivate` (`instructor.deactivate`); tenant scope from session; minimal metadata; audit failure non-blocking; route + helper unit tests. Validated via `pnpm check`.
 - `audit-log-write-paths-lessons-v1` — wired `lib/audit/lesson-audit.ts` into `POST /api/admin/lessons` (`lesson.create`) and `PUT /api/admin/lessons/[id]` (`lesson.update`); tenant scope from session; minimal metadata (operational ids, changedFields); exam multi-create emits one audit per lesson; audit failure non-blocking; route + helper unit tests. Validated via `pnpm check`.
 - `audit-log-write-paths-students-v1` — wired `lib/audit/student-audit.ts` into `POST /api/admin/students/[id]/app-access/remove` (`student.app_access.remove`) and `POST /api/admin/students/[id]/app-access/reactivate` (`student.app_access.reactivate`); tenant scope from session; lifecycle metadata (`previousAppAccessMode`, `appAccessMode`, `linkedUserId` on reactivate); `targetUserId` on reactivate; no student email in audit; audit failure non-blocking; route + helper unit tests. Validated via `pnpm check`.
+- `audit-log-write-paths-student-profile-v1` — expanded `lib/audit/student-audit.ts` into `PATCH /api/admin/students/[id]` (`student.update`; `changedFields` + `appAccessMode` only) and `POST /api/admin/students/[id]/change-email` (`student.email.change`; `policyMode`, `hasLinkedUser`, `invitationRevoked` flags); `StudentEmailChangeAuditContext` on service success; no email/address/name values in metadata; audit failure non-blocking; route + helper + service unit tests. Validated via `pnpm check`.
 
 ### Likely next (production path)
 
-1. Expand audit wiring to remaining student mutations (update/invite/delete) in small slices
+1. Expand audit wiring to student delete / invite / import in small slices
 
 ### Deferred (not next)
 
 - **`calendar-lessons-polish-v1e-student-warnings`** (P3) — product policy first
 - `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)**
-- Audit log write paths — people instructor + lessons + student app-access lifecycle slices done; expand to student update/invite/delete/import in future slices
+- Audit log write paths — people + lessons + student app-access + student profile/update slices done; expand to student delete/invite/import in future slices
 
 ### Product direction (backlog — deferred post-production polish)
 

@@ -26,8 +26,18 @@ export const STUDENT_EMAIL_CHANGE_CODE = {
 export type StudentEmailChangeCode =
   (typeof STUDENT_EMAIL_CHANGE_CODE)[keyof typeof STUDENT_EMAIL_CHANGE_CODE];
 
+export type StudentEmailChangeAuditContext = {
+  policyMode: "APP_USER" | "INVITED" | "MANUAL_ONLY";
+  hasLinkedUser: boolean;
+  invitationRevoked: boolean;
+};
+
 export type ChangeStudentEmailResult =
-  | { ok: true; student: StudentRecordDto }
+  | {
+      ok: true;
+      student: StudentRecordDto;
+      audit: StudentEmailChangeAuditContext;
+    }
   | { ok: false; notFound: true }
   | {
       ok: false;
@@ -375,7 +385,14 @@ export async function changeStudentEmail(input: {
           data: { email: normalizedEmail },
         });
 
-        return { kind: "ok" as const };
+        return {
+          kind: "ok" as const,
+          audit: {
+            policyMode: "APP_USER" as const,
+            hasLinkedUser: true,
+            invitationRevoked: false,
+          },
+        };
       }
 
       if (row.appAccessMode === "INVITED") {
@@ -401,7 +418,14 @@ export async function changeStudentEmail(input: {
           },
         });
 
-        return { kind: "ok" as const };
+        return {
+          kind: "ok" as const,
+          audit: {
+            policyMode: "INVITED" as const,
+            hasLinkedUser: false,
+            invitationRevoked: true,
+          },
+        };
       }
 
       if (row.appAccessMode !== "MANUAL_ONLY") {
@@ -432,7 +456,14 @@ export async function changeStudentEmail(input: {
         data: { email: normalizedEmail },
       });
 
-      return { kind: "ok" as const };
+      return {
+        kind: "ok" as const,
+        audit: {
+          policyMode: "MANUAL_ONLY" as const,
+          hasLinkedUser: false,
+          invitationRevoked: false,
+        },
+      };
     });
 
     if (txResult.kind === "not_found") {
@@ -455,7 +486,11 @@ export async function changeStudentEmail(input: {
       return { ok: false, notFound: true };
     }
 
-    return { ok: true, student: mapStudentRecordDto(updated) };
+    return {
+      ok: true,
+      student: mapStudentRecordDto(updated),
+      audit: txResult.audit,
+    };
   } catch {
     return {
       ok: false,
