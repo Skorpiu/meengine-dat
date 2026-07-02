@@ -32,6 +32,8 @@ import {
   mapLessonCalendarResponse,
 } from "@/lib/lessons/lesson-mappers";
 import { createAdminLesson } from "@/lib/lessons/lesson-create-service";
+import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
+import { writeLessonCreateAuditEvent } from "@/lib/audit/lesson-audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -191,6 +193,32 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   }
 
   const { data } = result;
+
+  const auditActor = {
+    userId: user.id,
+    role: user.role,
+    email: user.email,
+  };
+  const auditRequestContext = extractAuditRequestContext(request);
+
+  const lessonsToAudit = data.kind === "exam" ? data.lessons : [data.lesson];
+
+  for (const lesson of lessonsToAudit) {
+    await writeLessonCreateAuditEvent({
+      organizationId: orgId,
+      actor: auditActor,
+      lesson: {
+        id: lesson.id,
+        lessonType: lesson.lessonType,
+        studentId: lesson.studentId,
+        instructorId: lesson.instructorId,
+        vehicleId: lesson.vehicleId,
+        lessonSource: lesson.lessonSource,
+        practicalLessonNumber: lesson.practicalLessonNumber,
+      },
+      requestContext: auditRequestContext,
+    });
+  }
 
   if (data.kind === "exam") {
     return successResponse(

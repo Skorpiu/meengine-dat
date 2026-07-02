@@ -8,6 +8,7 @@ const h = vi.hoisted(() => {
   const vehicleFindFirstMock = vi.fn();
   const instructorFindFirstMock = vi.fn();
   const studentFindFirstMock = vi.fn();
+  const writeLessonUpdateAuditEventMock = vi.fn();
 
   const prismaMock = {
     lesson: {
@@ -30,6 +31,17 @@ const h = vi.hoisted(() => {
     vehicleFindFirstMock,
     instructorFindFirstMock,
     studentFindFirstMock,
+    writeLessonUpdateAuditEventMock,
+  };
+});
+
+vi.mock("@/lib/audit/lesson-audit", async () => {
+  const actual = await vi.importActual<
+    typeof import("@/lib/audit/lesson-audit")
+  >("@/lib/audit/lesson-audit");
+  return {
+    ...actual,
+    writeLessonUpdateAuditEvent: h.writeLessonUpdateAuditEventMock,
   };
 });
 
@@ -105,6 +117,10 @@ beforeEach(() => {
     isAvailableForBooking: true,
   });
   h.studentFindFirstMock.mockResolvedValue({ id: STUDENT_ROW_ID });
+  h.writeLessonUpdateAuditEventMock.mockResolvedValue({
+    ok: true,
+    id: "audit-1",
+  });
 });
 
 describe("GET /api/admin/lessons/[id]", () => {
@@ -178,6 +194,20 @@ describe("PUT /api/admin/lessons/[id]", () => {
       h.lessonUpdateMock.mock.calls[0]?.[0]?.select,
     );
     expect(body.data.lesson.startTime).toBe("10:00");
+    expect(h.writeLessonUpdateAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org1",
+        actor: {
+          userId: UUID_A,
+          role: "SUPER_ADMIN",
+          email: undefined,
+        },
+        changedFields: ["startTime", "endTime", "status"],
+        lesson: expect.objectContaining({
+          id: LESSON_ID,
+        }),
+      }),
+    );
   });
 
   it("updates instructorId and studentId for admin", async () => {
@@ -299,6 +329,39 @@ describe("PUT /api/admin/lessons/[id]", () => {
 
     expect(res.status).toBe(404);
     expect(h.lessonUpdateMock).not.toHaveBeenCalled();
+    expect(h.writeLessonUpdateAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("PUT still returns 200 when audit write fails", async () => {
+    h.writeLessonUpdateAuditEventMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+    h.lessonUpdateMock.mockResolvedValue(
+      sampleLessonDetailFixture({
+        id: LESSON_ID,
+        startTime: "10:00",
+        endTime: "11:00",
+        status: "SCHEDULED",
+      }),
+    );
+
+    const res = await PUT(
+      new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          startTime: "10:00",
+          endTime: "11:00",
+          status: "SCHEDULED",
+        }),
+      }) as any,
+      { params: { id: LESSON_ID } } as any,
+    );
+
+    expect(res.status).toBe(200);
+    expect(h.writeLessonUpdateAuditEventMock).toHaveBeenCalled();
+    expect(h.lessonUpdateMock).toHaveBeenCalled();
   });
 
   it("demo org blocks PUT with demo_restricted_action", async () => {

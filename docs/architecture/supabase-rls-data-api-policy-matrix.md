@@ -224,7 +224,7 @@ RLS and Data API blocks **do not replace** application tenant guards.
 | **P3** | `supabase-rls-class-b-hardening-v1b-global-reference-v1` | **Done** — migration `20260610170000_supabase_rls_class_b_hardening_v1b_global_reference` (3 tables); deployed validated env 2026-06-10 (main `cdfacf2`) | Closed |
 | **P3** | `supabase-rls-class-b-hardening-v1b-global-reference-deploy-record-v1` | **Done** — deploy + smoke pass on validated env; v1b revoke-only complete (31/31) | Closed |
 | **P2** | `supabase-rls-tenant-policies-v1` | **Tenant `CREATE POLICY`** — separate from v1b; JWT/helper analysis; only if Data API tenant access required | D4; **not** v1b |
-| **P2** | `audit-log-write-paths-lessons-v1` | Wire `writeAuditEvent` into lesson MVP mutations | Runtime gated |
+| **P2** | `audit-log-write-paths-lessons-v1` | Wire `writeAuditEvent` into lesson MVP mutations | **Done** — `lesson.create` + `lesson.update` on admin routes |
 | **P2** | `supabase-exposed-schema-review` | Remove `public` from Supabase exposed schemas or add dedicated `api` schema for any future Data API feature | Ops + product decision |
 | **P3** | `supabase-private-schema-refactor` | Move class C tables out of `public` | Large refactor — defer |
 

@@ -22,6 +22,11 @@ import {
   updateAdminLesson,
 } from "@/lib/lessons/lesson-update-delete-service";
 import { LESSON_DETAIL_SELECT } from "@/lib/lessons/lesson-queries";
+import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
+import {
+  collectLessonUpdateChangedFields,
+  writeLessonUpdateAuditEvent,
+} from "@/lib/audit/lesson-audit";
 
 type OrgScopedUser = {
   id: string;
@@ -170,6 +175,25 @@ export const PUT = withErrorHandling(
     if (!result.ok) {
       return errorResponse(result.error, result.status);
     }
+
+    const changedFields = collectLessonUpdateChangedFields(updatePayload);
+
+    await writeLessonUpdateAuditEvent({
+      organizationId: orgId,
+      actor: {
+        userId: user.id,
+        role: user.role,
+        email: user.email,
+      },
+      lesson: {
+        id: result.lesson.id,
+        lessonType: result.lesson.lessonType,
+        studentId: result.lesson.studentId,
+        instructorId: result.lesson.instructorId,
+      },
+      changedFields,
+      requestContext: extractAuditRequestContext(request),
+    });
 
     return successResponse({
       message: "Lesson updated successfully",
