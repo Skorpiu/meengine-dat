@@ -76,7 +76,7 @@ Controlled production deployment for a **first B2B driving-school client** using
 
 | Item | Notes |
 | ---- | ----- |
-| Audit log runtime | **Schema slice done** (`audit-log-tenant-context-migration-v1`); write paths + tenant queries next — unless compliance pulls earlier |
+| Audit log runtime | **Foundation done** (`audit-log-write-paths-foundation-v1`); integration + tenant queries next |
 | Demo DB separation | Recommended for public portfolio; dedicated client tenant lowers urgency |
 | `lesson-student-nullability-policy-review-v1` | Policy doc + validation gap grep |
 | `mobile-tablet-readiness-review-v1` | Penultimate before Competitive/Product Discovery |
