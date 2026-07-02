@@ -252,8 +252,7 @@ Documented and in use (docs/rules only; no runtime change):
 
 ### Likely next (production path)
 
-1. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
-2. Audit log runtime/migration — P2 unless compliance requires earlier (see DEC-044 plan)
+1. Audit log runtime/migration — P2 unless compliance requires earlier (see DEC-044 plan)
 
 ### Deferred (not next)
 

@@ -155,7 +155,7 @@ Production mutation smoke expects the fixture instructor to be bookable for **ca
 | Qualified category `B` (`DAT_SMOKE_EXPECTED_LESSON_CATEGORY`) | Hard-fail **before POST** if missing | **WARN**, proceed — backend POST enforces |
 | Instructor license expiry                                     | Hard-fail if expired                 | **WARN**, proceed — backend enforces      |
 
-**Assign categories in admin UI:** People → Instructors → Profiles → **Edit Instructor** → **Qualified license categories** (`instructor-qualified-categories-management-v1b`). No operator SQL required for routine smoke fixture maintenance.
+**Assign categories in admin UI:** People → Instructors → Profiles → **Edit Instructor** → **Qualified license categories** (`instructor-qualified-categories-management-v1b`, DEC-042). No operator SQL required for routine smoke fixture maintenance.
 
 **Authoritative safety boundary:** `POST /api/admin/lessons`. If the instructor fixture still lacks category **B**, mutation smoke fails at POST with HTTP **400** and **no lesson is created** (e.g. `Instructor has no qualified categories for driving lessons…`).
 
@@ -278,7 +278,36 @@ export DAT_SMOKE_ALLOWED_HOSTS=www.meengine.io
 | `pnpm e2e:smoke:prod`              | API then Playwright `@readonly` (unchanged)                   |
 | `pnpm e2e:smoke:prod:full`         | API + `@readonly` + `@fixture-preflight` + `@mutations`       |
 
-Install browser once per machine:
+### Quick reference (canonical flows)
+
+All commands assume working directory `driving_school_platform/nextjs_space` and **Git Bash** on Windows.
+
+1. **Local (read-only):**
+
+```bash
+pnpm e2e:smoke:api
+pnpm e2e:smoke:readonly
+```
+
+2. **Hosted (read-only):**
+
+```bash
+pnpm e2e:smoke:prod
+```
+
+3. **Hosted (zero-write fixture preflight):**
+
+```bash
+pnpm e2e:smoke:fixture-preflight
+```
+
+4. **Hosted (persisted mutations; dual opt-in):**
+
+```bash
+pnpm e2e:smoke:mutations
+```
+
+### Playwright install (once per machine)
 
 ```bash
 pnpm -C driving_school_platform/nextjs_space exec playwright install chromium
@@ -292,7 +321,6 @@ Assumed shell: Git Bash
 
 ```bash
 cd driving_school_platform/nextjs_space
-pnpm exec playwright install chromium
 
 export DAT_SMOKE_BASE_URL=http://localhost:3000
 export DAT_SMOKE_ADMIN_EMAIL=<local-smoke-admin>

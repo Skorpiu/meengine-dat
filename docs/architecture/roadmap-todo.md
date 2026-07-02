@@ -45,7 +45,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `instructor-qualified-categories-management-v1b` | **Done** | School Admin qualified categories on Edit Instructor; PATCH admin instructor; M2M `_InstructorCategories`; no migration |
 | `production-smoke-e2e-testids-v1` | **Done** | DEC-041: smoke `data-testid` markers; booking endpoint exposes `qualifiedCategoryNames` + `instructorLicenseExpiry` when `forBooking=true`; preflight category B validation |
 | `production-first-client-onboarding-record-v1` | **Done (docs)** | DEC-043: operator checklist + evidence template; [first-client-onboarding-record.md](./first-client-onboarding-record.md); smoke tenant vs real client; no runtime |
-| `production-smoke-runbook-sync-v1` | Pending | Residual runbook alignment if drift remains |
+| `production-smoke-runbook-sync-v1` | **Done (docs)** | Runbook sync after DEC-041/042/043/044: canonical commands, opt-in guards, category B via People UI (no SQL), smoke tenant vs first client separation; `production-smoke-e2e.md` |
 | `audit-log-tenant-context-foundation-plan-v1` | **Done (docs)** | DEC-044: tenant-aware audit log foundation plan (no runtime/schema); [audit-log-tenant-context-foundation-plan.md](./audit-log-tenant-context-foundation-plan.md) |
 | `audit-log-tenant-context-schema-plan-v1` | **Done (docs)** | Technical plan for first schema/migration slice (additive columns + indexes + backfill + RLS/REVOKE preservation); [audit-log-tenant-context-schema-plan.md](./audit-log-tenant-context-schema-plan.md) |
 | **First-client operator smoke (re-run lessons edit)** | **Done (operator)** | Manual smoke green after modal edit deploy (main `a9549bf`) |
