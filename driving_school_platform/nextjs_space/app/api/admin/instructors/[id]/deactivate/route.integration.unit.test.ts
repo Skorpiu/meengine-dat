@@ -4,6 +4,10 @@ vi.mock("@/lib/instructors/instructor-record-deactivate", () => ({
   deactivateInstructorRecord: vi.fn(),
 }));
 
+vi.mock("@/lib/audit/people-audit", () => ({
+  writeInstructorDeactivateAuditEvent: vi.fn(),
+}));
+
 vi.mock("next-auth", () => ({
   getServerSession: vi.fn(),
 }));
@@ -25,6 +29,7 @@ vi.mock("@/lib/users/user-route-access", async () => {
 
 import { POST } from "./route";
 import { deactivateInstructorRecord } from "@/lib/instructors/instructor-record-deactivate";
+import { writeInstructorDeactivateAuditEvent } from "@/lib/audit/people-audit";
 import { getServerSession } from "next-auth";
 import {
   assertUserTenantHost,
@@ -43,6 +48,8 @@ const rejectDemoMock =
 const deactivateMock = deactivateInstructorRecord as unknown as ReturnType<
   typeof vi.fn
 >;
+const writeDeactivateAuditMock =
+  writeInstructorDeactivateAuditEvent as unknown as ReturnType<typeof vi.fn>;
 
 const routeContext = { params: { id: "inst-1" } };
 
@@ -60,6 +67,7 @@ beforeEach(() => {
     warningCodes: [],
     futureLessonsCount: 0,
   });
+  writeDeactivateAuditMock.mockResolvedValue({ ok: true, id: "audit-1" });
 });
 
 describe("POST /api/admin/instructors/[id]/deactivate", () => {
@@ -79,6 +87,29 @@ describe("POST /api/admin/instructors/[id]/deactivate", () => {
     const body = await res.json();
     expect(body.success).toBe(true);
     expect(body.data.deactivated).toBe(true);
+    expect(writeDeactivateAuditMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        actor: expect.objectContaining({
+          userId: "admin-1",
+          role: "SUPER_ADMIN",
+        }),
+        instructorId: "inst-1",
+        alreadyInactive: false,
+        warningCodes: [],
+        futureLessonsCount: 0,
+        requestContext: expect.objectContaining({
+          requestMethod: "POST",
+          requestPath: "/api/admin/instructors/inst-1/deactivate",
+        }),
+      }),
+    );
+
+    const auditPayload = JSON.stringify(
+      writeDeactivateAuditMock.mock.calls[0]?.[0],
+    );
+    expect(auditPayload).not.toContain("password");
+    expect(auditPayload).not.toContain("tokenHash");
   });
 
   it("returns alreadyInactive payload", async () => {
@@ -140,6 +171,7 @@ describe("POST /api/admin/instructors/[id]/deactivate", () => {
     );
 
     expect(res.status).toBe(404);
+    expect(writeDeactivateAuditMock).not.toHaveBeenCalled();
   });
 
   it("returns 409 for self-deactivate", async () => {
@@ -183,5 +215,31 @@ describe("POST /api/admin/instructors/[id]/deactivate", () => {
 
     expect(res.status).toBe(403);
     expect(deactivateMock).not.toHaveBeenCalled();
+    expect(writeDeactivateAuditMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 200 when audit write fails", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
+    });
+    writeDeactivateAuditMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+
+    const res = await POST(
+      req(
+        "http://school.example.com/api/admin/instructors/inst-1/deactivate",
+      ) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(200);
+    expect(writeDeactivateAuditMock).toHaveBeenCalled();
   });
 });

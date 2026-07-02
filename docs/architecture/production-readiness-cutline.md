@@ -76,7 +76,7 @@ Controlled production deployment for a **first B2B driving-school client** using
 
 | Item | Notes |
 | ---- | ----- |
-| Audit log runtime | **Invitation slice done** (`audit-log-write-paths-integration-v1`); people/lessons + optional viewer next |
+| Audit log runtime | **Invitations + instructor people slice done**; students/lessons + optional viewer next |
 | Demo DB separation | Recommended for public portfolio; dedicated client tenant lowers urgency |
 | `lesson-student-nullability-policy-review-v1` | Policy doc + validation gap grep |
 | `mobile-tablet-readiness-review-v1` | Penultimate before Competitive/Product Discovery |

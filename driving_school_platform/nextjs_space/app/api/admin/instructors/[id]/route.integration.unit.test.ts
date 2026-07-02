@@ -8,6 +8,10 @@ vi.mock("@/lib/instructors/instructor-record-qualified-categories", () => ({
   updateInstructorQualifiedCategories: vi.fn(),
 }));
 
+vi.mock("@/lib/audit/people-audit", () => ({
+  writeInstructorQualifiedCategoriesAuditEvent: vi.fn(),
+}));
+
 vi.mock("next-auth", () => ({
   getServerSession: vi.fn(),
 }));
@@ -30,6 +34,7 @@ vi.mock("@/lib/users/user-route-access", async () => {
 import { DELETE, PATCH } from "./route";
 import { deleteInstructorRecordIfEligible } from "@/lib/instructors/instructor-record-delete";
 import { updateInstructorQualifiedCategories } from "@/lib/instructors/instructor-record-qualified-categories";
+import { writeInstructorQualifiedCategoriesAuditEvent } from "@/lib/audit/people-audit";
 import { getServerSession } from "next-auth";
 import {
   assertUserTenantHost,
@@ -49,6 +54,10 @@ const deleteInstructorMock =
   deleteInstructorRecordIfEligible as unknown as ReturnType<typeof vi.fn>;
 const updateQualifiedCategoriesMock =
   updateInstructorQualifiedCategories as unknown as ReturnType<typeof vi.fn>;
+const writeQualifiedCategoriesAuditMock =
+  writeInstructorQualifiedCategoriesAuditEvent as unknown as ReturnType<
+    typeof vi.fn
+  >;
 
 const routeContext = { params: { id: "inst-1" } };
 
@@ -71,6 +80,10 @@ beforeEach(() => {
       id: "inst-1",
       qualifiedCategories: [{ id: 2, name: "B" }],
     },
+  });
+  writeQualifiedCategoriesAuditMock.mockResolvedValue({
+    ok: true,
+    id: "audit-1",
   });
 });
 
@@ -241,6 +254,29 @@ describe("PATCH /api/admin/instructors/[id]", () => {
       instructorId: "inst-1",
       qualifiedCategoryNames: ["B"],
     });
+    expect(writeQualifiedCategoriesAuditMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        actor: expect.objectContaining({
+          userId: "admin-1",
+          role: "SUPER_ADMIN",
+        }),
+        instructor: {
+          id: "inst-1",
+          qualifiedCategories: [{ id: 2, name: "B" }],
+        },
+        requestContext: expect.objectContaining({
+          requestMethod: "PATCH",
+          requestPath: "/api/admin/instructors/inst-1",
+        }),
+      }),
+    );
+
+    const auditPayload = JSON.stringify(
+      writeQualifiedCategoriesAuditMock.mock.calls[0]?.[0],
+    );
+    expect(auditPayload).not.toContain("password");
+    expect(auditPayload).not.toContain("tokenHash");
   });
 
   it("returns 400 for invalid request body", async () => {
@@ -276,6 +312,7 @@ describe("PATCH /api/admin/instructors/[id]", () => {
     );
 
     expect(res.status).toBe(404);
+    expect(writeQualifiedCategoriesAuditMock).not.toHaveBeenCalled();
   });
 
   it("returns 400 when category is unknown or inactive", async () => {
@@ -299,6 +336,7 @@ describe("PATCH /api/admin/instructors/[id]", () => {
     const body = await res.json();
     expect(body.code).toBe("category_not_found");
     expect(body.categoryName).toBe("ZZZ");
+    expect(writeQualifiedCategoriesAuditMock).not.toHaveBeenCalled();
   });
 
   it("returns 403 for demo org", async () => {
@@ -320,5 +358,31 @@ describe("PATCH /api/admin/instructors/[id]", () => {
 
     expect(res.status).toBe(403);
     expect(updateQualifiedCategoriesMock).not.toHaveBeenCalled();
+    expect(writeQualifiedCategoriesAuditMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 200 when audit write fails", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
+    });
+    writeQualifiedCategoriesAuditMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+
+    const res = await PATCH(
+      req("PATCH", "http://school.example.com/api/admin/instructors/inst-1", {
+        qualifiedCategoryNames: ["B"],
+      }) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(200);
+    expect(writeQualifiedCategoriesAuditMock).toHaveBeenCalled();
   });
 });

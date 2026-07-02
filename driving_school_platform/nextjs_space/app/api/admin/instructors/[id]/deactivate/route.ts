@@ -8,16 +8,22 @@ import {
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { deactivateInstructorRecord } from "@/lib/instructors/instructor-record-deactivate";
+import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
+import { writeInstructorDeactivateAuditEvent } from "@/lib/audit/people-audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type RouteContext = { params: { id: string } };
 
-async function requireSuperAdminTenant(
-  request: NextRequest,
-): Promise<
-  | { ok: true; organizationId: string; currentUserId: string }
+async function requireSuperAdminTenant(request: NextRequest): Promise<
+  | {
+      ok: true;
+      organizationId: string;
+      currentUserId: string;
+      actorRole: "SUPER_ADMIN";
+      actorEmail: string | null | undefined;
+    }
   | { ok: false; response: NextResponse }
 > {
   const session = await getServerSession(authOptions);
@@ -46,6 +52,8 @@ async function requireSuperAdminTenant(
     ok: true,
     organizationId: orgId,
     currentUserId: session.user.id,
+    actorRole: session.user.role,
+    actorEmail: session.user.email,
   };
 }
 
@@ -77,6 +85,20 @@ export async function POST(request: NextRequest, context: RouteContext) {
         { status: HTTP_STATUS.CONFLICT },
       );
     }
+
+    await writeInstructorDeactivateAuditEvent({
+      organizationId: auth.organizationId,
+      actor: {
+        userId: auth.currentUserId,
+        role: auth.actorRole,
+        email: auth.actorEmail,
+      },
+      instructorId: context.params.id,
+      alreadyInactive: result.alreadyInactive,
+      warningCodes: result.warningCodes,
+      futureLessonsCount: result.futureLessonsCount,
+      requestContext: extractAuditRequestContext(request),
+    });
 
     return successResponse({
       deactivated: true,

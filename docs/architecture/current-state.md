@@ -252,16 +252,17 @@ Documented and in use (docs/rules only; no runtime change):
 - `audit-log-tenant-context-migration-v1` — migration `20260702120000_audit_log_tenant_context_v1`: additive tenant-aware columns on `audit_logs` (`organizationId`, `actorUserId`, `actorRole`, `actorEmail`, `targetUserId`, `metadata`, `requestId`); composite indexes; best-effort backfill from legacy `userId`; idempotent Class-B RLS + REVOKE reinforcement; no write paths/API/UI. Validated via `pnpm check`. Operator `migrate deploy` human-controlled.
 - `audit-log-write-paths-foundation-v1` — audit write boundary: `lib/audit/audit-log-service.ts` (`writeAuditEvent`, `buildAuditLogCreateData`, `extractAuditRequestContext`) + `lib/audit/audit-log-redaction.ts`; legacy field mapping; unit tests; no route wiring. Validated via `pnpm check`.
 - `audit-log-write-paths-integration-v1` — wired `writeInvitationAuditEvent` into `POST /api/admin/invitations` (`invitation.create`) and `POST /api/admin/invitations/[id]/revoke` (`invitation.revoke`); tenant scope from session; minimal redacted metadata; audit failure non-blocking; route + helper unit tests. Validated via `pnpm check`.
+- `audit-log-write-paths-people-v1` — wired `lib/audit/people-audit.ts` into `PATCH /api/admin/instructors/[id]` (`instructor.qualified_categories.update`) and `POST /api/admin/instructors/[id]/deactivate` (`instructor.deactivate`); tenant scope from session; minimal metadata; audit failure non-blocking; route + helper unit tests. Validated via `pnpm check`.
 
 ### Likely next (production path)
 
-1. Expand audit wiring to additional MVP mutations (people/lessons) in small slices
+1. Expand audit wiring to student lifecycle / lessons MVP mutations in small slices
 
 ### Deferred (not next)
 
 - **`calendar-lessons-polish-v1e-student-warnings`** (P3) — product policy first
 - `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)**
-- Audit log write paths — foundation done; integration slice next (`audit-log-write-paths-integration-v1`)
+- Audit log write paths — people instructor slice done; expand to students/lessons in future slices
 
 ### Product direction (backlog — deferred post-production polish)
 
