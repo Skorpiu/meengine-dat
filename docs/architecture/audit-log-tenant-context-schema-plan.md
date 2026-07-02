@@ -228,5 +228,6 @@ DDL rollback is expensive in Postgres; prefer forward-fix. Still, for safety:
 3. **(Done)** `audit-log-write-paths-integration-v1` — wire into invitation create + revoke.
 4. **(Done)** `audit-log-write-paths-people-v1` — wire into instructor qualified categories + deactivate.
 5. **(Done)** `audit-log-write-paths-lessons-v1` — wire into lesson create + update (admin routes).
-6. **(Next, gated)** expand to student lifecycle / lesson delete / import apply in small slices.
+6. **(Done)** `audit-log-write-paths-students-v1` — wire into student app-access remove + reactivate.
+7. **(Next, gated)** expand to student update/invite/delete and lesson delete / import apply in small slices.
 
