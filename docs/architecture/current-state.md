@@ -257,10 +257,11 @@ Documented and in use (docs/rules only; no runtime change):
 - `audit-log-write-paths-students-v1` — wired `lib/audit/student-audit.ts` into `POST /api/admin/students/[id]/app-access/remove` (`student.app_access.remove`) and `POST /api/admin/students/[id]/app-access/reactivate` (`student.app_access.reactivate`); tenant scope from session; lifecycle metadata (`previousAppAccessMode`, `appAccessMode`, `linkedUserId` on reactivate); `targetUserId` on reactivate; no student email in audit; audit failure non-blocking; route + helper unit tests. Validated via `pnpm check`.
 - `audit-log-write-paths-student-profile-v1` — expanded `lib/audit/student-audit.ts` into `PATCH /api/admin/students/[id]` (`student.update`; `changedFields` + `appAccessMode` only) and `POST /api/admin/students/[id]/change-email` (`student.email.change`; `policyMode`, `hasLinkedUser`, `invitationRevoked` flags); `StudentEmailChangeAuditContext` on service success; no email/address/name values in metadata; audit failure non-blocking; route + helper + service unit tests. Validated via `pnpm check`.
 - `audit-log-write-paths-student-delete-v1` — wired `student.delete` into `DELETE /api/admin/students/[id]`; `StudentDeleteAuditSnapshot` on `deleteStudentRecordIfEligible` success; metadata (`appAccessMode`, `hadLinkedUser`, `hadLessons` flags only); `targetUserId` when linked user existed (policy blocks delete today); audit failure non-blocking; route + helper + delete service unit tests. Validated via `pnpm check`.
+- `audit-log-write-paths-student-invite-v1` — wired `student.invite` into `POST /api/admin/students/[id]/invite` (not `invitation.create` — distinct Profiles flow; unlinked invites remain `invitation.create` on `POST /api/admin/invitations`); `StudentInviteAuditSnapshot` on service success; metadata (`invitationRole`, `invitationStatus`, `previousAppAccessMode`, `appAccessMode`, `hasExistingInvitation`); no token/email/inviteLink; audit failure non-blocking; route + helper + service unit tests. Validated via `pnpm check`.
 
 ### Likely next (production path)
 
-1. Expand audit wiring to student invite / import and lesson delete in small slices
+1. Expand audit wiring to import apply and lesson delete in small slices
 
 ### Deferred (not next)
 

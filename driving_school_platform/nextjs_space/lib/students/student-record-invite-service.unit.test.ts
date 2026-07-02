@@ -87,6 +87,12 @@ describe("inviteExistingStudentRecord", () => {
     });
 
     expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.audit).toEqual({
+      previousAppAccessMode: "MANUAL_ONLY",
+      invitationRole: "STUDENT",
+      invitationStatus: "PENDING",
+    });
     expect(h.transaction).toHaveBeenCalledTimes(1);
     expect(h.createInvitationMock).toHaveBeenCalledWith(
       expect.objectContaining({

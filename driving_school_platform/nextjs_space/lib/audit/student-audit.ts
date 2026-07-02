@@ -18,6 +18,8 @@ export type StudentProfileAuditAction =
 
 export type StudentDeleteAuditAction = "student.delete";
 
+export type StudentInviteAuditAction = "student.invite";
+
 export type StudentEmailChangePolicyMode =
   | "APP_USER"
   | "INVITED"
@@ -92,6 +94,21 @@ export function buildStudentEmailChangeAuditMetadata(input: {
     policyMode: input.policyMode,
     hasLinkedUser: input.hasLinkedUser,
     invitationRevoked: input.invitationRevoked,
+  };
+}
+
+export function buildStudentInviteAuditMetadata(input: {
+  invitationRole: string;
+  invitationStatus: string;
+  previousAppAccessMode: string;
+  hasExistingInvitation: boolean;
+}): Record<string, unknown> {
+  return {
+    invitationRole: input.invitationRole,
+    invitationStatus: input.invitationStatus,
+    previousAppAccessMode: input.previousAppAccessMode,
+    appAccessMode: "INVITED",
+    hasExistingInvitation: input.hasExistingInvitation,
   };
 }
 
@@ -181,6 +198,34 @@ export async function writeStudentEmailChangeAuditEvent(
         policyMode: input.policyMode,
         hasLinkedUser: input.hasLinkedUser,
         invitationRevoked: input.invitationRevoked,
+      }),
+      ...input.requestContext,
+    },
+    input.options,
+  );
+}
+
+export async function writeStudentInviteAuditEvent(
+  input: WriteStudentAuditEventBase & {
+    invitationRole: string;
+    invitationStatus: string;
+    previousAppAccessMode: string;
+  },
+) {
+  return writeAuditEvent(
+    {
+      organizationId: input.organizationId,
+      actorUserId: input.actor.userId,
+      actorRole: input.actor.role,
+      actorEmail: input.actor.email ?? null,
+      action: "student.invite",
+      entityType: STUDENT_AUDIT_ENTITY_TYPE,
+      entityId: input.studentId,
+      metadata: buildStudentInviteAuditMetadata({
+        invitationRole: input.invitationRole,
+        invitationStatus: input.invitationStatus,
+        previousAppAccessMode: input.previousAppAccessMode,
+        hasExistingInvitation: input.previousAppAccessMode === "INVITED",
       }),
       ...input.requestContext,
     },

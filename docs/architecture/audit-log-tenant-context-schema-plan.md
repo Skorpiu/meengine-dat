@@ -231,5 +231,6 @@ DDL rollback is expensive in Postgres; prefer forward-fix. Still, for safety:
 6. **(Done)** `audit-log-write-paths-students-v1` — wire into student app-access remove + reactivate.
 7. **(Done)** `audit-log-write-paths-student-profile-v1` — wire into student profile PATCH + change-email.
 8. **(Done)** `audit-log-write-paths-student-delete-v1` — wire into student hard-delete (`DELETE /api/admin/students/[id]`).
-9. **(Next, gated)** expand to student invite and lesson delete / import apply in small slices.
+9. **(Done)** `audit-log-write-paths-student-invite-v1` — wire into student profile invite (`POST /api/admin/students/[id]/invite`; `student.invite`, not `invitation.create`).
+10. **(Next, gated)** expand to lesson delete / import apply in small slices.
 

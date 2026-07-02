@@ -18,6 +18,11 @@ export type InviteExistingStudentRecordResult =
       invitation: InvitationDto;
       inviteLink: string;
       organizationName: string;
+      audit: {
+        previousAppAccessMode: string;
+        invitationRole: string;
+        invitationStatus: string;
+      };
     }
   | {
       ok: false;
@@ -126,6 +131,13 @@ export async function inviteExistingStudentRecord(
       },
     });
 
-    return inviteResult;
+    return {
+      ...inviteResult,
+      audit: {
+        previousAppAccessMode: student.appAccessMode,
+        invitationRole: inviteResult.invitation.role,
+        invitationStatus: inviteResult.invitation.status,
+      },
+    };
   });
 }
