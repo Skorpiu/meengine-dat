@@ -247,11 +247,12 @@ Documented and in use (docs/rules only; no runtime change):
 - `instructor-qualified-categories-management-v1b` — School Admin can view/edit instructor qualified license categories via People → Edit Instructor; PATCH `/api/admin/instructors/[id]`; M2M `_InstructorCategories`; no migration. Validated via `pnpm check`.
 - `production-smoke-e2e-testids-v1` — smoke testids + booking readiness metadata (DEC-041): `lib/smoke/smoke-testids.ts`; `qualifiedCategoryNames` / `instructorLicenseExpiry` on `GET /api/admin/instructors/all?forBooking=true`; fixture preflight category B hard-fail when exposed; improved readiness messages; not in `pnpm check`/CI.
 - `production-first-client-onboarding-record-v1` — docs-only first B2B client onboarding record (DEC-043): checklist (pre-onboarding, deploy, tenant setup, minimum data, smoke, go/no-go, handover); fillable example template; A Conquistadora = smoke only; [first-client-onboarding-record.md](./first-client-onboarding-record.md). No runtime/schema changes.
+- `audit-log-tenant-context-foundation-plan-v1` — docs-only foundation plan for tenant-aware audit logging (DEC-044): current `audit_logs` is Class-B hardened but lacks `organizationId` and has no app write paths; defines principles, event candidates, and future slices (schema + service boundary + optional viewer). [audit-log-tenant-context-foundation-plan.md](./audit-log-tenant-context-foundation-plan.md). No runtime/schema changes.
 
 ### Likely next (production path)
 
-1. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
-2. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
+1. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
+2. Audit log runtime/migration — P2 unless compliance requires earlier (see DEC-044 plan)
 
 ### Deferred (not next)
 
