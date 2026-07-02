@@ -6,6 +6,8 @@ import {
 } from "@/lib/api-utils";
 import { HTTP_STATUS } from "@/lib/constants";
 import { attemptInvitationEmailDelivery } from "@/lib/invitations/invitation-email-delivery";
+import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
+import { writeStudentInviteAuditEvent } from "@/lib/audit/student-audit";
 import { inviteExistingStudentRecord } from "@/lib/students/student-record-invite-service";
 import { inviteStudentRecordBodySchema } from "@/lib/students/student-record-invite-validation";
 import {
@@ -14,16 +16,19 @@ import {
 } from "@/lib/users/user-route-access";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import type { UserRole } from "@prisma/client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type RouteContext = { params: { id: string } };
 
-async function requireSuperAdminTenant(
-  request: NextRequest,
-): Promise<
-  | { ok: true; organizationId: string; userId: string }
+async function requireSuperAdminTenant(request: NextRequest): Promise<
+  | {
+      ok: true;
+      organizationId: string;
+      actor: { userId: string; role: UserRole; email?: string | null };
+    }
   | { ok: false; response: NextResponse }
 > {
   const session = await getServerSession(authOptions);
@@ -48,7 +53,15 @@ async function requireSuperAdminTenant(
     return { ok: false, response: tenantDenied };
   }
 
-  return { ok: true, organizationId: orgId, userId: session.user.id };
+  return {
+    ok: true,
+    organizationId: orgId,
+    actor: {
+      userId: session.user.id,
+      role: session.user.role,
+      email: session.user.email,
+    },
+  };
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
@@ -75,7 +88,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const result = await inviteExistingStudentRecord({
       organizationId: auth.organizationId,
-      createdByUserId: auth.userId,
+      createdByUserId: auth.actor.userId,
       studentId: context.params.id,
       email: validation.data.email,
       baseUrl: new URL(request.url).origin,
@@ -87,6 +100,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
         { status: result.status },
       );
     }
+
+    await writeStudentInviteAuditEvent({
+      organizationId: auth.organizationId,
+      actor: auth.actor,
+      studentId: context.params.id,
+      invitationRole: result.audit.invitationRole,
+      invitationStatus: result.audit.invitationStatus,
+      previousAppAccessMode: result.audit.previousAppAccessMode,
+      requestContext: extractAuditRequestContext(request),
+    });
 
     const emailDelivery = await attemptInvitationEmailDelivery({
       inviteLink: result.inviteLink,

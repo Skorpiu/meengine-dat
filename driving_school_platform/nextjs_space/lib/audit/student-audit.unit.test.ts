@@ -14,12 +14,14 @@ import {
   buildStudentAppAccessRemoveAuditMetadata,
   buildStudentDeleteAuditMetadata,
   buildStudentEmailChangeAuditMetadata,
+  buildStudentInviteAuditMetadata,
   buildStudentProfileUpdateAuditMetadata,
   collectStudentProfileUpdateChangedFields,
   writeStudentAppAccessReactivateAuditEvent,
   writeStudentAppAccessRemoveAuditEvent,
   writeStudentDeleteAuditEvent,
   writeStudentEmailChangeAuditEvent,
+  writeStudentInviteAuditEvent,
   writeStudentProfileUpdateAuditEvent,
 } from "@/lib/audit/student-audit";
 import { UserRole } from "@prisma/client";
@@ -179,6 +181,63 @@ describe("buildStudentDeleteAuditMetadata", () => {
       hadLinkedUser: false,
       hadLessons: false,
     });
+  });
+});
+
+describe("buildStudentInviteAuditMetadata", () => {
+  it("includes invite lifecycle flags without email or secrets", () => {
+    expect(
+      buildStudentInviteAuditMetadata({
+        invitationRole: "STUDENT",
+        invitationStatus: "PENDING",
+        previousAppAccessMode: "MANUAL_ONLY",
+        hasExistingInvitation: false,
+      }),
+    ).toEqual({
+      invitationRole: "STUDENT",
+      invitationStatus: "PENDING",
+      previousAppAccessMode: "MANUAL_ONLY",
+      appAccessMode: "INVITED",
+      hasExistingInvitation: false,
+    });
+  });
+});
+
+describe("writeStudentInviteAuditEvent", () => {
+  it("writes student.invite with tenant scope and flags only", async () => {
+    await writeStudentInviteAuditEvent({
+      organizationId: "org-a",
+      actor,
+      studentId: "stu-1",
+      invitationRole: "STUDENT",
+      invitationStatus: "PENDING",
+      previousAppAccessMode: "INVITED",
+      requestContext: { requestId: "req-inv-1" },
+    });
+
+    expect(h.writeAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        action: "student.invite",
+        entityType: "Student",
+        entityId: "stu-1",
+        metadata: {
+          invitationRole: "STUDENT",
+          invitationStatus: "PENDING",
+          previousAppAccessMode: "INVITED",
+          appAccessMode: "INVITED",
+          hasExistingInvitation: true,
+        },
+        requestId: "req-inv-1",
+      }),
+      undefined,
+    );
+
+    const payload = h.writeAuditEventMock.mock.calls[0]?.[0] as {
+      metadata?: Record<string, unknown>;
+    };
+    expect(JSON.stringify(payload.metadata)).not.toContain("@");
+    expect(JSON.stringify(payload.metadata)).not.toContain("token");
   });
 });
 

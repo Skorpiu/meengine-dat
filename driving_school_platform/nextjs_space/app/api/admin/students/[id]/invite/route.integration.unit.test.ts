@@ -3,16 +3,23 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const h = vi.hoisted(() => {
   const inviteExistingStudentRecordMock = vi.fn();
   const attemptInvitationEmailDeliveryMock = vi.fn();
+  const writeStudentInviteAuditEventMock = vi.fn();
 
   return {
     inviteExistingStudentRecordMock,
     attemptInvitationEmailDeliveryMock,
+    writeStudentInviteAuditEventMock,
   };
 });
 
 vi.mock("@/lib/students/student-record-invite-service", () => ({
   inviteExistingStudentRecord: (...args: unknown[]) =>
     h.inviteExistingStudentRecordMock(...args),
+}));
+
+vi.mock("@/lib/audit/student-audit", () => ({
+  writeStudentInviteAuditEvent: (...args: unknown[]) =>
+    h.writeStudentInviteAuditEventMock(...args),
 }));
 
 vi.mock("@/lib/invitations/invitation-email-delivery", () => ({
@@ -93,6 +100,15 @@ beforeEach(() => {
     invitation: invitationDto,
     inviteLink: "https://school.example.com/invitations/accept?token=abc",
     organizationName: "Demo School",
+    audit: {
+      previousAppAccessMode: "MANUAL_ONLY",
+      invitationRole: "STUDENT",
+      invitationStatus: "PENDING",
+    },
+  });
+  h.writeStudentInviteAuditEventMock.mockResolvedValue({
+    ok: true,
+    id: "audit-invite-1",
   });
   h.attemptInvitationEmailDeliveryMock.mockResolvedValue({
     attempted: true,
@@ -103,6 +119,15 @@ beforeEach(() => {
 
 describe("POST /api/admin/students/[id]/invite", () => {
   it("returns invitation, inviteLink, and emailDelivery", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
+    });
+
     const res = await POST(req({ email: "joao@school.test" }) as any, {
       params: { id: "stu-1" },
     });
@@ -123,6 +148,28 @@ describe("POST /api/admin/students/[id]/invite", () => {
         email: "joao@school.test",
       }),
     );
+    expect(h.writeStudentInviteAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        actor: {
+          userId: "admin-1",
+          role: "SUPER_ADMIN",
+          email: "admin@school.test",
+        },
+        studentId: "stu-1",
+        invitationRole: "STUDENT",
+        invitationStatus: "PENDING",
+        previousAppAccessMode: "MANUAL_ONLY",
+      }),
+    );
+
+    const auditPayload = JSON.stringify(
+      h.writeStudentInviteAuditEventMock.mock.calls[0]?.[0],
+    );
+    expect(auditPayload).not.toContain("token");
+    expect(auditPayload).not.toContain("tokenHash");
+    expect(auditPayload).not.toContain("inviteLink");
+    expect(auditPayload).not.toContain("joao@school.test");
   });
 
   it("returns 401 for non SUPER_ADMIN", async () => {
@@ -132,6 +179,7 @@ describe("POST /api/admin/students/[id]/invite", () => {
 
     const res = await POST(req() as any, { params: { id: "stu-1" } });
     expect(res.status).toBe(401);
+    expect(h.writeStudentInviteAuditEventMock).not.toHaveBeenCalled();
   });
 
   it("forwards service errors with code", async () => {
@@ -146,5 +194,49 @@ describe("POST /api/admin/students/[id]/invite", () => {
     expect(res.status).toBe(409);
     const body = await res.json();
     expect(body.code).toBe("student_already_linked");
+    expect(h.writeStudentInviteAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("POST still returns 201 when audit write fails", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
+    });
+    h.writeStudentInviteAuditEventMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+
+    const res = await POST(req({ email: "joao@school.test" }) as any, {
+      params: { id: "stu-1" },
+    });
+
+    expect(res.status).toBe(201);
+    expect(h.writeStudentInviteAuditEventMock).toHaveBeenCalled();
+    expect(h.inviteExistingStudentRecordMock).toHaveBeenCalled();
+  });
+
+  it("blocks demo org via user-management guard", async () => {
+    rejectDemoMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: "Demo restricted",
+          code: "demo_restricted_action",
+        }),
+        { status: 403 },
+      ),
+    );
+
+    const res = await POST(req({ email: "joao@school.test" }) as any, {
+      params: { id: "stu-1" },
+    });
+
+    expect(res.status).toBe(403);
+    expect(h.inviteExistingStudentRecordMock).not.toHaveBeenCalled();
+    expect(h.writeStudentInviteAuditEventMock).not.toHaveBeenCalled();
   });
 });
