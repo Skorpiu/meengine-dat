@@ -2,7 +2,9 @@
 
 Automated smoke for controlled B2B production readiness. Complements manual checklists ([smoke-test-checklist.md](./smoke-test-checklist.md), [production-smoke-baseline.md](./production-smoke-baseline.md)).
 
-**Decisions:** [DEC-036](../../../../docs/architecture/decision-log.md) (read-only v1a); [DEC-039](../../../../docs/architecture/decision-log.md) (fixture preflight); [DEC-040](../../../../docs/architecture/decision-log.md) (lesson mutation smoke v1); [DEC-041](../../../../docs/architecture/decision-log.md) (smoke testids + booking readiness metadata).
+**Decisions:** [DEC-036](../../../../docs/architecture/decision-log.md) (read-only v1a); [DEC-039](../../../../docs/architecture/decision-log.md) (fixture preflight); [DEC-040](../../../../docs/architecture/decision-log.md) (lesson mutation smoke v1); [DEC-041](../../../../docs/architecture/decision-log.md) (smoke testids + booking readiness metadata); [DEC-043](../../../../docs/architecture/decision-log.md) (first client onboarding record).
+
+**First real client:** use [first-client-onboarding-record.md](../../../../docs/architecture/first-client-onboarding-record.md) — do **not** treat this smoke tenant as the client onboarding record.
 
 ---
 
@@ -367,6 +369,7 @@ Created lessons are retained as an immutable smoke trail (no cleanup in v1).
 
 ## Related
 
+- [first-client-onboarding-record.md](../../../../docs/architecture/first-client-onboarding-record.md) — controlled first B2B client checklist (DEC-043); smoke tenant section separate from real client
 - [e2e-smoke.md](./e2e-smoke.md) — optional demo read-only smoke (`E2E_DEMO_*`)
 - [deployment-readiness.md](./deployment-readiness.md) — `pnpm smoke:health` (health only)
 - [production-readiness-cutline.md](../../../../docs/architecture/production-readiness-cutline.md) — DEC-032 cutline

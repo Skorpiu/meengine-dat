@@ -44,6 +44,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `production-smoke-e2e-lesson-mutations-v1` | **Done** | DEC-040: API-first DRIVING create + time update; `pnpm e2e:smoke:mutations`; dual opt-in; no cleanup; not in `pnpm check`/CI |
 | `instructor-qualified-categories-management-v1b` | **Done** | School Admin qualified categories on Edit Instructor; PATCH admin instructor; M2M `_InstructorCategories`; no migration |
 | `production-smoke-e2e-testids-v1` | **Done** | DEC-041: smoke `data-testid` markers; booking endpoint exposes `qualifiedCategoryNames` + `instructorLicenseExpiry` when `forBooking=true`; preflight category B validation |
+| `production-first-client-onboarding-record-v1` | **Done (docs)** | DEC-043: operator checklist + evidence template; [first-client-onboarding-record.md](./first-client-onboarding-record.md); smoke tenant vs real client; no runtime |
 | `production-smoke-runbook-sync-v1` | Pending | Residual runbook alignment if drift remains |
 | `audit-log-tenant-context-foundation-plan-v1` | Pending | Design doc + write-path contract only — **no migration** |
 | **First-client operator smoke (re-run lessons edit)** | **Done (operator)** | Manual smoke green after modal edit deploy (main `a9549bf`) |

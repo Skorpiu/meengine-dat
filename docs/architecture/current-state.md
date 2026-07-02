@@ -143,6 +143,8 @@ Documented and in use (docs/rules only; no runtime change):
 
 **Cutline doc:** [production-readiness-cutline.md](./production-readiness-cutline.md) (`production-readiness-cutline-doc-v1`).
 
+**First-client onboarding:** [first-client-onboarding-record.md](./first-client-onboarding-record.md) (`production-first-client-onboarding-record-v1`, DEC-043).
+
 **Analysis approved:** `production-readiness-cutline-review-v1` (analysis-only).
 
 **Do not open next:** `calendar-lessons-polish-v1e-student-warnings`, mobile/tablet review, Competitive/Product Discovery, audit log runtime, billing/checkout.
@@ -244,12 +246,12 @@ Documented and in use (docs/rules only; no runtime change):
 - `production-smoke-e2e-lesson-mutations-v1` — lesson mutation smoke (DEC-040): `pnpm e2e:smoke:mutations`; dual opt-in `DAT_E2E_ALLOW_PRODUCTION_MUTATIONS`; API-first create + time-shift update; fixture preflight inside spec; immutable smoke trail (no delete/cleanup); not in `pnpm check`/CI.
 - `instructor-qualified-categories-management-v1b` — School Admin can view/edit instructor qualified license categories via People → Edit Instructor; PATCH `/api/admin/instructors/[id]`; M2M `_InstructorCategories`; no migration. Validated via `pnpm check`.
 - `production-smoke-e2e-testids-v1` — smoke testids + booking readiness metadata (DEC-041): `lib/smoke/smoke-testids.ts`; `qualifiedCategoryNames` / `instructorLicenseExpiry` on `GET /api/admin/instructors/all?forBooking=true`; fixture preflight category B hard-fail when exposed; improved readiness messages; not in `pnpm check`/CI.
+- `production-first-client-onboarding-record-v1` — docs-only first B2B client onboarding record (DEC-043): checklist (pre-onboarding, deploy, tenant setup, minimum data, smoke, go/no-go, handover); fillable example template; A Conquistadora = smoke only; [first-client-onboarding-record.md](./first-client-onboarding-record.md). No runtime/schema changes.
 
 ### Likely next (production path)
 
-1. `production-first-client-onboarding-record-v1` — operator evidence doc after go-live
-2. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
-3. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
+1. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
+2. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
 
 ### Deferred (not next)
 
