@@ -258,16 +258,19 @@ Documented and in use (docs/rules only; no runtime change):
 - `audit-log-write-paths-student-profile-v1` — expanded `lib/audit/student-audit.ts` into `PATCH /api/admin/students/[id]` (`student.update`; `changedFields` + `appAccessMode` only) and `POST /api/admin/students/[id]/change-email` (`student.email.change`; `policyMode`, `hasLinkedUser`, `invitationRevoked` flags); `StudentEmailChangeAuditContext` on service success; no email/address/name values in metadata; audit failure non-blocking; route + helper + service unit tests. Validated via `pnpm check`.
 - `audit-log-write-paths-student-delete-v1` — wired `student.delete` into `DELETE /api/admin/students/[id]`; `StudentDeleteAuditSnapshot` on `deleteStudentRecordIfEligible` success; metadata (`appAccessMode`, `hadLinkedUser`, `hadLessons` flags only); `targetUserId` when linked user existed (policy blocks delete today); audit failure non-blocking; route + helper + delete service unit tests. Validated via `pnpm check`.
 - `audit-log-write-paths-student-invite-v1` — wired `student.invite` into `POST /api/admin/students/[id]/invite` (not `invitation.create` — distinct Profiles flow; unlinked invites remain `invitation.create` on `POST /api/admin/invitations`); `StudentInviteAuditSnapshot` on service success; metadata (`invitationRole`, `invitationStatus`, `previousAppAccessMode`, `appAccessMode`, `hasExistingInvitation`); no token/email/inviteLink; audit failure non-blocking; route + helper + service unit tests. Validated via `pnpm check`.
+- `audit-log-coverage-readiness-review-v1` — docs-only coverage readiness review: 12 audited actions/routes; admin write-path matrix by domain; P1 gaps (`lesson.delete`, `invitation.email.change`, instructor lifecycle); recommended next 3 slices; stop criteria for viewer/read API. [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md). No runtime/schema changes.
 
 ### Likely next (production path)
 
-1. Expand audit wiring to import apply and lesson delete in small slices
+1. `audit-log-write-paths-lesson-delete-v1` — `DELETE /api/admin/lessons/[id]` → `lesson.delete` (P1; completes Lessons MVP triad)
+2. `audit-log-write-paths-invitation-email-change-v1` — `POST /api/admin/invitations/[id]/change-email` → `invitation.email.change`
+3. `audit-log-write-paths-instructor-reactivate-v1` — `POST /api/admin/instructors/[id]/reactivate` → `instructor.reactivate`
 
 ### Deferred (not next)
 
 - **`calendar-lessons-polish-v1e-student-warnings`** (P3) — product policy first
 - `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)**
-- Audit log write paths — people + lessons + student app-access + student profile/update slices done; expand to student delete/invite/import in future slices
+- Audit log write paths — 12 actions wired; coverage matrix at [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md); next P1: lesson delete, invitation email change, instructor reactivate
 
 ### Product direction (backlog — deferred post-production polish)
 
