@@ -154,7 +154,7 @@ PostgreSQL table names use `@@map` values from the schema.
 
 | Table | Prisma model | Tenant scope | Current RLS | Revoke anon/auth | Intended path | Block anon/auth | Future policy | Prisma-primary |
 | ----- | ------------ | ------------ | ----------- | ---------------- | ------------- | --------------- | ------------- | -------------- |
-| `audit_logs` | AuditLog | **No `organizationId` today** — see `audit-log-tenant-context-foundation` | **Enabled** | **Yes** | Internal audit write/read (admin/platform) | **Yes** | Tenant-scoped queries need app filter until column added | **Yes** |
+| `audit_logs` | AuditLog | **`organizationId` nullable** (tenant-aware v1); actor fields + `metadata`/`requestId` additive | **Enabled** | **Yes** | Internal audit write/read (admin/platform) | **Yes** | Tenant-scoped queries can filter on `organizationId` once write paths exist | **Yes** |
 | `configuration_history` | ConfigurationHistory | Optional `organizationId` | **Enabled** | **Yes** | Config change audit | **Yes** | **No** permissive anon/auth policies | **Yes** |
 | `system_settings` | SystemSetting | Optional `organizationId`; global keys exist | **Enabled** | **Yes** | Server reads; `isPublic` flag is app-level, not PostgREST | **Yes** | Never expose raw settings via Data API | **Yes** |
 | `feature_flags` | FeatureFlag | Optional `organizationId` | **Enabled** | **Yes** | Server-side flag evaluation | **Yes** | No client flag table access | **Yes** |
@@ -224,7 +224,7 @@ RLS and Data API blocks **do not replace** application tenant guards.
 | **P3** | `supabase-rls-class-b-hardening-v1b-global-reference-v1` | **Done** — migration `20260610170000_supabase_rls_class_b_hardening_v1b_global_reference` (3 tables); deployed validated env 2026-06-10 (main `cdfacf2`) | Closed |
 | **P3** | `supabase-rls-class-b-hardening-v1b-global-reference-deploy-record-v1` | **Done** — deploy + smoke pass on validated env; v1b revoke-only complete (31/31) | Closed |
 | **P2** | `supabase-rls-tenant-policies-v1` | **Tenant `CREATE POLICY`** — separate from v1b; JWT/helper analysis; only if Data API tenant access required | D4; **not** v1b |
-| **P2** | `audit-log-tenant-context-foundation` | Add `organizationId` to `AuditLog`; plan tenant-scoped audit queries | Planning / migration gated |
+| **P2** | `audit-log-write-paths-foundation-v1` | `writeAuditEvent` service + wire 1–2 mutations | Runtime gated |
 | **P2** | `supabase-exposed-schema-review` | Remove `public` from Supabase exposed schemas or add dedicated `api` schema for any future Data API feature | Ops + product decision |
 | **P3** | `supabase-private-schema-refactor` | Move class C tables out of `public` | Large refactor — defer |
 
@@ -234,7 +234,7 @@ RLS and Data API blocks **do not replace** application tenant guards.
 | ------- | -------- | -------- | ------- |
 | 3 tables lack RLS in migrations (B1/B2 done) | SECURITY | P3 | **ACCEPT** — done in B3 `20260610170000_supabase_rls_class_b_hardening_v1b_global_reference` |
 | Class-B v1 (8 tables) RLS + REVOKE | SECURITY | P1 | **ACCEPT** — done in `20260603120000_supabase_rls_class_b_hardening_v1` |
-| `audit_logs` has no tenant column | DATA_INTEGRITY | P2 | **DEFER** — `audit-log-tenant-context-foundation` |
+| `audit_logs` has no tenant column | DATA_INTEGRITY | P2 | **RESOLVED (schema v1)** — `organizationId` added in `20260702120000_audit_log_tenant_context_v1`; write paths still pending |
 | Operational `organizationId` NOT NULL | DATA_INTEGRITY | — | **Done** on validated env (DEC-027) |
 | No `@supabase/supabase-js` dependency | DX | — | **ACCEPT** — intentional; Prisma-primary |
 

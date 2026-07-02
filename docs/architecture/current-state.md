@@ -249,16 +249,17 @@ Documented and in use (docs/rules only; no runtime change):
 - `production-first-client-onboarding-record-v1` — docs-only first B2B client onboarding record (DEC-043): checklist (pre-onboarding, deploy, tenant setup, minimum data, smoke, go/no-go, handover); fillable example template; A Conquistadora = smoke only; [first-client-onboarding-record.md](./first-client-onboarding-record.md). No runtime/schema changes.
 - `audit-log-tenant-context-foundation-plan-v1` — docs-only foundation plan for tenant-aware audit logging (DEC-044): current `audit_logs` is Class-B hardened but lacks `organizationId` and has no app write paths; defines principles, event candidates, and future slices (schema + service boundary + optional viewer). [audit-log-tenant-context-foundation-plan.md](./audit-log-tenant-context-foundation-plan.md). No runtime/schema changes.
 - `audit-log-tenant-context-schema-plan-v1` — docs-only technical plan for the first tenant-aware audit log schema/migration slice: additive columns (`organizationId`, actor fields, `metadata`, `requestId`), indexes, best-effort backfill, and RLS/REVOKE preservation. [audit-log-tenant-context-schema-plan.md](./audit-log-tenant-context-schema-plan.md). No runtime/schema changes.
+- `audit-log-tenant-context-migration-v1` — migration `20260702120000_audit_log_tenant_context_v1`: additive tenant-aware columns on `audit_logs` (`organizationId`, `actorUserId`, `actorRole`, `actorEmail`, `targetUserId`, `metadata`, `requestId`); composite indexes; best-effort backfill from legacy `userId`; idempotent Class-B RLS + REVOKE reinforcement; no write paths/API/UI. Validated via `pnpm check`. Operator `migrate deploy` human-controlled.
 
 ### Likely next (production path)
 
-1. Audit log runtime/migration — P2 unless compliance requires earlier (see DEC-044 plan)
+1. `audit-log-write-paths-foundation-v1` — write service + wire 1–2 high-value mutations (P2)
 
 ### Deferred (not next)
 
 - **`calendar-lessons-polish-v1e-student-warnings`** (P3) — product policy first
 - `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)**
-- Audit log runtime/migration — P2 unless compliance requires earlier
+- Audit log write paths — P2 unless compliance requires earlier (`audit-log-write-paths-foundation-v1`)
 
 ### Product direction (backlog — deferred post-production polish)
 

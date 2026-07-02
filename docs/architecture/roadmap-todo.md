@@ -48,6 +48,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `production-smoke-runbook-sync-v1` | **Done (docs)** | Runbook sync after DEC-041/042/043/044: canonical commands, opt-in guards, category B via People UI (no SQL), smoke tenant vs first client separation; `production-smoke-e2e.md` |
 | `audit-log-tenant-context-foundation-plan-v1` | **Done (docs)** | DEC-044: tenant-aware audit log foundation plan (no runtime/schema); [audit-log-tenant-context-foundation-plan.md](./audit-log-tenant-context-foundation-plan.md) |
 | `audit-log-tenant-context-schema-plan-v1` | **Done (docs)** | Technical plan for first schema/migration slice (additive columns + indexes + backfill + RLS/REVOKE preservation); [audit-log-tenant-context-schema-plan.md](./audit-log-tenant-context-schema-plan.md) |
+| `audit-log-tenant-context-migration-v1` | **Done** | Migration `20260702120000_audit_log_tenant_context_v1`: additive tenant-aware `audit_logs` columns + indexes + best-effort backfill; Class-B RLS/REVOKE preserved; no write paths |
 | **First-client operator smoke (re-run lessons edit)** | **Done (operator)** | Manual smoke green after modal edit deploy (main `a9549bf`) |
 
 ---
@@ -263,13 +264,12 @@ Parent batch — always slice before implementing.
 
 ### audit-log-tenant-context-foundation
 
-**Source:** external database/architecture critique triage; **planning only** — no schema changes in this item. Also **Security and data policy** (tenant-scoped audit queries).
+**Source:** external database/architecture critique triage; **schema slice done** in `audit-log-tenant-context-migration-v1`. Also **Security and data policy** (tenant-scoped audit queries).
 
-- Plan adding `organizationId` to `AuditLog` for tenant-scoped audit queries (model currently has `userId` / `userEmail` / `userRole` only; no tenant column).
-- Allow nullable `organizationId` for platform/global events (consistent with `ConfigurationHistory`, `BillingEvent`).
-- Index `organizationId` and `(organizationId, createdAt)` in a future migration batch.
-- `AuditLog` is a sensitive/internal table per `database.mdc` — RLS/grants and migration require explicit approval.
-- **Smallest safe v1 slice:** design doc + write-path contract (how org is resolved on audit insert); no migration in planning batch.
+- ~~Plan adding `organizationId` to `AuditLog`~~ — **done** (nullable; platform-scoped NULL preserved).
+- ~~Index `organizationId` and `(organizationId, createdAt)`~~ — **done** in migration `20260702120000_audit_log_tenant_context_v1`.
+- **Next:** `audit-log-write-paths-foundation-v1` — `writeAuditEvent` service + redaction allowlist; wire 1–2 mutations only.
+- `AuditLog` remains a sensitive/internal table per `database.mdc` — RLS/grants unchanged (Class-B).
 
 ### lesson-student-nullability-policy-review
 

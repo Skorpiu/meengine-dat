@@ -71,6 +71,11 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_userId ON audit_logs("userId");
 CREATE INDEX IF NOT EXISTS idx_audit_logs_entityType ON audit_logs("entityType");
 CREATE INDEX IF NOT EXISTS idx_audit_logs_createdAt ON audit_logs("createdAt");
 CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_org_createdAt ON audit_logs("organizationId", "createdAt");
+CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_createdAt ON audit_logs("entityType", "entityId", "createdAt");
+CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_createdAt ON audit_logs("actorUserId", "createdAt");
+CREATE INDEX IF NOT EXISTS idx_audit_logs_target_createdAt ON audit_logs("targetUserId", "createdAt");
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action_createdAt ON audit_logs("action", "createdAt");
 
 -- Composite indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_users_role_active ON users(role, "isActive");

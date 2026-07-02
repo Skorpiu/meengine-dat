@@ -531,28 +531,40 @@ model Notification {
 }
 
 model AuditLog {
-  id            String      @id @default(cuid())
-  userId        String?
-  userEmail     String?
-  userRole      UserRole?
-  action        String
-  entityType    String
-  entityId      String?
-  oldValues     Json?
-  newValues     Json?
-  ipAddress     String?
-  userAgent     String?
-  requestMethod String?
-  requestPath   String?
-  status        AuditStatus
-  errorMessage  String?
-  createdAt     DateTime    @default(now())
-  user          User?       @relation(fields: [userId], references: [id])
+  id             String      @id @default(cuid())
+  organizationId String?
+  userId         String?
+  userEmail      String?
+  userRole       UserRole?
+  actorUserId    String?
+  actorRole      UserRole?
+  actorEmail     String?
+  targetUserId   String?
+  action         String
+  entityType     String
+  entityId       String?
+  oldValues      Json?
+  newValues      Json?
+  metadata       Json?
+  ipAddress      String?
+  userAgent      String?
+  requestMethod  String?
+  requestPath    String?
+  requestId      String?
+  status         AuditStatus
+  errorMessage   String?
+  createdAt      DateTime    @default(now())
+  user           User?       @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([entityType])
   @@index([createdAt])
   @@index([action])
+  @@index([organizationId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([targetUserId, createdAt])
+  @@index([action, createdAt])
   @@map("audit_logs")
 }
 

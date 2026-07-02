@@ -1,7 +1,7 @@
 # Audit log tenant context — schema/migration plan (v1)
 
 **Batch:** `audit-log-tenant-context-schema-plan-v1` (docs-only)  
-**Status:** Planning only — no Prisma schema changes, no migrations, no runtime writes  
+**Status:** Executed in `audit-log-tenant-context-migration-v1` — migration `20260702120000_audit_log_tenant_context_v1`  
 **Related decision:** [DEC-044](./decision-log.md) (plan-first foundation)  
 **Related docs:** [audit-log-tenant-context-foundation-plan.md](./audit-log-tenant-context-foundation-plan.md), [production-readiness-cutline.md](./production-readiness-cutline.md) (DEC-032)
 
