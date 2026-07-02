@@ -68,7 +68,7 @@ Controlled production deployment for a **first B2B driving-school client** using
 | Item | Notes |
 | ---- | ----- |
 | `production-readiness-cutline-doc-v1` | This document + memory sync (**done** in batch) |
-| `production-smoke-runbook-sync-v1` | Residual runbook alignment if any drift remains after minimal sync |
+| `production-smoke-runbook-sync-v1` | **Done (docs)** — production smoke runbook synced after DEC-041/042/043/044 |
 | `audit-log-tenant-context-foundation-plan-v1` | **Done (docs)** — tenant-aware audit log foundation plan (DEC-044); no migration |
 | First-client operator smoke | People onboarding, Schedule Map, invite accept, lesson create/edit, import dry-run |
 
@@ -100,7 +100,7 @@ Controlled production deployment for a **first B2B driving-school client** using
 | # | Step | Type |
 | - | ---- | ---- |
 | 1 | `production-readiness-cutline-doc-v1` | Docs — **done** |
-| 2 | `production-smoke-runbook-sync-v1` (or residual sync) | Docs — minimal sync included in step 1 where small |
+| 2 | `production-smoke-runbook-sync-v1` (or residual sync) | Docs — **done** — `production-smoke-e2e.md` canonical |
 | 3 | **Operator: deploy + smoke first client** | Human gate — migrate deploy, smoke, invite QA on **target env** |
 | 4 | `audit-log-tenant-context-foundation-plan-v1` | Docs — **done** — [audit-log-tenant-context-foundation-plan.md](./audit-log-tenant-context-foundation-plan.md) (DEC-044) |
 | 5 | `production-first-client-onboarding-record-v1` | Docs — **done** — [first-client-onboarding-record.md](./first-client-onboarding-record.md) (DEC-043) |
