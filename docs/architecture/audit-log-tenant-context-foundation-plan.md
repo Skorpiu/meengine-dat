@@ -166,7 +166,7 @@ Platform-scoped (explicitly `organizationId = null`):
   - safe defaults when request context missing (cron/scripts)
 - Integrate into **highest-value** tenant mutations only (MVP list).
 
-**Status:** Foundation implemented in `audit-log-write-paths-foundation-v1` — `writeAuditEvent`, `buildAuditLogCreateData`, `extractAuditRequestContext`, and `lib/audit/audit-log-redaction.ts`. No route wiring in foundation slice; integration is a follow-up batch.
+**Status:** Foundation implemented in `audit-log-write-paths-foundation-v1`; invitation create/revoke wired in `audit-log-write-paths-integration-v1`.
 
 **Fence:** do not log secrets; add unit tests for redaction and event shapes.
 

@@ -225,5 +225,6 @@ DDL rollback is expensive in Postgres; prefer forward-fix. Still, for safety:
 
 1. **(Done)** `audit-log-tenant-context-migration-v1` — migration `20260702120000_audit_log_tenant_context_v1`.
 2. **(Done)** `audit-log-write-paths-foundation-v1` — `writeAuditEvent` service + redaction + unit tests; no route wiring.
-3. **(Next, gated)** `audit-log-write-paths-integration-v1` — wire into 1–2 high-value tenant mutations.
+3. **(Done)** `audit-log-write-paths-integration-v1` — wire into invitation create + revoke.
+4. **(Next, gated)** expand to people/lessons MVP mutations.
 

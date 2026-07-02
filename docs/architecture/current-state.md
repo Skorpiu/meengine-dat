@@ -251,10 +251,11 @@ Documented and in use (docs/rules only; no runtime change):
 - `audit-log-tenant-context-schema-plan-v1` — docs-only technical plan for the first tenant-aware audit log schema/migration slice: additive columns (`organizationId`, actor fields, `metadata`, `requestId`), indexes, best-effort backfill, and RLS/REVOKE preservation. [audit-log-tenant-context-schema-plan.md](./audit-log-tenant-context-schema-plan.md). No runtime/schema changes.
 - `audit-log-tenant-context-migration-v1` — migration `20260702120000_audit_log_tenant_context_v1`: additive tenant-aware columns on `audit_logs` (`organizationId`, `actorUserId`, `actorRole`, `actorEmail`, `targetUserId`, `metadata`, `requestId`); composite indexes; best-effort backfill from legacy `userId`; idempotent Class-B RLS + REVOKE reinforcement; no write paths/API/UI. Validated via `pnpm check`. Operator `migrate deploy` human-controlled.
 - `audit-log-write-paths-foundation-v1` — audit write boundary: `lib/audit/audit-log-service.ts` (`writeAuditEvent`, `buildAuditLogCreateData`, `extractAuditRequestContext`) + `lib/audit/audit-log-redaction.ts`; legacy field mapping; unit tests; no route wiring. Validated via `pnpm check`.
+- `audit-log-write-paths-integration-v1` — wired `writeInvitationAuditEvent` into `POST /api/admin/invitations` (`invitation.create`) and `POST /api/admin/invitations/[id]/revoke` (`invitation.revoke`); tenant scope from session; minimal redacted metadata; audit failure non-blocking; route + helper unit tests. Validated via `pnpm check`.
 
 ### Likely next (production path)
 
-1. `audit-log-write-paths-integration-v1` — wire `writeAuditEvent` into 1–2 high-value mutations (invitations/people MVP)
+1. Expand audit wiring to additional MVP mutations (people/lessons) in small slices
 
 ### Deferred (not next)
 

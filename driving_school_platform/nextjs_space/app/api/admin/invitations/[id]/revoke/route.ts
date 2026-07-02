@@ -6,6 +6,8 @@ import {
   assertUserTenantHost,
   rejectDemoUserManagementMutation,
 } from "@/lib/users/user-route-access";
+import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
+import { writeInvitationAuditEvent } from "@/lib/audit/invitation-audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -58,6 +60,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
         { status: result.status },
       );
     }
+
+    await writeInvitationAuditEvent({
+      action: "invitation.revoke",
+      organizationId: orgId,
+      actor: {
+        userId: session.user.id,
+        role: session.user.role,
+        email: session.user.email,
+      },
+      invitation: result.invitation,
+      requestContext: extractAuditRequestContext(request),
+    });
 
     return NextResponse.json({ invitation: result.invitation });
   } catch (error) {
