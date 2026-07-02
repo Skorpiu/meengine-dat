@@ -16,6 +16,7 @@ const h = vi.hoisted(() => {
   const lessonDeleteManyMock = vi.fn();
   const organizationFindUniqueMock = vi.fn();
   const vehicleFindFirstMock = vi.fn();
+  const writeLessonCreateAuditEventMock = vi.fn();
 
   const prismaMock = {
     instructor: { findFirst: instructorFindFirstMock },
@@ -47,8 +48,13 @@ const h = vi.hoisted(() => {
     lessonDeleteManyMock,
     organizationFindUniqueMock,
     vehicleFindFirstMock,
+    writeLessonCreateAuditEventMock,
   };
 });
+
+vi.mock("@/lib/audit/lesson-audit", () => ({
+  writeLessonCreateAuditEvent: h.writeLessonCreateAuditEventMock,
+}));
 
 vi.mock("@/lib/db", () => ({
   prisma: h.prismaMock,
@@ -154,6 +160,10 @@ beforeEach(() => {
 
   h.lessonFindManyMock.mockResolvedValue([]);
   h.vehicleFindFirstMock.mockResolvedValue({ id: 7 });
+  h.writeLessonCreateAuditEventMock.mockResolvedValue({
+    ok: true,
+    id: "audit-1",
+  });
 });
 
 afterEach(() => {
@@ -746,5 +756,122 @@ describe("POST /api/admin/lessons (handler integration)", () => {
     const body: any = await res.json();
     expect(body.code).toBe("demo_write_quota_exceeded");
     expect(h.lessonCreateMock).not.toHaveBeenCalled();
+  });
+
+  it("POST emits lesson.create audit with organizationId on DRIVING create", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+      email: "admin@school.test",
+    });
+
+    const manualStudentId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+    const payload = {
+      lessonType: "DRIVING",
+      instructorId: UUID_A,
+      studentId: manualStudentId,
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
+    };
+
+    const res = await POST(reqJson(payload) as any);
+
+    expect(res.status).toBe(201);
+    expect(h.writeLessonCreateAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org1",
+        actor: {
+          userId: UUID_A,
+          role: "SUPER_ADMIN",
+          email: "admin@school.test",
+        },
+        lesson: expect.objectContaining({
+          lessonType: "DRIVING",
+          studentId: manualStudentId,
+          instructorId: "inst-db-1",
+          lessonSource: "SYSTEM",
+          practicalLessonNumber: 1,
+        }),
+      }),
+    );
+
+    const auditPayload = JSON.stringify(
+      h.writeLessonCreateAuditEventMock.mock.calls[0]?.[0],
+    );
+    expect(auditPayload).not.toContain("password");
+    expect(auditPayload).not.toContain("tokenHash");
+  });
+
+  it("POST emits one lesson.create audit per exam student", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+      email: "admin@school.test",
+    });
+
+    const payload = {
+      lessonType: "THEORY_EXAM",
+      instructorId: UUID_A,
+      studentIds: [UUID_B, UUID_C],
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
+    };
+
+    const res = await POST(reqJson(payload) as any);
+
+    expect(res.status).toBe(201);
+    expect(h.writeLessonCreateAuditEventMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("POST does not emit audit when create fails validation", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+    });
+
+    const payload = {
+      lessonType: "DRIVING",
+      instructorId: UUID_A,
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
+    };
+
+    const res = await POST(reqJson(payload) as any);
+
+    expect(res.status).toBe(400);
+    expect(h.writeLessonCreateAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("POST still returns 201 when audit write fails", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_A,
+      role: "SUPER_ADMIN",
+      organizationId: "org1",
+      email: "admin@school.test",
+    });
+    h.writeLessonCreateAuditEventMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+
+    const payload = {
+      lessonType: "THEORY",
+      instructorId: UUID_A,
+      lessonDate: "2026-01-06",
+      startTime: "10:00",
+      endTime: "11:00",
+    };
+
+    const res = await POST(reqJson(payload) as any);
+
+    expect(res.status).toBe(201);
+    expect(h.writeLessonCreateAuditEventMock).toHaveBeenCalled();
+    expect(h.lessonCreateMock).toHaveBeenCalled();
   });
 });
