@@ -49,6 +49,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `audit-log-tenant-context-foundation-plan-v1` | **Done (docs)** | DEC-044: tenant-aware audit log foundation plan (no runtime/schema); [audit-log-tenant-context-foundation-plan.md](./audit-log-tenant-context-foundation-plan.md) |
 | `audit-log-tenant-context-schema-plan-v1` | **Done (docs)** | Technical plan for first schema/migration slice (additive columns + indexes + backfill + RLS/REVOKE preservation); [audit-log-tenant-context-schema-plan.md](./audit-log-tenant-context-schema-plan.md) |
 | `audit-log-tenant-context-migration-v1` | **Done** | Migration `20260702120000_audit_log_tenant_context_v1`: additive tenant-aware `audit_logs` columns + indexes + best-effort backfill; Class-B RLS/REVOKE preserved; no write paths |
+| `audit-log-write-paths-foundation-v1` | **Done** | `writeAuditEvent` service + redaction utility + unit tests; no route wiring |
 | **First-client operator smoke (re-run lessons edit)** | **Done (operator)** | Manual smoke green after modal edit deploy (main `a9549bf`) |
 
 ---
@@ -57,7 +58,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Notes |
 | ----- | ----- |
-| Audit log runtime implementation | Migration `organizationId`, write paths, tenant queries — P2 unless compliance pulls earlier |
+| Audit log runtime implementation | **Foundation done** — `writeAuditEvent` + redaction; next: wire 1–2 mutations (`audit-log-write-paths-integration-v1`) |
 | Demo DB separation | Recommended for public portfolio; lower urgency with dedicated client tenant |
 | `lesson-student-nullability-policy-review-v1` | Policy doc + validation gap grep |
 | `mobile-tablet-readiness-review-v1` | **Deferred/penultimate** — before Competitive/Product Discovery |
@@ -268,7 +269,7 @@ Parent batch — always slice before implementing.
 
 - ~~Plan adding `organizationId` to `AuditLog`~~ — **done** (nullable; platform-scoped NULL preserved).
 - ~~Index `organizationId` and `(organizationId, createdAt)`~~ — **done** in migration `20260702120000_audit_log_tenant_context_v1`.
-- **Next:** `audit-log-write-paths-foundation-v1` — `writeAuditEvent` service + redaction allowlist; wire 1–2 mutations only.
+- **Next:** `audit-log-write-paths-integration-v1` — wire `writeAuditEvent` into 1–2 high-value mutations (invitations/people MVP).
 - `AuditLog` remains a sensitive/internal table per `database.mdc` — RLS/grants unchanged (Class-B).
 
 ### lesson-student-nullability-policy-review
