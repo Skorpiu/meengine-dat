@@ -8,7 +8,10 @@ import {
 
 export const LESSON_AUDIT_ENTITY_TYPE = "Lesson";
 
-export type LessonAuditAction = "lesson.create" | "lesson.update";
+export type LessonAuditAction =
+  | "lesson.create"
+  | "lesson.update"
+  | "lesson.delete";
 
 export type LessonAuditActor = {
   userId: string;
@@ -24,6 +27,10 @@ export type LessonAuditSnapshot = {
   vehicleId?: number | null;
   lessonSource?: string | null;
   practicalLessonNumber?: number | null;
+};
+
+export type LessonDeleteAuditSnapshot = LessonAuditSnapshot & {
+  lessonDate?: Date;
 };
 
 type WriteLessonAuditEventBase = {
@@ -55,6 +62,24 @@ export function buildLessonCreateAuditMetadata(
 
   if (lesson.practicalLessonNumber != null) {
     metadata.practicalLessonNumber = lesson.practicalLessonNumber;
+  }
+
+  return metadata;
+}
+
+export function formatLessonScheduledDateOnly(lessonDate: Date): string {
+  return lessonDate.toISOString().slice(0, 10);
+}
+
+export function buildLessonDeleteAuditMetadata(
+  lesson: LessonDeleteAuditSnapshot,
+): Record<string, unknown> {
+  const metadata = buildLessonCreateAuditMetadata(lesson);
+
+  if (lesson.lessonDate) {
+    metadata.scheduledAtDateOnly = formatLessonScheduledDateOnly(
+      lesson.lessonDate,
+    );
   }
 
   return metadata;
@@ -157,6 +182,27 @@ export async function writeLessonUpdateAuditEvent(
         studentId: input.lesson.studentId,
         instructorId: input.lesson.instructorId,
       }),
+      ...input.requestContext,
+    },
+    input.options,
+  );
+}
+
+export async function writeLessonDeleteAuditEvent(
+  input: WriteLessonAuditEventBase & {
+    lesson: LessonDeleteAuditSnapshot;
+  },
+) {
+  return writeAuditEvent(
+    {
+      organizationId: input.organizationId,
+      actorUserId: input.actor.userId,
+      actorRole: input.actor.role,
+      actorEmail: input.actor.email ?? null,
+      action: "lesson.delete",
+      entityType: LESSON_AUDIT_ENTITY_TYPE,
+      entityId: input.lesson.id,
+      metadata: buildLessonDeleteAuditMetadata(input.lesson),
       ...input.requestContext,
     },
     input.options,

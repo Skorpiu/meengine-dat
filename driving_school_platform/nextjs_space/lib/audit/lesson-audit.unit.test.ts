@@ -11,9 +11,11 @@ vi.mock("@/lib/audit/audit-log-service", () => ({
 
 import {
   buildLessonCreateAuditMetadata,
+  buildLessonDeleteAuditMetadata,
   buildLessonUpdateAuditMetadata,
   collectLessonUpdateChangedFields,
   writeLessonCreateAuditEvent,
+  writeLessonDeleteAuditEvent,
   writeLessonUpdateAuditEvent,
 } from "@/lib/audit/lesson-audit";
 import { UserRole } from "@prisma/client";
@@ -154,5 +156,67 @@ describe("writeLessonUpdateAuditEvent", () => {
     const payload = h.writeAuditEventMock.mock.calls[0]?.[0];
     expect(payload).not.toHaveProperty("oldValues");
     expect(payload).not.toHaveProperty("newValues");
+  });
+});
+
+describe("buildLessonDeleteAuditMetadata", () => {
+  it("reuses create metadata and adds scheduledAtDateOnly without free text", () => {
+    expect(
+      buildLessonDeleteAuditMetadata({
+        ...drivingLesson,
+        lessonDate: new Date("2030-06-01T00:00:00.000Z"),
+      }),
+    ).toEqual({
+      lessonType: "DRIVING",
+      instructorId: "inst-row-1",
+      studentId: "stu-1",
+      vehicleId: 7,
+      source: "SYSTEM",
+      practicalLessonNumber: 3,
+      scheduledAtDateOnly: "2030-06-01",
+    });
+  });
+
+  it("omits scheduledAtDateOnly when lessonDate is absent", () => {
+    expect(buildLessonDeleteAuditMetadata(drivingLesson)).toEqual(
+      buildLessonCreateAuditMetadata(drivingLesson),
+    );
+  });
+});
+
+describe("writeLessonDeleteAuditEvent", () => {
+  it("writes tenant-scoped lesson.delete without secrets", async () => {
+    await writeLessonDeleteAuditEvent({
+      organizationId: "org-a",
+      actor,
+      lesson: {
+        ...drivingLesson,
+        lessonDate: new Date("2030-06-01T00:00:00.000Z"),
+      },
+      requestContext: { requestId: "req-del-1" },
+    });
+
+    expect(h.writeAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        action: "lesson.delete",
+        entityType: "Lesson",
+        entityId: "lesson-1",
+        metadata: buildLessonDeleteAuditMetadata({
+          ...drivingLesson,
+          lessonDate: new Date("2030-06-01T00:00:00.000Z"),
+        }),
+        requestId: "req-del-1",
+      }),
+      undefined,
+    );
+
+    const payload = JSON.stringify(h.writeAuditEventMock.mock.calls[0]?.[0]);
+    expect(payload).not.toContain("password");
+    expect(payload).not.toContain("tokenHash");
+    expect(payload).not.toContain("notes");
+    expect(
+      h.writeAuditEventMock.mock.calls[0]?.[0].metadata,
+    ).not.toHaveProperty("email");
   });
 });

@@ -57,7 +57,10 @@ function futureLessonRow(overrides: Record<string, unknown> = {}) {
     lessonDate: new Date("2030-06-01T00:00:00.000Z"),
     endTime: "23:59",
     studentId: STUDENT_ID,
+    instructorId: INSTRUCTOR_ROW_ID,
+    vehicleId: 7,
     lessonType: "DRIVING",
+    lessonSource: "SYSTEM",
     practicalLessonNumber: 3,
     instructor: { userId: INSTRUCTOR_USER_ID },
     ...overrides,
@@ -360,6 +363,31 @@ describe("updateAdminLesson", () => {
 });
 
 describe("deleteAdminLesson", () => {
+  it("returns audit snapshot after hard delete", async () => {
+    const result = await deleteAdminLesson({
+      organizationId: "org-1",
+      lessonId: LESSON_ID,
+      actor: { id: "admin-1", role: "SUPER_ADMIN" },
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.lesson).toEqual({
+        id: LESSON_ID,
+        lessonType: "DRIVING",
+        studentId: STUDENT_ID,
+        instructorId: INSTRUCTOR_ROW_ID,
+        vehicleId: 7,
+        lessonSource: "SYSTEM",
+        practicalLessonNumber: 3,
+        lessonDate: new Date("2030-06-01T00:00:00.000Z"),
+      });
+    }
+    expect(h.lessonDeleteManyMock).toHaveBeenCalledWith({
+      where: { id: LESSON_ID, organizationId: "org-1" },
+    });
+  });
+
   it("returns 404 when lesson is missing", async () => {
     h.lessonFindFirstMock.mockResolvedValue(null);
 
