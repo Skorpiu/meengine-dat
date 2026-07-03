@@ -1,4 +1,5 @@
 import type { PatchStudentRecordBody } from "@/lib/students/student-record-validation";
+import type { StudentRecordDto } from "@/lib/students/student-record-dto";
 import type { UserRole } from "@prisma/client";
 import {
   writeAuditEvent,
@@ -19,6 +20,8 @@ export type StudentProfileAuditAction =
 export type StudentDeleteAuditAction = "student.delete";
 
 export type StudentInviteAuditAction = "student.invite";
+
+export type StudentCreateAuditAction = "student.create";
 
 export type StudentEmailChangePolicyMode =
   | "APP_USER"
@@ -109,6 +112,61 @@ export function buildStudentInviteAuditMetadata(input: {
     previousAppAccessMode: input.previousAppAccessMode,
     appAccessMode: "INVITED",
     hasExistingInvitation: input.hasExistingInvitation,
+  };
+}
+
+export function buildStudentCreateAuditMetadata(input: {
+  appAccessMode: string;
+  hasLicenseCategory: boolean;
+  hasTransmissionType: boolean;
+  hasEmail: boolean;
+  hasAddress: boolean;
+  schoolStudentIdPresent: boolean;
+  createdVia: "manual";
+}): Record<string, unknown> {
+  return {
+    appAccessMode: input.appAccessMode,
+    hasLicenseCategory: input.hasLicenseCategory,
+    hasTransmissionType: input.hasTransmissionType,
+    hasEmail: input.hasEmail,
+    hasAddress: input.hasAddress,
+    schoolStudentIdPresent: input.schoolStudentIdPresent,
+    createdVia: input.createdVia,
+  };
+}
+
+export type StudentCreateAuditContext = {
+  linkedUserId: string | null;
+  appAccessMode: string;
+  hasLicenseCategory: boolean;
+  hasTransmissionType: boolean;
+  hasEmail: boolean;
+  hasAddress: boolean;
+  schoolStudentIdPresent: boolean;
+  createdVia: "manual";
+};
+
+export function buildStudentCreateAuditContextFromRecord(
+  student: Pick<
+    StudentRecordDto,
+    | "appAccessMode"
+    | "email"
+    | "address"
+    | "schoolStudentId"
+    | "category"
+    | "transmissionType"
+    | "userId"
+  >,
+): StudentCreateAuditContext {
+  return {
+    linkedUserId: student.userId,
+    appAccessMode: student.appAccessMode,
+    hasLicenseCategory: student.category != null,
+    hasTransmissionType: student.transmissionType != null,
+    hasEmail: Boolean(student.email?.trim()),
+    hasAddress: Boolean(student.address?.trim()),
+    schoolStudentIdPresent: Boolean(student.schoolStudentId?.trim()),
+    createdVia: "manual",
   };
 }
 
@@ -226,6 +284,34 @@ export async function writeStudentInviteAuditEvent(
         invitationStatus: input.invitationStatus,
         previousAppAccessMode: input.previousAppAccessMode,
         hasExistingInvitation: input.previousAppAccessMode === "INVITED",
+      }),
+      ...input.requestContext,
+    },
+    input.options,
+  );
+}
+
+export async function writeStudentCreateAuditEvent(
+  input: WriteStudentAuditEventBase & StudentCreateAuditContext,
+) {
+  return writeAuditEvent(
+    {
+      organizationId: input.organizationId,
+      actorUserId: input.actor.userId,
+      actorRole: input.actor.role,
+      actorEmail: input.actor.email ?? null,
+      action: "student.create",
+      entityType: STUDENT_AUDIT_ENTITY_TYPE,
+      entityId: input.studentId,
+      targetUserId: input.linkedUserId ?? null,
+      metadata: buildStudentCreateAuditMetadata({
+        appAccessMode: input.appAccessMode,
+        hasLicenseCategory: input.hasLicenseCategory,
+        hasTransmissionType: input.hasTransmissionType,
+        hasEmail: input.hasEmail,
+        hasAddress: input.hasAddress,
+        schoolStudentIdPresent: input.schoolStudentIdPresent,
+        createdVia: input.createdVia,
       }),
       ...input.requestContext,
     },

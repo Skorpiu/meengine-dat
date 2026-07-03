@@ -11,6 +11,12 @@ import {
   assertUserTenantHost,
   rejectDemoUserManagementMutation,
 } from "@/lib/users/user-route-access";
+import type { UserRole } from "@prisma/client";
+import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
+import {
+  buildStudentCreateAuditContextFromRecord,
+  writeStudentCreateAuditEvent,
+} from "@/lib/audit/student-audit";
 import {
   createManualStudentRecord,
   findStudentBySchoolIdInOrg,
@@ -34,7 +40,12 @@ async function requireStudentRecordsAccess(
   request: NextRequest,
   options: { write: boolean },
 ): Promise<
-  | { ok: true; organizationId: string; role: string }
+  | {
+      ok: true;
+      organizationId: string;
+      role: string;
+      actor: { userId: string; role: UserRole; email?: string | null };
+    }
   | { ok: false; response: NextResponse }
 > {
   const session = await getServerSession(authOptions);
@@ -71,13 +82,26 @@ async function requireStudentRecordsAccess(
     return { ok: false, response: tenantDenied };
   }
 
-  return { ok: true, organizationId: orgId, role };
+  return {
+    ok: true,
+    organizationId: orgId,
+    role,
+    actor: {
+      userId: session.user.id,
+      role: session.user.role,
+      email: session.user.email,
+    },
+  };
 }
 
-async function requireSuperAdminTenant(
-  request: NextRequest,
-): Promise<
-  { ok: true; organizationId: string } | { ok: false; response: NextResponse }
+async function requireSuperAdminTenant(request: NextRequest): Promise<
+  | {
+      ok: true;
+      organizationId: string;
+      role: string;
+      actor: { userId: string; role: UserRole; email?: string | null };
+    }
+  | { ok: false; response: NextResponse }
 > {
   return requireStudentRecordsAccess(request, { write: true });
 }
@@ -202,6 +226,16 @@ export async function POST(request: NextRequest) {
         schoolStudentYearSuffix: schoolId.parts.yearSuffix,
         schoolStudentSequence: schoolId.parts.sequenceNumber,
         enrollmentDate: enrollment.value,
+      });
+
+      const auditContext = buildStudentCreateAuditContextFromRecord(student);
+
+      await writeStudentCreateAuditEvent({
+        organizationId: auth.organizationId,
+        actor: auth.actor,
+        studentId: student.id,
+        ...auditContext,
+        requestContext: extractAuditRequestContext(request),
       });
 
       return successResponse({ student }, HTTP_STATUS.CREATED);

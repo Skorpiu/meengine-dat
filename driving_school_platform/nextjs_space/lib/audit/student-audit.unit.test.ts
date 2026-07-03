@@ -12,6 +12,8 @@ vi.mock("@/lib/audit/audit-log-service", () => ({
 import {
   buildStudentAppAccessReactivateAuditMetadata,
   buildStudentAppAccessRemoveAuditMetadata,
+  buildStudentCreateAuditContextFromRecord,
+  buildStudentCreateAuditMetadata,
   buildStudentDeleteAuditMetadata,
   buildStudentEmailChangeAuditMetadata,
   buildStudentInviteAuditMetadata,
@@ -19,6 +21,7 @@ import {
   collectStudentProfileUpdateChangedFields,
   writeStudentAppAccessReactivateAuditEvent,
   writeStudentAppAccessRemoveAuditEvent,
+  writeStudentCreateAuditEvent,
   writeStudentDeleteAuditEvent,
   writeStudentEmailChangeAuditEvent,
   writeStudentInviteAuditEvent,
@@ -336,5 +339,97 @@ describe("writeStudentAppAccessReactivateAuditEvent", () => {
       }),
       undefined,
     );
+  });
+});
+
+describe("buildStudentCreateAuditMetadata", () => {
+  it("includes lifecycle flags without PII", () => {
+    expect(
+      buildStudentCreateAuditMetadata({
+        appAccessMode: "MANUAL_ONLY",
+        hasLicenseCategory: false,
+        hasTransmissionType: false,
+        hasEmail: true,
+        hasAddress: false,
+        schoolStudentIdPresent: true,
+        createdVia: "manual",
+      }),
+    ).toEqual({
+      appAccessMode: "MANUAL_ONLY",
+      hasLicenseCategory: false,
+      hasTransmissionType: false,
+      hasEmail: true,
+      hasAddress: false,
+      schoolStudentIdPresent: true,
+      createdVia: "manual",
+    });
+  });
+});
+
+describe("buildStudentCreateAuditContextFromRecord", () => {
+  it("derives flags from created student without literal identifiers", () => {
+    expect(
+      buildStudentCreateAuditContextFromRecord({
+        appAccessMode: "MANUAL_ONLY",
+        email: "student@school.test",
+        address: "Street 1",
+        schoolStudentId: "26001",
+        category: null,
+        transmissionType: null,
+        userId: null,
+      }),
+    ).toEqual({
+      linkedUserId: null,
+      appAccessMode: "MANUAL_ONLY",
+      hasLicenseCategory: false,
+      hasTransmissionType: false,
+      hasEmail: true,
+      hasAddress: true,
+      schoolStudentIdPresent: true,
+      createdVia: "manual",
+    });
+  });
+});
+
+describe("writeStudentCreateAuditEvent", () => {
+  it("writes student.create with tenant scope and flags only", async () => {
+    await writeStudentCreateAuditEvent({
+      organizationId: "org-a",
+      actor,
+      studentId: "stu-1",
+      linkedUserId: null,
+      appAccessMode: "MANUAL_ONLY",
+      hasLicenseCategory: false,
+      hasTransmissionType: false,
+      hasEmail: true,
+      hasAddress: false,
+      schoolStudentIdPresent: true,
+      createdVia: "manual",
+    });
+
+    expect(h.writeAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        action: "student.create",
+        entityType: "Student",
+        entityId: "stu-1",
+        targetUserId: null,
+        metadata: buildStudentCreateAuditMetadata({
+          appAccessMode: "MANUAL_ONLY",
+          hasLicenseCategory: false,
+          hasTransmissionType: false,
+          hasEmail: true,
+          hasAddress: false,
+          schoolStudentIdPresent: true,
+          createdVia: "manual",
+        }),
+      }),
+      undefined,
+    );
+
+    const payload = JSON.stringify(h.writeAuditEventMock.mock.calls[0]?.[0]);
+    expect(payload).not.toContain("student@");
+    expect(payload).not.toContain("26001");
+    expect(payload).not.toContain("Street");
   });
 });
