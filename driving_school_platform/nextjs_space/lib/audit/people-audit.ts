@@ -20,7 +20,9 @@ export type PeopleAuditActor = {
 export type InstructorQualifiedCategoriesAuditAction =
   "instructor.qualified_categories.update";
 
-export type InstructorLifecycleAuditAction = "instructor.deactivate";
+export type InstructorLifecycleAuditAction =
+  | "instructor.deactivate"
+  | "instructor.reactivate";
 
 type WritePeopleAuditEventBase = {
   organizationId: string;
@@ -57,6 +59,14 @@ export function buildInstructorDeactivateAuditMetadata(input: {
   };
 }
 
+export function buildInstructorReactivateAuditMetadata(input: {
+  alreadyActive: boolean;
+}): Record<string, unknown> {
+  return {
+    alreadyActive: input.alreadyActive,
+  };
+}
+
 export async function writeInstructorQualifiedCategoriesAuditEvent(
   input: WritePeopleAuditEventBase & {
     instructor: InstructorQualifiedCategoriesDto;
@@ -83,6 +93,7 @@ export async function writeInstructorQualifiedCategoriesAuditEvent(
 export async function writeInstructorDeactivateAuditEvent(
   input: WritePeopleAuditEventBase & {
     instructorId: string;
+    targetUserId?: string | null;
     alreadyInactive: boolean;
     warningCodes: string[];
     futureLessonsCount: number;
@@ -97,10 +108,37 @@ export async function writeInstructorDeactivateAuditEvent(
       action: "instructor.deactivate",
       entityType: PEOPLE_AUDIT_ENTITY_TYPE.Instructor,
       entityId: input.instructorId,
+      targetUserId: input.targetUserId ?? null,
       metadata: buildInstructorDeactivateAuditMetadata({
         alreadyInactive: input.alreadyInactive,
         warningCodes: input.warningCodes,
         futureLessonsCount: input.futureLessonsCount,
+      }),
+      ...input.requestContext,
+    },
+    input.options,
+  );
+}
+
+export async function writeInstructorReactivateAuditEvent(
+  input: WritePeopleAuditEventBase & {
+    instructorId: string;
+    targetUserId?: string | null;
+    alreadyActive: boolean;
+  },
+) {
+  return writeAuditEvent(
+    {
+      organizationId: input.organizationId,
+      actorUserId: input.actor.userId,
+      actorRole: input.actor.role,
+      actorEmail: input.actor.email ?? null,
+      action: "instructor.reactivate",
+      entityType: PEOPLE_AUDIT_ENTITY_TYPE.Instructor,
+      entityId: input.instructorId,
+      targetUserId: input.targetUserId ?? null,
+      metadata: buildInstructorReactivateAuditMetadata({
+        alreadyActive: input.alreadyActive,
       }),
       ...input.requestContext,
     },

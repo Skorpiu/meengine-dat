@@ -8,16 +8,23 @@ import {
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { reactivateInstructorRecord } from "@/lib/instructors/instructor-record-reactivate";
+import { prisma } from "@/lib/db";
+import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
+import { writeInstructorReactivateAuditEvent } from "@/lib/audit/people-audit";
+import type { UserRole } from "@prisma/client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type RouteContext = { params: { id: string } };
 
-async function requireSuperAdminTenant(
-  request: NextRequest,
-): Promise<
-  { ok: true; organizationId: string } | { ok: false; response: NextResponse }
+async function requireSuperAdminTenant(request: NextRequest): Promise<
+  | {
+      ok: true;
+      organizationId: string;
+      actor: { userId: string; role: string; email?: string | null };
+    }
+  | { ok: false; response: NextResponse }
 > {
   const session = await getServerSession(authOptions);
 
@@ -44,6 +51,11 @@ async function requireSuperAdminTenant(
   return {
     ok: true,
     organizationId: orgId,
+    actor: {
+      userId: session.user.id,
+      role: session.user.role,
+      email: session.user.email,
+    },
   };
 }
 
@@ -74,6 +86,24 @@ export async function POST(request: NextRequest, context: RouteContext) {
         { status: HTTP_STATUS.CONFLICT },
       );
     }
+
+    const instructor = await prisma.instructor.findFirst({
+      where: { id: context.params.id, organizationId: auth.organizationId },
+      select: { userId: true },
+    });
+
+    await writeInstructorReactivateAuditEvent({
+      organizationId: auth.organizationId,
+      actor: {
+        userId: auth.actor.userId,
+        role: auth.actor.role as UserRole,
+        email: auth.actor.email,
+      },
+      instructorId: context.params.id,
+      targetUserId: instructor?.userId ?? null,
+      alreadyActive: result.alreadyActive,
+      requestContext: extractAuditRequestContext(request),
+    });
 
     return successResponse({
       reactivated: true,

@@ -261,18 +261,19 @@ Documented and in use (docs/rules only; no runtime change):
 - `audit-log-coverage-readiness-review-v1` — docs-only coverage readiness review: 12 audited actions/routes; admin write-path matrix by domain; P1 gaps (`lesson.delete`, `invitation.email.change`, instructor lifecycle); recommended next 3 slices; stop criteria for viewer/read API. [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md). No runtime/schema changes.
 - `audit-log-write-paths-lesson-delete-v1` — wired `lesson.delete` into `DELETE /api/admin/lessons/[id]`; `LessonDeleteAuditSnapshot` on `deleteAdminLesson` success (hard delete via scoped `deleteMany`; future-only guard unchanged); metadata (`lessonType`, operational ids, `source`, `practicalLessonNumber`, `scheduledAtDateOnly`); no notes/names/emails; audit failure non-blocking; route + helper + service unit tests. Validated via `pnpm check`.
 - `audit-log-write-paths-invitation-email-change-v1` — wired `invitation.email.change` into `POST /api/admin/invitations/[id]/change-email`; metadata (`role`, `status`, `emailChanged`, `tokenRegenerated`, `linkedStudentId` when linked); no old/new email/token/tokenHash/inviteLink; audit failure non-blocking; route + helper unit tests. Validated via `pnpm check`.
+- `audit-log-write-paths-instructor-reactivate-v1` — wired `instructor.reactivate` into `POST /api/admin/instructors/[id]/reactivate`; metadata (`alreadyActive` only) + `targetUserId`; no names/emails/notes; audit failure non-blocking; route + helper unit tests. Validated via `pnpm check`.
 
 ### Likely next (production path)
 
-1. `audit-log-write-paths-instructor-reactivate-v1` — `POST /api/admin/instructors/[id]/reactivate` → `instructor.reactivate`
-2. `audit-log-write-paths-instructor-delete-v1` — `DELETE /api/admin/instructors/[id]` → `instructor.delete`
-3. `audit-log-write-paths-instructor-email-change-v1` — `POST /api/admin/instructors/[id]/change-email` → `instructor.email.change`
+1. `audit-log-write-paths-instructor-delete-v1` — `DELETE /api/admin/instructors/[id]` → `instructor.delete`
+2. `audit-log-write-paths-instructor-email-change-v1` — `POST /api/admin/instructors/[id]/change-email` → `instructor.email.change`
+3. `audit-log-write-paths-student-create-v1` — `POST /api/admin/students` → `student.create`
 
 ### Deferred (not next)
 
 - **`calendar-lessons-polish-v1e-student-warnings`** (P3) — product policy first
 - `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)**
-- Audit log write paths — **14 actions wired**; coverage matrix at [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md); next P1: instructor reactivate, instructor delete
+- Audit log write paths — **15 actions wired**; coverage matrix at [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md); next P1: instructor delete, instructor email change
 
 ### Product direction (backlog — deferred post-production polish)
 
