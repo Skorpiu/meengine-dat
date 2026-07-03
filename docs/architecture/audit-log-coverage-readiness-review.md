@@ -22,7 +22,7 @@ DAT has a **working audit write boundary** (`lib/audit/audit-log-service.ts` + d
 | **DEFERRED** | 10+ | Settings/feature flags/license, platform org, billing webhooks, bulk cleanup, legacy user create |
 | **NOT_NEEDED** | 12+ | Reads, dry-runs (zero-write), blocked legacy deletes |
 
-**Readiness verdict:** Safe to continue **small write-path slices** before building a viewer/read API. Lessons MVP triad (`create` / `update` / `delete`) and invitation admin triad (`create` / `revoke` / `email.change`) are **complete**. Instructor lifecycle audit is **complete**. Student Onboarding manual create is **audited** (`student.create`). Manual practical history create is **audited** (`lesson.create` on `POST /api/admin/students/[id]/practical-lessons` with `source: MANUAL` + `createdVia: manual_practical_lesson`). **All P1 People/Lessons write gaps are closed** — next priority: **read API / operator viewer** unless import volume auditing becomes an operator requirement.
+**Readiness verdict:** P1 write-path instrumentation for People/Lessons is **complete**. **Read API foundation** (`GET /api/admin/audit-logs`) is now available for tenant SUPER_ADMIN (cursor pagination, filters, no cross-tenant reads). Next priority: **minimal operator viewer UI** unless import volume auditing becomes an operator requirement.
 
 **No runtime changes** in this batch — documentation and prioritization only.
 
@@ -83,6 +83,7 @@ Scanned: `app/api/admin/**/route.ts` plus operational siblings under `api/users`
 | `students/[id]/app-access/remove/route.ts` | POST |
 | `students/[id]/app-access/reactivate/route.ts` | POST |
 | `students/[id]/practical-lessons/route.ts` | POST |
+| `audit-logs/route.ts` | GET |
 | `students/import/apply/route.ts` | POST |
 | `students/import/dry-run/route.ts` | POST (zero-write) |
 | `lessons/route.ts` | POST |
@@ -195,6 +196,12 @@ Scanned: `app/api/admin/**/route.ts` plus operational siblings under `api/users`
 | `DELETE /api/users/delete` | Legacy user delete | **NOT_NEEDED** | — | — | — | Blocks STUDENT/INSTRUCTOR (`use_*_delete_policy`) |
 | `GET /api/admin/users` | Diagnostics read | **NOT_NEEDED** | — | — | — | Read-only |
 
+### Audit log (read API)
+
+| Endpoint | Operation | Status | Notes |
+| -------- | --------- | ------ | ----- |
+| `GET /api/admin/audit-logs` | List tenant audit events | **IMPLEMENTED** | `audit-log-read-api-foundation-v1`; SUPER_ADMIN + host guard; cursor `createdAt`+`id`; filters; DTO omits `ipAddress`/`userAgent`/`organizationId`; metadata re-redacted on read |
+
 ### Platform / Billing
 
 | Endpoint | Mutation | Status | Action | Risk | Priority | PII / secrets |
@@ -220,6 +227,7 @@ Ordered by foundation-plan MVP alignment and first-client operator need:
 **Recently closed:**
 
 - **`lesson.create` (manual practical)** — Manual completed practical history audit (`audit-log-write-paths-manual-practical-lesson-v1`); `POST /api/admin/students/[id]/practical-lessons`; reuses `writeLessonCreateAuditEvent`; metadata (`lessonType`, operational ids, `source: MANUAL`, `practicalLessonNumber`, `scheduledAtDateOnly`, `createdVia: manual_practical_lesson`); no notes/names/emails; audit failure non-blocking; separate from calendar `POST /api/admin/lessons` (no duplication).
+- **`GET /api/admin/audit-logs`** — Tenant read API foundation (`audit-log-read-api-foundation-v1`); SUPER_ADMIN + host guard; cursor pagination (`createdAt` + `id`); filters (`action`, `entityType`, `entityId`, `actorUserId`, `targetUserId`, `requestId`, `dateFrom`/`dateTo`); DTO omits `organizationId`, `ipAddress`, `userAgent`, `oldValues`, `newValues`; metadata re-redacted on read; no cross-tenant query param.
 - **`student.create`** — Manual Onboarding student create audit (`audit-log-write-paths-student-create-v1`); `POST /api/admin/students`; `StudentCreateAuditContext` from created record; metadata flags only (`appAccessMode`, `hasEmail`, `hasAddress`, `schoolStudentIdPresent`, `createdVia: manual`); no names/emails/schoolStudentId literal; audit failure non-blocking.
 - **`instructor.email.change`** — Instructor canonical login email change audit (`audit-log-write-paths-instructor-email-change-v1`); `POST /api/admin/instructors/[id]/change-email`; `InstructorEmailChangeAuditContext` on service success; metadata flags only; no old/new email; audit failure non-blocking.
 - **`instructor.delete`** — Instructor hard-delete audit (`audit-log-write-paths-instructor-delete-v1`); zero-deps policy via `DELETE /api/admin/instructors/[id]`; `InstructorDeleteAuditSnapshot` on service success; metadata (`hadLinkedUser`, `hadLessons`, `isAvailableForBooking` flags only); `targetUserId` when linked user existed; audit failure non-blocking.
@@ -240,7 +248,7 @@ Ordered by foundation-plan MVP alignment and first-client operator need:
 
 | # | Slice name | Scope | Why now |
 | - | ---------- | ----- | ------- |
-| 1 | `audit-log-read-api-foundation-v1` | Tenant-scoped paginated read API for `audit_logs` | P1 People/Lessons write gaps closed; operator viewer prerequisite |
+| 1 | `audit-log-viewer-ui-foundation-v1` | Minimal operator/internal viewer on list API | Read API foundation complete; viewer consumes `GET /api/admin/audit-logs` |
 | 2 | `audit-log-write-paths-student-import-apply-v1` | `POST /api/admin/students/import/apply` → summary `student.import.apply` | P2 volume audit; only if operator need confirmed |
 | 3 | `audit-log-write-paths-practical-lessons-import-apply-v1` | `POST /api/admin/practical-lessons/import/apply` → summary `lesson.import.apply` | P2 volume audit; only if operator need confirmed |
 
