@@ -43,6 +43,7 @@ const eligibleRow = {
   id: "inst-1",
   organizationId: "org-a",
   userId: "user-1",
+  isAvailableForBooking: true,
   user: {
     id: "user-1",
     email: "instructor@school.test",
@@ -74,7 +75,15 @@ describe("deleteInstructorRecordIfEligible", () => {
       currentUserId: "admin-1",
     });
 
-    expect(result).toEqual({ ok: true });
+    expect(result).toEqual({
+      ok: true,
+      audit: {
+        hadLinkedUser: true,
+        lessonsCount: 0,
+        linkedUserId: "user-1",
+        isAvailableForBooking: true,
+      },
+    });
     expect(h.userDeleteManyMock).toHaveBeenCalledWith({
       where: {
         id: "user-1",

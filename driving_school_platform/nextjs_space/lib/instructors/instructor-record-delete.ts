@@ -23,6 +23,7 @@ const INSTRUCTOR_DELETE_ELIGIBILITY_SELECT = {
   id: true,
   organizationId: true,
   userId: true,
+  isAvailableForBooking: true,
   user: {
     select: {
       id: true,
@@ -45,8 +46,15 @@ type DeleteEligibilityRow = Prisma.InstructorGetPayload<{
   select: typeof INSTRUCTOR_DELETE_ELIGIBILITY_SELECT;
 }>;
 
+export type InstructorDeleteAuditSnapshot = {
+  hadLinkedUser: boolean;
+  lessonsCount: number;
+  linkedUserId: string | null;
+  isAvailableForBooking: boolean;
+};
+
 export type DeleteInstructorRecordResult =
-  | { ok: true }
+  | { ok: true; audit: InstructorDeleteAuditSnapshot }
   | { ok: false; notFound: true }
   | {
       ok: false;
@@ -155,7 +163,15 @@ async function evaluateRowForDelete(
     };
   }
 
-  return { ok: true };
+  return {
+    ok: true,
+    audit: {
+      hadLinkedUser: row.userId != null,
+      lessonsCount: row._count.lessons,
+      linkedUserId: row.userId,
+      isAvailableForBooking: row.isAvailableForBooking,
+    },
+  };
 }
 
 /**

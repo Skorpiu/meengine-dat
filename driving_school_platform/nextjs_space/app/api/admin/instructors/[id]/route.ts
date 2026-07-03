@@ -11,7 +11,10 @@ import { deleteInstructorRecordIfEligible } from "@/lib/instructors/instructor-r
 import { normalizeInstructorQualifiedCategoryNames } from "@/lib/instructors/instructor-qualified-categories";
 import { updateInstructorQualifiedCategories } from "@/lib/instructors/instructor-record-qualified-categories";
 import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
-import { writeInstructorQualifiedCategoriesAuditEvent } from "@/lib/audit/people-audit";
+import {
+  writeInstructorDeleteAuditEvent,
+  writeInstructorQualifiedCategoriesAuditEvent,
+} from "@/lib/audit/people-audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -156,6 +159,21 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
         { status: HTTP_STATUS.CONFLICT },
       );
     }
+
+    await writeInstructorDeleteAuditEvent({
+      organizationId: auth.organizationId,
+      actor: {
+        userId: auth.currentUserId,
+        role: auth.actorRole,
+        email: auth.actorEmail,
+      },
+      instructorId: context.params.id,
+      hadLinkedUser: result.audit.hadLinkedUser,
+      lessonsCount: result.audit.lessonsCount,
+      linkedUserId: result.audit.linkedUserId,
+      isAvailableForBooking: result.audit.isAvailableForBooking,
+      requestContext: extractAuditRequestContext(request),
+    });
 
     return successResponse({ deleted: true });
   } catch (error) {
