@@ -9,6 +9,7 @@ const h = vi.hoisted(() => {
   const instructorFindFirstMock = vi.fn();
   const studentFindFirstMock = vi.fn();
   const writeLessonUpdateAuditEventMock = vi.fn();
+  const writeLessonDeleteAuditEventMock = vi.fn();
 
   const prismaMock = {
     lesson: {
@@ -32,6 +33,7 @@ const h = vi.hoisted(() => {
     instructorFindFirstMock,
     studentFindFirstMock,
     writeLessonUpdateAuditEventMock,
+    writeLessonDeleteAuditEventMock,
   };
 });
 
@@ -42,6 +44,7 @@ vi.mock("@/lib/audit/lesson-audit", async () => {
   return {
     ...actual,
     writeLessonUpdateAuditEvent: h.writeLessonUpdateAuditEventMock,
+    writeLessonDeleteAuditEvent: h.writeLessonDeleteAuditEventMock,
   };
 });
 
@@ -95,6 +98,12 @@ function futureLessonRow(overrides: Record<string, unknown> = {}) {
     id: LESSON_ID,
     lessonDate: new Date("2030-06-01T00:00:00.000Z"),
     endTime: "23:59",
+    studentId: STUDENT_ROW_ID,
+    instructorId: INSTRUCTOR_ROW_ID,
+    vehicleId: 7,
+    lessonType: "DRIVING",
+    lessonSource: "SYSTEM",
+    practicalLessonNumber: 3,
     instructor: { userId: UUID_A },
     ...overrides,
   };
@@ -120,6 +129,10 @@ beforeEach(() => {
   h.writeLessonUpdateAuditEventMock.mockResolvedValue({
     ok: true,
     id: "audit-1",
+  });
+  h.writeLessonDeleteAuditEventMock.mockResolvedValue({
+    ok: true,
+    id: "audit-del-1",
   });
 });
 
@@ -404,6 +417,31 @@ describe("DELETE /api/admin/lessons/[id]", () => {
     expect(h.lessonDeleteManyMock).toHaveBeenCalledWith({
       where: { id: LESSON_ID, organizationId: "org1" },
     });
+    expect(h.writeLessonDeleteAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org1",
+        actor: {
+          userId: UUID_A,
+          role: "SUPER_ADMIN",
+          email: undefined,
+        },
+        lesson: expect.objectContaining({
+          id: LESSON_ID,
+          lessonType: "DRIVING",
+          studentId: STUDENT_ROW_ID,
+          instructorId: INSTRUCTOR_ROW_ID,
+          vehicleId: 7,
+          lessonSource: "SYSTEM",
+        }),
+      }),
+    );
+
+    const auditPayload = JSON.stringify(
+      h.writeLessonDeleteAuditEventMock.mock.calls[0]?.[0]?.lesson,
+    );
+    expect(auditPayload).not.toContain("password");
+    expect(auditPayload).not.toContain("notes");
+    expect(auditPayload).not.toContain("@");
   });
 
   it("returns 404 when lesson not found", async () => {
@@ -418,6 +456,67 @@ describe("DELETE /api/admin/lessons/[id]", () => {
 
     expect(res.status).toBe(404);
     expect(h.lessonDeleteManyMock).not.toHaveBeenCalled();
+    expect(h.writeLessonDeleteAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when lesson already ended without audit", async () => {
+    h.lessonFindFirstMock.mockResolvedValue({
+      id: LESSON_ID,
+      lessonDate: new Date("2020-01-01"),
+      endTime: "08:00",
+      instructor: { userId: UUID_A },
+    });
+
+    const res = await DELETE(
+      new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`, {
+        method: "DELETE",
+      }) as any,
+      { params: { id: LESSON_ID } } as any,
+    );
+
+    expect(res.status).toBe(400);
+    expect(h.lessonDeleteManyMock).not.toHaveBeenCalled();
+    expect(h.writeLessonDeleteAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("forbids instructor from deleting another instructor lesson without audit", async () => {
+    verifyAuthMock.mockResolvedValue({
+      id: UUID_B,
+      role: "INSTRUCTOR",
+      organizationId: "org1",
+    });
+    h.lessonFindFirstMock.mockResolvedValue(
+      futureLessonRow({ instructor: { userId: UUID_A } }),
+    );
+
+    const res = await DELETE(
+      new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`, {
+        method: "DELETE",
+      }) as any,
+      { params: { id: LESSON_ID } } as any,
+    );
+
+    expect(res.status).toBe(403);
+    expect(h.lessonDeleteManyMock).not.toHaveBeenCalled();
+    expect(h.writeLessonDeleteAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("DELETE still returns 200 when audit write fails", async () => {
+    h.writeLessonDeleteAuditEventMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+
+    const res = await DELETE(
+      new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`, {
+        method: "DELETE",
+      }) as any,
+      { params: { id: LESSON_ID } } as any,
+    );
+
+    expect(res.status).toBe(200);
+    expect(h.writeLessonDeleteAuditEventMock).toHaveBeenCalled();
+    expect(h.lessonDeleteManyMock).toHaveBeenCalled();
   });
 
   it("demo org blocks DELETE with demo_restricted_action", async () => {
@@ -439,5 +538,6 @@ describe("DELETE /api/admin/lessons/[id]", () => {
     const body = await res.json();
     expect(body.code).toBe("demo_restricted_action");
     expect(h.lessonDeleteManyMock).not.toHaveBeenCalled();
+    expect(h.writeLessonDeleteAuditEventMock).not.toHaveBeenCalled();
   });
 });

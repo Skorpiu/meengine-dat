@@ -25,6 +25,7 @@ import { LESSON_DETAIL_SELECT } from "@/lib/lessons/lesson-queries";
 import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
 import {
   collectLessonUpdateChangedFields,
+  writeLessonDeleteAuditEvent,
   writeLessonUpdateAuditEvent,
 } from "@/lib/audit/lesson-audit";
 
@@ -245,6 +246,17 @@ export const DELETE = withErrorHandling(
     if (!result.ok) {
       return errorResponse(result.error, result.status);
     }
+
+    await writeLessonDeleteAuditEvent({
+      organizationId: orgId,
+      actor: {
+        userId: user.id,
+        role: user.role,
+        email: user.email,
+      },
+      lesson: result.lesson,
+      requestContext: extractAuditRequestContext(request),
+    });
 
     return successResponse({
       message: "Lesson deleted successfully",

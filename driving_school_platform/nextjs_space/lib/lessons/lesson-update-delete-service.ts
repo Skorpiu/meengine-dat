@@ -14,6 +14,7 @@ import {
   LESSON_DETAIL_SELECT,
   type LessonDetailItem,
 } from "@/lib/lessons/lesson-queries";
+import type { LessonDeleteAuditSnapshot } from "@/lib/audit/lesson-audit";
 import { resolvePracticalLessonNumberOnStudentChange } from "@/lib/lessons/practical-lesson-counter";
 import { findOperationalStudentInOrg } from "@/lib/students/student-lesson-resolve";
 
@@ -42,7 +43,7 @@ export type UpdateAdminLessonResult =
   | { ok: false; error: string; status: number };
 
 export type DeleteAdminLessonResult =
-  | { ok: true }
+  | { ok: true; lesson: LessonDeleteAuditSnapshot }
   | { ok: false; error: string; status: number };
 
 export async function updateAdminLesson(input: {
@@ -240,5 +241,17 @@ export async function deleteAdminLesson(input: {
 
   await prisma.lesson.deleteMany({ where: { id, organizationId: orgId } });
 
-  return { ok: true };
+  return {
+    ok: true,
+    lesson: {
+      id: lesson.id,
+      lessonType: lesson.lessonType,
+      studentId: lesson.studentId,
+      instructorId: lesson.instructorId,
+      vehicleId: lesson.vehicleId,
+      lessonSource: lesson.lessonSource,
+      practicalLessonNumber: lesson.practicalLessonNumber,
+      lessonDate: lesson.lessonDate,
+    },
+  };
 }
