@@ -266,16 +266,17 @@ Documented and in use (docs/rules only; no runtime change):
 - `audit-log-write-paths-instructor-email-change-v1` — wired `instructor.email.change` into `POST /api/admin/instructors/[id]/change-email`; `InstructorEmailChangeAuditContext` on `changeInstructorEmail` success; metadata flags only; no old/new email; audit failure non-blocking; route + helper + service unit tests. Validated via `pnpm check`.
 - `audit-log-write-paths-student-create-v1` — wired `student.create` into `POST /api/admin/students`; `StudentCreateAuditContext` from created record; metadata flags only; no names/emails/schoolStudentId literal; audit failure non-blocking; route + helper unit tests. Validated via `pnpm check`.
 - `audit-log-write-paths-manual-practical-lesson-v1` — wired `lesson.create` into `POST /api/admin/students/[id]/practical-lessons`; reuses `writeLessonCreateAuditEvent`; metadata (`source: MANUAL`, `createdVia: manual_practical_lesson`, `scheduledAtDateOnly`, operational ids); no notes/names/emails; audit failure non-blocking; distinct from calendar `POST /api/admin/lessons`; route + helper + service unit tests. Validated via `pnpm check`.
+- `audit-log-read-api-foundation-v1` — `GET /api/admin/audit-logs` tenant-scoped read API; `lib/audit/audit-log-query-params.ts` + `lib/audit/audit-log-query-service.ts`; SUPER_ADMIN + host guard; cursor pagination; filters; DTO omits `ipAddress`/`userAgent`/`organizationId`; metadata re-redacted on read; route + helper unit tests. Validated via `pnpm check`.
 
 ### Likely next (production path)
 
-1. `audit-log-read-api-foundation-v1` — tenant-scoped paginated read API for `audit_logs`
+1. `audit-log-viewer-ui-foundation-v1` — minimal operator/internal viewer consuming list API
 
 ### Deferred (not next)
 
 - **`calendar-lessons-polish-v1e-student-warnings`** (P3) — product policy first
 - `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)**
-- Audit log write paths — **18 actions / 19 routes wired**; P1 People/Lessons gaps closed; coverage matrix at [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md); next: read API foundation
+- Audit log write paths — **18 actions / 19 routes wired**; read API foundation at `GET /api/admin/audit-logs`; coverage matrix at [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md); next: viewer UI foundation
 
 ### Product direction (backlog — deferred post-production polish)
 
