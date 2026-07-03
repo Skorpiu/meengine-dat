@@ -19,8 +19,22 @@ export const INSTRUCTOR_EMAIL_CHANGE_CODE = {
 export type InstructorEmailChangeCode =
   (typeof INSTRUCTOR_EMAIL_CHANGE_CODE)[keyof typeof INSTRUCTOR_EMAIL_CHANGE_CODE];
 
+export type InstructorEmailChangeAuditContext = {
+  hasLinkedUser: boolean;
+  emailChanged: boolean;
+  pendingInvitationBlocked: boolean;
+  userEmailUpdated: boolean;
+  instructorEmailUpdated: boolean;
+  invitationRevoked: boolean;
+  linkedUserId: string;
+};
+
 export type ChangeInstructorEmailResult =
-  | { ok: true; user: InstructorRecordUserDto }
+  | {
+      ok: true;
+      user: InstructorRecordUserDto;
+      audit: InstructorEmailChangeAuditContext;
+    }
   | { ok: false; notFound: true }
   | {
       ok: false;
@@ -147,10 +161,10 @@ async function invalidateLinkedUserAccess(
 async function revokePendingInstructorInvitationsForEmail(
   tx: Prisma.TransactionClient,
   input: { organizationId: string; email: string },
-): Promise<void> {
+): Promise<number> {
   const normalizedEmail = normalizeInstructorEmail(input.email);
   const revokedAt = new Date();
-  await tx.userInvitation.updateMany({
+  const result = await tx.userInvitation.updateMany({
     where: {
       organizationId: input.organizationId,
       status: "PENDING",
@@ -162,6 +176,7 @@ async function revokePendingInstructorInvitationsForEmail(
       revokedAt,
     },
   });
+  return result.count;
 }
 
 async function assertNewEmailAvailable(
@@ -339,16 +354,26 @@ export async function changeInstructorEmail(input: {
         },
       });
 
-      await revokePendingInstructorInvitationsForEmail(tx, {
-        organizationId: input.organizationId,
-        email: currentEmail,
-      });
+      const invitationRevokedCount =
+        await revokePendingInstructorInvitationsForEmail(tx, {
+          organizationId: input.organizationId,
+          email: currentEmail,
+        });
 
       return {
         kind: "ok" as const,
         preserved: {
           isApproved: linkedUser.isApproved,
           isAvailableForBooking: row.isAvailableForBooking,
+        },
+        audit: {
+          hasLinkedUser: true,
+          emailChanged: true,
+          pendingInvitationBlocked: false,
+          userEmailUpdated: true,
+          instructorEmailUpdated: false,
+          invitationRevoked: invitationRevokedCount > 0,
+          linkedUserId: linkedUser.id,
         },
       };
     });
@@ -389,7 +414,11 @@ export async function changeInstructorEmail(input: {
       };
     }
 
-    return { ok: true, user: mapUpdatedUserDto(updated) };
+    return {
+      ok: true,
+      user: mapUpdatedUserDto(updated),
+      audit: txResult.audit,
+    };
   } catch {
     return {
       ok: false,

@@ -23,7 +23,8 @@ export type InstructorQualifiedCategoriesAuditAction =
 export type InstructorLifecycleAuditAction =
   | "instructor.deactivate"
   | "instructor.reactivate"
-  | "instructor.delete";
+  | "instructor.delete"
+  | "instructor.email.change";
 
 type WritePeopleAuditEventBase = {
   organizationId: string;
@@ -77,6 +78,24 @@ export function buildInstructorDeleteAuditMetadata(input: {
     hadLinkedUser: input.hadLinkedUser,
     hadLessons: input.hadLessons,
     isAvailableForBooking: input.isAvailableForBooking,
+  };
+}
+
+export function buildInstructorEmailChangeAuditMetadata(input: {
+  hasLinkedUser: boolean;
+  emailChanged: boolean;
+  pendingInvitationBlocked: boolean;
+  userEmailUpdated: boolean;
+  instructorEmailUpdated: boolean;
+  invitationRevoked: boolean;
+}): Record<string, unknown> {
+  return {
+    hasLinkedUser: input.hasLinkedUser,
+    emailChanged: input.emailChanged,
+    pendingInvitationBlocked: input.pendingInvitationBlocked,
+    userEmailUpdated: input.userEmailUpdated,
+    instructorEmailUpdated: input.instructorEmailUpdated,
+    invitationRevoked: input.invitationRevoked,
   };
 }
 
@@ -182,6 +201,42 @@ export async function writeInstructorDeleteAuditEvent(
         hadLinkedUser: input.hadLinkedUser,
         hadLessons: input.lessonsCount > 0,
         isAvailableForBooking: input.isAvailableForBooking,
+      }),
+      ...input.requestContext,
+    },
+    input.options,
+  );
+}
+
+export async function writeInstructorEmailChangeAuditEvent(
+  input: WritePeopleAuditEventBase & {
+    instructorId: string;
+    linkedUserId?: string | null;
+    hasLinkedUser: boolean;
+    emailChanged: boolean;
+    pendingInvitationBlocked: boolean;
+    userEmailUpdated: boolean;
+    instructorEmailUpdated: boolean;
+    invitationRevoked: boolean;
+  },
+) {
+  return writeAuditEvent(
+    {
+      organizationId: input.organizationId,
+      actorUserId: input.actor.userId,
+      actorRole: input.actor.role,
+      actorEmail: input.actor.email ?? null,
+      action: "instructor.email.change",
+      entityType: PEOPLE_AUDIT_ENTITY_TYPE.Instructor,
+      entityId: input.instructorId,
+      targetUserId: input.linkedUserId ?? null,
+      metadata: buildInstructorEmailChangeAuditMetadata({
+        hasLinkedUser: input.hasLinkedUser,
+        emailChanged: input.emailChanged,
+        pendingInvitationBlocked: input.pendingInvitationBlocked,
+        userEmailUpdated: input.userEmailUpdated,
+        instructorEmailUpdated: input.instructorEmailUpdated,
+        invitationRevoked: input.invitationRevoked,
       }),
       ...input.requestContext,
     },

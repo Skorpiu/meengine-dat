@@ -16,16 +16,22 @@ import {
 } from "@/lib/users/user-route-access";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import type { UserRole } from "@prisma/client";
+import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
+import { writeInstructorEmailChangeAuditEvent } from "@/lib/audit/people-audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type RouteContext = { params: { id: string } };
 
-async function requireSuperAdminTenant(
-  request: NextRequest,
-): Promise<
-  { ok: true; organizationId: string } | { ok: false; response: NextResponse }
+async function requireSuperAdminTenant(request: NextRequest): Promise<
+  | {
+      ok: true;
+      organizationId: string;
+      actor: { userId: string; role: UserRole; email?: string | null };
+    }
+  | { ok: false; response: NextResponse }
 > {
   const session = await getServerSession(authOptions);
 
@@ -49,7 +55,15 @@ async function requireSuperAdminTenant(
     return { ok: false, response: tenantDenied };
   }
 
-  return { ok: true, organizationId: orgId };
+  return {
+    ok: true,
+    organizationId: orgId,
+    actor: {
+      userId: session.user.id,
+      role: session.user.role,
+      email: session.user.email,
+    },
+  };
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
@@ -95,6 +109,20 @@ export async function POST(request: NextRequest, context: RouteContext) {
         { status: result.status },
       );
     }
+
+    await writeInstructorEmailChangeAuditEvent({
+      organizationId: auth.organizationId,
+      actor: auth.actor,
+      instructorId: context.params.id,
+      linkedUserId: result.audit.linkedUserId,
+      hasLinkedUser: result.audit.hasLinkedUser,
+      emailChanged: result.audit.emailChanged,
+      pendingInvitationBlocked: result.audit.pendingInvitationBlocked,
+      userEmailUpdated: result.audit.userEmailUpdated,
+      instructorEmailUpdated: result.audit.instructorEmailUpdated,
+      invitationRevoked: result.audit.invitationRevoked,
+      requestContext: extractAuditRequestContext(request),
+    });
 
     return successResponse({ user: result.user });
   } catch (error) {
