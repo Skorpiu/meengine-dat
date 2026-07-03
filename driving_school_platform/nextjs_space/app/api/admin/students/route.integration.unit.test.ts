@@ -4,6 +4,7 @@ const h = vi.hoisted(() => {
   const findManyMock = vi.fn();
   const findFirstMock = vi.fn();
   const createMock = vi.fn();
+  const writeStudentCreateAuditEventMock = vi.fn();
 
   const prismaMock = {
     student: {
@@ -13,7 +14,13 @@ const h = vi.hoisted(() => {
     },
   };
 
-  return { prismaMock, findManyMock, findFirstMock, createMock };
+  return {
+    prismaMock,
+    findManyMock,
+    findFirstMock,
+    createMock,
+    writeStudentCreateAuditEventMock,
+  };
 });
 
 vi.mock("@/lib/db", () => ({
@@ -43,6 +50,29 @@ vi.mock("@/lib/users/user-route-access", async () => {
     rejectDemoUserManagementMutation: vi.fn(),
   };
 });
+
+vi.mock("@/lib/audit/student-audit", () => ({
+  buildStudentCreateAuditContextFromRecord: (student: {
+    appAccessMode: string;
+    email: string | null;
+    address: string | null;
+    schoolStudentId: string | null;
+    category: unknown;
+    transmissionType: unknown;
+    userId: string | null;
+  }) => ({
+    linkedUserId: student.userId,
+    appAccessMode: student.appAccessMode,
+    hasLicenseCategory: student.category != null,
+    hasTransmissionType: student.transmissionType != null,
+    hasEmail: Boolean(student.email?.trim()),
+    hasAddress: Boolean(student.address?.trim()),
+    schoolStudentIdPresent: Boolean(student.schoolStudentId?.trim()),
+    createdVia: "manual" as const,
+  }),
+  writeStudentCreateAuditEvent: (...args: unknown[]) =>
+    h.writeStudentCreateAuditEventMock(...args),
+}));
 
 import { GET, POST } from "./route";
 import { getServerSession } from "next-auth";
@@ -104,6 +134,10 @@ beforeEach(() => {
   h.findManyMock.mockResolvedValue([]);
   h.findFirstMock.mockResolvedValue(null);
   h.createMock.mockResolvedValue(manualStudentRow);
+  h.writeStudentCreateAuditEventMock.mockResolvedValue({
+    ok: true,
+    id: "audit-1",
+  });
   assertUserTenantHostMock.mockResolvedValue(null);
   rejectDemoMock.mockResolvedValue(null);
 });
@@ -255,9 +289,14 @@ describe("GET /api/admin/students", () => {
 });
 
 describe("POST /api/admin/students", () => {
-  it("creates MANUAL_ONLY student without User", async () => {
+  it("creates MANUAL_ONLY student without User and emits audit", async () => {
     getServerSessionMock.mockResolvedValue({
-      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
     });
 
     const res = await POST(
@@ -285,6 +324,37 @@ describe("POST /api/admin/students", () => {
     expect(createArg.data.schoolStudentIdSource).toBe("MANUAL");
     expect(createArg.data.studentIdNumber).toBeUndefined();
     expect(createArg.select).toEqual(STUDENT_RECORD_SELECT);
+
+    expect(h.writeStudentCreateAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        actor: {
+          userId: "admin-1",
+          role: "SUPER_ADMIN",
+          email: "admin@school.test",
+        },
+        studentId: "stu-1",
+        linkedUserId: null,
+        appAccessMode: "MANUAL_ONLY",
+        hasLicenseCategory: false,
+        hasTransmissionType: false,
+        hasEmail: true,
+        hasAddress: false,
+        schoolStudentIdPresent: true,
+        createdVia: "manual",
+        requestContext: expect.objectContaining({
+          requestMethod: "POST",
+          requestPath: "/api/admin/students",
+        }),
+      }),
+    );
+
+    const auditPayload = JSON.stringify(
+      h.writeStudentCreateAuditEventMock.mock.calls[0]?.[0],
+    );
+    expect(auditPayload).not.toContain("João");
+    expect(auditPayload).not.toContain("joao@school.test");
+    expect(auditPayload).not.toContain("26001");
   });
 
   it("persists optional address on manual create", async () => {
@@ -308,6 +378,11 @@ describe("POST /api/admin/students", () => {
     expect(res.status).toBe(201);
     const createArg = h.createMock.mock.calls[0]?.[0];
     expect(createArg.data.address).toBe("Avenida Central 5");
+    expect(h.writeStudentCreateAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        hasAddress: true,
+      }),
+    );
   });
 
   it("returns 409 when schoolStudentId already exists in org", async () => {
@@ -326,6 +401,7 @@ describe("POST /api/admin/students", () => {
 
     expect(res.status).toBe(409);
     expect(h.createMock).not.toHaveBeenCalled();
+    expect(h.writeStudentCreateAuditEventMock).not.toHaveBeenCalled();
   });
 
   it("rejects invalid yearSuffix", async () => {
@@ -344,6 +420,7 @@ describe("POST /api/admin/students", () => {
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.code ?? body.error).toBe("year_suffix_must_be_2_digits");
+    expect(h.writeStudentCreateAuditEventMock).not.toHaveBeenCalled();
   });
 
   it("rejects invalid sequenceNumber", async () => {
@@ -362,6 +439,57 @@ describe("POST /api/admin/students", () => {
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.code ?? body.error).toBe("sequence_out_of_range");
+    expect(h.writeStudentCreateAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks demo org mutations", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-demo" },
+    });
+    rejectDemoMock.mockResolvedValue(
+      new Response(JSON.stringify({ code: "demo_restricted_action" }), {
+        status: 403,
+      }),
+    );
+
+    const res = await POST(
+      req("POST", "http://school.example.com/api/admin/students", {
+        firstName: "Ana",
+        yearSuffix: "26",
+        sequenceNumber: 1,
+      }) as any,
+    );
+
+    expect(res.status).toBe(403);
+    expect(h.createMock).not.toHaveBeenCalled();
+    expect(h.writeStudentCreateAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("POST still returns 201 when audit write fails", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
+    });
+    h.writeStudentCreateAuditEventMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+
+    const res = await POST(
+      req("POST", "http://school.example.com/api/admin/students", {
+        firstName: "Ana",
+        yearSuffix: "26",
+        sequenceNumber: 1,
+      }) as any,
+    );
+
+    expect(res.status).toBe(201);
+    expect(h.writeStudentCreateAuditEventMock).toHaveBeenCalled();
+    expect(h.createMock).toHaveBeenCalled();
   });
 
   it("checks duplicate only within organization", async () => {
