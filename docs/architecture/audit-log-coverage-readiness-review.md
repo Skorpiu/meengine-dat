@@ -9,20 +9,20 @@
 
 ## 1. Executive summary
 
-DAT has a **working audit write boundary** (`lib/audit/audit-log-service.ts` + domain helpers) and a **tenant-aware `audit_logs` schema** (migration `20260702120000_audit_log_tenant_context_v1`). **Eighteen distinct actions** are instrumented across **eighteen admin routes**, covering the highest-traffic People + Lessons flows introduced during the first B2B cutline.
+DAT has a **working audit write boundary** (`lib/audit/audit-log-service.ts` + domain helpers) and a **tenant-aware `audit_logs` schema** (migration `20260702120000_audit_log_tenant_context_v1`). **Nineteen admin routes** emit **eighteen distinct actions** (calendar + manual practical both use `lesson.create`), covering the highest-traffic People + Lessons flows introduced during the first B2B cutline.
 
 **Coverage posture (admin write paths):**
 
 | Bucket | Approx. count | Notes |
 | ------ | ------------- | ----- |
-| **AUDITED** | 18 routes / 18 actions | See §2 |
+| **AUDITED** | 19 routes / 19 actions | See §2 — `lesson.create` on two routes (calendar + manual practical) |
 | **COVERED_BY_OTHER_EVENT** | 1 | `POST /api/admin/students/[id]/invite` → `student.invite` (not `invitation.create`) |
-| **CANDIDATE (P1)** | 2 | Manual practical history |
+| **CANDIDATE (P1)** | 0 | — |
 | **CANDIDATE (P2)** | 6 | Import apply summaries, vehicles, invitation accept |
 | **DEFERRED** | 10+ | Settings/feature flags/license, platform org, billing webhooks, bulk cleanup, legacy user create |
 | **NOT_NEEDED** | 12+ | Reads, dry-runs (zero-write), blocked legacy deletes |
 
-**Readiness verdict:** Safe to continue **small write-path slices** before building a viewer/read API. Lessons MVP triad (`create` / `update` / `delete`) and invitation admin triad (`create` / `revoke` / `email.change`) are **complete**. Instructor lifecycle audit is **complete**. Student Onboarding manual create is **audited** (`student.create`). Next highest-value P1 gap: **manual practical history** (`lesson.create` + `lessonSource`). After remaining P1 People/Lessons gaps close, shift priority to **read API / operator viewer** unless import volume auditing becomes an operator requirement.
+**Readiness verdict:** Safe to continue **small write-path slices** before building a viewer/read API. Lessons MVP triad (`create` / `update` / `delete`) and invitation admin triad (`create` / `revoke` / `email.change`) are **complete**. Instructor lifecycle audit is **complete**. Student Onboarding manual create is **audited** (`student.create`). Manual practical history create is **audited** (`lesson.create` on `POST /api/admin/students/[id]/practical-lessons` with `source: MANUAL` + `createdVia: manual_practical_lesson`). **All P1 People/Lessons write gaps are closed** — next priority: **read API / operator viewer** unless import volume auditing becomes an operator requirement.
 
 **No runtime changes** in this batch — documentation and prioritization only.
 
@@ -41,6 +41,7 @@ DAT has a **working audit write boundary** (`lib/audit/audit-log-service.ts` + d
 | `instructor.delete` | `Instructor` | `DELETE /api/admin/instructors/[id]` | `writeInstructorDeleteAuditEvent` |
 | `instructor.email.change` | `Instructor` | `POST /api/admin/instructors/[id]/change-email` | `writeInstructorEmailChangeAuditEvent` |
 | `lesson.create` | `Lesson` | `POST /api/admin/lessons` | `writeLessonCreateAuditEvent` |
+| `lesson.create` | `Lesson` | `POST /api/admin/students/[id]/practical-lessons` | `writeLessonCreateAuditEvent` (`createdVia: manual_practical_lesson`, `source: MANUAL`) |
 | `lesson.update` | `Lesson` | `PUT /api/admin/lessons/[id]` | `writeLessonUpdateAuditEvent` |
 | `lesson.delete` | `Lesson` | `DELETE /api/admin/lessons/[id]` | `writeLessonDeleteAuditEvent` |
 | `student.app_access.remove` | `Student` | `POST /api/admin/students/[id]/app-access/remove` | `writeStudentAppAccessRemoveAuditEvent` |
@@ -138,7 +139,7 @@ Scanned: `app/api/admin/**/route.ts` plus operational siblings under `api/users`
 | `POST .../app-access/remove` | Remove app access | **AUDITED** | `student.app_access.remove` | Medium | — | Lifecycle modes only |
 | `POST .../app-access/reactivate` | Reactivate app access | **AUDITED** | `student.app_access.reactivate` | Medium | — | `linkedUserId` ok (operational id) |
 | `POST .../invite` | Profile invite | **AUDITED** | `student.invite` | Low | — | See Invitations |
-| `POST .../practical-lessons` | Manual completed practical history | **CANDIDATE** | `lesson.create` (source `DRIVING COMPLETED MANUAL`) | Low | **P1** | Reuse lesson helper; `lessonSource` in metadata |
+| `POST .../practical-lessons` | Manual completed practical history | **AUDITED** | `lesson.create` (`source: MANUAL`, `createdVia: manual_practical_lesson`) | Low | — | Reuses lesson helper; distinct route from calendar create |
 | `POST .../import/dry-run` | Preview import | **NOT_NEEDED** | — | — | — | Zero-write by contract |
 | `POST .../import/apply` | Bulk student import | **CANDIDATE** | `student.import.apply` (summary) | High — volume | **P2** | Row counts, error codes; no row payloads |
 | `GET .../export` | Export students | **NOT_NEEDED** | — | — | — | Read-only |
@@ -216,10 +217,9 @@ Scanned: `app/api/admin/**/route.ts` plus operational siblings under `api/users`
 
 Ordered by foundation-plan MVP alignment and first-client operator need:
 
-1. **Manual practical history** (`POST .../practical-lessons`) — creates `DRIVING COMPLETED MANUAL` lessons; can reuse `lesson.create` with `lessonSource` metadata rather than a new action.
-
 **Recently closed:**
 
+- **`lesson.create` (manual practical)** — Manual completed practical history audit (`audit-log-write-paths-manual-practical-lesson-v1`); `POST /api/admin/students/[id]/practical-lessons`; reuses `writeLessonCreateAuditEvent`; metadata (`lessonType`, operational ids, `source: MANUAL`, `practicalLessonNumber`, `scheduledAtDateOnly`, `createdVia: manual_practical_lesson`); no notes/names/emails; audit failure non-blocking; separate from calendar `POST /api/admin/lessons` (no duplication).
 - **`student.create`** — Manual Onboarding student create audit (`audit-log-write-paths-student-create-v1`); `POST /api/admin/students`; `StudentCreateAuditContext` from created record; metadata flags only (`appAccessMode`, `hasEmail`, `hasAddress`, `schoolStudentIdPresent`, `createdVia: manual`); no names/emails/schoolStudentId literal; audit failure non-blocking.
 - **`instructor.email.change`** — Instructor canonical login email change audit (`audit-log-write-paths-instructor-email-change-v1`); `POST /api/admin/instructors/[id]/change-email`; `InstructorEmailChangeAuditContext` on service success; metadata flags only; no old/new email; audit failure non-blocking.
 - **`instructor.delete`** — Instructor hard-delete audit (`audit-log-write-paths-instructor-delete-v1`); zero-deps policy via `DELETE /api/admin/instructors/[id]`; `InstructorDeleteAuditSnapshot` on service success; metadata (`hadLinkedUser`, `hadLessons`, `isAvailableForBooking` flags only); `targetUserId` when linked user existed; audit failure non-blocking.
@@ -240,11 +240,11 @@ Ordered by foundation-plan MVP alignment and first-client operator need:
 
 | # | Slice name | Scope | Why now |
 | - | ---------- | ----- | ------- |
-| 1 | `audit-log-write-paths-manual-practical-lesson-v1` | `POST /api/admin/students/[id]/practical-lessons` → `lesson.create` + `lessonSource` | Last P1 People/Lessons write gap; reuses lesson helper |
-| 2 | `audit-log-read-api-foundation-v1` | Tenant-scoped paginated read API for `audit_logs` | P1 People onboarding create closed; operator viewer prerequisite |
-| 3 | `audit-log-write-paths-student-import-apply-v1` | `POST /api/admin/students/import/apply` → summary `student.import.apply` | P2 volume audit; only if operator need confirmed |
+| 1 | `audit-log-read-api-foundation-v1` | Tenant-scoped paginated read API for `audit_logs` | P1 People/Lessons write gaps closed; operator viewer prerequisite |
+| 2 | `audit-log-write-paths-student-import-apply-v1` | `POST /api/admin/students/import/apply` → summary `student.import.apply` | P2 volume audit; only if operator need confirmed |
+| 3 | `audit-log-write-paths-practical-lessons-import-apply-v1` | `POST /api/admin/practical-lessons/import/apply` → summary `lesson.import.apply` | P2 volume audit; only if operator need confirmed |
 
-**Defer to slice 4+ (not in top 3):** manual practical-lesson POST (as `lesson.create`), import apply summaries.
+**Defer to slice 4+ (not in top 3):** import apply summaries (if not confirmed), vehicles, invitation accept.
 
 ---
 
@@ -272,7 +272,7 @@ Ordered by foundation-plan MVP alignment and first-client operator need:
 | -------- | ---- |
 | Linked student invite vs unlinked invitation create | **`student.invite`** vs **`invitation.create`** — never both for one mutation |
 | Student email change vs invitation email change on linked invite | Separate actions on separate routes; metadata flags only |
-| Manual practical lesson vs calendar lesson create | Prefer **`lesson.create`** + `lessonSource: DRIVING COMPLETED MANUAL` |
+| Manual practical lesson vs calendar lesson create | Prefer **`lesson.create`** + `source: MANUAL` + `createdVia: manual_practical_lesson` on manual route; calendar route uses `source: SYSTEM` — same action, distinct metadata; never duplicate on one mutation |
 | `PUT /api/users/update` vs `PATCH /api/admin/instructors/[id]` | Avoid duplicate audit for qualified categories; profile-only `instructor.update` if instrumented |
 
 ---

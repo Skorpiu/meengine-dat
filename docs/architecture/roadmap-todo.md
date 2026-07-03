@@ -63,6 +63,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `audit-log-write-paths-instructor-delete-v1` | **Done** | Instructor hard-delete audit wiring; `DELETE /api/admin/instructors/[id]` (`instructor.delete`); policy flags only; tests |
 | `audit-log-write-paths-instructor-email-change-v1` | **Done** | Instructor email-change audit wiring; `POST /api/admin/instructors/[id]/change-email` (`instructor.email.change`); flags only; tests |
 | `audit-log-write-paths-student-create-v1` | **Done** | Student manual create audit wiring; `POST /api/admin/students` (`student.create`); flags only; tests |
+| `audit-log-write-paths-manual-practical-lesson-v1` | **Done** | Manual practical history audit wiring; `POST /api/admin/students/[id]/practical-lessons` (`lesson.create` + `source: MANUAL`); tests |
 | `audit-log-coverage-readiness-review-v1` | **Done (docs)** | Admin write-path audit coverage matrix + P1 gap analysis + next 3 slices; [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md) |
 | **First-client operator smoke (re-run lessons edit)** | **Done (operator)** | Manual smoke green after modal edit deploy (main `a9549bf`) |
 
@@ -72,7 +73,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Notes |
 | ----- | ----- |
-| Audit log runtime implementation | **18 actions wired** — see [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md); next P1: manual practical lesson (`lesson.create` + `lessonSource`) |
+| Audit log runtime implementation | **18 actions / 19 routes wired** — P1 closed; see [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md); next: read API foundation |
 | Demo DB separation | Recommended for public portfolio; lower urgency with dedicated client tenant |
 | `lesson-student-nullability-policy-review-v1` | Policy doc + validation gap grep |
 | `mobile-tablet-readiness-review-v1` | **Deferred/penultimate** — before Competitive/Product Discovery |

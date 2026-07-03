@@ -265,16 +265,17 @@ Documented and in use (docs/rules only; no runtime change):
 - `audit-log-write-paths-instructor-delete-v1` — wired `instructor.delete` into `DELETE /api/admin/instructors/[id]`; `InstructorDeleteAuditSnapshot` on `deleteInstructorRecordIfEligible` success; metadata (`hadLinkedUser`, `hadLessons`, `isAvailableForBooking` flags only); `targetUserId` when linked user existed; audit failure non-blocking; route + helper + delete service unit tests. Validated via `pnpm check`.
 - `audit-log-write-paths-instructor-email-change-v1` — wired `instructor.email.change` into `POST /api/admin/instructors/[id]/change-email`; `InstructorEmailChangeAuditContext` on `changeInstructorEmail` success; metadata flags only; no old/new email; audit failure non-blocking; route + helper + service unit tests. Validated via `pnpm check`.
 - `audit-log-write-paths-student-create-v1` — wired `student.create` into `POST /api/admin/students`; `StudentCreateAuditContext` from created record; metadata flags only; no names/emails/schoolStudentId literal; audit failure non-blocking; route + helper unit tests. Validated via `pnpm check`.
+- `audit-log-write-paths-manual-practical-lesson-v1` — wired `lesson.create` into `POST /api/admin/students/[id]/practical-lessons`; reuses `writeLessonCreateAuditEvent`; metadata (`source: MANUAL`, `createdVia: manual_practical_lesson`, `scheduledAtDateOnly`, operational ids); no notes/names/emails; audit failure non-blocking; distinct from calendar `POST /api/admin/lessons`; route + helper + service unit tests. Validated via `pnpm check`.
 
 ### Likely next (production path)
 
-1. `audit-log-write-paths-manual-practical-lesson-v1` — `POST /api/admin/students/[id]/practical-lessons` → `lesson.create` + `lessonSource`
+1. `audit-log-read-api-foundation-v1` — tenant-scoped paginated read API for `audit_logs`
 
 ### Deferred (not next)
 
 - **`calendar-lessons-polish-v1e-student-warnings`** (P3) — product policy first
 - `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)**
-- Audit log write paths — **18 actions wired**; coverage matrix at [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md); next P1: manual practical lesson
+- Audit log write paths — **18 actions / 19 routes wired**; P1 People/Lessons gaps closed; coverage matrix at [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md); next: read API foundation
 
 ### Product direction (backlog — deferred post-production polish)
 

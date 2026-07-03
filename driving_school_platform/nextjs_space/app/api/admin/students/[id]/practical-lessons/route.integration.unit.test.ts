@@ -9,6 +9,7 @@ const h = vi.hoisted(() => {
   const categoryFindFirstMock = vi.fn();
   const createManualMock = vi.fn();
   const listManualMock = vi.fn();
+  const writeLessonCreateAuditEventMock = vi.fn();
 
   return {
     studentFindFirstMock,
@@ -19,6 +20,7 @@ const h = vi.hoisted(() => {
     categoryFindFirstMock,
     createManualMock,
     listManualMock,
+    writeLessonCreateAuditEventMock,
     prismaMock: {
       student: { findFirst: studentFindFirstMock },
       instructor: { findFirst: instructorFindFirstMock },
@@ -64,6 +66,12 @@ vi.mock("@/lib/lessons/manual-practical-lesson-service", () => ({
     h.createManualMock(...args),
   listStudentPracticalLessons: (...args: unknown[]) =>
     h.listManualMock(...args),
+}));
+
+vi.mock("@/lib/audit/lesson-audit", () => ({
+  MANUAL_PRACTICAL_LESSON_CREATE_VIA: "manual_practical_lesson",
+  writeLessonCreateAuditEvent: (...args: unknown[]) =>
+    h.writeLessonCreateAuditEventMock(...args),
 }));
 
 import { GET, POST } from "./route";
@@ -126,6 +134,20 @@ beforeEach(() => {
       lessonSource: "MANUAL",
       instructorName: "João Silva",
     },
+    auditSnapshot: {
+      id: "lesson-new",
+      lessonType: "DRIVING",
+      studentId,
+      instructorId: "inst-db-1",
+      vehicleId: null,
+      lessonSource: "MANUAL",
+      practicalLessonNumber: 5,
+      lessonDate: new Date("2026-01-10T00:00:00.000Z"),
+    },
+  });
+  h.writeLessonCreateAuditEventMock.mockResolvedValue({
+    ok: true,
+    id: "audit-1",
   });
 });
 
@@ -179,6 +201,50 @@ describe("POST /api/admin/students/[id]/practical-lessons", () => {
       studentId,
       body: expect.objectContaining({ practicalLessonNumber: 5 }),
     });
+    expect(h.writeLessonCreateAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-1",
+        actor: {
+          userId: "admin-1",
+          role: "SUPER_ADMIN",
+          email: undefined,
+        },
+        lesson: {
+          id: "lesson-new",
+          lessonType: "DRIVING",
+          studentId,
+          instructorId: "inst-db-1",
+          vehicleId: null,
+          lessonSource: "MANUAL",
+          practicalLessonNumber: 5,
+        },
+        metadataExtras: {
+          createdVia: "manual_practical_lesson",
+          lessonDate: new Date("2026-01-10T00:00:00.000Z"),
+        },
+      }),
+    );
+
+    const auditPayload = JSON.stringify(
+      h.writeLessonCreateAuditEventMock.mock.calls[0]?.[0],
+    );
+    expect(auditPayload).not.toContain("João Silva");
+    expect(auditPayload).not.toContain("notes");
+  });
+
+  it("POST still returns 201 when audit write fails", async () => {
+    h.writeLessonCreateAuditEventMock.mockResolvedValueOnce({
+      ok: false,
+      error: "db_down",
+    });
+
+    const res = await POST(req("POST", payload) as any, {
+      params: { id: studentId },
+    });
+
+    expect(res.status).toBe(201);
+    expect(h.createManualMock).toHaveBeenCalled();
+    expect(h.writeLessonCreateAuditEventMock).toHaveBeenCalled();
   });
 
   it("returns 409 when service reports duplicate number", async () => {
@@ -195,6 +261,17 @@ describe("POST /api/admin/students/[id]/practical-lessons", () => {
     expect(res.status).toBe(409);
     const body = await res.json();
     expect(body.code).toBe("practical_lesson_number_already_exists");
+    expect(h.writeLessonCreateAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("does not emit audit when validation fails", async () => {
+    const res = await POST(
+      req("POST", { ...payload, practicalLessonNumber: -1 }) as any,
+      { params: { id: studentId } },
+    );
+    expect(res.status).toBe(400);
+    expect(h.createManualMock).not.toHaveBeenCalled();
+    expect(h.writeLessonCreateAuditEventMock).not.toHaveBeenCalled();
   });
 
   it("does not call create when demo sandbox blocks lesson create", async () => {
@@ -210,5 +287,6 @@ describe("POST /api/admin/students/[id]/practical-lessons", () => {
     });
     expect(res.status).toBe(403);
     expect(h.createManualMock).not.toHaveBeenCalled();
+    expect(h.writeLessonCreateAuditEventMock).not.toHaveBeenCalled();
   });
 });

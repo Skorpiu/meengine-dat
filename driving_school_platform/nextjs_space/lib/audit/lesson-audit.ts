@@ -33,6 +33,14 @@ export type LessonDeleteAuditSnapshot = LessonAuditSnapshot & {
   lessonDate?: Date;
 };
 
+export const MANUAL_PRACTICAL_LESSON_CREATE_VIA =
+  "manual_practical_lesson" as const;
+
+export type LessonCreateAuditMetadataExtras = {
+  createdVia?: typeof MANUAL_PRACTICAL_LESSON_CREATE_VIA;
+  lessonDate?: Date;
+};
+
 type WriteLessonAuditEventBase = {
   organizationId: string;
   actor: LessonAuditActor;
@@ -42,6 +50,7 @@ type WriteLessonAuditEventBase = {
 
 export function buildLessonCreateAuditMetadata(
   lesson: LessonAuditSnapshot,
+  extras?: LessonCreateAuditMetadataExtras,
 ): Record<string, unknown> {
   const metadata: Record<string, unknown> = {
     lessonType: lesson.lessonType,
@@ -62,6 +71,16 @@ export function buildLessonCreateAuditMetadata(
 
   if (lesson.practicalLessonNumber != null) {
     metadata.practicalLessonNumber = lesson.practicalLessonNumber;
+  }
+
+  if (extras?.createdVia) {
+    metadata.createdVia = extras.createdVia;
+  }
+
+  if (extras?.lessonDate) {
+    metadata.scheduledAtDateOnly = formatLessonScheduledDateOnly(
+      extras.lessonDate,
+    );
   }
 
   return metadata;
@@ -140,6 +159,7 @@ export function buildLessonUpdateAuditMetadata(input: {
 export async function writeLessonCreateAuditEvent(
   input: WriteLessonAuditEventBase & {
     lesson: LessonAuditSnapshot;
+    metadataExtras?: LessonCreateAuditMetadataExtras;
   },
 ) {
   return writeAuditEvent(
@@ -151,7 +171,10 @@ export async function writeLessonCreateAuditEvent(
       action: "lesson.create",
       entityType: LESSON_AUDIT_ENTITY_TYPE,
       entityId: input.lesson.id,
-      metadata: buildLessonCreateAuditMetadata(input.lesson),
+      metadata: buildLessonCreateAuditMetadata(
+        input.lesson,
+        input.metadataExtras,
+      ),
       ...input.requestContext,
     },
     input.options,
