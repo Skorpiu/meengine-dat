@@ -9,20 +9,20 @@
 
 ## 1. Executive summary
 
-DAT has a **working audit write boundary** (`lib/audit/audit-log-service.ts` + domain helpers) and a **tenant-aware `audit_logs` schema** (migration `20260702120000_audit_log_tenant_context_v1`). **Fourteen distinct actions** are instrumented across **fourteen admin routes**, covering the highest-traffic People + Lessons flows introduced during the first B2B cutline.
+DAT has a **working audit write boundary** (`lib/audit/audit-log-service.ts` + domain helpers) and a **tenant-aware `audit_logs` schema** (migration `20260702120000_audit_log_tenant_context_v1`). **Fifteen distinct actions** are instrumented across **fifteen admin routes**, covering the highest-traffic People + Lessons flows introduced during the first B2B cutline.
 
 **Coverage posture (admin write paths):**
 
 | Bucket | Approx. count | Notes |
 | ------ | ------------- | ----- |
-| **AUDITED** | 14 routes / 14 actions | See §2 |
+| **AUDITED** | 15 routes / 15 actions | See §2 |
 | **COVERED_BY_OTHER_EVENT** | 1 | `POST /api/admin/students/[id]/invite` → `student.invite` (not `invitation.create`) |
-| **CANDIDATE (P1)** | 6 | Instructor email change, instructor delete/reactivate, student create, manual practical history |
+| **CANDIDATE (P1)** | 5 | Instructor email change, instructor delete, student create, manual practical history |
 | **CANDIDATE (P2)** | 6 | Import apply summaries, vehicles, invitation accept |
 | **DEFERRED** | 10+ | Settings/feature flags/license, platform org, billing webhooks, bulk cleanup, legacy user create |
 | **NOT_NEEDED** | 12+ | Reads, dry-runs (zero-write), blocked legacy deletes |
 
-**Readiness verdict:** Safe to continue **small write-path slices** before building a viewer/read API. Lessons MVP triad (`create` / `update` / `delete`) and invitation admin triad (`create` / `revoke` / `email.change`) are **complete**. Next highest-value P1 gaps: **`instructor.reactivate`**, **`instructor.delete`**. After remaining P1 instructor lifecycle gaps close, shift priority to **read API / operator viewer** unless import volume auditing becomes an operator requirement.
+**Readiness verdict:** Safe to continue **small write-path slices** before building a viewer/read API. Lessons MVP triad (`create` / `update` / `delete`) and invitation admin triad (`create` / `revoke` / `email.change`) are **complete**. Instructor lifecycle is now partially complete: `instructor.deactivate` + `instructor.reactivate`. Next highest-value P1 gap: **`instructor.delete`** (then `instructor.email.change`). After remaining P1 instructor lifecycle gaps close, shift priority to **read API / operator viewer** unless import volume auditing becomes an operator requirement.
 
 **No runtime changes** in this batch — documentation and prioritization only.
 
@@ -37,6 +37,7 @@ DAT has a **working audit write boundary** (`lib/audit/audit-log-service.ts` + d
 | `invitation.email.change` | `UserInvitation` | `POST /api/admin/invitations/[id]/change-email` | `writeInvitationEmailChangeAuditEvent` |
 | `instructor.qualified_categories.update` | `Instructor` | `PATCH /api/admin/instructors/[id]` | `writeInstructorQualifiedCategoriesAuditEvent` |
 | `instructor.deactivate` | `Instructor` | `POST /api/admin/instructors/[id]/deactivate` | `writeInstructorDeactivateAuditEvent` |
+| `instructor.reactivate` | `Instructor` | `POST /api/admin/instructors/[id]/reactivate` | `writeInstructorReactivateAuditEvent` |
 | `lesson.create` | `Lesson` | `POST /api/admin/lessons` | `writeLessonCreateAuditEvent` |
 | `lesson.update` | `Lesson` | `PUT /api/admin/lessons/[id]` | `writeLessonUpdateAuditEvent` |
 | `lesson.delete` | `Lesson` | `DELETE /api/admin/lessons/[id]` | `writeLessonDeleteAuditEvent` |
@@ -146,7 +147,7 @@ Scanned: `app/api/admin/**/route.ts` plus operational siblings under `api/users`
 | `PATCH /api/admin/instructors/[id]` | Qualified categories only | **AUDITED** | `instructor.qualified_categories.update` | Low | — | Category ids/names (reference data) |
 | `DELETE /api/admin/instructors/[id]` | Hard delete (zero-deps policy) | **CANDIDATE** | `instructor.delete` | Medium — destructive | **P1** | Policy/warning codes; mirror `student.delete` |
 | `POST .../deactivate` | Deactivate instructor | **AUDITED** | `instructor.deactivate` | Medium | — | Warning codes, counts |
-| `POST .../reactivate` | Reactivate instructor | **CANDIDATE** | `instructor.reactivate` | Medium | **P1** | Symmetric to deactivate metadata |
+| `POST .../reactivate` | Reactivate instructor | **AUDITED** | `instructor.reactivate` | Medium | — | Symmetric to deactivate metadata; flags only |
 | `POST .../change-email` | Instructor email change | **CANDIDATE** | `instructor.email.change` | Medium | **P1** | Policy flags; mirror `student.email.change` |
 | `PUT /api/users/update` | Unified instructor profile (People UI) | **CANDIDATE** | `instructor.update` | Medium — overlaps PATCH route scope | **P2** | `changedFields` only; avoid duplicating qualified-categories audit |
 
@@ -212,13 +213,14 @@ Scanned: `app/api/admin/**/route.ts` plus operational siblings under `api/users`
 
 Ordered by foundation-plan MVP alignment and first-client operator need:
 
-1. **Instructor lifecycle gaps** — `instructor.reactivate`, `instructor.delete`, `instructor.email.change` are active People flows without audit; symmetric to completed student slices.
+1. **Instructor lifecycle gaps** — `instructor.delete`, `instructor.email.change` are active People flows without audit; symmetric to completed student slices.
 2. **`student.create`** — manual Onboarding create; first touch of student record; low metadata risk.
 3. **Manual practical history** (`POST .../practical-lessons`) — creates `DRIVING COMPLETED MANUAL` lessons; can reuse `lesson.create` with `lessonSource` metadata rather than a new action.
 
 **Recently closed:**
 
 - **`invitation.email.change`** — Invitation admin triad complete (`audit-log-write-paths-invitation-email-change-v1`); pending email update + token regen via `POST /api/admin/invitations/[id]/change-email`.
+- **`instructor.reactivate`** — Instructor lifecycle partial closure (`audit-log-write-paths-instructor-reactivate-v1`); restores booking + app login via `POST /api/admin/instructors/[id]/reactivate`.
 - **`lesson.delete`** — Lessons MVP triad complete (`audit-log-write-paths-lesson-delete-v1`); hard delete via `DELETE /api/admin/lessons/[id]`; snapshot before `deleteMany`.
 
 **Explicit non-gaps / defer:**
@@ -234,11 +236,11 @@ Ordered by foundation-plan MVP alignment and first-client operator need:
 
 | # | Slice name | Scope | Why now |
 | - | ---------- | ----- | ------- |
-| 1 | `audit-log-write-paths-instructor-reactivate-v1` | `POST /api/admin/instructors/[id]/reactivate` → `instructor.reactivate` | Smallest instructor lifecycle gap; symmetric to existing `instructor.deactivate` |
-| 2 | `audit-log-write-paths-instructor-delete-v1` | `DELETE /api/admin/instructors/[id]` → `instructor.delete` | Destructive People flow; mirror `student.delete` metadata pattern |
-| 3 | `audit-log-write-paths-instructor-email-change-v1` | `POST /api/admin/instructors/[id]/change-email` → `instructor.email.change` | Symmetric to `student.email.change`; policy flags only |
+| 1 | `audit-log-write-paths-instructor-delete-v1` | `DELETE /api/admin/instructors/[id]` → `instructor.delete` | Destructive People flow; mirror `student.delete` metadata pattern |
+| 2 | `audit-log-write-paths-instructor-email-change-v1` | `POST /api/admin/instructors/[id]/change-email` → `instructor.email.change` | Symmetric to `student.email.change`; policy flags only |
+| 3 | `audit-log-write-paths-student-create-v1` | `POST /api/admin/students` → `student.create` | Closes Onboarding create gap with minimal metadata |
 
-**Defer to slice 4+ (not in top 3):** `student.create`, manual practical-lesson POST (as `lesson.create`), import apply summaries.
+**Defer to slice 4+ (not in top 3):** manual practical-lesson POST (as `lesson.create`), import apply summaries.
 
 ---
 

@@ -12,8 +12,10 @@ vi.mock("@/lib/audit/audit-log-service", () => ({
 import {
   buildInstructorDeactivateAuditMetadata,
   buildInstructorQualifiedCategoriesAuditMetadata,
+  buildInstructorReactivateAuditMetadata,
   writeInstructorDeactivateAuditEvent,
   writeInstructorQualifiedCategoriesAuditEvent,
+  writeInstructorReactivateAuditEvent,
 } from "@/lib/audit/people-audit";
 import { UserRole } from "@prisma/client";
 
@@ -84,6 +86,7 @@ describe("writeInstructorDeactivateAuditEvent", () => {
       organizationId: "org-a",
       actor,
       instructorId: "inst-1",
+      targetUserId: "user-1",
       alreadyInactive: false,
       warningCodes: ["instructor_has_future_lessons"],
       futureLessonsCount: 2,
@@ -94,6 +97,7 @@ describe("writeInstructorDeactivateAuditEvent", () => {
         action: "instructor.deactivate",
         entityType: "Instructor",
         entityId: "inst-1",
+        targetUserId: "user-1",
         metadata: buildInstructorDeactivateAuditMetadata({
           alreadyInactive: false,
           warningCodes: ["instructor_has_future_lessons"],
@@ -102,5 +106,45 @@ describe("writeInstructorDeactivateAuditEvent", () => {
       }),
       undefined,
     );
+  });
+});
+
+describe("buildInstructorReactivateAuditMetadata", () => {
+  it("includes alreadyActive only", () => {
+    expect(
+      buildInstructorReactivateAuditMetadata({ alreadyActive: false }),
+    ).toEqual({ alreadyActive: false });
+  });
+});
+
+describe("writeInstructorReactivateAuditEvent", () => {
+  it("writes reactivate audit with minimal metadata", async () => {
+    await writeInstructorReactivateAuditEvent({
+      organizationId: "org-a",
+      actor,
+      instructorId: "inst-1",
+      targetUserId: "user-1",
+      alreadyActive: false,
+      requestContext: { requestId: "req-1" },
+    });
+
+    expect(h.writeAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        action: "instructor.reactivate",
+        entityType: "Instructor",
+        entityId: "inst-1",
+        targetUserId: "user-1",
+        metadata: buildInstructorReactivateAuditMetadata({
+          alreadyActive: false,
+        }),
+        requestId: "req-1",
+      }),
+      undefined,
+    );
+
+    const payload = JSON.stringify(h.writeAuditEventMock.mock.calls[0]?.[0]);
+    expect(payload).not.toContain("password");
+    expect(payload).not.toContain("tokenHash");
   });
 });
