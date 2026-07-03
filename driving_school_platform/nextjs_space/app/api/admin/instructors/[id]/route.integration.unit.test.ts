@@ -9,6 +9,7 @@ vi.mock("@/lib/instructors/instructor-record-qualified-categories", () => ({
 }));
 
 vi.mock("@/lib/audit/people-audit", () => ({
+  writeInstructorDeleteAuditEvent: vi.fn(),
   writeInstructorQualifiedCategoriesAuditEvent: vi.fn(),
 }));
 
@@ -34,7 +35,10 @@ vi.mock("@/lib/users/user-route-access", async () => {
 import { DELETE, PATCH } from "./route";
 import { deleteInstructorRecordIfEligible } from "@/lib/instructors/instructor-record-delete";
 import { updateInstructorQualifiedCategories } from "@/lib/instructors/instructor-record-qualified-categories";
-import { writeInstructorQualifiedCategoriesAuditEvent } from "@/lib/audit/people-audit";
+import {
+  writeInstructorDeleteAuditEvent,
+  writeInstructorQualifiedCategoriesAuditEvent,
+} from "@/lib/audit/people-audit";
 import { getServerSession } from "next-auth";
 import {
   assertUserTenantHost,
@@ -54,6 +58,8 @@ const deleteInstructorMock =
   deleteInstructorRecordIfEligible as unknown as ReturnType<typeof vi.fn>;
 const updateQualifiedCategoriesMock =
   updateInstructorQualifiedCategories as unknown as ReturnType<typeof vi.fn>;
+const writeDeleteAuditMock =
+  writeInstructorDeleteAuditEvent as unknown as ReturnType<typeof vi.fn>;
 const writeQualifiedCategoriesAuditMock =
   writeInstructorQualifiedCategoriesAuditEvent as unknown as ReturnType<
     typeof vi.fn
@@ -73,7 +79,19 @@ beforeEach(() => {
   vi.resetAllMocks();
   assertUserTenantHostMock.mockResolvedValue(null);
   rejectDemoMock.mockResolvedValue(null);
-  deleteInstructorMock.mockResolvedValue({ ok: true });
+  deleteInstructorMock.mockResolvedValue({
+    ok: true,
+    audit: {
+      hadLinkedUser: true,
+      lessonsCount: 0,
+      linkedUserId: "user-1",
+      isAvailableForBooking: true,
+    },
+  });
+  writeDeleteAuditMock.mockResolvedValue({
+    ok: true,
+    id: "audit-delete-1",
+  });
   updateQualifiedCategoriesMock.mockResolvedValue({
     ok: true,
     instructor: {
@@ -88,9 +106,14 @@ beforeEach(() => {
 });
 
 describe("DELETE /api/admin/instructors/[id]", () => {
-  it("returns 200 when delete allowed", async () => {
+  it("returns 200 when delete allowed and emits audit", async () => {
     getServerSessionMock.mockResolvedValue({
-      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
     });
 
     const res = await DELETE(
@@ -110,6 +133,32 @@ describe("DELETE /api/admin/instructors/[id]", () => {
       instructorId: "inst-1",
       currentUserId: "admin-1",
     });
+    expect(writeDeleteAuditMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        actor: {
+          userId: "admin-1",
+          role: "SUPER_ADMIN",
+          email: "admin@school.test",
+        },
+        instructorId: "inst-1",
+        hadLinkedUser: true,
+        lessonsCount: 0,
+        linkedUserId: "user-1",
+        isAvailableForBooking: true,
+        requestContext: expect.objectContaining({
+          requestMethod: "DELETE",
+          requestPath: "/api/admin/instructors/inst-1",
+        }),
+      }),
+    );
+
+    const auditPayload = JSON.stringify(
+      writeDeleteAuditMock.mock.calls[0]?.[0],
+    );
+    expect(auditPayload).not.toContain("password");
+    expect(auditPayload).not.toContain("tokenHash");
+    expect(auditPayload).not.toContain("instructor@");
   });
 
   it("returns 404 when instructor missing or cross-tenant", async () => {
@@ -127,6 +176,7 @@ describe("DELETE /api/admin/instructors/[id]", () => {
     );
 
     expect(res.status).toBe(404);
+    expect(writeDeleteAuditMock).not.toHaveBeenCalled();
   });
 
   it("returns 403 for demo org", async () => {
@@ -149,6 +199,7 @@ describe("DELETE /api/admin/instructors/[id]", () => {
 
     expect(res.status).toBe(403);
     expect(deleteInstructorMock).not.toHaveBeenCalled();
+    expect(writeDeleteAuditMock).not.toHaveBeenCalled();
   });
 
   it("returns 401 when not SUPER_ADMIN", async () => {
@@ -166,6 +217,7 @@ describe("DELETE /api/admin/instructors/[id]", () => {
 
     expect(res.status).toBe(401);
     expect(deleteInstructorMock).not.toHaveBeenCalled();
+    expect(writeDeleteAuditMock).not.toHaveBeenCalled();
   });
 
   it("returns 409 with stable code when blocked by lessons", async () => {
@@ -190,6 +242,7 @@ describe("DELETE /api/admin/instructors/[id]", () => {
     expect(res.status).toBe(409);
     const body = await res.json();
     expect(body.code).toBe(INSTRUCTOR_DELETE_BLOCK_CODE.HAS_LESSONS);
+    expect(writeDeleteAuditMock).not.toHaveBeenCalled();
   });
 
   it("returns 409 for each main blocker code", async () => {
@@ -226,7 +279,35 @@ describe("DELETE /api/admin/instructors/[id]", () => {
       expect(res.status).toBe(409);
       const body = await res.json();
       expect(body.code).toBe(code);
+      expect(writeDeleteAuditMock).not.toHaveBeenCalled();
     }
+  });
+
+  it("DELETE still returns 200 when audit write fails", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
+    });
+    writeDeleteAuditMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+
+    const res = await DELETE(
+      req(
+        "DELETE",
+        "http://school.example.com/api/admin/instructors/inst-1",
+      ) as any,
+      routeContext,
+    );
+
+    expect(res.status).toBe(200);
+    expect(writeDeleteAuditMock).toHaveBeenCalled();
+    expect(deleteInstructorMock).toHaveBeenCalled();
   });
 });
 

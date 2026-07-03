@@ -11,9 +11,11 @@ vi.mock("@/lib/audit/audit-log-service", () => ({
 
 import {
   buildInstructorDeactivateAuditMetadata,
+  buildInstructorDeleteAuditMetadata,
   buildInstructorQualifiedCategoriesAuditMetadata,
   buildInstructorReactivateAuditMetadata,
   writeInstructorDeactivateAuditEvent,
+  writeInstructorDeleteAuditEvent,
   writeInstructorQualifiedCategoriesAuditEvent,
   writeInstructorReactivateAuditEvent,
 } from "@/lib/audit/people-audit";
@@ -146,5 +148,56 @@ describe("writeInstructorReactivateAuditEvent", () => {
     const payload = JSON.stringify(h.writeAuditEventMock.mock.calls[0]?.[0]);
     expect(payload).not.toContain("password");
     expect(payload).not.toContain("tokenHash");
+  });
+});
+
+describe("buildInstructorDeleteAuditMetadata", () => {
+  it("includes policy flags without PII", () => {
+    expect(
+      buildInstructorDeleteAuditMetadata({
+        hadLinkedUser: true,
+        hadLessons: false,
+        isAvailableForBooking: true,
+      }),
+    ).toEqual({
+      hadLinkedUser: true,
+      hadLessons: false,
+      isAvailableForBooking: true,
+    });
+  });
+});
+
+describe("writeInstructorDeleteAuditEvent", () => {
+  it("writes instructor.delete with tenant scope and flags only", async () => {
+    await writeInstructorDeleteAuditEvent({
+      organizationId: "org-a",
+      actor,
+      instructorId: "inst-1",
+      hadLinkedUser: true,
+      lessonsCount: 0,
+      linkedUserId: "user-1",
+      isAvailableForBooking: false,
+    });
+
+    expect(h.writeAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        action: "instructor.delete",
+        entityType: "Instructor",
+        entityId: "inst-1",
+        targetUserId: "user-1",
+        metadata: buildInstructorDeleteAuditMetadata({
+          hadLinkedUser: true,
+          hadLessons: false,
+          isAvailableForBooking: false,
+        }),
+      }),
+      undefined,
+    );
+
+    const payload = JSON.stringify(h.writeAuditEventMock.mock.calls[0]?.[0]);
+    expect(payload).not.toContain("password");
+    expect(payload).not.toContain("tokenHash");
+    expect(payload).not.toContain("instructor@");
   });
 });

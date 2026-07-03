@@ -22,7 +22,8 @@ export type InstructorQualifiedCategoriesAuditAction =
 
 export type InstructorLifecycleAuditAction =
   | "instructor.deactivate"
-  | "instructor.reactivate";
+  | "instructor.reactivate"
+  | "instructor.delete";
 
 type WritePeopleAuditEventBase = {
   organizationId: string;
@@ -64,6 +65,18 @@ export function buildInstructorReactivateAuditMetadata(input: {
 }): Record<string, unknown> {
   return {
     alreadyActive: input.alreadyActive,
+  };
+}
+
+export function buildInstructorDeleteAuditMetadata(input: {
+  hadLinkedUser: boolean;
+  hadLessons: boolean;
+  isAvailableForBooking: boolean;
+}): Record<string, unknown> {
+  return {
+    hadLinkedUser: input.hadLinkedUser,
+    hadLessons: input.hadLessons,
+    isAvailableForBooking: input.isAvailableForBooking,
   };
 }
 
@@ -139,6 +152,36 @@ export async function writeInstructorReactivateAuditEvent(
       targetUserId: input.targetUserId ?? null,
       metadata: buildInstructorReactivateAuditMetadata({
         alreadyActive: input.alreadyActive,
+      }),
+      ...input.requestContext,
+    },
+    input.options,
+  );
+}
+
+export async function writeInstructorDeleteAuditEvent(
+  input: WritePeopleAuditEventBase & {
+    instructorId: string;
+    hadLinkedUser: boolean;
+    lessonsCount: number;
+    linkedUserId?: string | null;
+    isAvailableForBooking: boolean;
+  },
+) {
+  return writeAuditEvent(
+    {
+      organizationId: input.organizationId,
+      actorUserId: input.actor.userId,
+      actorRole: input.actor.role,
+      actorEmail: input.actor.email ?? null,
+      action: "instructor.delete",
+      entityType: PEOPLE_AUDIT_ENTITY_TYPE.Instructor,
+      entityId: input.instructorId,
+      targetUserId: input.linkedUserId ?? null,
+      metadata: buildInstructorDeleteAuditMetadata({
+        hadLinkedUser: input.hadLinkedUser,
+        hadLessons: input.lessonsCount > 0,
+        isAvailableForBooking: input.isAvailableForBooking,
       }),
       ...input.requestContext,
     },
