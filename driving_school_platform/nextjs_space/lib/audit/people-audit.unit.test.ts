@@ -12,10 +12,12 @@ vi.mock("@/lib/audit/audit-log-service", () => ({
 import {
   buildInstructorDeactivateAuditMetadata,
   buildInstructorDeleteAuditMetadata,
+  buildInstructorEmailChangeAuditMetadata,
   buildInstructorQualifiedCategoriesAuditMetadata,
   buildInstructorReactivateAuditMetadata,
   writeInstructorDeactivateAuditEvent,
   writeInstructorDeleteAuditEvent,
+  writeInstructorEmailChangeAuditEvent,
   writeInstructorQualifiedCategoriesAuditEvent,
   writeInstructorReactivateAuditEvent,
 } from "@/lib/audit/people-audit";
@@ -199,5 +201,70 @@ describe("writeInstructorDeleteAuditEvent", () => {
     expect(payload).not.toContain("password");
     expect(payload).not.toContain("tokenHash");
     expect(payload).not.toContain("instructor@");
+  });
+});
+
+describe("buildInstructorEmailChangeAuditMetadata", () => {
+  it("includes policy flags without email or secrets", () => {
+    expect(
+      buildInstructorEmailChangeAuditMetadata({
+        hasLinkedUser: true,
+        emailChanged: true,
+        pendingInvitationBlocked: false,
+        userEmailUpdated: true,
+        instructorEmailUpdated: false,
+        invitationRevoked: true,
+      }),
+    ).toEqual({
+      hasLinkedUser: true,
+      emailChanged: true,
+      pendingInvitationBlocked: false,
+      userEmailUpdated: true,
+      instructorEmailUpdated: false,
+      invitationRevoked: true,
+    });
+  });
+});
+
+describe("writeInstructorEmailChangeAuditEvent", () => {
+  it("writes instructor.email.change with tenant scope and flags only", async () => {
+    await writeInstructorEmailChangeAuditEvent({
+      organizationId: "org-a",
+      actor,
+      instructorId: "inst-1",
+      linkedUserId: "user-1",
+      hasLinkedUser: true,
+      emailChanged: true,
+      pendingInvitationBlocked: false,
+      userEmailUpdated: true,
+      instructorEmailUpdated: false,
+      invitationRevoked: false,
+    });
+
+    expect(h.writeAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        action: "instructor.email.change",
+        entityType: "Instructor",
+        entityId: "inst-1",
+        targetUserId: "user-1",
+        metadata: buildInstructorEmailChangeAuditMetadata({
+          hasLinkedUser: true,
+          emailChanged: true,
+          pendingInvitationBlocked: false,
+          userEmailUpdated: true,
+          instructorEmailUpdated: false,
+          invitationRevoked: false,
+        }),
+      }),
+      undefined,
+    );
+
+    const payload = JSON.stringify(h.writeAuditEventMock.mock.calls[0]?.[0]);
+    expect(payload).not.toContain("password");
+    expect(payload).not.toContain("tokenHash");
+    expect(payload).not.toContain("inviteLink");
+    expect(payload).not.toContain("old@");
+    expect(payload).not.toContain("new@");
   });
 });

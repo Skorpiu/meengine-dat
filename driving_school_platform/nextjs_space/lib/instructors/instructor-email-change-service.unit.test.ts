@@ -160,6 +160,15 @@ describe("changeInstructorEmail success paths", () => {
         expect(result.user.instructor?.isAvailableForBooking).toBe(
           isAvailableForBooking,
         );
+        expect(result.audit).toEqual({
+          hasLinkedUser: true,
+          emailChanged: true,
+          pendingInvitationBlocked: false,
+          userEmailUpdated: true,
+          instructorEmailUpdated: false,
+          invitationRevoked: false,
+          linkedUserId: "user-1",
+        });
       }
       expect(h.userUpdateMock).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -172,6 +181,22 @@ describe("changeInstructorEmail success paths", () => {
       );
     },
   );
+
+  it("sets invitationRevoked when pending invitations are revoked", async () => {
+    h.instructorFindFirstMock.mockResolvedValue(activeRow);
+    h.invitationUpdateManyMock.mockResolvedValue({ count: 1 });
+
+    const result = await changeInstructorEmail({
+      organizationId: "org-a",
+      instructorId: "inst-1",
+      newEmail: "new@school.test",
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.audit.invitationRevoked).toBe(true);
+    }
+  });
 });
 
 describe("changeInstructorEmail validation", () => {
