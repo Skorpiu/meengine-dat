@@ -146,8 +146,23 @@ export async function listStudentPracticalLessons(input: {
   });
 }
 
+export type ManualPracticalLessonAuditSnapshot = {
+  id: string;
+  lessonType: string;
+  studentId: string;
+  instructorId: string;
+  vehicleId: number | null;
+  lessonSource: string;
+  practicalLessonNumber: number | null;
+  lessonDate: Date;
+};
+
 export type CreateManualPracticalLessonResult =
-  | { ok: true; lesson: ManualPracticalLessonListItem }
+  | {
+      ok: true;
+      lesson: ManualPracticalLessonListItem;
+      auditSnapshot: ManualPracticalLessonAuditSnapshot;
+    }
   | { ok: false; error: string; code?: string; status: number };
 
 export type CreateManualPracticalLessonInput = {
@@ -240,6 +255,10 @@ export async function createManualPracticalLesson(input: {
     },
     select: {
       id: true,
+      lessonType: true,
+      studentId: true,
+      instructorId: true,
+      vehicleId: true,
       lessonDate: true,
       startTime: true,
       endTime: true,
@@ -267,6 +286,16 @@ export async function createManualPracticalLesson(input: {
       status: created.status,
       lessonSource: created.lessonSource,
       instructorName: instructorName || "Instructor",
+    },
+    auditSnapshot: {
+      id: created.id,
+      lessonType: created.lessonType,
+      studentId: created.studentId!,
+      instructorId: created.instructorId,
+      vehicleId: created.vehicleId,
+      lessonSource: created.lessonSource,
+      practicalLessonNumber: created.practicalLessonNumber,
+      lessonDate: created.lessonDate,
     },
   };
 }

@@ -9,6 +9,12 @@ import { assertUserTenantHost } from "@/lib/users/user-route-access";
 import { decideDemoLessonCreate } from "@/lib/demo/demo-write-sandbox-route-guard";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import type { UserRole } from "@prisma/client";
+import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
+import {
+  MANUAL_PRACTICAL_LESSON_CREATE_VIA,
+  writeLessonCreateAuditEvent,
+} from "@/lib/audit/lesson-audit";
 import { findOperationalStudentInOrg } from "@/lib/students/student-lesson-resolve";
 import {
   createManualPracticalLesson,
@@ -21,10 +27,13 @@ export const dynamic = "force-dynamic";
 
 type RouteContext = { params: { id: string } };
 
-async function requireSuperAdminTenant(
-  request: NextRequest,
-): Promise<
-  { ok: true; organizationId: string } | { ok: false; response: NextResponse }
+async function requireSuperAdminTenant(request: NextRequest): Promise<
+  | {
+      ok: true;
+      organizationId: string;
+      actor: { userId: string; role: UserRole; email?: string | null };
+    }
+  | { ok: false; response: NextResponse }
 > {
   const session = await getServerSession(authOptions);
 
@@ -48,7 +57,15 @@ async function requireSuperAdminTenant(
     return { ok: false, response: tenantDenied };
   }
 
-  return { ok: true, organizationId: orgId };
+  return {
+    ok: true,
+    organizationId: orgId,
+    actor: {
+      userId: session.user.id,
+      role: session.user.role,
+      email: session.user.email,
+    },
+  };
 }
 
 export async function GET(request: NextRequest, context: RouteContext) {
@@ -126,6 +143,27 @@ export async function POST(request: NextRequest, context: RouteContext) {
       }
       return errorResponse(result.error, result.status);
     }
+
+    const { auditSnapshot } = result;
+
+    await writeLessonCreateAuditEvent({
+      organizationId: auth.organizationId,
+      actor: auth.actor,
+      lesson: {
+        id: auditSnapshot.id,
+        lessonType: auditSnapshot.lessonType,
+        studentId: auditSnapshot.studentId,
+        instructorId: auditSnapshot.instructorId,
+        vehicleId: auditSnapshot.vehicleId,
+        lessonSource: auditSnapshot.lessonSource,
+        practicalLessonNumber: auditSnapshot.practicalLessonNumber,
+      },
+      metadataExtras: {
+        createdVia: MANUAL_PRACTICAL_LESSON_CREATE_VIA,
+        lessonDate: auditSnapshot.lessonDate,
+      },
+      requestContext: extractAuditRequestContext(request),
+    });
 
     return successResponse({ lesson: result.lesson }, HTTP_STATUS.CREATED);
   } catch (error) {

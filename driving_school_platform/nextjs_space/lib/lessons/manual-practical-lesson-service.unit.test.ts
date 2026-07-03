@@ -49,6 +49,10 @@ beforeEach(() => {
   h.categoryFindFirstMock.mockResolvedValue({ id: 2, name: "B" });
   h.lessonCreateMock.mockResolvedValue({
     id: "lesson-manual-1",
+    lessonType: "DRIVING",
+    studentId: "stu-1",
+    instructorId: "inst-db-1",
+    vehicleId: null,
     lessonDate: new Date("2026-01-10T00:00:00.000Z"),
     startTime: "10:00",
     endTime: "11:00",
@@ -83,6 +87,16 @@ describe("createManualPracticalLesson", () => {
       expect(result.lesson.practicalLessonNumber).toBe(5);
       expect(result.lesson.lessonSource).toBe("MANUAL");
       expect(result.lesson.status).toBe("COMPLETED");
+      expect(result.auditSnapshot).toEqual({
+        id: "lesson-manual-1",
+        lessonType: "DRIVING",
+        studentId: "stu-1",
+        instructorId: "inst-db-1",
+        vehicleId: null,
+        lessonSource: "MANUAL",
+        practicalLessonNumber: 5,
+        lessonDate: new Date("2026-01-10T00:00:00.000Z"),
+      });
     }
 
     expect(h.lessonCreateMock).toHaveBeenCalledWith(

@@ -66,6 +66,24 @@ describe("buildLessonCreateAuditMetadata", () => {
       instructorId: "inst-row-1",
     });
   });
+
+  it("adds createdVia and scheduledAtDateOnly for manual practical history", () => {
+    expect(
+      buildLessonCreateAuditMetadata(drivingLesson, {
+        createdVia: "manual_practical_lesson",
+        lessonDate: new Date("2026-01-10T00:00:00.000Z"),
+      }),
+    ).toEqual({
+      lessonType: "DRIVING",
+      instructorId: "inst-row-1",
+      studentId: "stu-1",
+      vehicleId: 7,
+      source: "SYSTEM",
+      practicalLessonNumber: 3,
+      createdVia: "manual_practical_lesson",
+      scheduledAtDateOnly: "2026-01-10",
+    });
+  });
 });
 
 describe("collectLessonUpdateChangedFields", () => {
