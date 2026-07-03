@@ -11,7 +11,9 @@ vi.mock("@/lib/audit/audit-log-service", () => ({
 
 import {
   buildInvitationAuditMetadata,
+  buildInvitationEmailChangeAuditMetadata,
   writeInvitationAuditEvent,
+  writeInvitationEmailChangeAuditEvent,
 } from "@/lib/audit/invitation-audit";
 import { UserRole } from "@prisma/client";
 
@@ -123,5 +125,68 @@ describe("writeInvitationAuditEvent", () => {
       }),
       undefined,
     );
+  });
+});
+
+describe("buildInvitationEmailChangeAuditMetadata", () => {
+  it("includes flags and linkedStudentId without email values", () => {
+    expect(buildInvitationEmailChangeAuditMetadata(invitation)).toEqual({
+      role: "STUDENT",
+      status: "PENDING",
+      emailChanged: true,
+      tokenRegenerated: true,
+      linkedStudentId: "stu-1",
+    });
+  });
+
+  it("omits linkedStudentId for unlinked instructor invitations", () => {
+    expect(
+      buildInvitationEmailChangeAuditMetadata({
+        ...invitation,
+        role: "INSTRUCTOR",
+        studentId: null,
+      }),
+    ).toEqual({
+      role: "INSTRUCTOR",
+      status: "PENDING",
+      emailChanged: true,
+      tokenRegenerated: true,
+    });
+  });
+});
+
+describe("writeInvitationEmailChangeAuditEvent", () => {
+  it("writes invitation.email.change without token or email in metadata", async () => {
+    await writeInvitationEmailChangeAuditEvent({
+      organizationId: "org-a",
+      actor: {
+        userId: "admin-1",
+        role: UserRole.SUPER_ADMIN,
+        email: "admin@school.test",
+      },
+      invitation,
+      requestContext: { requestId: "req-email-1" },
+    });
+
+    expect(h.writeAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        action: "invitation.email.change",
+        entityType: "UserInvitation",
+        entityId: "inv-1",
+        metadata: buildInvitationEmailChangeAuditMetadata(invitation),
+        requestId: "req-email-1",
+      }),
+      undefined,
+    );
+
+    const metadata = h.writeAuditEventMock.mock.calls[0]?.[0]?.metadata;
+    expect(metadata).not.toHaveProperty("email");
+    expect(metadata).not.toHaveProperty("newEmail");
+    expect(metadata).not.toHaveProperty("oldEmail");
+    const payload = JSON.stringify(h.writeAuditEventMock.mock.calls[0]?.[0]);
+    expect(payload).not.toContain("tokenHash");
+    expect(payload).not.toContain("inviteLink");
+    expect(payload).not.toContain("student@school.test");
   });
 });
