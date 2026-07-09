@@ -12,10 +12,13 @@ vi.mock("@/lib/audit/audit-log-service", () => ({
 import {
   buildLessonCreateAuditMetadata,
   buildLessonDeleteAuditMetadata,
+  buildLessonImportApplyAuditMetadata,
   buildLessonUpdateAuditMetadata,
   collectLessonUpdateChangedFields,
+  resolveLessonImportApplyAuditEntityId,
   writeLessonCreateAuditEvent,
   writeLessonDeleteAuditEvent,
+  writeLessonImportApplyAuditEvent,
   writeLessonUpdateAuditEvent,
 } from "@/lib/audit/lesson-audit";
 import { UserRole } from "@prisma/client";
@@ -83,6 +86,84 @@ describe("buildLessonCreateAuditMetadata", () => {
       createdVia: "manual_practical_lesson",
       scheduledAtDateOnly: "2026-01-10",
     });
+  });
+});
+
+describe("buildLessonImportApplyAuditMetadata", () => {
+  it("includes aggregated counts and format without row payloads", () => {
+    expect(
+      buildLessonImportApplyAuditMetadata({
+        format: "csv",
+        totalRows: 3,
+        createdCount: 3,
+        skippedCount: 0,
+      }),
+    ).toEqual({
+      totalRows: 3,
+      createdCount: 3,
+      updatedCount: 0,
+      skippedCount: 0,
+      failedCount: 0,
+      dryRun: false,
+      source: "import",
+      format: "csv",
+      mode: "createOnly",
+      lessonSource: "IMPORT",
+      lessonType: "DRIVING",
+      hasErrors: false,
+    });
+  });
+});
+
+describe("resolveLessonImportApplyAuditEntityId", () => {
+  it("prefers requestId from request context", () => {
+    expect(
+      resolveLessonImportApplyAuditEntityId({ requestId: "req-imp-1" }),
+    ).toBe("req-imp-1");
+  });
+
+  it("generates a surrogate batch id when requestId is absent", () => {
+    const id = resolveLessonImportApplyAuditEntityId(undefined);
+    expect(id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
+  });
+});
+
+describe("writeLessonImportApplyAuditEvent", () => {
+  it("writes lesson.import.apply with LessonImport entity and summary metadata", async () => {
+    await writeLessonImportApplyAuditEvent({
+      organizationId: "org-a",
+      actor,
+      format: "json",
+      totalRows: 2,
+      createdCount: 2,
+      skippedCount: 0,
+      requestContext: { requestId: "req-batch-99" },
+    });
+
+    expect(h.writeAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        action: "lesson.import.apply",
+        entityType: "LessonImport",
+        entityId: "req-batch-99",
+        metadata: buildLessonImportApplyAuditMetadata({
+          format: "json",
+          totalRows: 2,
+          createdCount: 2,
+          skippedCount: 0,
+        }),
+      }),
+      undefined,
+    );
+
+    const payload = JSON.stringify(h.writeAuditEventMock.mock.calls[0]?.[0]);
+    expect(payload).not.toContain("Nota importada");
+    expect(payload).not.toContain("instrutor@");
+    expect(
+      h.writeAuditEventMock.mock.calls[0]?.[0].metadata,
+    ).not.toHaveProperty("preview");
   });
 });
 

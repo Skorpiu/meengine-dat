@@ -76,7 +76,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Notes |
 | ----- | ----- |
-| Audit log runtime implementation | **Write + read API + viewer UI foundation done** — see [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md); student import apply closed; next: practical lessons import apply summary (P2) |
+| Audit log runtime implementation | **Write + read API + viewer UI foundation done** — see [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md); import apply summary audits closed (Students + Practical lessons); next: viewer export polish (optional) |
 | Demo DB separation | Recommended for public portfolio; lower urgency with dedicated client tenant |
 | `lesson-student-nullability-policy-review-v1` | Policy doc + validation gap grep |
 | `mobile-tablet-readiness-review-v1` | **Deferred/penultimate** — before Competitive/Product Discovery |
