@@ -1,7 +1,7 @@
 # Audit log coverage readiness review
 
 **Batch:** `audit-log-coverage-readiness-review-v1`  
-**Date:** 2026-07-02  
+**Last updated:** 2026-07-09 (`audit-log-coverage-final-hardening-v1`)  
 **Decision context:** [DEC-044](./decision-log.md) — tenant-aware audit log foundation  
 **Related:** [audit-log-tenant-context-foundation-plan.md](./audit-log-tenant-context-foundation-plan.md), [audit-log-tenant-context-schema-plan.md](./audit-log-tenant-context-schema-plan.md)
 
@@ -9,22 +9,22 @@
 
 ## 1. Executive summary
 
-DAT has a **working audit write boundary** (`lib/audit/audit-log-service.ts` + domain helpers) and a **tenant-aware `audit_logs` schema** (migration `20260702120000_audit_log_tenant_context_v1`). **Nineteen admin routes** emit **eighteen distinct actions** (calendar + manual practical both use `lesson.create`), covering the highest-traffic People + Lessons flows introduced during the first B2B cutline.
+DAT has a **working audit write boundary** (`lib/audit/audit-log-service.ts` + domain helpers) and a **tenant-aware `audit_logs` schema** (migration `20260702120000_audit_log_tenant_context_v1`). Admin/operational routes now emit **22 distinct audit actions** covering the highest-traffic People + Lessons flows, plus **import apply** summaries and **export download access** events.
 
 **Coverage posture (admin write paths):**
 
 | Bucket | Approx. count | Notes |
 | ------ | ------------- | ----- |
-| **AUDITED** | 21+ routes / 21+ actions | Includes access events (export) in addition to mutations; see §2 and §4–5 |
+| **AUDITED** | 21+ routes / **22 actions** | Includes access events (export) and import apply summaries in addition to mutations; see §2 and §4–5 |
 | **COVERED_BY_OTHER_EVENT** | 1 | `POST /api/admin/students/[id]/invite` → `student.invite` (not `invitation.create`) |
 | **CANDIDATE (P1)** | 0 | — |
 | **CANDIDATE (P2)** | 4 | Vehicles, invitation accept |
 | **DEFERRED** | 10+ | Settings/feature flags/license, platform org, billing webhooks, bulk cleanup, legacy user create |
 | **NOT_NEEDED** | 12+ | Reads, dry-runs (zero-write), blocked legacy deletes |
 
-**Readiness verdict:** P1 write-path instrumentation for People/Lessons is **complete**. **Read API foundation** (`GET /api/admin/audit-logs`) and **viewer UI foundation** (`/admin/audit-logs`, URL-only) are available for tenant SUPER_ADMIN. Import apply summary audits are closed for Students (`student.import.apply`) and Practical lessons (`lesson.import.apply`). Next priority: viewer/export polish or remaining P2 candidates; platform viewer/export deferred.
+**Readiness verdict:** P1 write-path instrumentation for People/Lessons is **complete**. **Read API foundation** (`GET /api/admin/audit-logs`) and **viewer UI foundation** (`/admin/audit-logs`, URL-only) are available for tenant SUPER_ADMIN. Import apply summary audits are closed for Students (`student.import.apply`) and Practical lessons (`lesson.import.apply`). Next priority: viewer polish (optional) or remaining P2 candidates; **platform cross-tenant viewer** and **viewer CSV export** remain deferred.
 
-**No runtime changes** in this batch — documentation and prioritization only.
+This document is a **documentation snapshot** (no implementation in this batch).
 
 ---
 
@@ -242,7 +242,7 @@ Ordered by foundation-plan MVP alignment and first-client operator need:
 
 **Explicit non-gaps / defer:**
 
-- **Import apply (practical lessons)** — valuable but volume-heavy; student import apply closed in `audit-log-write-paths-student-import-apply-v1`.
+- **Import apply summaries** — closed for both Students and Practical lessons (`student.import.apply`, `lesson.import.apply`).
 - **Settings / feature flags / license** — separate `configuration_history` + operator-internal surfaces (DEC-026).
 - **`invitation.accept`** — public route; P2 until accept auditing policy is agreed (tenant resolution + no token logging).
 - **Vehicles** — foundation MVP listed but lower operator urgency than People/Lessons for first client.
@@ -254,6 +254,8 @@ Ordered by foundation-plan MVP alignment and first-client operator need:
 | # | Slice name | Scope | Why now |
 | - | ---------- | ----- | ------- |
 | 1 | `audit-log-viewer-export-v1` | CSV export from viewer (deferred until product need) | Optional; not blocking production |
+| 2 | `audit-log-viewer-platform-cross-tenant-v1` | Platform cross-tenant viewer (operator-only) | Deferred; requires stronger governance/guardrails |
+| 3 | `audit-log-viewer-entity-resolution-v1` | Optional entity display (e.g. resolve student/lesson labels) | Deferred; avoid PII leaks; keep viewer minimal |
 
 **Defer to slice 4+ (not in top 3):** import apply summaries (if not confirmed), vehicles, invitation accept.
 

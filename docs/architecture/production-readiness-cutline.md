@@ -22,7 +22,7 @@ Controlled production deployment for a **first B2B driving-school client** using
 | Billing / checkout | **Out of baseline** — no live PSP, checkout, or billing portal; do not market as production-ready |
 | Target environment | Each env gets its own **`prisma migrate status` / `migrate deploy`**, **`pnpm check`**, and **post-deploy smoke** |
 | Credentials | **No** `PLATFORM_ADMIN` / `SUPER_ADMIN` secrets in docs, git, tickets, or client handoff |
-| Audit logs | **Not P0** before controlled production; planning P1; runtime implementation P2 unless client/compliance requires earlier |
+| Audit logs | **Not P0** before controlled production; **foundation implemented** (tenant schema + write paths + read API + URL-only viewer). Optional polish (viewer export/platform view) deferred. |
 | Mobile / discovery | **`mobile-tablet-readiness-review-v1`** penultimate/deferred; **Competitive/Product Discovery** after production + cohesion + mobile |
 
 ---
@@ -46,7 +46,7 @@ Controlled production deployment for a **first B2B driving-school client** using
 | **Student UX** | Functional | Dashboard + lessons; less polished than admin — **acceptable** for first B2B client where school staff drive operations. |
 | **Import/export** | Ready | Students + practical lessons: export, dry-run, apply UI; demo guards on apply. |
 | **Docs/runbooks** | Ready (baseline) | Release checklist, smoke, demo runbooks exist. First-client onboarding record (DEC-043) added. Residual drift: `production-smoke-runbook-sync-v1` if needed. |
-| **Observability/audit** | Gap (planned) | `AuditLog` model exists (RLS hardened) but **no application write paths** today. Planning P1; implementation P2. |
+| **Observability/audit** | Ready (foundation) | Tenant-aware `audit_logs` schema + redacted write boundary + major write-path coverage + tenant read API + URL-only viewer are implemented. Platform cross-tenant viewer/export polish deferred. |
 | **Deployment/CI/QA** | Ready (gate) | GitLab CI = `pnpm check`. Operator deploy + smoke required per environment before client go-live. |
 
 **Summary:** DAT core is **production-ready enough** for controlled B2B production under invite-only, no public signup, no live billing assumptions.
@@ -76,7 +76,7 @@ Controlled production deployment for a **first B2B driving-school client** using
 
 | Item | Notes |
 | ---- | ----- |
-| Audit log runtime | **Invitations + instructor people slice done**; students/lessons + optional viewer next |
+| Audit log polish (optional) | Viewer CSV export, platform cross-tenant viewer governance, entity resolution — only if operator need/compliance requires |
 | Demo DB separation | Recommended for public portfolio; dedicated client tenant lowers urgency |
 | `lesson-student-nullability-policy-review-v1` | Policy doc + validation gap grep |
 | `mobile-tablet-readiness-review-v1` | Penultimate before Competitive/Product Discovery |
@@ -116,7 +116,7 @@ After stable production: `mobile-tablet-readiness-review-v1` → `competitive-pr
 - `mobile-tablet-readiness-review-v1` (until after production/cohesion)
 - `competitive-product-discovery-v1`
 - Engineering Excellence Audit implementation batches
-- Audit log migration / runtime writes / UI (until planning batch approved)
+- Audit log platform cross-tenant viewer / viewer CSV export / additional RLS policy work (separate slices; only if required)
 - Billing / checkout / PSP integration
 - i18n framework and locale packs
 - RLS tenant `CREATE POLICY` unless product-required
@@ -131,7 +131,7 @@ After stable production: `mobile-tablet-readiness-review-v1` → `competitive-pr
 | Stale runbooks | P1 | This cutline + smoke doc sync; `production-smoke-runbook-sync-v1` for residual |
 | Env-specific migrations | P1 | Never assume validated env = all envs; run gate per target |
 | Demo + prod same DB | P0 (portfolio) / P2 (dedicated client tenant) | Dedicated org/host for client; separate demo DB still recommended for portfolio |
-| No `AuditLog` writes | P2 | Vercel logs + manual DB investigation until audit slice ships |
+| Audit log gaps (platform view/export) | P2 | Foundation exists; defer platform cross-tenant viewer/export until governance need is explicit |
 | Student UX minimal | P2 | Acceptable for B2B; polish after go-live if needed |
 | Doc drift (signup/email) | P2 | `signup-hardening-plan.md` synced in cutline batch; re-audit if auth changes |
 
