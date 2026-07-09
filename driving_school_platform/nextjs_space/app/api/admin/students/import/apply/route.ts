@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
+import type { UserRole } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
+import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
+import { writeStudentImportApplyAuditEvent } from "@/lib/audit/student-audit";
 import {
   errorResponse,
   successResponse,
@@ -53,10 +56,13 @@ const studentImportApplyBodySchema = z
     }
   });
 
-async function requireSuperAdminTenant(
-  request: NextRequest,
-): Promise<
-  { ok: true; organizationId: string } | { ok: false; response: NextResponse }
+async function requireSuperAdminTenant(request: NextRequest): Promise<
+  | {
+      ok: true;
+      organizationId: string;
+      actor: { userId: string; role: UserRole; email?: string | null };
+    }
+  | { ok: false; response: NextResponse }
 > {
   const session = await getServerSession(authOptions);
 
@@ -87,7 +93,15 @@ async function requireSuperAdminTenant(
     return { ok: false, response: tenantDenied };
   }
 
-  return { ok: true, organizationId: orgId };
+  return {
+    ok: true,
+    organizationId: orgId,
+    actor: {
+      userId: session.user.id,
+      role: session.user.role as UserRole,
+      email: session.user.email,
+    },
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -132,6 +146,18 @@ export async function POST(request: NextRequest) {
       rows,
       existingSchoolStudentIds: existingSet,
     });
+
+    if (result.applied) {
+      await writeStudentImportApplyAuditEvent({
+        organizationId: auth.organizationId,
+        actor: auth.actor,
+        format,
+        totalRows: result.report.totalRows,
+        createdCount: result.createdCount,
+        skippedCount: result.skippedCount,
+        requestContext: extractAuditRequestContext(request),
+      });
+    }
 
     return successResponse(result, HTTP_STATUS.OK);
   } catch (error) {

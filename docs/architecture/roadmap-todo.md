@@ -67,6 +67,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `audit-log-read-api-foundation-v1` | **Done** | Tenant read API `GET /api/admin/audit-logs`; cursor pagination + filters; SUPER_ADMIN; tests |
 | `audit-log-viewer-ui-foundation-v1` | **Done** | `/admin/audit-logs` read-only viewer; filters + Load more; URL-only nav; client tests |
 | `audit-log-coverage-readiness-review-v1` | **Done (docs)** | Admin write-path audit coverage matrix + P1 gap analysis + next 3 slices; [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md) |
+| `audit-log-write-paths-student-import-apply-v1` | **Done** | Student import apply summary audit; `POST /api/admin/students/import/apply` (`student.import.apply`); aggregated metadata; `StudentImport` entity; tests |
 | **First-client operator smoke (re-run lessons edit)** | **Done (operator)** | Manual smoke green after modal edit deploy (main `a9549bf`) |
 
 ---
@@ -75,7 +76,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Notes |
 | ----- | ----- |
-| Audit log runtime implementation | **Write + read API + viewer UI foundation done** — see [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md); next: import apply summary audits (P2) |
+| Audit log runtime implementation | **Write + read API + viewer UI foundation done** — see [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md); student import apply closed; next: practical lessons import apply summary (P2) |
 | Demo DB separation | Recommended for public portfolio; lower urgency with dedicated client tenant |
 | `lesson-student-nullability-policy-review-v1` | Policy doc + validation gap grep |
 | `mobile-tablet-readiness-review-v1` | **Deferred/penultimate** — before Competitive/Product Discovery |

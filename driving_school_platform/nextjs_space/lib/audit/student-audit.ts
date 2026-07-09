@@ -23,6 +23,10 @@ export type StudentInviteAuditAction = "student.invite";
 
 export type StudentCreateAuditAction = "student.create";
 
+export type StudentImportApplyAuditAction = "student.import.apply";
+
+export const STUDENT_IMPORT_AUDIT_ENTITY_TYPE = "StudentImport";
+
 export type StudentEmailChangePolicyMode =
   | "APP_USER"
   | "INVITED"
@@ -113,6 +117,40 @@ export function buildStudentInviteAuditMetadata(input: {
     appAccessMode: "INVITED",
     hasExistingInvitation: input.hasExistingInvitation,
   };
+}
+
+export function buildStudentImportApplyAuditMetadata(input: {
+  format: "csv" | "json";
+  totalRows: number;
+  createdCount: number;
+  skippedCount: number;
+}): Record<string, unknown> {
+  return {
+    totalRows: input.totalRows,
+    createdCount: input.createdCount,
+    updatedCount: 0,
+    skippedCount: input.skippedCount,
+    failedCount: 0,
+    dryRun: false,
+    source: "import",
+    format: input.format,
+    mode: "createOnly",
+    hasErrors: false,
+  };
+}
+
+/**
+ * Batch surrogate when the product has no persisted importId.
+ * Prefer inbound request correlation headers when present.
+ */
+export function resolveStudentImportApplyAuditEntityId(
+  requestContext?: AuditRequestContext,
+): string {
+  const requestId = requestContext?.requestId?.trim();
+  if (requestId) {
+    return requestId;
+  }
+  return crypto.randomUUID();
 }
 
 export function buildStudentCreateAuditMetadata(input: {
@@ -364,6 +402,39 @@ export async function writeStudentAppAccessRemoveAuditEvent(
       entityId: input.studentId,
       metadata: buildStudentAppAccessRemoveAuditMetadata({
         appAccessMode: input.appAccessMode,
+      }),
+      ...input.requestContext,
+    },
+    input.options,
+  );
+}
+
+export async function writeStudentImportApplyAuditEvent(input: {
+  organizationId: string;
+  actor: StudentAuditActor;
+  format: "csv" | "json";
+  totalRows: number;
+  createdCount: number;
+  skippedCount: number;
+  requestContext?: AuditRequestContext;
+  options?: WriteAuditEventOptions;
+}) {
+  const entityId = resolveStudentImportApplyAuditEntityId(input.requestContext);
+
+  return writeAuditEvent(
+    {
+      organizationId: input.organizationId,
+      actorUserId: input.actor.userId,
+      actorRole: input.actor.role,
+      actorEmail: input.actor.email ?? null,
+      action: "student.import.apply",
+      entityType: STUDENT_IMPORT_AUDIT_ENTITY_TYPE,
+      entityId,
+      metadata: buildStudentImportApplyAuditMetadata({
+        format: input.format,
+        totalRows: input.totalRows,
+        createdCount: input.createdCount,
+        skippedCount: input.skippedCount,
       }),
       ...input.requestContext,
     },

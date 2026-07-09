@@ -15,14 +15,14 @@ DAT has a **working audit write boundary** (`lib/audit/audit-log-service.ts` + d
 
 | Bucket | Approx. count | Notes |
 | ------ | ------------- | ----- |
-| **AUDITED** | 19 routes / 19 actions | See §2 — `lesson.create` on two routes (calendar + manual practical) |
+| **AUDITED** | 20 routes / 20 actions | See §2 — `lesson.create` on two routes (calendar + manual practical) |
 | **COVERED_BY_OTHER_EVENT** | 1 | `POST /api/admin/students/[id]/invite` → `student.invite` (not `invitation.create`) |
 | **CANDIDATE (P1)** | 0 | — |
-| **CANDIDATE (P2)** | 6 | Import apply summaries, vehicles, invitation accept |
+| **CANDIDATE (P2)** | 5 | Practical lessons import apply, vehicles, invitation accept |
 | **DEFERRED** | 10+ | Settings/feature flags/license, platform org, billing webhooks, bulk cleanup, legacy user create |
 | **NOT_NEEDED** | 12+ | Reads, dry-runs (zero-write), blocked legacy deletes |
 
-**Readiness verdict:** P1 write-path instrumentation for People/Lessons is **complete**. **Read API foundation** (`GET /api/admin/audit-logs`) and **viewer UI foundation** (`/admin/audit-logs`, URL-only) are available for tenant SUPER_ADMIN. Next priority: **import apply summary audits (P2)** or polish; platform viewer/export deferred.
+**Readiness verdict:** P1 write-path instrumentation for People/Lessons is **complete**. **Read API foundation** (`GET /api/admin/audit-logs`) and **viewer UI foundation** (`/admin/audit-logs`, URL-only) are available for tenant SUPER_ADMIN. Student import apply summary audit closed (`audit-log-write-paths-student-import-apply-v1`). Next priority: **practical lessons import apply summary audit (P2)** or polish; platform viewer/export deferred.
 
 **No runtime changes** in this batch — documentation and prioritization only.
 
@@ -50,6 +50,7 @@ DAT has a **working audit write boundary** (`lib/audit/audit-log-service.ts` + d
 | `student.email.change` | `Student` | `POST /api/admin/students/[id]/change-email` | `writeStudentEmailChangeAuditEvent` |
 | `student.delete` | `Student` | `DELETE /api/admin/students/[id]` | `writeStudentDeleteAuditEvent` |
 | `student.create` | `Student` | `POST /api/admin/students` | `writeStudentCreateAuditEvent` |
+| `student.import.apply` | `StudentImport` | `POST /api/admin/students/import/apply` | `writeStudentImportApplyAuditEvent` |
 | `student.invite` | `Student` | `POST /api/admin/students/[id]/invite` | `writeStudentInviteAuditEvent` |
 
 **Cross-cutting properties (all wired routes):**
@@ -142,7 +143,7 @@ Scanned: `app/api/admin/**/route.ts` plus operational siblings under `api/users`
 | `POST .../invite` | Profile invite | **AUDITED** | `student.invite` | Low | — | See Invitations |
 | `POST .../practical-lessons` | Manual completed practical history | **AUDITED** | `lesson.create` (`source: MANUAL`, `createdVia: manual_practical_lesson`) | Low | — | Reuses lesson helper; distinct route from calendar create |
 | `POST .../import/dry-run` | Preview import | **NOT_NEEDED** | — | — | — | Zero-write by contract |
-| `POST .../import/apply` | Bulk student import | **CANDIDATE** | `student.import.apply` (summary) | High — volume | **P2** | Row counts, error codes; no row payloads |
+| `POST .../import/apply` | Bulk student import | **AUDITED** | `student.import.apply` (summary) | High — volume | — | Row counts only; no row payloads |
 | `GET .../export` | Export students | **NOT_NEEDED** | — | — | — | Read-only |
 
 ### Instructors
@@ -216,7 +217,7 @@ Scanned: `app/api/admin/**/route.ts` plus operational siblings under `api/users`
 | -------- | -------- | ------ | ------ | ---- | -------- | --------------- |
 | Student/practical **export** GET routes | Export | **NOT_NEEDED** | — | — | — | Read-only |
 | Student/practical **import dry-run** POST | Preview | **NOT_NEEDED** | — | — | — | Zero-write |
-| Student **import apply** POST | Bulk create students | **CANDIDATE** | `student.import.apply` | High — volume | **P2** | Summary metadata only |
+| Student **import apply** POST | Bulk create students | **AUDITED** | `student.import.apply` | High — volume | — | Summary metadata only |
 | Practical **import apply** POST | Bulk create lessons | **CANDIDATE** | `lesson.import.apply` | High — volume | **P2** | Summary metadata only |
 
 ---
@@ -227,6 +228,7 @@ Ordered by foundation-plan MVP alignment and first-client operator need:
 
 **Recently closed:**
 
+- **`student.import.apply`** — Student bulk import apply summary audit (`audit-log-write-paths-student-import-apply-v1`); `POST /api/admin/students/import/apply`; one aggregated event when `applied: true`; metadata (`totalRows`, `createdCount`, `updatedCount: 0`, `skippedCount`, `failedCount: 0`, `dryRun: false`, `source: import`, `format`, `mode: createOnly`, `hasErrors: false`); `entityType: StudentImport`; `entityId` = request correlation id or UUID surrogate; no row payloads/PII; audit failure non-blocking; dry-run route unchanged (NOT_NEEDED).
 - **`lesson.create` (manual practical)** — Manual completed practical history audit (`audit-log-write-paths-manual-practical-lesson-v1`); `POST /api/admin/students/[id]/practical-lessons`; reuses `writeLessonCreateAuditEvent`; metadata (`lessonType`, operational ids, `source: MANUAL`, `practicalLessonNumber`, `scheduledAtDateOnly`, `createdVia: manual_practical_lesson`); no notes/names/emails; audit failure non-blocking; separate from calendar `POST /api/admin/lessons` (no duplication).
 - **`GET /api/admin/audit-logs`** — Tenant read API foundation (`audit-log-read-api-foundation-v1`); SUPER_ADMIN + host guard; cursor pagination (`createdAt` + `id`); filters; DTO omits `organizationId`, `ipAddress`, `userAgent`, `oldValues`, `newValues`; metadata re-redacted on read; no cross-tenant query param.
 - **`/admin/audit-logs`** — Viewer UI foundation (`audit-log-viewer-ui-foundation-v1`); read-only table + filters + Load more; consumes list API only; URL-only (not in main navbar; DEC-026 operator pattern); metadata truncated in UI; no entity name resolution.
@@ -239,7 +241,7 @@ Ordered by foundation-plan MVP alignment and first-client operator need:
 
 **Explicit non-gaps / defer:**
 
-- **Import apply** — valuable but volume-heavy; foundation plan says summary-only P2.
+- **Import apply (practical lessons)** — valuable but volume-heavy; student import apply closed in `audit-log-write-paths-student-import-apply-v1`.
 - **Settings / feature flags / license** — separate `configuration_history` + operator-internal surfaces (DEC-026).
 - **`invitation.accept`** — public route; P2 until accept auditing policy is agreed (tenant resolution + no token logging).
 - **Vehicles** — foundation MVP listed but lower operator urgency than People/Lessons for first client.
@@ -250,9 +252,8 @@ Ordered by foundation-plan MVP alignment and first-client operator need:
 
 | # | Slice name | Scope | Why now |
 | - | ---------- | ----- | ------- |
-| 1 | `audit-log-write-paths-student-import-apply-v1` | `POST /api/admin/students/import/apply` → summary `student.import.apply` | P2 volume audit; only if operator need confirmed |
-| 2 | `audit-log-write-paths-practical-lessons-import-apply-v1` | `POST /api/admin/practical-lessons/import/apply` → summary `lesson.import.apply` | P2 volume audit; only if operator need confirmed |
-| 3 | `audit-log-viewer-export-v1` | CSV export from viewer (deferred until product need) | Optional; not blocking production |
+| 1 | `audit-log-write-paths-practical-lessons-import-apply-v1` | `POST /api/admin/practical-lessons/import/apply` → summary `lesson.import.apply` | P2 volume audit; only if operator need confirmed |
+| 2 | `audit-log-viewer-export-v1` | CSV export from viewer (deferred until product need) | Optional; not blocking production |
 
 **Defer to slice 4+ (not in top 3):** import apply summaries (if not confirmed), vehicles, invitation accept.
 
@@ -283,6 +284,7 @@ Ordered by foundation-plan MVP alignment and first-client operator need:
 | Linked student invite vs unlinked invitation create | **`student.invite`** vs **`invitation.create`** — never both for one mutation |
 | Student email change vs invitation email change on linked invite | Separate actions on separate routes; metadata flags only |
 | Manual practical lesson vs calendar lesson create | Prefer **`lesson.create`** + `source: MANUAL` + `createdVia: manual_practical_lesson` on manual route; calendar route uses `source: SYSTEM` — same action, distinct metadata; never duplicate on one mutation |
+| Student bulk import apply vs manual/per-row create | **`student.import.apply`** (summary, `StudentImport`) on import apply route when `applied: true`; **`student.create`** on manual `POST /api/admin/students` only — never emit per-row `student.create` during import apply |
 | `PUT /api/users/update` vs `PATCH /api/admin/instructors/[id]` | Avoid duplicate audit for qualified categories; profile-only `instructor.update` if instrumented |
 
 ---

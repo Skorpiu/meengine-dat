@@ -16,14 +16,17 @@ import {
   buildStudentCreateAuditMetadata,
   buildStudentDeleteAuditMetadata,
   buildStudentEmailChangeAuditMetadata,
+  buildStudentImportApplyAuditMetadata,
   buildStudentInviteAuditMetadata,
   buildStudentProfileUpdateAuditMetadata,
   collectStudentProfileUpdateChangedFields,
+  resolveStudentImportApplyAuditEntityId,
   writeStudentAppAccessReactivateAuditEvent,
   writeStudentAppAccessRemoveAuditEvent,
   writeStudentCreateAuditEvent,
   writeStudentDeleteAuditEvent,
   writeStudentEmailChangeAuditEvent,
+  writeStudentImportApplyAuditEvent,
   writeStudentInviteAuditEvent,
   writeStudentProfileUpdateAuditEvent,
 } from "@/lib/audit/student-audit";
@@ -388,6 +391,83 @@ describe("buildStudentCreateAuditContextFromRecord", () => {
       schoolStudentIdPresent: true,
       createdVia: "manual",
     });
+  });
+});
+
+describe("buildStudentImportApplyAuditMetadata", () => {
+  it("includes aggregated counts and format without row payloads", () => {
+    expect(
+      buildStudentImportApplyAuditMetadata({
+        format: "csv",
+        totalRows: 3,
+        createdCount: 3,
+        skippedCount: 0,
+      }),
+    ).toEqual({
+      totalRows: 3,
+      createdCount: 3,
+      updatedCount: 0,
+      skippedCount: 0,
+      failedCount: 0,
+      dryRun: false,
+      source: "import",
+      format: "csv",
+      mode: "createOnly",
+      hasErrors: false,
+    });
+  });
+});
+
+describe("resolveStudentImportApplyAuditEntityId", () => {
+  it("prefers requestId from request context", () => {
+    expect(
+      resolveStudentImportApplyAuditEntityId({ requestId: "req-import-1" }),
+    ).toBe("req-import-1");
+  });
+
+  it("generates a surrogate batch id when requestId is absent", () => {
+    const id = resolveStudentImportApplyAuditEntityId(undefined);
+    expect(id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
+  });
+});
+
+describe("writeStudentImportApplyAuditEvent", () => {
+  it("writes student.import.apply with StudentImport entity and summary metadata", async () => {
+    await writeStudentImportApplyAuditEvent({
+      organizationId: "org-a",
+      actor,
+      format: "json",
+      totalRows: 2,
+      createdCount: 2,
+      skippedCount: 0,
+      requestContext: { requestId: "req-batch-99" },
+    });
+
+    expect(h.writeAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        action: "student.import.apply",
+        entityType: "StudentImport",
+        entityId: "req-batch-99",
+        metadata: buildStudentImportApplyAuditMetadata({
+          format: "json",
+          totalRows: 2,
+          createdCount: 2,
+          skippedCount: 0,
+        }),
+      }),
+      undefined,
+    );
+
+    const payload = JSON.stringify(h.writeAuditEventMock.mock.calls[0]?.[0]);
+    expect(payload).not.toContain("João");
+    expect(payload).not.toContain("student@");
+    expect(payload).not.toContain("26001");
+    expect(
+      h.writeAuditEventMock.mock.calls[0]?.[0].metadata,
+    ).not.toHaveProperty("preview");
   });
 });
 
