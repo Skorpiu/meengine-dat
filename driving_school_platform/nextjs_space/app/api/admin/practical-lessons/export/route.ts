@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { errorResponse } from "@/lib/api-utils";
 import { HTTP_STATUS } from "@/lib/constants";
+import type { UserRole } from "@prisma/client";
+import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
+import { writeLessonExportDownloadAuditEvent } from "@/lib/audit/lesson-audit";
 import { assertUserTenantHost } from "@/lib/users/user-route-access";
 import {
   buildPracticalLessonExportPayload,
@@ -28,10 +31,13 @@ function isLessonSource(value: string): value is LessonSource {
   return (LESSON_SOURCES as readonly string[]).includes(value);
 }
 
-async function requireSuperAdminTenant(
-  request: NextRequest,
-): Promise<
-  { ok: true; organizationId: string } | { ok: false; response: NextResponse }
+async function requireSuperAdminTenant(request: NextRequest): Promise<
+  | {
+      ok: true;
+      organizationId: string;
+      actor: { userId: string; role: UserRole; email?: string | null };
+    }
+  | { ok: false; response: NextResponse }
 > {
   const session = await getServerSession(authOptions);
 
@@ -62,7 +68,15 @@ async function requireSuperAdminTenant(
     return { ok: false, response: tenantDenied };
   }
 
-  return { ok: true, organizationId: orgId };
+  return {
+    ok: true,
+    organizationId: orgId,
+    actor: {
+      userId: session.user.id,
+      role: session.user.role as UserRole,
+      email: session.user.email,
+    },
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -82,6 +96,14 @@ export async function GET(request: NextRequest) {
     if (sourceParam && !source) {
       return errorResponse("invalid_lesson_source", HTTP_STATUS.BAD_REQUEST);
     }
+
+    const filterKeys: string[] = [];
+    if (source) filterKeys.push("source");
+    if (searchParams.get("studentId")?.trim()) filterKeys.push("studentId");
+    if (searchParams.get("schoolStudentId")?.trim())
+      filterKeys.push("schoolStudentId");
+    if (searchParams.get("from")?.trim()) filterKeys.push("from");
+    if (searchParams.get("to")?.trim()) filterKeys.push("to");
 
     const result = await listPracticalLessonsForExport({
       organizationId: auth.organizationId,
@@ -104,8 +126,19 @@ export async function GET(request: NextRequest) {
 
     const exportRows = result.rows.map(mapPracticalLessonToExportRow);
     const exportedAt = new Date();
+    const requestContext = extractAuditRequestContext(request);
 
     if (formatParam === "json") {
+      await writeLessonExportDownloadAuditEvent({
+        organizationId: auth.organizationId,
+        actor: auth.actor,
+        format: "json",
+        exportedCount: exportRows.length,
+        hasFilters: filterKeys.length > 0,
+        filterKeys,
+        requestContext,
+      });
+
       return NextResponse.json(
         buildPracticalLessonExportPayload(exportRows, exportedAt),
         {
@@ -119,6 +152,16 @@ export async function GET(request: NextRequest) {
 
     const csv = serializePracticalLessonExportRowsToCsv(exportRows);
     const filenameDate = exportedAt.toISOString().slice(0, 10);
+
+    await writeLessonExportDownloadAuditEvent({
+      organizationId: auth.organizationId,
+      actor: auth.actor,
+      format: "csv",
+      exportedCount: exportRows.length,
+      hasFilters: filterKeys.length > 0,
+      filterKeys,
+      requestContext,
+    });
 
     return new NextResponse(csv, {
       status: HTTP_STATUS.OK,

@@ -12,12 +12,15 @@ vi.mock("@/lib/audit/audit-log-service", () => ({
 import {
   buildLessonCreateAuditMetadata,
   buildLessonDeleteAuditMetadata,
+  buildLessonExportDownloadAuditMetadata,
   buildLessonImportApplyAuditMetadata,
   buildLessonUpdateAuditMetadata,
   collectLessonUpdateChangedFields,
+  resolveLessonExportDownloadAuditEntityId,
   resolveLessonImportApplyAuditEntityId,
   writeLessonCreateAuditEvent,
   writeLessonDeleteAuditEvent,
+  writeLessonExportDownloadAuditEvent,
   writeLessonImportApplyAuditEvent,
   writeLessonUpdateAuditEvent,
 } from "@/lib/audit/lesson-audit";
@@ -115,6 +118,28 @@ describe("buildLessonImportApplyAuditMetadata", () => {
   });
 });
 
+describe("buildLessonExportDownloadAuditMetadata", () => {
+  it("includes minimal access metadata only", () => {
+    expect(
+      buildLessonExportDownloadAuditMetadata({
+        format: "csv",
+        exportedCount: 2,
+        hasFilters: true,
+        filterKeys: ["source"],
+        lessonType: "DRIVING",
+      }),
+    ).toEqual({
+      format: "csv",
+      exportedCount: 2,
+      hasFilters: true,
+      filterKeys: ["source"],
+      source: "admin_export",
+      includesPii: true,
+      lessonType: "DRIVING",
+    });
+  });
+});
+
 describe("resolveLessonImportApplyAuditEntityId", () => {
   it("prefers requestId from request context", () => {
     expect(
@@ -124,6 +149,21 @@ describe("resolveLessonImportApplyAuditEntityId", () => {
 
   it("generates a surrogate batch id when requestId is absent", () => {
     const id = resolveLessonImportApplyAuditEntityId(undefined);
+    expect(id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
+  });
+});
+
+describe("resolveLessonExportDownloadAuditEntityId", () => {
+  it("prefers requestId from request context", () => {
+    expect(
+      resolveLessonExportDownloadAuditEntityId({ requestId: "req-exp-1" }),
+    ).toBe("req-exp-1");
+  });
+
+  it("generates a surrogate batch id when requestId is absent", () => {
+    const id = resolveLessonExportDownloadAuditEntityId(undefined);
     expect(id).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
     );
@@ -164,6 +204,42 @@ describe("writeLessonImportApplyAuditEvent", () => {
     expect(
       h.writeAuditEventMock.mock.calls[0]?.[0].metadata,
     ).not.toHaveProperty("preview");
+  });
+});
+
+describe("writeLessonExportDownloadAuditEvent", () => {
+  it("writes lesson.export.download with LessonExport entity and minimal metadata", async () => {
+    await writeLessonExportDownloadAuditEvent({
+      organizationId: "org-a",
+      actor,
+      format: "json",
+      exportedCount: 1,
+      hasFilters: false,
+      filterKeys: [],
+      requestContext: { requestId: "req-export-99" },
+    });
+
+    expect(h.writeAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        action: "lesson.export.download",
+        entityType: "LessonExport",
+        entityId: "req-export-99",
+        metadata: buildLessonExportDownloadAuditMetadata({
+          format: "json",
+          exportedCount: 1,
+          hasFilters: false,
+          filterKeys: [],
+          lessonType: "DRIVING",
+        }),
+      }),
+      undefined,
+    );
+
+    const payload = JSON.stringify(h.writeAuditEventMock.mock.calls[0]?.[0]);
+    expect(payload).not.toContain("instrutor@");
+    expect(payload).not.toContain("Histórico");
+    expect(payload).not.toContain("26001");
   });
 });
 

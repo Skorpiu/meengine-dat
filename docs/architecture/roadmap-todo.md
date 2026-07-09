@@ -70,6 +70,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `audit-log-write-paths-student-import-apply-v1` | **Done** | Student import apply summary audit; `POST /api/admin/students/import/apply` (`student.import.apply`); aggregated metadata; `StudentImport` entity; tests |
 | `audit-log-write-paths-practical-lessons-import-apply-v1` | **Done** | Practical lessons import apply summary audit; `POST /api/admin/practical-lessons/import/apply` (`lesson.import.apply`); aggregated metadata; `LessonImport` entity; tests |
 | `audit-log-access-events-student-export-v1` | **Done** | Student export download access audit; `GET /api/admin/students/export` (`student.export.download`); minimal metadata; `StudentExport` entity; tests |
+| `audit-log-access-events-practical-lessons-export-v1` | **Done** | Practical lessons export download access audit; `GET /api/admin/practical-lessons/export` (`lesson.export.download`); minimal metadata; `LessonExport` entity; tests |
 | **First-client operator smoke (re-run lessons edit)** | **Done (operator)** | Manual smoke green after modal edit deploy (main `a9549bf`) |
 
 ---
