@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { errorResponse } from "@/lib/api-utils";
 import { HTTP_STATUS } from "@/lib/constants";
+import type { UserRole } from "@prisma/client";
+import { extractAuditRequestContext } from "@/lib/audit/audit-log-service";
+import { writeStudentExportDownloadAuditEvent } from "@/lib/audit/student-audit";
 import { assertUserTenantHost } from "@/lib/users/user-route-access";
 import { listStudentRecordsForExport } from "@/lib/students/student-record-queries";
 import { isStudentAppAccessModeParam } from "@/lib/students/student-record-validation";
@@ -22,10 +25,13 @@ function isExportFormat(value: string): value is ExportFormat {
   return (EXPORT_FORMATS as readonly string[]).includes(value);
 }
 
-async function requireSuperAdminTenant(
-  request: NextRequest,
-): Promise<
-  { ok: true; organizationId: string } | { ok: false; response: NextResponse }
+async function requireSuperAdminTenant(request: NextRequest): Promise<
+  | {
+      ok: true;
+      organizationId: string;
+      actor: { userId: string; role: UserRole; email?: string | null };
+    }
+  | { ok: false; response: NextResponse }
 > {
   const session = await getServerSession(authOptions);
 
@@ -56,7 +62,15 @@ async function requireSuperAdminTenant(
     return { ok: false, response: tenantDenied };
   }
 
-  return { ok: true, organizationId: orgId };
+  return {
+    ok: true,
+    organizationId: orgId,
+    actor: {
+      userId: session.user.id,
+      role: session.user.role as UserRole,
+      email: session.user.email,
+    },
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -81,6 +95,10 @@ export async function GET(request: NextRequest) {
       return errorResponse("invalid_app_access_mode", HTTP_STATUS.BAD_REQUEST);
     }
 
+    const filterKeys: string[] = [];
+    if (search?.trim()) filterKeys.push("search");
+    if (appAccessMode) filterKeys.push("appAccessMode");
+
     const rows = await listStudentRecordsForExport({
       organizationId: auth.organizationId,
       search,
@@ -89,8 +107,19 @@ export async function GET(request: NextRequest) {
 
     const exportRows = rows.map(mapStudentToExportRow);
     const exportedAt = new Date();
+    const requestContext = extractAuditRequestContext(request);
 
     if (formatParam === "json") {
+      await writeStudentExportDownloadAuditEvent({
+        organizationId: auth.organizationId,
+        actor: auth.actor,
+        format: "json",
+        exportedCount: exportRows.length,
+        hasFilters: filterKeys.length > 0,
+        filterKeys,
+        requestContext,
+      });
+
       return NextResponse.json(
         buildStudentExportPayload(exportRows, exportedAt),
         {
@@ -104,6 +133,16 @@ export async function GET(request: NextRequest) {
 
     const csv = serializeStudentExportRowsToCsv(exportRows);
     const filenameDate = exportedAt.toISOString().slice(0, 10);
+
+    await writeStudentExportDownloadAuditEvent({
+      organizationId: auth.organizationId,
+      actor: auth.actor,
+      format: "csv",
+      exportedCount: exportRows.length,
+      hasFilters: filterKeys.length > 0,
+      filterKeys,
+      requestContext,
+    });
 
     return new NextResponse(csv, {
       status: HTTP_STATUS.OK,

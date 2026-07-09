@@ -15,7 +15,7 @@ DAT has a **working audit write boundary** (`lib/audit/audit-log-service.ts` + d
 
 | Bucket | Approx. count | Notes |
 | ------ | ------------- | ----- |
-| **AUDITED** | 21 routes / 21 actions | See §2 — `lesson.create` on two routes (calendar + manual practical) |
+| **AUDITED** | 21+ routes / 21+ actions | Includes access events (export) in addition to mutations; see §2 and §4–5 |
 | **COVERED_BY_OTHER_EVENT** | 1 | `POST /api/admin/students/[id]/invite` → `student.invite` (not `invitation.create`) |
 | **CANDIDATE (P1)** | 0 | — |
 | **CANDIDATE (P2)** | 4 | Vehicles, invitation accept |
@@ -145,7 +145,7 @@ Scanned: `app/api/admin/**/route.ts` plus operational siblings under `api/users`
 | `POST .../practical-lessons` | Manual completed practical history | **AUDITED** | `lesson.create` (`source: MANUAL`, `createdVia: manual_practical_lesson`) | Low | — | Reuses lesson helper; distinct route from calendar create |
 | `POST .../import/dry-run` | Preview import | **NOT_NEEDED** | — | — | — | Zero-write by contract |
 | `POST .../import/apply` | Bulk student import | **AUDITED** | `student.import.apply` (summary) | High — volume | — | Row counts only; no row payloads |
-| `GET .../export` | Export students | **NOT_NEEDED** | — | — | — | Read-only |
+| `GET .../export` | Export students | **AUDITED** | `student.export.download` (access) | Medium — PII extraction | — | Access event only; no row payloads; `includesPii: true` |
 
 ### Instructors
 

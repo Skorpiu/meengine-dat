@@ -68,6 +68,8 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `audit-log-viewer-ui-foundation-v1` | **Done** | `/admin/audit-logs` read-only viewer; filters + Load more; URL-only nav; client tests |
 | `audit-log-coverage-readiness-review-v1` | **Done (docs)** | Admin write-path audit coverage matrix + P1 gap analysis + next 3 slices; [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md) |
 | `audit-log-write-paths-student-import-apply-v1` | **Done** | Student import apply summary audit; `POST /api/admin/students/import/apply` (`student.import.apply`); aggregated metadata; `StudentImport` entity; tests |
+| `audit-log-write-paths-practical-lessons-import-apply-v1` | **Done** | Practical lessons import apply summary audit; `POST /api/admin/practical-lessons/import/apply` (`lesson.import.apply`); aggregated metadata; `LessonImport` entity; tests |
+| `audit-log-access-events-student-export-v1` | **Done** | Student export download access audit; `GET /api/admin/students/export` (`student.export.download`); minimal metadata; `StudentExport` entity; tests |
 | **First-client operator smoke (re-run lessons edit)** | **Done (operator)** | Manual smoke green after modal edit deploy (main `a9549bf`) |
 
 ---

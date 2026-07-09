@@ -16,16 +16,19 @@ import {
   buildStudentCreateAuditMetadata,
   buildStudentDeleteAuditMetadata,
   buildStudentEmailChangeAuditMetadata,
+  buildStudentExportDownloadAuditMetadata,
   buildStudentImportApplyAuditMetadata,
   buildStudentInviteAuditMetadata,
   buildStudentProfileUpdateAuditMetadata,
   collectStudentProfileUpdateChangedFields,
+  resolveStudentExportDownloadAuditEntityId,
   resolveStudentImportApplyAuditEntityId,
   writeStudentAppAccessReactivateAuditEvent,
   writeStudentAppAccessRemoveAuditEvent,
   writeStudentCreateAuditEvent,
   writeStudentDeleteAuditEvent,
   writeStudentEmailChangeAuditEvent,
+  writeStudentExportDownloadAuditEvent,
   writeStudentImportApplyAuditEvent,
   writeStudentInviteAuditEvent,
   writeStudentProfileUpdateAuditEvent,
@@ -418,6 +421,26 @@ describe("buildStudentImportApplyAuditMetadata", () => {
   });
 });
 
+describe("buildStudentExportDownloadAuditMetadata", () => {
+  it("includes minimal access metadata only", () => {
+    expect(
+      buildStudentExportDownloadAuditMetadata({
+        format: "csv",
+        exportedCount: 2,
+        hasFilters: true,
+        filterKeys: ["search"],
+      }),
+    ).toEqual({
+      format: "csv",
+      exportedCount: 2,
+      hasFilters: true,
+      filterKeys: ["search"],
+      source: "admin_export",
+      includesPii: true,
+    });
+  });
+});
+
 describe("resolveStudentImportApplyAuditEntityId", () => {
   it("prefers requestId from request context", () => {
     expect(
@@ -427,6 +450,21 @@ describe("resolveStudentImportApplyAuditEntityId", () => {
 
   it("generates a surrogate batch id when requestId is absent", () => {
     const id = resolveStudentImportApplyAuditEntityId(undefined);
+    expect(id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
+  });
+});
+
+describe("resolveStudentExportDownloadAuditEntityId", () => {
+  it("prefers requestId from request context", () => {
+    expect(
+      resolveStudentExportDownloadAuditEntityId({ requestId: "req-export-1" }),
+    ).toBe("req-export-1");
+  });
+
+  it("generates a surrogate batch id when requestId is absent", () => {
+    const id = resolveStudentExportDownloadAuditEntityId(undefined);
     expect(id).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
     );
@@ -468,6 +506,41 @@ describe("writeStudentImportApplyAuditEvent", () => {
     expect(
       h.writeAuditEventMock.mock.calls[0]?.[0].metadata,
     ).not.toHaveProperty("preview");
+  });
+});
+
+describe("writeStudentExportDownloadAuditEvent", () => {
+  it("writes student.export.download with StudentExport entity and minimal metadata", async () => {
+    await writeStudentExportDownloadAuditEvent({
+      organizationId: "org-a",
+      actor,
+      format: "json",
+      exportedCount: 1,
+      hasFilters: false,
+      filterKeys: [],
+      requestContext: { requestId: "req-export-99" },
+    });
+
+    expect(h.writeAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        action: "student.export.download",
+        entityType: "StudentExport",
+        entityId: "req-export-99",
+        metadata: buildStudentExportDownloadAuditMetadata({
+          format: "json",
+          exportedCount: 1,
+          hasFilters: false,
+          filterKeys: [],
+        }),
+      }),
+      undefined,
+    );
+
+    const payload = JSON.stringify(h.writeAuditEventMock.mock.calls[0]?.[0]);
+    expect(payload).not.toContain("João");
+    expect(payload).not.toContain("joao@school.test");
+    expect(payload).not.toContain("26001");
   });
 });
 
