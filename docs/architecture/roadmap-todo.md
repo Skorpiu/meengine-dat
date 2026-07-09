@@ -290,7 +290,7 @@ Parent batch — always slice before implementing.
 
 - ~~Plan adding `organizationId` to `AuditLog`~~ — **done** (nullable; platform-scoped NULL preserved).
 - ~~Index `organizationId` and `(organizationId, createdAt)`~~ — **done** in migration `20260702120000_audit_log_tenant_context_v1`.
-- **Next:** expand audit wiring to student delete/invite and lesson delete/import in small gated slices.
+- ~~Expand audit wiring to student delete/invite and lesson delete/import~~ — **done** (write paths, import apply summaries, and export access events wired; read API + viewer UI foundation implemented).
 - `AuditLog` remains a sensitive/internal table per `database.mdc` — RLS/grants unchanged (Class-B).
 
 ### lesson-student-nullability-policy-review

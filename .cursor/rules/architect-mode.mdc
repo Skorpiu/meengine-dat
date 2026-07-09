@@ -355,12 +355,12 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Production cutline (DEC-032):** Controlled first B2B client — invite-only, `PUBLIC_SIGNUP_ENABLED=false`, no live billing. See `docs/architecture/production-readiness-cutline.md`.
 
-**Do not open next:** `calendar-lessons-polish-v1e-student-warnings`, `mobile-tablet-readiness-review-v1`, `competitive-product-discovery-v1`, audit log runtime/migration, billing/checkout, instructor route split (D4).
+**Do not open next:** `calendar-lessons-polish-v1e-student-warnings`, `mobile-tablet-readiness-review-v1`, `competitive-product-discovery-v1`, audit log platform viewer/export/RLS policy work, billing/checkout, instructor route split (D4).
 
 **Likely next after mutation smoke slice:**
 
 2. `production-first-client-onboarding-record-v1` — operator evidence doc
-3. `audit-log-tenant-context-foundation-plan-v1` — planning only (P1 docs)
+3. `lesson-student-nullability-policy-review-v1` — policy docs (P2)
 4. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
 5. `lesson-student-nullability-policy-review-v1` — policy docs (P2)
 
