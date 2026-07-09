@@ -56,6 +56,16 @@ vi.mock("@/lib/users/user-route-access", async () => {
   };
 });
 
+vi.mock("@/lib/audit/lesson-audit", async () => {
+  const actual = await vi.importActual<
+    typeof import("@/lib/audit/lesson-audit")
+  >("@/lib/audit/lesson-audit");
+  return {
+    ...actual,
+    writeLessonImportApplyAuditEvent: vi.fn(),
+  };
+});
+
 const demoGuardHoisted = vi.hoisted(() => ({
   decideDemoRouteMutationMock: vi.fn(),
 }));
@@ -79,6 +89,7 @@ vi.mock("@/lib/lessons/manual-practical-lesson-service", async () => {
 import { POST } from "./route";
 import { getServerSession } from "next-auth";
 import { assertUserTenantHost } from "@/lib/users/user-route-access";
+import { writeLessonImportApplyAuditEvent } from "@/lib/audit/lesson-audit";
 import { PRACTICAL_LESSON_IMPORT_CSV_HEADERS } from "@/lib/import-export/import-export-contracts";
 import { LESSON_TYPES } from "@/lib/constants";
 
@@ -88,6 +99,8 @@ const getServerSessionMock = getServerSession as unknown as ReturnType<
 const assertUserTenantHostMock = assertUserTenantHost as unknown as ReturnType<
   typeof vi.fn
 >;
+const writeLessonImportApplyAuditEventMock =
+  writeLessonImportApplyAuditEvent as unknown as ReturnType<typeof vi.fn>;
 
 const INSTRUCTOR_USER_ID = "11111111-1111-1111-1111-111111111111";
 const INSTRUCTOR_RECORD_ID = "22222222-2222-2222-2222-222222222222";
@@ -142,6 +155,10 @@ beforeEach(() => {
   assertUserTenantHostMock.mockResolvedValue(null);
   demoGuardHoisted.decideDemoRouteMutationMock.mockResolvedValue({
     allowed: true,
+  });
+  writeLessonImportApplyAuditEventMock.mockResolvedValue({
+    ok: true,
+    id: "audit-import-1",
   });
 });
 
@@ -360,5 +377,204 @@ describe("POST /api/admin/practical-lessons/import/apply", () => {
 
     expect(h.userCreateMock).not.toHaveBeenCalled();
     expect(h.invitationCreateMock).not.toHaveBeenCalled();
+  });
+
+  it("emits one lesson.import.apply audit with organizationId on successful apply", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
+    });
+
+    const res = await POST(
+      req({
+        format: "csv",
+        content: `${CSV_HEADER}\n26001;3;2026-05-29;09:00;60;instrutor@school.test;Nota importada`,
+      }) as any,
+    );
+
+    expect(res.status).toBe(200);
+    expect(writeLessonImportApplyAuditEventMock).toHaveBeenCalledTimes(1);
+    expect(writeLessonImportApplyAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        actor: {
+          userId: "admin-1",
+          role: "SUPER_ADMIN",
+          email: "admin@school.test",
+        },
+        format: "csv",
+        totalRows: 1,
+        createdCount: 1,
+        skippedCount: 0,
+        requestContext: expect.objectContaining({
+          requestMethod: "POST",
+          requestPath: "/api/admin/practical-lessons/import/apply",
+        }),
+      }),
+    );
+
+    const auditPayload = JSON.stringify(
+      writeLessonImportApplyAuditEventMock.mock.calls[0]?.[0],
+    );
+    expect(auditPayload).not.toContain("Nota importada");
+    expect(auditPayload).not.toContain("instrutor@school.test");
+    expect(auditPayload).not.toContain("26001");
+  });
+
+  it("does not audit when apply is rejected (invalid rows)", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+
+    await POST(
+      req({
+        format: "csv",
+        content: `${CSV_HEADER}\n26001;1;2026-05-29;09:00;60;bad-email;`,
+      }) as any,
+    );
+
+    expect(writeLessonImportApplyAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("does not audit when duplicate exists in database", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    h.lessonFindManyMock.mockResolvedValue([
+      { studentId: "student-1", practicalLessonNumber: 2 },
+    ]);
+
+    await POST(
+      req({
+        format: "json",
+        rows: [
+          {
+            schoolStudentId: "26001",
+            practicalLessonNumber: 2,
+            lessonDate: "2026-05-29",
+            startTime: "09:00",
+            instructorEmail: "instrutor@school.test",
+          },
+        ],
+      }) as any,
+    );
+
+    expect(writeLessonImportApplyAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("does not audit on 401, 403, or 400", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "u1", role: "INSTRUCTOR", organizationId: "org-a" },
+    });
+    await POST(req({ format: "json", rows: [] }) as any);
+    expect(writeLessonImportApplyAuditEventMock).not.toHaveBeenCalled();
+
+    vi.resetAllMocks();
+    h.studentFindManyMock.mockResolvedValue([
+      { id: "student-1", schoolStudentId: "26001" },
+    ]);
+    h.instructorFindManyMock.mockImplementation(async (args: unknown) => {
+      const query = args as {
+        where?: {
+          user?: { email?: { in?: string[] } };
+          userId?: { in?: string[] };
+        };
+      };
+      if (query.where?.user?.email) {
+        return [
+          {
+            userId: INSTRUCTOR_USER_ID,
+            user: { email: "instrutor@school.test" },
+          },
+        ];
+      }
+      if (query.where?.userId) {
+        return [{ id: INSTRUCTOR_RECORD_ID, userId: INSTRUCTOR_USER_ID }];
+      }
+      return [];
+    });
+    h.lessonFindManyMock.mockResolvedValue([]);
+    h.lessonCreateMock.mockResolvedValue({ id: "lesson-new" });
+    h.transactionMock.mockImplementation(async (callback: unknown) => {
+      if (typeof callback === "function") {
+        return callback(h.prismaMock);
+      }
+      return callback;
+    });
+    h.resolveCategoryMock.mockResolvedValue({ ok: true, categoryId: 2 });
+    assertUserTenantHostMock.mockResolvedValue(null);
+    demoGuardHoisted.decideDemoRouteMutationMock.mockResolvedValue({
+      allowed: true,
+    });
+    writeLessonImportApplyAuditEventMock.mockResolvedValue({
+      ok: true,
+      id: "audit-import-1",
+    });
+
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-demo" },
+    });
+    demoGuardHoisted.decideDemoRouteMutationMock.mockResolvedValue({
+      allowed: false,
+      reason: "demo_restricted_action",
+      status: 403,
+      message: "This action is restricted in the public demo environment.",
+    });
+    await POST(
+      req({
+        format: "csv",
+        content: `${CSV_HEADER}\n26001;1;2026-05-29;09:00;60;instrutor@school.test;`,
+      }) as any,
+    );
+    expect(writeLessonImportApplyAuditEventMock).not.toHaveBeenCalled();
+
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+    });
+    demoGuardHoisted.decideDemoRouteMutationMock.mockResolvedValue({
+      allowed: true,
+    });
+    await POST(req({ format: "xml", content: "x" }) as any);
+    expect(writeLessonImportApplyAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("POST still returns 200 when audit write fails", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
+    });
+    writeLessonImportApplyAuditEventMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+
+    const res = await POST(
+      req({
+        format: "json",
+        rows: [
+          {
+            schoolStudentId: "26001",
+            practicalLessonNumber: 5,
+            lessonDate: "2026-05-29",
+            startTime: "09:00",
+            instructorEmail: "instrutor@school.test",
+          },
+        ],
+      }) as any,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.data.applied).toBe(true);
+    expect(writeLessonImportApplyAuditEventMock).toHaveBeenCalledTimes(1);
+    expect(h.lessonCreateMock).toHaveBeenCalled();
   });
 });

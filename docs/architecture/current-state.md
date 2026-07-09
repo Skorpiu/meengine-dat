@@ -269,10 +269,11 @@ Documented and in use (docs/rules only; no runtime change):
 - `audit-log-read-api-foundation-v1` — `GET /api/admin/audit-logs` tenant-scoped read API; `lib/audit/audit-log-query-params.ts` + `lib/audit/audit-log-query-service.ts`; SUPER_ADMIN + host guard; cursor pagination; filters; DTO omits `ipAddress`/`userAgent`/`organizationId`; metadata re-redacted on read; route + helper unit tests. Validated via `pnpm check`.
 - `audit-log-viewer-ui-foundation-v1` — `/admin/audit-logs` read-only viewer; `AuditLogsClient` + `audit-log-list-client`; filters + cursor Load more; URL-only access (no main navbar link; DEC-026 pattern); SSR `SUPER_ADMIN` guard; client + ui-utils unit tests. Validated via `pnpm check`.
 - `audit-log-write-paths-student-import-apply-v1` — wired `student.import.apply` into `POST /api/admin/students/import/apply`; one aggregated audit when `applied: true`; `entityType: StudentImport`; summary metadata (counts, `format`, `mode: createOnly`); no row payloads/PII; audit failure non-blocking; dry-run route unchanged; route + helper unit tests. Validated via `pnpm check`.
+- `audit-log-write-paths-practical-lessons-import-apply-v1` — wired `lesson.import.apply` into `POST /api/admin/practical-lessons/import/apply`; one aggregated audit when `applied: true`; `entityType: LessonImport`; summary metadata (counts, `format`, `mode: createOnly`, `lessonSource: IMPORT`, `lessonType: DRIVING`); no row payloads/PII (no instructor email, no adminNotes, no schoolStudentId literals); audit failure non-blocking; dry-run route unchanged; route + helper unit tests. Validated via `pnpm check`.
 
 ### Likely next (production path)
 
-1. `audit-log-write-paths-practical-lessons-import-apply-v1` — summary audit for practical lessons import apply (P2; operator need)
+1. `audit-log-viewer-export-v1` — CSV export from viewer (optional; product need)
 
 ### Deferred (not next)
 

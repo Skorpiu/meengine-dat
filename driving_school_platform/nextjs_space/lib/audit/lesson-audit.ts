@@ -13,11 +13,15 @@ export type LessonAuditAction =
   | "lesson.update"
   | "lesson.delete";
 
+export type LessonImportApplyAuditAction = "lesson.import.apply";
+
 export type LessonAuditActor = {
   userId: string;
   role: UserRole;
   email?: string | null;
 };
+
+export const LESSON_IMPORT_AUDIT_ENTITY_TYPE = "LessonImport";
 
 export type LessonAuditSnapshot = {
   id: string;
@@ -47,6 +51,42 @@ type WriteLessonAuditEventBase = {
   requestContext?: AuditRequestContext;
   options?: WriteAuditEventOptions;
 };
+
+export function buildLessonImportApplyAuditMetadata(input: {
+  format: "csv" | "json";
+  totalRows: number;
+  createdCount: number;
+  skippedCount: number;
+}): Record<string, unknown> {
+  return {
+    totalRows: input.totalRows,
+    createdCount: input.createdCount,
+    updatedCount: 0,
+    skippedCount: input.skippedCount,
+    failedCount: 0,
+    dryRun: false,
+    source: "import",
+    format: input.format,
+    mode: "createOnly",
+    lessonSource: "IMPORT",
+    lessonType: "DRIVING",
+    hasErrors: false,
+  };
+}
+
+/**
+ * Batch surrogate when the product has no persisted importId.
+ * Prefer inbound request correlation headers when present.
+ */
+export function resolveLessonImportApplyAuditEntityId(
+  requestContext?: AuditRequestContext,
+): string {
+  const requestId = requestContext?.requestId?.trim();
+  if (requestId) {
+    return requestId;
+  }
+  return crypto.randomUUID();
+}
 
 export function buildLessonCreateAuditMetadata(
   lesson: LessonAuditSnapshot,
@@ -226,6 +266,39 @@ export async function writeLessonDeleteAuditEvent(
       entityType: LESSON_AUDIT_ENTITY_TYPE,
       entityId: input.lesson.id,
       metadata: buildLessonDeleteAuditMetadata(input.lesson),
+      ...input.requestContext,
+    },
+    input.options,
+  );
+}
+
+export async function writeLessonImportApplyAuditEvent(input: {
+  organizationId: string;
+  actor: LessonAuditActor;
+  format: "csv" | "json";
+  totalRows: number;
+  createdCount: number;
+  skippedCount: number;
+  requestContext?: AuditRequestContext;
+  options?: WriteAuditEventOptions;
+}) {
+  const entityId = resolveLessonImportApplyAuditEntityId(input.requestContext);
+
+  return writeAuditEvent(
+    {
+      organizationId: input.organizationId,
+      actorUserId: input.actor.userId,
+      actorRole: input.actor.role,
+      actorEmail: input.actor.email ?? null,
+      action: "lesson.import.apply",
+      entityType: LESSON_IMPORT_AUDIT_ENTITY_TYPE,
+      entityId,
+      metadata: buildLessonImportApplyAuditMetadata({
+        format: input.format,
+        totalRows: input.totalRows,
+        createdCount: input.createdCount,
+        skippedCount: input.skippedCount,
+      }),
       ...input.requestContext,
     },
     input.options,

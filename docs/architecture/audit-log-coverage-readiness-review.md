@@ -15,14 +15,14 @@ DAT has a **working audit write boundary** (`lib/audit/audit-log-service.ts` + d
 
 | Bucket | Approx. count | Notes |
 | ------ | ------------- | ----- |
-| **AUDITED** | 20 routes / 20 actions | See §2 — `lesson.create` on two routes (calendar + manual practical) |
+| **AUDITED** | 21 routes / 21 actions | See §2 — `lesson.create` on two routes (calendar + manual practical) |
 | **COVERED_BY_OTHER_EVENT** | 1 | `POST /api/admin/students/[id]/invite` → `student.invite` (not `invitation.create`) |
 | **CANDIDATE (P1)** | 0 | — |
-| **CANDIDATE (P2)** | 5 | Practical lessons import apply, vehicles, invitation accept |
+| **CANDIDATE (P2)** | 4 | Vehicles, invitation accept |
 | **DEFERRED** | 10+ | Settings/feature flags/license, platform org, billing webhooks, bulk cleanup, legacy user create |
 | **NOT_NEEDED** | 12+ | Reads, dry-runs (zero-write), blocked legacy deletes |
 
-**Readiness verdict:** P1 write-path instrumentation for People/Lessons is **complete**. **Read API foundation** (`GET /api/admin/audit-logs`) and **viewer UI foundation** (`/admin/audit-logs`, URL-only) are available for tenant SUPER_ADMIN. Student import apply summary audit closed (`audit-log-write-paths-student-import-apply-v1`). Next priority: **practical lessons import apply summary audit (P2)** or polish; platform viewer/export deferred.
+**Readiness verdict:** P1 write-path instrumentation for People/Lessons is **complete**. **Read API foundation** (`GET /api/admin/audit-logs`) and **viewer UI foundation** (`/admin/audit-logs`, URL-only) are available for tenant SUPER_ADMIN. Import apply summary audits are closed for Students (`student.import.apply`) and Practical lessons (`lesson.import.apply`). Next priority: viewer/export polish or remaining P2 candidates; platform viewer/export deferred.
 
 **No runtime changes** in this batch — documentation and prioritization only.
 
@@ -44,6 +44,7 @@ DAT has a **working audit write boundary** (`lib/audit/audit-log-service.ts` + d
 | `lesson.create` | `Lesson` | `POST /api/admin/students/[id]/practical-lessons` | `writeLessonCreateAuditEvent` (`createdVia: manual_practical_lesson`, `source: MANUAL`) |
 | `lesson.update` | `Lesson` | `PUT /api/admin/lessons/[id]` | `writeLessonUpdateAuditEvent` |
 | `lesson.delete` | `Lesson` | `DELETE /api/admin/lessons/[id]` | `writeLessonDeleteAuditEvent` |
+| `lesson.import.apply` | `LessonImport` | `POST /api/admin/practical-lessons/import/apply` | `writeLessonImportApplyAuditEvent` |
 | `student.app_access.remove` | `Student` | `POST /api/admin/students/[id]/app-access/remove` | `writeStudentAppAccessRemoveAuditEvent` |
 | `student.app_access.reactivate` | `Student` | `POST /api/admin/students/[id]/app-access/reactivate` | `writeStudentAppAccessReactivateAuditEvent` |
 | `student.update` | `Student` | `PATCH /api/admin/students/[id]` | `writeStudentProfileUpdateAuditEvent` |
@@ -165,7 +166,7 @@ Scanned: `app/api/admin/**/route.ts` plus operational siblings under `api/users`
 | `PUT /api/admin/lessons/[id]` | Update lesson | **AUDITED** | `lesson.update` | Low | — | `changedFields` + ids |
 | `DELETE /api/admin/lessons/[id]` | Hard delete lesson (future-only; `deleteMany` scoped) | **AUDITED** | `lesson.delete` | Medium — destructive | — | Snapshot ids/type + `scheduledAtDateOnly`; no free text |
 | `POST /api/admin/cleanup` | Bulk delete old lessons/exams | **DEFERRED** | `lesson.cleanup` (summary) | High — batch volume | **P3** | Counts + date window only |
-| `POST .../practical-lessons/import/apply` | Bulk practical import | **CANDIDATE** | `lesson.import.apply` (summary) | High — volume | **P2** | Created/skipped counts |
+| `POST .../practical-lessons/import/apply` | Bulk practical import | **AUDITED** | `lesson.import.apply` (summary) | High — volume | — | Summary counts only; no row payloads |
 | `POST .../practical-lessons/import/dry-run` | Preview | **NOT_NEEDED** | — | — | — | Zero-write |
 
 ### Vehicles
@@ -218,7 +219,7 @@ Scanned: `app/api/admin/**/route.ts` plus operational siblings under `api/users`
 | Student/practical **export** GET routes | Export | **NOT_NEEDED** | — | — | — | Read-only |
 | Student/practical **import dry-run** POST | Preview | **NOT_NEEDED** | — | — | — | Zero-write |
 | Student **import apply** POST | Bulk create students | **AUDITED** | `student.import.apply` | High — volume | — | Summary metadata only |
-| Practical **import apply** POST | Bulk create lessons | **CANDIDATE** | `lesson.import.apply` | High — volume | **P2** | Summary metadata only |
+| Practical **import apply** POST | Bulk create lessons | **AUDITED** | `lesson.import.apply` | High — volume | — | Summary metadata only |
 
 ---
 
@@ -252,8 +253,7 @@ Ordered by foundation-plan MVP alignment and first-client operator need:
 
 | # | Slice name | Scope | Why now |
 | - | ---------- | ----- | ------- |
-| 1 | `audit-log-write-paths-practical-lessons-import-apply-v1` | `POST /api/admin/practical-lessons/import/apply` → summary `lesson.import.apply` | P2 volume audit; only if operator need confirmed |
-| 2 | `audit-log-viewer-export-v1` | CSV export from viewer (deferred until product need) | Optional; not blocking production |
+| 1 | `audit-log-viewer-export-v1` | CSV export from viewer (deferred until product need) | Optional; not blocking production |
 
 **Defer to slice 4+ (not in top 3):** import apply summaries (if not confirmed), vehicles, invitation accept.
 
