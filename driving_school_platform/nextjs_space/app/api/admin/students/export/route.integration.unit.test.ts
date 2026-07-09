@@ -33,9 +33,20 @@ vi.mock("@/lib/users/user-route-access", async () => {
   };
 });
 
+vi.mock("@/lib/audit/student-audit", async () => {
+  const actual = await vi.importActual<
+    typeof import("@/lib/audit/student-audit")
+  >("@/lib/audit/student-audit");
+  return {
+    ...actual,
+    writeStudentExportDownloadAuditEvent: vi.fn(),
+  };
+});
+
 import { GET } from "./route";
 import { getServerSession } from "next-auth";
 import { assertUserTenantHost } from "@/lib/users/user-route-access";
+import { writeStudentExportDownloadAuditEvent } from "@/lib/audit/student-audit";
 import { STUDENT_RECORD_EXPORT_SELECT } from "@/lib/students/student-record-queries";
 import { STUDENT_EXPORT_CSV_HEADERS } from "@/lib/import-export/import-export-contracts";
 
@@ -45,6 +56,8 @@ const getServerSessionMock = getServerSession as unknown as ReturnType<
 const assertUserTenantHostMock = assertUserTenantHost as unknown as ReturnType<
   typeof vi.fn
 >;
+const writeStudentExportDownloadAuditEventMock =
+  writeStudentExportDownloadAuditEvent as unknown as ReturnType<typeof vi.fn>;
 
 const exportStudentRow = {
   schoolStudentId: "26001",
@@ -66,6 +79,10 @@ beforeEach(() => {
   vi.resetAllMocks();
   h.findManyMock.mockResolvedValue([exportStudentRow]);
   assertUserTenantHostMock.mockResolvedValue(null);
+  writeStudentExportDownloadAuditEventMock.mockResolvedValue({
+    ok: true,
+    id: "audit-export-1",
+  });
 });
 
 describe("GET /api/admin/students/export", () => {
@@ -95,12 +112,17 @@ describe("GET /api/admin/students/export", () => {
 
   it("exports CSV with expected header and no internal fields", async () => {
     getServerSessionMock.mockResolvedValue({
-      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
     });
 
     const res = await GET(
       req(
-        "http://school.example.com/api/admin/students/export?format=csv",
+        "http://school.example.com/api/admin/students/export?format=csv&search=Jo%C3%A3o&appAccessMode=MANUAL_ONLY",
       ) as any,
     );
     expect(res.status).toBe(200);
@@ -121,11 +143,43 @@ describe("GET /api/admin/students/export", () => {
     expect(arg.select).toEqual(STUDENT_RECORD_EXPORT_SELECT);
     expect(JSON.stringify(arg.select)).not.toContain("passwordHash");
     expect(JSON.stringify(arg.select)).not.toContain("user");
+
+    expect(writeStudentExportDownloadAuditEventMock).toHaveBeenCalledTimes(1);
+    expect(writeStudentExportDownloadAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-a",
+        actor: {
+          userId: "admin-1",
+          role: "SUPER_ADMIN",
+          email: "admin@school.test",
+        },
+        format: "csv",
+        exportedCount: 1,
+        hasFilters: true,
+        filterKeys: ["search", "appAccessMode"],
+        requestContext: expect.objectContaining({
+          requestMethod: "GET",
+          requestPath: "/api/admin/students/export",
+        }),
+      }),
+    );
+
+    const auditPayload = JSON.stringify(
+      writeStudentExportDownloadAuditEventMock.mock.calls[0]?.[0],
+    );
+    expect(auditPayload).not.toContain("João");
+    expect(auditPayload).not.toContain("joao@school.test");
+    expect(auditPayload).not.toContain("26001");
   });
 
   it("exports JSON with expected envelope shape", async () => {
     getServerSessionMock.mockResolvedValue({
-      user: { id: "admin-1", role: "SUPER_ADMIN", organizationId: "org-a" },
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
     });
 
     const res = await GET(
@@ -154,6 +208,16 @@ describe("GET /api/admin/students/export", () => {
     expect(body).not.toHaveProperty("passwordHash");
     expect(body.rows[0]).not.toHaveProperty("organizationId");
     expect(body.rows[0]).not.toHaveProperty("userId");
+
+    expect(writeStudentExportDownloadAuditEventMock).toHaveBeenCalledTimes(1);
+    expect(writeStudentExportDownloadAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        format: "json",
+        exportedCount: 1,
+        hasFilters: false,
+        filterKeys: [],
+      }),
+    );
   });
 
   it("exports JSON with null sequence when school id parts are missing", async () => {
@@ -220,5 +284,31 @@ describe("GET /api/admin/students/export", () => {
     );
     expect(res.status).toBe(400);
     expect(h.findManyMock).not.toHaveBeenCalled();
+    expect(writeStudentExportDownloadAuditEventMock).not.toHaveBeenCalled();
+  });
+
+  it("still exports when audit write fails", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: {
+        id: "admin-1",
+        role: "SUPER_ADMIN",
+        organizationId: "org-a",
+        email: "admin@school.test",
+      },
+    });
+    writeStudentExportDownloadAuditEventMock.mockResolvedValue({
+      ok: false,
+      error: "db_down",
+    });
+
+    const res = await GET(
+      req(
+        "http://school.example.com/api/admin/students/export?format=csv",
+      ) as any,
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("text/csv; charset=utf-8");
+    expect(writeStudentExportDownloadAuditEventMock).toHaveBeenCalledTimes(1);
   });
 });

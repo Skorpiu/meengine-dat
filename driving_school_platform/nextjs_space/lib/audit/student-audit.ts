@@ -27,6 +27,10 @@ export type StudentImportApplyAuditAction = "student.import.apply";
 
 export const STUDENT_IMPORT_AUDIT_ENTITY_TYPE = "StudentImport";
 
+export type StudentExportDownloadAuditAction = "student.export.download";
+
+export const STUDENT_EXPORT_AUDIT_ENTITY_TYPE = "StudentExport";
+
 export type StudentEmailChangePolicyMode =
   | "APP_USER"
   | "INVITED"
@@ -139,11 +143,41 @@ export function buildStudentImportApplyAuditMetadata(input: {
   };
 }
 
+export function buildStudentExportDownloadAuditMetadata(input: {
+  format: "csv" | "json";
+  exportedCount: number;
+  hasFilters: boolean;
+  filterKeys: string[];
+}): Record<string, unknown> {
+  return {
+    format: input.format,
+    exportedCount: input.exportedCount,
+    hasFilters: input.hasFilters,
+    filterKeys: input.filterKeys,
+    source: "admin_export",
+    includesPii: true,
+  };
+}
+
 /**
  * Batch surrogate when the product has no persisted importId.
  * Prefer inbound request correlation headers when present.
  */
 export function resolveStudentImportApplyAuditEntityId(
+  requestContext?: AuditRequestContext,
+): string {
+  const requestId = requestContext?.requestId?.trim();
+  if (requestId) {
+    return requestId;
+  }
+  return crypto.randomUUID();
+}
+
+/**
+ * Batch surrogate when the product has no persisted exportId.
+ * Prefer inbound request correlation headers when present.
+ */
+export function resolveStudentExportDownloadAuditEntityId(
   requestContext?: AuditRequestContext,
 ): string {
   const requestId = requestContext?.requestId?.trim();
@@ -435,6 +469,41 @@ export async function writeStudentImportApplyAuditEvent(input: {
         totalRows: input.totalRows,
         createdCount: input.createdCount,
         skippedCount: input.skippedCount,
+      }),
+      ...input.requestContext,
+    },
+    input.options,
+  );
+}
+
+export async function writeStudentExportDownloadAuditEvent(input: {
+  organizationId: string;
+  actor: StudentAuditActor;
+  format: "csv" | "json";
+  exportedCount: number;
+  hasFilters: boolean;
+  filterKeys: string[];
+  requestContext?: AuditRequestContext;
+  options?: WriteAuditEventOptions;
+}) {
+  const entityId = resolveStudentExportDownloadAuditEntityId(
+    input.requestContext,
+  );
+
+  return writeAuditEvent(
+    {
+      organizationId: input.organizationId,
+      actorUserId: input.actor.userId,
+      actorRole: input.actor.role,
+      actorEmail: input.actor.email ?? null,
+      action: "student.export.download",
+      entityType: STUDENT_EXPORT_AUDIT_ENTITY_TYPE,
+      entityId,
+      metadata: buildStudentExportDownloadAuditMetadata({
+        format: input.format,
+        exportedCount: input.exportedCount,
+        hasFilters: input.hasFilters,
+        filterKeys: input.filterKeys,
       }),
       ...input.requestContext,
     },
