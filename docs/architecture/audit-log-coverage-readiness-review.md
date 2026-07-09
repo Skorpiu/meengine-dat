@@ -216,7 +216,7 @@ Scanned: `app/api/admin/**/route.ts` plus operational siblings under `api/users`
 
 | Endpoint | Mutation | Status | Action | Risk | Priority | PII / secrets |
 | -------- | -------- | ------ | ------ | ---- | -------- | --------------- |
-| Student/practical **export** GET routes | Export | **NOT_NEEDED** | — | — | — | Read-only |
+| Student/practical **export** GET routes | Export | **AUDITED** | `student.export.download` / `lesson.export.download` (access) | Medium — PII extraction | — | Access event only; no row payloads; `includesPii: true` |
 | Student/practical **import dry-run** POST | Preview | **NOT_NEEDED** | — | — | — | Zero-write |
 | Student **import apply** POST | Bulk create students | **AUDITED** | `student.import.apply` | High — volume | — | Summary metadata only |
 | Practical **import apply** POST | Bulk create lessons | **AUDITED** | `lesson.import.apply` | High — volume | — | Summary metadata only |

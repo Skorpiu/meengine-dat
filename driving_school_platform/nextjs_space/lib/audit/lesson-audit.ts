@@ -15,6 +15,8 @@ export type LessonAuditAction =
 
 export type LessonImportApplyAuditAction = "lesson.import.apply";
 
+export type LessonExportDownloadAuditAction = "lesson.export.download";
+
 export type LessonAuditActor = {
   userId: string;
   role: UserRole;
@@ -22,6 +24,8 @@ export type LessonAuditActor = {
 };
 
 export const LESSON_IMPORT_AUDIT_ENTITY_TYPE = "LessonImport";
+
+export const LESSON_EXPORT_AUDIT_ENTITY_TYPE = "LessonExport";
 
 export type LessonAuditSnapshot = {
   id: string;
@@ -74,11 +78,43 @@ export function buildLessonImportApplyAuditMetadata(input: {
   };
 }
 
+export function buildLessonExportDownloadAuditMetadata(input: {
+  format: "csv" | "json";
+  exportedCount: number;
+  hasFilters: boolean;
+  filterKeys: string[];
+  lessonType: "DRIVING";
+}): Record<string, unknown> {
+  return {
+    format: input.format,
+    exportedCount: input.exportedCount,
+    hasFilters: input.hasFilters,
+    filterKeys: input.filterKeys,
+    source: "admin_export",
+    includesPii: true,
+    lessonType: input.lessonType,
+  };
+}
+
 /**
  * Batch surrogate when the product has no persisted importId.
  * Prefer inbound request correlation headers when present.
  */
 export function resolveLessonImportApplyAuditEntityId(
+  requestContext?: AuditRequestContext,
+): string {
+  const requestId = requestContext?.requestId?.trim();
+  if (requestId) {
+    return requestId;
+  }
+  return crypto.randomUUID();
+}
+
+/**
+ * Batch surrogate when the product has no persisted exportId.
+ * Prefer inbound request correlation headers when present.
+ */
+export function resolveLessonExportDownloadAuditEntityId(
   requestContext?: AuditRequestContext,
 ): string {
   const requestId = requestContext?.requestId?.trim();
@@ -298,6 +334,42 @@ export async function writeLessonImportApplyAuditEvent(input: {
         totalRows: input.totalRows,
         createdCount: input.createdCount,
         skippedCount: input.skippedCount,
+      }),
+      ...input.requestContext,
+    },
+    input.options,
+  );
+}
+
+export async function writeLessonExportDownloadAuditEvent(input: {
+  organizationId: string;
+  actor: LessonAuditActor;
+  format: "csv" | "json";
+  exportedCount: number;
+  hasFilters: boolean;
+  filterKeys: string[];
+  requestContext?: AuditRequestContext;
+  options?: WriteAuditEventOptions;
+}) {
+  const entityId = resolveLessonExportDownloadAuditEntityId(
+    input.requestContext,
+  );
+
+  return writeAuditEvent(
+    {
+      organizationId: input.organizationId,
+      actorUserId: input.actor.userId,
+      actorRole: input.actor.role,
+      actorEmail: input.actor.email ?? null,
+      action: "lesson.export.download",
+      entityType: LESSON_EXPORT_AUDIT_ENTITY_TYPE,
+      entityId,
+      metadata: buildLessonExportDownloadAuditMetadata({
+        format: input.format,
+        exportedCount: input.exportedCount,
+        hasFilters: input.hasFilters,
+        filterKeys: input.filterKeys,
+        lessonType: "DRIVING",
       }),
       ...input.requestContext,
     },
