@@ -63,6 +63,16 @@ import {
 import { SMOKE_TESTIDS } from "@/lib/smoke/smoke-testids";
 import { getStudentDisplayName } from "@/lib/students/student-display";
 import type { ScheduleMapStudentPayload } from "@/lib/students/schedule-lesson-student";
+import {
+  SCHEDULE_MAP_LESSON_ACTION_DELETE_CLASS,
+  SCHEDULE_MAP_LESSON_ACTION_EDIT_CLASS,
+  SCHEDULE_MAP_LESSON_ACTION_ICON_CLASS,
+  SCHEDULE_MAP_NAV_ICON_BUTTON_CLASS,
+  SCHEDULE_MAP_NARROW_VIEW_HELPER,
+  coerceScheduleMapViewTypeForViewport,
+  shouldRenderScheduleMapWideGrid,
+} from "@/lib/schedule/schedule-map-responsive";
+import { useScheduleMapWideViewport } from "@/hooks/use-schedule-map-wide-viewport";
 
 type ViewType = "day" | "week" | "month";
 
@@ -222,6 +232,16 @@ export function ScheduleMap({
 
   const { toast } = useToast();
   const router = useRouter();
+  const isWideViewportMeasured = useScheduleMapWideViewport();
+  const isNarrowViewport = isWideViewportMeasured === false;
+  const canRenderWideCalendarGrid = isWideViewportMeasured !== false;
+
+  useEffect(() => {
+    if (!isNarrowViewport) return;
+    setViewType((current) =>
+      coerceScheduleMapViewTypeForViewport(current, false),
+    );
+  }, [isNarrowViewport]);
 
   const hours = Array.from({ length: 14 }, (_, i) => i + 7); // 7h to 20h
 
@@ -671,7 +691,7 @@ export function ScheduleMap({
                   variant="outline"
                   size="icon"
                   onClick={() => navigateDate("prev")}
-                  className="h-8 w-8"
+                  className={SCHEDULE_MAP_NAV_ICON_BUTTON_CLASS}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -679,7 +699,7 @@ export function ScheduleMap({
                 <Button
                   variant="outline"
                   onClick={() => setCurrentDate(new Date())}
-                  className="h-8 text-sm"
+                  className="h-11 sm:h-8 text-sm"
                 >
                   Today
                 </Button>
@@ -688,7 +708,7 @@ export function ScheduleMap({
                   variant="outline"
                   size="icon"
                   onClick={() => navigateDate("next")}
-                  className="h-8 w-8"
+                  className={SCHEDULE_MAP_NAV_ICON_BUTTON_CLASS}
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -701,7 +721,7 @@ export function ScheduleMap({
                   onValueChange={setSelectedInstructor}
                   disabled={isLoadingInstructors}
                 >
-                  <SelectTrigger className="w-48 h-8">
+                  <SelectTrigger className="w-48 h-11 sm:h-8">
                     <SelectValue
                       placeholder={
                         isLoadingInstructors ? "Loading..." : "All Instructors"
@@ -732,13 +752,17 @@ export function ScheduleMap({
                 value={viewType}
                 onValueChange={(value: ViewType) => setViewType(value)}
               >
-                <SelectTrigger className="w-28 h-8">
+                <SelectTrigger className="w-28 h-11 sm:h-8">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="day">Day</SelectItem>
-                  <SelectItem value="week">Week</SelectItem>
-                  <SelectItem value="month">Month</SelectItem>
+                  <SelectItem value="week" disabled={isNarrowViewport}>
+                    Week
+                  </SelectItem>
+                  <SelectItem value="month" disabled={isNarrowViewport}>
+                    Month
+                  </SelectItem>
                 </SelectContent>
               </Select>
 
@@ -785,12 +809,20 @@ export function ScheduleMap({
               `${format(dates[0], "MMM d")} - ${format(dates[dates.length - 1], "MMM d, yyyy")}`}
             {viewType === "month" && format(currentDate, "MMMM yyyy")}
           </p>
+          {isNarrowViewport ? (
+            <p className="text-xs text-muted-foreground mt-2">
+              {SCHEDULE_MAP_NARROW_VIEW_HELPER}
+            </p>
+          ) : null}
         </CardHeader>
 
         <CardContent>
           <div className="overflow-x-auto max-w-full">
             <div className="min-w-0 w-full relative">
-              {viewType === "month" ? (
+              {shouldRenderScheduleMapWideGrid(
+                "month",
+                canRenderWideCalendarGrid,
+              ) && viewType === "month" ? (
                 // Month view - Calendar grid
                 <div className="grid grid-cols-7 gap-1">
                   {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
@@ -898,7 +930,7 @@ export function ScheduleMap({
                                     {/* Edit/Delete buttons - Available for admin and instructor */}
                                     {(userRole === "admin" ||
                                       userRole === "instructor") && (
-                                      <div className="flex gap-1 pt-2 border-t justify-end">
+                                      <div className="flex gap-2 sm:gap-1 pt-2 border-t justify-end">
                                         <Button
                                           variant="ghost"
                                           size="sm"
@@ -909,10 +941,15 @@ export function ScheduleMap({
                                             handleEditLesson(lesson.id);
                                           }}
                                           disabled={!canModifyLesson(lesson)}
-                                          className="h-6 w-6 p-0 bg-white hover:bg-blue-50 border border-blue-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                          className={
+                                            SCHEDULE_MAP_LESSON_ACTION_EDIT_CLASS
+                                          }
                                           title="Edit lesson"
+                                          aria-label="Edit lesson"
                                         >
-                                          <Edit className="h-3 w-3 text-blue-600" />
+                                          <Edit
+                                            className={`${SCHEDULE_MAP_LESSON_ACTION_ICON_CLASS} text-blue-600`}
+                                          />
                                         </Button>
                                         <Button
                                           variant="ghost"
@@ -925,10 +962,15 @@ export function ScheduleMap({
                                             setSelectedLesson(null);
                                           }}
                                           disabled={!canModifyLesson(lesson)}
-                                          className="h-6 w-6 p-0 bg-white hover:bg-red-50 border border-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                          className={
+                                            SCHEDULE_MAP_LESSON_ACTION_DELETE_CLASS
+                                          }
                                           title="Delete lesson"
+                                          aria-label="Delete lesson"
                                         >
-                                          <Trash2 className="h-3 w-3 text-red-600" />
+                                          <Trash2
+                                            className={`${SCHEDULE_MAP_LESSON_ACTION_ICON_CLASS} text-red-600`}
+                                          />
                                         </Button>
                                       </div>
                                     )}
@@ -947,7 +989,10 @@ export function ScheduleMap({
                     );
                   })}
                 </div>
-              ) : viewType === "week" ? (
+              ) : shouldRenderScheduleMapWideGrid(
+                  "week",
+                  canRenderWideCalendarGrid,
+                ) && viewType === "week" ? (
                 // Week view - 7-column grid with compact lesson chips (similar to month view)
                 <div className="grid grid-cols-7 gap-1">
                   {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
@@ -1068,7 +1113,7 @@ export function ScheduleMap({
                                     {/* Edit/Delete buttons - Available for admin and instructor */}
                                     {(userRole === "admin" ||
                                       userRole === "instructor") && (
-                                      <div className="flex gap-1 pt-2 border-t justify-end">
+                                      <div className="flex gap-2 sm:gap-1 pt-2 border-t justify-end">
                                         <Button
                                           variant="ghost"
                                           size="sm"
@@ -1079,10 +1124,15 @@ export function ScheduleMap({
                                             handleEditLesson(lesson.id);
                                           }}
                                           disabled={!canModifyLesson(lesson)}
-                                          className="h-6 w-6 p-0 bg-white hover:bg-blue-50 border border-blue-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                          className={
+                                            SCHEDULE_MAP_LESSON_ACTION_EDIT_CLASS
+                                          }
                                           title="Edit lesson"
+                                          aria-label="Edit lesson"
                                         >
-                                          <Edit className="h-3 w-3 text-blue-600" />
+                                          <Edit
+                                            className={`${SCHEDULE_MAP_LESSON_ACTION_ICON_CLASS} text-blue-600`}
+                                          />
                                         </Button>
                                         <Button
                                           variant="ghost"
@@ -1095,10 +1145,15 @@ export function ScheduleMap({
                                             setSelectedLesson(null);
                                           }}
                                           disabled={!canModifyLesson(lesson)}
-                                          className="h-6 w-6 p-0 bg-white hover:bg-red-50 border border-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                          className={
+                                            SCHEDULE_MAP_LESSON_ACTION_DELETE_CLASS
+                                          }
                                           title="Delete lesson"
+                                          aria-label="Delete lesson"
                                         >
-                                          <Trash2 className="h-3 w-3 text-red-600" />
+                                          <Trash2
+                                            className={`${SCHEDULE_MAP_LESSON_ACTION_ICON_CLASS} text-red-600`}
+                                          />
                                         </Button>
                                       </div>
                                     )}
@@ -1224,7 +1279,7 @@ export function ScheduleMap({
                                       {/* Edit/Remove buttons - Top-right corner, icon-only */}
                                       {(userRole === "admin" ||
                                         userRole === "instructor") && (
-                                        <div className="absolute top-2 right-2 flex gap-1 print:hidden z-10">
+                                        <div className="absolute top-2 right-2 flex gap-2 sm:gap-1 print:hidden z-10">
                                           <Button
                                             variant="ghost"
                                             size="sm"
@@ -1235,10 +1290,15 @@ export function ScheduleMap({
                                               handleEditLesson(lesson.id);
                                             }}
                                             disabled={!canModifyLesson(lesson)}
-                                            className="h-6 w-6 p-0 bg-white hover:bg-blue-50 border border-blue-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className={
+                                              SCHEDULE_MAP_LESSON_ACTION_EDIT_CLASS
+                                            }
                                             title="Edit lesson"
+                                            aria-label="Edit lesson"
                                           >
-                                            <Edit className="h-3 w-3 text-blue-600" />
+                                            <Edit
+                                              className={`${SCHEDULE_MAP_LESSON_ACTION_ICON_CLASS} text-blue-600`}
+                                            />
                                           </Button>
                                           <Button
                                             variant="ghost"
@@ -1251,16 +1311,21 @@ export function ScheduleMap({
                                               setSelectedLesson(null);
                                             }}
                                             disabled={!canModifyLesson(lesson)}
-                                            className="h-6 w-6 p-0 bg-white hover:bg-red-50 border border-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className={
+                                              SCHEDULE_MAP_LESSON_ACTION_DELETE_CLASS
+                                            }
                                             title="Delete lesson"
+                                            aria-label="Delete lesson"
                                           >
-                                            <Trash2 className="h-3 w-3 text-red-600" />
+                                            <Trash2
+                                              className={`${SCHEDULE_MAP_LESSON_ACTION_ICON_CLASS} text-red-600`}
+                                            />
                                           </Button>
                                         </div>
                                       )}
 
                                       {/* Content with fixed text size (text-xs) */}
-                                      <div className="pr-16 text-xs space-y-1">
+                                      <div className="pr-28 sm:pr-16 text-xs space-y-1">
                                         <div className="font-semibold text-xs border-b pb-1 mb-2">
                                           {lesson.startTime} - {lesson.endTime}
                                         </div>
@@ -1342,7 +1407,7 @@ export function ScheduleMap({
                                         {/* Edit/Remove buttons - Top-right corner, icon-only */}
                                         {(userRole === "admin" ||
                                           userRole === "instructor") && (
-                                          <div className="absolute top-2 right-2 flex gap-1 print:hidden z-10">
+                                          <div className="absolute top-2 right-2 flex gap-2 sm:gap-1 print:hidden z-10">
                                             <Button
                                               variant="ghost"
                                               size="sm"
@@ -1355,10 +1420,15 @@ export function ScheduleMap({
                                               disabled={
                                                 !canModifyLesson(lesson)
                                               }
-                                              className="h-6 w-6 p-0 bg-white hover:bg-blue-50 border border-blue-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                              className={
+                                                SCHEDULE_MAP_LESSON_ACTION_EDIT_CLASS
+                                              }
                                               title="Edit lesson"
+                                              aria-label="Edit lesson"
                                             >
-                                              <Edit className="h-3 w-3 text-blue-600" />
+                                              <Edit
+                                                className={`${SCHEDULE_MAP_LESSON_ACTION_ICON_CLASS} text-blue-600`}
+                                              />
                                             </Button>
                                             <Button
                                               variant="ghost"
@@ -1373,15 +1443,20 @@ export function ScheduleMap({
                                               disabled={
                                                 !canModifyLesson(lesson)
                                               }
-                                              className="h-6 w-6 p-0 bg-white hover:bg-red-50 border border-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                              className={
+                                                SCHEDULE_MAP_LESSON_ACTION_DELETE_CLASS
+                                              }
                                               title="Delete lesson"
+                                              aria-label="Delete lesson"
                                             >
-                                              <Trash2 className="h-3 w-3 text-red-600" />
+                                              <Trash2
+                                                className={`${SCHEDULE_MAP_LESSON_ACTION_ICON_CLASS} text-red-600`}
+                                              />
                                             </Button>
                                           </div>
                                         )}
 
-                                        <div className="pr-16 text-xs space-y-1">
+                                        <div className="pr-28 sm:pr-16 text-xs space-y-1">
                                           <div className="font-semibold text-xs border-b pb-1 mb-2">
                                             {lesson.startTime} -{" "}
                                             {lesson.endTime}
