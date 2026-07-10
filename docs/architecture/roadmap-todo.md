@@ -107,6 +107,8 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 - Done (v1): guarded hard delete + Admin UI “Remover ficha” + API `DELETE /api/admin/students/[id]` + tests.
 - Follow-up (deferred): soft-delete/archive for fichas with operational history.
 
+**Docs review:** **Done (docs)** — [student-delete-retention-policy-review.md](./student-delete-retention-policy-review.md) (2026-07-10). Notes: app policy blocks hard delete when operational history exists; DB-level `onDelete: Cascade` on `Lesson.student` is a P2 out-of-band risk (operator discipline).
+
 ### people-management-ux-unification
 
 - **Done (v1 slice):** `people-management-information-architecture-v1` — PT IA on `/admin/users` (Pessoas nav, Alunos primary, **Contas da app** section label, helper copy; same route/API/invitation behavior). **Not pending:** primary Alunos/Fichas hierarchy or Contas da app labeling from v1.
