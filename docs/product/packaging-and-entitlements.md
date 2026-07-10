@@ -41,7 +41,7 @@ Contracts: [client-data-import-export-strategy.md](../../driving_school_platform
 
 School-facing work is likely **Premium/Enterprise**. Planning slices: `payment-integration-product-planning-v1`, `payments-and-balances-foundation-v1`.
 
-**Fact:** `Payment` model and admin flows exist for tenant-scoped payment records today; product packaging and school-facing scope are **not** finalized here.
+**Fact:** `Payment` Prisma model exists but is **legacy/dormant** (no `organizationId`, USD default, `userId`-linked) — **not** a tenant-ready school ledger foundation. No school-facing payment admin product surface today. Product packaging and school-facing scope are **not** finalized here.
 
 ---
 
@@ -58,21 +58,24 @@ Until then: **English product UI baseline** for new surfaces.
 
 ---
 
-## Competitive / product discovery (backlog only)
+## Competitive / product discovery (completed)
 
-**Slice:** `competitive-product-discovery-v1` — compare DAT with driving-school management platforms; prioritize high-value themes. **No deep analysis in this doc.**
+**Slice:** `competitive-product-discovery-v1` — **Done (docs)** 2026-07-10.
 
-**Candidate themes to evaluate:**
+**Report:** [competitive-product-discovery.md](./competitive-product-discovery.md)
 
-- Student portal depth
-- Controlled self-scheduling / lesson requests
-- Reminders (email / SMS / WhatsApp)
-- Progress tracking
-- Payments / balances / packages
-- Documents / e-signatures
-- Reporting dashboards
-- Communications center
-- Operational analytics
+**Completion summary:** Compared DAT with **9 counted direct competitors with sufficient official evidence** (UK, PT, ES; **HIGH/MEDIUM per registry row**) and **3 adjacent** horizontal booking benchmarks (meetergo, anny, EasyWeek), plus **2 low-evidence** legacy PT products excluded from prevalence. DAT is strong on People, scheduling, import/export, audit, and tenant isolation. **Prevalence:** lesson reminders and school-facing balances are confirmed in **8/9** eligible direct competitors; controlled self-booking or lesson requests are confirmed in **6/9**. Largest DAT gaps: operational lesson reminders (Postmark delivery boundary only — no orchestration/scheduling/lifecycle), school-facing balances/ledger (`Payment` schema not tenant-ready), controlled student lesson requests (`LessonRequest` dormant schema only), progress/skills UI, and operational analytics. National regulator integration is **publicly confirmed in 4/6 counted Iberian direct competitors** (segment-specific; deferred).
+
+**Evidence-supported packaging implications (intent only — not commitments):**
+
+| Theme | Packaging signal |
+| ----- | ---------------- |
+| Self-service import/export (already shipped) | Premium/Enterprise — enforce via `import-export-business-packaging-v1` |
+| Lesson reminders (email) | Premium comms; Basic may stay manual |
+| School-facing balances / manual ledger | Premium/Enterprise; distinct from Platform subscription billing |
+| Controlled student booking (request + approval) | Premium “self-service” gate |
+| Progress/skills tracking | Premium |
+| IMT/regulatory modules | Separate segment offer or services — not baseline DAT |
 
 ---
 

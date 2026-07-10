@@ -89,6 +89,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `mobile-tablet-readiness-pwa-manifest-v1` | **Done** — `manifest.webmanifest`, SVG icon, theme-color metadata; no service worker |
 | `mobile-tablet-readiness-admin-surfaces-v1` | **Done** — Lessons rows, Vehicles badges/actions, Audit logs mobile cards; Settings deferred |
 | `mobile-tablet-readiness-playwright-viewports-v1` | **Done** — opt-in `pnpm e2e:mobile-viewports` via dedicated config; 5 admin routes × 3 projects = 15 tests; not in `pnpm check` |
+| `competitive-product-discovery-v1` | **Done (docs)** — [competitive-product-discovery.md](../product/competitive-product-discovery.md); recommended next planning: `lesson-reminders-email-product-plan-v1` |
 | Engineering Excellence Audit | Refactors, route consistency, optional E2E CI |
 | Billing / checkout / PSP | Explicit product scope only; not in baseline |
 | `supabase-rls-tenant-policies-v1` | Only if Data API tenant access is product-required |
@@ -100,7 +101,6 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | Slice | Notes |
 | ----- | ----- |
 | `calendar-lessons-polish-v1e-student-warnings` | Product policy first |
-| `competitive-product-discovery-v1` | After production + cohesion + mobile (DEC-007) |
 | i18n / `language-pack-pt-PT-v1` | After i18n framework |
 | `people-management-ux-unification-instructor-route-split-v1` | D4; tabs-first stands |
 
@@ -283,14 +283,17 @@ Parent batch — always slice before implementing.
 | `mobile-tablet-readiness-pwa-manifest-v1` | — | **Done** — `public/manifest.webmanifest`, `public/icons/dat-icon.svg`, `app/icon.svg`; layout metadata + theme-color; no service worker/offline |
 | `mobile-tablet-readiness-admin-surfaces-v1` | — | **Done** — Lessons row stack; Vehicles badge wrap + touch targets; Audit logs card fallback `<md`; `buildAuditLogMobileCardFields`; Settings deferred |
 | `mobile-tablet-readiness-playwright-viewports-v1` | — | **Done** — opt-in `pnpm e2e:mobile-viewports` via `playwright.mobile-viewports.config.ts`; 5 admin routes × 3 projects = 15 tests; hard-fail markers; not in `pnpm check` |
-| `competitive-product-discovery-v1` | P2 deferred | **Competitive/Product Discovery (future):** research competitor features that may add value to DAT; discuss, mature, architect, and implement in future slices. **Deferred until** explicit approval/waiver. See DEC-007. |
+| `competitive-product-discovery-v1` | — | **Done (docs)** 2026-07-10 — canonical registry (9 eligible direct / 3 adjacent / 2 low-evidence excluded); prevalence: reminders + balances **8/9**, self-booking/requests **6/9**; Iberian regulator **4/6**; schema-readiness correction; [competitive-product-discovery.md](../product/competitive-product-discovery.md). **Recommended next (planning only):** `lesson-reminders-email-product-plan-v1`. Backlog candidates (not approved): `school-balances-ledger-product-plan-v1`, `student-lesson-request-policy-planning-v1`, `student-progress-tracking-foundation-plan-v1`. |
+| `lesson-reminders-email-product-plan-v1` | P1 backlog | **Recommended next planning slice** — email lesson reminder policy, events, templates, non-goals (no SMS/WhatsApp/payment reminders); **`Notification` reuse not assumed**. Not implementation authorization. |
+| `school-balances-ledger-product-plan-v1` | P1 backlog | Manual school-facing ledger/balances product plan (no PSP). From discovery O2. |
+| `student-lesson-request-policy-planning-v1` | P2 backlog | Controlled request + approval policy (`LessonRequest` schema exists). From discovery O3. |
 | `i18n-framework-planning-v1` | P2 | Real i18n; switcher, fallback, plan tie-in |
 | `language-pack-pt-PT-v1` | P3 | pt-PT copy after framework |
 | `super-agent-product-strategy-protocol-v1` | — | **Done** in `cursor-operating-model.md` (this sync batch) |
 
 **Deferred explicitly:** `people-management-ux-unification-instructor-route-split-v1` (D4; not recommended next).
 
-**Product direction (backlog — post-production polish):** **Mobile/tablet** — review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports **done**. **Competitive/Product Discovery** (`competitive-product-discovery-v1`) — gated; requires explicit approval/waiver (DEC-007).
+**Product direction (backlog — post-production polish):** **Mobile/tablet** — **done**. **Competitive discovery** — **done** (`competitive-product-discovery-v1`). **Recommended next (planning):** `lesson-reminders-email-product-plan-v1` — requires explicit approval to implement any runtime follow-up.
 
 ---
 
