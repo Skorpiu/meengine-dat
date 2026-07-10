@@ -114,7 +114,7 @@ Student records **export/import** UI on registered student records is implemente
 - **Invitation / app access** should live **inside** the student or instructor person record.
 - **Import/export** should be UI buttons, not raw API URLs. **Student** export/import on Fichas registadas; **practical lessons export + import (preview + apply)** on `/admin/lessons` (Driving tab).
 
-**Delete/removal (implemented):** School Admin (`SUPER_ADMIN`) may hard-delete a `MANUAL_ONLY` student ficha with no linked User, invitations, lessons of any `LessonSource`, lesson counters, lesson requests, exam registrations, or payments. Blocked deletes return stable **409** codes. Demo org uses the existing user-management mutation guard. Soft-delete/archive remains deferred.
+**Delete/removal (implemented):** School Admin (`SUPER_ADMIN`) may hard-delete a `MANUAL_ONLY` student ficha with no linked User, invitations, lessons of any `LessonSource`, lesson counters, lesson requests, exam registrations, or payments. Blocked deletes return stable **409** codes. Demo org uses the existing user-management mutation guard. Soft-delete/archive remains deferred. Retention review: [student-delete-retention-policy-review.md](./student-delete-retention-policy-review.md).
 
 **Product UI language:** baseline is **English** for new product surfaces. `/admin/users` People Management copy reconciled in `product-ui-language-baseline-english-v1` (English labels; route `/admin/users` unchanged). Future locale work via proper i18n, not scattered literals (see [roadmap-todo.md](./roadmap-todo.md)).
 
