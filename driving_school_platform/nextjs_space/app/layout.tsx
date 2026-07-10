@@ -1,25 +1,50 @@
+import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
+import { SessionProvider } from "@/components/providers/session-provider";
+import { LanguageProvider } from "@/contexts/language-context";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
+import { Toaster as HotToaster } from "react-hot-toast";
 
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { SessionProvider } from "@/components/providers/session-provider"
-import { LanguageProvider } from "@/contexts/language-context"
-import { Toaster as SonnerToaster } from "@/components/ui/sonner"
-import { Toaster as HotToaster } from "react-hot-toast"
+const inter = Inter({ subsets: ["latin"] });
 
-const inter = Inter({ subsets: ["latin"] })
+/** Aligns with `--driving-primary` in globals.css and manifest.webmanifest */
+export const DAT_PWA_THEME_COLOR = "#2563eb";
+export const DAT_PWA_BACKGROUND_COLOR = "#ffffff";
+
+export const viewport: Viewport = {
+  themeColor: DAT_PWA_THEME_COLOR,
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
-  title: "Driving School Academy | Professional Driving School",
-  description: "Professional driving lessons with certified instructors. Learn to drive with confidence at Driving School Academy.",
-  keywords: "driving school, driving lessons, learn to drive, driving instructor, driving academy",
-}
+  applicationName: "Driving Academy Tool",
+  title: {
+    default: "Driving Academy Tool",
+    template: "%s | DAT",
+  },
+  description:
+    "Driving school operations platform for lessons, people, and scheduling. Requires network access.",
+  keywords:
+    "driving school, driving lessons, driving instructor, driving academy, school administration",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "DAT",
+  },
+  icons: {
+    icon: [{ url: "/icons/dat-icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icons/dat-icon.svg", type: "image/svg+xml" }],
+  },
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -40,5 +65,5 @@ export default function RootLayout({
         </SessionProvider>
       </body>
     </html>
-  )
+  );
 }

@@ -10,9 +10,9 @@ DAT has **basic responsive scaffolding** (Tailwind breakpoints, mobile navbar, s
 
 **Production decision (aligned with DEC-032):** Mobile/tablet gaps are **not production blockers** for the controlled first B2B client. School secretaria is expected to operate primarily on **desktop or tablet landscape**; student/instructor mobile use is **secondary** (schedule check, not full admin workflows).
 
-**Highest-impact gaps:** Schedule Map week/month views (`grid-cols-7` on narrow viewports), dense admin rows (Vehicles, Lessons header), operator tables (audit logs, settings) with horizontal scroll only, no PWA/manifest.
+**Highest-impact gaps:** Schedule Map week/month views (`grid-cols-7` on narrow viewports) — **mitigated** in schedule-map slice; dense admin rows (Vehicles, Lessons header) partially addressed; operator tables (audit logs, settings) with horizontal scroll only; **PWA manifest done** (install metadata only; no offline).
 
-**Recommended next slice:** `mobile-tablet-readiness-pwa-manifest-v1` (optional) or `mobile-tablet-readiness-admin-surfaces-v1` — PWA manifest or remaining admin surfaces polish.
+**Recommended next slice:** `mobile-tablet-readiness-admin-surfaces-v1` — remaining admin surfaces polish.
 
 **Implemented (2026-07-10):** `mobile-tablet-readiness-schedule-map-v1` — week/month disabled below `lg` (1024px); auto-fallback to day on resize; helper copy; edit/delete/nav touch targets `h-11` on narrow viewports; helpers in `lib/schedule/schedule-map-responsive.ts`.
 
@@ -122,7 +122,7 @@ Per DEC-032: **operational/deploy discipline**, not mobile redesign.
 
 | Area / page | Current state | Risk | Priority | Recommendation | Next slice |
 | ----------- | ------------- | ---- | -------- | -------------- | ---------- |
-| **Global — PWA** | No `manifest.json`, no `public/` icons, no service worker | Low (v1) | P2 | Add manifest + icons + theme-color only if product wants installable; defer offline SW | `mobile-tablet-readiness-pwa-manifest-v1` |
+| **Global — PWA** | `manifest.webmanifest`, SVG icon, theme-color via layout metadata; **no service worker / offline** | Low (v1) | P2 done | Install/home-screen metadata only; defer offline SW | — |
 | **Global — Navbar** | Mobile hamburger `md:hidden`; desktop links `hidden md:flex` | Low | P2 | Reduce header chrome on mobile; consider collapsing language/bell | `mobile-tablet-readiness-navbar-v1` |
 | **Global — Touch targets** | Buttons default `h-10`; calendar controls `h-8`; map edit `h-6` | Medium on map | P1 | Bump map actions to ≥44px; audit calendar controls | Part of schedule-map slice |
 | **`/admin` Schedule Map** | Day default; week/month gated at `lg` (1024px); touch targets `h-11` on narrow | Low | P2 remaining | PWA; Playwright mobile viewports | `mobile-tablet-readiness-playwright-viewports-v1` |
@@ -163,7 +163,7 @@ Per DEC-032: **operational/deploy discipline**, not mobile redesign.
 | Single-row dense admin cards | `vehicles-management-client.tsx` (mitigated), lesson rows in `lessons-management-client.tsx` | Overflow / truncation |
 | Hover-dependent tooltips | `student-records-manager.tsx` — Radix Tooltip on badges | Lost context on touch |
 | Small icon buttons on map | `schedule-map.tsx` — edit/delete `h-6 w-6` | Mis-taps |
-| No PWA metadata | `app/layout.tsx` — title/description only | No install prompt |
+| No PWA metadata | **Resolved** — `public/manifest.webmanifest` + `app/layout.tsx` metadata + `public/icons/dat-icon.svg` | Install metadata only; not offline-capable |
 
 ---
 
@@ -182,9 +182,11 @@ Phone (admin)         ████░░░░░░░░░░░░░░░�
 ## 7. Recommended slice sequence (post-review)
 
 1. **`mobile-tablet-readiness-schedule-map-v1`** — **Done** (2026-07-10): `lg` gate for week/month; day fallback; touch targets; `schedule-map-responsive.ts`.
-2. **`mobile-tablet-readiness-pwa-manifest-v1`** (optional product) — `manifest.webmanifest`, icons, theme-color; no service worker unless justified.
+2. **`mobile-tablet-readiness-pwa-manifest-v1`** — **Done** (2026-07-10): `manifest.webmanifest`, `dat-icon.svg`, theme-color/background metadata; no service worker.
 3. **`mobile-tablet-readiness-admin-surfaces-v1`** — lessons rows, vehicles badges, audit log mobile list (sliced sub-items OK).
 4. **`mobile-tablet-readiness-playwright-viewports-v1`** — enable commented Playwright mobile projects for regression.
+
+**Deferred (not in v1 PWA):** service worker, offline cache, push notifications.
 
 **Do not open:** full redesign, new design system, auth/billing/audit changes, or broad responsive refactor in one batch.
 
@@ -194,7 +196,7 @@ Phone (admin)         ████░░░░░░░░░░░░░░░�
 
 DEC-032 explicitly placed mobile/tablet review as **penultimate / P2 deferred**. This review **confirms** that placement: gaps are real but **do not block** controlled first B2B production when operator expectations are set correctly.
 
-After stable production and optional audit viewer export polish: **`mobile-tablet-readiness-pwa-manifest-v1`** or **`competitive-product-discovery-v1`** (DEC-007) per product priority.
+After stable production and optional mobile polish: **`mobile-tablet-readiness-admin-surfaces-v1`** or **`competitive-product-discovery-v1`** (DEC-007) per product priority.
 
 ---
 
