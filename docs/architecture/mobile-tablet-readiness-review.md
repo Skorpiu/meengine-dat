@@ -12,7 +12,9 @@ DAT has **basic responsive scaffolding** (Tailwind breakpoints, mobile navbar, s
 
 **Highest-impact gaps:** Schedule Map week/month views (`grid-cols-7` on narrow viewports), dense admin rows (Vehicles, Lessons header), operator tables (audit logs, settings) with horizontal scroll only, no PWA/manifest.
 
-**Recommended next slice:** `mobile-tablet-readiness-schedule-map-v1` — mobile-aware Schedule Map (default/lock day view on small screens, larger touch targets, week/month degradation strategy).
+**Recommended next slice:** `mobile-tablet-readiness-pwa-manifest-v1` (optional) or `mobile-tablet-readiness-admin-surfaces-v1` — PWA manifest or remaining admin surfaces polish.
+
+**Implemented (2026-07-10):** `mobile-tablet-readiness-schedule-map-v1` — week/month disabled below `lg` (1024px); auto-fallback to day on resize; helper copy; edit/delete/nav touch targets `h-11` on narrow viewports; helpers in `lib/schedule/schedule-map-responsive.ts`.
 
 ---
 
@@ -123,15 +125,15 @@ Per DEC-032: **operational/deploy discipline**, not mobile redesign.
 | **Global — PWA** | No `manifest.json`, no `public/` icons, no service worker | Low (v1) | P2 | Add manifest + icons + theme-color only if product wants installable; defer offline SW | `mobile-tablet-readiness-pwa-manifest-v1` |
 | **Global — Navbar** | Mobile hamburger `md:hidden`; desktop links `hidden md:flex` | Low | P2 | Reduce header chrome on mobile; consider collapsing language/bell | `mobile-tablet-readiness-navbar-v1` |
 | **Global — Touch targets** | Buttons default `h-10`; calendar controls `h-8`; map edit `h-6` | Medium on map | P1 | Bump map actions to ≥44px; audit calendar controls | Part of schedule-map slice |
-| **`/admin` Schedule Map** | Day default OK; week/month `grid-cols-7`; `overflow-x-auto` | Medium | **P1** | Lock or warn on small screens; list/agenda fallback for week/month; larger lesson chips | `mobile-tablet-readiness-schedule-map-v1` |
+| **`/admin` Schedule Map** | Day default; week/month gated at `lg` (1024px); touch targets `h-11` on narrow | Low | P2 remaining | PWA; Playwright mobile viewports | `mobile-tablet-readiness-playwright-viewports-v1` |
 | **`/admin/users` People** | Cards + `sm:` stacks; import/export responsive | Low | P2 | Badge tooltips → tap-friendly help; L2 tabs fixed (this batch) | `mobile-tablet-readiness-people-tooltips-v1` |
 | **`/admin/lessons`** | Columns stack `&lt;lg`; header fixed (this batch) | Low | P2 | Lesson row horizontal layout on narrow screens | `mobile-tablet-readiness-lessons-rows-v1` |
 | **`/admin/vehicles`** | Rows stack `&lt;sm` (this batch); badges still dense | Low | P2 | Wrap badges; optional maintenance row separation | `mobile-tablet-readiness-vehicles-badges-v1` |
 | **`/admin/audit-logs`** | Filters responsive; table 8-col + `overflow-x-auto` | Low | P2 | Optional card/list mobile view | `mobile-tablet-readiness-audit-logs-mobile-v1` |
 | **`/admin/settings`** | Operator/internal; tables scroll | Low | P2 | Stack filter header; defer until Platform boundary | Defer with Platform |
 | **`/admin/license`** | Read-only; standard container | OK | — | None | — |
-| **`/instructor`** | Same map issues; booking forms good | Medium | P1 | Schedule Map slice covers instructor | `mobile-tablet-readiness-schedule-map-v1` |
-| **`/student`** | Read-only map; day view OK | Low | P2 | Same map slice; no booking UI | `mobile-tablet-readiness-schedule-map-v1` |
+| **`/instructor`** | Schedule Map slice done; booking forms good | Low | P2 | Navbar density | `mobile-tablet-readiness-navbar-v1` |
+| **`/student`** | Read-only map; day view OK | Low | P2 | Same as instructor nav | `mobile-tablet-readiness-navbar-v1` |
 | **`/platform`** | Grids collapse; no navbar | Low | P2 | Touch-friendly inputs if mobile operator needed | Defer |
 | **Auth pages** | Mobile-friendly centered cards | OK | — | Register category grid minor | `mobile-tablet-readiness-auth-register-grid-v1` |
 | **Import/export dialogs** | `overflow-x-auto` preview; responsive footers | OK | — | None | — |
@@ -179,7 +181,7 @@ Phone (admin)         ████░░░░░░░░░░░░░░░�
 
 ## 7. Recommended slice sequence (post-review)
 
-1. **`mobile-tablet-readiness-schedule-map-v1`** (highest impact) — small-screen day-view default/lock; degrade week/month; touch targets; optional agenda list.
+1. **`mobile-tablet-readiness-schedule-map-v1`** — **Done** (2026-07-10): `lg` gate for week/month; day fallback; touch targets; `schedule-map-responsive.ts`.
 2. **`mobile-tablet-readiness-pwa-manifest-v1`** (optional product) — `manifest.webmanifest`, icons, theme-color; no service worker unless justified.
 3. **`mobile-tablet-readiness-admin-surfaces-v1`** — lessons rows, vehicles badges, audit log mobile list (sliced sub-items OK).
 4. **`mobile-tablet-readiness-playwright-viewports-v1`** — enable commented Playwright mobile projects for regression.
@@ -192,7 +194,7 @@ Phone (admin)         ████░░░░░░░░░░░░░░░�
 
 DEC-032 explicitly placed mobile/tablet review as **penultimate / P2 deferred**. This review **confirms** that placement: gaps are real but **do not block** controlled first B2B production when operator expectations are set correctly.
 
-After stable production and optional audit viewer export polish: implement **`mobile-tablet-readiness-schedule-map-v1`** before **`competitive-product-discovery-v1`** (DEC-007).
+After stable production and optional audit viewer export polish: **`mobile-tablet-readiness-pwa-manifest-v1`** or **`competitive-product-discovery-v1`** (DEC-007) per product priority.
 
 ---
 

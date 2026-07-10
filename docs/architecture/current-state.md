@@ -275,11 +275,12 @@ Documented and in use (docs/rules only; no runtime change):
 
 - `student-delete-retention-policy-review-v1` — docs-only retention policy review (2026-07-10); [student-delete-retention-policy-review.md](./student-delete-retention-policy-review.md). No schema/runtime changes.
 - `mobile-tablet-readiness-review-v1` — docs-only mobile/tablet readiness review (2026-07-10) + localized layout fixes (Vehicles rows, Lessons header, People L2 tabs); [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md). No API/schema/auth/billing/audit changes. Validated via `pnpm check`.
+- `mobile-tablet-readiness-schedule-map-v1` — Schedule Map responsive UX: week/month disabled below `lg` (1024px); auto day fallback on resize; helper copy; edit/delete/nav touch targets `h-11` on narrow viewports; `lib/schedule/schedule-map-responsive.ts` + unit tests. No API/schema/auth changes. Validated via `pnpm check`.
 
 ### Likely next (production path)
 
-1. `mobile-tablet-readiness-schedule-map-v1` — Schedule Map small-screen strategy (day-view lock/degrade week/month, touch targets) — **recommended** before Competitive/Product Discovery
-2. `audit-log-viewer-export-v1` — CSV export from viewer (optional; product need)
+1. `audit-log-viewer-export-v1` — CSV export from viewer (optional; product need)
+2. `mobile-tablet-readiness-pwa-manifest-v1` or `mobile-tablet-readiness-admin-surfaces-v1` — optional polish
 
 ### Deferred (not next)
 
@@ -289,7 +290,7 @@ Documented and in use (docs/rules only; no runtime change):
 
 ### Product direction (backlog — post-production polish)
 
-**Mobile/tablet readiness review (done):** `mobile-tablet-readiness-review-v1` — [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md). **Not a production blocker** (DEC-032). Next runtime slice: `mobile-tablet-readiness-schedule-map-v1`.
+**Mobile/tablet readiness review (done):** `mobile-tablet-readiness-review-v1` — [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md). **Schedule Map slice (done):** `mobile-tablet-readiness-schedule-map-v1`. **Not production blockers** (DEC-032).
 
 **Competitive/Product Discovery** (`competitive-product-discovery-v1`, P2 deferred; DEC-007): pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros. **Deferred until** after `mobile-tablet-readiness-schedule-map-v1` (or explicit waiver).
 

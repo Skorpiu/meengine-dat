@@ -83,7 +83,8 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | Demo DB separation | Recommended for public portfolio; lower urgency with dedicated client tenant |
 | `lesson-student-nullability-policy-review-v1` | Policy doc + validation gap grep — **Done (docs)** |
 | `student-delete-retention-policy-review-v1` | **Done (docs)** — [student-delete-retention-policy-review.md](./student-delete-retention-policy-review.md) |
-| `mobile-tablet-readiness-review-v1` | **Done (docs + minor UI)** — [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md); next: `mobile-tablet-readiness-schedule-map-v1` |
+| `mobile-tablet-readiness-review-v1` | **Done (docs + minor UI)** — [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md) |
+| `mobile-tablet-readiness-schedule-map-v1` | **Done** — `lg` gate week/month; day fallback; touch targets; `schedule-map-responsive.ts` |
 | Engineering Excellence Audit | Refactors, route consistency, optional E2E CI |
 | Billing / checkout / PSP | Explicit product scope only; not in baseline |
 | `supabase-rls-tenant-policies-v1` | Only if Data API tenant access is product-required |
@@ -274,7 +275,7 @@ Parent batch — always slice before implementing.
 | `payment-integration-product-planning-v1` | P2 | School-facing payments product spec |
 | `payments-and-balances-foundation-v1` | P2 | Technical foundation for balances/packages |
 | `mobile-tablet-readiness-review-v1` | — | **Done (docs + minor UI)** — readiness matrix + DEC-032 alignment; [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md); localized layout fixes (Vehicles, Lessons header, People L2 tabs); no API/schema/auth changes |
-| `mobile-tablet-readiness-schedule-map-v1` | P1 polish | Schedule Map small-screen strategy: day-view default/lock, week/month degradation, touch targets ≥44px; admin + instructor + student surfaces |
+| `mobile-tablet-readiness-schedule-map-v1` | — | **Done** — week/month gated below `lg` (1024px); day fallback on resize; helper copy; edit/delete/nav touch targets `h-11` on narrow; `lib/schedule/schedule-map-responsive.ts` + hook + unit tests; no API/schema/auth |
 | `mobile-tablet-readiness-pwa-manifest-v1` | P2 | Manifest + icons + theme-color only; no service worker unless justified |
 | `mobile-tablet-readiness-admin-surfaces-v1` | P2 | Lessons rows, vehicles badges, audit log mobile list (sliced sub-items OK) |
 | `mobile-tablet-readiness-playwright-viewports-v1` | P2 | Enable commented Playwright mobile viewport projects |
@@ -285,7 +286,7 @@ Parent batch — always slice before implementing.
 
 **Deferred explicitly:** `people-management-ux-unification-instructor-route-split-v1` (D4; not recommended next).
 
-**Product direction (backlog — post-production polish):** **Mobile/tablet readiness review** (`mobile-tablet-readiness-review-v1`) — **done**; next runtime slice `mobile-tablet-readiness-schedule-map-v1`. **Competitive/Product Discovery** (`competitive-product-discovery-v1`) — after schedule-map slice (or explicit waiver). Discovery/strategy track only — no runtime work until a dedicated slice is approved.
+**Product direction (backlog — post-production polish):** **Mobile/tablet** — review + Schedule Map slices **done**; optional: PWA manifest, admin surfaces, Playwright viewports. **Competitive/Product Discovery** (`competitive-product-discovery-v1`) — after optional mobile polish or explicit waiver.
 
 ---
 
