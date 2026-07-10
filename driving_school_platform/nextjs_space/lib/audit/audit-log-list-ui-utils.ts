@@ -68,3 +68,40 @@ export function auditLogListItemHasForbiddenFields(
     "newValues" in item
   );
 }
+
+export type AuditLogMobileCardField = {
+  label: string;
+  value: string;
+  mono?: boolean;
+};
+
+/** Privacy-minimal fields for narrow-viewport audit log cards (same as table columns). */
+export function buildAuditLogMobileCardFields(
+  item: AuditLogListItem,
+): AuditLogMobileCardField[] {
+  return [
+    { label: "Created", value: formatAuditLogDateTime(item.createdAt) },
+    { label: "Action", value: item.action, mono: true },
+    { label: "Entity", value: item.entityType },
+    {
+      label: "Entity ID",
+      value: formatAuditLogNullable(item.entityId),
+      mono: true,
+    },
+    { label: "Actor", value: formatAuditLogActorLabel(item) },
+    {
+      label: "Target user",
+      value: formatAuditLogNullable(item.targetUserId),
+      mono: true,
+    },
+    {
+      label: "Request ID",
+      value: formatAuditLogNullable(item.requestId),
+      mono: true,
+    },
+    {
+      label: "Metadata",
+      value: formatAuditLogMetadataSummary(item.metadata),
+    },
+  ];
+}

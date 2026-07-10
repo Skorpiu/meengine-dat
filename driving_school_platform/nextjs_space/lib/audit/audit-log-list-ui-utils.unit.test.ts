@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   AUDIT_LOG_METADATA_SUMMARY_MAX_LENGTH,
   auditLogListItemHasForbiddenFields,
+  buildAuditLogMobileCardFields,
   formatAuditLogActorLabel,
   formatAuditLogDateTime,
   formatAuditLogMetadataSummary,
@@ -86,5 +87,48 @@ describe("auditLogListItemHasForbiddenFields", () => {
         action: "lesson.create",
       }),
     ).toBe(false);
+  });
+});
+
+describe("buildAuditLogMobileCardFields", () => {
+  it("maps privacy-minimal list item fields for mobile cards", () => {
+    const fields = buildAuditLogMobileCardFields({
+      id: "audit-1",
+      createdAt: "2026-06-10T10:00:00.000Z",
+      action: "lesson.create",
+      entityType: "Lesson",
+      entityId: "lesson-1",
+      actorUserId: "admin-1",
+      actorRole: "SUPER_ADMIN",
+      actorEmail: "admin@school.test",
+      targetUserId: null,
+      requestId: "req-1",
+      metadata: { lessonType: "DRIVING" },
+    });
+
+    expect(fields.map((field) => field.label)).toEqual([
+      "Created",
+      "Action",
+      "Entity",
+      "Entity ID",
+      "Actor",
+      "Target user",
+      "Request ID",
+      "Metadata",
+    ]);
+    expect(fields.find((field) => field.label === "Action")?.value).toBe(
+      "lesson.create",
+    );
+    expect(fields.find((field) => field.label === "Actor")?.value).toBe(
+      "admin@school.test",
+    );
+    expect(fields.find((field) => field.label === "Metadata")?.value).toBe(
+      '{"lessonType":"DRIVING"}',
+    );
+    expect(fields).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: "organizationId" }),
+      ]),
+    );
   });
 });

@@ -87,6 +87,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `mobile-tablet-readiness-review-v1` | **Done (docs + minor UI)** — [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md) |
 | `mobile-tablet-readiness-schedule-map-v1` | **Done** — `lg` gate week/month; day fallback; touch targets; `schedule-map-responsive.ts` |
 | `mobile-tablet-readiness-pwa-manifest-v1` | **Done** — `manifest.webmanifest`, SVG icon, theme-color metadata; no service worker |
+| `mobile-tablet-readiness-admin-surfaces-v1` | **Done** — Lessons rows, Vehicles badges/actions, Audit logs mobile cards; Settings deferred |
 | Engineering Excellence Audit | Refactors, route consistency, optional E2E CI |
 | Billing / checkout / PSP | Explicit product scope only; not in baseline |
 | `supabase-rls-tenant-policies-v1` | Only if Data API tenant access is product-required |
@@ -279,7 +280,7 @@ Parent batch — always slice before implementing.
 | `mobile-tablet-readiness-review-v1` | — | **Done (docs + minor UI)** — readiness matrix + DEC-032 alignment; [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md); localized layout fixes (Vehicles, Lessons header, People L2 tabs); no API/schema/auth changes |
 | `mobile-tablet-readiness-schedule-map-v1` | — | **Done** — week/month gated below `lg` (1024px); day fallback on resize; helper copy; edit/delete/nav touch targets `h-11` on narrow; `lib/schedule/schedule-map-responsive.ts` + hook + unit tests; no API/schema/auth |
 | `mobile-tablet-readiness-pwa-manifest-v1` | — | **Done** — `public/manifest.webmanifest`, `public/icons/dat-icon.svg`, `app/icon.svg`; layout metadata + theme-color; no service worker/offline |
-| `mobile-tablet-readiness-admin-surfaces-v1` | P2 | Lessons rows, vehicles badges, audit log mobile list (sliced sub-items OK) |
+| `mobile-tablet-readiness-admin-surfaces-v1` | — | **Done** — Lessons row stack; Vehicles badge wrap + touch targets; Audit logs card fallback `<md`; `buildAuditLogMobileCardFields`; Settings deferred |
 | `mobile-tablet-readiness-playwright-viewports-v1` | P2 | Enable commented Playwright mobile viewport projects |
 | `competitive-product-discovery-v1` | P2 deferred | **Competitive/Product Discovery (future):** research competitor features that may add value to DAT; discuss, mature, architect, and implement in future slices. **Deferred until** after `mobile-tablet-readiness-schedule-map-v1` (or explicit waiver). See DEC-007. |
 | `i18n-framework-planning-v1` | P2 | Real i18n; switcher, fallback, plan tie-in |

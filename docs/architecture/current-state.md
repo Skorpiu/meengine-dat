@@ -278,10 +278,11 @@ Documented and in use (docs/rules only; no runtime change):
 - `mobile-tablet-readiness-review-v1` — docs-only mobile/tablet readiness review (2026-07-10) + localized layout fixes (Vehicles rows, Lessons header, People L2 tabs); [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md). No API/schema/auth/billing/audit changes. Validated via `pnpm check`.
 - `mobile-tablet-readiness-schedule-map-v1` — Schedule Map responsive UX: week/month disabled below `lg` (1024px); auto day fallback on resize; helper copy; edit/delete/nav touch targets `h-11` on narrow viewports; `lib/schedule/schedule-map-responsive.ts` + unit tests. No API/schema/auth changes. Validated via `pnpm check`.
 - `mobile-tablet-readiness-pwa-manifest-v1` — minimal PWA install metadata: `public/manifest.webmanifest`, `public/icons/dat-icon.svg`, `app/icon.svg`; `app/layout.tsx` metadata + `viewport.themeColor` (`#2563eb`); `display: standalone`; no service worker/offline/push. Validated via `pnpm check`.
+- `mobile-tablet-readiness-admin-surfaces-v1` — localized admin mobile polish: Lessons rows stack on narrow viewports; Vehicles badge wrap + `h-11` action targets; Audit logs card fallback below `md` via `buildAuditLogMobileCardFields` (privacy-minimal); Settings deferred. Validated via `pnpm check`.
 
 ### Likely next (production path)
 
-1. `mobile-tablet-readiness-admin-surfaces-v1` — optional polish (lessons rows, vehicles badges, audit mobile list)
+1. `mobile-tablet-readiness-playwright-viewports-v1` — optional mobile viewport smoke
 
 ### Deferred (not next)
 
