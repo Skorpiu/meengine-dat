@@ -303,6 +303,8 @@ Parent batch — always slice before implementing.
 - Consider DB-level check constraint later if worthwhile after audit of existing rows.
 - **Smallest safe v1 slice:** document policy + grep validation/API gaps; defer migration/check constraint.
 
+**Status:** **Done (docs)** — [lesson-student-nullability-policy-review.md](./lesson-student-nullability-policy-review.md) (2026-07-09).
+
 ### instructor-id-boundary-hygiene
 
 - Clarify `User.id` vs `Instructor.id`.
