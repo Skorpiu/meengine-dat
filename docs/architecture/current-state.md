@@ -147,7 +147,7 @@ Documented and in use (docs/rules only; no runtime change):
 
 **Analysis approved:** `production-readiness-cutline-review-v1` (analysis-only).
 
-**Do not open next:** `calendar-lessons-polish-v1e-student-warnings`, mobile/tablet review, Competitive/Product Discovery, audit log runtime, billing/checkout.
+**Do not open next:** `calendar-lessons-polish-v1e-student-warnings`, Competitive/Product Discovery, audit log runtime expansion, billing/checkout.
 
 ---
 
@@ -273,9 +273,13 @@ Documented and in use (docs/rules only; no runtime change):
 - `audit-log-access-events-student-export-v1` — wired `student.export.download` into `GET /api/admin/students/export`; one access event per successful export; `entityType: StudentExport`; metadata: `format`, `exportedCount`, `hasFilters`, `filterKeys` (names only), `source: admin_export`, `includesPii: true`; no query raw, no search values, no row payloads; audit failure non-blocking; export response headers/body unchanged; route + helper unit tests. Validated via `pnpm check`.
 - `audit-log-access-events-practical-lessons-export-v1` — wired `lesson.export.download` into `GET /api/admin/practical-lessons/export`; one access event per successful export; `entityType: LessonExport`; metadata: `format`, `exportedCount`, `hasFilters`, `filterKeys` (names only), `source: admin_export`, `includesPii: true`, `lessonType: DRIVING`; no query raw, no filter values, no row payloads; audit failure non-blocking; export response headers/body unchanged; route + helper unit tests. Validated via `pnpm check`.
 
+- `student-delete-retention-policy-review-v1` — docs-only retention policy review (2026-07-10); [student-delete-retention-policy-review.md](./student-delete-retention-policy-review.md). No schema/runtime changes.
+- `mobile-tablet-readiness-review-v1` — docs-only mobile/tablet readiness review (2026-07-10) + localized layout fixes (Vehicles rows, Lessons header, People L2 tabs); [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md). No API/schema/auth/billing/audit changes. Validated via `pnpm check`.
+
 ### Likely next (production path)
 
-1. `audit-log-viewer-export-v1` — CSV export from viewer (optional; product need)
+1. `mobile-tablet-readiness-schedule-map-v1` — Schedule Map small-screen strategy (day-view lock/degrade week/month, touch targets) — **recommended** before Competitive/Product Discovery
+2. `audit-log-viewer-export-v1` — CSV export from viewer (optional; product need)
 
 ### Deferred (not next)
 
@@ -283,11 +287,11 @@ Documented and in use (docs/rules only; no runtime change):
 - `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)**
 - Audit log — **write paths complete + read API + viewer UI foundation**; `/admin/audit-logs` URL-only (no main navbar); coverage at [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md)
 
-### Product direction (backlog — deferred post-production polish)
+### Product direction (backlog — post-production polish)
 
-**Penultimate (before Competitive/Product Discovery):** `mobile-tablet-readiness-review-v1` — responsive UX review for admin/instructor/student; Schedule Map on small screens; touch targets; forms/tables/dialogs; mobile performance/INP; PWA/installable readiness (manifest/icons/theme-color; service worker/offline only if justified); Playwright mobile viewport smoke. **Deferred until** DAT core is solid, cohesive, and in production.
+**Mobile/tablet readiness review (done):** `mobile-tablet-readiness-review-v1` — [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md). **Not a production blocker** (DEC-032). Next runtime slice: `mobile-tablet-readiness-schedule-map-v1`.
 
-**Competitive/Product Discovery** (`competitive-product-discovery-v1`, P2 deferred; DEC-007): pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros. **Deferred until** DAT core is cohesive, polished, and in production — after `mobile-tablet-readiness-review-v1`.
+**Competitive/Product Discovery** (`competitive-product-discovery-v1`, P2 deferred; DEC-007): pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros. **Deferred until** after `mobile-tablet-readiness-schedule-map-v1` (or explicit waiver).
 
 Engineering excellence audit items (non-blocking refactors) remain tracked separately in roadmap P2+.
 

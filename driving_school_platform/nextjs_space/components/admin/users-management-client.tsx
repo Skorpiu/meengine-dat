@@ -79,7 +79,7 @@ export function UsersManagementClient({
 
         <TabsContent value="students" className="space-y-6">
           <Tabs defaultValue="profiles" className="space-y-6">
-            <TabsList>
+            <TabsList className="flex h-auto w-full flex-wrap gap-1">
               <TabsTrigger value="profiles">Profiles</TabsTrigger>
               <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
             </TabsList>
@@ -130,7 +130,7 @@ export function UsersManagementClient({
 
         <TabsContent value="instructors" className="space-y-6">
           <Tabs defaultValue="profiles" className="space-y-6">
-            <TabsList>
+            <TabsList className="flex h-auto w-full flex-wrap gap-1">
               <TabsTrigger value="profiles">Profiles</TabsTrigger>
               <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
             </TabsList>

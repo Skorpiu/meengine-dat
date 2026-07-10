@@ -81,8 +81,9 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | ----- | ----- |
 | Audit log runtime implementation | **Write + read API + viewer UI foundation done** — see [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md); import apply summary audits closed (Students + Practical lessons); next: viewer export polish (optional) |
 | Demo DB separation | Recommended for public portfolio; lower urgency with dedicated client tenant |
-| `lesson-student-nullability-policy-review-v1` | Policy doc + validation gap grep |
-| `mobile-tablet-readiness-review-v1` | **Deferred/penultimate** — before Competitive/Product Discovery |
+| `lesson-student-nullability-policy-review-v1` | Policy doc + validation gap grep — **Done (docs)** |
+| `student-delete-retention-policy-review-v1` | **Done (docs)** — [student-delete-retention-policy-review.md](./student-delete-retention-policy-review.md) |
+| `mobile-tablet-readiness-review-v1` | **Done (docs + minor UI)** — [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md); next: `mobile-tablet-readiness-schedule-map-v1` |
 | Engineering Excellence Audit | Refactors, route consistency, optional E2E CI |
 | Billing / checkout / PSP | Explicit product scope only; not in baseline |
 | `supabase-rls-tenant-policies-v1` | Only if Data API tenant access is product-required |
@@ -272,15 +273,19 @@ Parent batch — always slice before implementing.
 | `provider-assisted-import-runbook-v1` | P2 | Full operator runbook (outline in [packaging-and-entitlements.md](../product/packaging-and-entitlements.md)) |
 | `payment-integration-product-planning-v1` | P2 | School-facing payments product spec |
 | `payments-and-balances-foundation-v1` | P2 | Technical foundation for balances/packages |
-| `mobile-tablet-readiness-review-v1` | P2 deferred | **Mobile/tablet readiness (penultimate pre-discovery):** responsive UX review for admin/instructor/student; Schedule Map on small screens; touch targets; forms/tables/lists/dialogs; mobile performance/INP; PWA/installable readiness (manifest/icons/theme-color; service worker/offline only if justified); Playwright mobile viewport smoke/e2e review. **Deferred until** DAT core is solid, cohesive, and in production — **before** `competitive-product-discovery-v1`. Analysis/planning only until approved slice. |
-| `competitive-product-discovery-v1` | P2 deferred | **Competitive/Product Discovery (future):** research competitor features that may add value to DAT; discuss, mature, architect, and implement in future slices. **Deferred until** DAT core is cohesive, polished, and in production — **after** `mobile-tablet-readiness-review-v1`. See DEC-007. |
+| `mobile-tablet-readiness-review-v1` | — | **Done (docs + minor UI)** — readiness matrix + DEC-032 alignment; [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md); localized layout fixes (Vehicles, Lessons header, People L2 tabs); no API/schema/auth changes |
+| `mobile-tablet-readiness-schedule-map-v1` | P1 polish | Schedule Map small-screen strategy: day-view default/lock, week/month degradation, touch targets ≥44px; admin + instructor + student surfaces |
+| `mobile-tablet-readiness-pwa-manifest-v1` | P2 | Manifest + icons + theme-color only; no service worker unless justified |
+| `mobile-tablet-readiness-admin-surfaces-v1` | P2 | Lessons rows, vehicles badges, audit log mobile list (sliced sub-items OK) |
+| `mobile-tablet-readiness-playwright-viewports-v1` | P2 | Enable commented Playwright mobile viewport projects |
+| `competitive-product-discovery-v1` | P2 deferred | **Competitive/Product Discovery (future):** research competitor features that may add value to DAT; discuss, mature, architect, and implement in future slices. **Deferred until** after `mobile-tablet-readiness-schedule-map-v1` (or explicit waiver). See DEC-007. |
 | `i18n-framework-planning-v1` | P2 | Real i18n; switcher, fallback, plan tie-in |
 | `language-pack-pt-PT-v1` | P3 | pt-PT copy after framework |
 | `super-agent-product-strategy-protocol-v1` | — | **Done** in `cursor-operating-model.md` (this sync batch) |
 
 **Deferred explicitly:** `people-management-ux-unification-instructor-route-split-v1` (D4; not recommended next).
 
-**Product direction (backlog — deferred post-production polish):** **Mobile/tablet readiness** (`mobile-tablet-readiness-review-v1`) — penultimate phase before discovery; responsive/PWA review when DAT core is production-solid. **Competitive/Product Discovery** (`competitive-product-discovery-v1`) — after mobile/tablet readiness. Discovery/strategy track only — no runtime work until app is production-cohesive and a dedicated slice is approved.
+**Product direction (backlog — post-production polish):** **Mobile/tablet readiness review** (`mobile-tablet-readiness-review-v1`) — **done**; next runtime slice `mobile-tablet-readiness-schedule-map-v1`. **Competitive/Product Discovery** (`competitive-product-discovery-v1`) — after schedule-map slice (or explicit waiver). Discovery/strategy track only — no runtime work until a dedicated slice is approved.
 
 ---
 

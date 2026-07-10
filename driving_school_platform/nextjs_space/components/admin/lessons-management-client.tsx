@@ -400,7 +400,7 @@ export function LessonsManagementClient() {
       <>
         {/* Header */}
         <div className="mb-8" data-testid={SMOKE_TESTIDS.lessonManagement}>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 Lesson Management
@@ -409,7 +409,7 @@ export function LessonsManagementClient() {
                 Track recent and upcoming lessons across all categories.
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {selectedView === "DRIVING" ? (
                 <>
                   <Button
