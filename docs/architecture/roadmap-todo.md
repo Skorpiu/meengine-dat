@@ -71,6 +71,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `audit-log-write-paths-practical-lessons-import-apply-v1` | **Done** | Practical lessons import apply summary audit; `POST /api/admin/practical-lessons/import/apply` (`lesson.import.apply`); aggregated metadata; `LessonImport` entity; tests |
 | `audit-log-access-events-student-export-v1` | **Done** | Student export download access audit; `GET /api/admin/students/export` (`student.export.download`); minimal metadata; `StudentExport` entity; tests |
 | `audit-log-access-events-practical-lessons-export-v1` | **Done** | Practical lessons export download access audit; `GET /api/admin/practical-lessons/export` (`lesson.export.download`); minimal metadata; `LessonExport` entity; tests |
+| `audit-log-viewer-export-v1` | **Done** | CSV export from `/admin/audit-logs`; `GET /api/admin/audit-logs/export`; privacy-minimal DTO; filters; max 10_000 rows; no export audit event; tests |
 | **First-client operator smoke (re-run lessons edit)** | **Done (operator)** | Manual smoke green after modal edit deploy (main `a9549bf`) |
 
 ---
@@ -79,7 +80,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Notes |
 | ----- | ----- |
-| Audit log runtime implementation | **Write + read API + viewer UI foundation done** — see [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md); import apply summary audits closed (Students + Practical lessons); next: viewer export polish (optional) |
+| Audit log runtime implementation | **Write + read API + viewer UI + CSV export done** — see [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md); import apply summary audits closed (Students + Practical lessons) |
 | Demo DB separation | Recommended for public portfolio; lower urgency with dedicated client tenant |
 | `lesson-student-nullability-policy-review-v1` | Policy doc + validation gap grep — **Done (docs)** |
 | `student-delete-retention-policy-review-v1` | **Done (docs)** — [student-delete-retention-policy-review.md](./student-delete-retention-policy-review.md) |

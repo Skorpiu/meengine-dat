@@ -34,8 +34,9 @@ export default async function AdminAuditLogsPage() {
             <AlertDescription>
               This page is internal tooling and is not linked from the main
               school admin navigation. Access it directly at{" "}
-              <span className="font-mono text-sm">/admin/audit-logs</span>.
-              Export and platform-wide viewers are deferred.
+              <span className="font-mono text-sm">/admin/audit-logs</span>. CSV
+              export respects the active filters and privacy-minimal fields
+              only. Platform-wide viewers are deferred.
             </AlertDescription>
           </Alert>
         </div>

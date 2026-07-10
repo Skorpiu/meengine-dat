@@ -253,9 +253,10 @@ Ordered by foundation-plan MVP alignment and first-client operator need:
 
 | # | Slice name | Scope | Why now |
 | - | ---------- | ----- | ------- |
-| 1 | `audit-log-viewer-export-v1` | CSV export from viewer (deferred until product need) | Optional; not blocking production |
-| 2 | `audit-log-viewer-platform-cross-tenant-v1` | Platform cross-tenant viewer (operator-only) | Deferred; requires stronger governance/guardrails |
-| 3 | `audit-log-viewer-entity-resolution-v1` | Optional entity display (e.g. resolve student/lesson labels) | Deferred; avoid PII leaks; keep viewer minimal |
+| 1 | `audit-log-viewer-platform-cross-tenant-v1` | Platform cross-tenant viewer (operator-only) | Deferred; requires stronger governance/guardrails |
+| 2 | `audit-log-viewer-entity-resolution-v1` | Optional entity display (e.g. resolve student/lesson labels) | Deferred; avoid PII leaks; keep viewer minimal |
+
+**Done (optional polish):** `audit-log-viewer-export-v1` — CSV export from `/admin/audit-logs` via `GET /api/admin/audit-logs/export`; privacy-minimal columns; filters respected; max 10_000 rows; no export access audit event.
 
 **Defer to slice 4+ (not in top 3):** import apply summaries (if not confirmed), vehicles, invitation accept.
 

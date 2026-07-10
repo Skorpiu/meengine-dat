@@ -14,29 +14,23 @@ const auditLogDateParamSchema = z
     message: "invalid_date",
   });
 
-export const auditLogListQuerySchema = z
-  .object({
-    limit: z.coerce
-      .number()
-      .int()
-      .min(1, "limit_out_of_range")
-      .max(AUDIT_LOG_LIST_MAX_LIMIT, "limit_out_of_range")
-      .optional()
-      .default(AUDIT_LOG_LIST_DEFAULT_LIMIT),
-    cursor: z.string().trim().min(1).optional(),
-    action: optionalFilterString(128),
-    entityType: optionalFilterString(128),
-    entityId: optionalFilterString(128),
-    actorUserId: optionalFilterString(128),
-    targetUserId: optionalFilterString(128),
-    requestId: optionalFilterString(256),
-    dateFrom: auditLogDateParamSchema.optional(),
-    dateTo: auditLogDateParamSchema.optional(),
-  })
-  .superRefine((value, ctx) => {
-    if (value.dateFrom && value.dateTo) {
-      const from = Date.parse(value.dateFrom);
-      const to = Date.parse(value.dateTo);
+const auditLogFilterFieldsSchema = z.object({
+  action: optionalFilterString(128),
+  entityType: optionalFilterString(128),
+  entityId: optionalFilterString(128),
+  actorUserId: optionalFilterString(128),
+  targetUserId: optionalFilterString(128),
+  requestId: optionalFilterString(256),
+  dateFrom: auditLogDateParamSchema.optional(),
+  dateTo: auditLogDateParamSchema.optional(),
+});
+
+function refineAuditLogDateRange<T extends z.ZodTypeAny>(schema: T) {
+  return schema.superRefine((value, ctx) => {
+    const filters = value as z.infer<typeof auditLogFilterFieldsSchema>;
+    if (filters.dateFrom && filters.dateTo) {
+      const from = Date.parse(filters.dateFrom);
+      const to = Date.parse(filters.dateTo);
       if (from > to) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -46,6 +40,26 @@ export const auditLogListQuerySchema = z
       }
     }
   });
+}
+
+export const auditLogExportQuerySchema = refineAuditLogDateRange(
+  auditLogFilterFieldsSchema,
+);
+
+export type AuditLogExportQuery = z.infer<typeof auditLogExportQuerySchema>;
+
+export const auditLogListQuerySchema = refineAuditLogDateRange(
+  auditLogFilterFieldsSchema.extend({
+    limit: z.coerce
+      .number()
+      .int()
+      .min(1, "limit_out_of_range")
+      .max(AUDIT_LOG_LIST_MAX_LIMIT, "limit_out_of_range")
+      .optional()
+      .default(AUDIT_LOG_LIST_DEFAULT_LIMIT),
+    cursor: z.string().trim().min(1).optional(),
+  }),
+);
 
 export type AuditLogListQuery = z.infer<typeof auditLogListQuerySchema>;
 
@@ -118,6 +132,34 @@ export function parseAuditLogListQueryFromSearchParams(
     if (!decoded) {
       return { success: false, error: "invalid_cursor" };
     }
+  }
+
+  return { success: true, data: result.data };
+}
+
+export function parseAuditLogExportQueryFromSearchParams(
+  searchParams: URLSearchParams,
+):
+  | { success: true; data: AuditLogExportQuery }
+  | { success: false; error: string } {
+  const raw = {
+    action: searchParams.get("action") ?? undefined,
+    entityType: searchParams.get("entityType") ?? undefined,
+    entityId: searchParams.get("entityId") ?? undefined,
+    actorUserId: searchParams.get("actorUserId") ?? undefined,
+    targetUserId: searchParams.get("targetUserId") ?? undefined,
+    requestId: searchParams.get("requestId") ?? undefined,
+    dateFrom: searchParams.get("dateFrom") ?? undefined,
+    dateTo: searchParams.get("dateTo") ?? undefined,
+  };
+
+  const result = auditLogExportQuerySchema.safeParse(raw);
+  if (!result.success) {
+    const issue = result.error.issues[0];
+    return {
+      success: false,
+      error: issue?.message ?? "invalid_query_params",
+    };
   }
 
   return { success: true, data: result.data };

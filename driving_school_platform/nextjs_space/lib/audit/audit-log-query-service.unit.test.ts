@@ -16,6 +16,7 @@ vi.mock("@/lib/db", () => ({
 }));
 
 import {
+  exportTenantAuditLogs,
   listTenantAuditLogs,
   mapAuditLogRowToListItem,
 } from "./audit-log-query-service";
@@ -215,5 +216,44 @@ describe("listTenantAuditLogs", () => {
         },
       ]),
     );
+  });
+});
+
+describe("exportTenantAuditLogs", () => {
+  it("paginates through results when the first page is full", async () => {
+    const page1 = Array.from({ length: 100 }, (_, index) => ({
+      ...baseRow,
+      id: `audit-${index + 1}`,
+    }));
+    const page2Row = { ...baseRow, id: "audit-101" };
+
+    h.findManyMock
+      .mockResolvedValueOnce([...page1, page2Row])
+      .mockResolvedValueOnce([page2Row]);
+
+    const result = await exportTenantAuditLogs({
+      organizationId: "org-a",
+      filters: {},
+      maxRows: 150,
+    });
+
+    expect(result.exportedCount).toBe(101);
+    expect(result.truncated).toBe(false);
+    expect(h.findManyMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("marks export as truncated when max rows is reached with more data available", async () => {
+    const row2 = { ...baseRow, id: "audit-2" };
+    h.findManyMock.mockResolvedValueOnce([baseRow, row2]);
+
+    const result = await exportTenantAuditLogs({
+      organizationId: "org-a",
+      filters: {},
+      maxRows: 1,
+    });
+
+    expect(result.exportedCount).toBe(1);
+    expect(result.truncated).toBe(true);
+    expect(result.items).toHaveLength(1);
   });
 });

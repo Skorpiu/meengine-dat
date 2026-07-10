@@ -5,8 +5,10 @@
 import { prisma } from "@/lib/db";
 import { redactAuditMetadata } from "@/lib/audit/audit-log-redaction";
 import {
+  AUDIT_LOG_LIST_MAX_LIMIT,
   decodeAuditLogListCursor,
   encodeAuditLogListCursor,
+  type AuditLogExportQuery,
   type AuditLogListQuery,
 } from "@/lib/audit/audit-log-query-params";
 import type { Prisma, UserRole } from "@prisma/client";
@@ -50,6 +52,16 @@ export type AuditLogListResult = {
   items: AuditLogListItemDto[];
   nextCursor: string | null;
   limit: number;
+};
+
+export const AUDIT_LOG_EXPORT_MAX_ROWS = 10_000;
+export const AUDIT_LOG_EXPORT_PAGE_SIZE = AUDIT_LOG_LIST_MAX_LIMIT;
+
+export type AuditLogExportResult = {
+  items: AuditLogListItemDto[];
+  exportedCount: number;
+  truncated: boolean;
+  maxRows: number;
 };
 
 export function mapAuditLogRowToListItem(
@@ -154,5 +166,53 @@ export async function listTenantAuditLogs(input: {
     items: page.map(mapAuditLogRowToListItem),
     nextCursor,
     limit,
+  };
+}
+
+export async function exportTenantAuditLogs(input: {
+  organizationId: string;
+  filters: AuditLogExportQuery;
+  maxRows?: number;
+}): Promise<AuditLogExportResult> {
+  const maxRows = input.maxRows ?? AUDIT_LOG_EXPORT_MAX_ROWS;
+  const items: AuditLogListItemDto[] = [];
+  let cursor: string | undefined;
+  let truncated = false;
+
+  while (items.length < maxRows) {
+    const page = await listTenantAuditLogs({
+      organizationId: input.organizationId,
+      query: {
+        ...input.filters,
+        limit: AUDIT_LOG_EXPORT_PAGE_SIZE,
+        cursor,
+      },
+    });
+
+    if (page.items.length === 0) {
+      break;
+    }
+
+    const remaining = maxRows - items.length;
+    const slice = page.items.slice(0, remaining);
+    items.push(...slice);
+
+    if (slice.length < page.items.length) {
+      truncated = true;
+      break;
+    }
+
+    if (!page.nextCursor) {
+      break;
+    }
+
+    cursor = page.nextCursor;
+  }
+
+  return {
+    items,
+    exportedCount: items.length,
+    truncated,
+    maxRows,
   };
 }

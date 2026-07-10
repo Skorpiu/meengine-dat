@@ -272,6 +272,7 @@ Documented and in use (docs/rules only; no runtime change):
 - `audit-log-write-paths-practical-lessons-import-apply-v1` — wired `lesson.import.apply` into `POST /api/admin/practical-lessons/import/apply`; one aggregated audit when `applied: true`; `entityType: LessonImport`; summary metadata (counts, `format`, `mode: createOnly`, `lessonSource: IMPORT`, `lessonType: DRIVING`); no row payloads/PII (no instructor email, no adminNotes, no schoolStudentId literals); audit failure non-blocking; dry-run route unchanged; route + helper unit tests. Validated via `pnpm check`.
 - `audit-log-access-events-student-export-v1` — wired `student.export.download` into `GET /api/admin/students/export`; one access event per successful export; `entityType: StudentExport`; metadata: `format`, `exportedCount`, `hasFilters`, `filterKeys` (names only), `source: admin_export`, `includesPii: true`; no query raw, no search values, no row payloads; audit failure non-blocking; export response headers/body unchanged; route + helper unit tests. Validated via `pnpm check`.
 - `audit-log-access-events-practical-lessons-export-v1` — wired `lesson.export.download` into `GET /api/admin/practical-lessons/export`; one access event per successful export; `entityType: LessonExport`; metadata: `format`, `exportedCount`, `hasFilters`, `filterKeys` (names only), `source: admin_export`, `includesPii: true`, `lessonType: DRIVING`; no query raw, no filter values, no row payloads; audit failure non-blocking; export response headers/body unchanged; route + helper unit tests. Validated via `pnpm check`.
+- `audit-log-viewer-export-v1` — CSV export from `/admin/audit-logs`; `GET /api/admin/audit-logs/export`; privacy-minimal DTO columns only; filters respected; server-side paginated export up to 10_000 rows; `guardCsvInjection` + reused `escapeCsvField`; no export access audit event (viewer-internal polish; avoids audit-loop noise); UI **Export CSV** button; route + export helper + client tests. Validated via `pnpm check`.
 
 - `student-delete-retention-policy-review-v1` — docs-only retention policy review (2026-07-10); [student-delete-retention-policy-review.md](./student-delete-retention-policy-review.md). No schema/runtime changes.
 - `mobile-tablet-readiness-review-v1` — docs-only mobile/tablet readiness review (2026-07-10) + localized layout fixes (Vehicles rows, Lessons header, People L2 tabs); [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md). No API/schema/auth/billing/audit changes. Validated via `pnpm check`.
@@ -279,14 +280,13 @@ Documented and in use (docs/rules only; no runtime change):
 
 ### Likely next (production path)
 
-1. `audit-log-viewer-export-v1` — CSV export from viewer (optional; product need)
-2. `mobile-tablet-readiness-pwa-manifest-v1` or `mobile-tablet-readiness-admin-surfaces-v1` — optional polish
+1. `mobile-tablet-readiness-pwa-manifest-v1` or `mobile-tablet-readiness-admin-surfaces-v1` — optional polish
 
 ### Deferred (not next)
 
 - **`calendar-lessons-polish-v1e-student-warnings`** (P3) — product policy first
 - `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)**
-- Audit log — **write paths complete + read API + viewer UI foundation**; `/admin/audit-logs` URL-only (no main navbar); coverage at [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md)
+- Audit log — **write paths complete + read API + viewer UI + CSV export**; `/admin/audit-logs` URL-only (no main navbar); coverage at [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md)
 
 ### Product direction (backlog — post-production polish)
 

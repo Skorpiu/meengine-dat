@@ -20,12 +20,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, RefreshCw, ScrollText } from "lucide-react";
+import { Loader2, RefreshCw, ScrollText, Download } from "lucide-react";
 import {
   fetchAuditLogList,
   type AuditLogListFilters,
   type AuditLogListItem,
 } from "@/lib/audit/audit-log-list-client";
+import { fetchAuditLogExport } from "@/lib/audit/audit-log-export-client";
 import {
   formatAuditLogActorLabel,
   formatAuditLogDateTime,
@@ -91,8 +92,10 @@ export function AuditLogsClient() {
   const [listLimit, setListLimit] = useState(50);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
   const [filterError, setFilterError] = useState("");
+  const [exportMessage, setExportMessage] = useState("");
 
   const loadAuditLogs = useCallback(
     async (options?: {
@@ -162,6 +165,25 @@ export function AuditLogsClient() {
 
   const handleRefresh = () => {
     void loadAuditLogs({ filters: appliedFilters });
+  };
+
+  const handleExportCsv = async () => {
+    setExporting(true);
+    setExportMessage("");
+    const result = await fetchAuditLogExport(appliedFilters);
+    setExporting(false);
+
+    if (!result.ok) {
+      setExportMessage(result.message);
+      return;
+    }
+
+    const truncatedNote = result.truncated
+      ? " Export reached the row limit; narrow filters to export more."
+      : "";
+    setExportMessage(
+      `Downloaded ${result.filename} (${result.exportedCount} event${result.exportedCount === 1 ? "" : "s"}).${truncatedNote}`,
+    );
   };
 
   const hasActiveFilters = Object.values(appliedFilters).some(
@@ -310,12 +332,32 @@ export function AuditLogsClient() {
               type="button"
               variant="outline"
               onClick={handleRefresh}
-              disabled={loading || loadingMore}
+              disabled={loading || loadingMore || exporting}
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void handleExportCsv()}
+              disabled={loading || loadingMore || exporting}
+            >
+              {exporting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 mr-2" />
+              )}
+              Export CSV
+            </Button>
           </div>
+
+          {exportMessage ? (
+            <Alert>
+              <AlertTitle>Export</AlertTitle>
+              <AlertDescription>{exportMessage}</AlertDescription>
+            </Alert>
+          ) : null}
 
           {filterError ? (
             <Alert variant="destructive">
