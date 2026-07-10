@@ -257,9 +257,11 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - Manual practical history creates **DRIVING COMPLETED MANUAL** lessons.
 - Normal app-created lessons use **SYSTEM** source.
 
-## DAT_3.7 priorities (cursor hint — verify `current-state.md` and `roadmap-todo.md`)
+## DAT_3.7 priorities (cursor hint — **verify `current-state.md` and `roadmap-todo.md`**)
 
-**Done (v1):**
+**Source of truth:** `docs/architecture/current-state.md` and `docs/architecture/roadmap-todo.md`. This section is a Cursor hint only; if drift, trust memory docs.
+
+**Done (v1)** — see memory docs for full list; recent closures include:
 
 - `student-record-delete-policy-and-action`
 - `people-management-information-architecture-v1` (slice of `people-management-ux-unification`)
@@ -346,28 +348,42 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `instructor-invite-license-fields-v1` — INSTRUCTOR invite collects license number + expiry on `UserInvitation`; accept uses real license data, no `INVITE-PENDING-*` (DEC-038); migration `20260623120000_add_instructor_license_fields_to_invitations`; placeholder Profiles warning; DEC-037/public signup unchanged
 - `production-smoke-e2e-fixture-preflight-v1` — zero-write fixture preflight (DEC-039); `pnpm e2e:smoke:fixture-preflight`; explicit `DAT_SMOKE_ORG_ID` + fixture IDs; temporary A Conquistadora smoke tenant on www.meengine.io; hosted green
 - `production-smoke-e2e-lesson-mutations-v1` — lesson mutation smoke (DEC-040); `pnpm e2e:smoke:mutations`; dual opt-in `DAT_E2E_ALLOW_PRODUCTION_MUTATIONS`; API-first create + update; no cleanup; not in `pnpm check`/CI
+- `production-smoke-e2e-testids-v1` — smoke `data-testid` markers + booking readiness metadata (DEC-041); not in `pnpm check`/CI
+- `production-first-client-onboarding-record-v1` — docs-only first B2B client onboarding record (DEC-043); `docs/architecture/first-client-onboarding-record.md`
+- `production-smoke-runbook-sync-v1` — docs-only runbook sync after smoke slices
+- **Audit log epic (core done):** migration `20260702120000_audit_log_tenant_context_v1`; write paths + `GET /api/admin/audit-logs` + `/admin/audit-logs` viewer UI foundation; coverage at `docs/architecture/audit-log-coverage-readiness-review.md`
+- `lesson-student-nullability-policy-review-v1` — docs-only; `docs/architecture/lesson-student-nullability-policy-review.md`
+- `student-delete-retention-policy-review-v1` — docs-only; `docs/architecture/student-delete-retention-policy-review.md`
+- `mobile-tablet-readiness-review-v1` — docs-only review + minor admin layout fixes; `docs/architecture/mobile-tablet-readiness-review.md`
+- `mobile-tablet-readiness-schedule-map-v1` — Schedule Map `lg` gate for week/month; day fallback; touch targets; `lib/schedule/schedule-map-responsive.ts`
 
-**Current recommended next:**
+**Current recommended next** (optional unless product says otherwise):
 
-1. `production-smoke-e2e-testids-v1` — optional UI testids if mutation selectors prove fragile
+1. `audit-log-viewer-export-v1` — CSV export from `/admin/audit-logs` viewer (**optional**; product need)
+2. `mobile-tablet-readiness-pwa-manifest-v1` — optional P2 (manifest + icons + theme-color; no SW unless justified)
+3. `mobile-tablet-readiness-admin-surfaces-v1` — optional P2 (lessons rows, vehicles badges, audit mobile list)
+4. `competitive-product-discovery-v1` — **only** after explicit approval/waiver (DEC-007)
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
 **Production cutline (DEC-032):** Controlled first B2B client — invite-only, `PUBLIC_SIGNUP_ENABLED=false`, no live billing. See `docs/architecture/production-readiness-cutline.md`.
 
-**Do not open next:** `calendar-lessons-polish-v1e-student-warnings`, `mobile-tablet-readiness-review-v1`, `competitive-product-discovery-v1`, audit log platform viewer/export/RLS policy work, billing/checkout, instructor route split (D4).
+**Do not open next** (unless explicit product scope / approval):
 
-**Likely next after mutation smoke slice:**
+- `calendar-lessons-polish-v1e-student-warnings` (P3 — product policy first)
+- `competitive-product-discovery-v1` (without explicit approval/waiver)
+- **Billing / checkout / PSP** — not in baseline cutline
+- **Prisma migrations / schema changes** — unless explicitly requested and gated
+- `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)**
+- **Platform cross-tenant audit viewer** — unless explicit platform product need
+- **`supabase-rls-tenant-policies-v1`** — only if Data API tenant access is product-required
 
-2. `production-first-client-onboarding-record-v1` — operator evidence doc
-3. `lesson-student-nullability-policy-review-v1` — policy docs (P2)
-4. `production-smoke-runbook-sync-v1` — only if residual runbook drift remains
-5. `lesson-student-nullability-policy-review-v1` — policy docs (P2)
+**Audit log note:** Core write + read + viewer foundation is **done**. `audit-log-viewer-export-v1` is **optional polish**, not a gate. Do **not** treat audit log as “do not open” wholesale.
 
-**Product direction (backlog — deferred post-production polish):**
+**Product direction (backlog — post-production polish):**
 
-- `mobile-tablet-readiness-review-v1` (P2 deferred) — penultimate: responsive/PWA review when DAT core is production-solid; **before** Competitive/Product Discovery
-- `competitive-product-discovery-v1` (P2 deferred; DEC-007) — **after** mobile/tablet readiness; **Deferred until** DAT core is cohesive, polished, and in production
+- **Mobile/tablet** — review + Schedule Map slices **done**; optional: PWA manifest, admin surfaces, Playwright viewports
+- **`competitive-product-discovery-v1`** (P2 deferred; DEC-007) — after optional mobile polish or explicit waiver
 
 **Deferred (not next — RLS revoke-only track closed):**
 
