@@ -1,8 +1,8 @@
 # Competitive Product Discovery
 
-**Slice:** `competitive-product-discovery-v1`  
-**Date:** 2026-07-10 (correction pass)  
-**Baseline:** main `a1c2dad` · prior slice `mobile-tablet-readiness-playwright-viewports-v1`  
+**Slice:** `competitive-product-discovery-v1`
+**Date:** 2026-07-10 (correction pass)
+**Baseline:** main `a1c2dad` · prior slice `mobile-tablet-readiness-playwright-viewports-v1`
 **Decision context:** DEC-007 (discovery slice only; no durable product decisions in this batch)
 
 **Registry summary (canonical):**
@@ -502,7 +502,7 @@ Scores 1 (low) – 5 (high). **Not summed** — qualitative prioritisation. Mark
 
 ### Medium-term (2)
 
-4. **`student-progress-tracking-foundation-plan-v1`** — competency/skills model aligned to school policy (not DVSA copy); builds on `LessonCounter` + lesson feedback fields.  
+4. **`student-progress-tracking-foundation-plan-v1`** — competency/skills model aligned to school policy (not DVSA copy); builds on `LessonCounter` + lesson feedback fields.
 5. **`import-export-business-packaging-v1`** — entitlements for self-service import/export already shipped technically (**Fact repo** PA-006).
 
 ### Explicitly rejected or deferred (≥2)
@@ -544,8 +544,8 @@ Scores 1 (low) – 5 (high). **Not summed** — qualitative prioritisation. Mark
 
 **Blocked until:**
 
-1. Plan slice completes with topics in §14.1  
-2. Explicit `APPROVED TO IMPLEMENT: lesson-reminders-email-foundation-v1` (or equivalent)  
+1. Plan slice completes with topics in §14.1
+2. Explicit `APPROVED TO IMPLEMENT: lesson-reminders-email-foundation-v1` (or equivalent)
 3. Architecture decision on reminder storage/dispatch — **not** assumed to reuse `Notification`
 
 ---
