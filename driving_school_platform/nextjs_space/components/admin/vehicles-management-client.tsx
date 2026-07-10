@@ -447,19 +447,19 @@ export function VehiclesManagementClient() {
                       key={vehicle.id}
                       className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50"
                     >
-                      <div className="flex items-center space-x-4 min-w-0">
-                        <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center">
-                          <VehicleIcon className="w-6 h-6 text-blue-600" />
+                      <div className="flex min-w-0 items-center space-x-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-blue-50">
+                          <VehicleIcon className="h-6 w-6 text-blue-600" />
                         </div>
-                        <div>
-                          <div className="font-medium">
+                        <div className="min-w-0 space-y-1">
+                          <div className="font-medium break-words">
                             {vehicle.make} {vehicle.model} ({vehicle.year})
                           </div>
-                          <div className="text-sm text-gray-600">
+                          <div className="break-words text-sm text-gray-600">
                             {vehicle.registrationNumber} • {vehicle.color} •{" "}
                             {vehicle.transmissionType?.name}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="break-words text-sm text-gray-500">
                             Category: {vehicle.category?.name || "General"} •
                             Mileage: {vehicle.currentMileage?.toLocaleString()}{" "}
                             km • Fuel: {vehicle.fuelType}
@@ -467,9 +467,8 @@ export function VehiclesManagementClient() {
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                        {/* Maintenance Checkbox */}
-                        <div className="flex items-center space-x-2 px-3 py-2 border rounded-lg bg-gray-50">
+                      <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
+                        <div className="flex w-full items-center space-x-2 rounded-lg border bg-gray-50 px-3 py-2 sm:w-auto">
                           <Checkbox
                             id={`maintenance-${vehicle.id}`}
                             checked={underMaintenance}
@@ -488,55 +487,57 @@ export function VehiclesManagementClient() {
                           </label>
                         </div>
 
-                        {/* Status Badges */}
-                        <Badge
-                          variant={vehicle.isActive ? "default" : "secondary"}
-                        >
-                          {vehicle.isActive ? "Active" : "Inactive"}
-                        </Badge>
-
-                        {isInUse && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {/* Status Badges */}
                           <Badge
-                            variant="secondary"
-                            className="bg-purple-100 text-purple-800"
+                            variant={vehicle.isActive ? "default" : "secondary"}
                           >
-                            In Use
+                            {vehicle.isActive ? "Active" : "Inactive"}
                           </Badge>
-                        )}
 
-                        {isAvailable && (
-                          <Badge
-                            variant="secondary"
-                            className="bg-green-100 text-green-800"
-                          >
-                            Available
-                          </Badge>
-                        )}
+                          {isInUse && (
+                            <Badge
+                              variant="secondary"
+                              className="bg-purple-100 text-purple-800"
+                            >
+                              In Use
+                            </Badge>
+                          )}
 
-                        {underMaintenance && (
-                          <Badge
-                            variant="secondary"
-                            className="bg-orange-100 text-orange-800"
-                          >
-                            Maintenance
-                          </Badge>
-                        )}
+                          {isAvailable && (
+                            <Badge
+                              variant="secondary"
+                              className="bg-green-100 text-green-800"
+                            >
+                              Available
+                            </Badge>
+                          )}
 
-                        {vehicle.hasDualControls && (
-                          <Badge variant="secondary">Dual Controls</Badge>
-                        )}
+                          {underMaintenance && (
+                            <Badge
+                              variant="secondary"
+                              className="bg-orange-100 text-orange-800"
+                            >
+                              Maintenance
+                            </Badge>
+                          )}
 
-                        {vehicle.hasDashcam && (
-                          <Badge variant="secondary">Dashcam</Badge>
-                        )}
+                          {vehicle.hasDualControls && (
+                            <Badge variant="secondary">Dual Controls</Badge>
+                          )}
+
+                          {vehicle.hasDashcam && (
+                            <Badge variant="secondary">Dashcam</Badge>
+                          )}
+                        </div>
 
                         {/* Action Buttons */}
-                        <div className="flex items-center gap-2 sm:ml-4">
+                        <div className="flex w-full flex-wrap gap-2 sm:ml-4 sm:w-auto">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleEditVehicle(vehicle)}
-                            className="gap-1"
+                            className="h-11 min-h-11 gap-1 sm:h-9 sm:min-h-0"
                           >
                             <Edit2 className="h-3 w-3" />
                             Edit
@@ -545,7 +546,7 @@ export function VehiclesManagementClient() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleDeleteClick(vehicle)}
-                            className="gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="h-11 min-h-11 gap-1 text-red-600 hover:bg-red-50 hover:text-red-700 sm:h-9 sm:min-h-0"
                           >
                             <Trash2 className="h-3 w-3" />
                             Delete

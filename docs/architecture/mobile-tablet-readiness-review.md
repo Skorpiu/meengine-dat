@@ -10,11 +10,15 @@ DAT has **basic responsive scaffolding** (Tailwind breakpoints, mobile navbar, s
 
 **Production decision (aligned with DEC-032):** Mobile/tablet gaps are **not production blockers** for the controlled first B2B client. School secretaria is expected to operate primarily on **desktop or tablet landscape**; student/instructor mobile use is **secondary** (schedule check, not full admin workflows).
 
-**Highest-impact gaps:** Schedule Map week/month views (`grid-cols-7` on narrow viewports) — **mitigated** in schedule-map slice; dense admin rows (Vehicles, Lessons header) partially addressed; operator tables (audit logs, settings) with horizontal scroll only; **PWA manifest done** (install metadata only; no offline).
+**Highest-impact gaps:** Schedule Map week/month views — **mitigated**; admin Lessons/Vehicles/Audit logs narrow-viewport polish **done** in admin-surfaces slice; Settings tables remain scroll-only (deferred/internal).
 
-**Recommended next slice:** `mobile-tablet-readiness-admin-surfaces-v1` — remaining admin surfaces polish.
+**Recommended next slice:** `mobile-tablet-readiness-playwright-viewports-v1` — optional mobile viewport smoke.
 
 **Implemented (2026-07-10):** `mobile-tablet-readiness-schedule-map-v1` — week/month disabled below `lg` (1024px); auto-fallback to day on resize; helper copy; edit/delete/nav touch targets `h-11` on narrow viewports; helpers in `lib/schedule/schedule-map-responsive.ts`.
+
+**Implemented (2026-07-10):** `mobile-tablet-readiness-pwa-manifest-v1` — `manifest.webmanifest`, `dat-icon.svg`, theme-color/background metadata; no service worker.
+
+**Implemented (2026-07-10):** `mobile-tablet-readiness-admin-surfaces-v1` — Lessons row stack on narrow viewports; Vehicles badge wrap + touch targets; Audit logs card fallback below `md` (privacy-minimal fields only).
 
 ---
 
@@ -127,9 +131,9 @@ Per DEC-032: **operational/deploy discipline**, not mobile redesign.
 | **Global — Touch targets** | Buttons default `h-10`; calendar controls `h-8`; map edit `h-6` | Medium on map | P1 | Bump map actions to ≥44px; audit calendar controls | Part of schedule-map slice |
 | **`/admin` Schedule Map** | Day default; week/month gated at `lg` (1024px); touch targets `h-11` on narrow | Low | P2 remaining | PWA; Playwright mobile viewports | `mobile-tablet-readiness-playwright-viewports-v1` |
 | **`/admin/users` People** | Cards + `sm:` stacks; import/export responsive | Low | P2 | Badge tooltips → tap-friendly help; L2 tabs fixed (this batch) | `mobile-tablet-readiness-people-tooltips-v1` |
-| **`/admin/lessons`** | Columns stack `&lt;lg`; header fixed (this batch) | Low | P2 | Lesson row horizontal layout on narrow screens | `mobile-tablet-readiness-lessons-rows-v1` |
-| **`/admin/vehicles`** | Rows stack `&lt;sm` (this batch); badges still dense | Low | P2 | Wrap badges; optional maintenance row separation | `mobile-tablet-readiness-vehicles-badges-v1` |
-| **`/admin/audit-logs`** | Filters responsive; table 8-col + `overflow-x-auto` | Low | P2 | Optional card/list mobile view | `mobile-tablet-readiness-audit-logs-mobile-v1` |
+| **`/admin/lessons`** | Columns stack `&lt;lg`; rows stack on narrow; header fixed | Low | P2 done | — | — |
+| **`/admin/vehicles`** | Rows stack `&lt;sm`; badges wrap; touch-friendly actions | Low | P2 done | — | — |
+| **`/admin/audit-logs`** | Filters responsive; table `md+`; card fallback `&lt;md` | Low | P2 done | — | — |
 | **`/admin/settings`** | Operator/internal; tables scroll | Low | P2 | Stack filter header; defer until Platform boundary | Defer with Platform |
 | **`/admin/license`** | Read-only; standard container | OK | — | None | — |
 | **`/instructor`** | Schedule Map slice done; booking forms good | Low | P2 | Navbar density | `mobile-tablet-readiness-navbar-v1` |
@@ -159,8 +163,8 @@ Per DEC-032: **operational/deploy discipline**, not mobile redesign.
 | Pattern | Evidence | Impact |
 | ------- | -------- | ------ |
 | Fixed 7-column calendar grid | `schedule-map.tsx` — `grid-cols-7` for week/month | Illegible on phone |
-| Horizontal-only table UX | `audit-logs-client.tsx`, `settings-management-client.tsx` | Scroll fatigue |
-| Single-row dense admin cards | `vehicles-management-client.tsx` (mitigated), lesson rows in `lessons-management-client.tsx` | Overflow / truncation |
+| Horizontal-only table UX | `settings-management-client.tsx` (audit logs mitigated with card fallback) | Scroll fatigue on settings |
+| Single-row dense admin cards | lesson rows improved in admin-surfaces slice | Reduced overflow on Lessons |
 | Hover-dependent tooltips | `student-records-manager.tsx` — Radix Tooltip on badges | Lost context on touch |
 | Small icon buttons on map | `schedule-map.tsx` — edit/delete `h-6 w-6` | Mis-taps |
 | No PWA metadata | **Resolved** — `public/manifest.webmanifest` + `app/layout.tsx` metadata + `public/icons/dat-icon.svg` | Install metadata only; not offline-capable |
@@ -183,7 +187,7 @@ Phone (admin)         ████░░░░░░░░░░░░░░░�
 
 1. **`mobile-tablet-readiness-schedule-map-v1`** — **Done** (2026-07-10): `lg` gate for week/month; day fallback; touch targets; `schedule-map-responsive.ts`.
 2. **`mobile-tablet-readiness-pwa-manifest-v1`** — **Done** (2026-07-10): `manifest.webmanifest`, `dat-icon.svg`, theme-color/background metadata; no service worker.
-3. **`mobile-tablet-readiness-admin-surfaces-v1`** — lessons rows, vehicles badges, audit log mobile list (sliced sub-items OK).
+3. **`mobile-tablet-readiness-admin-surfaces-v1`** — **Done** (2026-07-10): Lessons rows, Vehicles badges/actions, Audit logs mobile cards (`buildAuditLogMobileCardFields`).
 4. **`mobile-tablet-readiness-playwright-viewports-v1`** — enable commented Playwright mobile projects for regression.
 
 **Deferred (not in v1 PWA):** service worker, offline cache, push notifications.
@@ -196,7 +200,7 @@ Phone (admin)         ████░░░░░░░░░░░░░░░�
 
 DEC-032 explicitly placed mobile/tablet review as **penultimate / P2 deferred**. This review **confirms** that placement: gaps are real but **do not block** controlled first B2B production when operator expectations are set correctly.
 
-After stable production and optional mobile polish: **`mobile-tablet-readiness-admin-surfaces-v1`** or **`competitive-product-discovery-v1`** (DEC-007) per product priority.
+After stable production and optional mobile polish: **`mobile-tablet-readiness-playwright-viewports-v1`** or **`competitive-product-discovery-v1`** (DEC-007) per product priority.
 
 ---
 

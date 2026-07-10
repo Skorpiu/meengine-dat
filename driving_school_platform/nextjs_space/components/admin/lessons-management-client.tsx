@@ -257,25 +257,27 @@ export function LessonsManagementClient() {
     return (
       <div
         key={lesson.id}
-        className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+        className="flex flex-col gap-3 p-4 border rounded-lg hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between"
       >
-        <div className="flex items-center space-x-4">
-          <div className="text-center min-w-[80px]">
-            <div className="text-sm font-medium">
-              {getLessonDateLabel(lesson.lessonDate)}
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+          <div className="flex items-center gap-3 sm:contents">
+            <div className="text-center min-w-[80px] shrink-0">
+              <div className="text-sm font-medium">
+                {getLessonDateLabel(lesson.lessonDate)}
+              </div>
+              <div className="text-xs text-gray-500">{lesson.startTime}</div>
             </div>
-            <div className="text-xs text-gray-500">{lesson.startTime}</div>
+            <div
+              className={`h-3 w-3 shrink-0 rounded-full ${getLessonTypeDotColorClass(
+                isExamsTab
+                  ? lesson.lessonType
+                  : selectedView === "CODE"
+                    ? LESSON_TYPES.THEORY
+                    : LESSON_TYPES.DRIVING,
+              )}`}
+            />
           </div>
-          <div
-            className={`w-3 h-3 rounded-full ${getLessonTypeDotColorClass(
-              isExamsTab
-                ? lesson.lessonType
-                : selectedView === "CODE"
-                  ? LESSON_TYPES.THEORY
-                  : LESSON_TYPES.DRIVING,
-            )}`}
-          />
-          <div>
+          <div className="min-w-0">
             {isExamsTab ? (
               <>
                 <div className="font-medium">
@@ -350,9 +352,9 @@ export function LessonsManagementClient() {
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex w-full flex-wrap items-center gap-2 border-t pt-3 sm:w-auto sm:shrink-0 sm:justify-end sm:gap-3 sm:border-t-0 sm:pt-0">
           {selectedView === "DRIVING" && lesson.vehicle && (
-            <div className="text-right text-sm">
+            <div className="w-full text-sm sm:w-auto sm:text-right">
               <div className="font-medium">
                 {lesson.vehicle.make} {lesson.vehicle.model}
               </div>
@@ -360,6 +362,7 @@ export function LessonsManagementClient() {
           )}
 
           <Badge
+            className="shrink-0"
             variant={
               lesson.status === "SCHEDULED"
                 ? "default"

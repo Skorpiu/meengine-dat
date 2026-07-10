@@ -28,6 +28,7 @@ import {
 } from "@/lib/audit/audit-log-list-client";
 import { fetchAuditLogExport } from "@/lib/audit/audit-log-export-client";
 import {
+  buildAuditLogMobileCardFields,
   formatAuditLogActorLabel,
   formatAuditLogDateTime,
   formatAuditLogMetadataSummary,
@@ -394,56 +395,85 @@ export function AuditLogsClient() {
                 : "No audit events recorded yet."}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Created</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Entity</TableHead>
-                    <TableHead>Entity ID</TableHead>
-                    <TableHead>Actor</TableHead>
-                    <TableHead>Target user</TableHead>
-                    <TableHead>Request ID</TableHead>
-                    <TableHead>Metadata</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="whitespace-nowrap">
-                        {formatAuditLogDateTime(item.createdAt)}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {item.action}
-                      </TableCell>
-                      <TableCell>{item.entityType}</TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {formatAuditLogNullable(item.entityId)}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {formatAuditLogActorLabel(item)}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {formatAuditLogNullable(item.targetUserId)}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {formatAuditLogNullable(item.requestId)}
-                      </TableCell>
-                      <TableCell
-                        className="max-w-xs text-xs text-muted-foreground break-all"
-                        title={formatAuditLogMetadataSummary(
-                          item.metadata,
-                          500,
-                        )}
-                      >
-                        {formatAuditLogMetadataSummary(item.metadata)}
-                      </TableCell>
+            <>
+              <div className="hidden overflow-x-auto md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Action</TableHead>
+                      <TableHead>Entity</TableHead>
+                      <TableHead>Entity ID</TableHead>
+                      <TableHead>Actor</TableHead>
+                      <TableHead>Target user</TableHead>
+                      <TableHead>Request ID</TableHead>
+                      <TableHead>Metadata</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {items.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="whitespace-nowrap">
+                          {formatAuditLogDateTime(item.createdAt)}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {item.action}
+                        </TableCell>
+                        <TableCell>{item.entityType}</TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {formatAuditLogNullable(item.entityId)}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {formatAuditLogActorLabel(item)}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {formatAuditLogNullable(item.targetUserId)}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {formatAuditLogNullable(item.requestId)}
+                        </TableCell>
+                        <TableCell
+                          className="max-w-xs break-all text-xs text-muted-foreground"
+                          title={formatAuditLogMetadataSummary(
+                            item.metadata,
+                            500,
+                          )}
+                        >
+                          {formatAuditLogMetadataSummary(item.metadata)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="space-y-3 md:hidden">
+                {items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="space-y-3 rounded-lg border p-4"
+                  >
+                    {buildAuditLogMobileCardFields(item).map((field) => (
+                      <div
+                        key={`${item.id}-${field.label}`}
+                        className="min-w-0"
+                      >
+                        <p className="text-xs font-medium text-muted-foreground">
+                          {field.label}
+                        </p>
+                        <p
+                          className={`break-words text-sm ${
+                            field.mono ? "font-mono text-xs" : ""
+                          }`}
+                        >
+                          {field.value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
 
           {nextCursor ? (
