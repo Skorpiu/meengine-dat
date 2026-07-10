@@ -290,3 +290,9 @@ Documented and in use (docs/rules only; no runtime change):
 **Competitive/Product Discovery** (`competitive-product-discovery-v1`, P2 deferred; DEC-007): pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros. **Deferred until** DAT core is cohesive, polished, and in production — after `mobile-tablet-readiness-review-v1`.
 
 Engineering excellence audit items (non-blocking refactors) remain tracked separately in roadmap P2+.
+
+---
+
+## Lesson ↔ Student nullability policy (review)
+
+Docs-only review completed: [lesson-student-nullability-policy-review.md](./lesson-student-nullability-policy-review.md).
