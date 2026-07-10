@@ -399,7 +399,7 @@ export function VehiclesManagementClient() {
       {/* Vehicles List */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle>
                 {selectedFleet === "all"
@@ -445,9 +445,9 @@ export function VehiclesManagementClient() {
                   return (
                     <div
                       key={vehicle.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                      className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50"
                     >
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-4 min-w-0">
                         <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center">
                           <VehicleIcon className="w-6 h-6 text-blue-600" />
                         </div>
@@ -467,7 +467,7 @@ export function VehiclesManagementClient() {
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-3">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                         {/* Maintenance Checkbox */}
                         <div className="flex items-center space-x-2 px-3 py-2 border rounded-lg bg-gray-50">
                           <Checkbox
@@ -531,7 +531,7 @@ export function VehiclesManagementClient() {
                         )}
 
                         {/* Action Buttons */}
-                        <div className="flex items-center space-x-2 ml-4">
+                        <div className="flex items-center gap-2 sm:ml-4">
                           <Button
                             variant="outline"
                             size="sm"
