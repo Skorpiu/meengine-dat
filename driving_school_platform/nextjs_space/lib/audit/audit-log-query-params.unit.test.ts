@@ -5,6 +5,7 @@ import {
   decodeAuditLogListCursor,
   encodeAuditLogListCursor,
   parseAuditLogListQueryFromSearchParams,
+  parseAuditLogExportQueryFromSearchParams,
 } from "./audit-log-query-params";
 
 describe("auditLogListQuerySchema via parseAuditLogListQueryFromSearchParams", () => {
@@ -101,6 +102,39 @@ describe("auditLogListQuerySchema via parseAuditLogListQueryFromSearchParams", (
         targetUserId: "user-2",
         requestId: "req-1",
       });
+    }
+  });
+});
+
+describe("auditLogExportQuerySchema via parseAuditLogExportQueryFromSearchParams", () => {
+  it("parses filters without pagination fields", () => {
+    const parsed = parseAuditLogExportQueryFromSearchParams(
+      new URLSearchParams({
+        action: "lesson.create",
+        entityType: "Lesson",
+      }),
+    );
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data).toEqual({
+        action: "lesson.create",
+        entityType: "Lesson",
+      });
+      expect(parsed.data).not.toHaveProperty("limit");
+      expect(parsed.data).not.toHaveProperty("cursor");
+    }
+  });
+
+  it("rejects invalid date range", () => {
+    const parsed = parseAuditLogExportQueryFromSearchParams(
+      new URLSearchParams({
+        dateFrom: "2026-06-10",
+        dateTo: "2026-06-01",
+      }),
+    );
+    expect(parsed.success).toBe(false);
+    if (!parsed.success) {
+      expect(parsed.error).toBe("date_range_invalid");
     }
   });
 });
