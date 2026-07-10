@@ -147,7 +147,7 @@ Documented and in use (docs/rules only; no runtime change):
 
 **Analysis approved:** `production-readiness-cutline-review-v1` (analysis-only).
 
-**Do not open next:** `calendar-lessons-polish-v1e-student-warnings`, Competitive/Product Discovery, audit log runtime expansion, billing/checkout.
+**Do not open next:** `calendar-lessons-polish-v1e-student-warnings`, audit log runtime expansion, billing/checkout.
 
 ---
 
@@ -280,10 +280,11 @@ Documented and in use (docs/rules only; no runtime change):
 - `mobile-tablet-readiness-pwa-manifest-v1` — minimal PWA install metadata: `public/manifest.webmanifest`, `public/icons/dat-icon.svg`, `app/icon.svg`; `app/layout.tsx` metadata + `viewport.themeColor` (`#2563eb`); `display: standalone`; no service worker/offline/push. Validated via `pnpm check`.
 - `mobile-tablet-readiness-admin-surfaces-v1` — localized admin mobile polish: Lessons rows stack on narrow viewports; Vehicles badge wrap + `h-11` action targets; Audit logs card fallback below `md` via `buildAuditLogMobileCardFields` (privacy-minimal); Settings deferred. Validated via `pnpm check`.
 - `mobile-tablet-readiness-playwright-viewports-v1` — opt-in Playwright mobile/tablet viewport smoke: `pnpm e2e:mobile-viewports` via `playwright.mobile-viewports.config.ts`; projects `desktop-chromium`, `mobile-chromium` (Pixel 5), `tablet-chromium` (810×1080); read-only admin page loads on `/admin`, `/admin/lessons`, `/admin/vehicles`, `/admin/audit-logs`, `/admin/users` (15 tests); helpers `e2e/helpers/smoke-viewport-layout.ts`; not in `pnpm check`/CI default. Includes pre-existing PWA layout export fix (`app/layout.tsx`). Validated via `pnpm check`.
+- `competitive-product-discovery-v1` — docs-only market comparison (DEC-007 waiver granted 2026-07-10): **9 eligible direct + 3 adjacent** benchmarks (canonical registry; HIGH/MEDIUM per row); prevalence denominators; corrected schema-readiness (`LessonRequest`/`Payment`/`Notification` = dormant partial, not product-ready); [competitive-product-discovery.md](../product/competitive-product-discovery.md). No runtime/schema changes. Validated via `pnpm check`.
 
 ### Likely next (production path)
 
-1. `competitive-product-discovery-v1` — only after explicit approval/waiver (DEC-007)
+1. **`lesson-reminders-email-product-plan-v1`** — **recommended next planning slice** (from discovery); not implementation authorization
 
 ### Deferred (not next)
 
@@ -295,7 +296,7 @@ Documented and in use (docs/rules only; no runtime change):
 
 **Mobile/tablet readiness (done):** review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports — [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md). Opt-in viewport smoke: `pnpm e2e:mobile-viewports`. **Not production blockers** (DEC-032).
 
-**Competitive/Product Discovery** (`competitive-product-discovery-v1`, P2 deferred; DEC-007): pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros. **Deferred until** explicit approval/waiver.
+**Competitive/Product Discovery (`competitive-product-discovery-v1`, done 2026-07-10):** Market comparison complete — [competitive-product-discovery.md](../product/competitive-product-discovery.md). Registry: **9 eligible direct / 3 adjacent / 2 low-evidence excluded** (HIGH/MEDIUM evidence per product). Lesson reminders and school-facing balances are confirmed in **8/9** eligible direct competitors; controlled self-booking or lesson requests are confirmed in **6/9**. DAT gaps: operational lesson reminders (Postmark delivery boundary only — no orchestration/scheduling/lifecycle), school-facing balances (no tenant-ready `Payment` foundation), controlled lesson requests (`LessonRequest` dormant schema only). **Recommended next planning slice:** `lesson-reminders-email-product-plan-v1` — planning only; does not authorize runtime or `Notification` reuse (implementation requires explicit approval).
 
 Engineering excellence audit items (non-blocking refactors) remain tracked separately in roadmap P2+.
 

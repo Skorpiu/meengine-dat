@@ -360,10 +360,11 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `mobile-tablet-readiness-admin-surfaces-v1` — Lessons/Vehicles/Audit logs mobile polish
 - `mobile-tablet-readiness-playwright-viewports-v1` — opt-in viewport smoke via dedicated Playwright config
 - `audit-log-viewer-export-v1` — CSV export from `/admin/audit-logs`
+- `competitive-product-discovery-v1` — docs-only market comparison (9 eligible direct / 3 adjacent canonical registry); [competitive-product-discovery.md](../../docs/product/competitive-product-discovery.md)
 
 **Current recommended next** (optional unless product says otherwise):
 
-1. `competitive-product-discovery-v1` — **only** after explicit approval/waiver (DEC-007)
+1. `lesson-reminders-email-product-plan-v1` — **planning slice** from discovery; not implementation authorization
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
@@ -372,7 +373,6 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 **Do not open next** (unless explicit product scope / approval):
 
 - `calendar-lessons-polish-v1e-student-warnings` (P3 — product policy first)
-- `competitive-product-discovery-v1` (without explicit approval/waiver)
 - **Billing / checkout / PSP** — not in baseline cutline
 - **Prisma migrations / schema changes** — unless explicitly requested and gated
 - `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)**
@@ -384,7 +384,8 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 **Product direction (backlog — post-production polish):**
 
 - **Mobile/tablet** — review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports **done**
-- **`competitive-product-discovery-v1`** (P2 deferred; DEC-007) — gated; requires explicit approval/waiver
+- **`competitive-product-discovery-v1`** — **done** (2026-07-10); see [competitive-product-discovery.md](../../docs/product/competitive-product-discovery.md). Prevalence: reminders + balances **8/9**, self-booking/requests **6/9** (9 eligible direct competitors; HIGH/MEDIUM per row)
+- **Recommended next planning:** `lesson-reminders-email-product-plan-v1` (not implementation approval)
 
 **Deferred (not next — RLS revoke-only track closed):**
 
