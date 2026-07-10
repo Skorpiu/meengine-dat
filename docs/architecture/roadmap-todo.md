@@ -88,6 +88,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `mobile-tablet-readiness-schedule-map-v1` | **Done** — `lg` gate week/month; day fallback; touch targets; `schedule-map-responsive.ts` |
 | `mobile-tablet-readiness-pwa-manifest-v1` | **Done** — `manifest.webmanifest`, SVG icon, theme-color metadata; no service worker |
 | `mobile-tablet-readiness-admin-surfaces-v1` | **Done** — Lessons rows, Vehicles badges/actions, Audit logs mobile cards; Settings deferred |
+| `mobile-tablet-readiness-playwright-viewports-v1` | **Done** — opt-in `pnpm e2e:mobile-viewports` via dedicated config; 5 admin routes × 3 projects = 15 tests; not in `pnpm check` |
 | Engineering Excellence Audit | Refactors, route consistency, optional E2E CI |
 | Billing / checkout / PSP | Explicit product scope only; not in baseline |
 | `supabase-rls-tenant-policies-v1` | Only if Data API tenant access is product-required |
@@ -281,15 +282,15 @@ Parent batch — always slice before implementing.
 | `mobile-tablet-readiness-schedule-map-v1` | — | **Done** — week/month gated below `lg` (1024px); day fallback on resize; helper copy; edit/delete/nav touch targets `h-11` on narrow; `lib/schedule/schedule-map-responsive.ts` + hook + unit tests; no API/schema/auth |
 | `mobile-tablet-readiness-pwa-manifest-v1` | — | **Done** — `public/manifest.webmanifest`, `public/icons/dat-icon.svg`, `app/icon.svg`; layout metadata + theme-color; no service worker/offline |
 | `mobile-tablet-readiness-admin-surfaces-v1` | — | **Done** — Lessons row stack; Vehicles badge wrap + touch targets; Audit logs card fallback `<md`; `buildAuditLogMobileCardFields`; Settings deferred |
-| `mobile-tablet-readiness-playwright-viewports-v1` | P2 | Enable commented Playwright mobile viewport projects |
-| `competitive-product-discovery-v1` | P2 deferred | **Competitive/Product Discovery (future):** research competitor features that may add value to DAT; discuss, mature, architect, and implement in future slices. **Deferred until** after `mobile-tablet-readiness-schedule-map-v1` (or explicit waiver). See DEC-007. |
+| `mobile-tablet-readiness-playwright-viewports-v1` | — | **Done** — opt-in `pnpm e2e:mobile-viewports` via `playwright.mobile-viewports.config.ts`; 5 admin routes × 3 projects = 15 tests; hard-fail markers; not in `pnpm check` |
+| `competitive-product-discovery-v1` | P2 deferred | **Competitive/Product Discovery (future):** research competitor features that may add value to DAT; discuss, mature, architect, and implement in future slices. **Deferred until** explicit approval/waiver. See DEC-007. |
 | `i18n-framework-planning-v1` | P2 | Real i18n; switcher, fallback, plan tie-in |
 | `language-pack-pt-PT-v1` | P3 | pt-PT copy after framework |
 | `super-agent-product-strategy-protocol-v1` | — | **Done** in `cursor-operating-model.md` (this sync batch) |
 
 **Deferred explicitly:** `people-management-ux-unification-instructor-route-split-v1` (D4; not recommended next).
 
-**Product direction (backlog — post-production polish):** **Mobile/tablet** — review + Schedule Map slices **done**; optional: PWA manifest, admin surfaces, Playwright viewports. **Competitive/Product Discovery** (`competitive-product-discovery-v1`) — after optional mobile polish or explicit waiver.
+**Product direction (backlog — post-production polish):** **Mobile/tablet** — review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports **done**. **Competitive/Product Discovery** (`competitive-product-discovery-v1`) — gated; requires explicit approval/waiver (DEC-007).
 
 ---
 

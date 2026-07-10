@@ -46,6 +46,7 @@
     "e2e:smoke:mutations": "playwright test e2e/production-smoke/ --grep @mutations",
     "e2e:smoke:prod": "tsx scripts/smoke-production-api.ts && playwright test e2e/production-smoke/ --grep @readonly",
     "e2e:smoke:prod:full": "tsx scripts/smoke-production-api.ts && playwright test e2e/production-smoke/ --grep \"@readonly|@fixture-preflight|@mutations\"",
+    "e2e:mobile-viewports": "playwright test --config=playwright.mobile-viewports.config.ts",
     "check": "pnpm -s lint && pnpm -s typecheck && pnpm -s test:run && pnpm -s build",
     "fix": "prettier --write . && eslint --fix .",
     "prepare": "cd ../.. && husky driving_school_platform/nextjs_space/.husky"
