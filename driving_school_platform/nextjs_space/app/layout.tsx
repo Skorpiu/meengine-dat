@@ -10,8 +10,7 @@ import { Toaster as HotToaster } from "react-hot-toast";
 const inter = Inter({ subsets: ["latin"] });
 
 /** Aligns with `--driving-primary` in globals.css and manifest.webmanifest */
-export const DAT_PWA_THEME_COLOR = "#2563eb";
-export const DAT_PWA_BACKGROUND_COLOR = "#ffffff";
+const DAT_PWA_THEME_COLOR = "#2563eb";
 
 export const viewport: Viewport = {
   themeColor: DAT_PWA_THEME_COLOR,

@@ -16,10 +16,13 @@ Automated smoke for controlled B2B production readiness. Complements manual chec
 | Read-only UI smoke        | `@readonly`          | **No**  | `pnpm e2e:smoke:readonly`          |
 | Fixture preflight         | `@fixture-preflight` | **No**  | `pnpm e2e:smoke:fixture-preflight` |
 | Lesson mutations          | `@mutations`         | **Yes** | `pnpm e2e:smoke:mutations`         |
+| Mobile/tablet viewports   | `@mobile-viewport`   | **No**  | `pnpm e2e:mobile-viewports`        |
 
 Combined readonly hosted run: `pnpm e2e:smoke:prod` (API + `@readonly` only).
 
 Optional full hosted run (API + readonly + fixture preflight + mutations): `pnpm e2e:smoke:prod:full` — requires mutation dual opt-in.
+
+Optional mobile/tablet viewport smoke (read-only admin surfaces): `pnpm e2e:mobile-viewports` — not in `pnpm check`/CI default. See [Mobile/tablet viewport smoke](#mobiletablet-viewport-smoke-opt-in).
 
 **Fixture preflight must pass before mutation smoke** (mutations spec runs preflight internally).
 
@@ -277,6 +280,7 @@ export DAT_SMOKE_ALLOWED_HOSTS=www.meengine.io
 | `pnpm e2e:smoke:mutations`         | Playwright `@mutations` (lesson create + update; dual opt-in) |
 | `pnpm e2e:smoke:prod`              | API then Playwright `@readonly` (unchanged)                   |
 | `pnpm e2e:smoke:prod:full`         | API + `@readonly` + `@fixture-preflight` + `@mutations`       |
+| `pnpm e2e:mobile-viewports`        | Playwright `@mobile-viewport` (read-only admin layout smoke)  |
 
 ### Quick reference (canonical flows)
 
@@ -307,11 +311,21 @@ pnpm e2e:smoke:fixture-preflight
 pnpm e2e:smoke:mutations
 ```
 
+5. **Mobile/tablet viewport smoke (read-only; opt-in):**
+
+```bash
+pnpm e2e:mobile-viewports
+# or list only:
+pnpm exec playwright test --config=playwright.mobile-viewports.config.ts --list
+```
+
 ### Playwright install (once per machine)
 
 ```bash
 pnpm -C driving_school_platform/nextjs_space exec playwright install chromium
 ```
+
+Chromium is sufficient for all viewport projects (desktop, Pixel 5, and custom tablet profile).
 
 ---
 
@@ -333,6 +347,53 @@ pnpm e2e:smoke:readonly
 Start `pnpm dev` locally or let Playwright start it when `E2E_SKIP_WEB_SERVER` is unset and base URL is localhost.
 
 Admin/instructor UI tests **skip** when credentials are missing (API checks still run).
+
+---
+
+## Mobile/tablet viewport smoke (opt-in)
+
+Read-only layout regression checks for admin surfaces at narrow and tablet viewports. **Not** in `pnpm check` or default CI. Uses a **dedicated Playwright config** so existing smoke commands remain `chromium`-only.
+
+| Field      | Value                                                                                                    |
+| ---------- | -------------------------------------------------------------------------------------------------------- |
+| Tag        | `@mobile-viewport`                                                                                       |
+| Script     | `pnpm e2e:mobile-viewports`                                                                              |
+| Config     | `playwright.mobile-viewports.config.ts`                                                                  |
+| Writes     | **No**                                                                                                   |
+| Projects   | `desktop-chromium` (1280×720), `mobile-chromium` (Pixel 5), `tablet-chromium` (810×1080 Chromium, touch) |
+| Test count | **15** (5 routes × 3 projects)                                                                           |
+
+### Scope
+
+After admin login (`DAT_SMOKE_ADMIN_EMAIL` / `DAT_SMOKE_ADMIN_PASSWORD`):
+
+- `/admin` — Schedule Map / admin dashboard marker; narrow Day-view helper visible on mobile/tablet portrait, hidden on desktop
+- `/admin/lessons`
+- `/admin/vehicles`
+- `/admin/audit-logs`
+- `/admin/users`
+
+Each page: no login redirect, no fatal page errors, no critical horizontal overflow (8px tolerance), **required** stable UI markers (hard-fail when missing).
+
+### Credential skip behavior
+
+When admin credentials are absent, all **15** tests are **skipped**. That outcome validates test discovery and configuration only — it is **not** a successful viewport smoke run. An authenticated pass requires page assertions to execute.
+
+### Local run
+
+Assumed shell: Git Bash
+
+```bash
+cd driving_school_platform/nextjs_space
+
+export DAT_SMOKE_BASE_URL=http://localhost:3000
+export DAT_SMOKE_ADMIN_EMAIL=<local-smoke-admin>
+export DAT_SMOKE_ADMIN_PASSWORD=<secret>
+
+pnpm e2e:mobile-viewports
+```
+
+Hosted targets require the same opt-in guards as other smoke suites (`DAT_E2E_ALLOW_PRODUCTION`, `DAT_SMOKE_ALLOWED_HOSTS`).
 
 ---
 

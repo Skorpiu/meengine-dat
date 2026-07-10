@@ -356,13 +356,14 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `student-delete-retention-policy-review-v1` — docs-only; `docs/architecture/student-delete-retention-policy-review.md`
 - `mobile-tablet-readiness-review-v1` — docs-only review + minor admin layout fixes; `docs/architecture/mobile-tablet-readiness-review.md`
 - `mobile-tablet-readiness-schedule-map-v1` — Schedule Map `lg` gate for week/month; day fallback; touch targets; `lib/schedule/schedule-map-responsive.ts`
+- `mobile-tablet-readiness-pwa-manifest-v1` — PWA install metadata; no service worker
+- `mobile-tablet-readiness-admin-surfaces-v1` — Lessons/Vehicles/Audit logs mobile polish
+- `mobile-tablet-readiness-playwright-viewports-v1` — opt-in viewport smoke via dedicated Playwright config
+- `audit-log-viewer-export-v1` — CSV export from `/admin/audit-logs`
 
 **Current recommended next** (optional unless product says otherwise):
 
-1. `audit-log-viewer-export-v1` — CSV export from `/admin/audit-logs` viewer (**optional**; product need)
-2. `mobile-tablet-readiness-pwa-manifest-v1` — optional P2 (manifest + icons + theme-color; no SW unless justified)
-3. `mobile-tablet-readiness-admin-surfaces-v1` — optional P2 (lessons rows, vehicles badges, audit mobile list)
-4. `competitive-product-discovery-v1` — **only** after explicit approval/waiver (DEC-007)
+1. `competitive-product-discovery-v1` — **only** after explicit approval/waiver (DEC-007)
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
@@ -382,8 +383,8 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Product direction (backlog — post-production polish):**
 
-- **Mobile/tablet** — review + Schedule Map slices **done**; optional: PWA manifest, admin surfaces, Playwright viewports
-- **`competitive-product-discovery-v1`** (P2 deferred; DEC-007) — after optional mobile polish or explicit waiver
+- **Mobile/tablet** — review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports **done**
+- **`competitive-product-discovery-v1`** (P2 deferred; DEC-007) — gated; requires explicit approval/waiver
 
 **Deferred (not next — RLS revoke-only track closed):**
 

@@ -12,13 +12,15 @@ DAT has **basic responsive scaffolding** (Tailwind breakpoints, mobile navbar, s
 
 **Highest-impact gaps:** Schedule Map week/month views — **mitigated**; admin Lessons/Vehicles/Audit logs narrow-viewport polish **done** in admin-surfaces slice; Settings tables remain scroll-only (deferred/internal).
 
-**Recommended next slice:** `mobile-tablet-readiness-playwright-viewports-v1` — optional mobile viewport smoke.
+**Recommended next slice:** `competitive-product-discovery-v1` — only after explicit approval/waiver (DEC-007).
 
 **Implemented (2026-07-10):** `mobile-tablet-readiness-schedule-map-v1` — week/month disabled below `lg` (1024px); auto-fallback to day on resize; helper copy; edit/delete/nav touch targets `h-11` on narrow viewports; helpers in `lib/schedule/schedule-map-responsive.ts`.
 
 **Implemented (2026-07-10):** `mobile-tablet-readiness-pwa-manifest-v1` — `manifest.webmanifest`, `dat-icon.svg`, theme-color/background metadata; no service worker.
 
 **Implemented (2026-07-10):** `mobile-tablet-readiness-admin-surfaces-v1` — Lessons row stack on narrow viewports; Vehicles badge wrap + touch targets; Audit logs card fallback below `md` (privacy-minimal fields only).
+
+**Implemented (2026-07-10):** `mobile-tablet-readiness-playwright-viewports-v1` — opt-in `pnpm e2e:mobile-viewports` via `playwright.mobile-viewports.config.ts`; projects `desktop-chromium`, `mobile-chromium` (Pixel 5), `tablet-chromium` (810×1080 Chromium); read-only admin loads on `/admin`, `/admin/lessons`, `/admin/vehicles`, `/admin/audit-logs`, `/admin/users` (15 tests); not in `pnpm check`.
 
 ---
 
@@ -27,7 +29,7 @@ DAT has **basic responsive scaffolding** (Tailwind breakpoints, mobile navbar, s
 - Static code review of primary routes and shared components under `driving_school_platform/nextjs_space`.
 - Breakpoints: Tailwind defaults (`sm` 640px, `md` 768px, `lg` 1024px).
 - Viewports considered: phone portrait (~375px), tablet portrait (~768px), tablet landscape / small laptop (~1024px).
-- No device lab or Playwright mobile viewport runs in this batch (Playwright mobile projects remain commented in `playwright.config.ts`).
+- No device lab runs in the original review batch; Playwright mobile viewport smoke added in `mobile-tablet-readiness-playwright-viewports-v1` (opt-in; not in `pnpm check`).
 - Separated **production blockers** from **polish** per DEC-032 cutline.
 
 ---
@@ -129,7 +131,7 @@ Per DEC-032: **operational/deploy discipline**, not mobile redesign.
 | **Global — PWA** | `manifest.webmanifest`, SVG icon, theme-color via layout metadata; **no service worker / offline** | Low (v1) | P2 done | Install/home-screen metadata only; defer offline SW | — |
 | **Global — Navbar** | Mobile hamburger `md:hidden`; desktop links `hidden md:flex` | Low | P2 | Reduce header chrome on mobile; consider collapsing language/bell | `mobile-tablet-readiness-navbar-v1` |
 | **Global — Touch targets** | Buttons default `h-10`; calendar controls `h-8`; map edit `h-6` | Medium on map | P1 | Bump map actions to ≥44px; audit calendar controls | Part of schedule-map slice |
-| **`/admin` Schedule Map** | Day default; week/month gated at `lg` (1024px); touch targets `h-11` on narrow | Low | P2 remaining | PWA; Playwright mobile viewports | `mobile-tablet-readiness-playwright-viewports-v1` |
+| **`/admin` Schedule Map** | Day default; week/month gated at `lg` (1024px); touch targets `h-11` on narrow | Low | — | Optional instructor viewport smoke | — |
 | **`/admin/users` People** | Cards + `sm:` stacks; import/export responsive | Low | P2 | Badge tooltips → tap-friendly help; L2 tabs fixed (this batch) | `mobile-tablet-readiness-people-tooltips-v1` |
 | **`/admin/lessons`** | Columns stack `&lt;lg`; rows stack on narrow; header fixed | Low | P2 done | — | — |
 | **`/admin/vehicles`** | Rows stack `&lt;sm`; badges wrap; touch-friendly actions | Low | P2 done | — | — |
@@ -142,7 +144,7 @@ Per DEC-032: **operational/deploy discipline**, not mobile redesign.
 | **Auth pages** | Mobile-friendly centered cards | OK | — | Register category grid minor | `mobile-tablet-readiness-auth-register-grid-v1` |
 | **Import/export dialogs** | `overflow-x-auto` preview; responsive footers | OK | — | None | — |
 | **Modals / dialogs** | `max-h-[90vh]`, `w-full`, `sm:max-w-*` | OK | — | None | — |
-| **Playwright QA** | Mobile viewports commented out | Low | P2 | Add optional mobile viewport smoke after map slice | `mobile-tablet-readiness-playwright-viewports-v1` |
+| **Playwright QA** | Mobile/tablet viewport smoke (opt-in; 15 tests) | Low | — | Optional instructor viewport smoke | — |
 
 ---
 
@@ -188,7 +190,7 @@ Phone (admin)         ████░░░░░░░░░░░░░░░�
 1. **`mobile-tablet-readiness-schedule-map-v1`** — **Done** (2026-07-10): `lg` gate for week/month; day fallback; touch targets; `schedule-map-responsive.ts`.
 2. **`mobile-tablet-readiness-pwa-manifest-v1`** — **Done** (2026-07-10): `manifest.webmanifest`, `dat-icon.svg`, theme-color/background metadata; no service worker.
 3. **`mobile-tablet-readiness-admin-surfaces-v1`** — **Done** (2026-07-10): Lessons rows, Vehicles badges/actions, Audit logs mobile cards (`buildAuditLogMobileCardFields`).
-4. **`mobile-tablet-readiness-playwright-viewports-v1`** — enable commented Playwright mobile projects for regression.
+4. **`mobile-tablet-readiness-playwright-viewports-v1`** — **Done** (2026-07-10): dedicated `playwright.mobile-viewports.config.ts`; 5 admin routes × 3 projects; Schedule Map narrow-helper assertions.
 
 **Deferred (not in v1 PWA):** service worker, offline cache, push notifications.
 
@@ -200,7 +202,7 @@ Phone (admin)         ████░░░░░░░░░░░░░░░�
 
 DEC-032 explicitly placed mobile/tablet review as **penultimate / P2 deferred**. This review **confirms** that placement: gaps are real but **do not block** controlled first B2B production when operator expectations are set correctly.
 
-After stable production and optional mobile polish: **`mobile-tablet-readiness-playwright-viewports-v1`** or **`competitive-product-discovery-v1`** (DEC-007) per product priority.
+After stable production and optional mobile polish: **`competitive-product-discovery-v1`** (DEC-007) per product priority.
 
 ---
 

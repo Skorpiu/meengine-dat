@@ -279,10 +279,11 @@ Documented and in use (docs/rules only; no runtime change):
 - `mobile-tablet-readiness-schedule-map-v1` — Schedule Map responsive UX: week/month disabled below `lg` (1024px); auto day fallback on resize; helper copy; edit/delete/nav touch targets `h-11` on narrow viewports; `lib/schedule/schedule-map-responsive.ts` + unit tests. No API/schema/auth changes. Validated via `pnpm check`.
 - `mobile-tablet-readiness-pwa-manifest-v1` — minimal PWA install metadata: `public/manifest.webmanifest`, `public/icons/dat-icon.svg`, `app/icon.svg`; `app/layout.tsx` metadata + `viewport.themeColor` (`#2563eb`); `display: standalone`; no service worker/offline/push. Validated via `pnpm check`.
 - `mobile-tablet-readiness-admin-surfaces-v1` — localized admin mobile polish: Lessons rows stack on narrow viewports; Vehicles badge wrap + `h-11` action targets; Audit logs card fallback below `md` via `buildAuditLogMobileCardFields` (privacy-minimal); Settings deferred. Validated via `pnpm check`.
+- `mobile-tablet-readiness-playwright-viewports-v1` — opt-in Playwright mobile/tablet viewport smoke: `pnpm e2e:mobile-viewports` via `playwright.mobile-viewports.config.ts`; projects `desktop-chromium`, `mobile-chromium` (Pixel 5), `tablet-chromium` (810×1080); read-only admin page loads on `/admin`, `/admin/lessons`, `/admin/vehicles`, `/admin/audit-logs`, `/admin/users` (15 tests); helpers `e2e/helpers/smoke-viewport-layout.ts`; not in `pnpm check`/CI default. Includes pre-existing PWA layout export fix (`app/layout.tsx`). Validated via `pnpm check`.
 
 ### Likely next (production path)
 
-1. `mobile-tablet-readiness-playwright-viewports-v1` — optional mobile viewport smoke
+1. `competitive-product-discovery-v1` — only after explicit approval/waiver (DEC-007)
 
 ### Deferred (not next)
 
@@ -292,9 +293,9 @@ Documented and in use (docs/rules only; no runtime change):
 
 ### Product direction (backlog — post-production polish)
 
-**Mobile/tablet readiness review (done):** `mobile-tablet-readiness-review-v1` — [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md). **Schedule Map slice (done):** `mobile-tablet-readiness-schedule-map-v1`. **PWA manifest (done):** `mobile-tablet-readiness-pwa-manifest-v1` — install metadata only; no offline. **Not production blockers** (DEC-032).
+**Mobile/tablet readiness (done):** review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports — [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md). Opt-in viewport smoke: `pnpm e2e:mobile-viewports`. **Not production blockers** (DEC-032).
 
-**Competitive/Product Discovery** (`competitive-product-discovery-v1`, P2 deferred; DEC-007): pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros. **Deferred until** after `mobile-tablet-readiness-schedule-map-v1` (or explicit waiver).
+**Competitive/Product Discovery** (`competitive-product-discovery-v1`, P2 deferred; DEC-007): pesquisar features de concorrentes que possam acrescentar valor ao DAT; discutir, maturar, arquitetar e implementar por slices futuros. **Deferred until** explicit approval/waiver.
 
 Engineering excellence audit items (non-blocking refactors) remain tracked separately in roadmap P2+.
 
