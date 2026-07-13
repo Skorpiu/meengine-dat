@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { getUserRoleLabel } from "@/lib/users/user-role-label";
+import type { UserRole } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -206,8 +208,8 @@ export function Navbar({ currentPage }: NavbarProps) {
                     <p className="text-xs leading-none text-muted-foreground">
                       {session.user.email}
                     </p>
-                    <p className="text-xs leading-none text-muted-foreground capitalize">
-                      {session.user.role.toLowerCase().replace("_", " ")}
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {getUserRoleLabel(session.user.role as UserRole)}
                     </p>
                   </div>
                 </DropdownMenuLabel>

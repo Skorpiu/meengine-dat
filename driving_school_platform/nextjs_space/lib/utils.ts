@@ -66,7 +66,7 @@ export function capitalize(str: string): string {
 /**
  * Format enum values to readable strings
  * @param enumValue - Enum value (e.g., "SUPER_ADMIN")
- * @returns Formatted string (e.g., "Super Admin")
+ * @returns Formatted string (e.g., "Active Status")
  */
 export function formatEnumValue(enumValue: string): string {
   return enumValue

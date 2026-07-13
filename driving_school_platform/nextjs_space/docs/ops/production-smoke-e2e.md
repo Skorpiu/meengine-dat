@@ -2,7 +2,7 @@
 
 Automated smoke for controlled B2B production readiness. Complements manual checklists ([smoke-test-checklist.md](./smoke-test-checklist.md), [production-smoke-baseline.md](./production-smoke-baseline.md)).
 
-**Decisions:** [DEC-036](../../../../docs/architecture/decision-log.md) (read-only v1a); [DEC-039](../../../../docs/architecture/decision-log.md) (fixture preflight); [DEC-040](../../../../docs/architecture/decision-log.md) (lesson mutation smoke v1); [DEC-041](../../../../docs/architecture/decision-log.md) (smoke testids + booking readiness metadata); [DEC-043](../../../../docs/architecture/decision-log.md) (first client onboarding record).
+**Decisions:** [DEC-036](../../../../docs/architecture/decision-log.md) (read-only v1a); [DEC-039](../../../../docs/architecture/decision-log.md) (fixture preflight); [DEC-040](../../../../docs/architecture/decision-log.md) (lesson mutation smoke v1); [DEC-041](../../../../docs/architecture/decision-log.md) (smoke testids + booking readiness metadata); [DEC-043](../../../../docs/architecture/decision-log.md) (first client onboarding record); [DEC-045](../../../../docs/architecture/decision-log.md) (smoke tenant identity + School Admin terminology).
 
 **First real client:** use [first-client-onboarding-record.md](../../../../docs/architecture/first-client-onboarding-record.md) — do **not** treat this smoke tenant as the client onboarding record.
 
@@ -30,15 +30,38 @@ Optional mobile/tablet viewport smoke (read-only admin surfaces): `pnpm e2e:mobi
 
 ## Temporary production smoke tenant (operator policy)
 
-Until a separate official client tenant exists, the current **`A Conquistadora`** organization on `https://www.meengine.io` is treated as a **production smoke / test tenant**, not as the final real client tenant.
+Until the real **`A Conquistadora`** client tenant is provisioned separately, the technical production smoke organization on `https://www.meengine.io` is named **`DAT Production Smoke`** (DEC-045). It is a **production smoke / test tenant**, not the real client tenant.
 
 | Field           | Value                       |
 | --------------- | --------------------------- |
-| Organization    | `A Conquistadora`           |
+| Organization    | `DAT Production Smoke`      |
 | Organization ID | `cmltn7vdl0000f8c4vxy6gcwx` |
 | Host            | `www.meengine.io`           |
 
-When the official client tenant is created later, **do not reuse** these fixture IDs or assumptions.
+When the official **`A Conquistadora`** client tenant is created later, **do not reuse** these fixture IDs or assumptions.
+
+### Rename operator (display name only)
+
+**Status: completed** (human operator, 2026-07-13). Verified production `Organization.name` is **`DAT Production Smoke`**. No further apply action required for the approved DEC-045 rename.
+
+| Field           | Verified value              |
+| --------------- | --------------------------- |
+| Previous name   | `A Conquistadora`           |
+| Verified name   | `DAT Production Smoke`      |
+| Organization ID | `cmltn7vdl0000f8c4vxy6gcwx` |
+| Matched host    | `www.meengine.io`           |
+| Domain count    | 2                           |
+| User count      | 11                          |
+| Performed by    | Human operator (not agent)  |
+
+The guarded script remains available for **dry-run / idempotency verification** only:
+
+| Mode                         | Command                                                                                                                                                           |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dry-run (default)            | `DAT_SMOKE_ORG_ID=cmltn7vdl0000f8c4vxy6gcwx DAT_SMOKE_EXPECTED_HOST=www.meengine.io pnpm -C driving_school_platform/nextjs_space ops:rename-production-smoke-org` |
+| Apply (normally unnecessary) | `DAT_SMOKE_RENAME_APPLY=true` plus the same env vars                                                                                                              |
+
+Mutates **`Organization.name` only**. Does not change domains, users, fixtures, licenses, or subscriptions.
 
 **Do not** use `demo.meengine.io` for production mutation smoke. **Do not** use broad list searches or normal operational records as mutable fixtures — only explicit IDs below.
 

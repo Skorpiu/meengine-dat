@@ -16,7 +16,7 @@ Use this runbook to validate batches before production merge, exercise tenancy/s
 - Map Preview host to a **dedicated QA organization**.
 - **Preferred QA org name:** `DAT QA Migration Sandbox`
 - Use data prefix: **`DATQA`** (names, IDs, notes — easy to spot test data)
-- Do **not** run import/apply tests against **A Conquistadora** real tenant unless doing an explicit, limited smoke test.
+- Do **not** run import/apply tests against the **`DAT Production Smoke`** tenant unless doing an explicit, limited smoke test. The future real client **`A Conquistadora`** must use a dedicated org — never smoke fixtures.
 - Do **not** run import/apply tests in **public demo**.
 
 Verify which database the Preview deployment uses (Vercel Preview env vars). **Do not assume** preview and production DBs are separate.
