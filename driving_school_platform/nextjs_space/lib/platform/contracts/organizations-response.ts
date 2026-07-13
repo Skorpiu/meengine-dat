@@ -22,7 +22,7 @@ export type PlatformOrganizationsPostResponse = {
   organizationId: string;
   primaryHost: string;
   hosts: string[];
-  superAdmin: {
+  schoolAdmin: {
     id: string;
     email: string;
     firstName: string;
@@ -61,7 +61,7 @@ export function toPlatformOrganizationsPostResponse(input: {
   organizationId: string;
   primaryHost: string;
   hosts: string[];
-  superAdmin: {
+  schoolAdmin: {
     id: string;
     email: string;
     firstName: string;
@@ -75,7 +75,7 @@ export function toPlatformOrganizationsPostResponse(input: {
     organizationId: input.organizationId,
     primaryHost: input.primaryHost,
     hosts: input.hosts,
-    superAdmin: input.superAdmin,
+    schoolAdmin: input.schoolAdmin,
     licenseKey: input.licenseKey,
   };
 }

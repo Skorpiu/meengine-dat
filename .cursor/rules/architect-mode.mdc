@@ -155,6 +155,17 @@ Follow the **Memory Update Protocol** in `docs/ops/cursor-operating-model.md`: d
 
 If **this batch** changes architecture, workflow, or project state, update the relevant memory docs in the **same docs-only batch** or call out a required follow-up before merge.
 
+### Operational Reality Sync Gate
+
+After a human executes an approved production or operator action:
+
+1. Treat the **verified result** (operator output or other evidence) as source of truth.
+2. Reconcile `current-state.md`, `roadmap-todo.md`, and the relevant runbook or operational record.
+3. Reconcile `architect-mode.mdc` when the fact affects future Super Agent behavior.
+4. Never continue reporting the **pre-operation planned state** as current.
+5. Distinguish **human-executed** actions from **agent-executed** actions.
+6. Do not mark an operation complete without output or other evidence.
+
 ## Terminal and command discipline (Git Bash)
 
 For DAT, assume **Rui runs commands in Git Bash**. See `docs/ops/cursor-operating-model.md` — **Git Bash Command Discipline Protocol** and `docs/ops/command-batteries.md` — **Shell convention**.
@@ -346,7 +357,8 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `production-smoke-e2e-readonly-v1` — hybrid read-only automated smoke (DEC-036); `pnpm e2e:smoke:api` / `e2e:smoke:readonly` / `e2e:smoke:prod`; production opt-in guards; not in `pnpm check`/CI default; runbook `docs/ops/production-smoke-e2e.md`
 - `instructor-invite-auto-approve-v1` — invitation accept sets `isApproved=true` for all invited roles including INSTRUCTOR (DEC-037); public signup policy unchanged; no schema/migration/RLS
 - `instructor-invite-license-fields-v1` — INSTRUCTOR invite collects license number + expiry on `UserInvitation`; accept uses real license data, no `INVITE-PENDING-*` (DEC-038); migration `20260623120000_add_instructor_license_fields_to_invitations`; placeholder Profiles warning; DEC-037/public signup unchanged
-- `production-smoke-e2e-fixture-preflight-v1` — zero-write fixture preflight (DEC-039); `pnpm e2e:smoke:fixture-preflight`; explicit `DAT_SMOKE_ORG_ID` + fixture IDs; temporary A Conquistadora smoke tenant on www.meengine.io; hosted green
+- `production-smoke-e2e-fixture-preflight-v1` — zero-write fixture preflight (DEC-039); `pnpm e2e:smoke:fixture-preflight`; explicit `DAT_SMOKE_ORG_ID` + fixture IDs; technical smoke tenant **`DAT Production Smoke`** on www.meengine.io (DEC-045); hosted green
+- `dat-v1-smoke-tenant-school-admin-identity-v1` — smoke org **`DAT Production Smoke`**; School Admin product label (`SUPER_ADMIN` persisted); Platform onboarding `schoolAdmin*`; production rename **completed** 2026-07-13 (human operator; org `cmltn7vdl0000f8c4vxy6gcwx`); script `pnpm ops:rename-production-smoke-org` for dry-run/idempotency only (DEC-045)
 - `production-smoke-e2e-lesson-mutations-v1` — lesson mutation smoke (DEC-040); `pnpm e2e:smoke:mutations`; dual opt-in `DAT_E2E_ALLOW_PRODUCTION_MUTATIONS`; API-first create + update; no cleanup; not in `pnpm check`/CI
 - `production-smoke-e2e-testids-v1` — smoke `data-testid` markers + booking readiness metadata (DEC-041); not in `pnpm check`/CI
 - `production-first-client-onboarding-record-v1` — docs-only first B2B client onboarding record (DEC-043); `docs/architecture/first-client-onboarding-record.md`
@@ -364,7 +376,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Current recommended next** (optional unless product says otherwise):
 
-1. `lesson-reminders-email-product-plan-v1` — **planning slice** from discovery; not implementation authorization
+1. `dat-v1-commercial-platform-cutline-plan-v1` — **planning slice**; not implementation authorization
 
 **UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
 
@@ -385,7 +397,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 - **Mobile/tablet** — review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports **done**
 - **`competitive-product-discovery-v1`** — **done** (2026-07-10); see [competitive-product-discovery.md](../../docs/product/competitive-product-discovery.md). Prevalence: reminders + balances **8/9**, self-booking/requests **6/9** (9 eligible direct competitors; HIGH/MEDIUM per row)
-- **Recommended next planning:** `lesson-reminders-email-product-plan-v1` (not implementation approval)
+- **Recommended next planning:** `dat-v1-commercial-platform-cutline-plan-v1` (not implementation approval)
 
 **Deferred (not next — RLS revoke-only track closed):**
 

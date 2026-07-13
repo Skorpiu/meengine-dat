@@ -17,10 +17,10 @@ export const platformOnboardOrganizationServerSchema = z.object({
   name: z.string().min(2),
   hosts: z.array(z.string().min(3)).min(1),
   primaryHost: z.string().min(3),
-  superAdminEmail: z.string().email(),
-  superAdminPassword: z.string().min(8),
-  superAdminFirstName: z.string().min(1),
-  superAdminLastName: z.string().min(1),
+  schoolAdminEmail: z.string().email(),
+  schoolAdminPassword: z.string().min(8),
+  schoolAdminFirstName: z.string().min(1),
+  schoolAdminLastName: z.string().min(1),
   licenseFeatureKeys: z.array(z.enum(FEATURE_KEYS)).min(1),
   licenseNotes: z.string().optional(),
   licenseExpiresAt: z.string().datetime().optional(),
@@ -53,14 +53,14 @@ export const platformOnboardOrganizationClientSchema = z.object({
       "Hosts: indica pelo menos 1 host",
     ),
   primaryHost: z.string().trim().min(3, "Primary host: obrigatório"),
-  superAdminEmail: z.string().trim().email("Email inválido"),
-  superAdminPassword: z.string().min(8, "Password: mínimo 8 caracteres"),
-  superAdminFirstName: z
+  schoolAdminEmail: z.string().trim().email("Email inválido"),
+  schoolAdminPassword: z.string().min(8, "Password: mínimo 8 caracteres"),
+  schoolAdminFirstName: z
     .string()
     .trim()
     .min(1, "Primeiro nome: obrigatório")
     .max(80, "Primeiro nome: máximo 80"),
-  superAdminLastName: z
+  schoolAdminLastName: z
     .string()
     .trim()
     .min(1, "Último nome: obrigatório")

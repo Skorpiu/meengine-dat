@@ -1,4 +1,5 @@
 import type { AuditLogListItem } from "@/lib/audit/audit-log-list-client";
+import { getUserRoleLabelFromString } from "@/lib/users/user-role-label";
 
 export const AUDIT_LOG_METADATA_SUMMARY_MAX_LENGTH = 160;
 
@@ -9,7 +10,7 @@ export function formatAuditLogActorLabel(
     return item.actorEmail.trim();
   }
   if (item.actorRole) {
-    return item.actorRole;
+    return getUserRoleLabelFromString(item.actorRole);
   }
   if (item.actorUserId?.trim()) {
     return item.actorUserId.trim();

@@ -23,9 +23,9 @@ This document is used in two modes:
 
 ## Smoke tenant vs first real client
 
-| Aspect | **A Conquistadora** (temporary smoke) | **First real client** (this record) |
-| ------ | ------------------------------------- | ----------------------------------- |
-| Role | Production **smoke / test** tenant on `www.meengine.io` | Dedicated **operational** school tenant |
+| Aspect | **`DAT Production Smoke`** (technical smoke) | **Real client: `A Conquistadora`** (future) |
+| ------ | -------------------------------------------- | ------------------------------------------- |
+| Role | Production **smoke / test** tenant on `www.meengine.io` | Dedicated **operational** school tenant (not created yet) |
 | Fixture IDs | Fixed `DAT_SMOKE_*` IDs in smoke runbook | **New** org — **do not reuse** smoke fixture IDs |
 | Mutation smoke | Opt-in `DAT_E2E_ALLOW_PRODUCTION_MUTATIONS` on smoke fixtures only | **Do not** use real client records as mutable smoke fixtures |
 | This document | Reference only (smoke status section) | Primary fill target |
@@ -58,7 +58,7 @@ flowchart TD
 | - | ----- | ------ | ---------------- |
 | A1 | Client contract / scope agreed (invite-only B2B, no live billing) | ☐ | Align with DEC-032 |
 | A2 | Target **tenant host** decided (not `demo.meengine.io`) | ☐ | e.g. `school.example.com` |
-| A3 | **Dedicated organization** planned (not A Conquistadora) | ☐ | New `Organization` row |
+| A3 | **Dedicated organization** planned (not `DAT Production Smoke`) | ☐ | New `Organization` row for **A Conquistadora** |
 | A4 | `PUBLIC_SIGNUP_ENABLED=false` on target production | ☐ | Env / deployment checklist |
 | A5 | Credential policy: no `PLATFORM_ADMIN` / `SUPER_ADMIN` secrets in tickets or git | ☐ | Vault only |
 | A6 | Postmark / email routing reviewed for client domain if needed | ☐ | [email-provider-postmark-runbook.md](../../driving_school_platform/nextjs_space/docs/ops/email-provider-postmark-runbook.md) |
@@ -155,9 +155,11 @@ One manual or system-created lesson is **optional** for handover demo; not requi
 
 Distinguish **smoke tenant** runs from **client tenant** validation.
 
-### F1 — Smoke tenant (`A Conquistadora` on `www.meengine.io`)
+### F1 — Smoke tenant (`DAT Production Smoke` on `www.meengine.io`)
 
 For **automated** production smoke only — not the client record.
+
+**Organization rename (DEC-045):** completed by human operator on **2026-07-13**. Previous name `A Conquistadora` → verified name **`DAT Production Smoke`** (org `cmltn7vdl0000f8c4vxy6gcwx`, host `www.meengine.io`, 2 domains, 11 users). Real client **`A Conquistadora`** remains **not created**.
 
 | Suite | Command | Last run (UTC) | Result | Commit |
 | ----- | ------- | -------------- | ------ | ------ |
@@ -194,10 +196,10 @@ References: [smoke-test-checklist.md](../../driving_school_platform/nextjs_space
 
 | Gate | Criterion | GO? |
 | ---- | --------- | --- |
-| G1 | Dedicated org + host live; **not** A Conquistadora | ☐ |
+| G1 | Dedicated org + host live for **A Conquistadora**; **not** `DAT Production Smoke` | ☐ |
 | G2 | `PUBLIC_SIGNUP_ENABLED=false` | ☐ |
 | G3 | Deploy + migrate + `pnpm check` on release SHA | ☐ |
-| G4 | Owner SUPER_ADMIN can log in and reach `/admin` | ☐ |
+| G4 | Owner School Admin (`SUPER_ADMIN`) can log in and reach `/admin` | ☐ |
 | G5 | Minimum instructors (licensed, qualified categories, bookable) | ☐ |
 | G6 | Minimum vehicle(s) bookable | ☐ |
 | G7 | Minimum student record(s) or agreed import complete | ☐ |
@@ -261,10 +263,10 @@ Copy the block below into a **private** operator note or a redacted commit when 
 - Display name: Example Driving School
 - Tenant host: example-school.meengine.io
 - organizationId: clxxxxxxxxxxxxxxxxxxxxxxxxx
-- Smoke tenant used for automation: A Conquistadora (separate — not this org)
+- Smoke tenant used for automation: **DAT Production Smoke** on `www.meengine.io` (separate — not the real client org)
 
 ## Admin
-- Initial SUPER_ADMIN: Example Admin (email in vault)
+- Initial School Admin (`SUPER_ADMIN`): Example Admin (email in vault)
 - User.id: clxxxxxxxxxxxxxxxxxxxxxxxxx
 - Postmark: active; domain verified 2026-06-XX; password reset smoke-passed
 

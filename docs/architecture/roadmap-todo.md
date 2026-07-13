@@ -40,7 +40,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `production-smoke-e2e-readonly-v1` | **Done** | DEC-036: hybrid API + Playwright read-only smoke; env guards; `pnpm e2e:smoke:api` / `e2e:smoke:readonly` / `e2e:smoke:prod`; runbook [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md); no mutations; not in `pnpm check`/CI default |
 | `instructor-invite-auto-approve-v1` | **Done** | DEC-037: invitation accept sets `isApproved=true` for all invited roles (including INSTRUCTOR); public signup unchanged; no schema/migration/RLS |
 | `instructor-invite-license-fields-v1` | **Done** | DEC-038: INSTRUCTOR invite collects license number + expiry; stored on `UserInvitation`; accept uses real data; no `INVITE-PENDING-*`; migration `20260623120000_add_instructor_license_fields_to_invitations` |
-| `production-smoke-e2e-fixture-preflight-v1` | **Done** | DEC-039: zero-write fixture preflight; `pnpm e2e:smoke:fixture-preflight`; explicit org/student/instructor/vehicle IDs; temporary A Conquistadora smoke tenant on www.meengine.io |
+| `production-smoke-e2e-fixture-preflight-v1` | **Done** | DEC-039: zero-write fixture preflight; `pnpm e2e:smoke:fixture-preflight`; explicit org/student/instructor/vehicle IDs; technical smoke tenant **`DAT Production Smoke`** on www.meengine.io (DEC-045) |
 | `production-smoke-e2e-lesson-mutations-v1` | **Done** | DEC-040: API-first DRIVING create + time update; `pnpm e2e:smoke:mutations`; dual opt-in; no cleanup; not in `pnpm check`/CI |
 | `instructor-qualified-categories-management-v1b` | **Done** | School Admin qualified categories on Edit Instructor; PATCH admin instructor; M2M `_InstructorCategories`; no migration |
 | `production-smoke-e2e-testids-v1` | **Done** | DEC-041: smoke `data-testid` markers; booking endpoint exposes `qualifiedCategoryNames` + `instructorLicenseExpiry` when `forBooking=true`; preflight category B validation |
@@ -89,7 +89,8 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `mobile-tablet-readiness-pwa-manifest-v1` | **Done** — `manifest.webmanifest`, SVG icon, theme-color metadata; no service worker |
 | `mobile-tablet-readiness-admin-surfaces-v1` | **Done** — Lessons rows, Vehicles badges/actions, Audit logs mobile cards; Settings deferred |
 | `mobile-tablet-readiness-playwright-viewports-v1` | **Done** — opt-in `pnpm e2e:mobile-viewports` via dedicated config; 5 admin routes × 3 projects = 15 tests; not in `pnpm check` |
-| `competitive-product-discovery-v1` | **Done (docs)** — [competitive-product-discovery.md](../product/competitive-product-discovery.md); recommended next planning: `lesson-reminders-email-product-plan-v1` |
+| `competitive-product-discovery-v1` | **Done (docs)** — [competitive-product-discovery.md](../product/competitive-product-discovery.md); recommended next planning: `dat-v1-commercial-platform-cutline-plan-v1` |
+| `dat-v1-smoke-tenant-school-admin-identity-v1` | **Done** | DEC-045: smoke org **`DAT Production Smoke`**; School Admin product label; Platform `schoolAdmin*` onboarding; rename script + **production rename completed** (human operator 2026-07-13; verified org `cmltn7vdl0000f8c4vxy6gcwx`); no migration |
 | Engineering Excellence Audit | Refactors, route consistency, optional E2E CI |
 | Billing / checkout / PSP | Explicit product scope only; not in baseline |
 | `supabase-rls-tenant-policies-v1` | Only if Data API tenant access is product-required |
@@ -283,8 +284,9 @@ Parent batch — always slice before implementing.
 | `mobile-tablet-readiness-pwa-manifest-v1` | — | **Done** — `public/manifest.webmanifest`, `public/icons/dat-icon.svg`, `app/icon.svg`; layout metadata + theme-color; no service worker/offline |
 | `mobile-tablet-readiness-admin-surfaces-v1` | — | **Done** — Lessons row stack; Vehicles badge wrap + touch targets; Audit logs card fallback `<md`; `buildAuditLogMobileCardFields`; Settings deferred |
 | `mobile-tablet-readiness-playwright-viewports-v1` | — | **Done** — opt-in `pnpm e2e:mobile-viewports` via `playwright.mobile-viewports.config.ts`; 5 admin routes × 3 projects = 15 tests; hard-fail markers; not in `pnpm check` |
-| `competitive-product-discovery-v1` | — | **Done (docs)** 2026-07-10 — canonical registry (9 eligible direct / 3 adjacent / 2 low-evidence excluded); prevalence: reminders + balances **8/9**, self-booking/requests **6/9**; Iberian regulator **4/6**; schema-readiness correction; [competitive-product-discovery.md](../product/competitive-product-discovery.md). **Recommended next (planning only):** `lesson-reminders-email-product-plan-v1`. Backlog candidates (not approved): `school-balances-ledger-product-plan-v1`, `student-lesson-request-policy-planning-v1`, `student-progress-tracking-foundation-plan-v1`. |
-| `lesson-reminders-email-product-plan-v1` | P1 backlog | **Recommended next planning slice** — email lesson reminder policy, events, templates, non-goals (no SMS/WhatsApp/payment reminders); **`Notification` reuse not assumed**. Not implementation authorization. |
+| `competitive-product-discovery-v1` | — | **Done (docs)** 2026-07-10 — canonical registry (9 eligible direct / 3 adjacent / 2 low-evidence excluded); prevalence: reminders + balances **8/9**, self-booking/requests **6/9**; Iberian regulator **4/6**; schema-readiness correction; [competitive-product-discovery.md](../product/competitive-product-discovery.md). **Recommended next (planning only):** `dat-v1-commercial-platform-cutline-plan-v1`. Backlog candidates (not approved): `lesson-reminders-email-product-plan-v1`, `school-balances-ledger-product-plan-v1`, `student-lesson-request-policy-planning-v1`, `student-progress-tracking-foundation-plan-v1`. |
+| `dat-v1-commercial-platform-cutline-plan-v1` | P1 backlog | **Recommended next planning slice** — commercial/platform cutline for DAT v1 packaging and operator boundaries. Not implementation authorization. |
+| `lesson-reminders-email-product-plan-v1` | P1 backlog | Email lesson reminder policy, events, templates, non-goals (no SMS/WhatsApp/payment reminders); **`Notification` reuse not assumed**. Not implementation authorization. |
 | `school-balances-ledger-product-plan-v1` | P1 backlog | Manual school-facing ledger/balances product plan (no PSP). From discovery O2. |
 | `student-lesson-request-policy-planning-v1` | P2 backlog | Controlled request + approval policy (`LessonRequest` schema exists). From discovery O3. |
 | `i18n-framework-planning-v1` | P2 | Real i18n; switcher, fallback, plan tie-in |
@@ -293,7 +295,7 @@ Parent batch — always slice before implementing.
 
 **Deferred explicitly:** `people-management-ux-unification-instructor-route-split-v1` (D4; not recommended next).
 
-**Product direction (backlog — post-production polish):** **Mobile/tablet** — **done**. **Competitive discovery** — **done** (`competitive-product-discovery-v1`). **Recommended next (planning):** `lesson-reminders-email-product-plan-v1` — requires explicit approval to implement any runtime follow-up.
+**Product direction (backlog — post-production polish):** **Mobile/tablet** — **done**. **Competitive discovery** — **done** (`competitive-product-discovery-v1`). **Smoke identity + School Admin terminology** — **done** (`dat-v1-smoke-tenant-school-admin-identity-v1`, DEC-045); production smoke org rename **completed** by human operator 2026-07-13. **Recommended next (planning):** `dat-v1-commercial-platform-cutline-plan-v1` — requires explicit approval to implement any runtime follow-up.
 
 ---
 

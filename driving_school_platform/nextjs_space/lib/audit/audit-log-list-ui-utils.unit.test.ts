@@ -27,7 +27,7 @@ describe("formatAuditLogActorLabel", () => {
         actorRole: "SUPER_ADMIN",
         actorUserId: "admin-1",
       }),
-    ).toBe("SUPER_ADMIN");
+    ).toBe("School Admin");
     expect(
       formatAuditLogActorLabel({
         actorEmail: null,

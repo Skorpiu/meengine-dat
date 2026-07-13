@@ -12,6 +12,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { User, Mail, Calendar, Settings } from "lucide-react";
+import { getUserRoleLabel } from "@/lib/users/user-role-label";
+import type { UserRole } from "@/lib/types";
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
@@ -66,7 +68,7 @@ export default async function ProfilePage() {
                               : "secondary"
                         }
                       >
-                        {session.user.role.replace("_", " ").toLowerCase()}
+                        {getUserRoleLabel(session.user.role as UserRole)}
                       </Badge>
                     </div>
                   </div>
@@ -119,7 +121,7 @@ export default async function ProfilePage() {
                         <div>
                           <p className="text-sm text-gray-500">Role</p>
                           <p className="font-medium capitalize">
-                            {session.user.role.replace("_", " ").toLowerCase()}
+                            {getUserRoleLabel(session.user.role as UserRole)}
                           </p>
                         </div>
                       </div>

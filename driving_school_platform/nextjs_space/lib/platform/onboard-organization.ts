@@ -16,10 +16,10 @@ export type OnboardOrganizationInput = {
   name: string;
   hosts: string[];
   primaryHost: string;
-  superAdminEmail: string;
-  superAdminPassword: string;
-  superAdminFirstName: string;
-  superAdminLastName: string;
+  schoolAdminEmail: string;
+  schoolAdminPassword: string;
+  schoolAdminFirstName: string;
+  schoolAdminLastName: string;
   licenseFeatureKeys: FeatureKey[];
   licenseNotes?: string;
   licenseExpiresAt?: string;
@@ -29,7 +29,7 @@ export type OnboardOrganizationOk = {
   organizationId: string;
   primaryHost: string;
   hosts: string[];
-  superAdmin: {
+  schoolAdmin: {
     id: string;
     email: string;
     firstName: string;
@@ -88,7 +88,7 @@ export async function onboardOrganization(
 
   // Guard against email collisions
   const existingUser = await db.user.findUnique({
-    where: { email: input.superAdminEmail.toLowerCase() },
+    where: { email: input.schoolAdminEmail.toLowerCase() },
     select: { id: true },
   });
 
@@ -96,11 +96,11 @@ export async function onboardOrganization(
     return {
       ok: false,
       status: HTTP_STATUS.CONFLICT,
-      body: { error: "Super admin email already exists" },
+      body: { error: "School admin email already exists" },
     };
   }
 
-  const passwordHash = await bcrypt.hash(input.superAdminPassword, 12);
+  const passwordHash = await bcrypt.hash(input.schoolAdminPassword, 12);
 
   const result = await db.$transaction(async (tx) => {
     const org = await tx.organization.create({
@@ -117,13 +117,13 @@ export async function onboardOrganization(
       })),
     });
 
-    const superAdmin = await tx.user.create({
+    const schoolAdmin = await tx.user.create({
       data: {
-        email: input.superAdminEmail.toLowerCase(),
+        email: input.schoolAdminEmail.toLowerCase(),
         passwordHash,
         role: "SUPER_ADMIN",
-        firstName: input.superAdminFirstName,
-        lastName: input.superAdminLastName,
+        firstName: input.schoolAdminFirstName,
+        lastName: input.schoolAdminLastName,
         isApproved: true,
         isEmailVerified: true,
         emailVerified: new Date(),
@@ -150,7 +150,7 @@ export async function onboardOrganization(
       opts.createdByUserId,
     );
 
-    return { org, superAdmin, licenseKey: license.key ?? null };
+    return { org, schoolAdmin, licenseKey: license.key ?? null };
   });
 
   return {
@@ -159,7 +159,7 @@ export async function onboardOrganization(
       organizationId: result.org.id,
       primaryHost,
       hosts,
-      superAdmin: result.superAdmin,
+      schoolAdmin: result.schoolAdmin,
       licenseKey: result.licenseKey,
     },
   };

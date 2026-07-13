@@ -29,10 +29,10 @@ export default function PlatformDashboard({
     name: "",
     hosts: "",
     primaryHost: "",
-    superAdminEmail: "",
-    superAdminPassword: "",
-    superAdminFirstName: "",
-    superAdminLastName: "",
+    schoolAdminEmail: "",
+    schoolAdminPassword: "",
+    schoolAdminFirstName: "",
+    schoolAdminLastName: "",
     licenseFeatureKeys: [] as FeatureKey[],
     licenseNotes: "",
     licenseExpiresAt: "",
@@ -54,10 +54,10 @@ export default function PlatformDashboard({
         name: form.name,
         hosts: form.hosts,
         primaryHost: form.primaryHost,
-        superAdminEmail: form.superAdminEmail,
-        superAdminPassword: form.superAdminPassword,
-        superAdminFirstName: form.superAdminFirstName,
-        superAdminLastName: form.superAdminLastName,
+        schoolAdminEmail: form.schoolAdminEmail,
+        schoolAdminPassword: form.schoolAdminPassword,
+        schoolAdminFirstName: form.schoolAdminFirstName,
+        schoolAdminLastName: form.schoolAdminLastName,
         licenseExpiresAt: form.licenseExpiresAt || undefined,
         licenseNotes: form.licenseNotes || undefined,
       });
@@ -108,10 +108,10 @@ export default function PlatformDashboard({
         name: "",
         hosts: "",
         primaryHost: "",
-        superAdminEmail: "",
-        superAdminPassword: "",
-        superAdminFirstName: "",
-        superAdminLastName: "",
+        schoolAdminEmail: "",
+        schoolAdminPassword: "",
+        schoolAdminFirstName: "",
+        schoolAdminLastName: "",
         licenseFeatureKeys: [],
         licenseNotes: "",
         licenseExpiresAt: "",
@@ -204,47 +204,47 @@ export default function PlatformDashboard({
           <div>
             <input
               className="border rounded p-2 w-full"
-              placeholder="Super admin email"
-              value={form.superAdminEmail}
+              placeholder="School admin email"
+              value={form.schoolAdminEmail}
               onChange={(e) =>
-                setForm((p) => ({ ...p, superAdminEmail: e.target.value }))
+                setForm((p) => ({ ...p, schoolAdminEmail: e.target.value }))
               }
             />
-            {fieldError("superAdminEmail")}
+            {fieldError("schoolAdminEmail")}
           </div>
           <div>
             <input
               className="border rounded p-2 w-full"
-              placeholder="Super admin password"
+              placeholder="School admin password"
               type="password"
-              value={form.superAdminPassword}
+              value={form.schoolAdminPassword}
               onChange={(e) =>
-                setForm((p) => ({ ...p, superAdminPassword: e.target.value }))
+                setForm((p) => ({ ...p, schoolAdminPassword: e.target.value }))
               }
             />
-            {fieldError("superAdminPassword")}
+            {fieldError("schoolAdminPassword")}
           </div>
           <div>
             <input
               className="border rounded p-2 w-full"
-              placeholder="Super admin first name"
-              value={form.superAdminFirstName}
+              placeholder="School admin first name"
+              value={form.schoolAdminFirstName}
               onChange={(e) =>
-                setForm((p) => ({ ...p, superAdminFirstName: e.target.value }))
+                setForm((p) => ({ ...p, schoolAdminFirstName: e.target.value }))
               }
             />
-            {fieldError("superAdminFirstName")}
+            {fieldError("schoolAdminFirstName")}
           </div>
           <div>
             <input
               className="border rounded p-2 w-full"
-              placeholder="Super admin last name"
-              value={form.superAdminLastName}
+              placeholder="School admin last name"
+              value={form.schoolAdminLastName}
               onChange={(e) =>
-                setForm((p) => ({ ...p, superAdminLastName: e.target.value }))
+                setForm((p) => ({ ...p, schoolAdminLastName: e.target.value }))
               }
             />
-            {fieldError("superAdminLastName")}
+            {fieldError("schoolAdminLastName")}
           </div>
           <input
             className="border rounded p-2"

@@ -46,8 +46,8 @@ async function main() {
   console.log("🏢 Creating default organization...");
   const organization = await prisma.organization.create({
     data: {
-      name: "A Conquistadora",
-      email: "admin@aconquistadora.com",
+      name: "DAT Production Smoke",
+      email: "smoke@meengine.io",
       phoneNumber: "+1234567890",
       address: "123 Main Street",
       city: "Guimarães",
@@ -294,8 +294,8 @@ async function main() {
 
   console.log(`✅ Created ${createdCategories.length} categories`);
 
-  // 3. Create Super Admin User
-  console.log("👑 Creating super admin user...");
+  // 3. Create School Admin user (persisted role SUPER_ADMIN)
+  console.log("👑 Creating School Admin user...");
   const hashedPassword = await bcrypt.hash("Conquistadora!", 12);
 
   const superAdmin = await prisma.user.create({
@@ -304,7 +304,7 @@ async function main() {
       organizationId: orgId,
       passwordHash: hashedPassword,
       role: "SUPER_ADMIN" as any,
-      firstName: "Conquistadora",
+      firstName: "Smoke",
       lastName: "Admin",
       phoneNumber: "+1-555-0100",
       isEmailVerified: true,
@@ -313,7 +313,7 @@ async function main() {
   });
 
   console.log(
-    `✅ Created super admin: ${superAdmin.firstName} ${superAdmin.lastName}`,
+    `✅ Created School Admin: ${superAdmin.firstName} ${superAdmin.lastName}`,
   );
 
   // 4. Create Default Test User (john@doe.com)
@@ -866,14 +866,14 @@ async function main() {
 📊 Summary:
   - Transmission Types: 2
   - Categories: ${createdCategories.length}
-  - Users: ${instructorUsers.length + studentUsers.length + 2} (including Super Admin & Test User)
+  - Users: ${instructorUsers.length + studentUsers.length + 2} (including School Admin & Test User)
   - Instructors: ${instructors.length}
   - Students: ${students.length}
   - Vehicles: ${vehicles.length}
   - System Settings: ${systemSettings.length}
   - Lesson Counters: ${lessonCounters.length}
 
-👑 Super Admin Credentials:
+👑 School Admin Credentials (technical smoke tenant):
   Email: conquistadora@drivingschool.com
   Password: Conquistadora!
 
