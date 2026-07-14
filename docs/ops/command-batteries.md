@@ -554,6 +554,7 @@ Flow: export → edit → dry-run → review errors → apply (all-or-nothing).
 | Topic | Path |
 | ----- | ---- |
 | Preview QA | [preview-qa-runbook.md](./preview-qa-runbook.md) |
+| Git tags and recovery | [git-tags-and-recovery-runbook.md](./git-tags-and-recovery-runbook.md) |
 | Reviewer workflow | [reviewer-workflow.md](./reviewer-workflow.md) |
 | Release checklist | `driving_school_platform/nextjs_space/docs/ops/release-checklist.md` |
 | Architecture memory | [../architecture/system-design.md](../architecture/system-design.md) |

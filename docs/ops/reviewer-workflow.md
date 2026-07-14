@@ -277,6 +277,7 @@ Do **not** update for trivial chat or duplicate notes.
 | `system-design.md` | Durable domain/architecture rules |
 | `roadmap-todo.md` | Backlog |
 | `command-batteries.md` | Commands |
+| `git-tags-and-recovery-runbook.md` | Tag categories, recovery commands, backup boundaries |
 | `preview-qa-runbook.md` | Preview/demo/QA |
 | `reviewer-workflow.md` | This workflow |
 | `architect-mode.mdc` | Agent rules |

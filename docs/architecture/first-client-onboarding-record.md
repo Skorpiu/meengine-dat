@@ -56,7 +56,7 @@ flowchart TD
 
 | # | Check | Status | Notes / evidence |
 | - | ----- | ------ | ---------------- |
-| A1 | Client contract / scope agreed (invite-only B2B, no live billing) | ☐ | Align with DEC-032 |
+| A1 | Client contract / scope agreed (invite-only B2B; billing per sold scope — current core: no live self-service billing) | ☐ | Align with DEC-032 + [dat-v1-commercial-release-scope.md](../product/dat-v1-commercial-release-scope.md) |
 | A2 | Target **tenant host** decided (not `demo.meengine.io`) | ☐ | e.g. `school.example.com` |
 | A3 | **Dedicated organization** planned (not `DAT Production Smoke`) | ☐ | New `Organization` row for **A Conquistadora** |
 | A4 | `PUBLIC_SIGNUP_ENABLED=false` on target production | ☐ | Env / deployment checklist |
@@ -99,7 +99,7 @@ flowchart TD
 | **Feature modules enabled** | e.g. `LESSON_MANAGEMENT`, `VEHICLE_MANAGEMENT`, `USER_MANAGEMENT` |
 | **Settings / Plan UI** | School admin sees **Plan** read-only (DEC-026); Settings not in navbar |
 
-**Org creation:** operator path via platform onboarding — see [platform-admin-runbook.md](../../driving_school_platform/nextjs_space/docs/ops/platform-admin-runbook.md) and [production-host-split.md](../../driving_school_platform/nextjs_space/docs/ops/production-host-split.md). Record **who** performed setup and **date** in Section H.
+**Org creation:** **Platform** onboarding/provisioning — fresh org, domain, subscription, entitlements (DEC-053). See [platform-admin-runbook.md](../../driving_school_platform/nextjs_space/docs/ops/platform-admin-runbook.md), [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md). Record **who** performed setup and **date** in Section H.
 
 ---
 

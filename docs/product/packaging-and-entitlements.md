@@ -1,81 +1,75 @@
 # Packaging and Entitlements (Product Intent)
 
-**Status:** Product/business direction. **Plan enforcement in UI/API is not implemented** unless a named batch says so.
+**Status:** Product/business direction (updated 2026-07-14). **Plan enforcement in UI/API is not fully implemented** unless a named batch says so.
 
-**Fact:** Self-service import/export UI (dry-run/apply) already exists in DAT for entitled environments — see [current-state.md](../architecture/current-state.md). Tier gating is a **future** slice: `import-export-business-packaging-v1`.
+**Catalog:** [dat-plan-and-module-catalog.md](./dat-plan-and-module-catalog.md) (Basic / Standard / Premium — **supersedes** Basic/Starter vs Premium/Enterprise-only forward planning; DEC-004 remains historical).
+
+**Fact:** Self-service import/export UI already exists in DAT — tier gating is a **future** slice: `import-export-business-packaging-v1`.
 
 ---
 
-## Plan tiers (intent)
+## Plan tiers (intent — DAT v1)
 
-| Tier | Import/export | Notes |
-| ---- | ------------- | ----- |
-| **Basic / Starter** | Provider-assisted import during onboarding; basic export may be included | Vendor/operator runs process; school admin may not get full self-service UI |
-| **Premium / Enterprise** | Self-service import/export UI, dry-run/apply, templates, import history/audit, advanced validation | Aligns with shipped technical capability; packaging TBD |
+| Tier | Summary |
+| ---- | ------- |
+| **Basic** | Core operations; provider-assisted import; no email reminders or ledger by default |
+| **Standard** | Full operations + self-service import/export + email lesson reminders |
+| **Premium** | Standard + school ledger (typ.) + school payment module when built |
+
+**Billing intervals:** monthly and annual (DEC-049). **Add-ons:** modules sold separately where not bundled (DEC-050).
+
+**No final prices** in planning docs — open decision OD-002.
+
+---
+
+## Modules vs feature flags
+
+- Commercial **modules** = entitlement bundles (Plan/add-on derived).
+- Do **not** expose tenant-editable raw `feature_flags` as the commercial module system (DEC-050, DEC-026).
+- Runtime today uses legacy `FeatureKey` in `lib/config/license-features.ts` — alignment batch deferred.
 
 ---
 
 ## Provider-assisted import (deferred runbook)
 
-Full runbook: **`provider-assisted-import-runbook-v1`** (P2 ops — not written in product sync v1).
+Full runbook: **`provider-assisted-import-runbook-v1`** (P2 ops).
 
-**Outline only:**
-
-1. **Template** — use repo examples under `driving_school_platform/nextjs_space/docs/examples/import-export/`
-2. **Data cleanup** — normalize IDs, dates, instructor resolution off-repo
-3. **Dry-run** — zero-write preview against QA/tenant DB
-4. **Fix** — iterate on row errors
-5. **Apply** — human-approved apply (non-demo org)
-6. **Customer validation** — school sign-off on counts and samples
+**Outline:** template → cleanup → dry-run → fix → apply → customer validation.
 
 Contracts: [client-data-import-export-strategy.md](../../driving_school_platform/nextjs_space/docs/engineering/client-data-import-export-strategy.md).
 
 ---
 
-## Payment Integration (two meanings)
+## Payment domains (two — DEC-046, DEC-052)
 
 | Meaning | Owner | Scope |
 | ------- | ----- | ----- |
-| **DAT customer subscription** | Future **Platform** + billing/entitlements | What a **school pays for DAT** — not “Payment Integration” in school admin |
-| **School-facing payment operations** | Future **DAT** | Student balances, lesson packages, payments received, debts, receipts, accounting export; SIBS/Stripe/MB Way later |
+| **DAT tenant subscription** | **Platform** | School pays for DAT — checkout, subscription, entitlements |
+| **School-facing ledger** | **DAT** (optional module) | Student balances, packages, receipts; entitlement-gated; **not** mandatory |
 
-School-facing work is likely **Premium/Enterprise**. Planning slices: `payment-integration-product-planning-v1`, `payments-and-balances-foundation-v1`.
+**Fact:** `Payment` Prisma model is **legacy/dormant** — not tenant-ready for either domain.
 
-**Fact:** `Payment` Prisma model exists but is **legacy/dormant** (no `organizationId`, USD default, `userId`-linked) — **not** a tenant-ready school ledger foundation. No school-facing payment admin product surface today. Product packaging and school-facing scope are **not** finalized here.
+---
+
+## Email lesson reminders
+
+- **DAT v1 target** — entitlement-gated (`LESSON_REMINDERS_EMAIL`).
+- Postmark = delivery boundary only; orchestration not built.
+- SMS/WhatsApp deferred.
 
 ---
 
 ## Multi-Language
 
-**Fact:** “Multi-Language Support” exists as a **license entitlement name** in `lib/config/license-features.ts`. **Real i18n is not implemented.**
-
-**Future slices:**
-
-- `i18n-framework-planning-v1` — framework, fallback, switcher behavior, pricing/plan tie-in
-- `language-pack-pt-PT-v1` — pt-PT copy strategy and packs
-
-Until then: **English product UI baseline** for new surfaces.
+Entitlement placeholder only until `i18n-framework-planning-v1`. English UI baseline until then.
 
 ---
 
-## Competitive / product discovery (completed)
-
-**Slice:** `competitive-product-discovery-v1` — **Done (docs)** 2026-07-10.
+## Competitive discovery (completed)
 
 **Report:** [competitive-product-discovery.md](./competitive-product-discovery.md)
 
-**Completion summary:** Compared DAT with **9 counted direct competitors with sufficient official evidence** (UK, PT, ES; **HIGH/MEDIUM per registry row**) and **3 adjacent** horizontal booking benchmarks (meetergo, anny, EasyWeek), plus **2 low-evidence** legacy PT products excluded from prevalence. DAT is strong on People, scheduling, import/export, audit, and tenant isolation. **Prevalence:** lesson reminders and school-facing balances are confirmed in **8/9** eligible direct competitors; controlled self-booking or lesson requests are confirmed in **6/9**. Largest DAT gaps: operational lesson reminders (Postmark delivery boundary only — no orchestration/scheduling/lifecycle), school-facing balances/ledger (`Payment` schema not tenant-ready), controlled student lesson requests (`LessonRequest` dormant schema only), progress/skills UI, and operational analytics. National regulator integration is **publicly confirmed in 4/6 counted Iberian direct competitors** (segment-specific; deferred).
-
-**Evidence-supported packaging implications (intent only — not commitments):**
-
-| Theme | Packaging signal |
-| ----- | ---------------- |
-| Self-service import/export (already shipped) | Premium/Enterprise — enforce via `import-export-business-packaging-v1` |
-| Lesson reminders (email) | Premium comms; Basic may stay manual |
-| School-facing balances / manual ledger | Premium/Enterprise; distinct from Platform subscription billing |
-| Controlled student booking (request + approval) | Premium “self-service” gate |
-| Progress/skills tracking | Premium |
-| IMT/regulatory modules | Separate segment offer or services — not baseline DAT |
+Reminders + balances = table stakes (8/9 direct competitors). Packaging implications absorbed into [dat-plan-and-module-catalog.md](./dat-plan-and-module-catalog.md).
 
 ---
 
@@ -83,12 +77,11 @@ Until then: **English product UI baseline** for new surfaces.
 
 | Slice | Purpose |
 | ----- | ------- |
-| `import-export-business-packaging-v1` | Enforce or document tier vs self-service UI |
-| `provider-assisted-import-runbook-v1` | Operator runbook (full) |
-| `payment-integration-product-planning-v1` | School-facing payments product spec |
-| `payments-and-balances-foundation-v1` | Technical foundation |
-| `competitive-product-discovery-v1` | Market comparison backlog input |
-| `i18n-framework-planning-v1` | Real localization |
-| `language-pack-pt-PT-v1` | Portuguese product copy |
+| `dat-v1-commercial-platform-cutline-plan-v1` | **Done (docs)** — commercial cutline plan |
+| `platform-subscription-checkout-foundation-v1` | Checkout + billing (sensitive — not authorized) |
+| `dat-license-self-service-ui-v1` | License self-service (not authorized) |
+| `import-export-business-packaging-v1` | Tier vs self-service UI enforcement |
+| `lesson-reminders-email-foundation-v1` | Email reminders runtime |
+| `school-balances-ledger-foundation-v1` | Optional ledger module |
 
-See [roadmap-todo.md](../architecture/roadmap-todo.md) — **P1 / Product and packaging**.
+See [roadmap-todo.md](../architecture/roadmap-todo.md) and [dat-v1-commercial-release-plan.md](../architecture/dat-v1-commercial-release-plan.md).

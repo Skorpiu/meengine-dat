@@ -89,7 +89,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `mobile-tablet-readiness-pwa-manifest-v1` | **Done** — `manifest.webmanifest`, SVG icon, theme-color metadata; no service worker |
 | `mobile-tablet-readiness-admin-surfaces-v1` | **Done** — Lessons rows, Vehicles badges/actions, Audit logs mobile cards; Settings deferred |
 | `mobile-tablet-readiness-playwright-viewports-v1` | **Done** — opt-in `pnpm e2e:mobile-viewports` via dedicated config; 5 admin routes × 3 projects = 15 tests; not in `pnpm check` |
-| `competitive-product-discovery-v1` | **Done (docs)** — [competitive-product-discovery.md](../product/competitive-product-discovery.md); recommended next planning: `dat-v1-commercial-platform-cutline-plan-v1` |
+| `competitive-product-discovery-v1` | **Done (docs)** — [competitive-product-discovery.md](../product/competitive-product-discovery.md); commercial planning: `dat-v1-commercial-platform-cutline-plan-v1` **done** |
 | `dat-v1-smoke-tenant-school-admin-identity-v1` | **Done** | DEC-045: smoke org **`DAT Production Smoke`**; School Admin product label; Platform `schoolAdmin*` onboarding; rename script + **production rename completed** (human operator 2026-07-13; verified org `cmltn7vdl0000f8c4vxy6gcwx`); no migration |
 | Engineering Excellence Audit | Refactors, route consistency, optional E2E CI |
 | Billing / checkout / PSP | Explicit product scope only; not in baseline |
@@ -285,7 +285,8 @@ Parent batch — always slice before implementing.
 | `mobile-tablet-readiness-admin-surfaces-v1` | — | **Done** — Lessons row stack; Vehicles badge wrap + touch targets; Audit logs card fallback `<md`; `buildAuditLogMobileCardFields`; Settings deferred |
 | `mobile-tablet-readiness-playwright-viewports-v1` | — | **Done** — opt-in `pnpm e2e:mobile-viewports` via `playwright.mobile-viewports.config.ts`; 5 admin routes × 3 projects = 15 tests; hard-fail markers; not in `pnpm check` |
 | `competitive-product-discovery-v1` | — | **Done (docs)** 2026-07-10 — canonical registry (9 eligible direct / 3 adjacent / 2 low-evidence excluded); prevalence: reminders + balances **8/9**, self-booking/requests **6/9**; Iberian regulator **4/6**; schema-readiness correction; [competitive-product-discovery.md](../product/competitive-product-discovery.md). **Recommended next (planning only):** `dat-v1-commercial-platform-cutline-plan-v1`. Backlog candidates (not approved): `lesson-reminders-email-product-plan-v1`, `school-balances-ledger-product-plan-v1`, `student-lesson-request-policy-planning-v1`, `student-progress-tracking-foundation-plan-v1`. |
-| `dat-v1-commercial-platform-cutline-plan-v1` | P1 backlog | **Recommended next planning slice** — commercial/platform cutline for DAT v1 packaging and operator boundaries. Not implementation authorization. |
+| `dat-v1-commercial-platform-cutline-plan-v1` | **Done (docs)** | DEC-046–057; [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md); tag runbook [git-tags-and-recovery-runbook.md](../ops/git-tags-and-recovery-runbook.md); safety tag `dat-v1-core-baseline-95b833e`; no runtime |
+| `platform-commercial-catalog-schema-plan-v1` | P1 backlog | **Recommended next** — D4 schema proposal for Basic/Standard/Premium; not implementation authorization |
 | `lesson-reminders-email-product-plan-v1` | P1 backlog | Email lesson reminder policy, events, templates, non-goals (no SMS/WhatsApp/payment reminders); **`Notification` reuse not assumed**. Not implementation authorization. |
 | `school-balances-ledger-product-plan-v1` | P1 backlog | Manual school-facing ledger/balances product plan (no PSP). From discovery O2. |
 | `student-lesson-request-policy-planning-v1` | P2 backlog | Controlled request + approval policy (`LessonRequest` schema exists). From discovery O3. |
@@ -295,7 +296,7 @@ Parent batch — always slice before implementing.
 
 **Deferred explicitly:** `people-management-ux-unification-instructor-route-split-v1` (D4; not recommended next).
 
-**Product direction (backlog — post-production polish):** **Mobile/tablet** — **done**. **Competitive discovery** — **done** (`competitive-product-discovery-v1`). **Smoke identity + School Admin terminology** — **done** (`dat-v1-smoke-tenant-school-admin-identity-v1`, DEC-045); production smoke org rename **completed** by human operator 2026-07-13. **Recommended next (planning):** `dat-v1-commercial-platform-cutline-plan-v1` — requires explicit approval to implement any runtime follow-up.
+**Product direction (backlog — commercial path):** **Mobile/tablet** — **done**. **Competitive discovery** — **done**. **Commercial cutline planning** — **done** (`dat-v1-commercial-platform-cutline-plan-v1`, DEC-046–057). **Smoke identity** — **done** (DEC-045). **Recommended next:** `platform-commercial-catalog-schema-plan-v1` (D4 planning) — not implementation authorization.
 
 ---
 

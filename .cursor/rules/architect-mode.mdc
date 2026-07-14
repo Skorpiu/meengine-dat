@@ -373,19 +373,20 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `mobile-tablet-readiness-playwright-viewports-v1` — opt-in viewport smoke via dedicated Playwright config
 - `audit-log-viewer-export-v1` — CSV export from `/admin/audit-logs`
 - `competitive-product-discovery-v1` — docs-only market comparison (9 eligible direct / 3 adjacent canonical registry); [competitive-product-discovery.md](../../docs/product/competitive-product-discovery.md)
+- `dat-v1-commercial-platform-cutline-plan-v1` — docs-only commercial/platform cutline (DEC-046–057); plans + tag runbook; safety tag `dat-v1-core-baseline-95b833e` @ `95b833e`; no runtime
 
 **Current recommended next** (optional unless product says otherwise):
 
-1. `dat-v1-commercial-platform-cutline-plan-v1` — **planning slice**; not implementation authorization
+1. `platform-commercial-catalog-schema-plan-v1` — **D4 planning slice**; not implementation authorization
 
-**UX principle (durable):** Status labels/badges with the same semantic meaning use consistent wording and colors/variants across DAT (see `lib/people/people-app-access-ui-theme.ts`, DEC-020).
+**Release anchor (DEC-056):** safety baseline tag `dat-v1-core-baseline-95b833e` → `95b833e`. Runbook: [git-tags-and-recovery-runbook.md](../../docs/ops/git-tags-and-recovery-runbook.md). Target release: `dat-v1.0.0-rc.*` → `dat-v1.0.0` (DEC-057).
 
-**Production cutline (DEC-032):** Controlled first B2B client — invite-only, `PUBLIC_SIGNUP_ENABLED=false`, no live billing. See `docs/architecture/production-readiness-cutline.md`.
+**Production cutline (DEC-032) — current deployed core:** Controlled B2B — invite-only, `PUBLIC_SIGNUP_ENABLED=false`, no live self-service billing **today**. **Target DAT v1.0** adds Platform billing (DEC-046). See [production-readiness-cutline.md](../../docs/architecture/production-readiness-cutline.md) and [dat-v1-commercial-release-scope.md](../../docs/product/dat-v1-commercial-release-scope.md).
 
 **Do not open next** (unless explicit product scope / approval):
 
 - `calendar-lessons-polish-v1e-student-warnings` (P3 — product policy first)
-- **Billing / checkout / PSP** — not in baseline cutline
+- **Billing / checkout / PSP runtime** — requires explicit sensitive-batch approval per slice
 - **Prisma migrations / schema changes** — unless explicitly requested and gated
 - `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)**
 - **Platform cross-tenant audit viewer** — unless explicit platform product need
@@ -397,7 +398,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 - **Mobile/tablet** — review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports **done**
 - **`competitive-product-discovery-v1`** — **done** (2026-07-10); see [competitive-product-discovery.md](../../docs/product/competitive-product-discovery.md). Prevalence: reminders + balances **8/9**, self-booking/requests **6/9** (9 eligible direct competitors; HIGH/MEDIUM per row)
-- **Recommended next planning:** `dat-v1-commercial-platform-cutline-plan-v1` (not implementation approval)
+- **Recommended next planning:** `platform-commercial-catalog-schema-plan-v1` (not implementation approval)
 
 **Deferred (not next — RLS revoke-only track closed):**
 
@@ -407,6 +408,23 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 **Daily Super-Agent:** default **Manual daily Super-Agent check** ([cursor-automations-prompts.md](../../docs/ops/cursor-automations-prompts.md)) at no extra cost; Cursor Automations only if free on current plan.
 
 If a task conflicts with project memory, **stop and report the conflict** before editing.
+
+## Release Anchor and Recovery Gate
+
+Before recommending recovery, rollback, release branching, or final release:
+
+1. Inspect existing **local and remote tags** (`git tag --list`, `git ls-remote --tags origin`).
+2. Identify tag category: **baseline**, **RC**, **final release**, or **hotfix** (see [git-tags-and-recovery-runbook.md](../../docs/ops/git-tags-and-recovery-runbook.md)).
+3. Prefer **comparison**, **archive**, or **isolated worktree** before altering branches.
+4. **Never move** a published tag (DEC-055).
+5. **Never recommend** resetting or force-pushing `main` without an approved incident procedure.
+6. Distinguish **code recovery** (Git tag) from **database/infrastructure recovery** (operator runbooks).
+7. Keep tag **creation and publication human-controlled** — agents do not publish tags unless explicitly instructed.
+8. Record newly verified release anchors in `current-state.md` or the release plan when operator confirms.
+
+Full commands: [git-tags-and-recovery-runbook.md](../../docs/ops/git-tags-and-recovery-runbook.md) — do not duplicate the complete runbook here.
+
+**Current safety baseline:** `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056).
 
 ## Cursor Automations (Super-Agent)
 

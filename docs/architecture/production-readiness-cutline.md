@@ -1,15 +1,19 @@
 # DAT Production-Readiness Cutline
 
-**Status:** Active cutline for controlled first B2B client production.  
-**Baseline commit:** `5f41082` (main).  
+**Status:** Active cutline for **current deployed core** — controlled first B2B client production.
+**Baseline commit (historical doc):** `5f41082` (main at DEC-032 write time).
+**Current main (2026-07-14):** `d75dd22`.
+**Safety tag:** `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056).
 **Decision:** [DEC-032](./decision-log.md) — `production-readiness-cutline-doc-v1`.  
-**Related:** [current-state.md](./current-state.md), [roadmap-todo.md](./roadmap-todo.md), [release-checklist.md](../../driving_school_platform/nextjs_space/docs/ops/release-checklist.md).
+**Commercial target:** [dat-v1-commercial-release-scope.md](../product/dat-v1-commercial-release-scope.md) — **final DAT v1.0 includes self-service billing**; this cutline describes what is **deployed today**, not the commercial end state.
 
 ---
 
 ## Scope
 
 Controlled production deployment for a **first B2B driving-school client** using DAT as the operational product. This cutline is **not** a public open-demo or self-serve signup launch.
+
+**Important distinction (2026-07-14):** The **no live billing** assumption below applies to the **current deployed core** and controlled B2B path (DEC-032). It is **not** the final DAT v1.0 product target (DEC-046). Do not rewrite historical DEC-032 evidence; add forward docs for commercial scope.
 
 ---
 
@@ -19,7 +23,7 @@ Controlled production deployment for a **first B2B driving-school client** using
 | ---------- | ----------- |
 | Onboarding model | **Invite-only** (copy-link); admin-provisioned students/instructors |
 | Public signup | **`PUBLIC_SIGNUP_ENABLED=false`** (unset or explicit `false`) on client production |
-| Billing / checkout | **Out of baseline** — no live PSP, checkout, or billing portal; do not market as production-ready |
+| Billing / checkout | **Out of current deployed baseline** — no live PSP, checkout, or billing portal for controlled B2B today. **Target DAT v1.0:** Platform subscription billing (DEC-046) — see [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md) |
 | Target environment | Each env gets its own **`prisma migrate status` / `migrate deploy`**, **`pnpm check`**, and **post-deploy smoke** |
 | Credentials | **No** `PLATFORM_ADMIN` / `SUPER_ADMIN` secrets in docs, git, tickets, or client handoff |
 | Audit logs | **Not P0** before controlled production; **foundation implemented** (tenant schema + write paths + read API + URL-only viewer). Optional polish (viewer export/platform view) deferred. |
