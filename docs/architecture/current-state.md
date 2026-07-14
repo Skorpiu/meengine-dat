@@ -285,13 +285,14 @@ Documented and in use (docs/rules only; no runtime change):
 - `dat-v1-smoke-tenant-school-admin-identity-v1` — smoke org **`DAT Production Smoke`**; School Admin label; production rename completed 2026-07-13 (DEC-045)
 - `dat-v1-commercial-platform-cutline-plan-v1` — commercial/platform cutline planning (DEC-046–057); [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md); safety tag `dat-v1-core-baseline-95b833e`; [git-tags-and-recovery-runbook.md](../ops/git-tags-and-recovery-runbook.md); no runtime
 - `dat-plan-naming-and-doc-hygiene-v1` — approved commercial plan display names (DEC-058): DAT Core, DAT Plus, DAT Premium; stable keys `DAT_CORE`/`DAT_PLUS`/`DAT_PREMIUM` documented; package composition remains provisional; canonical memory continuity contract (DEC-059); Markdown hygiene; no runtime
+- `platform-commercial-catalog-schema-plan-v1` — D4 commercial catalogue schema plan (DEC-060); hybrid Option C; candidate Prisma schema **proposed — not implemented**; [platform-commercial-catalog-schema-plan.md](./platform-commercial-catalog-schema-plan.md); no runtime/schema/migration
 
-### Likely next (commercial path — planning done)
+### Likely next (commercial path)
 
-1. **`platform-commercial-catalog-schema-plan-v1`** — docs + D4 schema proposal for DAT Core / DAT Plus / DAT Premium catalog (not implementation authorization)
+1. **`platform-commercial-catalog-schema-foundation-v1`** — additive Prisma catalogue models/enums + migration; schema tests; no checkout/provider/subscription/License UI/provisioning (requires `APPROVED TO IMPLEMENT`)
 2. **`platform-subscription-webhook-hardening-v1`** — sensitive; requires explicit approval
 
-Planning reference: [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md) (`dat-v1-commercial-platform-cutline-plan-v1` **done** 2026-07-14).
+Planning reference: [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md); catalogue plan: [platform-commercial-catalog-schema-plan.md](./platform-commercial-catalog-schema-plan.md).
 
 ### Deferred (not next)
 
@@ -303,7 +304,7 @@ Planning reference: [dat-v1-commercial-release-plan.md](./dat-v1-commercial-rele
 
 **Mobile/tablet readiness (done):** review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports — [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md). Opt-in viewport smoke: `pnpm e2e:mobile-viewports`. **Not production blockers** (DEC-032).
 
-**Competitive/Product Discovery (`competitive-product-discovery-v1`, done 2026-07-10):** Market comparison complete — [competitive-product-discovery.md](../product/competitive-product-discovery.md). **Commercial cutline planning done:** `dat-v1-commercial-platform-cutline-plan-v1` (2026-07-14, DEC-046–057). **Recommended next:** `platform-commercial-catalog-schema-plan-v1` — D4 planning; not implementation authorization.
+**Competitive/Product Discovery (`competitive-product-discovery-v1`, done 2026-07-10):** Market comparison complete — [competitive-product-discovery.md](../product/competitive-product-discovery.md). **Commercial cutline planning done:** `dat-v1-commercial-platform-cutline-plan-v1` (2026-07-14, DEC-046–057). **Catalogue schema plan done:** `platform-commercial-catalog-schema-plan-v1` (DEC-060). **Recommended next:** `platform-commercial-catalog-schema-foundation-v1` — first implementation-sensitive slice; not authorized without explicit approval.
 
 Engineering excellence audit items (non-blocking refactors) remain tracked separately in roadmap P2+.
 

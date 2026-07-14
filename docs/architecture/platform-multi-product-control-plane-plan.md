@@ -146,6 +146,7 @@ Platform catalog entries reference product code; entitlements are product-scoped
 
 | Document | Role |
 | -------- | ---- |
+| [platform-commercial-catalog-schema-plan.md](./platform-commercial-catalog-schema-plan.md) | D4 catalogue schema (DEC-060) |
 | [dat-vs-platform-boundary.md](../product/dat-vs-platform-boundary.md) | Product boundary (updated) |
 | [platform-subscription-billing-entitlements-plan.md](./platform-subscription-billing-entitlements-plan.md) | Billing detail |
 | [platform-admin-runbook.md](../../driving_school_platform/nextjs_space/docs/ops/platform-admin-runbook.md) | Current operator onboarding |

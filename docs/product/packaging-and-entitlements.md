@@ -22,7 +22,7 @@
 
 **Billing intervals:** monthly and annual (DEC-049). **Add-ons:** modules sold separately where not bundled (DEC-050).
 
-**No final prices** in planning docs — open decision OD-002. **Exact package composition remains provisional** until `platform-commercial-catalog-schema-plan-v1`.
+**No final prices** in planning docs — open decision OD-002. **Exact package composition remains provisional** — schema plan done: [platform-commercial-catalog-schema-plan.md](../architecture/platform-commercial-catalog-schema-plan.md) (DEC-060).
 
 ---
 
@@ -84,7 +84,8 @@ Reminders + balances = table stakes (8/9 direct competitors). Packaging implicat
 | ----- | ------- |
 | `dat-v1-commercial-platform-cutline-plan-v1` | **Done (docs)** — commercial cutline plan |
 | `dat-plan-naming-and-doc-hygiene-v1` | **Done (docs)** — approved display names DEC-058 |
-| `platform-commercial-catalog-schema-plan-v1` | **Recommended next** — D4 schema proposal |
+| `platform-commercial-catalog-schema-plan-v1` | **Done (docs)** — [platform-commercial-catalog-schema-plan.md](../architecture/platform-commercial-catalog-schema-plan.md) (DEC-060) |
+| `platform-commercial-catalog-schema-foundation-v1` | **Recommended next** — additive Prisma catalogue models/enums + migration |
 | `platform-subscription-checkout-foundation-v1` | Checkout + billing (sensitive — not authorized) |
 | `dat-license-self-service-ui-v1` | License self-service (not authorized) |
 | `import-export-business-packaging-v1` | Tier vs self-service UI enforcement |

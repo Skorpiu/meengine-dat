@@ -58,21 +58,22 @@ Planning order — each runtime slice needs its own approval gate.
 
 | # | Slice | Type | Depends on |
 | - | ----- | ---- | ---------- |
-| 1 | `platform-commercial-catalog-schema-plan-v1` | Docs + D4 schema proposal | This plan |
-| 2 | `platform-subscription-webhook-hardening-v1` | Runtime (sensitive) | Provider choice (partial) |
-| 3 | `platform-commercial-catalog-v1` | Runtime/schema (sensitive) | #1 |
-| 4 | `platform-subscription-checkout-foundation-v1` | Runtime (sensitive) | #3 |
-| 5 | `platform-entitlement-projection-basic-standard-premium-v1` | Runtime | #3, #4 |
-| 6 | `platform-tenant-provision-subscription-v1` | Runtime | #5 |
-| 7 | `dat-license-self-service-ui-v1` | UI/runtime | #4, #5 |
-| 8 | `import-export-business-packaging-v1` | Runtime | #5 |
-| 9 | `lesson-reminders-email-product-plan-v1` | Docs | — |
-| 10 | `lesson-reminders-email-foundation-v1` | Runtime | #9, #5 |
-| 11 | `school-balances-ledger-product-plan-v1` | Docs | — |
-| 12 | `school-balances-ledger-foundation-v1` | Runtime (optional module) | #11, #5 |
-| 13 | `a-conquistadora-platform-provision-v1` | Operator + runtime | #6 |
-| 14 | `dat-v1.0.0-rc.1-release-gate-v1` | Docs + operator | #1–#13 as scoped |
-| 15 | `dat-v1.0.0-final-release-v1` | Operator tag + docs | RC sign-off |
+| 1 | `platform-commercial-catalog-schema-plan-v1` | Docs + D4 schema proposal | **Done** — [platform-commercial-catalog-schema-plan.md](./platform-commercial-catalog-schema-plan.md) (DEC-060) |
+| 2 | `platform-commercial-catalog-schema-foundation-v1` | Schema/migration (sensitive) | #1 — **recommended next**; requires approval |
+| 3 | `platform-subscription-webhook-hardening-v1` | Runtime (sensitive) | Provider choice (partial) |
+| 4 | `platform-commercial-catalog-v1` | Runtime/schema (sensitive) | #2 |
+| 5 | `platform-subscription-checkout-foundation-v1` | Runtime (sensitive) | #3, #4 |
+| 6 | `platform-entitlement-projection-basic-standard-premium-v1` | Runtime | #4, #5 |
+| 7 | `platform-tenant-provision-subscription-v1` | Runtime | #6 |
+| 8 | `dat-license-self-service-ui-v1` | UI/runtime | #5, #6 |
+| 9 | `import-export-business-packaging-v1` | Runtime | #6 |
+| 10 | `lesson-reminders-email-product-plan-v1` | Docs | — |
+| 11 | `lesson-reminders-email-foundation-v1` | Runtime | #10, #6 |
+| 12 | `school-balances-ledger-product-plan-v1` | Docs | — |
+| 13 | `school-balances-ledger-foundation-v1` | Runtime (optional module) | #12, #6 |
+| 14 | `a-conquistadora-platform-provision-v1` | Operator + runtime | #7 |
+| 15 | `dat-v1.0.0-rc.1-release-gate-v1` | Docs + operator | #1–#14 as scoped |
+| 16 | `dat-v1.0.0-final-release-v1` | Operator tag + docs | RC sign-off |
 
 **Parallel planning (non-blocking):** `platform-multi-product-api-boundary-v1`, `student-lesson-request-policy-planning-v1`.
 

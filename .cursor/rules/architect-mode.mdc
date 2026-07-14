@@ -419,12 +419,13 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `competitive-product-discovery-v1` — docs-only market comparison (9 eligible direct / 3 adjacent canonical registry); [competitive-product-discovery.md](../../docs/product/competitive-product-discovery.md)
 - `dat-v1-commercial-platform-cutline-plan-v1` — docs-only commercial/platform cutline (DEC-046–057); plans + tag runbook; safety tag `dat-v1-core-baseline-95b833e` @ `95b833e`; no runtime
 - `dat-plan-naming-and-doc-hygiene-v1` — docs-only (DEC-058/059): commercial plans **DAT Core**, **DAT Plus**, **DAT Premium**; superseded planning labels Basic/Standard; planned keys `DAT_CORE`/`DAT_PLUS`/`DAT_PREMIUM`; canonical memory continuity contract; package composition and pricing **open**; display names ≠ entitlement checks; no runtime
+- `platform-commercial-catalog-schema-plan-v1` — D4 commercial catalogue schema plan (DEC-060); hybrid Option C; [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md); candidate schema proposed — not implemented; no runtime/schema/migration
 
-**Commercial plan names (DEC-058):** DAT Core, DAT Plus, DAT Premium. Basic and Standard are **superseded planning labels** only. Planned stable identifiers: `DAT_CORE`, `DAT_PLUS`, `DAT_PREMIUM` (billing interval separate: `MONTHLY`/`ANNUAL`). Exact package composition and pricing remain unresolved until `platform-commercial-catalog-schema-plan-v1`. **Never** use display names directly as entitlement authorization checks.
+**Commercial plan names (DEC-058):** DAT Core, DAT Plus, DAT Premium. Basic and Standard are **superseded planning labels** only. Planned stable identifiers: `DAT_CORE`, `DAT_PLUS`, `DAT_PREMIUM` (billing interval separate: `MONTHLY`/`ANNUAL`). Exact package composition and pricing remain **provisional** (OD-002/007/008). Catalogue schema plan **done** — [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md) (DEC-060). **Never** use display names directly as entitlement authorization checks.
 
 **Current recommended next** (optional unless product says otherwise):
 
-1. `platform-commercial-catalog-schema-plan-v1` — **D4 planning slice**; not implementation authorization
+1. `platform-commercial-catalog-schema-foundation-v1` — **D4 implementation slice**; additive Prisma catalogue models/enums + migration; requires explicit `APPROVED TO IMPLEMENT`
 
 **Release anchor (DEC-056):** safety baseline tag `dat-v1-core-baseline-95b833e` → `95b833e`. Runbook: [git-tags-and-recovery-runbook.md](../../docs/ops/git-tags-and-recovery-runbook.md). Target release: `dat-v1.0.0-rc.*` → `dat-v1.0.0` (DEC-057).
 
@@ -446,7 +447,8 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - **Mobile/tablet** — review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports **done**
 - **`competitive-product-discovery-v1`** — **done** (2026-07-10); see [competitive-product-discovery.md](../../docs/product/competitive-product-discovery.md). Prevalence: reminders + balances **8/9**, self-booking/requests **6/9** (9 eligible direct competitors; HIGH/MEDIUM per row)
 - **`dat-plan-naming-and-doc-hygiene-v1`** — **done** (DEC-058): DAT Core / DAT Plus / DAT Premium display names; Basic/Standard superseded planning labels
-- **Recommended next planning:** `platform-commercial-catalog-schema-plan-v1` (not implementation approval)
+- **`platform-commercial-catalog-schema-plan-v1`** — **done** (DEC-060): hybrid catalogue schema plan; [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md)
+- **Recommended next implementation:** `platform-commercial-catalog-schema-foundation-v1` (requires explicit approval)
 
 **Deferred (not next — RLS revoke-only track closed):**
 

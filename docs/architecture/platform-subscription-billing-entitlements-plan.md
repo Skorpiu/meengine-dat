@@ -138,8 +138,9 @@ Durations, retry counts, and provider-specific behavior remain **open decisions*
 
 ## Smallest safe implementation slices (recommended order)
 
-1. `platform-commercial-catalog-schema-plan-v1` — docs + schema proposal (D4 gate)
-2. `platform-subscription-checkout-foundation-v1` — checkout session + webhook hardening (sensitive)
+1. `platform-commercial-catalog-schema-plan-v1` — **done** — [platform-commercial-catalog-schema-plan.md](./platform-commercial-catalog-schema-plan.md) (DEC-060)
+2. `platform-commercial-catalog-schema-foundation-v1` — additive Prisma catalogue models/enums + migration (sensitive; requires approval)
+3. `platform-subscription-checkout-foundation-v1` — checkout session + webhook hardening (sensitive)
 3. `platform-entitlement-projection-v1` — DAT Core / DAT Plus / DAT Premium → grants
 4. `dat-license-self-service-ui-v1` — License page checkout UX (initiate only)
 5. `import-export-business-packaging-v1` — enforce tier vs existing self-service UI
@@ -152,6 +153,7 @@ Each slice requires explicit `APPROVED TO IMPLEMENT` when touching auth/billing/
 
 | Document | Role |
 | -------- | ---- |
+| [platform-commercial-catalog-schema-plan.md](./platform-commercial-catalog-schema-plan.md) | D4 catalogue schema plan (DEC-060) |
 | [dat-plan-and-module-catalog.md](../product/dat-plan-and-module-catalog.md) | Plan/module definitions |
 | [dat-vs-platform-boundary.md](../product/dat-vs-platform-boundary.md) | Boundary summary |
 | [platform-multi-product-control-plane-plan.md](./platform-multi-product-control-plane-plan.md) | Control plane extraction |
