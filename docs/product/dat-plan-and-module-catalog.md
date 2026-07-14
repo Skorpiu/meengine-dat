@@ -74,7 +74,7 @@ Examples (documentation only — no schema/types in this batch):
 
 ## Plan tiers — proposed package matrix (non-final)
 
-The matrix below is **explicitly proposed** and **non-final** until `platform-commercial-catalog-schema-plan-v1`. Open decisions include: email reminders in Core vs Plus; school ledger in Premium vs add-on vs both; usage/storage/user/student limits; final prices; annual discount; trial duration; add-on eligibility; grandfathering policy.
+The matrix below is **explicitly proposed** and **non-final**. Schema plan: [platform-commercial-catalog-schema-plan.md](../architecture/platform-commercial-catalog-schema-plan.md) (DEC-060). Open decisions include: email reminders in Core vs Plus; school ledger in Premium vs add-on vs both; usage/storage/user/student limits; final prices; annual discount; trial duration; add-on eligibility; grandfathering policy.
 
 ### DAT Core
 

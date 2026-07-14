@@ -21,6 +21,7 @@ Concise product memory for DAT (driving-school operations) vs **Platform** (MeEn
 
 | Document | Purpose |
 | -------- | ------- |
+| [platform-commercial-catalog-schema-plan.md](../architecture/platform-commercial-catalog-schema-plan.md) | D4 commercial catalogue schema plan (DEC-060) |
 | [dat-v1-commercial-release-plan.md](../architecture/dat-v1-commercial-release-plan.md) | Master release plan, ordered slices, RC/final tags |
 | [platform-subscription-billing-entitlements-plan.md](../architecture/platform-subscription-billing-entitlements-plan.md) | Platform billing + entitlements |
 | [platform-multi-product-control-plane-plan.md](../architecture/platform-multi-product-control-plane-plan.md) | Multi-product Platform extraction |

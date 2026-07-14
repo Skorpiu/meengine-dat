@@ -89,6 +89,7 @@ DEC-045 unchanged.
 | Document | Role |
 | -------- | ---- |
 | [dat-plan-and-module-catalog.md](./dat-plan-and-module-catalog.md) | DAT Core / DAT Plus / DAT Premium modules and add-ons (proposed matrix) |
+| [platform-commercial-catalog-schema-plan.md](../architecture/platform-commercial-catalog-schema-plan.md) | D4 commercial catalogue schema plan (DEC-060) |
 | [platform-subscription-billing-entitlements-plan.md](../architecture/platform-subscription-billing-entitlements-plan.md) | Billing and entitlement architecture |
 | [platform-multi-product-control-plane-plan.md](../architecture/platform-multi-product-control-plane-plan.md) | Platform extraction and multi-product target |
 | [packaging-and-entitlements.md](./packaging-and-entitlements.md) | Product packaging (updated) |
