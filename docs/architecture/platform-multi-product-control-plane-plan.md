@@ -1,7 +1,7 @@
 # Platform Multi-Product Control Plane Plan
 
-**Status:** Architecture plan (docs-only). **Not** implementation authorization.  
-**Batch:** `dat-v1-commercial-platform-cutline-plan-v1`  
+**Status:** Architecture plan (docs-only). **Not** implementation authorization.
+**Batch:** `dat-v1-commercial-platform-cutline-plan-v1`
 **Decisions:** [DEC-053](../architecture/decision-log.md), [DEC-054](../architecture/decision-log.md)
 
 **Supersedes (planning):** [PA-004](../product/product-assumptions.md) — Platform is no longer “vague future only”; partial runtime exists. Extraction to separate deployable product remains **phased**.

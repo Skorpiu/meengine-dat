@@ -1,8 +1,8 @@
 # Platform Subscription Billing and Entitlements Plan
 
-**Status:** Architecture plan (docs-only). **Not** implementation authorization.  
-**Batch:** `dat-v1-commercial-platform-cutline-plan-v1`  
-**Decisions:** [DEC-046](../architecture/decision-log.md), [DEC-047](../architecture/decision-log.md), [DEC-048](../architecture/decision-log.md)–[DEC-052](../architecture/decision-log.md)
+**Status:** Architecture plan (docs-only). **Not** implementation authorization.
+**Batch:** `dat-v1-commercial-platform-cutline-plan-v1`; plan display names aligned in `dat-plan-naming-and-doc-hygiene-v1` (DEC-058)
+**Decisions:** [DEC-046](../architecture/decision-log.md), [DEC-047](../architecture/decision-log.md), [DEC-048](../architecture/decision-log.md)–[DEC-052](../architecture/decision-log.md), [DEC-058](../architecture/decision-log.md)
 
 ---
 
@@ -48,7 +48,7 @@ Define how **Platform** owns tenant subscription billing and how **DAT** consume
 | Payload projection V1 | `lib/billing/payload-v1.ts`, `processor.ts` | Implemented — updates `Organization.subscription*` + `EntitlementGrant` |
 | Webhook route | `app/api/billing/webhooks/[provider]/route.ts` | Implemented — **no real signature verification** |
 | Providers | `lib/billing/providers/*` | **Stub** — `createCheckout` returns invalid URLs |
-| Plan map | `lib/billing/billing-plans.ts` | Static BASE/PREMIUM/ENTERPRISE — **not** Basic/Standard/Premium catalog |
+| Plan map | `lib/billing/billing-plans.ts` | Static BASE/PREMIUM/ENTERPRISE — **not** DAT Core / DAT Plus / DAT Premium catalog |
 | Platform onboard | `lib/platform/onboard-organization.ts` | Creates org + `LicenseKey`; **does not** auto-grant entitlements |
 | DAT License UI | `app/admin/license/page.tsx` | **Read-only** for School Admin |
 | Entitlement resolver | `lib/licensing/effective-entitlements.ts` | Implemented — manual `OrganizationFeature` + time-bound grants |
@@ -63,7 +63,7 @@ Define how **Platform** owns tenant subscription billing and how **DAT** consume
 ### Phase A — Commercial catalog (Platform)
 
 - Product: `DAT`
-- Plans: Basic, Standard, Premium
+- Plans: DAT Core, DAT Plus, DAT Premium (display names; planned keys `DAT_CORE`, `DAT_PLUS`, `DAT_PREMIUM`)
 - Prices: monthly + annual per plan (amounts TBD)
 - Add-ons: catalog entries linkable to subscription items
 - Mapping: plan/add-on → module entitlement keys (see [dat-plan-and-module-catalog.md](../product/dat-plan-and-module-catalog.md))
@@ -140,7 +140,7 @@ Durations, retry counts, and provider-specific behavior remain **open decisions*
 
 1. `platform-commercial-catalog-schema-plan-v1` — docs + schema proposal (D4 gate)
 2. `platform-subscription-checkout-foundation-v1` — checkout session + webhook hardening (sensitive)
-3. `platform-entitlement-projection-v1` — Basic/Standard/Premium → grants
+3. `platform-entitlement-projection-v1` — DAT Core / DAT Plus / DAT Premium → grants
 4. `dat-license-self-service-ui-v1` — License page checkout UX (initiate only)
 5. `import-export-business-packaging-v1` — enforce tier vs existing self-service UI
 

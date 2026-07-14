@@ -1,8 +1,8 @@
 # DAT v1 Commercial Release Plan
 
-**Status:** Master planning document. **Not** implementation authorization for runtime slices.  
-**Batch:** `dat-v1-commercial-platform-cutline-plan-v1`  
-**Baseline:** main `d75dd22` · safety tag `dat-v1-core-baseline-95b833e` @ `95b833e`  
+**Status:** Master planning document. **Not** implementation authorization for runtime slices.
+**Batch:** `dat-v1-commercial-platform-cutline-plan-v1`; display names updated in `dat-plan-naming-and-doc-hygiene-v1` (DEC-058)
+**Baseline:** main `42d075e` · safety tag `dat-v1-core-baseline-95b833e` @ `95b833e`
 **Scope summary:** [dat-v1-commercial-release-scope.md](../product/dat-v1-commercial-release-scope.md)
 
 ---
@@ -17,7 +17,7 @@ Ship **DAT v1.0** as a **sellable, subscribable** product with Platform-owned te
 
 | | Current deployed core | Target DAT v1.0 |
 | --- | --------------------- | --------------- |
-| **Git anchor** | main `d75dd22`; safety tag `95b833e` | RC tags → `dat-v1.0.0` |
+| **Git anchor** | main `42d075e`; safety tag `95b833e` | RC tags → `dat-v1.0.0` |
 | **Billing** | No live self-service billing | Platform subscription billing |
 | **License UI** | Read-only Plan page | Full self-service (initiate; Platform confirms) |
 | **Platform** | Minimal onboard UI + API | Evolving control plane |
@@ -44,7 +44,7 @@ Runbook: [git-tags-and-recovery-runbook.md](../ops/git-tags-and-recovery-runbook
 **RC entry criteria (intent):**
 
 - Platform checkout + webhook path green in staging
-- Basic/Standard/Premium entitlement projection verified
+- DAT Core / DAT Plus / DAT Premium entitlement projection verified
 - DAT License self-service flow end-to-end (with test provider)
 - Email lesson reminders MVP for entitled tenants
 - **A Conquistadora** provisioned via Platform (or parallel staging client)
@@ -94,7 +94,7 @@ Planning order — each runtime slice needs its own approval gate.
 
 1. School Admin opens **Plan** (`/admin/license`).
 2. Views current plan, modules, renewal status (from Platform-backed subscription state).
-3. Compares Basic / Standard / Premium; selects monthly or annual.
+3. Compares DAT Core / DAT Plus / DAT Premium; selects monthly or annual.
 4. Optional add-ons (e.g. school ledger) if not bundled.
 5. **Start checkout** → Platform creates session → redirect to provider.
 6. Provider confirms → Platform webhook → entitlement projection.
@@ -127,8 +127,8 @@ Planning order — each runtime slice needs its own approval gate.
 | OD-004 | Proration on mid-cycle upgrade |
 | OD-005 | Trial length and auto-conversion |
 | OD-006 | Grace period duration and suspension rules |
-| OD-007 | School ledger included in Premium vs add-only |
-| OD-008 | Basic tier lesson reminder trial (if any) |
+| OD-007 | School ledger included in DAT Premium vs add-only |
+| OD-008 | DAT Core vs DAT Plus lesson reminder inclusion (and trial, if any) |
 
 ---
 
@@ -139,7 +139,7 @@ Planning order — each runtime slice needs its own approval gate.
 | Product README: immediate next = lesson reminders planning only | **Superseded** — commercial/platform cutline plan is now primary path; reminders remain **in** v1.0 target as slice #9–10 |
 | DEC-032: no live billing as permanent product state | **Clarified** — true for **current core**; **not** final DAT v1.0 target |
 | PA-004: Platform vague future only | **Superseded** — partial Platform UI/API exists; multi-product extraction phased (DEC-054) |
-| Basic/Starter vs Premium/Enterprise packaging | **Superseded** by Basic/Standard/Premium catalog |
+| Basic/Starter vs Premium/Enterprise packaging | **Superseded** by three-tier catalog (DEC-048); display names **DAT Core / DAT Plus / DAT Premium** (DEC-058) |
 
 ---
 

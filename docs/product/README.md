@@ -11,7 +11,7 @@ Concise product memory for DAT (driving-school operations) vs **Platform** (MeEn
 | Document | Purpose |
 | -------- | ------- |
 | [dat-v1-commercial-release-scope.md](./dat-v1-commercial-release-scope.md) | DAT v1.0 commercial scope — current core vs target |
-| [dat-plan-and-module-catalog.md](./dat-plan-and-module-catalog.md) | Basic / Standard / Premium, modules, add-ons, intervals |
+| [dat-plan-and-module-catalog.md](./dat-plan-and-module-catalog.md) | DAT Core / DAT Plus / DAT Premium, modules, add-ons, intervals |
 | [dat-vs-platform-boundary.md](./dat-vs-platform-boundary.md) | DAT vs Platform ownership (partial Platform runtime today) |
 | [packaging-and-entitlements.md](./packaging-and-entitlements.md) | Packaging summary and enforcement backlog |
 | [product-assumptions.md](./product-assumptions.md) | Living assumptions (dated, confidence, validate-by) |
@@ -40,7 +40,7 @@ Concise product memory for DAT (driving-school operations) vs **Platform** (MeEn
 - **DAT** — product used by driving schools (students, lessons, fleet, school admin).
 - **Platform** — provider control plane for DAT customers (orgs, plans, subscriptions, entitlements, provisioning). **Partial UI/API exists** (`/platform`, `/api/platform/organizations`); commercial billing **not production-ready**.
 - **Current deployed core** — controlled B2B, invite-only, no live self-service billing (DEC-032 historical cutline).
-- **Target DAT v1.0** — sellable/subscribable; Platform-owned tenant billing; License self-service; Basic/Standard/Premium; email reminders; optional school ledger (DEC-046–057).
+- **Target DAT v1.0** — sellable/subscribable; Platform-owned tenant billing; License self-service; DAT Core / DAT Plus / DAT Premium (DEC-058); email reminders; optional school ledger (DEC-046–058).
 - **Safety tag** — `dat-v1-core-baseline-95b833e` @ `95b833e` (pre-commercial core anchor; not final release).
 - **English UI baseline** — new product surfaces default to English until i18n ships.
 

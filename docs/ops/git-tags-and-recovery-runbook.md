@@ -1,7 +1,7 @@
 # Git Tags and Recovery Runbook
 
-**Status:** Active operator runbook.  
-**Batch:** `dat-v1-commercial-platform-cutline-plan-v1`  
+**Status:** Active operator runbook.
+**Batch:** `dat-v1-commercial-platform-cutline-plan-v1`
 **Related:** [decision-log.md](../architecture/decision-log.md) (DEC-055–DEC-057), [dat-v1-commercial-release-plan.md](../architecture/dat-v1-commercial-release-plan.md)
 
 ---

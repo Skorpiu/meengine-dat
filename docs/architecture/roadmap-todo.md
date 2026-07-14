@@ -286,7 +286,8 @@ Parent batch — always slice before implementing.
 | `mobile-tablet-readiness-playwright-viewports-v1` | — | **Done** — opt-in `pnpm e2e:mobile-viewports` via `playwright.mobile-viewports.config.ts`; 5 admin routes × 3 projects = 15 tests; hard-fail markers; not in `pnpm check` |
 | `competitive-product-discovery-v1` | — | **Done (docs)** 2026-07-10 — canonical registry (9 eligible direct / 3 adjacent / 2 low-evidence excluded); prevalence: reminders + balances **8/9**, self-booking/requests **6/9**; Iberian regulator **4/6**; schema-readiness correction; [competitive-product-discovery.md](../product/competitive-product-discovery.md). **Recommended next (planning only):** `dat-v1-commercial-platform-cutline-plan-v1`. Backlog candidates (not approved): `lesson-reminders-email-product-plan-v1`, `school-balances-ledger-product-plan-v1`, `student-lesson-request-policy-planning-v1`, `student-progress-tracking-foundation-plan-v1`. |
 | `dat-v1-commercial-platform-cutline-plan-v1` | **Done (docs)** | DEC-046–057; [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md); tag runbook [git-tags-and-recovery-runbook.md](../ops/git-tags-and-recovery-runbook.md); safety tag `dat-v1-core-baseline-95b833e`; no runtime |
-| `platform-commercial-catalog-schema-plan-v1` | P1 backlog | **Recommended next** — D4 schema proposal for Basic/Standard/Premium; not implementation authorization |
+| `dat-plan-naming-and-doc-hygiene-v1` | **Done (docs)** | DEC-058 (plan display names) + DEC-059 (canonical memory continuity contract); DAT Core / DAT Plus / DAT Premium; stable keys documented; Markdown hygiene; no runtime |
+| `platform-commercial-catalog-schema-plan-v1` | P1 backlog | **Recommended next** — D4 schema proposal for DAT Core / DAT Plus / DAT Premium; not implementation authorization |
 | `lesson-reminders-email-product-plan-v1` | P1 backlog | Email lesson reminder policy, events, templates, non-goals (no SMS/WhatsApp/payment reminders); **`Notification` reuse not assumed**. Not implementation authorization. |
 | `school-balances-ledger-product-plan-v1` | P1 backlog | Manual school-facing ledger/balances product plan (no PSP). From discovery O2. |
 | `student-lesson-request-policy-planning-v1` | P2 backlog | Controlled request + approval policy (`LessonRequest` schema exists). From discovery O3. |
@@ -296,7 +297,7 @@ Parent batch — always slice before implementing.
 
 **Deferred explicitly:** `people-management-ux-unification-instructor-route-split-v1` (D4; not recommended next).
 
-**Product direction (backlog — commercial path):** **Mobile/tablet** — **done**. **Competitive discovery** — **done**. **Commercial cutline planning** — **done** (`dat-v1-commercial-platform-cutline-plan-v1`, DEC-046–057). **Smoke identity** — **done** (DEC-045). **Recommended next:** `platform-commercial-catalog-schema-plan-v1` (D4 planning) — not implementation authorization.
+**Product direction (backlog — commercial path):** **Mobile/tablet** — **done**. **Competitive discovery** — **done**. **Commercial cutline planning** — **done** (`dat-v1-commercial-platform-cutline-plan-v1`, DEC-046–057). **Plan display names + memory continuity** — **done** (`dat-plan-naming-and-doc-hygiene-v1`, DEC-058/059). **Smoke identity** — **done** (DEC-045). **Recommended next:** `platform-commercial-catalog-schema-plan-v1` (D4 planning) — not implementation authorization.
 
 ---
 
