@@ -38,7 +38,7 @@
 | Area | Today (code) | Target |
 | ---- | ------------ | ------ |
 | Organizations / customers | Onboard + list via `/platform`, `GET/POST /api/platform/organizations` | Full lifecycle management |
-| Plans / subscriptions | Static billing projection + stubs | Basic/Standard/Premium + monthly/annual (DEC-048, DEC-049) |
+| Plans / subscriptions | Static billing projection + stubs | DAT Core / DAT Plus / DAT Premium + monthly/annual (DEC-048 tier structure, DEC-058 display names, DEC-049) |
 | Entitlements (commercial) | `EntitlementGrant` + event processor (partial) | Authoritative projection from subscription + add-ons |
 | Checkout / PSP | Webhook route + stub providers | Verified provider integration |
 | Real tenant provisioning | Onboard creates org + license key | Subscription-linked provision (DEC-053) |

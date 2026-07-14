@@ -166,6 +166,50 @@ After a human executes an approved production or operator action:
 5. Distinguish **human-executed** actions from **agent-executed** actions.
 6. Do not mark an operation complete without output or other evidence.
 
+## Canonical Memory Hierarchy and Continuity Gate
+
+Repository-backed canonical memory is a **project recovery mechanism** (DEC-059). If context is lost, recover from these sources — not from Git history, old prompts, or isolated planning docs alone.
+
+### Source responsibilities
+
+| Source | Owns |
+| ------ | ---- |
+| [decision-log.md](../../docs/architecture/decision-log.md) | Append-only durable history; approved decisions and supersession; never rewrite history to look current |
+| [current-state.md](../../docs/architecture/current-state.md) | Present truth — completed slices, verified operator/deploy actions, baseline, limitations; never describe planned work as implemented |
+| [roadmap-todo.md](../../docs/architecture/roadmap-todo.md) | Ordered backlog and **one** recommended next slice; completed work must not stay pending |
+| **This rule (`architect-mode.mdc`)** | Super Agent navigator — invariants, baseline, next slice; points to sources above; **not** a full project archive |
+| Product / architecture / ops docs | Domain plans, contracts, runbooks — **referenced by** canonical sources; do not override approved DECs |
+
+### Recovery reading order
+
+1. `.cursor/rules/architect-mode.mdc`
+2. `docs/architecture/current-state.md`
+3. `docs/architecture/roadmap-todo.md`
+4. Relevant [decision-log.md](../../docs/architecture/decision-log.md) entries
+5. Canonical plan for the next slice
+6. Relevant ops runbook for operator actions
+
+### Mandatory continuity gate (every slice close)
+
+Before reporting a slice complete, verify:
+
+1. Durable decision? → append [decision-log.md](../../docs/architecture/decision-log.md) (next DEC number).
+2. Verified reality changed? → update [current-state.md](../../docs/architecture/current-state.md).
+3. Backlog changed? → update [roadmap-todo.md](../../docs/architecture/roadmap-todo.md).
+4. Baseline, invariant, or next slice changed? → update this rule.
+5. Human operator action? → reconcile verified result; distinguish human vs agent execution.
+6. Release anchor/tag created? → record in current-state / release docs.
+7. All four canonical sources agree? → report **Memory Consistency Gate** explicitly.
+8. Next recommended branch unambiguous? → exactly one next slice unless alternatives are intentionally documented.
+
+Do not report a slice fully complete while canonical sources materially disagree.
+
+### Conflict resolution
+
+When sources disagree: (1) verified operational evidence → deployed/production reality; (2) latest approved DEC → durable policy; (3) `current-state.md` → current repo/product state; (4) `roadmap-todo.md` → planned future work; (5) historical docs → evidence only, not current authority. Reconcile — do not silently leave stale sources.
+
+Full protocol: [cursor-operating-model.md](../../docs/ops/cursor-operating-model.md) — Memory Consistency Gate, Memory Update Protocol, Operational Reality Sync Gate.
+
 ## Terminal and command discipline (Git Bash)
 
 For DAT, assume **Rui runs commands in Git Bash**. See `docs/ops/cursor-operating-model.md` — **Git Bash Command Discipline Protocol** and `docs/ops/command-batteries.md` — **Shell convention**.
@@ -374,6 +418,9 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `audit-log-viewer-export-v1` — CSV export from `/admin/audit-logs`
 - `competitive-product-discovery-v1` — docs-only market comparison (9 eligible direct / 3 adjacent canonical registry); [competitive-product-discovery.md](../../docs/product/competitive-product-discovery.md)
 - `dat-v1-commercial-platform-cutline-plan-v1` — docs-only commercial/platform cutline (DEC-046–057); plans + tag runbook; safety tag `dat-v1-core-baseline-95b833e` @ `95b833e`; no runtime
+- `dat-plan-naming-and-doc-hygiene-v1` — docs-only (DEC-058/059): commercial plans **DAT Core**, **DAT Plus**, **DAT Premium**; superseded planning labels Basic/Standard; planned keys `DAT_CORE`/`DAT_PLUS`/`DAT_PREMIUM`; canonical memory continuity contract; package composition and pricing **open**; display names ≠ entitlement checks; no runtime
+
+**Commercial plan names (DEC-058):** DAT Core, DAT Plus, DAT Premium. Basic and Standard are **superseded planning labels** only. Planned stable identifiers: `DAT_CORE`, `DAT_PLUS`, `DAT_PREMIUM` (billing interval separate: `MONTHLY`/`ANNUAL`). Exact package composition and pricing remain unresolved until `platform-commercial-catalog-schema-plan-v1`. **Never** use display names directly as entitlement authorization checks.
 
 **Current recommended next** (optional unless product says otherwise):
 
@@ -398,6 +445,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 - **Mobile/tablet** — review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports **done**
 - **`competitive-product-discovery-v1`** — **done** (2026-07-10); see [competitive-product-discovery.md](../../docs/product/competitive-product-discovery.md). Prevalence: reminders + balances **8/9**, self-booking/requests **6/9** (9 eligible direct competitors; HIGH/MEDIUM per row)
+- **`dat-plan-naming-and-doc-hygiene-v1`** — **done** (DEC-058): DAT Core / DAT Plus / DAT Premium display names; Basic/Standard superseded planning labels
 - **Recommended next planning:** `platform-commercial-catalog-schema-plan-v1` (not implementation approval)
 
 **Deferred (not next — RLS revoke-only track closed):**

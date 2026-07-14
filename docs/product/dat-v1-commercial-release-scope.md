@@ -1,8 +1,8 @@
 # DAT v1 Commercial Release Scope
 
-**Status:** Approved product direction (planning). **Not** implementation authorization.  
-**Batch:** `dat-v1-commercial-platform-cutline-plan-v1`  
-**Decision:** [DEC-046](../architecture/decision-log.md) through [DEC-057](../architecture/decision-log.md)  
+**Status:** Approved product direction (planning). **Not** implementation authorization.
+**Batch:** `dat-v1-commercial-platform-cutline-plan-v1`; display names updated in `dat-plan-naming-and-doc-hygiene-v1`
+**Decision:** [DEC-046](../architecture/decision-log.md) through [DEC-058](../architecture/decision-log.md)
 **Master plan:** [dat-v1-commercial-release-plan.md](../architecture/dat-v1-commercial-release-plan.md)
 
 ---
@@ -11,7 +11,7 @@
 
 **DAT v1.0** must become a **sellable and subscribable** product. The primary payment domain in DAT v1 is **tenant subscription billing** — schools pay the DAT provider/owner. This is **distinct** from school-to-student financial operations.
 
-**Current deployed core** (main `d75dd22`, safety tag `dat-v1-core-baseline-95b833e` @ `95b833e`) remains usable under **controlled B2B**: invite-only, no public signup, **no live self-service subscription billing**. That state is **historically accurate** per [production-readiness-cutline.md](../architecture/production-readiness-cutline.md) (DEC-032).
+**Current deployed core** (main `42d075e`, safety tag `dat-v1-core-baseline-95b833e` @ `95b833e`) remains usable under **controlled B2B**: invite-only, no public signup, **no live self-service subscription billing**. That state is **historically accurate** per [production-readiness-cutline.md](../architecture/production-readiness-cutline.md) (DEC-032).
 
 **Target DAT v1.0** adds Platform-owned commercial billing, self-service License flow, plan/add-on entitlements, real tenant provisioning through Platform, email lesson reminders, optional school ledger module, **A Conquistadora** onboarding via Platform, and RC/final release governance.
 
@@ -88,7 +88,7 @@ DEC-045 unchanged.
 
 | Document | Role |
 | -------- | ---- |
-| [dat-plan-and-module-catalog.md](./dat-plan-and-module-catalog.md) | Basic / Standard / Premium modules and add-ons |
+| [dat-plan-and-module-catalog.md](./dat-plan-and-module-catalog.md) | DAT Core / DAT Plus / DAT Premium modules and add-ons (proposed matrix) |
 | [platform-subscription-billing-entitlements-plan.md](../architecture/platform-subscription-billing-entitlements-plan.md) | Billing and entitlement architecture |
 | [platform-multi-product-control-plane-plan.md](../architecture/platform-multi-product-control-plane-plan.md) | Platform extraction and multi-product target |
 | [packaging-and-entitlements.md](./packaging-and-entitlements.md) | Product packaging (updated) |

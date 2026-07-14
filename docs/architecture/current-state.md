@@ -130,6 +130,7 @@ Documented and in use (docs/rules only; no runtime change):
 - **Cursor Automations prompt templates (v1)** — [cursor-automations-prompts.md](../ops/cursor-automations-prompts.md)
 - **External database architecture audit triage** — critique classified into roadmap items (`tenant-required-operational-organization-id-audit`, `audit-log-tenant-context-foundation`, `lesson-student-nullability-policy-review`); triage itself is **docs-only**, no schema changes from triage alone
 - **Git Bash command discipline** — [command-batteries.md](../ops/command-batteries.md), [cursor-operating-model.md](../ops/cursor-operating-model.md): Git Bash/bash batteries by default (`Assumed shell: Git Bash`); no PowerShell mixing; single-line Conventional Commit messages; guarded `DAT-*.zip` generation (`cursor-git-bash-command-discipline`)
+- **Canonical memory hierarchy and continuity contract (DEC-059)** — recovery reading order and mandatory slice-close gate in [architect-mode.mdc](../../.cursor/rules/architect-mode.mdc); `decision-log` = history, `current-state` = now, `roadmap-todo` = next, `architect-mode` = navigator
 
 **Daily guidance (no extra Cursor cost):** **Daily Manual Super-Agent Check** is the default workflow ([cursor-automations-prompts.md](../ops/cursor-automations-prompts.md)). Use **Cursor Automations** only if available in the **current plan at no extra cost** (`cursor-automations-super-agent-scheduled-support` in roadmap).
 
@@ -139,7 +140,7 @@ Documented and in use (docs/rules only; no runtime change):
 
 **Historical cutline:** invite-only, `PUBLIC_SIGNUP_ENABLED=false`, **no live self-service billing** on the **current deployed core**. See [production-readiness-cutline.md](./production-readiness-cutline.md).
 
-**Target DAT v1.0 (DEC-046–057):** sellable/subscribable product with Platform-owned tenant billing, Basic/Standard/Premium, License self-service, email reminders, optional school ledger. Planning: [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md).
+**Target DAT v1.0 (DEC-046–058):** sellable/subscribable product with Platform-owned tenant billing, DAT Core / DAT Plus / DAT Premium, License self-service, email reminders, optional school ledger. Planning: [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md).
 
 **Safety baseline tag:** `dat-v1-core-baseline-95b833e` → commit `95b833e` (DEC-056). Runbook: [git-tags-and-recovery-runbook.md](../ops/git-tags-and-recovery-runbook.md).
 
@@ -283,10 +284,11 @@ Documented and in use (docs/rules only; no runtime change):
 - `competitive-product-discovery-v1` — docs-only market comparison (DEC-007 waiver granted 2026-07-10): **9 eligible direct + 3 adjacent** benchmarks (canonical registry; HIGH/MEDIUM per row); prevalence denominators; corrected schema-readiness (`LessonRequest`/`Payment`/`Notification` = dormant partial, not product-ready); [competitive-product-discovery.md](../product/competitive-product-discovery.md). No runtime/schema changes. Validated via `pnpm check`.
 - `dat-v1-smoke-tenant-school-admin-identity-v1` — smoke org **`DAT Production Smoke`**; School Admin label; production rename completed 2026-07-13 (DEC-045)
 - `dat-v1-commercial-platform-cutline-plan-v1` — commercial/platform cutline planning (DEC-046–057); [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md); safety tag `dat-v1-core-baseline-95b833e`; [git-tags-and-recovery-runbook.md](../ops/git-tags-and-recovery-runbook.md); no runtime
+- `dat-plan-naming-and-doc-hygiene-v1` — approved commercial plan display names (DEC-058): DAT Core, DAT Plus, DAT Premium; stable keys `DAT_CORE`/`DAT_PLUS`/`DAT_PREMIUM` documented; package composition remains provisional; canonical memory continuity contract (DEC-059); Markdown hygiene; no runtime
 
 ### Likely next (commercial path — planning done)
 
-1. **`platform-commercial-catalog-schema-plan-v1`** — docs + D4 schema proposal for Basic/Standard/Premium catalog (not implementation authorization)
+1. **`platform-commercial-catalog-schema-plan-v1`** — docs + D4 schema proposal for DAT Core / DAT Plus / DAT Premium catalog (not implementation authorization)
 2. **`platform-subscription-webhook-hardening-v1`** — sensitive; requires explicit approval
 
 Planning reference: [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md) (`dat-v1-commercial-platform-cutline-plan-v1` **done** 2026-07-14).
