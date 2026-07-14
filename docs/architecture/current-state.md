@@ -135,19 +135,19 @@ Documented and in use (docs/rules only; no runtime change):
 
 ---
 
-## Production cutline (DEC-032)
+## Production cutline (DEC-032) — current deployed core
 
-**Baseline:** main `5f41082` · `pnpm check` 167 test files / 1255 tests / build OK · Calendar/Lessons v1d closed.
+**Historical cutline:** invite-only, `PUBLIC_SIGNUP_ENABLED=false`, **no live self-service billing** on the **current deployed core**. See [production-readiness-cutline.md](./production-readiness-cutline.md).
 
-**Path:** Controlled first **B2B client** production under invite-only, `PUBLIC_SIGNUP_ENABLED=false`, no live billing assumptions. DAT core is **production-ready enough** for that scope.
+**Target DAT v1.0 (DEC-046–057):** sellable/subscribable product with Platform-owned tenant billing, Basic/Standard/Premium, License self-service, email reminders, optional school ledger. Planning: [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md).
+
+**Safety baseline tag:** `dat-v1-core-baseline-95b833e` → commit `95b833e` (DEC-056). Runbook: [git-tags-and-recovery-runbook.md](../ops/git-tags-and-recovery-runbook.md).
 
 **Cutline doc:** [production-readiness-cutline.md](./production-readiness-cutline.md) (`production-readiness-cutline-doc-v1`).
 
-**First-client onboarding:** [first-client-onboarding-record.md](./first-client-onboarding-record.md) (`production-first-client-onboarding-record-v1`, DEC-043).
+**First-client onboarding:** [first-client-onboarding-record.md](./first-client-onboarding-record.md) (`production-first-client-onboarding-record-v1`, DEC-043). Real client **A Conquistadora** — provision via Platform when commercial path ready (DEC-053).
 
-**Analysis approved:** `production-readiness-cutline-review-v1` (analysis-only).
-
-**Do not open next:** `calendar-lessons-polish-v1e-student-warnings`, audit log runtime expansion, billing/checkout.
+**Do not open without approval:** billing/checkout runtime, Prisma migrations for commercial catalog, `calendar-lessons-polish-v1e-student-warnings`.
 
 ---
 
@@ -281,11 +281,15 @@ Documented and in use (docs/rules only; no runtime change):
 - `mobile-tablet-readiness-admin-surfaces-v1` — localized admin mobile polish: Lessons rows stack on narrow viewports; Vehicles badge wrap + `h-11` action targets; Audit logs card fallback below `md` via `buildAuditLogMobileCardFields` (privacy-minimal); Settings deferred. Validated via `pnpm check`.
 - `mobile-tablet-readiness-playwright-viewports-v1` — opt-in Playwright mobile/tablet viewport smoke: `pnpm e2e:mobile-viewports` via `playwright.mobile-viewports.config.ts`; projects `desktop-chromium`, `mobile-chromium` (Pixel 5), `tablet-chromium` (810×1080); read-only admin page loads on `/admin`, `/admin/lessons`, `/admin/vehicles`, `/admin/audit-logs`, `/admin/users` (15 tests); helpers `e2e/helpers/smoke-viewport-layout.ts`; not in `pnpm check`/CI default. Includes pre-existing PWA layout export fix (`app/layout.tsx`). Validated via `pnpm check`.
 - `competitive-product-discovery-v1` — docs-only market comparison (DEC-007 waiver granted 2026-07-10): **9 eligible direct + 3 adjacent** benchmarks (canonical registry; HIGH/MEDIUM per row); prevalence denominators; corrected schema-readiness (`LessonRequest`/`Payment`/`Notification` = dormant partial, not product-ready); [competitive-product-discovery.md](../product/competitive-product-discovery.md). No runtime/schema changes. Validated via `pnpm check`.
-- `dat-v1-smoke-tenant-school-admin-identity-v1` — smoke org canonical name **`DAT Production Smoke`** (seed + operator rename script); user-facing tenant admin label **`School Admin`** (`lib/users/user-role-label.ts`; persisted `SUPER_ADMIN` unchanged); Platform onboarding `schoolAdmin*` contract; `pnpm ops:rename-production-smoke-org` (DEC-045). No Prisma migration. **Production rename apply:** completed by human operator 2026-07-13 (verified name `DAT Production Smoke`, org `cmltn7vdl0000f8c4vxy6gcwx`, host `www.meengine.io`; agent did not execute apply). Validated via `pnpm check`.
+- `dat-v1-smoke-tenant-school-admin-identity-v1` — smoke org **`DAT Production Smoke`**; School Admin label; production rename completed 2026-07-13 (DEC-045)
+- `dat-v1-commercial-platform-cutline-plan-v1` — commercial/platform cutline planning (DEC-046–057); [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md); safety tag `dat-v1-core-baseline-95b833e`; [git-tags-and-recovery-runbook.md](../ops/git-tags-and-recovery-runbook.md); no runtime
 
-### Likely next (production path)
+### Likely next (commercial path — planning done)
 
-1. **`dat-v1-commercial-platform-cutline-plan-v1`** — commercial/platform cutline planning slice; not implementation authorization
+1. **`platform-commercial-catalog-schema-plan-v1`** — docs + D4 schema proposal for Basic/Standard/Premium catalog (not implementation authorization)
+2. **`platform-subscription-webhook-hardening-v1`** — sensitive; requires explicit approval
+
+Planning reference: [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md) (`dat-v1-commercial-platform-cutline-plan-v1` **done** 2026-07-14).
 
 ### Deferred (not next)
 
@@ -297,7 +301,7 @@ Documented and in use (docs/rules only; no runtime change):
 
 **Mobile/tablet readiness (done):** review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports — [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md). Opt-in viewport smoke: `pnpm e2e:mobile-viewports`. **Not production blockers** (DEC-032).
 
-**Competitive/Product Discovery (`competitive-product-discovery-v1`, done 2026-07-10):** Market comparison complete — [competitive-product-discovery.md](../product/competitive-product-discovery.md). **Recommended next planning slice:** `dat-v1-commercial-platform-cutline-plan-v1` — planning only; does not authorize runtime implementation without explicit approval.
+**Competitive/Product Discovery (`competitive-product-discovery-v1`, done 2026-07-10):** Market comparison complete — [competitive-product-discovery.md](../product/competitive-product-discovery.md). **Commercial cutline planning done:** `dat-v1-commercial-platform-cutline-plan-v1` (2026-07-14, DEC-046–057). **Recommended next:** `platform-commercial-catalog-schema-plan-v1` — D4 planning; not implementation authorization.
 
 Engineering excellence audit items (non-blocking refactors) remain tracked separately in roadmap P2+.
 

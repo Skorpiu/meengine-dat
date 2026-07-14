@@ -1,6 +1,8 @@
 # DAT vs Platform Boundary
 
-**Status:** Product direction (documented). **Platform is future/deferred** — not a separate implemented product or repo today.
+**Status:** Product direction (documented). **Partial Platform runtime exists** in the monolith — not a separate deployment yet, and **not** production-ready commercial control plane.
+
+**Updated:** 2026-07-14 (`dat-v1-commercial-platform-cutline-plan-v1`)
 
 ---
 
@@ -18,58 +20,78 @@
 | Lessons | Calendar, practical/theory, lesson requests |
 | Exams | Scheduling and registrations |
 | Operational import/export | Migration and bulk data for school operations |
-| Student portal | Future-facing student experience (in DAT) |
-| School-facing payments | Future: balances, packages, receipts — see [packaging-and-entitlements.md](./packaging-and-entitlements.md) |
+| Student portal | Student experience (in DAT) |
+| School-facing ledger | Optional module — balances, packages, receipts (DEC-051) |
+| Email lesson reminders | Orchestration and scheduling (Postmark = delivery only) |
+| License self-service UI | Display plan, initiate checkout — **does not authorize paid entitlements** (DEC-047) |
 
-**Host (today):** Tenant/school app (e.g. `www.meengine.io`, Preview QA hosts). See [system-design.md](../architecture/system-design.md).
+**Host (today):** Tenant/school app (e.g. client subdomain, Preview QA hosts). See [system-design.md](../architecture/system-design.md).
 
 ---
 
-## Platform (future provider product)
+## Platform (provider control plane)
 
-**Who uses it:** Rui/vendor — manage DAT **customers** (organizations), not day-to-day school lessons.
+**Who uses it:** MeEngine operator (`PLATFORM_ADMIN`) — manage DAT **customers**, not day-to-day school lessons.
 
-**Platform will own (deferred):**
+**Platform owns (target; partial today):**
 
-| Area | Notes |
-| ---- | ----- |
-| Organizations / customers | Tenant registry, onboarding |
-| Plans / subscriptions | Commercial packaging for DAT |
-| Entitlements | Feature gates per customer |
-| Feature flags | Internal/product flags (not school-admin knobs) |
-| System / internal settings | Operator configuration |
-| DAT subscription billing | What schools pay **for DAT** — not school→student payments |
-| Domains / hosts | `organization_domains`, platform host mapping |
-| Advanced onboarding / admin ops | Operator workflows beyond school admin |
+| Area | Today (code) | Target |
+| ---- | ------------ | ------ |
+| Organizations / customers | Onboard + list via `/platform`, `GET/POST /api/platform/organizations` | Full lifecycle management |
+| Plans / subscriptions | Static billing projection + stubs | Basic/Standard/Premium + monthly/annual (DEC-048, DEC-049) |
+| Entitlements (commercial) | `EntitlementGrant` + event processor (partial) | Authoritative projection from subscription + add-ons |
+| Checkout / PSP | Webhook route + stub providers | Verified provider integration |
+| Real tenant provisioning | Onboard creates org + license key | Subscription-linked provision (DEC-053) |
+| Feature flags / system settings | Internal tables; school UI hidden | Platform operator surfaces |
+| DAT subscription billing | Partial `lib/billing/*` | Platform-owned (DEC-046) |
+| Domains / hosts | `organization_domains` | Platform registry |
+| Multi-product | DAT only in practice | Reusable control plane (DEC-054) |
 
-**Host (today):** `platform.meengine.io` exists for `PLATFORM_ADMIN` sign-in; **no dedicated Platform management UI** in baseline — operators use scripts (e.g. [platform-admin-runbook.md](../../driving_school_platform/nextjs_space/docs/ops/platform-admin-runbook.md)).
+**Host (today):** `platform.meengine.io` for `PLATFORM_ADMIN` sign-in.
+
+**Fact (reconciled):** Platform **has** a minimal management UI and API — **not** “no UI/API”. It **does not** yet provide commercial subscription management, post-onboard ops, or separate deployment.
+
+Operator runbook: [platform-admin-runbook.md](../../driving_school_platform/nextjs_space/docs/ops/platform-admin-runbook.md).
+
+---
+
+## Payment domains (two — do not merge)
+
+| Domain | Owner | Meaning |
+| ------ | ----- | ------- |
+| **Tenant subscription billing** | **Platform** | School pays for DAT (DEC-046) |
+| **School-facing ledger / payments** | **DAT** (optional module) | School tracks student money (DEC-052, DEC-051) |
+
+School admin **Plan** page is for **DAT subscription**, not student payments.
 
 ---
 
 ## Settings and Feature Flags (today vs future)
 
-**Fact (repo today):** School Admin can open `/admin/settings` and manage system settings and feature flags via admin APIs.
+**Fact (repo today):** `/admin/settings` exists with CRUD APIs; **hidden from school admin navbar** (DEC-026).
 
 **Product direction:**
 
-- Current Settings / System Settings / Feature Flags are **too technical** for client-facing school admins.
-- **Future:** demote, hide, or reposition from client-facing DAT.
-- **Ownership:** most of this moves to **future Platform**; DAT keeps only **School Settings** a school admin can understand (branding, practical prefs, etc. — to be defined per slice).
+- Schools use **License / Plan** — not raw feature flags.
+- Commercial **modules** are entitlement bundles — not tenant-editable flags (DEC-050).
+- Internal settings/flags remain operator/Platform concerns.
 
-**Audit (done):** [admin-settings-client-visibility-audit.md](../architecture/admin-settings-client-visibility-audit.md) — `admin-settings-client-visibility-review-v1`. **Module gating** uses License/Entitlements (DEC-026), not `feature_flags` CRUD. **Fase B (done):** Settings hidden from school admin nav; `/admin/settings` operator copy. **Fase C (done):** `/admin/license` Plan & features read-only; navbar **Plan**. Platform extraction: `platform-settings-and-feature-flags-boundary-v1` (P2).
+**Audit (done):** [admin-settings-client-visibility-audit.md](../architecture/admin-settings-client-visibility-audit.md).
 
 ---
 
 ## What this doc does not claim
 
-- Platform is **not** a separate codebase or deployment yet.
-- Moving tables or building Platform UI is **out of scope** until explicitly approved batches.
-- RLS/Data API posture for internal tables remains engineering-owned — see [supabase-rls-data-api-policy-matrix.md](../architecture/supabase-rls-data-api-policy-matrix.md).
+- Platform is **not** a separate codebase or production deployment yet (phased — DEC-054).
+- Platform/billing stack is **not** production-ready for commercial self-service because partial code exists.
+- Moving tables or expanding Platform UI requires explicit approved batches.
 
 ---
 
 ## References
 
-- [decision-log.md](../architecture/decision-log.md) — DEC-001, DEC-002
+- [decision-log.md](../architecture/decision-log.md) — DEC-001 (historical), DEC-046–DEC-054
+- [platform-multi-product-control-plane-plan.md](../architecture/platform-multi-product-control-plane-plan.md)
+- [platform-subscription-billing-entitlements-plan.md](../architecture/platform-subscription-billing-entitlements-plan.md)
 - [packaging-and-entitlements.md](./packaging-and-entitlements.md)
 - [product-assumptions.md](./product-assumptions.md)
