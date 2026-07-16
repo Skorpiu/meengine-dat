@@ -288,7 +288,8 @@ Parent batch — always slice before implementing.
 | `dat-v1-commercial-platform-cutline-plan-v1` | **Done (docs)** | DEC-046–057; [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md); tag runbook [git-tags-and-recovery-runbook.md](../ops/git-tags-and-recovery-runbook.md); safety tag `dat-v1-core-baseline-95b833e`; no runtime |
 | `dat-plan-naming-and-doc-hygiene-v1` | **Done (docs)** | DEC-058 (plan display names) + DEC-059 (canonical memory continuity contract); DAT Core / DAT Plus / DAT Premium; stable keys documented; Markdown hygiene; no runtime |
 | `platform-commercial-catalog-schema-plan-v1` | **Done (docs)** | DEC-060; hybrid Option C; [platform-commercial-catalog-schema-plan.md](./platform-commercial-catalog-schema-plan.md); candidate schema proposed — not implemented; no runtime |
-| `platform-commercial-catalog-schema-foundation-v1` | P1 backlog | **Recommended next** — additive Prisma catalogue models/enums + migration; no checkout/provider/subscription/License UI; requires explicit approval |
+| `platform-commercial-catalog-schema-foundation-v1` | **Done (repo)** | DEC-061; migration `20260714160000_platform_commercial_catalog_schema_foundation_v1`; 3 enums + 11 models; product-scoped compound FKs; Class-B RLS; contract test; **not deployed by agent**; no catalogue data |
+| `platform-commercial-catalog-seed-v1` | P1 backlog | **Recommended next** — idempotent seed identities + DRAFT catalogue shell; offerings/prices only when commercial values approved; requires explicit approval |
 | `lesson-reminders-email-product-plan-v1` | P1 backlog | Email lesson reminder policy, events, templates, non-goals (no SMS/WhatsApp/payment reminders); **`Notification` reuse not assumed**. Not implementation authorization. |
 | `school-balances-ledger-product-plan-v1` | P1 backlog | Manual school-facing ledger/balances product plan (no PSP). From discovery O2. |
 | `student-lesson-request-policy-planning-v1` | P2 backlog | Controlled request + approval policy (`LessonRequest` schema exists). From discovery O3. |
@@ -298,7 +299,7 @@ Parent batch — always slice before implementing.
 
 **Deferred explicitly:** `people-management-ux-unification-instructor-route-split-v1` (D4; not recommended next).
 
-**Product direction (backlog — commercial path):** **Mobile/tablet** — **done**. **Competitive discovery** — **done**. **Commercial cutline planning** — **done** (`dat-v1-commercial-platform-cutline-plan-v1`, DEC-046–057). **Plan display names + memory continuity** — **done** (`dat-plan-naming-and-doc-hygiene-v1`, DEC-058/059). **Catalogue schema plan** — **done** (`platform-commercial-catalog-schema-plan-v1`, DEC-060). **Smoke identity** — **done** (DEC-045). **Recommended next:** `platform-commercial-catalog-schema-foundation-v1` — requires explicit `APPROVED TO IMPLEMENT`.
+**Product direction (backlog — commercial path):** **Mobile/tablet** — **done**. **Competitive discovery** — **done**. **Commercial cutline planning** — **done** (`dat-v1-commercial-platform-cutline-plan-v1`, DEC-046–057). **Plan display names + memory continuity** — **done** (`dat-plan-naming-and-doc-hygiene-v1`, DEC-058/059). **Catalogue schema plan** — **done** (`platform-commercial-catalog-schema-plan-v1`, DEC-060). **Catalogue schema foundation** — **done (repo)** (`platform-commercial-catalog-schema-foundation-v1`, DEC-061). **Smoke identity** — **done** (DEC-045). **Recommended next:** `platform-commercial-catalog-seed-v1` — requires explicit approval.
 
 ---
 
@@ -401,6 +402,17 @@ Parent batch — always slice before implementing.
 ---
 
 ## P3 / DX
+
+### typescript-baseurl-deprecation-v1
+
+**Source:** editor TypeScript language service (newer than project `5.2.2`) warns that `baseUrl` is deprecated in `driving_school_platform/nextjs_space/tsconfig.json`.
+
+- Inventory imports that rely on `baseUrl`.
+- Confirm `paths` works without `baseUrl`.
+- Remove `baseUrl` safely; add explicit path mappings only where required.
+- Validate lint, typecheck, tests and build.
+- Do **not** use `ignoreDeprecations` as the permanent solution.
+- **Not** the next commercial slice; non-blocking tooling hygiene.
 
 ### cursor-rules-performance-split
 

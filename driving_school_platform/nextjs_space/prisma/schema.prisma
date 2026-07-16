@@ -47,12 +47,12 @@ model VerificationToken {
 }
 
 model User {
-  id                         String          @id @default(cuid())
-  email                      String          @unique
+  id                         String                   @id @default(cuid())
+  email                      String                   @unique
   emailVerified              DateTime?
   image                      String?
   passwordHash               String?
-  role                       UserRole        @default(STUDENT)
+  role                       UserRole                 @default(STUDENT)
   firstName                  String
   lastName                   String
   phoneNumber                String?
@@ -62,28 +62,28 @@ model User {
   postalCode                 String?
   profilePictureUrl          String?
   organizationId             String?
-  isEmailVerified            Boolean         @default(false)
+  isEmailVerified            Boolean                  @default(false)
   emailVerificationToken     String?
   emailVerificationExpiresAt DateTime?
-  isApproved                 Boolean         @default(false)
+  isApproved                 Boolean                  @default(false)
   passwordResetToken         String?
   passwordResetExpiresAt     DateTime?
-  createdAt                  DateTime        @default(now())
-  updatedAt                  DateTime        @updatedAt
+  createdAt                  DateTime                 @default(now())
+  updatedAt                  DateTime                 @updatedAt
   lastLoginAt                DateTime?
   accounts                   Account[]
   auditLogs                  AuditLog[]
   instructor                 Instructor?
-  lessonRequestsReviewed     LessonRequest[] @relation("ReviewedBy")
-  lessonsCancelled           Lesson[]        @relation("CancelledBy")
+  lessonRequestsReviewed     LessonRequest[]          @relation("ReviewedBy")
+  lessonsCancelled           Lesson[]                 @relation("CancelledBy")
   notifications              Notification[]
-  paymentsUser               Payment[]       @relation("PaymentUser")
+  paymentsUser               Payment[]                @relation("PaymentUser")
   sessions                   Session[]
   student                    Student?
   preferences                UserPreference?
-  organization               Organization?   @relation(fields: [organizationId], references: [id])
-  createdInvitations         UserInvitation[] @relation("UserInvitationCreatedBy")
-  acceptedInvitations        UserInvitation[] @relation("UserInvitationAcceptedUser")
+  organization               Organization?            @relation(fields: [organizationId], references: [id])
+  createdInvitations         UserInvitation[]         @relation("UserInvitationCreatedBy")
+  acceptedInvitations        UserInvitation[]         @relation("UserInvitationAcceptedUser")
   passwordResetTokens        PasswordResetToken[]
   emailVerificationTokens    EmailVerificationToken[]
 
@@ -139,8 +139,8 @@ model Category {
 }
 
 model Student {
-  id                           String                   @id @default(cuid())
-  userId                       String?                  @unique
+  id                           String                 @id @default(cuid())
+  userId                       String?                @unique
   firstName                    String?
   lastName                     String?
   email                        String?
@@ -150,13 +150,13 @@ model Student {
   schoolStudentYearSuffix      String?
   schoolStudentSequence        Int?
   schoolStudentIdSource        StudentSchoolIdSource?
-  appAccessMode                StudentAppAccessMode     @default(APP_USER)
-  studentIdNumber              String?                  @unique
-  studentNumber                Int                      @unique @default(autoincrement())
+  appAccessMode                StudentAppAccessMode   @default(APP_USER)
+  studentIdNumber              String?                @unique
+  studentNumber                Int                    @unique @default(autoincrement())
   categoryId                   Int?
-  transmissionTypeId         Int?
+  transmissionTypeId           Int?
   organizationId               String
-  hasDrivingLicense            Boolean                  @default(false)
+  hasDrivingLicense            Boolean                @default(false)
   existingLicenseNumber        String?
   existingLicenseCategories    String[]
   medicalCertificateUrl        String?
@@ -166,24 +166,24 @@ model Student {
   emergencyContactRelationship String?
   preferredInstructorId        String?
   preferredLessonTime          String?
-  theoryExamPassed             Boolean                  @default(false)
-  practicalExamPassed          Boolean                  @default(false)
+  theoryExamPassed             Boolean                @default(false)
+  practicalExamPassed          Boolean                @default(false)
   enrollmentDate               DateTime?
   graduationDate               DateTime?
   adminNotes                   String?
   specialRequirements          String?
-  createdAt                    DateTime                 @default(now())
-  updatedAt                    DateTime                 @updatedAt
+  createdAt                    DateTime               @default(now())
+  updatedAt                    DateTime               @updatedAt
   examRegistrations            ExamRegistration[]
   lessonCounters               LessonCounter[]
   lessonRequests               LessonRequest[]
   lessons                      Lesson[]
-  paymentsStudent              Payment[]                @relation("PaymentStudent")
-  category                     Category?                @relation(fields: [categoryId], references: [id])
-  organization                 Organization             @relation(fields: [organizationId], references: [id])
-  preferredInstructor          Instructor?              @relation("PreferredStudents", fields: [preferredInstructorId], references: [id])
-  transmissionType             TransmissionType?        @relation(fields: [transmissionTypeId], references: [id])
-  user                         User?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  paymentsStudent              Payment[]              @relation("PaymentStudent")
+  category                     Category?              @relation(fields: [categoryId], references: [id])
+  organization                 Organization           @relation(fields: [organizationId], references: [id])
+  preferredInstructor          Instructor?            @relation("PreferredStudents", fields: [preferredInstructorId], references: [id])
+  transmissionType             TransmissionType?      @relation(fields: [transmissionTypeId], references: [id])
+  user                         User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
   userInvitations              UserInvitation[]
 
   @@unique([organizationId, schoolStudentId])
@@ -614,14 +614,14 @@ model Organization {
 }
 
 model EntitlementGrant {
-  id             String       @id @default(cuid())
+  id             String    @id @default(cuid())
   organizationId String
   featureKey     String
   source         String
   startsAt       DateTime
   expiresAt      DateTime?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -646,16 +646,16 @@ model OrganizationDomain {
 }
 
 model UserInvitation {
-  id              String               @id @default(cuid())
-  organizationId  String
-  email           String
-  role            UserRole
-  tokenHash       String               @unique
-  status          UserInvitationStatus @default(PENDING)
-  expiresAt       DateTime
-  acceptedAt      DateTime?
-  revokedAt       DateTime?
-  createdByUserId String?
+  id                      String               @id @default(cuid())
+  organizationId          String
+  email                   String
+  role                    UserRole
+  tokenHash               String               @unique
+  status                  UserInvitationStatus @default(PENDING)
+  expiresAt               DateTime
+  acceptedAt              DateTime?
+  revokedAt               DateTime?
+  createdByUserId         String?
   acceptedUserId          String?
   studentId               String?
   instructorLicenseNumber String?
@@ -768,15 +768,15 @@ model LicenseKey {
 }
 
 model BillingEvent {
-  id              String        @id @default(cuid())
-  provider        BillingProvider
-  providerEventId String
-  eventType       BillingEventType
-  organizationId  String?
-  status          BillingEventStatus @default(RECEIVED)
-  payload         Json
-  receivedAt      DateTime      @default(now())
-  processedAt     DateTime?
+  id               String             @id @default(cuid())
+  provider         BillingProvider
+  providerEventId  String
+  eventType        BillingEventType
+  organizationId   String?
+  status           BillingEventStatus @default(RECEIVED)
+  payload          Json
+  receivedAt       DateTime           @default(now())
+  processedAt      DateTime?
   processingResult Json?
 
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
@@ -892,6 +892,242 @@ model ConfigurationHistory {
   @@index([changedAt])
   @@index([changedBy])
   @@map("configuration_history")
+}
+
+// ─── Platform commercial catalogue (additive foundation — no seed data) ───
+// Publication immutability for PUBLISHED+ rows is enforced by a future write-service boundary.
+// DRAFT rows are editable at the application layer.
+
+model CommercialProduct {
+  id          String   @id @default(cuid())
+  productKey  String   @unique
+  displayName String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  plans             Plan[]
+  addOns            AddOn[]
+  entitlementDefs   EntitlementDefinition[]
+  catalogueVersions CatalogueVersion[]
+
+  @@map("commercial_products")
+}
+
+model Plan {
+  id          String   @id @default(cuid())
+  productId   String
+  planKey     String
+  displayName String
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  product   CommercialProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
+  offerings PlanOffering[]
+
+  @@unique([productId, planKey])
+  @@unique([id, productId])
+  @@index([productId])
+  @@map("commercial_plans")
+}
+
+model AddOn {
+  id          String   @id @default(cuid())
+  productId   String
+  addOnKey    String
+  displayName String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  product   CommercialProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
+  offerings AddOnOffering[]
+
+  @@unique([productId, addOnKey])
+  @@unique([id, productId])
+  @@index([productId])
+  @@map("commercial_add_ons")
+}
+
+model EntitlementDefinition {
+  id               String               @id @default(cuid())
+  productId        String
+  entitlementKey   String
+  displayName      String
+  description      String?
+  defaultValueKind EntitlementValueKind @default(BOOLEAN)
+  isActive         Boolean              @default(true)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  product             CommercialProduct               @relation(fields: [productId], references: [id], onDelete: Restrict)
+  planOfferingGrants  PlanOfferingEntitlementGrant[]
+  addOnOfferingGrants AddOnOfferingEntitlementGrant[]
+
+  @@unique([productId, entitlementKey])
+  @@unique([id, productId])
+  @@index([productId])
+  @@map("entitlement_definitions")
+}
+
+model CatalogueVersion {
+  id            String                 @id @default(cuid())
+  productId     String
+  versionKey    String
+  status        CatalogueVersionStatus @default(DRAFT)
+  displayName   String?
+  notes         String?
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+  publishedAt   DateTime?
+  retiredAt     DateTime?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  product            CommercialProduct          @relation(fields: [productId], references: [id], onDelete: Restrict)
+  planOfferings      PlanOffering[]
+  addOnOfferings     AddOnOffering[]
+  addOnEligibilities AddOnOfferingEligibility[]
+
+  @@unique([productId, versionKey])
+  @@unique([id, productId])
+  @@index([productId, status])
+  @@index([productId, effectiveFrom])
+  @@map("catalogue_versions")
+}
+
+model PlanOffering {
+  id                 String   @id @default(cuid())
+  productId          String
+  catalogueVersionId String
+  planId             String
+  displayName        String
+  description        String?
+  compositionHash    String?
+  createdAt          DateTime @default(now())
+
+  catalogueVersion   CatalogueVersion               @relation(fields: [catalogueVersionId, productId], references: [id, productId], onDelete: Restrict)
+  plan               Plan                           @relation(fields: [planId, productId], references: [id, productId], onDelete: Restrict)
+  prices             CataloguePrice[]
+  entitlementGrants  PlanOfferingEntitlementGrant[]
+  addOnEligibilities AddOnOfferingEligibility[]
+
+  @@unique([catalogueVersionId, planId])
+  @@unique([id, productId])
+  @@unique([id, catalogueVersionId])
+  @@index([catalogueVersionId])
+  @@index([planId])
+  @@index([productId])
+  @@map("plan_offerings")
+}
+
+model AddOnOffering {
+  id                 String   @id @default(cuid())
+  productId          String
+  catalogueVersionId String
+  addOnId            String
+  displayName        String
+  description        String?
+  createdAt          DateTime @default(now())
+
+  catalogueVersion  CatalogueVersion                @relation(fields: [catalogueVersionId, productId], references: [id, productId], onDelete: Restrict)
+  addOn             AddOn                           @relation(fields: [addOnId, productId], references: [id, productId], onDelete: Restrict)
+  prices            CataloguePrice[]
+  entitlementGrants AddOnOfferingEntitlementGrant[]
+  planEligibilities AddOnOfferingEligibility[]
+
+  @@unique([catalogueVersionId, addOnId])
+  @@unique([id, productId])
+  @@unique([id, catalogueVersionId])
+  @@index([catalogueVersionId])
+  @@index([addOnId])
+  @@index([productId])
+  @@map("add_on_offerings")
+}
+
+model AddOnOfferingEligibility {
+  catalogueVersionId String
+  addOnOfferingId    String
+  planOfferingId     String
+  createdAt          DateTime @default(now())
+
+  catalogueVersion CatalogueVersion @relation(fields: [catalogueVersionId], references: [id], onDelete: Restrict)
+  addOnOffering    AddOnOffering    @relation(fields: [addOnOfferingId, catalogueVersionId], references: [id, catalogueVersionId], onDelete: Cascade)
+  planOffering     PlanOffering     @relation(fields: [planOfferingId, catalogueVersionId], references: [id, catalogueVersionId], onDelete: Cascade)
+
+  @@id([addOnOfferingId, planOfferingId])
+  @@index([catalogueVersionId])
+  @@index([planOfferingId])
+  @@map("add_on_offering_eligibilities")
+}
+
+model CataloguePrice {
+  id              String          @id @default(cuid())
+  currency        String
+  interval        BillingInterval
+  amountMinor     Int
+  taxTreatment    String?
+  effectiveFrom   DateTime?
+  effectiveTo     DateTime?
+  planOfferingId  String?
+  addOnOfferingId String?
+  createdAt       DateTime        @default(now())
+
+  planOffering  PlanOffering?  @relation(fields: [planOfferingId], references: [id], onDelete: Cascade)
+  addOnOffering AddOnOffering? @relation(fields: [addOnOfferingId], references: [id], onDelete: Cascade)
+
+  @@unique([planOfferingId, interval, currency])
+  @@unique([addOnOfferingId, interval, currency])
+  @@index([planOfferingId, interval])
+  @@index([addOnOfferingId, interval])
+  @@map("catalogue_prices")
+}
+
+model PlanOfferingEntitlementGrant {
+  id                      String               @id @default(cuid())
+  productId               String
+  planOfferingId          String
+  entitlementDefinitionId String
+  valueKind               EntitlementValueKind
+  valueBoolean            Boolean?
+  valueInteger            Int?
+  valueString             String?
+  valueJson               Json?
+
+  planOffering          PlanOffering          @relation(fields: [planOfferingId, productId], references: [id, productId], onDelete: Cascade)
+  entitlementDefinition EntitlementDefinition @relation(fields: [entitlementDefinitionId, productId], references: [id, productId], onDelete: Restrict)
+
+  @@unique([planOfferingId, entitlementDefinitionId])
+  @@index([planOfferingId])
+  @@index([entitlementDefinitionId])
+  @@index([productId])
+  @@map("plan_offering_entitlement_grants")
+}
+
+model AddOnOfferingEntitlementGrant {
+  id                      String               @id @default(cuid())
+  productId               String
+  addOnOfferingId         String
+  entitlementDefinitionId String
+  valueKind               EntitlementValueKind
+  valueBoolean            Boolean?
+  valueInteger            Int?
+  valueString             String?
+  valueJson               Json?
+
+  addOnOffering         AddOnOffering         @relation(fields: [addOnOfferingId, productId], references: [id, productId], onDelete: Cascade)
+  entitlementDefinition EntitlementDefinition @relation(fields: [entitlementDefinitionId, productId], references: [id, productId], onDelete: Restrict)
+
+  @@unique([addOnOfferingId, entitlementDefinitionId])
+  @@index([addOnOfferingId])
+  @@index([entitlementDefinitionId])
+  @@index([productId])
+  @@map("add_on_offering_entitlement_grants")
 }
 
 enum StudentAppAccessMode {
@@ -1082,6 +1318,26 @@ enum BillingEventStatus {
   RECEIVED
   PROCESSED
   FAILED
+}
+
+enum CatalogueVersionStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  RETIRED
+  ARCHIVED
+}
+
+enum BillingInterval {
+  MONTHLY
+  ANNUAL
+}
+
+enum EntitlementValueKind {
+  BOOLEAN
+  INTEGER_LIMIT
+  STRING_POLICY
+  JSON_CONFIG
 }
 
 enum SettingType {

@@ -1,9 +1,9 @@
 # Platform Commercial Catalogue Schema Plan
 
-**Status:** D4 architecture plan — **PROPOSED — NOT IMPLEMENTED**
-**Batch:** `platform-commercial-catalog-schema-plan-v1`
-**Baseline inspected:** main `a9c0137` (2026-07-14)
-**Decisions (invariants):** [DEC-046](./decision-log.md)–[DEC-052](./decision-log.md), [DEC-058](./decision-log.md), [DEC-059](./decision-log.md), [DEC-060](./decision-log.md)
+**Status:** D4 architecture plan — **IMPLEMENTED (foundation slice)** / **PARTIAL — runtime deferred**
+**Batch:** `platform-commercial-catalog-schema-plan-v1` (plan); foundation implemented in `platform-commercial-catalog-schema-foundation-v1` (DEC-061)
+**Baseline inspected:** main `9782199` (2026-07-14)
+**Decisions (invariants):** [DEC-046](./decision-log.md)–[DEC-052](./decision-log.md), [DEC-058](./decision-log.md)–[DEC-061](./decision-log.md)
 **Product intent:** [dat-plan-and-module-catalog.md](../product/dat-plan-and-module-catalog.md)
 
 ---
@@ -36,7 +36,42 @@
 3. **Published** catalogue versions, offerings, and prices are **not silently mutated** — corrections create new versions.
 4. **Historical subscriptions** pin to agreed `PlanOffering` + `CataloguePrice` (+ grant composition), never display names or live catalogue rows alone.
 
-**Next implementation slice (not authorized here):** `platform-commercial-catalog-schema-foundation-v1` — additive Prisma models/enums + migration only; no checkout, provider, subscription lifecycle, License UI, or tenant provisioning changes.
+**Next implementation slice (not authorized here):** `platform-commercial-catalog-seed-v1` — deterministic idempotent seed definitions only; no checkout, provider, subscription lifecycle, License UI, or tenant provisioning changes.
+
+---
+
+## Implemented in `platform-commercial-catalog-schema-foundation-v1` (repo only — not deployed by agent)
+
+| Area | Status |
+| ---- | ------ |
+| Additive enums (`CatalogueVersionStatus`, `BillingInterval`, `EntitlementValueKind`) | **Done** — `prisma/schema.prisma` |
+| Stable-identity models (`CommercialProduct`, `Plan`, `AddOn`, `EntitlementDefinition`) | **Done** |
+| Versioned models (`CatalogueVersion`, `PlanOffering`, `AddOnOffering`, `CataloguePrice`, grants) | **Done** |
+| Relational add-on eligibility (`AddOnOfferingEligibility` + composite FKs) | **Done** — not PostgreSQL arrays |
+| Product scope compound FKs on offerings/grants | **Done** — `productId` + `(id, productId)` uniqueness |
+| Entitlement grants FK to `EntitlementDefinition` | **Done** |
+| Typed grant value CHECK constraints (plan + add-on) | **Done** — migration SQL |
+| Price `amountMinor Int`, exactly-one target, currency shape CHECK | **Done** |
+| Class-B RLS + REVOKE on all 11 new tables | **Done** — migration `20260714160000_platform_commercial_catalog_schema_foundation_v1` |
+| Schema contract test | **Done** — `lib/platform/commercial-catalog-schema-foundation.unit.test.ts` |
+| Commercial seed data | **None** |
+| Runtime catalogue services / APIs / UI | **None** |
+| Operator `migrate deploy` | **Not executed** — human-controlled |
+
+**Publication immutability:** DRAFT rows are editable at the application layer; PUBLISHED+ immutability is **not** database-enforced in this slice — future write-service boundary owns lifecycle rules.
+
+---
+
+## Still planned (deferred slices)
+
+| Slice | Scope |
+| ----- | ----- |
+| `platform-commercial-catalog-seed-v1` | Stable identities + DRAFT catalogue shell; offerings/prices only when commercial values approved |
+| `platform-commercial-catalog-read-services-v1` | Read-only catalogue repositories/APIs |
+| `platform-entitlement-catalogue-bridge-v1` | Project catalogue grants → tenant `EntitlementGrant` |
+| Provider mappings, subscriptions, checkout | Later D4 slices per release plan |
+| Platform management UI, License self-service | Later UI slices |
+| Production migration deployment | Human operator — separate from schema authoring |
 
 ---
 
@@ -889,7 +924,7 @@ Existing `BillingEvent` store **retains** provider events; future processor reso
 | OD-012 | Entitlement value representation edge cases (unlimited sentinel) | Open |
 | OD-013 | Catalogue publication workflow (UI vs script) | Open |
 | OD-014 | Grandfathering policy when catalogue retires | Open |
-| OD-015 | `eligiblePlanOfferingIds` as array vs join table | Open (implementation D2) |
+| OD-015 | `eligiblePlanOfferingIds` as array vs join table | **Closed (DEC-061)** — relational `AddOnOfferingEligibility` join model with composite FKs |
 | OD-016 | `Plan.displayName` mutability vs offering-only copy | Open — leaning offering-only for published copy |
 
 **Do not fabricate commercial answers in implementation without product approval.**
@@ -901,8 +936,8 @@ Existing `BillingEvent` store **retains** provider events; future processor reso
 | Order | Slice | Type | Gate |
 | ----- | ----- | ---- | ---- |
 | 1 | `platform-commercial-catalog-schema-plan-v1` | Docs | **Done (this document)** |
-| 2 | `platform-commercial-catalog-schema-foundation-v1` | Schema/migration | `APPROVED TO IMPLEMENT` required |
-| 3 | `platform-commercial-catalog-seed-v1` | Seed | Sensitive data — approval |
+| 2 | `platform-commercial-catalog-schema-foundation-v1` | Schema/migration | **Done (repo)** — migration `20260714160000_platform_commercial_catalog_schema_foundation_v1`; not deployed by agent |
+| 3 | `platform-commercial-catalog-seed-v1` | Seed | **Recommended next** — sensitive data; approval required |
 | 4 | `platform-commercial-catalog-read-services-v1` | Runtime read | Approval |
 | 5 | `platform-entitlement-catalogue-bridge-v1` | Runtime bridge | D4 — billing adjacent |
 | 6 | `platform-tenant-subscription-schema-v1` | Schema | D4 |
@@ -941,4 +976,4 @@ Aligns with [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan
 
 ---
 
-*End of plan — candidate schema is PROPOSED — NOT IMPLEMENTED.*
+*End of plan — foundation schema implemented in repo (DEC-061); not deployed; no catalogue data.*

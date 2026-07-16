@@ -285,12 +285,13 @@ Documented and in use (docs/rules only; no runtime change):
 - `dat-v1-smoke-tenant-school-admin-identity-v1` — smoke org **`DAT Production Smoke`**; School Admin label; production rename completed 2026-07-13 (DEC-045)
 - `dat-v1-commercial-platform-cutline-plan-v1` — commercial/platform cutline planning (DEC-046–057); [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md); safety tag `dat-v1-core-baseline-95b833e`; [git-tags-and-recovery-runbook.md](../ops/git-tags-and-recovery-runbook.md); no runtime
 - `dat-plan-naming-and-doc-hygiene-v1` — approved commercial plan display names (DEC-058): DAT Core, DAT Plus, DAT Premium; stable keys `DAT_CORE`/`DAT_PLUS`/`DAT_PREMIUM` documented; package composition remains provisional; canonical memory continuity contract (DEC-059); Markdown hygiene; no runtime
-- `platform-commercial-catalog-schema-plan-v1` — D4 commercial catalogue schema plan (DEC-060); hybrid Option C; candidate Prisma schema **proposed — not implemented**; [platform-commercial-catalog-schema-plan.md](./platform-commercial-catalog-schema-plan.md); no runtime/schema/migration
+- `platform-commercial-catalog-schema-plan-v1` — D4 commercial catalogue schema plan (DEC-060); hybrid Option C; [platform-commercial-catalog-schema-plan.md](./platform-commercial-catalog-schema-plan.md); no runtime/schema/migration
+- `platform-commercial-catalog-schema-foundation-v1` — additive Prisma catalogue foundation (DEC-061): enums + 11 models; migration `20260714160000_platform_commercial_catalog_schema_foundation_v1`; product-scoped compound FKs on offerings/grants; Class-B RLS; contract test; **no catalogue data; no runtime services; not deployed by agent**. Validated via `pnpm check`.
 
 ### Likely next (commercial path)
 
-1. **`platform-commercial-catalog-schema-foundation-v1`** — additive Prisma catalogue models/enums + migration; schema tests; no checkout/provider/subscription/License UI/provisioning (requires `APPROVED TO IMPLEMENT`)
-2. **`platform-subscription-webhook-hardening-v1`** — sensitive; requires explicit approval
+1. **`platform-commercial-catalog-seed-v1`** — deterministic idempotent seed: `CommercialProduct` (`DAT`), stable plans (`DAT_CORE`/`DAT_PLUS`/`DAT_PREMIUM`), entitlement definitions, one DRAFT catalogue shell; offerings/prices only when commercial values approved; no checkout/provider/subscriptions (requires explicit approval)
+2. **`platform-commercial-catalog-read-services-v1`** — read-only catalogue services
 
 Planning reference: [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md); catalogue plan: [platform-commercial-catalog-schema-plan.md](./platform-commercial-catalog-schema-plan.md).
 
@@ -304,7 +305,7 @@ Planning reference: [dat-v1-commercial-release-plan.md](./dat-v1-commercial-rele
 
 **Mobile/tablet readiness (done):** review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports — [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md). Opt-in viewport smoke: `pnpm e2e:mobile-viewports`. **Not production blockers** (DEC-032).
 
-**Competitive/Product Discovery (`competitive-product-discovery-v1`, done 2026-07-10):** Market comparison complete — [competitive-product-discovery.md](../product/competitive-product-discovery.md). **Commercial cutline planning done:** `dat-v1-commercial-platform-cutline-plan-v1` (2026-07-14, DEC-046–057). **Catalogue schema plan done:** `platform-commercial-catalog-schema-plan-v1` (DEC-060). **Recommended next:** `platform-commercial-catalog-schema-foundation-v1` — first implementation-sensitive slice; not authorized without explicit approval.
+**Competitive/Product Discovery (`competitive-product-discovery-v1`, done 2026-07-10):** Market comparison complete — [competitive-product-discovery.md](../product/competitive-product-discovery.md). **Commercial cutline planning done:** `dat-v1-commercial-platform-cutline-plan-v1` (2026-07-14, DEC-046–057). **Catalogue schema plan done:** `platform-commercial-catalog-schema-plan-v1` (DEC-060). **Catalogue schema foundation done (repo):** `platform-commercial-catalog-schema-foundation-v1` (DEC-061) — migration authored, not deployed; no catalogue data. **Recommended next:** `platform-commercial-catalog-seed-v1` — requires explicit approval.
 
 Engineering excellence audit items (non-blocking refactors) remain tracked separately in roadmap P2+.
 
