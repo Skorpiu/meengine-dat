@@ -59,9 +59,10 @@ Planning order — each runtime slice needs its own approval gate.
 | # | Slice | Type | Depends on |
 | - | ----- | ---- | ---------- |
 | 1 | `platform-commercial-catalog-schema-plan-v1` | Docs + D4 schema proposal | **Done** — [platform-commercial-catalog-schema-plan.md](./platform-commercial-catalog-schema-plan.md) (DEC-060) |
-| 2 | `platform-commercial-catalog-schema-foundation-v1` | Schema/migration (sensitive) | #1 — **recommended next**; requires approval |
-| 3 | `platform-subscription-webhook-hardening-v1` | Runtime (sensitive) | Provider choice (partial) |
-| 4 | `platform-commercial-catalog-v1` | Runtime/schema (sensitive) | #2 |
+| 2 | `platform-commercial-catalog-schema-foundation-v1` | Schema/migration (sensitive) | #1 — **done (repo)** — migration `20260714160000_platform_commercial_catalog_schema_foundation_v1`; DEC-061; not deployed by agent |
+| 3 | `platform-commercial-catalog-seed-v1` | Seed (sensitive) | #2 — **recommended next**; requires approval |
+| 4 | `platform-subscription-webhook-hardening-v1` | Runtime (sensitive) | Provider choice (partial) |
+| 5 | `platform-commercial-catalog-read-services-v1` | Runtime | #2 |
 | 5 | `platform-subscription-checkout-foundation-v1` | Runtime (sensitive) | #3, #4 |
 | 6 | `platform-entitlement-projection-basic-standard-premium-v1` | Runtime | #4, #5 |
 | 7 | `platform-tenant-provision-subscription-v1` | Runtime | #6 |
