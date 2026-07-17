@@ -38,6 +38,7 @@
     "tenant:org-null-report": "tsx scripts/report-tenant-organization-null-scope.ts",
     "tenant:org-backfill:dry-run": "tsx scripts/dry-run-tenant-organization-backfill.ts",
     "ops:rename-production-smoke-org": "tsx scripts/rename-production-smoke-organization.ts",
+    "seed:commercial-catalog": "tsx --require dotenv/config scripts/seed-commercial-catalog.ts",
     "predev": "pnpm -s env:check",
     "test:e2e": "playwright test",
     "test:e2e:demo": "playwright test e2e/demo-smoke.spec.ts",
