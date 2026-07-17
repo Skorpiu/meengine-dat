@@ -161,6 +161,8 @@ For **automated** production smoke only — not the client record.
 
 **Organization rename (DEC-045):** completed by human operator on **2026-07-13**. Previous name `A Conquistadora` → verified name **`DAT Production Smoke`** (org `cmltn7vdl0000f8c4vxy6gcwx`, host `www.meengine.io`, 2 domains, 11 users). Real client **`A Conquistadora`** remains **not created**.
 
+**Incident note (2026-07-17):** accidental legacy `prisma db seed` reset the remote technical smoke database (test-only data). The org/user/entity IDs recorded above are **stale** and must not be used as `DAT_SMOKE_*` fixtures. See [2026-07-17-remote-legacy-seed-reset.md](../ops/incidents/2026-07-17-remote-legacy-seed-reset.md). Capture replacement IDs in `platform-admin-access-and-smoke-reconcile-v1`.
+
 | Suite | Command | Last run (UTC) | Result | Commit |
 | ----- | ------- | -------------- | ------ | ------ |
 | API + signup guard | `pnpm e2e:smoke:api` | | ☐ pass / fail | |

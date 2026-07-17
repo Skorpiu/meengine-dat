@@ -36,7 +36,7 @@
 3. **Published** catalogue versions, offerings, and prices are **not silently mutated** — corrections create new versions.
 4. **Historical subscriptions** pin to agreed `PlanOffering` + `CataloguePrice` (+ grant composition), never display names or live catalogue rows alone.
 
-**Next implementation slice (not authorized here):** `platform-commercial-catalog-seed-v1` — deterministic idempotent seed definitions only; no checkout, provider, subscription lifecycle, License UI, or tenant provisioning changes.
+**Next implementation slice (not authorized here):** `platform-commercial-catalog-read-services-v1` — read-only catalogue repositories; no checkout, provider, subscription lifecycle, License UI, or tenant provisioning changes.
 
 ---
 
@@ -54,7 +54,7 @@
 | Price `amountMinor Int`, exactly-one target, currency shape CHECK | **Done** |
 | Class-B RLS + REVOKE on all 11 new tables | **Done** — migration `20260714160000_platform_commercial_catalog_schema_foundation_v1` |
 | Schema contract test | **Done** — `lib/platform/commercial-catalog-schema-foundation.unit.test.ts` |
-| Commercial seed data | **None** |
+| Commercial seed data | **Repo only** — manifest + `seedDatCommercialCatalogue` + dedicated CLI `scripts/seed-commercial-catalog.ts` (`pnpm seed:commercial-catalog`); **requires `--apply` for DB writes**; **not wired into** legacy `scripts/seed.ts` / `prisma db seed`; **not executed by agent**; zero entitlement definitions in bootstrap (composition open). Legacy seed is **local-only** (DEC-062). |
 | Runtime catalogue services / APIs / UI | **None** |
 | Operator `migrate deploy` | **Not executed** — human-controlled |
 
@@ -66,7 +66,6 @@
 
 | Slice | Scope |
 | ----- | ----- |
-| `platform-commercial-catalog-seed-v1` | Stable identities + DRAFT catalogue shell; offerings/prices only when commercial values approved |
 | `platform-commercial-catalog-read-services-v1` | Read-only catalogue repositories/APIs |
 | `platform-entitlement-catalogue-bridge-v1` | Project catalogue grants → tenant `EntitlementGrant` |
 | Provider mappings, subscriptions, checkout | Later D4 slices per release plan |
@@ -151,11 +150,13 @@ Audit performed against live repository paths (not stale docs alone).
 
 **No checkout, no plan comparison, no interval selection.**
 
-### 2.7 Seed data (`scripts/seed.ts`, `scripts/seed-organization.ts`)
+### 2.7 Seed data (`scripts/seed.ts`, `scripts/seed-organization.ts`, commercial CLI)
 
-- Default org: `DAT Production Smoke`, `subscriptionTier: BASE`, all `OrganizationFeature` disabled.
+- Legacy `scripts/seed.ts` / `prisma db seed`: **local development only** (DEC-062) — fail-closed on remote hosts; requires `ALLOW_DESTRUCTIVE_LOCAL_SEED=DELETE_LOCAL_DAT_APP_DATA`; **not** the production/remote commercial bootstrap path.
+- Commercial identities: dedicated `scripts/seed-commercial-catalog.ts` via `pnpm seed:commercial-catalog` (preview) / `-- --apply` (writes). Reconciles product `DAT`, plans `DAT_CORE`/`DAT_PLUS`/`DAT_PREMIUM`, DRAFT `DAT_V1_INITIAL_DRAFT` only. Requires schema migration already deployed. Does not publish, migrate, or create offerings/prices/grants.
+- Default org in legacy seed: `DAT Production Smoke`, `subscriptionTier: BASE`, all `OrganizationFeature` disabled.
 - Sample `LicenseKey` with `STUDENT_ACCESS`, `VEHICLE_MANAGEMENT`.
-- **No** catalogue seed, **no** DAT Core/Plus/Premium data.
+- **Incident 2026-07-17:** remote technical smoke DB was accidentally wiped/reseeded by legacy seed (test-only data); see [incident record](../ops/incidents/2026-07-17-remote-legacy-seed-reset.md).
 
 ### 2.8 Naming collisions and risks
 

@@ -420,13 +420,14 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `dat-v1-commercial-platform-cutline-plan-v1` — docs-only commercial/platform cutline (DEC-046–057); plans + tag runbook; safety tag `dat-v1-core-baseline-95b833e` @ `95b833e`; no runtime
 - `dat-plan-naming-and-doc-hygiene-v1` — docs-only (DEC-058/059): commercial plans **DAT Core**, **DAT Plus**, **DAT Premium**; superseded planning labels Basic/Standard; planned keys `DAT_CORE`/`DAT_PLUS`/`DAT_PREMIUM`; canonical memory continuity contract; package composition and pricing **open**; display names ≠ entitlement checks; no runtime
 - `platform-commercial-catalog-schema-plan-v1` — D4 commercial catalogue schema plan (DEC-060); hybrid Option C; [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md); no runtime/schema/migration in plan batch
-- `platform-commercial-catalog-schema-foundation-v1` — additive Prisma catalogue foundation (DEC-061); migration `20260714160000_platform_commercial_catalog_schema_foundation_v1`; 3 enums + 11 models; **product-scoped compound FKs** on offerings/grants; relational add-on eligibility; Class-B RLS; contract test; **no catalogue data; no runtime services; not deployed by agent**
+- `platform-commercial-catalog-schema-foundation-v1` — additive Prisma catalogue foundation (DEC-061); migration `20260714160000_platform_commercial_catalog_schema_foundation_v1`; 3 enums + 11 models; **product-scoped compound FKs** on offerings/grants; relational add-on eligibility; Class-B RLS; contract test; **no runtime services; not deployed by agent**
+- `platform-commercial-catalog-seed-v1` — idempotent seed manifest + service + dedicated CLI (`scripts/seed-commercial-catalog.ts`, `pnpm seed:commercial-catalog`; **`--apply` required for writes**); product `DAT`, plans `DAT_CORE`/`DAT_PLUS`/`DAT_PREMIUM`, DRAFT `DAT_V1_INITIAL_DRAFT`; zero entitlement definitions; **not** wired into legacy `scripts/seed.ts` / `prisma db seed`; **DEC-062** local-only fail-closed destructive seed (`lib/ops/destructive-seed-safety.ts`); **seed not executed by agent**; **no confirmed DB catalogue rows**; incident 2026-07-17 remote smoke reset (test-only; prior `DAT_SMOKE_*` IDs stale)
 
-**Commercial plan names (DEC-058):** DAT Core, DAT Plus, DAT Premium. Basic and Standard are **superseded planning labels** only. Planned stable identifiers: `DAT_CORE`, `DAT_PLUS`, `DAT_PREMIUM` (billing interval separate: `MONTHLY`/`ANNUAL`). Exact package composition and pricing remain **provisional** (OD-002/007/008). Catalogue schema foundation **done (repo)** — [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md) (DEC-060/061). **Never** use display names directly as entitlement authorization checks.
+**Commercial plan names (DEC-058):** DAT Core, DAT Plus, DAT Premium. Basic and Standard are **superseded planning labels** only. Planned stable identifiers: `DAT_CORE`, `DAT_PLUS`, `DAT_PREMIUM` (billing interval separate: `MONTHLY`/`ANNUAL`). Exact package composition and pricing remain **provisional** (OD-002/007/008). Catalogue schema foundation **done (repo)** — [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md) (DEC-060/061). Seed identities **done (repo)** — not executed. **Never** use display names directly as entitlement authorization checks.
 
 **Current recommended next** (optional unless product says otherwise):
 
-1. `platform-commercial-catalog-seed-v1` — idempotent seed identities + DRAFT catalogue shell; offerings/prices only when commercial values approved; requires explicit approval
+1. `platform-admin-access-and-smoke-reconcile-v1` — human-approved read-only remote validation; Platform admin reconcile; rotate seeded credentials; capture new smoke fixture IDs; then resume `platform-commercial-catalog-read-services-v1`
 
 **Release anchor (DEC-056):** safety baseline tag `dat-v1-core-baseline-95b833e` → `95b833e`. Runbook: [git-tags-and-recovery-runbook.md](../../docs/ops/git-tags-and-recovery-runbook.md). Target release: `dat-v1.0.0-rc.*` → `dat-v1.0.0` (DEC-057).
 
@@ -449,8 +450,9 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - **`competitive-product-discovery-v1`** — **done** (2026-07-10); see [competitive-product-discovery.md](../../docs/product/competitive-product-discovery.md). Prevalence: reminders + balances **8/9**, self-booking/requests **6/9** (9 eligible direct competitors; HIGH/MEDIUM per row)
 - **`dat-plan-naming-and-doc-hygiene-v1`** — **done** (DEC-058): DAT Core / DAT Plus / DAT Premium display names; Basic/Standard superseded planning labels
 - **`platform-commercial-catalog-schema-plan-v1`** — **done** (DEC-060): hybrid catalogue schema plan; [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md)
-- **`platform-commercial-catalog-schema-foundation-v1`** — **done (repo)** (DEC-061): additive migration + schema; not deployed; no catalogue data
-- **Recommended next implementation:** `platform-commercial-catalog-seed-v1` (requires explicit approval)
+- **`platform-commercial-catalog-schema-foundation-v1`** — **done (repo)** (DEC-061): additive migration + schema; not deployed
+- **`platform-commercial-catalog-seed-v1`** — **done (repo)**: seed code + dedicated `--apply` CLI present; not executed; DEC-062 local-only legacy seed; incident 2026-07-17 smoke reset (test-only; IDs stale); no DB catalogue rows confirmed
+- **Recommended next implementation:** `platform-admin-access-and-smoke-reconcile-v1`
 
 **Deferred (not next — RLS revoke-only track closed):**
 
@@ -473,10 +475,28 @@ Before recommending recovery, rollback, release branching, or final release:
 6. Distinguish **code recovery** (Git tag) from **database/infrastructure recovery** (operator runbooks).
 7. Keep tag **creation and publication human-controlled** — agents do not publish tags unless explicitly instructed.
 8. Record newly verified release anchors in `current-state.md` or the release plan when operator confirms.
+9. **Git tags do not back up database rows** — a code tag (including `dat-v1-core-baseline-95b833e`) cannot restore deleted organizations, users, or lessons.
 
 Full commands: [git-tags-and-recovery-runbook.md](../../docs/ops/git-tags-and-recovery-runbook.md) — do not duplicate the complete runbook here.
 
-**Current safety baseline:** `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056).
+**Current safety baseline:** `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — **code/recovery comparison only**, not a database backup.
+
+## Database command safety (DEC-062)
+
+**Never include destructive database commands in a routine multi-command copy/paste battery, even when preceded by “do not execute”.**
+
+Additional Super Agent requirements:
+
+- One database-writing command per explicitly approved block.
+- Do not automatically continue with another database command after a failed database command in the same paste block.
+- Identify whether the target is local or remote **before** any approved write.
+- Prefer preview/dry-run before apply where supported.
+- Do not treat presence of `.env` as permission to connect to or write a remote database.
+- Legacy `scripts/seed.ts` / `prisma db seed` is **local-only** and fail-closed on remote hosts; local runs require `ALLOW_DESTRUCTIVE_LOCAL_SEED=DELETE_LOCAL_DAT_APP_DATA`.
+- Remote provisioning uses dedicated non-destructive operator commands (never the legacy destructive seed).
+- Commercial catalogue identity seed is separate: `pnpm seed:commercial-catalog` (preview) / `-- --apply` (writes).
+
+Incident reference: [2026-07-17-remote-legacy-seed-reset.md](../../docs/ops/incidents/2026-07-17-remote-legacy-seed-reset.md).
 
 ## Cursor Automations (Super-Agent)
 

@@ -1,22 +1,43 @@
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+import {
+  DESTRUCTIVE_LOCAL_SEED_CONFIRMATION,
+  assertDestructiveLocalSeedAllowed,
+  formatDestructiveSeedRefusalMessage,
+} from "@/lib/ops/destructive-seed-safety";
 
 async function main() {
-  console.log("🌱 Starting database seeding...");
-
-  // Safety guard: never run destructive seed in production by accident
-  if (
-    process.env.NODE_ENV === "production" &&
-    process.env.ALLOW_PROD_SEED !== "true"
-  ) {
-    throw new Error(
-      "Refusing to run seed in production. Set ALLOW_PROD_SEED=true if you really mean it.",
-    );
+  const safety = assertDestructiveLocalSeedAllowed({
+    databaseUrl: process.env.DATABASE_URL,
+    confirmation: process.env.ALLOW_DESTRUCTIVE_LOCAL_SEED,
+  });
+  if (!safety.ok) {
+    console.error(formatDestructiveSeedRefusalMessage(safety));
+    process.exitCode = 1;
+    return;
   }
 
-  // Clear existing data (be careful in production!)
+  console.log(
+    `🌱 Starting local destructive database seeding (target ${safety.redactedTarget})...`,
+  );
+  console.log(
+    `Confirmation: ALLOW_DESTRUCTIVE_LOCAL_SEED=${DESTRUCTIVE_LOCAL_SEED_CONFIRMATION}`,
+  );
+
+  const { PrismaClient } = await import("@prisma/client");
+  const prisma = new PrismaClient();
+
+  try {
+    await runDestructiveLocalSeed(prisma);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+async function runDestructiveLocalSeed(
+  prisma: import("@prisma/client").PrismaClient,
+) {
+  // Clear existing data (local development only — guard already enforced)
   console.log("🗑️ Clearing existing data...");
   await prisma.auditLog.deleteMany();
   await prisma.notification.deleteMany();
@@ -893,12 +914,7 @@ async function main() {
   `);
 }
 
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error("❌ Seeding failed:", e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+main().catch(async (e) => {
+  console.error("❌ Seeding failed:", e);
+  process.exitCode = 1;
+});
