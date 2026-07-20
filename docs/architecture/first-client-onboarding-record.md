@@ -159,9 +159,9 @@ Distinguish **smoke tenant** runs from **client tenant** validation.
 
 For **automated** production smoke only — not the client record.
 
-**Organization rename (DEC-045):** completed by human operator on **2026-07-13**. Previous name `A Conquistadora` → verified name **`DAT Production Smoke`** (org `cmltn7vdl0000f8c4vxy6gcwx`, host `www.meengine.io`, 2 domains, 11 users). Real client **`A Conquistadora`** remains **not created**.
+**Organization rename (DEC-045):** completed by human operator on **2026-07-13**. Previous name `A Conquistadora` → verified name **`DAT Production Smoke`** (host `www.meengine.io`, 2 domains, 11 users at rename time). The pre-incident organization/entity identifiers recorded at rename are **historical pre-incident identifiers** — **stale after 2026-07-17** — **must not be used in `DAT_SMOKE_*` configuration**. Real client **`A Conquistadora`** remains **not created**.
 
-**Incident note (2026-07-17):** accidental legacy `prisma db seed` reset the remote technical smoke database (test-only data). The org/user/entity IDs recorded above are **stale** and must not be used as `DAT_SMOKE_*` fixtures. See [2026-07-17-remote-legacy-seed-reset.md](../ops/incidents/2026-07-17-remote-legacy-seed-reset.md). Capture replacement IDs in `platform-admin-access-and-smoke-reconcile-v1`.
+**Incident note (2026-07-17):** accidental legacy `prisma db seed` reset the remote technical smoke database (test-only data). The org/user/entity IDs recorded above are **stale** and must not be used as `DAT_SMOKE_*` fixtures. See [2026-07-17-remote-legacy-seed-reset.md](../ops/incidents/2026-07-17-remote-legacy-seed-reset.md). Capture replacement IDs in `dat-production-smoke-reconcile-v1` (DEC-063: do not recreate embedded Platform Admin).
 
 | Suite | Command | Last run (UTC) | Result | Commit |
 | ----- | ------- | -------------- | ------ | ------ |
