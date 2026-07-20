@@ -16,7 +16,7 @@
 | Scope | App tables globally wiped and fictitious test fixtures recreated by the legacy seed |
 | Real customers | None — no real clients; real tenant **A Conquistadora** has not been created |
 | Pre-incident data | Fictitious test/smoke data only |
-| Platform access | Application Platform admin identity may need reconciliation (Auth/Storage not wiped by this seed) |
+| Platform access | Embedded DAT `PLATFORM_ADMIN` is **intentionally not recreated** (DEC-063); Supabase Auth/Storage were not wiped by this seed |
 | Commercial seed | Did **not** execute |
 | Commercial migration | Was **not** deployed |
 | Supabase Auth / Storage | Untouched by the legacy seed |
@@ -46,7 +46,7 @@
 
 ## Follow-up slice
 
-`platform-admin-access-and-smoke-reconcile-v1` — human-approved read-only validation, Platform admin reconciliation, credential rotation, capture new smoke fixture IDs, then resume commercial read-services work.
+`dat-production-smoke-reconcile-v1` — inspect-only remote validation tooling for the technical DAT smoke tenant; **do not** recreate embedded `PLATFORM_ADMIN` (DEC-063). Runbook: [production-smoke-reconciliation-inspect.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-reconciliation-inspect.md). After smoke reconcile closes, recommended next: `platform-separation-architecture-plan-v1`.
 
 ---
 

@@ -402,7 +402,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `instructor-invite-auto-approve-v1` — invitation accept sets `isApproved=true` for all invited roles including INSTRUCTOR (DEC-037); public signup policy unchanged; no schema/migration/RLS
 - `instructor-invite-license-fields-v1` — INSTRUCTOR invite collects license number + expiry on `UserInvitation`; accept uses real license data, no `INVITE-PENDING-*` (DEC-038); migration `20260623120000_add_instructor_license_fields_to_invitations`; placeholder Profiles warning; DEC-037/public signup unchanged
 - `production-smoke-e2e-fixture-preflight-v1` — zero-write fixture preflight (DEC-039); `pnpm e2e:smoke:fixture-preflight`; explicit `DAT_SMOKE_ORG_ID` + fixture IDs; technical smoke tenant **`DAT Production Smoke`** on www.meengine.io (DEC-045); hosted green
-- `dat-v1-smoke-tenant-school-admin-identity-v1` — smoke org **`DAT Production Smoke`**; School Admin product label (`SUPER_ADMIN` persisted); Platform onboarding `schoolAdmin*`; production rename **completed** 2026-07-13 (human operator; org `cmltn7vdl0000f8c4vxy6gcwx`); script `pnpm ops:rename-production-smoke-org` for dry-run/idempotency only (DEC-045)
+- `dat-v1-smoke-tenant-school-admin-identity-v1` — smoke org **`DAT Production Smoke`**; School Admin product label (`SUPER_ADMIN` persisted); Platform onboarding `schoolAdmin*`; production rename **completed** 2026-07-13 (human operator; pre-incident org id is **historical** — stale after 2026-07-17; must not be used in `DAT_SMOKE_*` configuration); script `pnpm ops:rename-production-smoke-org` for dry-run/idempotency only (DEC-045)
 - `production-smoke-e2e-lesson-mutations-v1` — lesson mutation smoke (DEC-040); `pnpm e2e:smoke:mutations`; dual opt-in `DAT_E2E_ALLOW_PRODUCTION_MUTATIONS`; API-first create + update; no cleanup; not in `pnpm check`/CI
 - `production-smoke-e2e-testids-v1` — smoke `data-testid` markers + booking readiness metadata (DEC-041); not in `pnpm check`/CI
 - `production-first-client-onboarding-record-v1` — docs-only first B2B client onboarding record (DEC-043); `docs/architecture/first-client-onboarding-record.md`
@@ -422,12 +422,16 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `platform-commercial-catalog-schema-plan-v1` — D4 commercial catalogue schema plan (DEC-060); hybrid Option C; [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md); no runtime/schema/migration in plan batch
 - `platform-commercial-catalog-schema-foundation-v1` — additive Prisma catalogue foundation (DEC-061); migration `20260714160000_platform_commercial_catalog_schema_foundation_v1`; 3 enums + 11 models; **product-scoped compound FKs** on offerings/grants; relational add-on eligibility; Class-B RLS; contract test; **no runtime services; not deployed by agent**
 - `platform-commercial-catalog-seed-v1` — idempotent seed manifest + service + dedicated CLI (`scripts/seed-commercial-catalog.ts`, `pnpm seed:commercial-catalog`; **`--apply` required for writes**); product `DAT`, plans `DAT_CORE`/`DAT_PLUS`/`DAT_PREMIUM`, DRAFT `DAT_V1_INITIAL_DRAFT`; zero entitlement definitions; **not** wired into legacy `scripts/seed.ts` / `prisma db seed`; **DEC-062** local-only fail-closed destructive seed (`lib/ops/destructive-seed-safety.ts`); **seed not executed by agent**; **no confirmed DB catalogue rows**; incident 2026-07-17 remote smoke reset (test-only; prior `DAT_SMOKE_*` IDs stale)
+- `dat-production-smoke-reconcile-v1` (inspect-only sub-slice in progress) — **DEC-063:** do not recreate embedded `PLATFORM_ADMIN`; smoke-only inspect tooling (`pnpm ops:inspect-production-smoke-reconciliation`); remote inspect **not executed by agent**; embedded `/platform` transitional/non-authoritative
 
 **Commercial plan names (DEC-058):** DAT Core, DAT Plus, DAT Premium. Basic and Standard are **superseded planning labels** only. Planned stable identifiers: `DAT_CORE`, `DAT_PLUS`, `DAT_PREMIUM` (billing interval separate: `MONTHLY`/`ANNUAL`). Exact package composition and pricing remain **provisional** (OD-002/007/008). Catalogue schema foundation **done (repo)** — [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md) (DEC-060/061). Seed identities **done (repo)** — not executed. **Never** use display names directly as entitlement authorization checks.
 
 **Current recommended next** (optional unless product says otherwise):
 
-1. `platform-admin-access-and-smoke-reconcile-v1` — human-approved read-only remote validation; Platform admin reconcile; rotate seeded credentials; capture new smoke fixture IDs; then resume `platform-commercial-catalog-read-services-v1`
+1. Complete `dat-production-smoke-reconcile-v1` (human-approved remote inspect → fixture/credential reconcile) — then `platform-separation-architecture-plan-v1`
+2. Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded Platform without the separation plan
+
+**Abandoned:** `platform-admin-access-and-smoke-reconcile-v1` (superseded by DEC-063 / `dat-production-smoke-reconcile-v1`)
 
 **Release anchor (DEC-056):** safety baseline tag `dat-v1-core-baseline-95b833e` → `95b833e`. Runbook: [git-tags-and-recovery-runbook.md](../../docs/ops/git-tags-and-recovery-runbook.md). Target release: `dat-v1.0.0-rc.*` → `dat-v1.0.0` (DEC-057).
 
@@ -452,7 +456,8 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - **`platform-commercial-catalog-schema-plan-v1`** — **done** (DEC-060): hybrid catalogue schema plan; [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md)
 - **`platform-commercial-catalog-schema-foundation-v1`** — **done (repo)** (DEC-061): additive migration + schema; not deployed
 - **`platform-commercial-catalog-seed-v1`** — **done (repo)**: seed code + dedicated `--apply` CLI present; not executed; DEC-062 local-only legacy seed; incident 2026-07-17 smoke reset (test-only; IDs stale); no DB catalogue rows confirmed
-- **Recommended next implementation:** `platform-admin-access-and-smoke-reconcile-v1`
+- **`dat-production-smoke-reconcile-v1`** — **in progress** (inspect-only sub-slice; DEC-063); remote inspect not executed
+- **Recommended next after smoke close:** `platform-separation-architecture-plan-v1`
 
 **Deferred (not next — RLS revoke-only track closed):**
 
