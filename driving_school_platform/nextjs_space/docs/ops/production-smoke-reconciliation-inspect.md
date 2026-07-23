@@ -1,8 +1,8 @@
 # DAT production smoke reconciliation — inspect-only
 
-**Slice:** `dat-production-smoke-reconcile-v1` (inspect-only sub-slice)
+**Slice:** `dat-production-smoke-reconcile-v1` / `dat-production-smoke-canonical-fixtures-v1`
 **Incident:** [2026-07-17-remote-legacy-seed-reset.md](../../../../docs/ops/incidents/2026-07-17-remote-legacy-seed-reset.md)
-**Decision:** DEC-063 (embedded Platform non-authoritative; smoke-only reconcile)
+**Decision:** DEC-063 (embedded Platform non-authoritative); DEC-064 (canonical smoke fixtures)
 
 **Canonical path (repository-relative):**
 `driving_school_platform/nextjs_space/docs/ops/production-smoke-reconciliation-inspect.md`
@@ -11,75 +11,109 @@
 
 ## Purpose
 
-Read-only **application-level** inspection of the technical DAT smoke tenant (`DAT Production Smoke`) after the 2026-07-17 legacy seed reset.
+Application-level inspection and optional fixture reconcile for the technical DAT smoke tenant (`DAT Production Smoke`).
 
-This command:
-
-- validates remote target identity before Prisma construction;
-- reports sanitized organization, domain, School Admin candidates, category B, instructor/student/vehicle candidates, feature readiness, counts, and anomalies;
-- does **not** select fixtures automatically when multiple candidates exist;
-- does **not** export full fixture IDs (vault capture is a later approved operation).
-
-## Important boundaries
-
-| Boundary             | Rule                                                                                              |
-| -------------------- | ------------------------------------------------------------------------------------------------- |
-| Data scope           | Test/smoke data only — no real customer tenant                                                    |
-| Platform Admin       | **Intentionally not restored** inside DAT                                                         |
-| Embedded `/platform` | Transitional / non-authoritative (DEC-063)                                                        |
-| Read-only claim      | **Application-level inspect-only** — does **not** claim PostgreSQL enforces read-only             |
-| Writes               | None — no `--apply`, no feature enablement, no password rotation, no cleanup, no commercial apply |
-| Commercial catalogue | Not queried (migration undeployed)                                                                |
-| Git ZIP / tags       | **Not** a database backup — tags and archives cannot restore rows                                 |
-
-Autonomous MeEngine Platform architecture is deferred to `platform-separation-architecture-plan-v1`.
-
-## Required environment (expected target identity)
-
-Set all of:
-
-- `DAT_OPS_EXPECTED_DB_HOST` — exact hostname match
-- `DAT_OPS_EXPECTED_DB_NAME` — exact database name match
-- `DAT_OPS_EXPECTED_SUPABASE_PROJECT_REF` — exact Supabase project reference
-
-`DATABASE_URL` comes from the normal runtime environment (`postgresql:` / `postgres:` only). When `DIRECT_URL` is present, it must use the same authorized protocols and resolve to the same project reference and database name.
-
-Do **not** authorize via `FORCE`, `NODE_ENV`, or mere presence of a `.env` file.
-
-Do **not** paste real project refs, database URLs, passwords, or full fixture IDs into tickets or git.
-
-## Command (human-approved only)
+## Commands (human-approved only)
 
 Assumed shell: Git Bash
+
+Inspect (zero-write):
 
 ```bash
 cd driving_school_platform/nextjs_space
 pnpm ops:inspect-production-smoke-reconciliation
 ```
 
-Optional JSON output:
+Fixtures reconcile dry-run (zero-write). Operator-safe env load via Node 20 `--env-file` (do **not** `source` the file; do not print its contents):
 
 ```bash
-pnpm ops:inspect-production-smoke-reconciliation -- --json
+cd driving_school_platform/nextjs_space
+node \
+  --env-file=.env.operator.production.local \
+  --import tsx \
+  scripts/reconcile-production-smoke-fixtures.ts
 ```
 
-**Execute only after explicit human approval.** One database-related command per approved block. Agents must not run this CLI unless Rui explicitly requests execution. Do not chain this command with seed, migrate, or other write operations in the same paste block.
+Equivalent package script (passes the same `--env-file` explicitly — it does **not** rely on Next.js / bare `tsx` / pnpm auto-loading):
 
-## What it does not do
+```bash
+cd driving_school_platform/nextjs_space
+pnpm ops:reconcile-production-smoke-fixtures
+```
 
-- seed / migrate / restore / commercial catalogue apply
-- enable features
-- rotate passwords or update vault values
-- run smoke suites
-- recreate `PLATFORM_ADMIN`
-- query commercial catalogue tables
-- print full emails, full org/user/category IDs, passwords, hashes, or full project references
-- claim PostgreSQL session/transaction read-only enforcement
+Fixtures reconcile apply (**writes**; single transaction; not executed by agents in this slice):
+
+```bash
+cd driving_school_platform/nextjs_space
+node \
+  --env-file=.env.operator.production.local \
+  --import tsx \
+  scripts/reconcile-production-smoke-fixtures.ts \
+  --apply
+```
+
+Or:
+
+```bash
+cd driving_school_platform/nextjs_space
+pnpm ops:reconcile-production-smoke-fixtures -- --apply
+```
+
+(`--` is the pnpm/POSIX end-of-options separator; the CLI ignores a standalone `--` and still treats `--apply` as apply.)
+
+**Execute only after explicit human approval.** One database-related command per approved block.
+
+## Required environment
+
+- `DAT_OPS_EXPECTED_DB_HOST`
+- `DAT_OPS_EXPECTED_DB_NAME`
+- `DAT_OPS_EXPECTED_SUPABASE_PROJECT_REF`
+- `DATABASE_URL` (`postgresql:` / `postgres:` only)
+- Optional: `DIRECT_URL` (same project/database)
+- Optional operator-only: `DAT_SMOKE_EXPECTED_ADMIN_EMAIL` (exact match; never log full value; never commit real values)
+
+Operator secrets live in `.env.operator.production.local` (gitignored via `.env*`). Load it only through `node --env-file=...` as shown above.
+
+## Canonical fixtures (names — not IDs)
+
+| Fixture                 | Notes                                                                              |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| Smoke Admin             | Canonical School Admin (`SUPER_ADMIN`)                                             |
+| John Doe                | Additional admin — preserve; do not delete without dependency audit                |
+| Smoke Instructor 1      | Intended manual (seed); remote observed provenance = invite \| unknown             |
+| Smoke Instructor 2      | Intended invite; observed `invite` only when ACCEPTED `UserInvitation` is coherent |
+| Smoke Instructor Non-B  | Negative fixture (no category B)                                                   |
+| Smoke Student 1         | Intended manual (seed); remote observed = invite \| unknown                        |
+| Smoke Student 2         | Intended invite; observed when ACCEPTED invitation is coherent                     |
+| Smoke Student A1        | Negative fixture (category A1)                                                     |
+| `01-DS-24` … `05-DS-24` | Plates; `03-DS-24` is A1 negative                                                  |
+
+Smoke-required feature overrides (tenant-only): `LESSON_MANAGEMENT`, `VEHICLE_MANAGEMENT`, `STUDENT_ACCESS`.
+
+## Boundaries
+
+| Boundary             | Rule                                                                           |
+| -------------------- | ------------------------------------------------------------------------------ |
+| Read-only claim      | Application-level — does **not** claim PostgreSQL read-only                    |
+| Platform Admin       | Not restored                                                                   |
+| Commercial catalogue | Not queried / not migrated by these commands                                   |
+| Writes               | Reconcile only with `--apply`; no seed/migrate in these CLIs                   |
+| Secrets              | No passwords, full URLs, full project refs, full emails, or full IDs in output |
+| Git tags / ZIP       | Not a database backup                                                          |
+
+## Provenance note
+
+Observed states: `invite` | `manual` | `unknown`.
+
+- `invite` — only with observable coherent ACCEPTED `UserInvitation` (email / `acceptedUserId` / `studentId`).
+- `manual` — only when provenance is deterministically known (e.g. local seed created by DAT seed code).
+- `unknown` — no accepted invite and no explicit manual evidence (typical remote residual).
+
+Remote reconcile **never** invents `manual` from a missing invite row, and does **not** fabricate invitations. Readiness may warn on `unknown`; it must not fail solely for that reason.
 
 ## Related
 
-- Smoke runbook: [production-smoke-e2e.md](./production-smoke-e2e.md)
-- Destructive seed safety (DEC-062): `lib/ops/destructive-seed-safety.ts`
+- Smoke E2E: [production-smoke-e2e.md](./production-smoke-e2e.md)
 - Target guard: `lib/ops/remote-operator-target-guard.ts`
-- Inspection service: `lib/ops/production-smoke-reconciliation-inspection.ts`
-- CLI: `scripts/inspect-production-smoke-reconciliation.ts`
+- Inspect: `lib/ops/production-smoke-reconciliation-inspection.ts`
+- Reconcile: `lib/ops/production-smoke-fixtures-reconciliation.ts`

@@ -44,15 +44,47 @@ export class LicenseService {
   }
 
   /**
-   * Enable a feature for an organization
+   * Enable a feature for an organization (tenant-scoped organizationFeature upsert).
+   *
+   * Optional `client` lets callers participate in an outer Prisma transaction
+   * (e.g. smoke fixture reconcile apply). When `throwOnError` is true, failures
+   * propagate so the surrounding transaction can roll back.
    */
   static async enableFeature(
     organizationId: string,
     featureKey: FeatureKey,
     enabledBy?: string,
+    options?: {
+      client?: {
+        organizationFeature: {
+          upsert: (args: {
+            where: {
+              organizationId_featureKey: {
+                organizationId: string;
+                featureKey: string;
+              };
+            };
+            create: {
+              organizationId: string;
+              featureKey: string;
+              isEnabled: boolean;
+              enabledAt: Date;
+              enabledBy?: string;
+            };
+            update: {
+              isEnabled: boolean;
+              enabledAt: Date;
+              enabledBy?: string;
+            };
+          }) => Promise<unknown>;
+        };
+      };
+      throwOnError?: boolean;
+    },
   ): Promise<boolean> {
+    const client = options?.client ?? db;
     try {
-      await db.organizationFeature.upsert({
+      await client.organizationFeature.upsert({
         where: {
           organizationId_featureKey: {
             organizationId,
@@ -75,6 +107,9 @@ export class LicenseService {
 
       return true;
     } catch (error) {
+      if (options?.throwOnError) {
+        throw error;
+      }
       console.error("Error enabling feature:", error);
       return false;
     }

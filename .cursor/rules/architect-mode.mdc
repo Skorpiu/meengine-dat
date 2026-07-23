@@ -422,13 +422,14 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `platform-commercial-catalog-schema-plan-v1` — D4 commercial catalogue schema plan (DEC-060); hybrid Option C; [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md); no runtime/schema/migration in plan batch
 - `platform-commercial-catalog-schema-foundation-v1` — additive Prisma catalogue foundation (DEC-061); migration `20260714160000_platform_commercial_catalog_schema_foundation_v1`; 3 enums + 11 models; **product-scoped compound FKs** on offerings/grants; relational add-on eligibility; Class-B RLS; contract test; **no runtime services; not deployed by agent**
 - `platform-commercial-catalog-seed-v1` — idempotent seed manifest + service + dedicated CLI (`scripts/seed-commercial-catalog.ts`, `pnpm seed:commercial-catalog`; **`--apply` required for writes**); product `DAT`, plans `DAT_CORE`/`DAT_PLUS`/`DAT_PREMIUM`, DRAFT `DAT_V1_INITIAL_DRAFT`; zero entitlement definitions; **not** wired into legacy `scripts/seed.ts` / `prisma db seed`; **DEC-062** local-only fail-closed destructive seed (`lib/ops/destructive-seed-safety.ts`); **seed not executed by agent**; **no confirmed DB catalogue rows**; incident 2026-07-17 remote smoke reset (test-only; prior `DAT_SMOKE_*` IDs stale)
-- `dat-production-smoke-reconcile-v1` (inspect-only sub-slice in progress) — **DEC-063:** do not recreate embedded `PLATFORM_ADMIN`; smoke-only inspect tooling (`pnpm ops:inspect-production-smoke-reconciliation`); remote inspect **not executed by agent**; embedded `/platform` transitional/non-authoritative
+- `dat-production-smoke-reconcile-v1` — **DEC-063:** do not recreate embedded `PLATFORM_ADMIN`; smoke-only inspect tooling (`pnpm ops:inspect-production-smoke-reconciliation`); embedded `/platform` transitional/non-authoritative
+- `dat-production-smoke-canonical-fixtures-v1` — **DEC-064:** canonical fixtures + smoke feature overrides + reconcile CLI (`pnpm ops:reconcile-production-smoke-fixtures`); **remote `--apply` not executed by agent**
 
 **Commercial plan names (DEC-058):** DAT Core, DAT Plus, DAT Premium. Basic and Standard are **superseded planning labels** only. Planned stable identifiers: `DAT_CORE`, `DAT_PLUS`, `DAT_PREMIUM` (billing interval separate: `MONTHLY`/`ANNUAL`). Exact package composition and pricing remain **provisional** (OD-002/007/008). Catalogue schema foundation **done (repo)** — [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md) (DEC-060/061). Seed identities **done (repo)** — not executed. **Never** use display names directly as entitlement authorization checks.
 
 **Current recommended next** (optional unless product says otherwise):
 
-1. Complete `dat-production-smoke-reconcile-v1` (human-approved remote inspect → fixture/credential reconcile) — then `platform-separation-architecture-plan-v1`
+1. Human dry-run then `--apply` for `ops:reconcile-production-smoke-fixtures` on validated smoke target — then vault capture + hosted smoke — then `platform-separation-architecture-plan-v1`
 2. Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded Platform without the separation plan
 
 **Abandoned:** `platform-admin-access-and-smoke-reconcile-v1` (superseded by DEC-063 / `dat-production-smoke-reconcile-v1`)
@@ -456,8 +457,9 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - **`platform-commercial-catalog-schema-plan-v1`** — **done** (DEC-060): hybrid catalogue schema plan; [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md)
 - **`platform-commercial-catalog-schema-foundation-v1`** — **done (repo)** (DEC-061): additive migration + schema; not deployed
 - **`platform-commercial-catalog-seed-v1`** — **done (repo)**: seed code + dedicated `--apply` CLI present; not executed; DEC-062 local-only legacy seed; incident 2026-07-17 smoke reset (test-only; IDs stale); no DB catalogue rows confirmed
-- **`dat-production-smoke-reconcile-v1`** — **in progress** (inspect-only sub-slice; DEC-063); remote inspect not executed
-- **Recommended next after smoke close:** `platform-separation-architecture-plan-v1`
+- **`dat-production-smoke-reconcile-v1`** — **done (inspect tooling)** (DEC-063)
+- **`dat-production-smoke-canonical-fixtures-v1`** — **in progress (repo)** (DEC-064); remote `--apply` not executed
+- **Recommended next after smoke fixtures close:** `platform-separation-architecture-plan-v1`
 
 **Deferred (not next — RLS revoke-only track closed):**
 

@@ -9,6 +9,15 @@
 
 import { redactEmailRecipient } from "@/lib/email/redaction";
 import { isInstructorLicenseExpiryTodayOrFuture } from "@/lib/instructors/instructor-license-utils";
+import { normalizeInvitationEmail } from "@/lib/invitations/invitation-policy";
+import {
+  CANONICAL_SMOKE_ADMIN,
+  CANONICAL_SMOKE_INSTRUCTORS,
+  CANONICAL_SMOKE_STUDENTS,
+  CANONICAL_SMOKE_VEHICLES,
+  namesMatch,
+  type SmokeFixtureProvenance,
+} from "@/lib/ops/production-smoke-fixtures-canonical";
 import { PRODUCTION_SMOKE_ORGANIZATION_TARGET_NAME } from "@/lib/ops/rename-production-smoke-organization";
 
 export const CANONICAL_SMOKE_ORGANIZATION_NAME =
@@ -189,6 +198,8 @@ export type ProductionSmokeInspectionDb = {
           select: {
             id: true;
             email: true;
+            firstName: true;
+            lastName: true;
             isApproved: true;
             isEmailVerified: true;
           };
@@ -205,6 +216,8 @@ export type ProductionSmokeInspectionDb = {
         user: {
           id: string;
           email: string;
+          firstName: string;
+          lastName: string;
           isApproved: boolean;
           isEmailVerified: boolean;
         } | null;
@@ -250,6 +263,27 @@ export type ProductionSmokeInspectionDb = {
   billingEvent: { count: InspectCount<{ organizationId: null }> };
   verificationToken: { count: InspectCount<Record<string, never>> };
   rateLimitBucket: { count: InspectCount<Record<string, never>> };
+  userInvitation: {
+    findMany: InspectFindMany<
+      { organizationId: string; status?: "ACCEPTED" },
+      {
+        id: true;
+        email: true;
+        role: true;
+        status: true;
+        acceptedUserId: true;
+        studentId: true;
+      },
+      {
+        id: string;
+        email: string;
+        role: string;
+        status: string;
+        acceptedUserId: string | null;
+        studentId: string | null;
+      }
+    >;
+  };
 };
 
 export type SafeIdPrefix = string;
@@ -278,6 +312,7 @@ export type SchoolAdminCandidate = {
   /** School Admin deactivation is represented by isApproved=false. */
   activeState: "active" | "deactivated";
   displayName: string;
+  isCanonical: boolean;
 };
 
 export type InstructorCandidate = {
@@ -290,6 +325,9 @@ export type InstructorCandidate = {
   qualifiedForCategoryB: boolean;
   eligible: boolean;
   ineligibilityReasons: string[];
+  observedProvenance: SmokeFixtureProvenance;
+  isCanonicalPositive: boolean;
+  isCanonicalNegative: boolean;
 };
 
 export type StudentCandidate = {
@@ -304,6 +342,9 @@ export type StudentCandidate = {
   eligible: boolean;
   suitability: "eligible" | "ineligible";
   reasons: string[];
+  observedProvenance: SmokeFixtureProvenance;
+  isCanonicalPositive: boolean;
+  isCanonicalNegative: boolean;
 };
 
 export type VehicleCandidate = {
@@ -315,6 +356,8 @@ export type VehicleCandidate = {
   underMaintenance: boolean;
   eligible: boolean;
   reasons: string[];
+  isCanonicalPositive: boolean;
+  isCanonicalNegative: boolean;
 };
 
 export type DomainInspection = {
@@ -390,13 +433,18 @@ export type ProductionSmokeInspectionResult = {
     organizationReady: boolean;
     domainReady: boolean;
     schoolAdminCandidateCount: number;
+    canonicalSchoolAdminFound: boolean;
     categoryBReady: boolean;
     eligibleInstructorCandidateCount: number;
     eligibleStudentCandidateCount: number;
     eligibleVehicleCandidateCount: number;
     requiredFeaturesReady: boolean;
+    canonicalPositiveInstructorsReady: boolean;
+    canonicalPositiveStudentsReady: boolean;
+    canonicalPositiveVehiclesReady: boolean;
     readOnlySmokePotentiallyReady: boolean;
     mutationSmokePotentiallyReady: boolean;
+    fixturesPotentiallyReady: boolean;
     blockers: string[];
     warnings: string[];
     humanDecisionsRequired: string[];
@@ -408,6 +456,63 @@ function displayName(
   last: string | null | undefined,
 ): string {
   return [first?.trim(), last?.trim()].filter(Boolean).join(" ") || "(unnamed)";
+}
+
+/**
+ * Remote observation only: ACCEPTED invitation ⇒ `invite`, else `unknown`.
+ * Never invents `manual` from absence of invite rows.
+ */
+function observeInviteProvenance(input: {
+  userId: string | null | undefined;
+  email: string | null | undefined;
+  studentId?: string | null;
+  invitations: Array<{
+    status: string;
+    acceptedUserId: string | null;
+    studentId: string | null;
+    email: string;
+    role: string;
+  }>;
+  expectedRole: "INSTRUCTOR" | "STUDENT";
+}): SmokeFixtureProvenance {
+  const matches = input.invitations.filter((inv) => {
+    if (inv.status !== "ACCEPTED") return false;
+    if (inv.role !== input.expectedRole) return false;
+    if (input.userId && inv.acceptedUserId === input.userId) return true;
+    if (input.studentId && inv.studentId === input.studentId) return true;
+    if (
+      input.email &&
+      normalizeInvitationEmail(inv.email) ===
+        normalizeInvitationEmail(input.email)
+    ) {
+      return true;
+    }
+    return false;
+  });
+  return matches.length > 0 ? "invite" : "unknown";
+}
+
+function emptyReadiness(blockers: string[], warnings: string[] = []) {
+  return {
+    organizationReady: false,
+    domainReady: false,
+    schoolAdminCandidateCount: 0,
+    canonicalSchoolAdminFound: false,
+    categoryBReady: false,
+    eligibleInstructorCandidateCount: 0,
+    eligibleStudentCandidateCount: 0,
+    eligibleVehicleCandidateCount: 0,
+    requiredFeaturesReady: false,
+    canonicalPositiveInstructorsReady: false,
+    canonicalPositiveStudentsReady: false,
+    canonicalPositiveVehiclesReady: false,
+    readOnlySmokePotentiallyReady: false,
+    mutationSmokePotentiallyReady: false,
+    fixturesPotentiallyReady: false,
+    blockers,
+    warnings,
+    humanDecisionsRequired: [] as string[],
+  };
 }
 
 function classifyFeatureState(
@@ -627,18 +732,7 @@ export async function inspectProductionSmokeReconciliation(
       counts: null,
       anomalies,
       readiness: {
-        organizationReady: false,
-        domainReady: false,
-        schoolAdminCandidateCount: 0,
-        categoryBReady: false,
-        eligibleInstructorCandidateCount: 0,
-        eligibleStudentCandidateCount: 0,
-        eligibleVehicleCandidateCount: 0,
-        requiredFeaturesReady: false,
-        readOnlySmokePotentiallyReady: false,
-        mutationSmokePotentiallyReady: false,
-        blockers: ["smoke_organization_missing"],
-        warnings: [],
+        ...emptyReadiness(["smoke_organization_missing"]),
         humanDecisionsRequired: [
           "Confirm whether the technical smoke tenant must be recreated or repaired.",
         ],
@@ -675,19 +769,11 @@ export async function inspectProductionSmokeReconciliation(
       counts: null,
       anomalies,
       readiness: {
-        organizationReady: false,
-        domainReady: false,
-        schoolAdminCandidateCount: 0,
-        categoryBReady: false,
-        eligibleInstructorCandidateCount: 0,
-        eligibleStudentCandidateCount: 0,
-        eligibleVehicleCandidateCount: 0,
-        requiredFeaturesReady: false,
-        readOnlySmokePotentiallyReady: false,
-        mutationSmokePotentiallyReady: false,
-        blockers: ["smoke_organization_ambiguous"],
-        warnings: namedOrgs.map(
-          (org) => `ambiguous_org_prefix:${toSafeIdPrefix(org.id)}`,
+        ...emptyReadiness(
+          ["smoke_organization_ambiguous"],
+          namedOrgs.map(
+            (org) => `ambiguous_org_prefix:${toSafeIdPrefix(org.id)}`,
+          ),
         ),
         humanDecisionsRequired: [
           "Resolve duplicate DAT Production Smoke organizations before recommending fixtures.",
@@ -707,6 +793,7 @@ export async function inspectProductionSmokeReconciliation(
     instructors,
     students,
     vehicles,
+    acceptedInvitations,
     userCount,
     instructorCount,
     studentCount,
@@ -783,6 +870,8 @@ export async function inspectProductionSmokeReconciliation(
           select: {
             id: true,
             email: true,
+            firstName: true,
+            lastName: true,
             isApproved: true,
             isEmailVerified: true,
           },
@@ -798,6 +887,17 @@ export async function inspectProductionSmokeReconciliation(
         isActive: true,
         underMaintenance: true,
         category: { select: { id: true, name: true } },
+      },
+    }),
+    db.userInvitation.findMany({
+      where: { organizationId, status: "ACCEPTED" },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        status: true,
+        acceptedUserId: true,
+        studentId: true,
       },
     }),
     db.user.count({ where: { organizationId } }),
@@ -826,7 +926,16 @@ export async function inspectProductionSmokeReconciliation(
       isEmailVerified: admin.isEmailVerified,
       activeState: admin.isApproved ? "active" : "deactivated",
       displayName: displayName(admin.firstName, admin.lastName),
+      isCanonical: namesMatch(
+        admin.firstName,
+        admin.lastName,
+        CANONICAL_SMOKE_ADMIN.firstName,
+        CANONICAL_SMOKE_ADMIN.lastName,
+      ),
     }),
+  );
+  const canonicalSchoolAdminFound = schoolAdminCandidates.some(
+    (admin) => admin.isCanonical,
   );
 
   let categoryB: CategoryBInspection;
@@ -886,6 +995,31 @@ export async function inspectProductionSmokeReconciliation(
       qualifiedForCategoryB: classification.qualifiedForCategoryB,
       eligible: classification.eligible && categoryB.ready,
       ineligibilityReasons: reasons,
+      observedProvenance: observeInviteProvenance({
+        userId: row.userId,
+        email: row.user.email,
+        invitations: acceptedInvitations,
+        expectedRole: "INSTRUCTOR",
+      }),
+      isCanonicalPositive:
+        namesMatch(
+          row.user.firstName,
+          row.user.lastName,
+          CANONICAL_SMOKE_INSTRUCTORS.instructor1.firstName,
+          CANONICAL_SMOKE_INSTRUCTORS.instructor1.lastName,
+        ) ||
+        namesMatch(
+          row.user.firstName,
+          row.user.lastName,
+          CANONICAL_SMOKE_INSTRUCTORS.instructor2.firstName,
+          CANONICAL_SMOKE_INSTRUCTORS.instructor2.lastName,
+        ),
+      isCanonicalNegative: namesMatch(
+        row.user.firstName,
+        row.user.lastName,
+        CANONICAL_SMOKE_INSTRUCTORS.instructorNonB.firstName,
+        CANONICAL_SMOKE_INSTRUCTORS.instructorNonB.lastName,
+      ),
     };
   });
 
@@ -909,7 +1043,10 @@ export async function inspectProductionSmokeReconciliation(
       emailRedacted: emailSource
         ? redactEmailRecipient(emailSource)
         : "[missing-email]",
-      displayName: displayName(row.firstName, row.lastName),
+      displayName: displayName(
+        row.firstName ?? row.user?.firstName,
+        row.lastName ?? row.user?.lastName,
+      ),
       categoryName: row.category?.name ?? null,
       appAccessMode: row.appAccessMode,
       hasLinkedUser: Boolean(row.userId && row.user),
@@ -918,6 +1055,32 @@ export async function inspectProductionSmokeReconciliation(
       eligible,
       suitability: eligible ? "eligible" : "ineligible",
       reasons,
+      observedProvenance: observeInviteProvenance({
+        userId: row.userId,
+        email: emailSource || null,
+        studentId: row.id,
+        invitations: acceptedInvitations,
+        expectedRole: "STUDENT",
+      }),
+      isCanonicalPositive:
+        namesMatch(
+          row.firstName ?? row.user?.firstName,
+          row.lastName ?? row.user?.lastName,
+          CANONICAL_SMOKE_STUDENTS.student1.firstName,
+          CANONICAL_SMOKE_STUDENTS.student1.lastName,
+        ) ||
+        namesMatch(
+          row.firstName ?? row.user?.firstName,
+          row.lastName ?? row.user?.lastName,
+          CANONICAL_SMOKE_STUDENTS.student2.firstName,
+          CANONICAL_SMOKE_STUDENTS.student2.lastName,
+        ),
+      isCanonicalNegative: namesMatch(
+        row.firstName ?? row.user?.firstName,
+        row.lastName ?? row.user?.lastName,
+        CANONICAL_SMOKE_STUDENTS.studentA1.firstName,
+        CANONICAL_SMOKE_STUDENTS.studentA1.lastName,
+      ),
     };
   });
 
@@ -943,6 +1106,12 @@ export async function inspectProductionSmokeReconciliation(
       underMaintenance: row.underMaintenance,
       eligible,
       reasons,
+      isCanonicalPositive: CANONICAL_SMOKE_VEHICLES.some(
+        (v) => !v.negative && v.registrationNumber === row.registrationNumber,
+      ),
+      isCanonicalNegative: CANONICAL_SMOKE_VEHICLES.some(
+        (v) => v.negative && v.registrationNumber === row.registrationNumber,
+      ),
     };
   });
 
@@ -991,44 +1160,48 @@ export async function inspectProductionSmokeReconciliation(
     );
   }
 
-  if (schoolAdminCandidates.length === 0) {
-    blockers.push("no_school_admin_candidates");
+  if (!canonicalSchoolAdminFound) {
+    blockers.push("canonical_school_admin_missing");
     humanDecisionsRequired.push(
-      "Provision or identify a School Admin (SUPER_ADMIN) for the smoke tenant.",
+      "Ensure School Admin display name is exactly Smoke Admin (or reconcile fixtures).",
     );
   } else if (schoolAdminCandidates.length > 1) {
-    warnings.push("multiple_school_admin_candidates_unselected");
-    humanDecisionsRequired.push(
-      "Choose which School Admin credential to place in the operator vault for DAT_SMOKE_ADMIN_*.",
-    );
+    warnings.push("additional_school_admins_informative_only");
   }
 
   const eligibleInstructors = instructorCandidates.filter((c) => c.eligible);
   const eligibleStudents = studentCandidates.filter((c) => c.eligible);
   const eligibleVehicles = vehicleCandidates.filter((c) => c.eligible);
+  const canonicalPositiveInstructorsReady =
+    instructorCandidates.filter((c) => c.isCanonicalPositive && c.eligible)
+      .length >= 2;
+  const canonicalPositiveStudentsReady =
+    studentCandidates.filter((c) => c.isCanonicalPositive && c.eligible)
+      .length >= 2;
+  const canonicalPositiveVehiclesReady =
+    vehicleCandidates.filter((c) => c.isCanonicalPositive && c.eligible)
+      .length >= 4;
+
+  if (!canonicalPositiveInstructorsReady) {
+    blockers.push("canonical_positive_instructors_incomplete");
+  }
+  if (!canonicalPositiveStudentsReady) {
+    blockers.push("canonical_positive_students_incomplete");
+  }
+  if (!canonicalPositiveVehiclesReady) {
+    blockers.push("canonical_positive_vehicles_incomplete");
+  }
 
   if (eligibleInstructors.length === 0) {
     blockers.push("no_eligible_instructor_candidates");
-  } else if (eligibleInstructors.length > 1) {
-    humanDecisionsRequired.push(
-      "Choose one eligible instructor User.id for DAT_SMOKE_INSTRUCTOR_USER_ID (full ID retrieval is a later approved operation).",
-    );
   }
 
   if (eligibleStudents.length === 0) {
     blockers.push("no_eligible_student_candidates");
-  } else if (eligibleStudents.length > 1) {
-    humanDecisionsRequired.push(
-      "Choose one eligible student for DAT_SMOKE_STUDENT_ID (full ID retrieval is a later approved operation).",
-    );
   }
 
   if (eligibleVehicles.length === 0) {
     blockers.push("no_eligible_vehicle_candidates");
-  } else if (eligibleVehicles.length > 1) {
-    humanDecisionsRequired.push(
-      "Choose one eligible vehicle for DAT_SMOKE_VEHICLE_ID (full ID retrieval is a later approved operation).",
-    );
   }
 
   if (anomalies.billingEventsWithNullOrganizationId > 0) {
@@ -1043,20 +1216,24 @@ export async function inspectProductionSmokeReconciliation(
     blockers.push("domain_not_ready");
   }
 
-  const hasSchoolAdmin = schoolAdminCandidates.length >= 1;
   const readOnlySmokePotentiallyReady =
-    organizationReady && domainReady && hasSchoolAdmin && requiredFeaturesReady;
+    organizationReady &&
+    domainReady &&
+    canonicalSchoolAdminFound &&
+    requiredFeaturesReady;
 
-  const mutationSmokePotentiallyReady =
+  const fixturesPotentiallyReady =
     readOnlySmokePotentiallyReady &&
     categoryB.ready &&
-    eligibleInstructors.length >= 1 &&
-    eligibleStudents.length >= 1 &&
-    eligibleVehicles.length >= 1;
+    canonicalPositiveInstructorsReady &&
+    canonicalPositiveStudentsReady &&
+    canonicalPositiveVehiclesReady;
 
-  if (!readOnlySmokePotentiallyReady) {
+  const mutationSmokePotentiallyReady = fixturesPotentiallyReady;
+
+  if (!fixturesPotentiallyReady) {
     humanDecisionsRequired.push(
-      "Do not run hosted smoke suites until blockers are resolved and credentials are rotated in the operator vault.",
+      "Do not run hosted smoke suites until blockers are resolved, fixtures are reconciled, and credentials are rotated in the operator vault.",
     );
   }
 
@@ -1098,13 +1275,18 @@ export async function inspectProductionSmokeReconciliation(
       organizationReady,
       domainReady,
       schoolAdminCandidateCount: schoolAdminCandidates.length,
+      canonicalSchoolAdminFound,
       categoryBReady: categoryB.ready,
       eligibleInstructorCandidateCount: eligibleInstructors.length,
       eligibleStudentCandidateCount: eligibleStudents.length,
       eligibleVehicleCandidateCount: eligibleVehicles.length,
       requiredFeaturesReady,
+      canonicalPositiveInstructorsReady,
+      canonicalPositiveStudentsReady,
+      canonicalPositiveVehiclesReady,
       readOnlySmokePotentiallyReady,
       mutationSmokePotentiallyReady,
+      fixturesPotentiallyReady,
       blockers,
       warnings,
       humanDecisionsRequired,

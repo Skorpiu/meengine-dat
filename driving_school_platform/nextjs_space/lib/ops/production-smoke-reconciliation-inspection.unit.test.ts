@@ -50,6 +50,7 @@ function makeDb(
     billingEvent: { count: zeroCount },
     verificationToken: { count: zeroCount },
     rateLimitBucket: { count: zeroCount },
+    userInvitation: { findMany: emptyFindMany },
     ...overrides,
   };
 }
@@ -205,7 +206,9 @@ describe("production-smoke-reconciliation-inspection", () => {
     });
     const result = await inspectProductionSmokeReconciliation(db);
     expect(result.schoolAdminCandidates).toEqual([]);
-    expect(result.readiness.blockers).toContain("no_school_admin_candidates");
+    expect(result.readiness.blockers).toContain(
+      "canonical_school_admin_missing",
+    );
   });
 
   it("leaves multiple School Admin candidates unselected", async () => {
@@ -239,7 +242,7 @@ describe("production-smoke-reconciliation-inspection", () => {
             id: "adminone000000001",
             email: "one@example.com",
             role: "SUPER_ADMIN",
-            firstName: "One",
+            firstName: "Smoke",
             lastName: "Admin",
             isApproved: true,
             isEmailVerified: true,
@@ -259,11 +262,10 @@ describe("production-smoke-reconciliation-inspection", () => {
     });
     const result = await inspectProductionSmokeReconciliation(db);
     expect(result.schoolAdminCandidates).toHaveLength(2);
-    expect(
-      result.readiness.humanDecisionsRequired.some((d) =>
-        d.includes("Choose which School Admin"),
-      ),
-    ).toBe(true);
+    expect(result.readiness.canonicalSchoolAdminFound).toBe(true);
+    expect(result.readiness.warnings).toContain(
+      "additional_school_admins_informative_only",
+    );
   });
 
   it("reports category B missing", async () => {
@@ -758,6 +760,7 @@ describe("production-smoke-reconciliation CLI source contract", () => {
       billingEvent: { count: vi.fn(), create: vi.fn() },
       verificationToken: { count: vi.fn(), create: vi.fn() },
       rateLimitBucket: { count: vi.fn(), create: vi.fn() },
+      userInvitation: { findMany: vi.fn(), create: vi.fn() },
     };
 
     const adapted = adaptPrismaToInspectionDb(
@@ -770,6 +773,7 @@ describe("production-smoke-reconciliation CLI source contract", () => {
     ]);
     expect(Object.keys(adapted.user).sort()).toEqual(["count", "findMany"]);
     expect(Object.keys(adapted.lesson).sort()).toEqual(["count"]);
+    expect(Object.keys(adapted.userInvitation).sort()).toEqual(["findMany"]);
     expect(adapted.organization).not.toHaveProperty("create");
     expect(adapted.organization).not.toHaveProperty("update");
     expect(adapted.organization).not.toHaveProperty("delete");
