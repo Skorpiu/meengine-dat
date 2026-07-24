@@ -38,6 +38,28 @@ export function formatSmokeFixturesReconcilePlanText(
   }
 
   lines.push("");
+  lines.push(`Additional Instructors: ${plan.additionalInstructors.length}`);
+  for (const row of plan.additionalInstructors) {
+    lines.push(
+      `  idPrefix=${row.idPrefix} email=${row.emailRedacted} name=${row.displayName} kind=${row.kind} preserved=${String(row.preserved)}`,
+    );
+  }
+
+  lines.push("");
+  lines.push(`Additional Students: ${plan.additionalStudents.length}`);
+  for (const row of plan.additionalStudents) {
+    lines.push(
+      `  idPrefix=${row.idPrefix} email=${row.emailRedacted} name=${row.displayName} kind=${row.kind} preserved=${String(row.preserved)}`,
+    );
+  }
+
+  lines.push("");
+  lines.push(`Human decisions required: ${plan.humanDecisionsRequired.length}`);
+  for (const decision of plan.humanDecisionsRequired) {
+    lines.push(`  ${decision}`);
+  }
+
+  lines.push("");
   lines.push("Features (smoke tenant overrides only)");
   for (const feature of plan.features) {
     lines.push(

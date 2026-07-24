@@ -405,6 +405,19 @@ async function runDestructiveLocalSeed(
     }),
     prisma.user.create({
       data: {
+        email: "sarah.williams@drivingschool.com",
+        organizationId: orgId,
+        passwordHash: await bcrypt.hash("instructor123", 12),
+        role: "INSTRUCTOR" as any,
+        firstName: "Sarah",
+        lastName: "Williams",
+        phoneNumber: "+1-555-0204",
+        isEmailVerified: true,
+        isApproved: true,
+      },
+    }),
+    prisma.user.create({
+      data: {
         email: "smoke.instructor.nonb@drivingschool.com",
         organizationId: orgId,
         passwordHash: await bcrypt.hash("instructor123", 12),
@@ -447,7 +460,7 @@ async function runDestructiveLocalSeed(
       data: {
         userId: instructorUsers[1].id,
         organizationId: orgId,
-        instructorLicenseNumber: "INS-002-2024",
+        instructorLicenseNumber: "INS-SMOKE-INVITE-2",
         instructorLicenseExpiry: new Date("2099-12-31"),
         employmentType: "FULL_TIME",
         hourlyRate: 42.0,
@@ -471,6 +484,30 @@ async function runDestructiveLocalSeed(
     prisma.instructor.create({
       data: {
         userId: instructorUsers[2].id,
+        organizationId: orgId,
+        instructorLicenseNumber: "INS-002-2024",
+        instructorLicenseExpiry: new Date("2099-12-31"),
+        employmentType: "FULL_TIME",
+        hourlyRate: 41.0,
+        maxLessonsPerDay: 8,
+        isAvailableForBooking: true,
+        specializations: "Preserved additional instructor fixture",
+        qualifiedCategories: {
+          connect: createdCategories
+            .filter((c) => ["B"].includes(c.name))
+            .map((c) => ({ id: c.id })),
+        },
+        qualifiedTransmissionTypes: {
+          connect: [
+            { id: manualTransmission.id },
+            { id: automaticTransmission.id },
+          ],
+        },
+      },
+    }),
+    prisma.instructor.create({
+      data: {
+        userId: instructorUsers[3].id,
         organizationId: orgId,
         instructorLicenseNumber: "INS-003-2024",
         instructorLicenseExpiry: new Date("2099-12-31"),
@@ -532,6 +569,23 @@ async function runDestructiveLocalSeed(
     }),
     prisma.user.create({
       data: {
+        email: "bob.wilson@email.com",
+        organizationId: orgId,
+        passwordHash: await bcrypt.hash("student123", 12),
+        role: "STUDENT" as any,
+        firstName: "Bob",
+        lastName: "Wilson",
+        phoneNumber: "+1-555-0304",
+        dateOfBirth: new Date("1999-03-12"),
+        address: "321 Elm St",
+        city: "Springfield",
+        postalCode: "12348",
+        isEmailVerified: true,
+        isApproved: true,
+      },
+    }),
+    prisma.user.create({
+      data: {
         email: "smoke.student.a1@email.com",
         organizationId: orgId,
         passwordHash: await bcrypt.hash("student123", 12),
@@ -581,7 +635,7 @@ async function runDestructiveLocalSeed(
         lastName: "Student 2",
         email: "smoke.student2@email.com",
         studentNumber: 2,
-        studentIdNumber: "STU-002-2024",
+        studentIdNumber: "STU-SMOKE-INVITE-2",
         categoryId: categoryB?.id,
         transmissionTypeId: manualTransmission.id,
         appAccessMode: "APP_USER",
@@ -595,6 +649,25 @@ async function runDestructiveLocalSeed(
     prisma.student.create({
       data: {
         userId: studentUsers[2].id,
+        organizationId: orgId,
+        firstName: "Bob",
+        lastName: "Wilson",
+        email: "bob.wilson@email.com",
+        studentNumber: 4,
+        studentIdNumber: "STU-002-2024",
+        categoryId: categoryB?.id,
+        transmissionTypeId: manualTransmission.id,
+        appAccessMode: "APP_USER",
+        emergencyContactName: "Pat Wilson",
+        emergencyContactPhone: "+1-555-0404",
+        emergencyContactRelationship: "Parent",
+        preferredInstructorId: instructors[0].id,
+        preferredLessonTime: "afternoon",
+      },
+    }),
+    prisma.student.create({
+      data: {
+        userId: studentUsers[3].id,
         organizationId: orgId,
         firstName: "Smoke",
         lastName: "Student A1",
@@ -616,8 +689,8 @@ async function runDestructiveLocalSeed(
 
   console.log(`✅ Created ${students.length} students`);
 
-  // Observable invite provenance for Instructor 2 / Student 2 (post-accept artifact).
-  // Local seed cannot run outbound invite email; rows mirror fields left by acceptInvitation.
+  // Observable invite provenance for Smoke Instructor 2 / Smoke Student 2 only.
+  // Local seed simulates post-accept without sending email. Sarah/Bob have no ACCEPTED invites.
   const { generateInvitationToken, hashInvitationToken } = await import(
     "@/lib/invitations/invitation-token-service"
   );
@@ -633,7 +706,7 @@ async function runDestructiveLocalSeed(
       acceptedAt: now,
       acceptedUserId: instructorUsers[1].id,
       createdByUserId: superAdmin.id,
-      instructorLicenseNumber: "INS-002-2024",
+      instructorLicenseNumber: "INS-SMOKE-INVITE-2",
       instructorLicenseExpiry: new Date("2099-12-31"),
     },
   });
@@ -652,7 +725,7 @@ async function runDestructiveLocalSeed(
     },
   });
   console.log(
-    "✅ Seeded ACCEPTED invitation provenance for Smoke Instructor 2 and Smoke Student 2",
+    "✅ Seeded ACCEPTED invitation provenance for Smoke Instructor 2 and Smoke Student 2 (local post-accept simulation; no email sent)",
   );
 
   // 7. Create Sample Vehicles

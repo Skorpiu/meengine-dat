@@ -71,22 +71,27 @@ pnpm ops:reconcile-production-smoke-fixtures -- --apply
 - `DATABASE_URL` (`postgresql:` / `postgres:` only)
 - Optional: `DIRECT_URL` (same project/database)
 - Optional operator-only: `DAT_SMOKE_EXPECTED_ADMIN_EMAIL` (exact match; never log full value; never commit real values)
+- Optional operator-only invite fixtures (exact match; never log full values; never commit real values):
+  - `DAT_SMOKE_INVITED_INSTRUCTOR_EMAIL` — Smoke Instructor 2 (ACCEPTED invitation required)
+  - `DAT_SMOKE_INVITED_STUDENT_EMAIL` — Smoke Student 2 (ACCEPTED invitation required)
 
 Operator secrets live in `.env.operator.production.local` (gitignored via `.env*`). Load it only through `node --env-file=...` as shown above.
 
 ## Canonical fixtures (names — not IDs)
 
-| Fixture                 | Notes                                                                              |
-| ----------------------- | ---------------------------------------------------------------------------------- |
-| Smoke Admin             | Canonical School Admin (`SUPER_ADMIN`)                                             |
-| John Doe                | Additional admin — preserve; do not delete without dependency audit                |
-| Smoke Instructor 1      | Intended manual (seed); remote observed provenance = invite \| unknown             |
-| Smoke Instructor 2      | Intended invite; observed `invite` only when ACCEPTED `UserInvitation` is coherent |
-| Smoke Instructor Non-B  | Negative fixture (no category B)                                                   |
-| Smoke Student 1         | Intended manual (seed); remote observed = invite \| unknown                        |
-| Smoke Student 2         | Intended invite; observed when ACCEPTED invitation is coherent                     |
-| Smoke Student A1        | Negative fixture (category A1)                                                     |
-| `01-DS-24` … `05-DS-24` | Plates; `03-DS-24` is A1 negative                                                  |
+| Fixture                 | Notes                                                                                                                                            |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Smoke Admin             | Canonical School Admin (`SUPER_ADMIN`)                                                                                                           |
+| John Doe                | Additional admin — preserve; do not delete without dependency audit                                                                              |
+| Smoke Instructor 1      | Intended manual (seed); remote observed provenance = invite \| unknown                                                                           |
+| Smoke Instructor 2      | Intended invite; resolved only via `DAT_SMOKE_INVITED_INSTRUCTOR_EMAIL` + coherent ACCEPTED invitation — **never** Sarah Williams / INS-002-2024 |
+| Smoke Instructor Non-B  | Negative fixture (no category B)                                                                                                                 |
+| Smoke Student 1         | Intended manual (seed); remote observed = invite \| unknown                                                                                      |
+| Smoke Student 2         | Intended invite; resolved only via `DAT_SMOKE_INVITED_STUDENT_EMAIL` + coherent ACCEPTED invitation — **never** Bob Wilson / STU-002-2024        |
+| Smoke Student A1        | Negative fixture (category A1)                                                                                                                   |
+| Sarah Williams          | Preserved additional instructor (INS-002-2024) — not renamed to Smoke Instructor 2                                                               |
+| Bob Wilson              | Preserved additional student (STU-002-2024) — not renamed to Smoke Student 2                                                                     |
+| `01-DS-24` … `05-DS-24` | Plates; `03-DS-24` is A1 negative                                                                                                                |
 
 Smoke-required feature overrides (tenant-only): `LESSON_MANAGEMENT`, `VEHICLE_MANAGEMENT`, `STUDENT_ACCESS`.
 
@@ -105,11 +110,11 @@ Smoke-required feature overrides (tenant-only): `LESSON_MANAGEMENT`, `VEHICLE_MA
 
 Observed states: `invite` | `manual` | `unknown`.
 
-- `invite` — only with observable coherent ACCEPTED `UserInvitation` (email / `acceptedUserId` / `studentId`).
+- `invite` — only for Smoke Instructor 2 / Smoke Student 2 when a coherent ACCEPTED `UserInvitation` matches the operator-only exact email (`DAT_SMOKE_INVITED_INSTRUCTOR_EMAIL` / `DAT_SMOKE_INVITED_STUDENT_EMAIL`).
 - `manual` — only when provenance is deterministically known (e.g. local seed created by DAT seed code).
-- `unknown` — no accepted invite and no explicit manual evidence (typical remote residual).
+- `unknown` — no accepted invite and no explicit manual evidence (typical remote residual for legacy manual fixtures).
 
-Remote reconcile **never** invents `manual` from a missing invite row, and does **not** fabricate invitations. Readiness may warn on `unknown`; it must not fail solely for that reason.
+Remote reconcile **never** invents `manual` from a missing invite row, and does **not** fabricate invitations or send email. Missing invite fixtures are **blockers** (`canonical_invited_instructor_missing` / `canonical_invited_student_missing`) until the operator sends invites, accepts them, and re-runs dry-run. Sarah Williams and Bob Wilson remain preserved additional fixtures.
 
 ## Related
 

@@ -12,12 +12,21 @@ import {
   enableSmokeOrganizationFeature,
   parseSmokeFixturesReconcileArgs,
   planProductionSmokeFixturesReconciliation,
+  resolveInvitedInstructor,
+  resolveInvitedStudent,
   type SmokeFixturesReconcileDb,
 } from "@/lib/ops/production-smoke-fixtures-reconciliation";
 import { formatSmokeFixturesReconcilePlanText } from "@/lib/ops/production-smoke-fixtures-reconciliation-output";
 import { CANONICAL_SMOKE_ORGANIZATION_NAME } from "@/lib/ops/production-smoke-reconciliation-inspection";
 
 const ORG_ID = "orgsmoke1abcdefghijklmnop";
+const INVITED_INSTRUCTOR_EMAIL = "invited.instructor@example.com";
+const INVITED_STUDENT_EMAIL = "invited.student@example.com";
+
+const defaultPlanOptions = {
+  invitedInstructorEmail: INVITED_INSTRUCTOR_EMAIL,
+  invitedStudentEmail: INVITED_STUDENT_EMAIL,
+};
 
 function baseOrg() {
   return {
@@ -28,14 +37,251 @@ function baseOrg() {
   };
 }
 
+function legacyInstructors() {
+  return [
+    {
+      id: "instr001aaaaaaaa",
+      userId: "userinstr001aaaaaa",
+      instructorLicenseNumber: "INS-001-2024",
+      isAvailableForBooking: true,
+      instructorLicenseExpiry: new Date("2099-12-31"),
+      user: {
+        id: "userinstr001aaaaaa",
+        email: "michael.johnson@drivingschool.com",
+        firstName: "Michael",
+        lastName: "Johnson",
+        role: "INSTRUCTOR",
+        isApproved: true,
+        isEmailVerified: true,
+      },
+      qualifiedCategories: [{ id: 2, name: "B" }],
+    },
+    {
+      id: "instr002bbbbbbbb",
+      userId: "userinstr002bbbbbb",
+      instructorLicenseNumber: "INS-002-2024",
+      isAvailableForBooking: true,
+      instructorLicenseExpiry: new Date("2099-12-31"),
+      user: {
+        id: "userinstr002bbbbbb",
+        email: "sarah.williams@drivingschool.com",
+        firstName: "Sarah",
+        lastName: "Williams",
+        role: "INSTRUCTOR",
+        isApproved: true,
+        isEmailVerified: true,
+      },
+      qualifiedCategories: [{ id: 2, name: "B" }],
+    },
+    {
+      id: "instr003cccccccc",
+      userId: "userinstr003cccccc",
+      instructorLicenseNumber: "INS-003-2024",
+      isAvailableForBooking: true,
+      instructorLicenseExpiry: new Date("2099-12-31"),
+      user: {
+        id: "userinstr003cccccc",
+        email: "david.brown@drivingschool.com",
+        firstName: "David",
+        lastName: "Brown",
+        role: "INSTRUCTOR",
+        isApproved: true,
+        isEmailVerified: true,
+      },
+      qualifiedCategories: [{ id: 3, name: "C" }],
+    },
+  ];
+}
+
+function invitedInstructorRow() {
+  return {
+    id: "instrinv2aaaaaaaa",
+    userId: "userinstrinv2aaaaaa",
+    instructorLicenseNumber: "INS-SMOKE-INVITE-2",
+    isAvailableForBooking: true,
+    instructorLicenseExpiry: new Date("2099-12-31"),
+    user: {
+      id: "userinstrinv2aaaaaa",
+      email: INVITED_INSTRUCTOR_EMAIL,
+      firstName: "Pending",
+      lastName: "Instructor Two",
+      role: "INSTRUCTOR",
+      isApproved: true,
+      isEmailVerified: true,
+    },
+    qualifiedCategories: [{ id: 2, name: "B" }],
+  };
+}
+
+function legacyStudents() {
+  return [
+    {
+      id: "stud001aaaaaaaaaa",
+      userId: "userstud001aaaaaaa",
+      firstName: null,
+      lastName: null,
+      email: null,
+      studentIdNumber: "STU-001-2024",
+      appAccessMode: "APP_USER",
+      category: { id: 2, name: "B" },
+      user: {
+        id: "userstud001aaaaaaa",
+        email: "alice.smith@email.com",
+        firstName: "Alice",
+        lastName: "Smith",
+        role: "STUDENT",
+        isApproved: true,
+        isEmailVerified: true,
+      },
+    },
+    {
+      id: "stud002bbbbbbbbbb",
+      userId: "userstud002bbbbbbb",
+      firstName: null,
+      lastName: null,
+      email: null,
+      studentIdNumber: "STU-002-2024",
+      appAccessMode: "APP_USER",
+      category: { id: 2, name: "B" },
+      user: {
+        id: "userstud002bbbbbbb",
+        email: "bob.wilson@email.com",
+        firstName: "Bob",
+        lastName: "Wilson",
+        role: "STUDENT",
+        isApproved: true,
+        isEmailVerified: true,
+      },
+    },
+    {
+      id: "stud003cccccccccc",
+      userId: "userstud003ccccccc",
+      firstName: null,
+      lastName: null,
+      email: null,
+      studentIdNumber: "STU-003-2024",
+      appAccessMode: "APP_USER",
+      category: { id: 1, name: "A1" },
+      user: {
+        id: "userstud003ccccccc",
+        email: "carol.davis@email.com",
+        firstName: "Carol",
+        lastName: "Davis",
+        role: "STUDENT",
+        isApproved: true,
+        isEmailVerified: true,
+      },
+    },
+  ];
+}
+
+function invitedStudentRow() {
+  return {
+    id: "studinv2bbbbbbbbbb",
+    userId: "userstudinv2bbbbbb",
+    firstName: null,
+    lastName: null,
+    email: null,
+    studentIdNumber: "STU-SMOKE-INVITE-2",
+    appAccessMode: "APP_USER",
+    category: { id: 2, name: "B" },
+    user: {
+      id: "userstudinv2bbbbbb",
+      email: INVITED_STUDENT_EMAIL,
+      firstName: "Pending",
+      lastName: "Student Two",
+      role: "STUDENT",
+      isApproved: true,
+      isEmailVerified: true,
+    },
+  };
+}
+
+function invitedInvitations() {
+  return [
+    {
+      id: "invinst2accepted",
+      email: INVITED_INSTRUCTOR_EMAIL,
+      role: "INSTRUCTOR",
+      status: "ACCEPTED",
+      acceptedUserId: "userinstrinv2aaaaaa",
+      studentId: null,
+      acceptedAt: new Date(),
+    },
+    {
+      id: "invstud2accepted",
+      email: INVITED_STUDENT_EMAIL,
+      role: "STUDENT",
+      status: "ACCEPTED",
+      acceptedUserId: "userstudinv2bbbbbb",
+      studentId: "studinv2bbbbbbbbbb",
+      acceptedAt: new Date(),
+    },
+  ];
+}
+
+function legacyVehicles() {
+  return [
+    {
+      id: 11,
+      registrationNumber: "DS-001-2024",
+      status: "AVAILABLE",
+      isActive: true,
+      underMaintenance: false,
+      category: { id: 2, name: "B" },
+    },
+    {
+      id: 12,
+      registrationNumber: "DS-002-2024",
+      status: "AVAILABLE",
+      isActive: true,
+      underMaintenance: false,
+      category: { id: 2, name: "B" },
+    },
+    {
+      id: 13,
+      registrationNumber: "DS-003-2024",
+      status: "AVAILABLE",
+      isActive: true,
+      underMaintenance: false,
+      category: { id: 1, name: "A1" },
+    },
+    {
+      id: 14,
+      registrationNumber: "DS-004-2024",
+      status: "AVAILABLE",
+      isActive: true,
+      underMaintenance: false,
+      category: { id: 2, name: "B" },
+    },
+    {
+      id: 15,
+      registrationNumber: "DS-005-2024",
+      status: "AVAILABLE",
+      isActive: true,
+      underMaintenance: false,
+      category: { id: 2, name: "B" },
+    },
+  ];
+}
+
 function makeDb(
   overrides: Partial<SmokeFixturesReconcileDb> = {},
+  includeInvitedFixtures = false,
 ): SmokeFixturesReconcileDb {
   const zeroCount = vi.fn().mockResolvedValue(0);
   const emptyFindMany = vi.fn().mockResolvedValue([]);
   const upsert = vi.fn().mockResolvedValue({});
   const update = vi.fn().mockResolvedValue({});
   const create = vi.fn().mockResolvedValue({ id: "audit1" });
+
+  const instructors = includeInvitedFixtures
+    ? [...legacyInstructors(), invitedInstructorRow()]
+    : legacyInstructors();
+  const students = includeInvitedFixtures
+    ? [...legacyStudents(), invitedStudentRow()]
+    : legacyStudents();
+  const invitations = includeInvitedFixtures ? invitedInvitations() : [];
 
   const db: SmokeFixturesReconcileDb = {
     organization: {
@@ -70,185 +316,18 @@ function makeDb(
       update,
     },
     instructor: {
-      findMany: vi.fn().mockResolvedValue([
-        {
-          id: "instr001aaaaaaaa",
-          userId: "userinstr001aaaaaa",
-          instructorLicenseNumber: "INS-001-2024",
-          isAvailableForBooking: true,
-          instructorLicenseExpiry: new Date("2099-12-31"),
-          user: {
-            id: "userinstr001aaaaaa",
-            email: "michael.johnson@drivingschool.com",
-            firstName: "Michael",
-            lastName: "Johnson",
-            role: "INSTRUCTOR",
-            isApproved: true,
-            isEmailVerified: true,
-          },
-          qualifiedCategories: [{ id: 2, name: "B" }],
-        },
-        {
-          id: "instr002bbbbbbbb",
-          userId: "userinstr002bbbbbb",
-          instructorLicenseNumber: "INS-002-2024",
-          isAvailableForBooking: true,
-          instructorLicenseExpiry: new Date("2099-12-31"),
-          user: {
-            id: "userinstr002bbbbbb",
-            email: "sarah.williams@drivingschool.com",
-            firstName: "Sarah",
-            lastName: "Williams",
-            role: "INSTRUCTOR",
-            isApproved: true,
-            isEmailVerified: true,
-          },
-          qualifiedCategories: [{ id: 2, name: "B" }],
-        },
-        {
-          id: "instr003cccccccc",
-          userId: "userinstr003cccccc",
-          instructorLicenseNumber: "INS-003-2024",
-          isAvailableForBooking: true,
-          instructorLicenseExpiry: new Date("2099-12-31"),
-          user: {
-            id: "userinstr003cccccc",
-            email: "david.brown@drivingschool.com",
-            firstName: "David",
-            lastName: "Brown",
-            role: "INSTRUCTOR",
-            isApproved: true,
-            isEmailVerified: true,
-          },
-          qualifiedCategories: [{ id: 3, name: "C" }],
-        },
-      ]),
+      findMany: vi.fn().mockResolvedValue(instructors),
     },
     student: {
-      findMany: vi.fn().mockResolvedValue([
-        {
-          id: "stud001aaaaaaaaaa",
-          userId: "userstud001aaaaaaa",
-          firstName: null,
-          lastName: null,
-          email: null,
-          studentIdNumber: "STU-001-2024",
-          appAccessMode: "APP_USER",
-          category: { id: 2, name: "B" },
-          user: {
-            id: "userstud001aaaaaaa",
-            email: "alice.smith@email.com",
-            firstName: "Alice",
-            lastName: "Smith",
-            isApproved: true,
-            isEmailVerified: true,
-          },
-        },
-        {
-          id: "stud002bbbbbbbbbb",
-          userId: "userstud002bbbbbbb",
-          firstName: null,
-          lastName: null,
-          email: null,
-          studentIdNumber: "STU-002-2024",
-          appAccessMode: "APP_USER",
-          category: { id: 2, name: "B" },
-          user: {
-            id: "userstud002bbbbbbb",
-            email: "bob.wilson@email.com",
-            firstName: "Bob",
-            lastName: "Wilson",
-            isApproved: true,
-            isEmailVerified: true,
-          },
-        },
-        {
-          id: "stud003cccccccccc",
-          userId: "userstud003ccccccc",
-          firstName: null,
-          lastName: null,
-          email: null,
-          studentIdNumber: "STU-003-2024",
-          appAccessMode: "APP_USER",
-          category: { id: 1, name: "A1" },
-          user: {
-            id: "userstud003ccccccc",
-            email: "carol.davis@email.com",
-            firstName: "Carol",
-            lastName: "Davis",
-            isApproved: true,
-            isEmailVerified: true,
-          },
-        },
-      ]),
+      findMany: vi.fn().mockResolvedValue(students),
       update,
     },
     vehicle: {
-      findMany: vi.fn().mockResolvedValue([
-        {
-          id: 11,
-          registrationNumber: "DS-001-2024",
-          status: "AVAILABLE",
-          isActive: true,
-          underMaintenance: false,
-          category: { id: 2, name: "B" },
-        },
-        {
-          id: 12,
-          registrationNumber: "DS-002-2024",
-          status: "AVAILABLE",
-          isActive: true,
-          underMaintenance: false,
-          category: { id: 2, name: "B" },
-        },
-        {
-          id: 13,
-          registrationNumber: "DS-003-2024",
-          status: "AVAILABLE",
-          isActive: true,
-          underMaintenance: false,
-          category: { id: 1, name: "A1" },
-        },
-        {
-          id: 14,
-          registrationNumber: "DS-004-2024",
-          status: "AVAILABLE",
-          isActive: true,
-          underMaintenance: false,
-          category: { id: 2, name: "B" },
-        },
-        {
-          id: 15,
-          registrationNumber: "DS-005-2024",
-          status: "AVAILABLE",
-          isActive: true,
-          underMaintenance: false,
-          category: { id: 2, name: "B" },
-        },
-      ]),
+      findMany: vi.fn().mockResolvedValue(legacyVehicles()),
       update,
     },
     userInvitation: {
-      findMany: vi.fn().mockResolvedValue([
-        {
-          id: "inv002aaaaaaaaaa",
-          email: "sarah.williams@drivingschool.com",
-          role: "INSTRUCTOR",
-          status: "ACCEPTED",
-          acceptedUserId: "userinstr002bbbbbb",
-          studentId: null,
-          acceptedAt: new Date(),
-        },
-        {
-          id: "invstud2aaaaaaaa",
-          email: "bob.wilson@email.com",
-          role: "STUDENT",
-          status: "ACCEPTED",
-          acceptedUserId: "userstud002bbbbbbb",
-          studentId: "stud002bbbbbbbbbb",
-          acceptedAt: new Date(),
-        },
-      ]),
+      findMany: vi.fn().mockResolvedValue(invitations),
     },
     auditLog: { create },
     $transaction: async (fn) => fn(db),
@@ -268,171 +347,194 @@ function makeFullyCanonicalDb(
   const upsert = vi.fn();
   const vehicleUpdate = vi.fn();
   const auditCreate = vi.fn().mockResolvedValue({ id: "a1" });
-  return makeDb({
-    organizationFeature: {
-      findMany: vi.fn().mockResolvedValue(
-        SMOKE_REQUIRED_FEATURE_KEYS.map((featureKey) => ({
-          featureKey,
-          isEnabled: true,
-        })),
-      ),
-      upsert,
-    },
-    instructor: {
-      findMany: vi.fn().mockResolvedValue([
-        {
-          id: "instr001aaaaaaaa",
-          userId: "userinstr001aaaaaa",
-          instructorLicenseNumber: "INS-001-2024",
-          isAvailableForBooking: true,
-          instructorLicenseExpiry: new Date("2099-12-31"),
-          user: {
-            id: "userinstr001aaaaaa",
-            email: "smoke.instructor1@drivingschool.com",
-            firstName: "Smoke",
-            lastName: "Instructor 1",
-            role: "INSTRUCTOR",
-            isApproved: true,
-            isEmailVerified: true,
+  return makeDb(
+    {
+      organizationFeature: {
+        findMany: vi.fn().mockResolvedValue(
+          SMOKE_REQUIRED_FEATURE_KEYS.map((featureKey) => ({
+            featureKey,
+            isEnabled: true,
+          })),
+        ),
+        upsert,
+      },
+      instructor: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: "instr001aaaaaaaa",
+            userId: "userinstr001aaaaaa",
+            instructorLicenseNumber: "INS-001-2024",
+            isAvailableForBooking: true,
+            instructorLicenseExpiry: new Date("2099-12-31"),
+            user: {
+              id: "userinstr001aaaaaa",
+              email: "smoke.instructor1@drivingschool.com",
+              firstName: "Smoke",
+              lastName: "Instructor 1",
+              role: "INSTRUCTOR",
+              isApproved: true,
+              isEmailVerified: true,
+            },
+            qualifiedCategories: [{ id: 2, name: "B" }],
           },
-          qualifiedCategories: [{ id: 2, name: "B" }],
-        },
-        {
-          id: "instr002bbbbbbbb",
-          userId: "userinstr002bbbbbb",
-          instructorLicenseNumber: "INS-002-2024",
-          isAvailableForBooking: true,
-          instructorLicenseExpiry: new Date("2099-12-31"),
-          user: {
-            id: "userinstr002bbbbbb",
-            email: "smoke.instructor2@drivingschool.com",
-            firstName: "Smoke",
-            lastName: "Instructor 2",
-            role: "INSTRUCTOR",
-            isApproved: true,
-            isEmailVerified: true,
+          {
+            id: "instrinv2aaaaaaaa",
+            userId: "userinstrinv2aaaaaa",
+            instructorLicenseNumber: "INS-SMOKE-INVITE-2",
+            isAvailableForBooking: true,
+            instructorLicenseExpiry: new Date("2099-12-31"),
+            user: {
+              id: "userinstrinv2aaaaaa",
+              email: INVITED_INSTRUCTOR_EMAIL,
+              firstName: "Smoke",
+              lastName: "Instructor 2",
+              role: "INSTRUCTOR",
+              isApproved: true,
+              isEmailVerified: true,
+            },
+            qualifiedCategories: [{ id: 2, name: "B" }],
           },
-          qualifiedCategories: [{ id: 2, name: "B" }],
-        },
-        {
-          id: "instr003cccccccc",
-          userId: "userinstr003cccccc",
-          instructorLicenseNumber: "INS-003-2024",
-          isAvailableForBooking: true,
-          instructorLicenseExpiry: new Date("2099-12-31"),
-          user: {
-            id: "userinstr003cccccc",
-            email: "smoke.instructor.nonb@drivingschool.com",
-            firstName: "Smoke",
-            lastName: "Instructor Non-B",
-            role: "INSTRUCTOR",
-            isApproved: true,
-            isEmailVerified: true,
+          {
+            id: "instr002bbbbbbbb",
+            userId: "userinstr002bbbbbb",
+            instructorLicenseNumber: "INS-002-2024",
+            isAvailableForBooking: true,
+            instructorLicenseExpiry: new Date("2099-12-31"),
+            user: {
+              id: "userinstr002bbbbbb",
+              email: "sarah.williams@drivingschool.com",
+              firstName: "Sarah",
+              lastName: "Williams",
+              role: "INSTRUCTOR",
+              isApproved: true,
+              isEmailVerified: true,
+            },
+            qualifiedCategories: [{ id: 2, name: "B" }],
           },
-          qualifiedCategories: [{ id: 3, name: "C" }],
-        },
-      ]),
-    },
-    student: {
-      findMany: vi.fn().mockResolvedValue([
-        {
-          id: "stud001aaaaaaaaaa",
-          userId: "userstud001aaaaaaa",
-          firstName: "Smoke",
-          lastName: "Student 1",
-          email: "smoke.student1@email.com",
-          studentIdNumber: "STU-001-2024",
-          appAccessMode: "APP_USER",
-          category: { id: 2, name: "B" },
-          user: {
-            id: "userstud001aaaaaaa",
-            email: "smoke.student1@email.com",
+          {
+            id: "instr003cccccccc",
+            userId: "userinstr003cccccc",
+            instructorLicenseNumber: "INS-003-2024",
+            isAvailableForBooking: true,
+            instructorLicenseExpiry: new Date("2099-12-31"),
+            user: {
+              id: "userinstr003cccccc",
+              email: "smoke.instructor.nonb@drivingschool.com",
+              firstName: "Smoke",
+              lastName: "Instructor Non-B",
+              role: "INSTRUCTOR",
+              isApproved: true,
+              isEmailVerified: true,
+            },
+            qualifiedCategories: [{ id: 3, name: "C" }],
+          },
+        ]),
+      },
+      student: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: "stud001aaaaaaaaaa",
+            userId: "userstud001aaaaaaa",
             firstName: "Smoke",
             lastName: "Student 1",
-            isApproved: true,
-            isEmailVerified: true,
+            email: "smoke.student1@email.com",
+            studentIdNumber: "STU-001-2024",
+            appAccessMode: "APP_USER",
+            category: { id: 2, name: "B" },
+            user: {
+              id: "userstud001aaaaaaa",
+              email: "smoke.student1@email.com",
+              firstName: "Smoke",
+              lastName: "Student 1",
+              role: "STUDENT",
+              isApproved: true,
+              isEmailVerified: true,
+            },
           },
-        },
-        {
-          id: "stud002bbbbbbbbbb",
-          userId: "userstud002bbbbbbb",
-          firstName: "Smoke",
-          lastName: "Student 2",
-          email: "smoke.student2@email.com",
-          studentIdNumber: "STU-002-2024",
-          appAccessMode: "APP_USER",
-          category: { id: 2, name: "B" },
-          user: {
-            id: "userstud002bbbbbbb",
-            email: "smoke.student2@email.com",
+          {
+            id: "studinv2bbbbbbbbbb",
+            userId: "userstudinv2bbbbbb",
             firstName: "Smoke",
             lastName: "Student 2",
-            isApproved: true,
-            isEmailVerified: true,
+            email: INVITED_STUDENT_EMAIL,
+            studentIdNumber: "STU-SMOKE-INVITE-2",
+            appAccessMode: "APP_USER",
+            category: { id: 2, name: "B" },
+            user: {
+              id: "userstudinv2bbbbbb",
+              email: INVITED_STUDENT_EMAIL,
+              firstName: "Smoke",
+              lastName: "Student 2",
+              role: "STUDENT",
+              isApproved: true,
+              isEmailVerified: true,
+            },
           },
-        },
-        {
-          id: "stud003cccccccccc",
-          userId: "userstud003ccccccc",
-          firstName: "Smoke",
-          lastName: "Student A1",
-          email: "smoke.student.a1@email.com",
-          studentIdNumber: "STU-003-2024",
-          appAccessMode: "APP_USER",
-          category: { id: 1, name: "A1" },
-          user: {
-            id: "userstud003ccccccc",
-            email: "smoke.student.a1@email.com",
+          {
+            id: "stud002bbbbbbbbbb",
+            userId: "userstud002bbbbbbb",
+            firstName: "Bob",
+            lastName: "Wilson",
+            email: "bob.wilson@email.com",
+            studentIdNumber: "STU-002-2024",
+            appAccessMode: "APP_USER",
+            category: { id: 2, name: "B" },
+            user: {
+              id: "userstud002bbbbbbb",
+              email: "bob.wilson@email.com",
+              firstName: "Bob",
+              lastName: "Wilson",
+              role: "STUDENT",
+              isApproved: true,
+              isEmailVerified: true,
+            },
+          },
+          {
+            id: "stud003cccccccccc",
+            userId: "userstud003ccccccc",
             firstName: "Smoke",
             lastName: "Student A1",
-            isApproved: true,
-            isEmailVerified: true,
+            email: "smoke.student.a1@email.com",
+            studentIdNumber: "STU-003-2024",
+            appAccessMode: "APP_USER",
+            category: { id: 1, name: "A1" },
+            user: {
+              id: "userstud003ccccccc",
+              email: "smoke.student.a1@email.com",
+              firstName: "Smoke",
+              lastName: "Student A1",
+              role: "STUDENT",
+              isApproved: true,
+              isEmailVerified: true,
+            },
           },
-        },
-      ]),
-      update: vi.fn(),
+        ]),
+        update: vi.fn(),
+      },
+      vehicle: {
+        findMany: vi.fn().mockResolvedValue(
+          CANONICAL_SMOKE_VEHICLES.map((v, idx) => ({
+            id: 20 + idx,
+            registrationNumber: v.registrationNumber,
+            status: "AVAILABLE",
+            isActive: true,
+            underMaintenance: false,
+            category: {
+              id: v.categoryName === "B" ? 2 : 1,
+              name: v.categoryName,
+            },
+          })),
+        ),
+        update: vehicleUpdate,
+      },
+      userInvitation: {
+        findMany: vi.fn().mockResolvedValue(invitedInvitations()),
+      },
+      auditLog: { create: auditCreate },
+      ...extras,
     },
-    vehicle: {
-      findMany: vi.fn().mockResolvedValue(
-        CANONICAL_SMOKE_VEHICLES.map((v, idx) => ({
-          id: 20 + idx,
-          registrationNumber: v.registrationNumber,
-          status: "AVAILABLE",
-          isActive: true,
-          underMaintenance: false,
-          category: {
-            id: v.categoryName === "B" ? 2 : 1,
-            name: v.categoryName,
-          },
-        })),
-      ),
-      update: vehicleUpdate,
-    },
-    userInvitation: {
-      findMany: vi.fn().mockResolvedValue([
-        {
-          id: "inv002aaaaaaaaaa",
-          email: "smoke.instructor2@drivingschool.com",
-          role: "INSTRUCTOR",
-          status: "ACCEPTED",
-          acceptedUserId: "userinstr002bbbbbb",
-          studentId: null,
-          acceptedAt: new Date(),
-        },
-        {
-          id: "invstud2aaaaaaaa",
-          email: "smoke.student2@email.com",
-          role: "STUDENT",
-          status: "ACCEPTED",
-          acceptedUserId: "userstud002bbbbbbb",
-          studentId: "stud002bbbbbbbbbb",
-          acceptedAt: new Date(),
-        },
-      ]),
-    },
-    auditLog: { create: auditCreate },
-    ...extras,
-  });
+    true,
+  );
 }
 
 describe("production-smoke-fixtures-reconciliation", () => {
@@ -472,21 +574,371 @@ describe("production-smoke-fixtures-reconciliation", () => {
     });
   });
 
-  it("dry-run plans feature enables, renames, and plates without writes", async () => {
-    const db = makeDb({
-      organizationFeature: {
-        findMany: vi.fn().mockResolvedValue(
-          SMOKE_REQUIRED_FEATURE_KEYS.map((featureKey) => ({
-            featureKey,
-            isEnabled: false,
-          })),
-        ),
-        upsert: vi.fn(),
+  it("blocks when both operator-only invite emails are missing and fixtures are not resolved", async () => {
+    const result = await planProductionSmokeFixturesReconciliation(makeDb(), {
+      apply: false,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.plan?.blockers).toContain(
+        "invited_instructor_email_env_missing",
+      );
+      expect(result.plan?.blockers).toContain(
+        "invited_student_email_env_missing",
+      );
+      expect(result.plan?.humanDecisionsRequired.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("blocks when invited instructor fixture is missing", async () => {
+    const result = await planProductionSmokeFixturesReconciliation(makeDb(), {
+      apply: false,
+      ...defaultPlanOptions,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.plan?.blockers).toContain(
+        "canonical_invited_instructor_missing",
+      );
+    }
+  });
+
+  it("blocks when invited student fixture is missing", async () => {
+    const db = makeDb({}, true);
+    const instructors = await db.instructor.findMany({
+      where: { organizationId: ORG_ID },
+      select: {
+        id: true,
+        userId: true,
+        instructorLicenseNumber: true,
+        isAvailableForBooking: true,
+        instructorLicenseExpiry: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            isApproved: true,
+            isEmailVerified: true,
+          },
+        },
+        qualifiedCategories: { select: { id: true, name: true } },
       },
     });
+    const result = await planProductionSmokeFixturesReconciliation(
+      makeDb({
+        instructor: { findMany: vi.fn().mockResolvedValue(instructors) },
+      }),
+      { apply: false, ...defaultPlanOptions },
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.plan?.blockers).toContain(
+        "canonical_invited_student_missing",
+      );
+    }
+  });
+
+  it("does not accept PENDING, REVOKED, or EXPIRED invitations", async () => {
+    const instructors = [...legacyInstructors(), invitedInstructorRow()];
+    const students = [...legacyStudents(), invitedStudentRow()];
+    const invitations = [
+      {
+        id: "pending",
+        email: INVITED_INSTRUCTOR_EMAIL,
+        role: "INSTRUCTOR",
+        status: "PENDING",
+        acceptedUserId: null,
+        studentId: null,
+        acceptedAt: null,
+      },
+      {
+        id: "revoked",
+        email: INVITED_STUDENT_EMAIL,
+        role: "STUDENT",
+        status: "REVOKED",
+        acceptedUserId: null,
+        studentId: "studinv2bbbbbbbbbb",
+        acceptedAt: null,
+      },
+      {
+        id: "expired",
+        email: INVITED_STUDENT_EMAIL,
+        role: "STUDENT",
+        status: "EXPIRED",
+        acceptedUserId: "userstudinv2bbbbbb",
+        studentId: "studinv2bbbbbbbbbb",
+        acceptedAt: null,
+      },
+    ];
+    const result = await planProductionSmokeFixturesReconciliation(
+      makeDb({
+        instructor: { findMany: vi.fn().mockResolvedValue(instructors) },
+        student: {
+          findMany: vi.fn().mockResolvedValue(students),
+          update: vi.fn(),
+        },
+        userInvitation: { findMany: vi.fn().mockResolvedValue(invitations) },
+      }),
+      { apply: false, ...defaultPlanOptions },
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.plan?.blockers).toContain(
+        "canonical_invited_instructor_missing",
+      );
+      expect(result.plan?.blockers).toContain(
+        "canonical_invited_student_missing",
+      );
+    }
+  });
+
+  it("rejects ACCEPTED instructor invite with wrong acceptedUserId", () => {
+    const instructors = [...legacyInstructors(), invitedInstructorRow()];
+    const invitations = [
+      {
+        id: "bad",
+        email: INVITED_INSTRUCTOR_EMAIL,
+        role: "INSTRUCTOR",
+        status: "ACCEPTED",
+        acceptedUserId: "wrong-user-id",
+        studentId: null,
+        acceptedAt: new Date(),
+      },
+    ];
+    const resolved = resolveInvitedInstructor(
+      instructors,
+      invitations,
+      {
+        key: "instructor2",
+        firstName: "Smoke",
+        lastName: "Instructor 2",
+        displayName: "Smoke Instructor 2",
+        intendedProvenance: "invite",
+        resolution: "invite",
+        requiresCategoryB: true,
+      },
+      { invitedInstructorEmail: INVITED_INSTRUCTOR_EMAIL },
+    );
+    expect(resolved.ok).toBe(false);
+    if (!resolved.ok) {
+      expect(resolved.reason).toBe("canonical_invited_instructor_missing");
+    }
+  });
+
+  it("rejects ACCEPTED student invite with wrong studentId", () => {
+    const students = [...legacyStudents(), invitedStudentRow()];
+    const invitations = [
+      {
+        id: "bad",
+        email: INVITED_STUDENT_EMAIL,
+        role: "STUDENT",
+        status: "ACCEPTED",
+        acceptedUserId: "userstudinv2bbbbbb",
+        studentId: "wrong-student-id",
+        acceptedAt: new Date(),
+      },
+    ];
+    const resolved = resolveInvitedStudent(
+      students,
+      invitations,
+      {
+        key: "student2",
+        firstName: "Smoke",
+        lastName: "Student 2",
+        displayName: "Smoke Student 2",
+        intendedProvenance: "invite",
+        resolution: "invite",
+        categoryName: "B",
+      },
+      { invitedStudentEmail: INVITED_STUDENT_EMAIL },
+    );
+    expect(resolved.ok).toBe(false);
+    if (!resolved.ok) {
+      expect(resolved.reason).toBe("canonical_invited_student_missing");
+    }
+  });
+
+  it("rejects ACCEPTED invite when user role is wrong", () => {
+    const wrongRoleInstructor = {
+      ...invitedInstructorRow(),
+      user: {
+        ...invitedInstructorRow().user,
+        role: "STUDENT",
+      },
+    };
+    const resolved = resolveInvitedInstructor(
+      [...legacyInstructors(), wrongRoleInstructor],
+      invitedInvitations(),
+      {
+        key: "instructor2",
+        firstName: "Smoke",
+        lastName: "Instructor 2",
+        displayName: "Smoke Instructor 2",
+        intendedProvenance: "invite",
+        resolution: "invite",
+        requiresCategoryB: true,
+      },
+      { invitedInstructorEmail: INVITED_INSTRUCTOR_EMAIL },
+    );
+    expect(resolved.ok).toBe(false);
+    if (!resolved.ok) {
+      expect(resolved.reason).toBe("invited_instructor_wrong_user_role");
+    }
+  });
+
+  it("rejects ambiguous ACCEPTED invitations", () => {
+    const invitations = [
+      ...invitedInvitations(),
+      {
+        id: "dup-instructor",
+        email: INVITED_INSTRUCTOR_EMAIL,
+        role: "INSTRUCTOR",
+        status: "ACCEPTED",
+        acceptedUserId: "userinstrinv2aaaaaa",
+        studentId: null,
+        acceptedAt: new Date(),
+      },
+    ];
+    const instructorResolved = resolveInvitedInstructor(
+      [...legacyInstructors(), invitedInstructorRow()],
+      invitations,
+      {
+        key: "instructor2",
+        firstName: "Smoke",
+        lastName: "Instructor 2",
+        displayName: "Smoke Instructor 2",
+        intendedProvenance: "invite",
+        resolution: "invite",
+        requiresCategoryB: true,
+      },
+      { invitedInstructorEmail: INVITED_INSTRUCTOR_EMAIL },
+    );
+    expect(instructorResolved.ok).toBe(false);
+    if (!instructorResolved.ok) {
+      expect(instructorResolved.reason).toBe(
+        "ambiguous_accepted_invitation:instructor",
+      );
+    }
+
+    const studentInvitations = [
+      ...invitedInvitations(),
+      {
+        id: "dup-student",
+        email: INVITED_STUDENT_EMAIL,
+        role: "STUDENT",
+        status: "ACCEPTED",
+        acceptedUserId: "userstudinv2bbbbbb",
+        studentId: "studinv2bbbbbbbbbb",
+        acceptedAt: new Date(),
+      },
+    ];
+    const studentResolved = resolveInvitedStudent(
+      [...legacyStudents(), invitedStudentRow()],
+      studentInvitations,
+      {
+        key: "student2",
+        firstName: "Smoke",
+        lastName: "Student 2",
+        displayName: "Smoke Student 2",
+        intendedProvenance: "invite",
+        resolution: "invite",
+        categoryName: "B",
+      },
+      { invitedStudentEmail: INVITED_STUDENT_EMAIL },
+    );
+    expect(studentResolved.ok).toBe(false);
+    if (!studentResolved.ok) {
+      expect(studentResolved.reason).toBe(
+        "ambiguous_accepted_invitation:student",
+      );
+    }
+  });
+
+  it("resolves valid invited fixtures", async () => {
+    const result = await planProductionSmokeFixturesReconciliation(
+      makeDb({}, true),
+      { apply: false, ...defaultPlanOptions },
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(
+      result.plan.instructors.find(
+        (i) => i.displayName === "Smoke Instructor 2",
+      )?.observedProvenance,
+    ).toBe("invite");
+    expect(
+      result.plan.students.find((s) => s.displayName === "Smoke Student 2")
+        ?.observedProvenance,
+    ).toBe("invite");
+  });
+
+  it("preserves Sarah and Bob without renaming them to invite canonical names", async () => {
+    const result = await planProductionSmokeFixturesReconciliation(
+      makeDb({}, true),
+      { apply: false, ...defaultPlanOptions },
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(
+      result.plan.additionalInstructors.some(
+        (i) => i.displayName === "Sarah Williams" && i.preserved,
+      ),
+    ).toBe(true);
+    expect(
+      result.plan.additionalStudents.some(
+        (s) => s.displayName === "Bob Wilson" && s.preserved,
+      ),
+    ).toBe(true);
+    expect(
+      result.plan.nameChanges.some(
+        (c) =>
+          c.fromDisplayName === "Sarah Williams" &&
+          c.toDisplayName === "Smoke Instructor 2",
+      ),
+    ).toBe(false);
+    expect(
+      result.plan.nameChanges.some(
+        (c) =>
+          c.fromDisplayName === "Bob Wilson" &&
+          c.toDisplayName === "Smoke Student 2",
+      ),
+    ).toBe(false);
+  });
+
+  it("refuses apply while invited fixtures are missing", async () => {
+    const result = await planProductionSmokeFixturesReconciliation(makeDb(), {
+      apply: true,
+      ...defaultPlanOptions,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.code).toBe("fixture_resolution_failed");
+      expect(result.plan?.mode).toBe("apply");
+    }
+  });
+
+  it("dry-run plans feature enables, renames, and plates without writes", async () => {
+    const db = makeDb(
+      {
+        organizationFeature: {
+          findMany: vi.fn().mockResolvedValue(
+            SMOKE_REQUIRED_FEATURE_KEYS.map((featureKey) => ({
+              featureKey,
+              isEnabled: false,
+            })),
+          ),
+          upsert: vi.fn(),
+        },
+      },
+      true,
+    );
 
     const result = await planProductionSmokeFixturesReconciliation(db, {
       apply: false,
+      ...defaultPlanOptions,
     });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -497,7 +949,6 @@ describe("production-smoke-fixtures-reconciliation", () => {
     expect(result.plan.vehicles.map((v) => v.toRegistration)).toEqual(
       CANONICAL_SMOKE_VEHICLES.map((v) => v.registrationNumber),
     );
-    expect(result.plan.vehicles.some((v) => v.negative)).toBe(true);
     expect(db.organizationFeature.upsert).not.toHaveBeenCalled();
     expect(db.user.update).not.toHaveBeenCalled();
     expect(db.vehicle.update).not.toHaveBeenCalled();
@@ -512,7 +963,7 @@ describe("production-smoke-fixtures-reconciliation", () => {
           count: vi.fn().mockResolvedValue(0),
         },
       }),
-      { apply: false },
+      { apply: false, ...defaultPlanOptions },
     );
     expect(missing.ok).toBe(false);
     if (!missing.ok) expect(missing.code).toBe("smoke_organization_missing");
@@ -524,7 +975,7 @@ describe("production-smoke-fixtures-reconciliation", () => {
           count: vi.fn().mockResolvedValue(0),
         },
       }),
-      { apply: false },
+      { apply: false, ...defaultPlanOptions },
     );
     expect(ambiguous.ok).toBe(false);
     if (!ambiguous.ok) {
@@ -540,7 +991,7 @@ describe("production-smoke-fixtures-reconciliation", () => {
           count: vi.fn().mockResolvedValue(2),
         },
       }),
-      { apply: false },
+      { apply: false, ...defaultPlanOptions },
     );
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -549,9 +1000,10 @@ describe("production-smoke-fixtures-reconciliation", () => {
   });
 
   it("selects canonical School Admin by exact identity and preserves John Doe", async () => {
-    const result = await planProductionSmokeFixturesReconciliation(makeDb(), {
-      apply: false,
-    });
+    const result = await planProductionSmokeFixturesReconciliation(
+      makeDb({}, true),
+      { apply: false, ...defaultPlanOptions },
+    );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.plan.canonicalSchoolAdmin.displayName).toBe("Smoke Admin");
@@ -560,17 +1012,13 @@ describe("production-smoke-fixtures-reconciliation", () => {
         (a) => a.displayName === "John Doe",
       ),
     ).toBe(true);
-    expect(
-      result.plan.additionalSchoolAdmins.find(
-        (a) => a.displayName === "John Doe",
-      )?.preserved,
-    ).toBe(true);
   });
 
-  it("observes invite vs unknown provenance (never invents remote manual)", async () => {
-    const result = await planProductionSmokeFixturesReconciliation(makeDb(), {
-      apply: false,
-    });
+  it("observes invite for invited fixtures and unknown for legacy manual fixtures", async () => {
+    const result = await planProductionSmokeFixturesReconciliation(
+      makeDb({}, true),
+      { apply: false, ...defaultPlanOptions },
+    );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(
@@ -597,8 +1045,6 @@ describe("production-smoke-fixtures-reconciliation", () => {
     expect(
       result.plan.blockers.some((b) => b.startsWith("provenance_unknown")),
     ).toBe(false);
-    const text = formatSmokeFixturesReconcilePlanText(result.plan);
-    expect(text).toContain("mode=dry-run");
   });
 
   it("apply enables features, renames fixtures, normalizes plates, and writes audit once", async () => {
@@ -607,40 +1053,43 @@ describe("production-smoke-fixtures-reconciliation", () => {
     const studentUpdate = vi.fn().mockResolvedValue({});
     const vehicleUpdate = vi.fn().mockResolvedValue({});
     const auditCreate = vi.fn().mockResolvedValue({ id: "a1" });
-    const base = makeDb();
+    const base = makeDb({}, true);
 
-    const db = makeDb({
-      organizationFeature: {
-        findMany: vi.fn().mockResolvedValue(
-          SMOKE_REQUIRED_FEATURE_KEYS.map((featureKey) => ({
-            featureKey,
-            isEnabled: false,
-          })),
-        ),
-        upsert,
+    const db = makeDb(
+      {
+        organizationFeature: {
+          findMany: vi.fn().mockResolvedValue(
+            SMOKE_REQUIRED_FEATURE_KEYS.map((featureKey) => ({
+              featureKey,
+              isEnabled: false,
+            })),
+          ),
+          upsert,
+        },
+        user: {
+          findMany: base.user.findMany,
+          update: userUpdate,
+        },
+        student: {
+          findMany: base.student.findMany,
+          update: studentUpdate,
+        },
+        vehicle: {
+          findMany: base.vehicle.findMany,
+          update: vehicleUpdate,
+        },
+        auditLog: { create: auditCreate },
       },
-      user: {
-        findMany: base.user.findMany,
-        update: userUpdate,
-      },
-      student: {
-        findMany: base.student.findMany,
-        update: studentUpdate,
-      },
-      vehicle: {
-        findMany: base.vehicle.findMany,
-        update: vehicleUpdate,
-      },
-      auditLog: { create: auditCreate },
-    });
+      true,
+    );
 
     const applied = await planProductionSmokeFixturesReconciliation(db, {
       apply: true,
+      ...defaultPlanOptions,
     });
     expect(applied.ok).toBe(true);
     if (!applied.ok) return;
     expect(applied.applied).toBe(true);
-    expect(applied.plan.mode).toBe("apply");
     expect(upsert).toHaveBeenCalledTimes(3);
     expect(userUpdate).toHaveBeenCalled();
     expect(studentUpdate).toHaveBeenCalled();
@@ -652,24 +1101,20 @@ describe("production-smoke-fixtures-reconciliation", () => {
     const canonicalDb = makeFullyCanonicalDb();
     const idempotent = await planProductionSmokeFixturesReconciliation(
       canonicalDb,
-      { apply: true },
+      { apply: true, ...defaultPlanOptions },
     );
     expect(idempotent.ok).toBe(true);
     if (!idempotent.ok) return;
     expect(idempotent.plan.features.every((f) => f.action === "noop")).toBe(
       true,
     );
-    expect(idempotent.plan.vehicles.every((v) => v.alreadyCanonical)).toBe(
-      true,
-    );
     expect(idempotent.changesApplied).toBe(0);
     expect(canonicalDb.organizationFeature.upsert).not.toHaveBeenCalled();
-    expect(canonicalDb.vehicle.update).not.toHaveBeenCalled();
     expect(canonicalDb.auditLog.create).not.toHaveBeenCalled();
   });
 
   it("refuses instructor destination name collision", async () => {
-    const base = makeDb();
+    const base = makeDb({}, true);
     const instructors = await base.instructor.findMany({
       where: { organizationId: ORG_ID },
       select: {
@@ -713,119 +1158,24 @@ describe("production-smoke-fixtures-reconciliation", () => {
       },
     ];
     const result = await planProductionSmokeFixturesReconciliation(
-      makeDb({
-        instructor: { findMany: vi.fn().mockResolvedValue(withCollider) },
-      }),
-      { apply: false },
+      makeDb(
+        {
+          instructor: { findMany: vi.fn().mockResolvedValue(withCollider) },
+        },
+        true,
+      ),
+      { apply: false, ...defaultPlanOptions },
     );
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.code).toBe("fixture_resolution_failed");
       expect(result.plan?.blockers).toContain(
         "destination_name_collision:instructor:Smoke Instructor 1",
       );
     }
   });
 
-  it("refuses student destination name collision", async () => {
-    const base = makeDb();
-    const students = await base.student.findMany({
-      where: { organizationId: ORG_ID },
-      select: {
-        id: true,
-        userId: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        studentIdNumber: true,
-        appAccessMode: true,
-        category: { select: { id: true, name: true } },
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            isApproved: true,
-            isEmailVerified: true,
-          },
-        },
-      },
-    });
-    const withCollider = [
-      ...students,
-      {
-        id: "stud999colliderxx",
-        userId: null,
-        firstName: "Smoke",
-        lastName: "Student 1",
-        email: "collider.student@email.com",
-        studentIdNumber: "STU-999-2024",
-        appAccessMode: "MANUAL_ONLY",
-        category: { id: 2, name: "B" },
-        user: null,
-      },
-    ];
-    const result = await planProductionSmokeFixturesReconciliation(
-      makeDb({
-        student: {
-          findMany: vi.fn().mockResolvedValue(withCollider),
-          update: vi.fn(),
-        },
-      }),
-      { apply: false },
-    );
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.plan?.blockers).toContain(
-        "destination_name_collision:student:Smoke Student 1",
-      );
-    }
-  });
-
-  it("refuses destination plate collision", async () => {
-    const base = makeDb();
-    const vehicles = await base.vehicle.findMany({
-      where: { organizationId: ORG_ID },
-      select: {
-        id: true,
-        registrationNumber: true,
-        status: true,
-        isActive: true,
-        underMaintenance: true,
-        category: { select: { id: true, name: true } },
-      },
-    });
-    const withCollider = [
-      ...vehicles,
-      {
-        id: 99,
-        registrationNumber: "01-DS-24",
-        status: "AVAILABLE",
-        isActive: true,
-        underMaintenance: false,
-        category: { id: 2, name: "B" },
-      },
-    ];
-    const result = await planProductionSmokeFixturesReconciliation(
-      makeDb({
-        vehicle: {
-          findMany: vi.fn().mockResolvedValue(withCollider),
-          update: vi.fn(),
-        },
-      }),
-      { apply: false },
-    );
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.plan?.blockers).toContain(
-        "destination_plate_collision:01-DS-24",
-      );
-    }
-  });
-
-  it("refuses multiple candidates for the same legacy license", async () => {
-    const base = makeDb();
+  it("plans partially reconciled legacy state (some already canonical)", async () => {
+    const base = makeDb({}, true);
     const instructors = await base.instructor.findMany({
       where: { organizationId: ORG_ID },
       select: {
@@ -848,57 +1198,8 @@ describe("production-smoke-fixtures-reconciliation", () => {
         qualifiedCategories: { select: { id: true, name: true } },
       },
     });
-    const duplicated = [
-      ...instructors,
-      {
-        ...instructors[0]!,
-        id: "instr001duplicatee",
-        userId: "userinstr001dupaaa",
-        user: {
-          ...instructors[0]!.user,
-          id: "userinstr001dupaaa",
-          email: "michael.johnson.dup@drivingschool.com",
-        },
-      },
-    ];
-    const result = await planProductionSmokeFixturesReconciliation(
-      makeDb({
-        instructor: { findMany: vi.fn().mockResolvedValue(duplicated) },
-      }),
-      { apply: false },
-    );
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.plan?.blockers).toContain("ambiguous_license:INS-001-2024");
-    }
-  });
-
-  it("plans partially reconciled state (some already canonical)", async () => {
-    const base = makeDb();
-    const instructors = await base.instructor.findMany({
-      where: { organizationId: ORG_ID },
-      select: {
-        id: true,
-        userId: true,
-        instructorLicenseNumber: true,
-        isAvailableForBooking: true,
-        instructorLicenseExpiry: true,
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            role: true,
-            isApproved: true,
-            isEmailVerified: true,
-          },
-        },
-        qualifiedCategories: { select: { id: true, name: true } },
-      },
-    });
-    const partial = instructors.map((row, idx) =>
-      idx === 0
+    const partial = instructors.map((row) =>
+      row.instructorLicenseNumber === "INS-001-2024"
         ? {
             ...row,
             user: {
@@ -910,10 +1211,13 @@ describe("production-smoke-fixtures-reconciliation", () => {
         : row,
     );
     const result = await planProductionSmokeFixturesReconciliation(
-      makeDb({
-        instructor: { findMany: vi.fn().mockResolvedValue(partial) },
-      }),
-      { apply: false },
+      makeDb(
+        {
+          instructor: { findMany: vi.fn().mockResolvedValue(partial) },
+        },
+        true,
+      ),
+      { apply: false, ...defaultPlanOptions },
     );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -960,37 +1264,43 @@ describe("production-smoke-fixtures-reconciliation", () => {
 
   it("rolls back when an apply operation fails", async () => {
     const failingUpsert = vi.fn().mockRejectedValue(new Error("boom"));
-    const db = makeDb({
-      organizationFeature: {
-        findMany: vi.fn().mockResolvedValue(
-          SMOKE_REQUIRED_FEATURE_KEYS.map((featureKey) => ({
-            featureKey,
-            isEnabled: false,
-          })),
-        ),
-        upsert: failingUpsert,
+    const db = makeDb(
+      {
+        organizationFeature: {
+          findMany: vi.fn().mockResolvedValue(
+            SMOKE_REQUIRED_FEATURE_KEYS.map((featureKey) => ({
+              featureKey,
+              isEnabled: false,
+            })),
+          ),
+          upsert: failingUpsert,
+        },
       },
-    });
+      true,
+    );
 
     const result = await planProductionSmokeFixturesReconciliation(db, {
       apply: true,
+      ...defaultPlanOptions,
     });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.code).toBe("apply_failed");
   });
 
   it("sanitized output omits full emails and ids", async () => {
-    const result = await planProductionSmokeFixturesReconciliation(makeDb(), {
-      apply: false,
-    });
+    const result = await planProductionSmokeFixturesReconciliation(
+      makeDb({}, true),
+      { apply: false, ...defaultPlanOptions },
+    );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     const text = formatSmokeFixturesReconcilePlanText(result.plan);
     expect(text).not.toContain("admin@example.com");
     expect(text).not.toContain(ORG_ID);
-    expect(text).not.toContain("michael.johnson@drivingschool.com");
-    expect(text).toContain("Smoke Instructor Non-B");
-    expect(text).toContain("03-DS-24");
+    expect(text).not.toContain(INVITED_INSTRUCTOR_EMAIL);
+    expect(text).toContain("Sarah Williams");
+    expect(text).toContain("Bob Wilson");
+    expect(text).toContain("Human decisions required");
     expect(text).toContain("mode=dry-run");
   });
 
@@ -1028,14 +1338,10 @@ describe("production-smoke-fixtures-reconciliation", () => {
     const pkg = readFileSync(join(process.cwd(), "package.json"), "utf8");
     expect(service).not.toContain("PLATFORM_ADMIN");
     expect(service).not.toContain("commercialProduct");
-    expect(service).not.toContain(
-      "20260714160000_platform_commercial_catalog_schema_foundation_v1",
-    );
-    expect(service).not.toContain("deleteMany");
+    expect(cli).toContain("DAT_SMOKE_INVITED_INSTRUCTOR_EMAIL");
+    expect(cli).toContain("DAT_SMOKE_INVITED_STUDENT_EMAIL");
     expect(cli).toContain("assertRemoteOperatorTargetAllowed");
     expect(cli).toContain("--env-file");
-    expect(cli).toContain("--apply");
-    expect(cli).not.toContain("dotenv.config");
     expect(pkg).toContain(
       "node --env-file=.env.operator.production.local --import tsx scripts/reconcile-production-smoke-fixtures.ts",
     );

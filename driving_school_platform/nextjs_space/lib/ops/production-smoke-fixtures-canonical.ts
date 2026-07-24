@@ -17,12 +17,33 @@ export const PRESERVED_EXTRA_ADMIN = {
 } as const;
 
 /**
+ * Legacy rows preserved without rename to invite-canonical names.
+ * Remote residual identities after 2026-07-17 reset — not invite fixtures.
+ */
+export const PRESERVED_ADDITIONAL_INSTRUCTOR = {
+  firstName: "Sarah",
+  lastName: "Williams",
+  displayName: "Sarah Williams",
+  legacyLicenseNumber: "INS-002-2024",
+  legacyEmailLocalHint: "sarah.williams",
+} as const;
+
+export const PRESERVED_ADDITIONAL_STUDENT = {
+  firstName: "Bob",
+  lastName: "Wilson",
+  displayName: "Bob Wilson",
+  legacyStudentIdNumber: "STU-002-2024",
+  legacyEmailLocalHint: "bob.wilson",
+} as const;
+
+/**
  * Observed/intended fixture provenance.
- * - `invite`: observable ACCEPTED UserInvitation evidence only
- * - `manual`: deterministic known-manual context (e.g. local seed created by DAT seed)
- * - `unknown`: no observable invite and no explicit manual evidence (remote default)
+ * - `invite`: coherent ACCEPTED UserInvitation evidence only
+ * - `manual`: deterministic known-manual context (e.g. local seed)
+ * - `unknown`: no coherent invite (typical for remote manual/legacy residuals)
  *
- * Remote reconcile must never invent `manual` merely because an invite row is absent.
+ * Remote reconcile never invents `manual` from a missing invite, and never
+ * renames Sarah/Bob into invite-canonical display names.
  */
 export type SmokeFixtureProvenance = "invite" | "manual" | "unknown";
 
@@ -32,10 +53,9 @@ export const CANONICAL_SMOKE_INSTRUCTORS = {
     firstName: "Smoke",
     lastName: "Instructor 1",
     displayName: "Smoke Instructor 1",
-    /** Seed intent; remote observed provenance stays invite|unknown. */
     intendedProvenance: "manual" as const,
+    resolution: "legacy" as const,
     requiresCategoryB: true,
-    /** Deterministic seed identity keys (pre-rename). */
     legacyLicenseNumber: "INS-001-2024",
     legacyFirstName: "Michael",
     legacyLastName: "Johnson",
@@ -47,11 +67,9 @@ export const CANONICAL_SMOKE_INSTRUCTORS = {
     lastName: "Instructor 2",
     displayName: "Smoke Instructor 2",
     intendedProvenance: "invite" as const,
+    /** Resolved only via operator-only invite email + coherent ACCEPTED invitation. */
+    resolution: "invite" as const,
     requiresCategoryB: true,
-    legacyLicenseNumber: "INS-002-2024",
-    legacyFirstName: "Sarah",
-    legacyLastName: "Williams",
-    legacyEmailLocalHint: "sarah.williams",
   },
   instructorNonB: {
     key: "instructorNonB",
@@ -59,6 +77,7 @@ export const CANONICAL_SMOKE_INSTRUCTORS = {
     lastName: "Instructor Non-B",
     displayName: "Smoke Instructor Non-B",
     intendedProvenance: "manual" as const,
+    resolution: "legacy" as const,
     requiresCategoryB: false,
     legacyLicenseNumber: "INS-003-2024",
     legacyFirstName: "David",
@@ -74,6 +93,7 @@ export const CANONICAL_SMOKE_STUDENTS = {
     lastName: "Student 1",
     displayName: "Smoke Student 1",
     intendedProvenance: "manual" as const,
+    resolution: "legacy" as const,
     categoryName: "B",
     legacyStudentIdNumber: "STU-001-2024",
     legacyFirstName: "Alice",
@@ -86,11 +106,8 @@ export const CANONICAL_SMOKE_STUDENTS = {
     lastName: "Student 2",
     displayName: "Smoke Student 2",
     intendedProvenance: "invite" as const,
+    resolution: "invite" as const,
     categoryName: "B",
-    legacyStudentIdNumber: "STU-002-2024",
-    legacyFirstName: "Bob",
-    legacyLastName: "Wilson",
-    legacyEmailLocalHint: "bob.wilson",
   },
   studentA1: {
     key: "studentA1",
@@ -98,6 +115,7 @@ export const CANONICAL_SMOKE_STUDENTS = {
     lastName: "Student A1",
     displayName: "Smoke Student A1",
     intendedProvenance: "manual" as const,
+    resolution: "legacy" as const,
     categoryName: "A1",
     legacyStudentIdNumber: "STU-003-2024",
     legacyFirstName: "Carol",
@@ -164,6 +182,14 @@ export type SmokeRequiredFeatureKey =
 
 export const DAT_SMOKE_EXPECTED_ADMIN_EMAIL_ENV =
   "DAT_SMOKE_EXPECTED_ADMIN_EMAIL";
+
+/** Operator-only exact email for the invite-accepted Smoke Instructor 2 fixture. */
+export const DAT_SMOKE_INVITED_INSTRUCTOR_EMAIL_ENV =
+  "DAT_SMOKE_INVITED_INSTRUCTOR_EMAIL";
+
+/** Operator-only exact email for the invite-accepted Smoke Student 2 fixture. */
+export const DAT_SMOKE_INVITED_STUDENT_EMAIL_ENV =
+  "DAT_SMOKE_INVITED_STUDENT_EMAIL";
 
 export function displayNameOf(first: string, last: string): string {
   return `${first} ${last}`;

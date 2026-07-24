@@ -17,6 +17,8 @@ import {
   CANONICAL_SMOKE_STUDENTS,
   CANONICAL_SMOKE_VEHICLES,
   DAT_SMOKE_EXPECTED_ADMIN_EMAIL_ENV,
+  PRESERVED_ADDITIONAL_INSTRUCTOR,
+  PRESERVED_ADDITIONAL_STUDENT,
   PRESERVED_EXTRA_ADMIN,
   SMOKE_REQUIRED_FEATURE_KEYS,
   displayNameOf,
@@ -164,6 +166,7 @@ export type SmokeFixturesReconcileDb = {
             email: true;
             firstName: true;
             lastName: true;
+            role: true;
             isApproved: true;
             isEmailVerified: true;
           };
@@ -184,6 +187,7 @@ export type SmokeFixturesReconcileDb = {
           email: string;
           firstName: string;
           lastName: string;
+          role: string;
           isApproved: boolean;
           isEmailVerified: boolean;
         } | null;
@@ -224,7 +228,7 @@ export type SmokeFixturesReconcileDb = {
     findMany: (args: {
       where: {
         organizationId: string;
-        status?: "ACCEPTED";
+        status?: "ACCEPTED" | "PENDING" | "REVOKED" | "EXPIRED";
       };
       select: {
         id: true;
@@ -312,6 +316,21 @@ export type SmokeFixturesReconcilePlan = {
     displayName: string;
     preserved: boolean;
   }>;
+  additionalInstructors: Array<{
+    idPrefix: SafeIdPrefix;
+    emailRedacted: string;
+    displayName: string;
+    kind: "additionalInstructor";
+    preserved: boolean;
+  }>;
+  additionalStudents: Array<{
+    idPrefix: SafeIdPrefix;
+    emailRedacted: string;
+    displayName: string;
+    kind: "additionalStudent";
+    preserved: boolean;
+  }>;
+  humanDecisionsRequired: string[];
   features: FeatureEnablePlan[];
   instructors: ResolvedFixtureRow[];
   students: ResolvedFixtureRow[];
@@ -346,6 +365,30 @@ export type SmokeFixturesReconcileSuccess = {
 export type SmokeFixturesReconcileResult =
   | SmokeFixturesReconcileSuccess
   | SmokeFixturesReconcileRefusal;
+
+type InstructorRow = Awaited<
+  ReturnType<SmokeFixturesReconcileDb["instructor"]["findMany"]>
+>[number];
+
+type StudentRow = Awaited<
+  ReturnType<SmokeFixturesReconcileDb["student"]["findMany"]>
+>[number];
+
+type InvitationRow = Awaited<
+  ReturnType<SmokeFixturesReconcileDb["userInvitation"]["findMany"]>
+>[number];
+
+type LegacyInstructorSpec =
+  | typeof CANONICAL_SMOKE_INSTRUCTORS.instructor1
+  | typeof CANONICAL_SMOKE_INSTRUCTORS.instructorNonB;
+
+type LegacyStudentSpec =
+  | typeof CANONICAL_SMOKE_STUDENTS.student1
+  | typeof CANONICAL_SMOKE_STUDENTS.studentA1;
+
+type InvitedInstructorSpec = typeof CANONICAL_SMOKE_INSTRUCTORS.instructor2;
+
+type InvitedStudentSpec = typeof CANONICAL_SMOKE_STUDENTS.student2;
 
 function emailMatchesHint(email: string, hint: string): boolean {
   const local = email.split("@")[0]?.toLowerCase() ?? "";
@@ -388,12 +431,12 @@ function observeInviteProvenance(input: {
 
 /**
  * Prefer stable legacy identifiers, then legacy names/email, then canonical name.
- * Enables rename planning and destination-collision detection.
+ * Legacy specs only — never resolves invite-canonical instructor2.
  */
-function resolveInstructor(
-  rows: Awaited<ReturnType<SmokeFixturesReconcileDb["instructor"]["findMany"]>>,
-  spec: (typeof CANONICAL_SMOKE_INSTRUCTORS)[keyof typeof CANONICAL_SMOKE_INSTRUCTORS],
-): { ok: true; row: (typeof rows)[number] } | { ok: false; reason: string } {
+export function resolveInstructor(
+  rows: InstructorRow[],
+  spec: LegacyInstructorSpec,
+): { ok: true; row: InstructorRow } | { ok: false; reason: string } {
   const byLicense = rows.filter(
     (r) => r.instructorLicenseNumber === spec.legacyLicenseNumber,
   );
@@ -448,10 +491,124 @@ function resolveInstructor(
   return { ok: false, reason: `missing:${spec.displayName}` };
 }
 
-function resolveStudent(
-  rows: Awaited<ReturnType<SmokeFixturesReconcileDb["student"]["findMany"]>>,
-  spec: (typeof CANONICAL_SMOKE_STUDENTS)[keyof typeof CANONICAL_SMOKE_STUDENTS],
-): { ok: true; row: (typeof rows)[number] } | { ok: false; reason: string } {
+function findCoherentAcceptedInstructorInvite(
+  instructor: InstructorRow,
+  invitations: InvitationRow[],
+): InvitationRow | null {
+  const matches = invitations.filter(
+    (inv) =>
+      inv.status === "ACCEPTED" &&
+      inv.role === "INSTRUCTOR" &&
+      inv.acceptedUserId === instructor.userId &&
+      normalizeInvitationEmail(inv.email) ===
+        normalizeInvitationEmail(instructor.user.email),
+  );
+  if (matches.length === 1) return matches[0]!;
+  return null;
+}
+
+function validateInvitedInstructorRow(
+  row: InstructorRow,
+  spec: InvitedInstructorSpec,
+  expectedEmail: string,
+): { ok: true } | { ok: false; reason: string } {
+  if (row.user.role !== "INSTRUCTOR") {
+    return { ok: false, reason: "invited_instructor_wrong_user_role" };
+  }
+  if (
+    normalizeInvitationEmail(row.user.email) !==
+    normalizeInvitationEmail(expectedEmail)
+  ) {
+    return { ok: false, reason: "invited_instructor_email_mismatch" };
+  }
+  const hasB = row.qualifiedCategories.some(
+    (c) => c.name.trim().toUpperCase() === "B",
+  );
+  if (spec.requiresCategoryB && !hasB) {
+    return {
+      ok: false,
+      reason: `instructor_missing_category_b:${spec.displayName}`,
+    };
+  }
+  if (!row.isAvailableForBooking) {
+    return {
+      ok: false,
+      reason: "invited_instructor_not_available_for_booking",
+    };
+  }
+  if (row.instructorLicenseExpiry.getTime() <= Date.now()) {
+    return { ok: false, reason: "invited_instructor_license_expired" };
+  }
+  return { ok: true };
+}
+
+/**
+ * Resolve Smoke Instructor 2 only via operator-only exact email + coherent
+ * ACCEPTED invitation. Never matches Sarah Williams / INS-002-2024.
+ */
+export function resolveInvitedInstructor(
+  rows: InstructorRow[],
+  invitations: InvitationRow[],
+  spec: InvitedInstructorSpec,
+  options: { invitedInstructorEmail?: string },
+):
+  | { ok: true; row: InstructorRow; observedProvenance: "invite" }
+  | { ok: false; reason: string } {
+  const expectedEmail = options.invitedInstructorEmail?.trim() ?? "";
+
+  if (!expectedEmail) {
+    const byCanonical = rows.filter((r) =>
+      namesMatch(
+        r.user.firstName,
+        r.user.lastName,
+        spec.firstName,
+        spec.lastName,
+      ),
+    );
+    if (byCanonical.length !== 1) {
+      return { ok: false, reason: "invited_instructor_email_env_missing" };
+    }
+    const row = byCanonical[0]!;
+    const invite = findCoherentAcceptedInstructorInvite(row, invitations);
+    if (!invite) {
+      return { ok: false, reason: "invited_instructor_email_env_missing" };
+    }
+    const valid = validateInvitedInstructorRow(row, spec, row.user.email);
+    if (!valid.ok) return valid;
+    return { ok: true, row, observedProvenance: "invite" };
+  }
+
+  const normalizedExpected = normalizeInvitationEmail(expectedEmail);
+  const acceptedMatches = invitations.filter(
+    (inv) =>
+      inv.status === "ACCEPTED" &&
+      inv.role === "INSTRUCTOR" &&
+      normalizeInvitationEmail(inv.email) === normalizedExpected,
+  );
+  if (acceptedMatches.length === 0) {
+    return { ok: false, reason: "canonical_invited_instructor_missing" };
+  }
+  if (acceptedMatches.length > 1) {
+    return { ok: false, reason: "ambiguous_accepted_invitation:instructor" };
+  }
+
+  const invite = acceptedMatches[0]!;
+  const row = rows.find((r) => r.userId === invite.acceptedUserId);
+  if (!row) {
+    return { ok: false, reason: "canonical_invited_instructor_missing" };
+  }
+  if (invite.acceptedUserId !== row.userId) {
+    return { ok: false, reason: "invited_instructor_accepted_user_mismatch" };
+  }
+  const valid = validateInvitedInstructorRow(row, spec, expectedEmail);
+  if (!valid.ok) return valid;
+  return { ok: true, row, observedProvenance: "invite" };
+}
+
+export function resolveStudent(
+  rows: StudentRow[],
+  spec: LegacyStudentSpec,
+): { ok: true; row: StudentRow } | { ok: false; reason: string } {
   const byStudentId = rows.filter(
     (r) => r.studentIdNumber === spec.legacyStudentIdNumber,
   );
@@ -502,6 +659,123 @@ function resolveStudent(
   }
 
   return { ok: false, reason: `missing:${spec.displayName}` };
+}
+
+function findCoherentAcceptedStudentInvite(
+  student: StudentRow,
+  invitations: InvitationRow[],
+): InvitationRow | null {
+  const email = student.email ?? student.user?.email ?? "";
+  const matches = invitations.filter(
+    (inv) =>
+      inv.status === "ACCEPTED" &&
+      inv.role === "STUDENT" &&
+      inv.acceptedUserId === student.userId &&
+      inv.studentId === student.id &&
+      normalizeInvitationEmail(inv.email) === normalizeInvitationEmail(email),
+  );
+  if (matches.length === 1) return matches[0]!;
+  return null;
+}
+
+function validateInvitedStudentRow(
+  row: StudentRow,
+  spec: InvitedStudentSpec,
+  expectedEmail: string,
+): { ok: true } | { ok: false; reason: string } {
+  if (!row.userId || !row.user) {
+    return { ok: false, reason: "invited_student_missing_user" };
+  }
+  if (row.user.role !== "STUDENT") {
+    return { ok: false, reason: "invited_student_wrong_user_role" };
+  }
+  const email = row.email ?? row.user.email;
+  if (
+    normalizeInvitationEmail(email) !== normalizeInvitationEmail(expectedEmail)
+  ) {
+    return { ok: false, reason: "invited_student_email_mismatch" };
+  }
+  if (row.appAccessMode !== "APP_USER") {
+    return { ok: false, reason: "invited_student_not_app_user" };
+  }
+  const categoryName = row.category?.name ?? null;
+  if (
+    categoryName?.trim().toUpperCase() !==
+    spec.categoryName.trim().toUpperCase()
+  ) {
+    return {
+      ok: false,
+      reason: `student_category_mismatch:${spec.displayName}:expected_${spec.categoryName}:got_${categoryName ?? "none"}`,
+    };
+  }
+  return { ok: true };
+}
+
+/**
+ * Resolve Smoke Student 2 only via operator-only exact email + coherent
+ * ACCEPTED invitation. Never matches Bob Wilson / STU-002-2024.
+ */
+export function resolveInvitedStudent(
+  rows: StudentRow[],
+  invitations: InvitationRow[],
+  spec: InvitedStudentSpec,
+  options: { invitedStudentEmail?: string },
+):
+  | { ok: true; row: StudentRow; observedProvenance: "invite" }
+  | { ok: false; reason: string } {
+  const expectedEmail = options.invitedStudentEmail?.trim() ?? "";
+
+  if (!expectedEmail) {
+    const byCanonical = rows.filter((r) => {
+      const first = r.firstName ?? r.user?.firstName;
+      const last = r.lastName ?? r.user?.lastName;
+      return namesMatch(first, last, spec.firstName, spec.lastName);
+    });
+    if (byCanonical.length !== 1) {
+      return { ok: false, reason: "invited_student_email_env_missing" };
+    }
+    const row = byCanonical[0]!;
+    const invite = findCoherentAcceptedStudentInvite(row, invitations);
+    if (!invite) {
+      return { ok: false, reason: "invited_student_email_env_missing" };
+    }
+    const valid = validateInvitedStudentRow(
+      row,
+      spec,
+      row.email ?? row.user?.email ?? "",
+    );
+    if (!valid.ok) return valid;
+    return { ok: true, row, observedProvenance: "invite" };
+  }
+
+  const normalizedExpected = normalizeInvitationEmail(expectedEmail);
+  const acceptedMatches = invitations.filter(
+    (inv) =>
+      inv.status === "ACCEPTED" &&
+      inv.role === "STUDENT" &&
+      normalizeInvitationEmail(inv.email) === normalizedExpected,
+  );
+  if (acceptedMatches.length === 0) {
+    return { ok: false, reason: "canonical_invited_student_missing" };
+  }
+  if (acceptedMatches.length > 1) {
+    return { ok: false, reason: "ambiguous_accepted_invitation:student" };
+  }
+
+  const invite = acceptedMatches[0]!;
+  const row = rows.find((r) => r.id === invite.studentId);
+  if (!row) {
+    return { ok: false, reason: "canonical_invited_student_missing" };
+  }
+  if (invite.studentId !== row.id) {
+    return { ok: false, reason: "invited_student_student_id_mismatch" };
+  }
+  if (invite.acceptedUserId !== row.userId) {
+    return { ok: false, reason: "invited_student_accepted_user_mismatch" };
+  }
+  const valid = validateInvitedStudentRow(row, spec, expectedEmail);
+  if (!valid.ok) return valid;
+  return { ok: true, row, observedProvenance: "invite" };
 }
 
 function resolveVehicle(
@@ -677,6 +951,8 @@ export async function planProductionSmokeFixturesReconciliation(
   options: {
     apply: boolean;
     expectedAdminEmail?: string;
+    invitedInstructorEmail?: string;
+    invitedStudentEmail?: string;
   },
 ): Promise<SmokeFixturesReconcileResult> {
   const namedOrgs = await db.organization.findMany({
@@ -721,7 +997,7 @@ export async function planProductionSmokeFixturesReconciliation(
     instructors,
     students,
     vehicles,
-    acceptedInvitations,
+    allInvitations,
   ] = await Promise.all([
     db.organizationFeature.findMany({
       where: { organizationId: org.id },
@@ -778,6 +1054,7 @@ export async function planProductionSmokeFixturesReconciliation(
             email: true,
             firstName: true,
             lastName: true,
+            role: true,
             isApproved: true,
             isEmailVerified: true,
           },
@@ -796,7 +1073,7 @@ export async function planProductionSmokeFixturesReconciliation(
       },
     }),
     db.userInvitation.findMany({
-      where: { organizationId: org.id, status: "ACCEPTED" },
+      where: { organizationId: org.id },
       select: {
         id: true,
         email: true,
@@ -809,8 +1086,13 @@ export async function planProductionSmokeFixturesReconciliation(
     }),
   ]);
 
+  const acceptedInvitations = allInvitations.filter(
+    (inv) => inv.status === "ACCEPTED",
+  );
+
   const blockers: string[] = [];
   const warnings: string[] = [];
+  const humanDecisionsRequired: string[] = [];
   const nameChanges: NameChangePlan[] = [];
 
   const expectedEmail = options.expectedAdminEmail?.trim();
@@ -898,6 +1180,51 @@ export async function planProductionSmokeFixturesReconciliation(
     },
   );
 
+  const additionalInstructors = instructors
+    .filter(
+      (row) =>
+        row.instructorLicenseNumber ===
+          PRESERVED_ADDITIONAL_INSTRUCTOR.legacyLicenseNumber ||
+        namesMatch(
+          row.user.firstName,
+          row.user.lastName,
+          PRESERVED_ADDITIONAL_INSTRUCTOR.firstName,
+          PRESERVED_ADDITIONAL_INSTRUCTOR.lastName,
+        ),
+    )
+    .map((row) => ({
+      idPrefix: toSafeIdPrefix(row.id),
+      emailRedacted: redactEmailRecipient(row.user.email),
+      displayName: displayNameOf(row.user.firstName, row.user.lastName),
+      kind: "additionalInstructor" as const,
+      preserved: true,
+    }));
+
+  const additionalStudents = students
+    .filter(
+      (row) =>
+        row.studentIdNumber ===
+          PRESERVED_ADDITIONAL_STUDENT.legacyStudentIdNumber ||
+        namesMatch(
+          row.firstName ?? row.user?.firstName,
+          row.lastName ?? row.user?.lastName,
+          PRESERVED_ADDITIONAL_STUDENT.firstName,
+          PRESERVED_ADDITIONAL_STUDENT.lastName,
+        ),
+    )
+    .map((row) => ({
+      idPrefix: toSafeIdPrefix(row.id),
+      emailRedacted: redactEmailRecipient(
+        row.email ?? row.user?.email ?? "[missing-email]",
+      ),
+      displayName: displayNameOf(
+        row.firstName ?? row.user?.firstName ?? "",
+        row.lastName ?? row.user?.lastName ?? "",
+      ),
+      kind: "additionalStudent" as const,
+      preserved: true,
+    }));
+
   const instructorPlans: ResolvedFixtureRow[] = [];
   const resolvedInstructorRefs: Array<{
     rowId: string;
@@ -906,6 +1233,63 @@ export async function planProductionSmokeFixturesReconciliation(
     displayName: string;
   }> = [];
   for (const spec of Object.values(CANONICAL_SMOKE_INSTRUCTORS)) {
+    if (spec.resolution === "invite") {
+      const resolved = resolveInvitedInstructor(
+        instructors,
+        allInvitations,
+        spec,
+        { invitedInstructorEmail: options.invitedInstructorEmail },
+      );
+      if (!resolved.ok) {
+        blockers.push(resolved.reason);
+        if (
+          resolved.reason === "canonical_invited_instructor_missing" ||
+          resolved.reason === "invited_instructor_email_env_missing"
+        ) {
+          humanDecisionsRequired.push(
+            "Send INSTRUCTOR invite to operator-only email (DAT_SMOKE_INVITED_INSTRUCTOR_EMAIL); accept invite and complete profile; re-run dry-run.",
+          );
+        }
+        continue;
+      }
+      const row = resolved.row;
+      resolvedInstructorRefs.push({
+        rowId: row.id,
+        firstName: spec.firstName,
+        lastName: spec.lastName,
+        displayName: spec.displayName,
+      });
+
+      const alreadyCanonical = namesMatch(
+        row.user.firstName,
+        row.user.lastName,
+        spec.firstName,
+        spec.lastName,
+      );
+      if (!alreadyCanonical) {
+        nameChanges.push({
+          entity: "user",
+          idPrefix: toSafeIdPrefix(row.userId),
+          fromDisplayName: displayNameOf(row.user.firstName, row.user.lastName),
+          toDisplayName: spec.displayName,
+          emailRedacted: redactEmailRecipient(row.user.email),
+          alreadyCanonical: false,
+        });
+      }
+
+      instructorPlans.push({
+        key: spec.key,
+        displayName: spec.displayName,
+        idPrefix: toSafeIdPrefix(row.id),
+        emailRedacted: redactEmailRecipient(row.user.email),
+        intendedProvenance: spec.intendedProvenance,
+        observedProvenance: resolved.observedProvenance,
+        alreadyCanonical,
+        notes: [],
+      });
+      continue;
+    }
+
     const resolved = resolveInstructor(instructors, spec);
     if (!resolved.ok) {
       blockers.push(resolved.reason);
@@ -940,13 +1324,6 @@ export async function planProductionSmokeFixturesReconciliation(
     if (observedProvenance === "unknown") {
       notes.push("provenance_unknown_no_accepted_invitation");
       warnings.push(`provenance_unknown:${spec.displayName}`);
-    }
-    if (
-      spec.intendedProvenance === "invite" &&
-      observedProvenance !== "invite"
-    ) {
-      notes.push("invite_provenance_not_observable_on_current_rows");
-      warnings.push(`invite_provenance_gap:${spec.displayName}`);
     }
 
     const alreadyCanonical = namesMatch(
@@ -986,6 +1363,80 @@ export async function planProductionSmokeFixturesReconciliation(
     displayName: string;
   }> = [];
   for (const spec of Object.values(CANONICAL_SMOKE_STUDENTS)) {
+    if (spec.resolution === "invite") {
+      const resolved = resolveInvitedStudent(students, allInvitations, spec, {
+        invitedStudentEmail: options.invitedStudentEmail,
+      });
+      if (!resolved.ok) {
+        blockers.push(resolved.reason);
+        if (
+          resolved.reason === "canonical_invited_student_missing" ||
+          resolved.reason === "invited_student_email_env_missing"
+        ) {
+          humanDecisionsRequired.push(
+            "Send STUDENT invite to operator-only email (DAT_SMOKE_INVITED_STUDENT_EMAIL); accept invite and complete profile; re-run dry-run.",
+          );
+        }
+        continue;
+      }
+      const row = resolved.row;
+      resolvedStudentRefs.push({
+        rowId: row.id,
+        firstName: spec.firstName,
+        lastName: spec.lastName,
+        displayName: spec.displayName,
+      });
+
+      const email = row.email ?? row.user?.email ?? "";
+      const currentFirst = row.firstName ?? row.user?.firstName ?? "";
+      const currentLast = row.lastName ?? row.user?.lastName ?? "";
+      const alreadyCanonical = namesMatch(
+        currentFirst,
+        currentLast,
+        spec.firstName,
+        spec.lastName,
+      );
+      if (!alreadyCanonical) {
+        if (row.userId) {
+          nameChanges.push({
+            entity: "user",
+            idPrefix: toSafeIdPrefix(row.userId),
+            fromDisplayName: displayNameOf(
+              row.user?.firstName ?? "",
+              row.user?.lastName ?? "",
+            ),
+            toDisplayName: spec.displayName,
+            emailRedacted: email
+              ? redactEmailRecipient(email)
+              : "[missing-email]",
+            alreadyCanonical: false,
+          });
+        }
+        nameChanges.push({
+          entity: "student",
+          idPrefix: toSafeIdPrefix(row.id),
+          fromDisplayName: displayNameOf(currentFirst, currentLast),
+          toDisplayName: spec.displayName,
+          emailRedacted: email
+            ? redactEmailRecipient(email)
+            : "[missing-email]",
+          alreadyCanonical: false,
+        });
+      }
+
+      studentPlans.push({
+        key: spec.key,
+        displayName: spec.displayName,
+        idPrefix: toSafeIdPrefix(row.id),
+        emailRedacted: email ? redactEmailRecipient(email) : "[missing-email]",
+        intendedProvenance: spec.intendedProvenance,
+        observedProvenance: resolved.observedProvenance,
+        alreadyCanonical,
+        notes: [],
+      });
+      continue;
+    }
+
     const resolved = resolveStudent(students, spec);
     if (!resolved.ok) {
       blockers.push(resolved.reason);
@@ -1020,13 +1471,6 @@ export async function planProductionSmokeFixturesReconciliation(
     if (observedProvenance === "unknown") {
       notes.push("provenance_unknown_no_accepted_invitation");
       warnings.push(`provenance_unknown:${spec.displayName}`);
-    }
-    if (
-      spec.intendedProvenance === "invite" &&
-      observedProvenance !== "invite"
-    ) {
-      notes.push("invite_provenance_not_observable_on_current_rows");
-      warnings.push(`invite_provenance_gap:${spec.displayName}`);
     }
 
     const currentFirst = row.firstName ?? row.user?.firstName ?? "";
@@ -1114,7 +1558,7 @@ export async function planProductionSmokeFixturesReconciliation(
   );
 
   const provenanceLimitation =
-    "Observable invite provenance requires an ACCEPTED UserInvitation linked by acceptedUserId, studentId, or email. Absence of such a row yields observed=unknown (never invented as manual). Reconcile does not fabricate invitation rows or rewrite provenance.";
+    "Invited fixtures (Smoke Instructor 2, Smoke Student 2) require a coherent ACCEPTED UserInvitation matched by operator-only exact email (DAT_SMOKE_INVITED_INSTRUCTOR_EMAIL / DAT_SMOKE_INVITED_STUDENT_EMAIL). Absence is a blocker. Sarah Williams and Bob Wilson are preserved as additional fixtures and are never renamed into invite-canonical names. Reconcile does not fabricate invitations or send email.";
 
   const plan: SmokeFixturesReconcilePlan = {
     mode: options.apply ? "apply" : "dry-run",
@@ -1136,6 +1580,9 @@ export async function planProductionSmokeFixturesReconciliation(
       matchedByExpectedEmail,
     },
     additionalSchoolAdmins,
+    additionalInstructors,
+    additionalStudents,
+    humanDecisionsRequired,
     features,
     instructors: instructorPlans,
     students: studentPlans,
@@ -1176,6 +1623,32 @@ export async function planProductionSmokeFixturesReconciliation(
       }
 
       for (const spec of Object.values(CANONICAL_SMOKE_INSTRUCTORS)) {
+        if (spec.resolution === "invite") {
+          const resolved = resolveInvitedInstructor(
+            instructors,
+            allInvitations,
+            spec,
+            { invitedInstructorEmail: options.invitedInstructorEmail },
+          );
+          if (!resolved.ok) throw new Error(resolved.reason);
+          const row = resolved.row;
+          if (
+            !namesMatch(
+              row.user.firstName,
+              row.user.lastName,
+              spec.firstName,
+              spec.lastName,
+            )
+          ) {
+            await tx.user.update({
+              where: { id: row.userId },
+              data: { firstName: spec.firstName, lastName: spec.lastName },
+            });
+            count += 1;
+          }
+          continue;
+        }
+
         const resolved = resolveInstructor(instructors, spec);
         if (!resolved.ok) throw new Error(resolved.reason);
         const row = resolved.row;
@@ -1196,6 +1669,41 @@ export async function planProductionSmokeFixturesReconciliation(
       }
 
       for (const spec of Object.values(CANONICAL_SMOKE_STUDENTS)) {
+        if (spec.resolution === "invite") {
+          const resolved = resolveInvitedStudent(
+            students,
+            allInvitations,
+            spec,
+            { invitedStudentEmail: options.invitedStudentEmail },
+          );
+          if (!resolved.ok) throw new Error(resolved.reason);
+          const row = resolved.row;
+          const currentFirst = row.firstName ?? row.user?.firstName ?? "";
+          const currentLast = row.lastName ?? row.user?.lastName ?? "";
+          if (
+            !namesMatch(
+              currentFirst,
+              currentLast,
+              spec.firstName,
+              spec.lastName,
+            )
+          ) {
+            if (row.userId) {
+              await tx.user.update({
+                where: { id: row.userId },
+                data: { firstName: spec.firstName, lastName: spec.lastName },
+              });
+              count += 1;
+            }
+            await tx.student.update({
+              where: { id: row.id },
+              data: { firstName: spec.firstName, lastName: spec.lastName },
+            });
+            count += 1;
+          }
+          continue;
+        }
+
         const resolved = resolveStudent(students, spec);
         if (!resolved.ok) throw new Error(resolved.reason);
         const row = resolved.row;

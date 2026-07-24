@@ -21,7 +21,11 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { DAT_SMOKE_EXPECTED_ADMIN_EMAIL_ENV } from "@/lib/ops/production-smoke-fixtures-canonical";
+import {
+  DAT_SMOKE_EXPECTED_ADMIN_EMAIL_ENV,
+  DAT_SMOKE_INVITED_INSTRUCTOR_EMAIL_ENV,
+  DAT_SMOKE_INVITED_STUDENT_EMAIL_ENV,
+} from "@/lib/ops/production-smoke-fixtures-canonical";
 import {
   formatSmokeFixturesReconcileFailureMessage,
   formatSmokeFixturesReconcilePlanText,
@@ -142,6 +146,8 @@ export async function runSmokeFixturesReconcileCli(
       {
         apply,
         expectedAdminEmail: env[DAT_SMOKE_EXPECTED_ADMIN_EMAIL_ENV],
+        invitedInstructorEmail: env[DAT_SMOKE_INVITED_INSTRUCTOR_EMAIL_ENV],
+        invitedStudentEmail: env[DAT_SMOKE_INVITED_STUDENT_EMAIL_ENV],
       },
     );
 

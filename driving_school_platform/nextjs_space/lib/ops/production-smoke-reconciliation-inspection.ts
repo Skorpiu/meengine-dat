@@ -1172,24 +1172,67 @@ export async function inspectProductionSmokeReconciliation(
   const eligibleInstructors = instructorCandidates.filter((c) => c.eligible);
   const eligibleStudents = studentCandidates.filter((c) => c.eligible);
   const eligibleVehicles = vehicleCandidates.filter((c) => c.eligible);
+
+  const hasInstructor1 = instructorCandidates.some(
+    (c) =>
+      c.eligible &&
+      c.displayName === CANONICAL_SMOKE_INSTRUCTORS.instructor1.displayName,
+  );
+  const hasInvitedInstructor2 = instructorCandidates.some(
+    (c) =>
+      c.eligible &&
+      c.displayName === CANONICAL_SMOKE_INSTRUCTORS.instructor2.displayName &&
+      c.observedProvenance === "invite",
+  );
+  const hasNegativeInstructor = instructorCandidates.some(
+    (c) =>
+      c.displayName === CANONICAL_SMOKE_INSTRUCTORS.instructorNonB.displayName,
+  );
+  const hasStudent1 = studentCandidates.some(
+    (c) =>
+      c.eligible &&
+      c.displayName === CANONICAL_SMOKE_STUDENTS.student1.displayName,
+  );
+  const hasInvitedStudent2 = studentCandidates.some(
+    (c) =>
+      c.eligible &&
+      c.displayName === CANONICAL_SMOKE_STUDENTS.student2.displayName &&
+      c.observedProvenance === "invite",
+  );
+  const hasNegativeStudent = studentCandidates.some(
+    (c) => c.displayName === CANONICAL_SMOKE_STUDENTS.studentA1.displayName,
+  );
+
   const canonicalPositiveInstructorsReady =
-    instructorCandidates.filter((c) => c.isCanonicalPositive && c.eligible)
-      .length >= 2;
-  const canonicalPositiveStudentsReady =
-    studentCandidates.filter((c) => c.isCanonicalPositive && c.eligible)
-      .length >= 2;
+    hasInstructor1 && hasInvitedInstructor2;
+  const canonicalPositiveStudentsReady = hasStudent1 && hasInvitedStudent2;
   const canonicalPositiveVehiclesReady =
     vehicleCandidates.filter((c) => c.isCanonicalPositive && c.eligible)
       .length >= 4;
+  const canonicalNegativeVehiclesReady = vehicleCandidates.some(
+    (c) => c.isCanonicalNegative,
+  );
 
   if (!canonicalPositiveInstructorsReady) {
     blockers.push("canonical_positive_instructors_incomplete");
   }
+  if (!hasInvitedInstructor2) {
+    blockers.push("canonical_invited_instructor_missing_or_unknown_provenance");
+  }
   if (!canonicalPositiveStudentsReady) {
     blockers.push("canonical_positive_students_incomplete");
   }
+  if (!hasInvitedStudent2) {
+    blockers.push("canonical_invited_student_missing_or_unknown_provenance");
+  }
+  if (!hasNegativeInstructor || !hasNegativeStudent) {
+    warnings.push("canonical_negative_fixtures_incomplete");
+  }
   if (!canonicalPositiveVehiclesReady) {
     blockers.push("canonical_positive_vehicles_incomplete");
+  }
+  if (!canonicalNegativeVehiclesReady) {
+    warnings.push("canonical_negative_vehicle_missing");
   }
 
   if (eligibleInstructors.length === 0) {

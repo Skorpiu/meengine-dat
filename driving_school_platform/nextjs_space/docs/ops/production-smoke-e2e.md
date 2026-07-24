@@ -96,6 +96,13 @@ node \
 
 Package script equivalent (passes `--env-file=.env.operator.production.local` explicitly): `pnpm ops:reconcile-production-smoke-fixtures`. See [production-smoke-reconciliation-inspect.md](./production-smoke-reconciliation-inspect.md).
 
+Reconcile requires operator-only invite fixture emails when remote rows are not already canonical with coherent ACCEPTED invitations:
+
+- `DAT_SMOKE_INVITED_INSTRUCTOR_EMAIL` — Smoke Instructor 2 (never Sarah Williams / INS-002-2024)
+- `DAT_SMOKE_INVITED_STUDENT_EMAIL` — Smoke Student 2 (never Bob Wilson / STU-002-2024)
+
+Missing invite fixtures block reconcile until invites are sent, accepted, and dry-run passes. Sarah/Bob are preserved additional fixtures.
+
 `Student.schoolStudentId` follows the business format (`YY` + registration number) — preflight does **not** require a `SMOKE-*` school ID prefix.
 
 ---
