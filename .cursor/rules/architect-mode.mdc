@@ -423,14 +423,15 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - `platform-commercial-catalog-schema-foundation-v1` — additive Prisma catalogue foundation (DEC-061); migration `20260714160000_platform_commercial_catalog_schema_foundation_v1`; 3 enums + 11 models; **product-scoped compound FKs** on offerings/grants; relational add-on eligibility; Class-B RLS; contract test; **no runtime services; not deployed by agent**
 - `platform-commercial-catalog-seed-v1` — idempotent seed manifest + service + dedicated CLI (`scripts/seed-commercial-catalog.ts`, `pnpm seed:commercial-catalog`; **`--apply` required for writes**); product `DAT`, plans `DAT_CORE`/`DAT_PLUS`/`DAT_PREMIUM`, DRAFT `DAT_V1_INITIAL_DRAFT`; zero entitlement definitions; **not** wired into legacy `scripts/seed.ts` / `prisma db seed`; **DEC-062** local-only fail-closed destructive seed (`lib/ops/destructive-seed-safety.ts`); **seed not executed by agent**; **no confirmed DB catalogue rows**; incident 2026-07-17 remote smoke reset (test-only; prior `DAT_SMOKE_*` IDs stale)
 - `dat-production-smoke-reconcile-v1` — **DEC-063:** do not recreate embedded `PLATFORM_ADMIN`; smoke-only inspect tooling (`pnpm ops:inspect-production-smoke-reconciliation`); embedded `/platform` transitional/non-authoritative
-- `dat-production-smoke-canonical-fixtures-v1` — **DEC-064 (corrected):** manual rename targets + negatives; invite fixtures require real ACCEPTED + `DAT_SMOKE_INVITED_*_EMAIL` (missing = blocker); Sarah/Bob preserved additional; reconcile CLI; **2026-07-24 human:** both invites accepted via app — Instructor 2 invite-resolvable + category B present; Student 2 still blocked by `UserInvitation.studentId=null` (`canonical_invited_student_missing` — do not relax); **`--apply` not authorized / not executed by agent**; P0 `student-invite-accept-student-link-repair-v1`; P1 `people-instructor-invite-accept-list-refresh-v1`
+- `dat-production-smoke-canonical-fixtures-v1` — **DEC-064 (corrected):** manual rename targets + negatives; invite fixtures require real ACCEPTED + `DAT_SMOKE_INVITED_*_EMAIL` (missing = blocker); Sarah/Bob preserved additional; reconcile CLI; **2026-07-24 human:** both invites accepted via app — Instructor 2 invite-resolvable + category B present; Student 2 category B but `UserInvitation.studentId=null` until repair apply; **`--apply` not authorized / not executed by agent**; P1 `people-instructor-invite-accept-list-refresh-v1`
+- `student-invite-accept-student-link-repair-v1` — **done (repo):** accept path persists `studentId`; CLI `ops:repair-accepted-student-invitation-link`; **remote repair apply pending human**
 - `school-person-identifiers-settings-product-plan-v1` — **DEC-065** backlog (plan first): Admin → Settings → Identifiers & numbering; not implemented
 
 **Commercial plan names (DEC-058):** DAT Core, DAT Plus, DAT Premium. Basic and Standard are **superseded planning labels** only. Planned stable identifiers: `DAT_CORE`, `DAT_PLUS`, `DAT_PREMIUM` (billing interval separate: `MONTHLY`/`ANNUAL`). Exact package composition and pricing remain **provisional** (OD-002/007/008). Catalogue schema foundation **done (repo)** — [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md) (DEC-060/061). Seed identities **done (repo)** — not executed. **Never** use display names directly as entitlement authorization checks.
 
 **Current recommended next** (optional unless product says otherwise):
 
-1. **P0:** `student-invite-accept-student-link-repair-v1` (accept-path fix + safe repair of existing invite `studentId` + tests; Student 2 category **B** already set) → dry-run → human `--apply` only when green → vault + hosted smoke
+1. **Human:** `pnpm ops:repair-accepted-student-invitation-link` dry-run → approve `-- --apply` → fixture dry-run → human fixture `--apply` when green → vault + hosted smoke
 2. **P1 (parallel):** `people-instructor-invite-accept-list-refresh-v1`
 3. After smoke fixtures close: `platform-separation-architecture-plan-v1`
 4. Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded Platform without the separation plan
@@ -462,8 +463,8 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - **`platform-commercial-catalog-schema-foundation-v1`** — **done (repo)** (DEC-061): additive migration + schema; not deployed
 - **`platform-commercial-catalog-seed-v1`** — **done (repo)**: seed code + dedicated `--apply` CLI present; not executed; DEC-062 local-only legacy seed; incident 2026-07-17 smoke reset (test-only; IDs stale); no DB catalogue rows confirmed
 - **`dat-production-smoke-reconcile-v1`** — **done (inspect tooling)** (DEC-063)
-- **`dat-production-smoke-canonical-fixtures-v1`** — **in progress** (DEC-064; invites accepted 2026-07-24; Student 2 `studentId` link still blocker; `--apply` not run)
-- **P0 next:** `student-invite-accept-student-link-repair-v1`
+- **`dat-production-smoke-canonical-fixtures-v1`** — **in progress** (DEC-064; invites accepted 2026-07-24; Student 2 link repair code ready; remote repair apply pending; `--apply` not run)
+- **`student-invite-accept-student-link-repair-v1`** — **done (repo)**; remote repair apply pending human
 - **P1:** `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065)
 - **Recommended next after smoke fixtures close:** `platform-separation-architecture-plan-v1`
 

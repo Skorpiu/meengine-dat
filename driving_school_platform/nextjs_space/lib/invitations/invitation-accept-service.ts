@@ -270,6 +270,8 @@ export async function acceptInvitation(
         },
       });
 
+      let resolvedStudentId: string | null = null;
+
       if (role === "STUDENT") {
         if (current.studentId) {
           const linkedStudent = await tx.student.findFirst({
@@ -303,13 +305,29 @@ export async function acceptInvitation(
               ...(linkedStudent.lastName?.trim() ? {} : { lastName }),
             },
           });
+          resolvedStudentId = linkedStudent.id;
         } else {
-          await tx.student.create({
-            data: {
+          // Defensive: reuse a Student already linked to this new user (same txn).
+          const alreadyLinked = await tx.student.findFirst({
+            where: {
               userId: user.id,
               organizationId: current.organizationId,
             },
+            select: { id: true },
           });
+
+          if (alreadyLinked) {
+            resolvedStudentId = alreadyLinked.id;
+          } else {
+            const createdStudent = await tx.student.create({
+              data: {
+                userId: user.id,
+                organizationId: current.organizationId,
+              },
+              select: { id: true },
+            });
+            resolvedStudentId = createdStudent.id;
+          }
         }
       } else {
         const licenseNumber = normalizeInstructorLicenseNumber(
@@ -343,12 +361,19 @@ export async function acceptInvitation(
         });
       }
 
+      if (role === "STUDENT" && !resolvedStudentId) {
+        throw new Error("INVITATION_ACCEPT_student_record_not_found");
+      }
+
       const updatedCount = await tx.userInvitation.updateMany({
         where: { id: current.id, status: "PENDING" },
         data: {
           status: "ACCEPTED",
           acceptedAt: new Date(),
           acceptedUserId: user.id,
+          ...(role === "STUDENT" && resolvedStudentId
+            ? { studentId: resolvedStudentId }
+            : {}),
         },
       });
 

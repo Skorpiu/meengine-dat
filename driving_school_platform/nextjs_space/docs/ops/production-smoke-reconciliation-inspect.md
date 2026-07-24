@@ -131,9 +131,34 @@ Human-executed real invite+accept on the validated smoke tenant (operator-only `
 
 **People UI note:** invited instructor may not appear under Admin → People → Instructors despite correct DB rows — tracked as `people-instructor-invite-accept-list-refresh-v1` (P1); not a reconcile CLI issue.
 
+## Repair accepted student invitation link (operator)
+
+**Slice:** `student-invite-accept-student-link-repair-v1`
+
+Future STUDENT invite accept now persists `UserInvitation.studentId` in the same transaction as `acceptedUserId` / `ACCEPTED` (`lib/invitations/invitation-accept-service.ts`).
+
+For the already-accepted smoke Student 2 row (ACCEPTED + profile exists + category B + `studentId=null`), use the dedicated operator CLI (**human-controlled**; agent must not run remote apply):
+
+Assumed shell: Git Bash
+
+```bash
+cd driving_school_platform/nextjs_space
+
+# Dry-run (default; zero writes)
+pnpm ops:repair-accepted-student-invitation-link
+
+# Explicit apply (writes UserInvitation.studentId only)
+pnpm ops:repair-accepted-student-invitation-link -- --apply
+```
+
+Requirements: `.env.operator.production.local` with remote target identity env + `DAT_SMOKE_INVITED_STUDENT_EMAIL` (exact; never pass email via argv; never log full email). Updates **only** `UserInvitation.studentId`. Does not change names, category, `studentNumber`, `studentIdNumber`, features, or plates. Idempotent when already linked. After apply, re-run smoke fixture dry-run; `--apply` for fixture reconcile remains separately gated.
+
+**Repo status:** repair code ready; **remote repair apply pending human approval** (not executed by agent).
+
 ## Related
 
 - Smoke E2E: [production-smoke-e2e.md](./production-smoke-e2e.md)
 - Target guard: `lib/ops/remote-operator-target-guard.ts`
 - Inspect: `lib/ops/production-smoke-reconciliation-inspection.ts`
 - Reconcile: `lib/ops/production-smoke-fixtures-reconciliation.ts`
+- Student invite link repair: `lib/ops/repair-accepted-student-invitation-link.ts`
