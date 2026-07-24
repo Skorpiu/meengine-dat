@@ -103,6 +103,8 @@ Reconcile requires operator-only invite fixture emails when remote rows are not 
 
 Missing invite fixtures block reconcile until invites are sent, accepted, and dry-run passes. Sarah/Bob are preserved additional fixtures.
 
+**Operator note (2026-07-24):** real invites were accepted via the app for Instructor 2 and Student 2. Instructor 2 is invite-resolvable with category B present. Student 2 category is **B** (initial diagnosis C+E; operator later changed to B via the app). Student 2 remains blocked solely until `UserInvitation.studentId` is set (`canonical_invited_student_missing` — reconciler stay fail-closed); see P0 `student-invite-accept-student-link-repair-v1` and runbook [production-smoke-reconciliation-inspect.md](./production-smoke-reconciliation-inspect.md). **`--apply` not authorized** until dry-run is green. Do not put emails, passwords, or full IDs in docs.
+
 `Student.schoolStudentId` follows the business format (`YY` + registration number) — preflight does **not** require a `SMOKE-*` school ID prefix.
 
 ---
