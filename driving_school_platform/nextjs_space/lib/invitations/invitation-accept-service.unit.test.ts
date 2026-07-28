@@ -116,11 +116,14 @@ function setupSuccessfulTransaction(role: "STUDENT" | "INSTRUCTOR") {
     lastName: "Driver",
   });
   h.userInvitationUpdateMany.mockResolvedValue({ count: 1 });
+  h.studentCreate.mockResolvedValue({ id: "stu-created-1" });
+  h.studentFindFirst.mockResolvedValue(null);
   h.userInvitationFindUniqueOrThrow.mockResolvedValue({
     ...pendingInvitation({ role }),
     status: "ACCEPTED",
     acceptedAt: new Date("2026-05-22T00:00:00.000Z"),
     acceptedUserId: "user-1",
+    studentId: role === "STUDENT" ? "stu-created-1" : null,
     createdBy: null,
     acceptedUser: null,
   });
@@ -201,6 +204,15 @@ describe("acceptInvitation", () => {
 
     expect(h.studentCreate).toHaveBeenCalledWith({
       data: { userId: "user-1", organizationId: "org-a" },
+      select: { id: true },
+    });
+    expect(h.userInvitationUpdateMany).toHaveBeenCalledWith({
+      where: { id: "inv-1", status: "PENDING" },
+      data: expect.objectContaining({
+        status: "ACCEPTED",
+        acceptedUserId: "user-1",
+        studentId: "stu-created-1",
+      }),
     });
     expect(h.instructorCreate).not.toHaveBeenCalled();
     expect(h.userCreate.mock.calls[0][0].data.organizationId).toBe("org-a");
@@ -209,6 +221,84 @@ describe("acceptInvitation", () => {
       Date,
     );
     expect(h.userCreate.mock.calls[0][0].data.isApproved).toBe(true);
+  });
+
+  it("reuses Student already linked to the new user and persists studentId", async () => {
+    setupSuccessfulTransaction("STUDENT");
+    h.studentFindFirst.mockResolvedValue({ id: "stu-already" });
+
+    const result = await acceptInvitation({
+      token: rawToken,
+      password: "SecurePass1!",
+      firstName: "Alex",
+      lastName: "Driver",
+    });
+
+    expect(result.ok).toBe(true);
+    expect(h.studentCreate).not.toHaveBeenCalled();
+    expect(h.userInvitationUpdateMany).toHaveBeenCalledWith({
+      where: { id: "inv-1", status: "PENDING" },
+      data: expect.objectContaining({
+        studentId: "stu-already",
+        acceptedUserId: "user-1",
+      }),
+    });
+  });
+
+  it("does not set studentId when accepting an INSTRUCTOR invitation", async () => {
+    setupSuccessfulTransaction("INSTRUCTOR");
+    h.userInvitationFindUnique.mockResolvedValue(
+      pendingInvitation({
+        role: "INSTRUCTOR",
+        email: "inst@school.test",
+        instructorLicenseNumber: "LIC-ACCEPT-1",
+        instructorLicenseExpiry: new Date("2028-06-15T00:00:00.000Z"),
+      }),
+    );
+    h.userCreate.mockResolvedValue({
+      id: "user-2",
+      email: "inst@school.test",
+      role: "INSTRUCTOR",
+      firstName: "Pat",
+      lastName: "Teach",
+    });
+
+    const result = await acceptInvitation({
+      token: rawToken,
+      password: "SecurePass1!",
+      firstName: "Pat",
+      lastName: "Teach",
+    });
+
+    expect(result.ok).toBe(true);
+    expect(h.userInvitationUpdateMany).toHaveBeenCalledWith({
+      where: { id: "inv-1", status: "PENDING" },
+      data: {
+        status: "ACCEPTED",
+        acceptedAt: expect.any(Date),
+        acceptedUserId: "user-2",
+      },
+    });
+    expect(h.userInvitationUpdateMany.mock.calls[0][0].data).not.toHaveProperty(
+      "studentId",
+    );
+  });
+
+  it("rolls back when invitation update fails (transaction throws)", async () => {
+    setupSuccessfulTransaction("STUDENT");
+    h.userInvitationUpdateMany.mockResolvedValue({ count: 0 });
+
+    const result = await acceptInvitation({
+      token: rawToken,
+      password: "SecurePass1!",
+      firstName: "Alex",
+      lastName: "Driver",
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.code).toBe("invitation_not_pending");
+    }
   });
 
   it("approves users created through invitation acceptance (instructor)", async () => {
@@ -387,6 +477,13 @@ describe("acceptInvitation", () => {
         appAccessMode: "APP_USER",
         email: "student@school.test",
       },
+    });
+    expect(h.userInvitationUpdateMany).toHaveBeenCalledWith({
+      where: { id: "inv-1", status: "PENDING" },
+      data: expect.objectContaining({
+        studentId: "stu-existing",
+        acceptedUserId: "user-1",
+      }),
     });
   });
 

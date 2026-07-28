@@ -153,6 +153,9 @@ export function adaptPrismaToInspectionDb(
     rateLimitBucket: {
       count: (args) => prisma.rateLimitBucket.count(args),
     },
+    userInvitation: {
+      findMany: (args) => prisma.userInvitation.findMany(args),
+    },
   };
 }
 

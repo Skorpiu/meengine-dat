@@ -32,11 +32,11 @@ Optional mobile/tablet viewport smoke (read-only admin surfaces): `pnpm e2e:mobi
 
 Until the real **`A Conquistadora`** client tenant is provisioned separately, the technical production smoke organization on `https://www.meengine.io` is named **`DAT Production Smoke`** (DEC-045). It is a **production smoke / test tenant**, not the real client tenant.
 
-| Field           | Value                       |
-| --------------- | --------------------------- |
-| Organization    | `DAT Production Smoke`      |
-| Organization ID | `cmltn7vdl0000f8c4vxy6gcwx` |
-| Host            | `www.meengine.io`           |
+| Field           | Value                                                                                                                                    |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Organization    | `DAT Production Smoke`                                                                                                                   |
+| Organization ID | Set via operator vault `DAT_SMOKE_ORG_ID` after reconcile/inspect — **never reuse historical pre-incident IDs (stale after 2026-07-17)** |
+| Host            | `www.meengine.io`                                                                                                                        |
 
 When the official **`A Conquistadora`** client tenant is created later, **do not reuse** these fixture IDs or assumptions.
 
@@ -44,42 +44,68 @@ When the official **`A Conquistadora`** client tenant is created later, **do not
 
 **Status: completed** (human operator, 2026-07-13). Verified production `Organization.name` is **`DAT Production Smoke`**. No further apply action required for the approved DEC-045 rename.
 
-| Field           | Verified value              |
-| --------------- | --------------------------- |
-| Previous name   | `A Conquistadora`           |
-| Verified name   | `DAT Production Smoke`      |
-| Organization ID | `cmltn7vdl0000f8c4vxy6gcwx` |
-| Matched host    | `www.meengine.io`           |
-| Domain count    | 2                           |
-| User count      | 11                          |
-| Performed by    | Human operator (not agent)  |
+| Field           | Verified value                                                                                                   |
+| --------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Previous name   | `A Conquistadora`                                                                                                |
+| Verified name   | `DAT Production Smoke`                                                                                           |
+| Organization ID | **historical pre-incident identifier** — stale after 2026-07-17; must not be used in `DAT_SMOKE_*` configuration |
+| Matched host    | `www.meengine.io`                                                                                                |
+| Domain count    | 2                                                                                                                |
+| User count      | 11                                                                                                               |
+| Performed by    | Human operator (not agent)                                                                                       |
 
 The guarded script remains available for **dry-run / idempotency verification** only:
 
-| Mode                         | Command                                                                                                                                                           |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Dry-run (default)            | `DAT_SMOKE_ORG_ID=cmltn7vdl0000f8c4vxy6gcwx DAT_SMOKE_EXPECTED_HOST=www.meengine.io pnpm -C driving_school_platform/nextjs_space ops:rename-production-smoke-org` |
-| Apply (normally unnecessary) | `DAT_SMOKE_RENAME_APPLY=true` plus the same env vars                                                                                                              |
+| Mode                         | Command                                                                                                                                                        |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dry-run (default)            | `DAT_SMOKE_ORG_ID=<current-smoke-org-id> DAT_SMOKE_EXPECTED_HOST=www.meengine.io pnpm -C driving_school_platform/nextjs_space ops:rename-production-smoke-org` |
+| Apply (normally unnecessary) | `DAT_SMOKE_RENAME_APPLY=true` plus the same env vars                                                                                                           |
 
 Mutates **`Organization.name` only**. Does not change domains, users, fixtures, licenses, or subscriptions.
 
 **Do not** use `demo.meengine.io` for production mutation smoke. **Do not** use broad list searches or normal operational records as mutable fixtures — only explicit IDs below.
 
-### Current smoke fixtures (IDs only — no secrets in git)
+### Current smoke fixtures (canonical names — IDs only in operator vault)
 
-| Fixture                          | ID / value                        |
-| -------------------------------- | --------------------------------- |
-| Admin email                      | `conquistadora@drivingschool.com` |
-| Student ID                       | `cmqy5ipo20001kv046njb88zm`       |
-| Student email (expected)         | `rukahh@gmail.com`                |
-| Student school ID (expected)     | `26001`                           |
-| Instructor User ID               | `cmqqtdhwr0007if042bmjnhe5`       |
-| Instructor email (expected)      | `afilipa.lab@gmail.com`           |
-| Vehicle ID                       | `90`                              |
-| Vehicle registration (expected)  | `SM-00-KE`                        |
-| Expected DRIVING lesson category | `B`                               |
+Pre-incident fixture IDs and emails in older runbook revisions are **historical** — **stale after 2026-07-17** — **must not be used in `DAT_SMOKE_*` configuration**.
 
-`Student.schoolStudentId` follows the business format (`YY` + registration number, e.g. `26001`) — preflight does **not** require a `SMOKE-*` school ID prefix.
+After inspect + reconcile, capture current IDs only in the operator vault:
+
+| Fixture                          | Canonical identity                                |
+| -------------------------------- | ------------------------------------------------- |
+| School Admin                     | `Smoke Admin`                                     |
+| Instructor (positive)            | `Smoke Instructor 1` or `Smoke Instructor 2`      |
+| Student (positive)               | `Smoke Student 1` or `Smoke Student 2`            |
+| Vehicle (positive)               | `01-DS-24`, `02-DS-24`, `04-DS-24`, or `05-DS-24` |
+| Negative instructor              | `Smoke Instructor Non-B`                          |
+| Negative student                 | `Smoke Student A1`                                |
+| Negative vehicle                 | `03-DS-24` (A1)                                   |
+| Expected DRIVING lesson category | `B`                                               |
+
+Reconcile tooling (operator-safe Node 20 `--env-file`; dry-run default; `--apply` human-only):
+
+Assumed shell: Git Bash
+
+```bash
+cd driving_school_platform/nextjs_space
+node \
+  --env-file=.env.operator.production.local \
+  --import tsx \
+  scripts/reconcile-production-smoke-fixtures.ts
+```
+
+Package script equivalent (passes `--env-file=.env.operator.production.local` explicitly): `pnpm ops:reconcile-production-smoke-fixtures`. See [production-smoke-reconciliation-inspect.md](./production-smoke-reconciliation-inspect.md).
+
+Reconcile requires operator-only invite fixture emails when remote rows are not already canonical with coherent ACCEPTED invitations:
+
+- `DAT_SMOKE_INVITED_INSTRUCTOR_EMAIL` — Smoke Instructor 2 (never Sarah Williams / INS-002-2024)
+- `DAT_SMOKE_INVITED_STUDENT_EMAIL` — Smoke Student 2 (never Bob Wilson / STU-002-2024)
+
+Missing invite fixtures block reconcile until invites are sent, accepted, and dry-run passes. Sarah/Bob are preserved additional fixtures.
+
+**Operator note (2026-07-28):** `dat-production-smoke-canonical-fixtures-v1` closed on the technical smoke DB by **human** operator — student invite link repair applied; fixture reconcile `--apply` completed (`changesApplied=18`); read-only inspector all-ready / no blockers; second dry-run idempotent; invite fixtures `provenance=invite`; Sarah Williams, Bob Wilson, John Doe preserved; commercial catalogue untouched; no `PLATFORM_ADMIN` recreate. Agent did not execute remote writes. **Next P0:** `dat-production-smoke-hosted-verification-v1` — capture full fixture IDs in operator vault, fill `DAT_SMOKE_*`, run fixture preflight, then hosted read-only and mutation smoke. Do not put emails, passwords, or full IDs in docs.
+
+`Student.schoolStudentId` follows the business format (`YY` + registration number) — preflight does **not** require a `SMOKE-*` school ID prefix.
 
 ---
 
@@ -447,14 +473,14 @@ pnpm e2e:smoke:prod
 Add fixture IDs and expected identity checks (recommended for `www.meengine.io`):
 
 ```bash
-export DAT_SMOKE_ORG_ID=cmltn7vdl0000f8c4vxy6gcwx
-export DAT_SMOKE_STUDENT_ID=cmqy5ipo20001kv046njb88zm
-export DAT_SMOKE_INSTRUCTOR_USER_ID=cmqqtdhwr0007if042bmjnhe5
-export DAT_SMOKE_VEHICLE_ID=90
-export DAT_SMOKE_EXPECTED_STUDENT_EMAIL=rukahh@gmail.com
-export DAT_SMOKE_EXPECTED_STUDENT_SCHOOL_ID=26001
-export DAT_SMOKE_EXPECTED_VEHICLE_REGISTRATION=SM-00-KE
-export DAT_SMOKE_EXPECTED_INSTRUCTOR_EMAIL=afilipa.lab@gmail.com
+export DAT_SMOKE_ORG_ID=<current-smoke-org-id-from-vault>
+export DAT_SMOKE_STUDENT_ID=<current-smoke-student-id-from-vault>
+export DAT_SMOKE_INSTRUCTOR_USER_ID=<current-smoke-instructor-user-id-from-vault>
+export DAT_SMOKE_VEHICLE_ID=<current-smoke-vehicle-id-from-vault>
+export DAT_SMOKE_EXPECTED_STUDENT_EMAIL=<redacted-in-vault>
+export DAT_SMOKE_EXPECTED_STUDENT_SCHOOL_ID=<school-student-id>
+export DAT_SMOKE_EXPECTED_VEHICLE_REGISTRATION=01-DS-24
+export DAT_SMOKE_EXPECTED_INSTRUCTOR_EMAIL=<redacted-in-vault>
 export DAT_SMOKE_EXPECTED_LESSON_CATEGORY=B
 
 pnpm e2e:smoke:fixture-preflight

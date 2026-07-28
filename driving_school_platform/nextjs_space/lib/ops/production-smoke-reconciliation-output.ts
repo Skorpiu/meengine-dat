@@ -99,7 +99,7 @@ export function formatProductionSmokeInspectionText(input: {
   lines.push(`School Admin candidates: ${result.schoolAdminCandidates.length}`);
   for (const admin of result.schoolAdminCandidates) {
     lines.push(
-      `  userIdPrefix=${admin.userIdPrefix} email=${admin.emailRedacted} role=${admin.role} approved=${String(admin.isApproved)} verified=${String(admin.isEmailVerified)} activeState=${admin.activeState} name=${admin.displayName}`,
+      `  userIdPrefix=${admin.userIdPrefix} email=${admin.emailRedacted} role=${admin.role} approved=${String(admin.isApproved)} verified=${String(admin.isEmailVerified)} activeState=${admin.activeState} name=${admin.displayName} canonical=${String(admin.isCanonical)}`,
     );
   }
   lines.push("");
@@ -121,7 +121,7 @@ export function formatProductionSmokeInspectionText(input: {
   lines.push(`Instructor candidates: ${result.instructorCandidates.length}`);
   for (const row of result.instructorCandidates) {
     lines.push(
-      `  instructorIdPrefix=${row.instructorIdPrefix} userIdPrefix=${row.userIdPrefix} email=${row.emailRedacted} name=${row.displayName} available=${String(row.isAvailableForBooking)} licenseValid=${String(row.licenseValid)} categoryB=${String(row.qualifiedForCategoryB)} eligible=${String(row.eligible)} reasons=${row.ineligibilityReasons.join("|") || "(none)"}`,
+      `  instructorIdPrefix=${row.instructorIdPrefix} userIdPrefix=${row.userIdPrefix} email=${row.emailRedacted} name=${row.displayName} available=${String(row.isAvailableForBooking)} licenseValid=${String(row.licenseValid)} categoryB=${String(row.qualifiedForCategoryB)} eligible=${String(row.eligible)} provenance=${row.observedProvenance} canonicalPositive=${String(row.isCanonicalPositive)} canonicalNegative=${String(row.isCanonicalNegative)} reasons=${row.ineligibilityReasons.join("|") || "(none)"}`,
     );
   }
   lines.push("");
@@ -129,7 +129,7 @@ export function formatProductionSmokeInspectionText(input: {
   lines.push(`Student candidates: ${result.studentCandidates.length}`);
   for (const row of result.studentCandidates) {
     lines.push(
-      `  studentIdPrefix=${row.studentIdPrefix} email=${row.emailRedacted} name=${row.displayName} category=${row.categoryName ?? "(none)"} appAccess=${row.appAccessMode} linkedUser=${String(row.hasLinkedUser)} eligible=${String(row.eligible)} reasons=${row.reasons.join("|") || "(none)"}`,
+      `  studentIdPrefix=${row.studentIdPrefix} email=${row.emailRedacted} name=${row.displayName} category=${row.categoryName ?? "(none)"} appAccess=${row.appAccessMode} linkedUser=${String(row.hasLinkedUser)} eligible=${String(row.eligible)} provenance=${row.observedProvenance} canonicalPositive=${String(row.isCanonicalPositive)} canonicalNegative=${String(row.isCanonicalNegative)} reasons=${row.reasons.join("|") || "(none)"}`,
     );
   }
   lines.push("");
@@ -137,7 +137,7 @@ export function formatProductionSmokeInspectionText(input: {
   lines.push(`Vehicle candidates: ${result.vehicleCandidates.length}`);
   for (const row of result.vehicleCandidates) {
     lines.push(
-      `  vehicleIdPrefix=${row.vehicleIdPrefix} registration=${row.registrationNumber} category=${row.categoryName ?? "(none)"} status=${row.status} active=${String(row.isActive)} maintenance=${String(row.underMaintenance)} eligible=${String(row.eligible)} reasons=${row.reasons.join("|") || "(none)"}`,
+      `  vehicleIdPrefix=${row.vehicleIdPrefix} registration=${row.registrationNumber} category=${row.categoryName ?? "(none)"} status=${row.status} active=${String(row.isActive)} maintenance=${String(row.underMaintenance)} eligible=${String(row.eligible)} canonicalPositive=${String(row.isCanonicalPositive)} canonicalNegative=${String(row.isCanonicalNegative)} reasons=${row.reasons.join("|") || "(none)"}`,
     );
   }
   lines.push("");
@@ -170,6 +170,9 @@ export function formatProductionSmokeInspectionText(input: {
   lines.push(
     `  schoolAdminCandidates=${result.readiness.schoolAdminCandidateCount}`,
   );
+  lines.push(
+    `  canonicalSchoolAdminFound=${String(result.readiness.canonicalSchoolAdminFound)}`,
+  );
   lines.push(`  categoryBReady=${String(result.readiness.categoryBReady)}`);
   lines.push(
     `  eligibleInstructorCandidates=${result.readiness.eligibleInstructorCandidateCount}`,
@@ -184,10 +187,22 @@ export function formatProductionSmokeInspectionText(input: {
     `  requiredFeaturesReady=${String(result.readiness.requiredFeaturesReady)}`,
   );
   lines.push(
+    `  canonicalPositiveInstructorsReady=${String(result.readiness.canonicalPositiveInstructorsReady)}`,
+  );
+  lines.push(
+    `  canonicalPositiveStudentsReady=${String(result.readiness.canonicalPositiveStudentsReady)}`,
+  );
+  lines.push(
+    `  canonicalPositiveVehiclesReady=${String(result.readiness.canonicalPositiveVehiclesReady)}`,
+  );
+  lines.push(
     `  readOnlySmokePotentiallyReady=${String(result.readiness.readOnlySmokePotentiallyReady)}`,
   );
   lines.push(
     `  mutationSmokePotentiallyReady=${String(result.readiness.mutationSmokePotentiallyReady)}`,
+  );
+  lines.push(
+    `  fixturesPotentiallyReady=${String(result.readiness.fixturesPotentiallyReady)}`,
   );
   lines.push(`  blockers=${result.readiness.blockers.join("|") || "(none)"}`);
   lines.push(`  warnings=${result.readiness.warnings.join("|") || "(none)"}`);
@@ -196,7 +211,7 @@ export function formatProductionSmokeInspectionText(input: {
   );
   lines.push("");
   lines.push(
-    "Reminder: potentially-ready does not mean smoke has run. Full fixture IDs are not exported in this phase.",
+    "Reminder: fixturesPotentiallyReady does not mean smoke has run. Full fixture IDs are not exported in this phase.",
   );
 
   const text = lines.join("\n");
