@@ -66,6 +66,7 @@ Controlled production deployment for a **first B2B driving-school client** using
 | Credential policy | Vault + rotation; scoped accounts; never expose high-privilege secrets |
 | Target env deploy discipline | `migrate status` / `migrate deploy`, `pnpm check` green, post-deploy smoke |
 | `PUBLIC_SIGNUP_ENABLED=false` | Mandatory for first B2B client production |
+| `dat-production-smoke-hosted-verification-v1` | **P0 immediate** (current ops) — vault `DAT_SMOKE_*` → fixture preflight → hosted read-only → hosted mutations → runbook validation. Does **not** wait on engineering excellence audit. |
 
 ### P1 — strongly recommended on path to / immediately after cutline
 
@@ -75,6 +76,9 @@ Controlled production deployment for a **first B2B driving-school client** using
 | `production-smoke-runbook-sync-v1` | **Done (docs)** — production smoke runbook synced after DEC-041/042/043/044 |
 | `audit-log-tenant-context-foundation-plan-v1` | **Done (docs)** — tenant-aware audit log foundation plan (DEC-044); no migration |
 | First-client operator smoke | People onboarding, Schedule Map, invite accept, lesson create/edit, import dry-run |
+| `engineering-excellence-audit-v1` | **P1 / engineering excellence — planned (analysis-only)** — global maintainability audit; **not executed**; does **not** replace/delay hosted smoke P0; no runtime/schema/data changes during audit; later small refactor slices only. See [roadmap-todo.md](./roadmap-todo.md). |
+
+**Canonical sequence (current):** (1) `dat-production-smoke-hosted-verification-v1` — P0; (2) `engineering-excellence-audit-v1` — P1 analysis-only; (3) `platform-separation-architecture-plan-v1`; (4) small audit-approved refactor slices.
 
 ### P2 — post-production or non-blocking
 
@@ -84,7 +88,7 @@ Controlled production deployment for a **first B2B driving-school client** using
 | Demo DB separation | Recommended for public portfolio; dedicated client tenant lowers urgency |
 | `lesson-student-nullability-policy-review-v1` | Policy doc + validation gap grep |
 | `mobile-tablet-readiness-review-v1` | Penultimate before Competitive/Product Discovery |
-| Engineering Excellence Audit | Refactors, route consistency, optional E2E CI |
+| Engineering excellence topic backlog (not the global audit) | Route consistency, DTO minimization, concurrency hardening, etc. — longer-running P2 topics; **global** audit is P1 (`engineering-excellence-audit-v1`) |
 | Billing/checkout/PSP | Explicit product scope only |
 | `supabase-rls-tenant-policies-v1` | Only if Data API tenant access is product-required |
 
@@ -119,7 +123,7 @@ After stable production: `mobile-tablet-readiness-review-v1` → `competitive-pr
 - `calendar-lessons-polish-v1e-student-warnings`
 - `mobile-tablet-readiness-review-v1` (until after production/cohesion)
 - `competitive-product-discovery-v1`
-- Engineering Excellence Audit implementation batches
+- Mass engineering-excellence **refactor** batches — open only as small slices recommended by `engineering-excellence-audit-v1` (analysis-only audit itself is **P1 planned**, not deferred here)
 - Audit log platform cross-tenant viewer / viewer CSV export / additional RLS policy work (separate slices; only if required)
 - Billing / checkout / PSP integration
 - i18n framework and locale packs

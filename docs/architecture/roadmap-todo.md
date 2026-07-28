@@ -91,9 +91,10 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | `mobile-tablet-readiness-playwright-viewports-v1` | **Done** — opt-in `pnpm e2e:mobile-viewports` via dedicated config; 5 admin routes × 3 projects = 15 tests; not in `pnpm check` |
 | `competitive-product-discovery-v1` | **Done (docs)** — [competitive-product-discovery.md](../product/competitive-product-discovery.md); commercial planning: `dat-v1-commercial-platform-cutline-plan-v1` **done** |
 | `dat-v1-smoke-tenant-school-admin-identity-v1` | **Done** | DEC-045: smoke org **`DAT Production Smoke`**; School Admin product label; Platform `schoolAdmin*` onboarding; rename script + **production rename completed** (human operator 2026-07-13). Pre-incident org identifier is **historical** — stale after 2026-07-17; must not be used in `DAT_SMOKE_*` configuration. No migration |
-| Engineering Excellence Audit | Refactors, route consistency, optional E2E CI |
 | Billing / checkout / PSP | Explicit product scope only; not in baseline |
 | `supabase-rls-tenant-policies-v1` | Only if Data API tenant access is product-required |
+
+> **Note:** Global engineering excellence audit is **not** P2 — see P1 slice `engineering-excellence-audit-v1`.
 
 ---
 
@@ -294,10 +295,11 @@ Parent batch — always slice before implementing.
 | `dat-production-smoke-canonical-fixtures-v1` | P0 / ops **done (code + smoke DB)** | DEC-064 closed 2026-07-28 (human): repair apply + fixture `--apply` (`changesApplied=18`) + inspector all-ready / no blockers + idempotent second dry-run; invite fixtures `provenance=invite`; Sarah/Bob/John Doe preserved; catalogue untouched; no `PLATFORM_ADMIN` recreate; agent did **not** run remote writes. Full IDs stay in vault only. |
 | `student-invite-accept-student-link-repair-v1` | **Done (repo + remote)** | Accept path persists `UserInvitation.studentId` in-transaction. Operator CLI applied by human on smoke tenant (2026-07-28): linked `studentId` only on ACCEPTED STUDENT invite; agent did not run remote apply. |
 | `dat-production-smoke-hosted-verification-v1` | **P0** ops **next** | After fixtures close: capture full fixture IDs in operator vault → fill `DAT_SMOKE_*` → `pnpm e2e:smoke:fixture-preflight` → hosted read-only smoke → hosted mutation smoke → validate [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md). **Not** in this fixtures-close memory batch. |
+| `engineering-excellence-audit-v1` | **P1 / engineering excellence — planned (analysis-only)** | Global maintainability / internal-quality audit of current code — **planned, not executed**. Does **not** replace, delay, or mix with hosted smoke P0. See dedicated section below. |
 | `people-instructor-invite-accept-list-refresh-v1` | **P1** bug | Functional: after real INSTRUCTOR invite accept, User + ACCEPTED invitation + Instructor profile exist, but instructor may not appear under Admin → People → Instructors (Students list refreshed correctly). Investigate SSR query, client refresh, revalidation/cache, filters, approval state — **do not assume missing profile**. QA: no refresh / manual refresh / new login. Add integration or UI test proving accepted invite + associated Instructor appears in People. |
 | `school-person-identifiers-settings-product-plan-v1` | **P1** product/arch **plan first** | DEC-065: configurable school person identifiers in **Admin → Settings → Identifiers & numbering** (English UI baseline; PT planning label *Identificadores e numeração*). Separate student vs instructor/staff formats; distinguish DB ids, technical `studentNumber`, presented `studentIdNumber` / `schoolStudentId`, future internal instructor number vs `instructorLicenseNumber`. Plan must audit current schema (global `@unique` on `studentIdNumber`/`studentNumber`/`instructorIdNumber`/`instructorLicenseNumber`; tenant `@@unique([organizationId, schoolStudentId])`; hardcoded YY+NNN helper; invite accept leaves school ids empty) and reconcile DEC-026 Settings visibility. Implementation later in small slices — **not** this memory batch. |
 | `platform-admin-access-and-smoke-reconcile-v1` | **Abandoned / superseded** | Replaced by `dat-production-smoke-reconcile-v1` + DEC-063 (do not recreate embedded PLATFORM_ADMIN) |
-| `platform-separation-architecture-plan-v1` | P1 backlog | **Recommended next after hosted smoke verification** (`dat-production-smoke-hosted-verification-v1`) — autonomous MeEngine Platform vs DAT boundary plan; embedded `/platform` transitional |
+| `platform-separation-architecture-plan-v1` | P1 backlog | **After** hosted smoke P0 and engineering-excellence audit P1 (canonical sequence) — autonomous MeEngine Platform vs DAT boundary plan; embedded `/platform` transitional |
 | `platform-commercial-catalog-read-services-v1` | P1 backlog | Read-only catalogue repositories — **do not resume blindly** inside embedded Platform; gate after Platform separation plan |
 | `lesson-reminders-email-product-plan-v1` | P1 backlog | Email lesson reminder policy, events, templates, non-goals (no SMS/WhatsApp/payment reminders); **`Notification` reuse not assumed**. Not implementation authorization. |
 | `school-balances-ledger-product-plan-v1` | P1 backlog | Manual school-facing ledger/balances product plan (no PSP). From discovery O2. |
@@ -308,11 +310,43 @@ Parent batch — always slice before implementing.
 
 **Deferred explicitly:** `people-management-ux-unification-instructor-route-split-v1` (D4; not recommended next).
 
-**Product direction (backlog — commercial path):** **Mobile/tablet** — **done**. **Competitive discovery** — **done**. **Commercial cutline planning** — **done** (`dat-v1-commercial-platform-cutline-plan-v1`, DEC-046–057). **Plan display names + memory continuity** — **done** (`dat-plan-naming-and-doc-hygiene-v1`, DEC-058/059). **Catalogue schema plan** — **done** (`platform-commercial-catalog-schema-plan-v1`, DEC-060). **Catalogue schema foundation** — **done (repo)** (`platform-commercial-catalog-schema-foundation-v1`, DEC-061). **Catalogue seed code** — **done (repo)** (`platform-commercial-catalog-seed-v1`; not executed; DEC-062 local-only legacy seed). **Smoke identity** — **done** (DEC-045) then **incident reset 2026-07-17** (test-only; IDs stale). **DEC-063:** do not recreate embedded Platform Admin; smoke-only inspect via `dat-production-smoke-reconcile-v1`. **DEC-064 fixtures done (code + smoke DB, 2026-07-28 human):** repair + fixture `--apply` + inspector green + idempotent dry-run; catalogue untouched; no `PLATFORM_ADMIN` recreate. **Next P0 ops:** `dat-production-smoke-hosted-verification-v1`. **P1 parallel:** `people-instructor-invite-accept-list-refresh-v1`. **DEC-065 / identifiers:** `school-person-identifiers-settings-product-plan-v1` (plan Settings identifiers product; not implement numbering system yet). **Recommended after hosted smoke:** `platform-separation-architecture-plan-v1` (not blind catalogue read-services inside embedded Platform).
+**Canonical sequence (approved direction):** (1) `dat-production-smoke-hosted-verification-v1` — **P0** immediate ops; (2) `engineering-excellence-audit-v1` — **P1** analysis-only; (3) `platform-separation-architecture-plan-v1`; (4) small refactor slices approved by the audit. Parallel P1s preserved: `people-instructor-invite-accept-list-refresh-v1`, `school-person-identifiers-settings-product-plan-v1`. Product backlog remains visible: `lesson-reminders-email-product-plan-v1`, `school-balances-ledger-product-plan-v1`, controlled lesson requests, student progress by competencies, import/export commercial packaging; commercial catalogue read-services blocked by Platform separation plan.
+
+**Product direction (backlog — commercial path):** **Mobile/tablet** — **done**. **Competitive discovery** — **done**. **Commercial cutline planning** — **done** (`dat-v1-commercial-platform-cutline-plan-v1`, DEC-046–057). **Plan display names + memory continuity** — **done** (`dat-plan-naming-and-doc-hygiene-v1`, DEC-058/059). **Catalogue schema plan** — **done** (`platform-commercial-catalog-schema-plan-v1`, DEC-060). **Catalogue schema foundation** — **done (repo)** (`platform-commercial-catalog-schema-foundation-v1`, DEC-061). **Catalogue seed code** — **done (repo)** (`platform-commercial-catalog-seed-v1`; not executed; DEC-062 local-only legacy seed). **Smoke identity** — **done** (DEC-045) then **incident reset 2026-07-17** (test-only; IDs stale). **DEC-063:** do not recreate embedded Platform Admin; smoke-only inspect via `dat-production-smoke-reconcile-v1`. **DEC-064 fixtures done (code + smoke DB, 2026-07-28 human):** repair + fixture `--apply` + inspector green + idempotent dry-run; catalogue untouched; no `PLATFORM_ADMIN` recreate. **Next P0 ops:** `dat-production-smoke-hosted-verification-v1`. **P1 planned (analysis-only, after P0 ops):** `engineering-excellence-audit-v1`. **P1 parallel:** `people-instructor-invite-accept-list-refresh-v1`. **DEC-065 / identifiers:** `school-person-identifiers-settings-product-plan-v1` (plan Settings identifiers product; not implement numbering system yet). **After hosted smoke + engineering audit:** `platform-separation-architecture-plan-v1` (not blind catalogue read-services inside embedded Platform).
 
 ---
 
-## P2 / Engineering excellence
+## P1 / Engineering excellence — planned (analysis-only)
+
+### `engineering-excellence-audit-v1` | P1 / engineering excellence — planned (analysis-only)
+
+**Status:** **Planned** — not executed. Memory/roadmap formalization only in this batch. No findings claimed; no refactor slices pre-created.
+
+**Goal (future execution):** Global maintainability and internal-quality audit of the current codebase **without** changing functional behaviour during the audit itself.
+
+**Does not:** replace, delay, or mix with `dat-production-smoke-hosted-verification-v1` (P0); alter runtime/schema/data; mass-refactor; invent abstractions to cut lines; mix internal maintenance with new features; declare duplication without evidence; treat prior localized refactors as a substitute for this global audit.
+
+**Scope (when executed):**
+
+| Area | Look for |
+| ---- | -------- |
+| Duplication | Repeated blocks; repeated validation/normalization; repeated HTTP response construction; duplicated logic across routes/services/repositories/UI; repeated test fixtures/mocks/builders/setup |
+| Structure | Business logic in route handlers; oversized modules; mixed responsibilities; helpers too specific or wrongly shared; unnecessary coupling; dead/obsolete paths |
+| Readability | Ambiguous names; too many parameters; deep conditionals; duplicated/permissive types; similar contracts implemented inconsistently |
+| Comments | Future comments in **English**; add only for decisions, invariants, safety limits, non-obvious behaviour, trade-offs, cross-module contracts; avoid restating code; preserve/reinforce comments on remote ops, seed/migration safety, tenant isolation, audit logging, idempotency, DAT/Platform boundaries |
+| Tests | Duplicate mocks/builders/fixtures; tests over-coupled to implementation; missing reusable builders; complex modules under-covered; redundant tests without confidence gain |
+
+**Future deliverable (analysis-only report):** (1) inventory of issues; (2) concrete evidence per file/module; (3) severity + value classification; (4) distinguish safe refactor / architectural improvement / tech debt / possible functional change; (5) recommended sequence of **small** slices; (6) behavioural-equivalence criteria; (7) risks and rollback; (8) mandatory tests per future refactor.
+
+**After the audit:** implement derived refactors later — one small scope per branch; no unauthorized functional changes; behavioural equivalence + `pnpm check`. Those slices are **not** created in this memory batch.
+
+**Canonical position:** after P0 hosted verification; before Platform separation plan and derived refactor slices. Parallel P1 product/bug slices remain independent.
+
+---
+
+## P2 / Engineering excellence (topic backlog — not the global audit)
+
+> The global systematic audit is **`engineering-excellence-audit-v1` (P1 analysis-only)** above. Items below are longer-running topic backlog; derived refactor slices should come from the audit, not from inventing mass refactors here.
 
 ### audit-log-tenant-context-foundation
 

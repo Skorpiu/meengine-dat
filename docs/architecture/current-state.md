@@ -296,15 +296,28 @@ Documented and in use (docs/rules only; no runtime change):
 
 **Exists in repo (not Settings UI):** `Student.schoolStudentId` (+ `schoolStudentYearSuffix` / `schoolStudentSequence` / `schoolStudentIdSource`), helpers `lib/students/student-school-id.ts` (hardcoded **YY+NNN** 5-digit build/parse for A Conquistadora-style IDs), unit tests `student-school-id.unit.test.ts`; manual create/import paths set school IDs; tenant unique `@@unique([organizationId, schoolStudentId])`. **Also:** `Student.studentNumber` global `@unique` autoincrement; `Student.studentIdNumber` global `@unique` (nullable; often legacy/smoke labels). **Instructor:** `instructorIdNumber` global `@unique` (nullable); `instructorLicenseNumber` global `@unique` (official license — must not be reused as internal school number). **Unlinked invite accept** creates Student with `userId` + `organizationId` only — leaves `schoolStudentId` / `studentIdNumber` empty (gap vs manual create). **`/admin/settings`** has no identifiers/numbering product config (Settings currently operator/internal per DEC-026). Product plan backlog: **`school-person-identifiers-settings-product-plan-v1`** (DEC-065) — plan first; no schema/numbering system in this batch.
 
-### Likely next (commercial path)
+### Likely next (canonical sequence)
 
-1. **P0 ops:** `dat-production-smoke-hosted-verification-v1` — vault capture of full fixture IDs → fill `DAT_SMOKE_*` → fixture preflight → hosted read-only smoke → hosted mutation smoke → runbook validation (**not** implemented in the fixtures-close memory batch)
-2. **P1 (parallel):** `people-instructor-invite-accept-list-refresh-v1` — investigate People Instructors list after invite accept
-3. **After hosted smoke verification:** `platform-separation-architecture-plan-v1` (autonomous MeEngine Platform vs DAT)
-4. **`school-person-identifiers-settings-product-plan-v1`** — P1 product/architecture plan (Settings surface); implementation later in small slices
-5. **`platform-commercial-catalog-read-services-v1`** — deferred until Platform separation plan gates commercial work (do not resume blindly inside embedded `/platform`)
+1. **P0 ops (immediate):** `dat-production-smoke-hosted-verification-v1` — vault capture of full fixture IDs → fill `DAT_SMOKE_*` → fixture preflight → hosted read-only smoke → hosted mutation smoke → runbook validation
+2. **P1 / engineering excellence — planned (analysis-only):** `engineering-excellence-audit-v1` — global maintainability audit (**planned; not executed**); does not replace or delay hosted smoke
+3. **`platform-separation-architecture-plan-v1`** — autonomous MeEngine Platform vs DAT (after hosted smoke + engineering audit)
+4. **Small refactor slices** approved by the audit (not pre-created; one small scope per branch)
+
+**P1 parallel (preserved):** `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). **Commercial catalogue read-services** remain gated by Platform separation plan.
 
 Planning reference: [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md); catalogue plan: [platform-commercial-catalog-schema-plan.md](./platform-commercial-catalog-schema-plan.md); smoke inspect: [production-smoke-reconciliation-inspect.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-reconciliation-inspect.md).
+
+### Engineering excellence (audit status)
+
+- Localized refactors and hygiene have occurred across many prior slices (People, Calendar/Lessons, import/export, audit log, tenant/RLS, etc.).
+- A **global, systematic** maintainability / internal-quality audit has **not** been executed.
+- Slice **`engineering-excellence-audit-v1`** is **planned** as **P1 / engineering excellence — planned (analysis-only)** in [roadmap-todo.md](./roadmap-todo.md). No concrete audit findings are claimed in this memory batch; derived refactor slices are **not** pre-created.
+
+### Operator housekeeping (local / Git — human-executed)
+
+- **Git housekeeping completed** (human operator): obsolete remote branch `feature/schedule-and-vehicles` removed after preserving unintegrated historical commit `b101112` (`DAT v2`, 2025-11-29) via annotated published tag **`archive-schedule-and-vehicles-b101112`**.
+- That tag is **historical archive only** — **not** a release, **not** a recovery baseline, **not** a canonical current version. No DEC for this archive operation.
+- Docker/local runner cleanup was also completed by the human operator (ephemeral container/volume IDs are **not** recorded in architectural memory).
 
 ### Deferred (not next)
 
@@ -316,9 +329,7 @@ Planning reference: [dat-v1-commercial-release-plan.md](./dat-v1-commercial-rele
 
 **Mobile/tablet readiness (done):** review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports — [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md). Opt-in viewport smoke: `pnpm e2e:mobile-viewports`. **Not production blockers** (DEC-032).
 
-**Competitive/Product Discovery (`competitive-product-discovery-v1`, done 2026-07-10):** Market comparison complete — [competitive-product-discovery.md](../product/competitive-product-discovery.md). **Commercial cutline planning done:** `dat-v1-commercial-platform-cutline-plan-v1` (2026-07-14, DEC-046–057). **Catalogue schema plan done:** `platform-commercial-catalog-schema-plan-v1` (DEC-060). **Catalogue schema foundation done (repo):** `platform-commercial-catalog-schema-foundation-v1` (DEC-061) — migration authored, not deployed. **Catalogue seed code done (repo):** `platform-commercial-catalog-seed-v1` — identities + DRAFT shell + dedicated `--apply` CLI; not executed; no DB catalogue rows confirmed; legacy `prisma db seed` is local-only (DEC-062). **Incident 2026-07-17:** remote technical smoke DB reset/reseeded with test-only data — prior smoke org/entity IDs are **historical pre-incident identifiers**, **stale after 2026-07-17**, **must not be used in `DAT_SMOKE_*` configuration**. **DEC-063:** do not recreate embedded Platform Admin; inspect tooling done via `dat-production-smoke-reconcile-v1`. **DEC-064 fixtures done (code + smoke DB, 2026-07-28 human apply):** repair + fixture `--apply` + inspector green + idempotent dry-run; catalogue untouched; no `PLATFORM_ADMIN` recreate. **Next P0 ops:** `dat-production-smoke-hosted-verification-v1`. **After hosted smoke:** `platform-separation-architecture-plan-v1`. **Identifiers Settings plan (backlog):** `school-person-identifiers-settings-product-plan-v1` (DEC-065).
-
-Engineering excellence audit items (non-blocking refactors) remain tracked separately in roadmap P2+.
+**Competitive/Product Discovery (`competitive-product-discovery-v1`, done 2026-07-10):** Market comparison complete — [competitive-product-discovery.md](../product/competitive-product-discovery.md). **Commercial cutline planning done:** `dat-v1-commercial-platform-cutline-plan-v1` (2026-07-14, DEC-046–057). **Catalogue schema plan done:** `platform-commercial-catalog-schema-plan-v1` (DEC-060). **Catalogue schema foundation done (repo):** `platform-commercial-catalog-schema-foundation-v1` (DEC-061) — migration authored, not deployed. **Catalogue seed code done (repo):** `platform-commercial-catalog-seed-v1` — identities + DRAFT shell + dedicated `--apply` CLI; not executed; no DB catalogue rows confirmed; legacy `prisma db seed` is local-only (DEC-062). **Incident 2026-07-17:** remote technical smoke DB reset/reseeded with test-only data — prior smoke org/entity IDs are **historical pre-incident identifiers**, **stale after 2026-07-17**, **must not be used in `DAT_SMOKE_*` configuration**. **DEC-063:** do not recreate embedded Platform Admin; inspect tooling done via `dat-production-smoke-reconcile-v1`. **DEC-064 fixtures done (code + smoke DB, 2026-07-28 human apply):** repair + fixture `--apply` + inspector green + idempotent dry-run; catalogue untouched; no `PLATFORM_ADMIN` recreate. **Next P0 ops:** `dat-production-smoke-hosted-verification-v1`. **P1 planned (analysis-only):** `engineering-excellence-audit-v1`. **After hosted smoke + engineering audit:** `platform-separation-architecture-plan-v1`. **Identifiers Settings plan (backlog):** `school-person-identifiers-settings-product-plan-v1` (DEC-065). Product backlog preserved: `lesson-reminders-email-product-plan-v1`, `school-balances-ledger-product-plan-v1`, controlled lesson requests, student progress by competencies, import/export commercial packaging.
 
 ---
 

@@ -431,11 +431,12 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 **Current recommended next** (optional unless product says otherwise):
 
-1. **P0 ops:** `dat-production-smoke-hosted-verification-v1` — vault `DAT_SMOKE_*` IDs → fixture preflight → hosted read-only → hosted mutations → runbook validation
-2. **P1 (parallel):** `people-instructor-invite-accept-list-refresh-v1`
-3. After hosted smoke verification: `platform-separation-architecture-plan-v1`
-4. Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded Platform without the separation plan
-5. Product/arch plan (not next ops): `school-person-identifiers-settings-product-plan-v1` (DEC-065)
+1. **P0 ops (immediate):** `dat-production-smoke-hosted-verification-v1` — vault `DAT_SMOKE_*` IDs → fixture preflight → hosted read-only → hosted mutations → runbook validation
+2. **P1 / engineering excellence — planned (analysis-only):** `engineering-excellence-audit-v1` — global maintainability audit (**planned; not executed**); does not replace, delay, or mix with hosted smoke P0
+3. After hosted smoke + engineering audit: `platform-separation-architecture-plan-v1`
+4. Small refactor slices approved by the audit (one small scope per branch; behavioural equivalence + `pnpm check`)
+5. **P1 parallel (preserved):** `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065)
+6. Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded Platform without the separation plan
 
 **Abandoned:** `platform-admin-access-and-smoke-reconcile-v1` (superseded by DEC-063 / `dat-production-smoke-reconcile-v1`)
 
@@ -466,8 +467,10 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - **`dat-production-smoke-canonical-fixtures-v1`** — **done (code + smoke DB)** (DEC-064; human apply 2026-07-28; inspector green; idempotent dry-run)
 - **`student-invite-accept-student-link-repair-v1`** — **done (repo + remote)**; human repair apply 2026-07-28
 - **P0 next ops:** `dat-production-smoke-hosted-verification-v1`
-- **P1:** `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065)
-- **Recommended after hosted smoke:** `platform-separation-architecture-plan-v1`
+- **P1 / engineering excellence — planned (analysis-only):** `engineering-excellence-audit-v1` (not executed; not P2)
+- **P1 parallel:** `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065)
+- **Canonical after hosted smoke + engineering audit:** `platform-separation-architecture-plan-v1`, then audit-derived refactor slices
+- Product backlog preserved: `lesson-reminders-email-product-plan-v1`, `school-balances-ledger-product-plan-v1`, controlled lesson requests, student progress by competencies, import/export commercial packaging
 
 **Deferred (not next — RLS revoke-only track closed):**
 
