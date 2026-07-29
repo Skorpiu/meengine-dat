@@ -17,6 +17,8 @@ Application-level inspection and optional fixture reconcile for the technical DA
 
 Assumed shell: Git Bash
 
+**Roles:** the agent may prepare and audit commands; the **human operator** executes all remote writes. One remote database-writing command per approved block. Commercial catalogue is **out of scope**. Embedded `PLATFORM_ADMIN` is **not** restored (DEC-063).
+
 Inspect (zero-write):
 
 ```bash
@@ -41,7 +43,22 @@ cd driving_school_platform/nextjs_space
 pnpm ops:reconcile-production-smoke-fixtures
 ```
 
-Fixtures reconcile apply (**writes**; single transaction; not executed by agents in this slice):
+> ### ⚠️ APPLY COMMANDS BELOW — PROHIBITED WITHOUT NEW AUTHORIZATION
+>
+> **DEC-064 apply operations completed 2026-07-28** (human operator): fixture reconcile `--apply` (`changesApplied=18`) and student invite link repair `--apply` are **closed**. Inspector was all-ready with no blockers; second dry-run was idempotent.
+>
+> Do **not** re-run apply unless **all** of the following are true:
+>
+> 1. **New evidence** that fixtures or links are broken again
+> 2. Fresh **inspect**
+> 3. Fresh **dry-run** review
+> 4. **Target guard** checks pass (`DAT_OPS_EXPECTED_*`) — this is a **technical** CLI/env guard
+> 5. Explicit **confirmation phrase** — currently a **human/process** gate (not claimed as a CLI-enforced technical protection unless code evidence says otherwise). The exact phrase is **not** invented in this branch; before any future apply, the exact phrase and the write block must be **explicitly approved**
+> 6. **Explicit human authorization** to execute remote writes
+>
+> Agents prepare and audit only — humans execute remote writes. **One** remote write command per approved block (`--apply`). Commercial catalogue remains untouched. Do not recreate `PLATFORM_ADMIN`. The 2026-07-28 applies remain **closed** and prohibited without new evidence.
+
+Fixtures reconcile apply (**writes**; single transaction; **not** for routine re-use after 2026-07-28 close):
 
 ```bash
 cd driving_school_platform/nextjs_space
@@ -61,7 +78,7 @@ pnpm ops:reconcile-production-smoke-fixtures -- --apply
 
 (`--` is the pnpm/POSIX end-of-options separator; the CLI ignores a standalone `--` and still treats `--apply` as apply.)
 
-**Execute only after explicit human approval.** One database-related command per approved block.
+**Execute only after explicit human approval and the gate above.** One database-related command per approved block.
 
 ## Required environment
 
@@ -142,7 +159,7 @@ Human-executed repair + fixture reconcile on the validated smoke tenant. Agent d
 
 Future STUDENT invite accept persists `UserInvitation.studentId` in the same transaction as `acceptedUserId` / `ACCEPTED` (`lib/invitations/invitation-accept-service.ts`).
 
-Dedicated operator CLI remains available for any future ACCEPTED-but-unlinked STUDENT invite (human-controlled; agent must not run remote apply):
+Dedicated operator CLI remains available for any future ACCEPTED-but-unlinked STUDENT invite (human-controlled; agent must not run remote apply). **2026-07-28 repair apply is complete** — do not re-run without new evidence + inspect + dry-run + target guard + process confirmation phrase (explicitly approved; not invented here) + explicit human authorization:
 
 Assumed shell: Git Bash
 
@@ -152,7 +169,7 @@ cd driving_school_platform/nextjs_space
 # Dry-run (default; zero writes)
 pnpm ops:repair-accepted-student-invitation-link
 
-# Explicit apply (writes UserInvitation.studentId only)
+# Explicit apply (writes UserInvitation.studentId only) — prohibited without new authorization gate above
 pnpm ops:repair-accepted-student-invitation-link -- --apply
 ```
 

@@ -312,172 +312,76 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - Manual practical history creates **DRIVING COMPLETED MANUAL** lessons.
 - Normal app-created lessons use **SYSTEM** source.
 
-## DAT_3.7 priorities (cursor hint — **verify `current-state.md` and `roadmap-todo.md`**)
+## Current operational navigator (verify memory docs)
 
-**Source of truth:** `docs/architecture/current-state.md` and `docs/architecture/roadmap-todo.md`. This section is a Cursor hint only; if drift, trust memory docs.
+**Source of truth:** `docs/architecture/current-state.md` and `docs/architecture/roadmap-todo.md`. This section is a Cursor navigator only; if drift, trust those docs and [decision-log.md](../../docs/architecture/decision-log.md). Full closed-slice history lives in `current-state.md` — do **not** treat this rule as an archive.
 
-**Done (v1)** — see memory docs for full list; recent closures include:
+### Baseline anchors (distinct meanings)
 
-- `student-record-delete-policy-and-action`
-- `people-management-information-architecture-v1` (slice of `people-management-ux-unification`)
-- `product-ui-language-baseline-english-v1` — English copy on `/admin/users` People Management tree (reconciled PT IA exception)
-- `people-management-ux-unification-instructors-section-v1` — read-only Instructors section on `/admin/users` (no route split)
-- Cursor Super-Agent protocols, Automations operating model, and prompt templates (docs in `docs/ops/`)
-- External database architecture audit triage (roadmap items only; no schema from triage)
-- `import-export-ui-students-export-v1` (slice of `import-export-ui-actions` — export CSV/JSON on Fichas registadas)
-- `import-export-ui-students-import-dry-run-v1` — student import dry-run preview on Fichas registadas
-- `import-export-ui-students-import-apply-v1` — student import apply on same dialog
-- `import-export-ui-practical-lessons-export-v1` — practical lessons export on `/admin/lessons` Driving tab
-- `import-export-ui-practical-lessons-import-dry-run-v1` — practical lessons import dry-run preview on same page
-- `tenant-required-operational-organization-id-audit` — docs-only; report at `docs/architecture/tenant-required-operational-organization-id-audit.md`
-- `supabase-rls-data-api-policy-matrix` — docs-only; report at `docs/architecture/supabase-rls-data-api-policy-matrix.md`
-- `cursor-git-bash-command-discipline` — Git Bash/bash batteries by default; see `docs/ops/command-batteries.md`
-- `super-agent-operational-housekeeping-sync-v1` — Human-controlled merge batteries, Memory Consistency Gate, Daily Branch Housekeeping (list-only), Prepare next branch; see `docs/ops/cursor-operating-model.md`
-- `import-apply-demo-guard-v1` — demo mutation guard on student/practical-lessons import **apply** routes (`user_management` / `lesson_management`)
-- `import-export-ui-practical-lessons-import-apply-v1` — practical lessons import apply UI on `/admin/lessons` (preview + confirmation + apply)
-- `tenant-operational-organization-id-null-counts-report-v1` — read-only null-scope report; `pnpm tenant:org-null-report` (audit follow-up)
-- `tenant-operational-organization-id-backfill-dry-run-v1` — dry-run backfill planner; `pnpm tenant:org-backfill:dry-run`; legacy backfill script fail-safe
-- `people-management-ux-unification-invitations-v1` — student-record invitation UX (pendingInvitation, Send/Revoke on row)
-- `supabase-rls-class-b-hardening-v1` — migration `20260603120000_supabase_rls_class_b_hardening_v1` (8 class-B tables; RLS + REVOKE; Preview SQL gate passed)
-- `supabase-rls-class-b-hardening-v1b-review` — analysis-only; 12 hardened / 19 candidates / 0 policies; Prisma-primary
-- `supabase-rls-class-b-hardening-v1b-plan-v1` — docs-only sliced v1b plan + DEC-030; report `docs/architecture/supabase-rls-class-b-hardening-v1b-plan.md`
-- `supabase-rls-class-b-hardening-v1b-nextauth-v1` — migration `20260610150000_supabase_rls_class_b_hardening_v1b_nextauth` (B1: RLS+REVOKE on `accounts`, `sessions`, `verification_tokens`, `users`); merged main `edd73de`
-- `supabase-rls-class-b-hardening-v1b-nextauth-deploy-record-v1` — docs-only: B1 deployed + smoke-passed validated env 2026-06-10; 24 migrations up to date; operator-confirmed green
-- `supabase-rls-class-b-hardening-v1b-tenant-business-revoke-v1` — migration `20260610160000_supabase_rls_class_b_hardening_v1b_tenant_business_revoke` (B2: RLS+REVOKE on 12 tenant/platform tables); merged main `dd26d18`
-- `supabase-rls-class-b-hardening-v1b-tenant-business-deploy-record-v1` — docs-only: B2 deployed + smoke-passed validated env 2026-06-10; 25 migrations up to date; operator-confirmed green
-- `supabase-rls-class-b-hardening-v1b-global-reference-v1` — migration `20260610170000_supabase_rls_class_b_hardening_v1b_global_reference` (B3: RLS+REVOKE on `categories`, `transmission_types`, `user_preferences`); merged main `cdfacf2`
-- `supabase-rls-class-b-hardening-v1b-global-reference-deploy-record-v1` — docs-only: B3 deployed + smoke-passed validated env 2026-06-10; 26 migrations up to date; operator-confirmed all green; **RLS Class-B v1b revoke-only complete (31/31; B1+B2+B3)**
-- `product-roadmap-and-platform-boundary-sync-v1` — docs/product hub, decision-log, DAT vs Platform, packaging; see `docs/product/`
-- `people-management-internal-tabs-v1` — internal L1/L2 tabs on `/admin/users` (Students, Instructors, App accounts); client-side invitation role filter; SSR unchanged
-- `people-management-onboarding-reframe-v1` — L2 Onboarding (manual student + new instructor + invitations); App accounts tab retained
-- `people-management-profiles-status-and-pagination-v1` — Students → Profiles; profile badges + label guide; 15/page Load more; instructor search; Pending invitations Onboarding copy (absorbs record-status-badges + instructor-people-search UI)
-- `people-management-row-app-access-v1` — unified **Edit Student** + **Delete**; compact APP_USER row badges; canonical email; blocked Delete copy; remove/reactivate + Change email deferred (DEC-014/015); instructors deferred (`people-management-edit-instructor-unified-v1`)
-- `people-management-app-access-remove-v1` — Remove app access for APP_USER students (`POST /api/admin/students/[id]/app-access/remove`); preserves profile/history; disables login
-- `people-management-app-access-reactivate-v1` — Reactivate app access for MANUAL_ONLY students (`POST /api/admin/students/[id]/app-access/reactivate`); orphan User relink; Path B → Send invitation
-- `people-management-edit-instructor-unified-v1` — Instructors → Profiles **Edit Instructor** + blocked **Delete**; unified editor (profile + App access); `PUT /api/users/update`; App accounts tab retained (DEC-018)
-- `instructor-delete-policy-v1-docs` — Instructor delete/deactivate policy doc; DEC-019
-- `instructor-hard-delete-zero-deps-v1` — Zero-deps hard delete API + Profiles Delete UI + legacy INSTRUCTOR guard on `DELETE /api/users/delete`
-- `instructor-deactivate-v1` — Deactivate + Reactivate in Edit → App access; APIs; badge/App access colors aligned with Vehicles + Students; Schedule Map warning; booking enforcement + credentials login block
-- `people-management-app-accounts-demote-v1` — App Accounts removed from People L1 tabs; **Advanced accounts** read-only diagnostics (collapsed by default); no legacy create/edit/delete UI; APIs unchanged
-- `users-delete-student-guard-v1` — `DELETE /api/users/delete` blocks STUDENT with **409** `use_student_delete_policy` (symmetric to INSTRUCTOR); legacy endpoint no longer deletes STUDENT/INSTRUCTOR Users
-- `admin-users-page-tenant-scope-v1` — analysis-only audit; P1 SSR cross-tenant read leak on `/admin/users` (report: `docs/architecture/admin-users-page-tenant-scope-audit.md`)
-- `admin-users-page-tenant-scope-fix-v1` — SSR People page scopes Users to `session.user.organizationId`; loader `lib/people/admin-users-page-data.ts`
-- `people-management-onboarding-unlinked-invitations-v1` — Students → Onboarding unlinked-only pending student invite list; client-side Expired display; helpers `lib/invitations/invitation-ui-utils.ts`
-- `people-management-advanced-accounts-removal-and-profile-avatars-v1` — Advanced accounts section removed from People; `PeopleProfileAvatar` on Students/Instructors Profiles; `loadAdminUsersPageData` bridge retained; no API/schema changes
-- `people-management-student-profile-operational-fields-v1` — license category + transmission on Student profile; PATCH student operational fields; App access = login/lifecycle only; MANUAL_ONLY App access section in Edit Student
-- `people-management-profile-address-fields-v1` — Address on Student/Instructor profile (DEC-023); `Student.address` migration; PATCH/POST students + manual create; APP_USER syncs `User.address`; Instructor UI-only on `User.address`; App access = login/lifecycle only
-- `people-management-student-email-change-policy-v1` — Change email via `POST /api/admin/students/[id]/change-email`; PATCH guard `use_change_email_flow`; Edit Student modal; DEC-024; no schema/migration
-- `people-management-instructor-profile-invite-badge-v1` — UI-only instructor invite/profile lifecycle clarity (DEC-025): Onboarding copy; Profiles conditional app-account subtitle; instructor label guide; no Pending invite badge on Profiles; no API/schema
-- `people-management-ux-unification-instructor-invitations-v1` — UI-only closure under `people-management-ux-unification` (DEC-025): refined Onboarding/Profiles copy + label guide (Student vs Instructor asymmetry); helpers reused from `instructor-record-ui-utils.ts`; no API/schema
-- `admin-settings-client-visibility-review-v1` — docs-only audit: `/admin/settings` operator/internal; module gating = License/Entitlements (DEC-026); report `docs/architecture/admin-settings-client-visibility-audit.md`; no runtime changes
-- `admin-settings-client-visibility-hide-v1` — UI-only (DEC-026 Fase B): Settings removed from school admin navbar; `/admin/settings` operator/internal copy; CRUD tabs + APIs unchanged
-- `admin-license-client-readonly-v1` — UI-only (DEC-026 Fase C): `/admin/license` Plan & features read-only; Activate/toggles hidden; navbar **Plan**; APIs/gating unchanged
-- `tenant-operational-organization-id-not-null-readiness-review-v1` — analysis-only readiness review for future NOT NULL on six operational tables
-- `tenant-operational-organization-id-not-null-readiness-doc-v1` — docs-only readiness + DEC-027; report `docs/architecture/tenant-operational-organization-id-not-null-readiness.md`; operator evidence 2026-06-09: 0 operational NULLs, no backfill apply needed
-- `tenant-operational-organization-id-not-null-migrations-plan-v1` — docs-only D4 gate: GO/NO-GO checklist, operator battery, single-migration proposal, smoke tests; no schema/migration/runtime/data changes
-- `tenant-operational-organization-id-not-null-migrations-v1` — migration `20260610140000_make_operational_organization_id_required`; NOT NULL on six operational models (main `1854d1b`)
-- `tenant-operational-organization-id-not-null-deploy-record-v1` — docs-only: operator deploy recorded on validated target env (2026-06-10); post-deploy gate passed; `User`/dual-scope remain nullable
-- `people-management-instructor-email-change-policy-v1` — analysis-only Instructor change-email policy
-- `people-management-instructor-email-change-policy-doc-v1` — docs-only policy + DEC-028; `docs/architecture/instructor-email-change-policy.md`
-- `people-management-instructor-email-change-v1` — `POST /api/admin/instructors/[id]/change-email` + Edit Instructor Change email modal (DEC-028); service/tests/UI; no schema/migration
-- `invitation-email-update-v1` — analysis-only pending invitation email update
-- `invitation-email-update-policy-doc-v1` — docs-only policy + DEC-029; `docs/architecture/invitation-email-update-policy.md`
-- `invitation-email-update-unlinked-instructor-v1` — `POST /api/admin/invitations/[id]/change-email` + Instructors → Onboarding Change email (DEC-029 slice 2a); token regeneration; no auto-send; demo guard
-- `invitation-email-update-unlinked-student-v1` — same endpoint/service/dialog + Students → Onboarding Change email (DEC-029 slice 2b); org `Student.email` collision check
-- `invitation-email-update-linked-student-v1` — linked STUDENT Profiles/App access Change invitation email; syncs `Student.email`; preserves `INVITED` (DEC-029 slice 2c)
-- `calendar-lessons-polish-v1` — analysis-only Calendar/Lessons UX audit (Schedule Map `/admin` vs Lesson Management `/admin/lessons`); no runtime
-- `calendar-lessons-polish-v1-plan-v1` — docs-only sub-slice plan (DEC-031): v1a–v1e in `roadmap-todo.md`; no runtime
-- `calendar-lessons-polish-v1a-consistency-ui` — UI + SSR mapping (DEC-031): aligned `/admin/lessons` colors with Schedule Map; `Practice #N`; Title Case status; SSR `isAvailableForBooking`; helpers `lesson-type-ui-theme.ts`, `getLessonStatusDisplayLabel`; no schema/API
-- `calendar-lessons-polish-v1b-edit-refresh` — UI navigation (DEC-031): edit lesson/exam returns to dashboard with Schedule Map refresh + date focus via `?focusDate=YYYY-MM-DD&scheduleRefresh=1`; `lib/schedule/schedule-map-navigation.ts`; `hooks/use-schedule-dashboard-controls.ts`; cancel/back without params; no schema/API
-- `calendar-lessons-polish-v1c-a-truncation-indicator` — read behaviour (DEC-031): `/admin/lessons` Recent/Upcoming honest truncation — `take: 51`, max 50 UI items; additive `recentHasMore` / `upcomingHasMore`; `admin-dashboard-lessons-truncation.ts`; UI notice + Schedule Map link; temporal window unchanged; no schema/API
-- `calendar-lessons-polish-v1c-b-upcoming-horizon` — read behaviour (DEC-031): Upcoming on `/admin/lessons` = today remaining + next 7 days (`ADMIN_DASHBOARD_UPCOMING_HORIZON_DAYS`); v1c-a truncation preserved; Recent/Current/Schedule Map unchanged; no schema/API
-- `calendar-lessons-polish-v1d-vehicle-warnings` — display-only (DEC-031): vehicle warnings on Schedule Map + `/admin/lessons`; `LESSON_LIST_VEHICLE_SELECT` + `getLessonVehicleWarning`; persisted fields only; no create/update blocking; no schema/API
-- `production-readiness-cutline-review-v1` — analysis-only production cutline after v1d; no runtime
-- `production-readiness-cutline-doc-v1` — docs-only cutline + DEC-032 + memory/smoke sync; `docs/architecture/production-readiness-cutline.md`
-- `calendar-lessons-edit-flow-refresh-fix-v1` — analysis-only P1 blocker from first B2B operator smoke (edit PUT omitted instructor/student; wrong form default)
-- `calendar-lessons-edit-persistence-refresh-fix-v1` — PUT edit persists instructor (User.id) + student (DEC-033); `lesson-update-request-body.ts`; EditLessonClient fix; v1b refresh unchanged; no schema/migration
-- `calendar-lessons-edit-practical-number-reassign-v1` — DRIVING edit recalculates `practicalLessonNumber` on student change (DEC-034); `resolvePracticalLessonNumberOnStudentChange`; `Practice No. N` label; no schema/migration
-- `calendar-lessons-edit-modal-ux-v1` — Schedule Map edit opens in Dialog (DEC-035); `EditLessonDialog` + `useEditLessonForm`; admin + instructor dashboards; fallback `/admin/lessons/edit/[id]` retained; no schema/API/persistence changes
-- `production-smoke-e2e-readonly-v1` — hybrid read-only automated smoke (DEC-036); `pnpm e2e:smoke:api` / `e2e:smoke:readonly` / `e2e:smoke:prod`; production opt-in guards; not in `pnpm check`/CI default; runbook `docs/ops/production-smoke-e2e.md`
-- `instructor-invite-auto-approve-v1` — invitation accept sets `isApproved=true` for all invited roles including INSTRUCTOR (DEC-037); public signup policy unchanged; no schema/migration/RLS
-- `instructor-invite-license-fields-v1` — INSTRUCTOR invite collects license number + expiry on `UserInvitation`; accept uses real license data, no `INVITE-PENDING-*` (DEC-038); migration `20260623120000_add_instructor_license_fields_to_invitations`; placeholder Profiles warning; DEC-037/public signup unchanged
-- `production-smoke-e2e-fixture-preflight-v1` — zero-write fixture preflight (DEC-039); `pnpm e2e:smoke:fixture-preflight`; explicit `DAT_SMOKE_ORG_ID` + fixture IDs; technical smoke tenant **`DAT Production Smoke`** on www.meengine.io (DEC-045); hosted green
-- `dat-v1-smoke-tenant-school-admin-identity-v1` — smoke org **`DAT Production Smoke`**; School Admin product label (`SUPER_ADMIN` persisted); Platform onboarding `schoolAdmin*`; production rename **completed** 2026-07-13 (human operator; pre-incident org id is **historical** — stale after 2026-07-17; must not be used in `DAT_SMOKE_*` configuration); script `pnpm ops:rename-production-smoke-org` for dry-run/idempotency only (DEC-045)
-- `production-smoke-e2e-lesson-mutations-v1` — lesson mutation smoke (DEC-040); `pnpm e2e:smoke:mutations`; dual opt-in `DAT_E2E_ALLOW_PRODUCTION_MUTATIONS`; API-first create + update; no cleanup; not in `pnpm check`/CI
-- `production-smoke-e2e-testids-v1` — smoke `data-testid` markers + booking readiness metadata (DEC-041); not in `pnpm check`/CI
-- `production-first-client-onboarding-record-v1` — docs-only first B2B client onboarding record (DEC-043); `docs/architecture/first-client-onboarding-record.md`
-- `production-smoke-runbook-sync-v1` — docs-only runbook sync after smoke slices
-- **Audit log epic (core done):** migration `20260702120000_audit_log_tenant_context_v1`; write paths + `GET /api/admin/audit-logs` + `/admin/audit-logs` viewer UI foundation; coverage at `docs/architecture/audit-log-coverage-readiness-review.md`
-- `lesson-student-nullability-policy-review-v1` — docs-only; `docs/architecture/lesson-student-nullability-policy-review.md`
-- `student-delete-retention-policy-review-v1` — docs-only; `docs/architecture/student-delete-retention-policy-review.md`
-- `mobile-tablet-readiness-review-v1` — docs-only review + minor admin layout fixes; `docs/architecture/mobile-tablet-readiness-review.md`
-- `mobile-tablet-readiness-schedule-map-v1` — Schedule Map `lg` gate for week/month; day fallback; touch targets; `lib/schedule/schedule-map-responsive.ts`
-- `mobile-tablet-readiness-pwa-manifest-v1` — PWA install metadata; no service worker
-- `mobile-tablet-readiness-admin-surfaces-v1` — Lessons/Vehicles/Audit logs mobile polish
-- `mobile-tablet-readiness-playwright-viewports-v1` — opt-in viewport smoke via dedicated Playwright config
-- `audit-log-viewer-export-v1` — CSV export from `/admin/audit-logs`
-- `competitive-product-discovery-v1` — docs-only market comparison (9 eligible direct / 3 adjacent canonical registry); [competitive-product-discovery.md](../../docs/product/competitive-product-discovery.md)
-- `dat-v1-commercial-platform-cutline-plan-v1` — docs-only commercial/platform cutline (DEC-046–057); plans + tag runbook; safety tag `dat-v1-core-baseline-95b833e` @ `95b833e`; no runtime
-- `dat-plan-naming-and-doc-hygiene-v1` — docs-only (DEC-058/059): commercial plans **DAT Core**, **DAT Plus**, **DAT Premium**; superseded planning labels Basic/Standard; planned keys `DAT_CORE`/`DAT_PLUS`/`DAT_PREMIUM`; canonical memory continuity contract; package composition and pricing **open**; display names ≠ entitlement checks; no runtime
-- `platform-commercial-catalog-schema-plan-v1` — D4 commercial catalogue schema plan (DEC-060); hybrid Option C; [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md); no runtime/schema/migration in plan batch
-- `platform-commercial-catalog-schema-foundation-v1` — additive Prisma catalogue foundation (DEC-061); migration `20260714160000_platform_commercial_catalog_schema_foundation_v1`; 3 enums + 11 models; **product-scoped compound FKs** on offerings/grants; relational add-on eligibility; Class-B RLS; contract test; **no runtime services; not deployed by agent**
-- `platform-commercial-catalog-seed-v1` — idempotent seed manifest + service + dedicated CLI (`scripts/seed-commercial-catalog.ts`, `pnpm seed:commercial-catalog`; **`--apply` required for writes**); product `DAT`, plans `DAT_CORE`/`DAT_PLUS`/`DAT_PREMIUM`, DRAFT `DAT_V1_INITIAL_DRAFT`; zero entitlement definitions; **not** wired into legacy `scripts/seed.ts` / `prisma db seed`; **DEC-062** local-only fail-closed destructive seed (`lib/ops/destructive-seed-safety.ts`); **seed not executed by agent**; **no confirmed DB catalogue rows**; incident 2026-07-17 remote smoke reset (test-only; prior `DAT_SMOKE_*` IDs stale)
-- `dat-production-smoke-reconcile-v1` — **DEC-063:** do not recreate embedded `PLATFORM_ADMIN`; smoke-only inspect tooling (`pnpm ops:inspect-production-smoke-reconciliation`); embedded `/platform` transitional/non-authoritative
-- `dat-production-smoke-canonical-fixtures-v1` — **done (code + smoke DB)** (DEC-064): reconcile CLI + human operator apply 2026-07-28 (repair + fixture `--apply` + inspector green + idempotent dry-run); invite fixtures `provenance=invite`; Sarah/Bob/John Doe preserved; catalogue untouched; no `PLATFORM_ADMIN` recreate; agent did not run remote writes; P1 `people-instructor-invite-accept-list-refresh-v1`
-- `student-invite-accept-student-link-repair-v1` — **done (repo + remote):** accept path persists `studentId`; repair CLI applied by human 2026-07-28
-- `school-person-identifiers-settings-product-plan-v1` — **DEC-065** backlog (plan first): Admin → Settings → Identifiers & numbering; not implemented
+| Anchor | Meaning |
+| ------ | ------- |
+| `archive-schedule-and-vehicles-b101112` | **Historical archive only** — preserves unintegrated commit `b101112`; **not** a release, recovery, or current baseline |
+| `dat-v1-core-baseline-95b833e` @ `95b833e` | **Safety baseline** (DEC-056) — code/recovery comparison only; **not** a database backup |
+| `b408075` | **Verified entry baseline** for slice `canonical-state-reconciliation-v1` (main at branch creation). Not an eternal SHA; re-confirm the commit served in Production before hosted smoke |
 
-**Commercial plan names (DEC-058):** DAT Core, DAT Plus, DAT Premium. Basic and Standard are **superseded planning labels** only. Planned stable identifiers: `DAT_CORE`, `DAT_PLUS`, `DAT_PREMIUM` (billing interval separate: `MONTHLY`/`ANNUAL`). Exact package composition and pricing remain **provisional** (OD-002/007/008). Catalogue schema foundation **done (repo)** — [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md) (DEC-060/061). Seed identities **done (repo)** — not executed. **Never** use display names directly as entitlement authorization checks.
+### Verified operational reality (entry of this slice)
 
-**Current recommended next** (optional unless product says otherwise):
+| Fact | Status |
+| ---- | ------ |
+| Entry commit | `b408075` — `Merge branch 'engineering-excellence-audit-roadmap-v1'` |
+| GitLab CI | Pipeline `#2712551669` Passed (zero failed / skipped / manual) |
+| Vercel Production | Project `meengine-dat` — deployment **Ready** on source commit `b408075` |
+| Shared hosts | `www.meengine.io`, `platform.meengine.io`, `demo.meengine.io`, `meengine-dat.vercel.app` — **same** Vercel app/deployment today |
+| DAT / Platform separation | **Decided and planned** — **not** yet physical separate products/deployments |
+| Smoke fixtures (DEC-064) | Closed 2026-07-28 by **human** operator — repair + fixture apply (`changesApplied=18`); inspector no blockers; fixtures all-ready; idempotent dry-run; Sarah/Bob/John Doe preserved; catalogue untouched; no `PLATFORM_ADMIN` recreate; full IDs in vault only |
+| Student invite link repair | **Done** (repo + remote) — accept path persists `studentId`; remote repair human-applied 2026-07-28 |
+| Pre-incident hosted smoke | Evidence **before** the 2026-07-17 smoke reset does **not** substitute for a new hosted verification |
 
-1. **P0 ops (immediate):** `dat-production-smoke-hosted-verification-v1` — vault `DAT_SMOKE_*` IDs → fixture preflight → hosted read-only → hosted mutations → runbook validation
-2. **P1 / engineering excellence — planned (analysis-only):** `engineering-excellence-audit-v1` — global maintainability audit (**planned; not executed**); does not replace, delay, or mix with hosted smoke P0
-3. After hosted smoke + engineering audit: `platform-separation-architecture-plan-v1`
-4. Small refactor slices approved by the audit (one small scope per branch; behavioural equivalence + `pnpm check`)
-5. **P1 parallel (preserved):** `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065)
-6. Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded Platform without the separation plan
+Do **not** re-run repair or fixture apply without new evidence and explicit human authorization.
 
-**Abandoned:** `platform-admin-access-and-smoke-reconcile-v1` (superseded by DEC-063 / `dat-production-smoke-reconcile-v1`)
+### Production cutline (DEC-032) — current deployed core
 
-**Release anchor (DEC-056):** safety baseline tag `dat-v1-core-baseline-95b833e` → `95b833e`. Runbook: [git-tags-and-recovery-runbook.md](../../docs/ops/git-tags-and-recovery-runbook.md). Target release: `dat-v1.0.0-rc.*` → `dat-v1.0.0` (DEC-057).
+Controlled B2B: invite-only, `PUBLIC_SIGNUP_ENABLED=false`, no live self-service billing **today**. **Target DAT v1.0** adds Platform billing (DEC-046). See [production-readiness-cutline.md](../../docs/architecture/production-readiness-cutline.md).
 
-**Production cutline (DEC-032) — current deployed core:** Controlled B2B — invite-only, `PUBLIC_SIGNUP_ENABLED=false`, no live self-service billing **today**. **Target DAT v1.0** adds Platform billing (DEC-046). See [production-readiness-cutline.md](../../docs/architecture/production-readiness-cutline.md) and [dat-v1-commercial-release-scope.md](../../docs/product/dat-v1-commercial-release-scope.md).
+**Commercial plan names (DEC-058):** DAT Core, DAT Plus, DAT Premium. Stable keys: `DAT_CORE`, `DAT_PLUS`, `DAT_PREMIUM`. Never use display names as entitlement checks. Catalogue schema + seed **code** done (repo); seed not executed; no confirmed DB catalogue rows.
 
-**Do not open next** (unless explicit product scope / approval):
+### Single recommended next slice
 
-- `calendar-lessons-polish-v1e-student-warnings` (P3 — product policy first)
-- **Billing / checkout / PSP runtime** — requires explicit sensitive-batch approval per slice
-- **Prisma migrations / schema changes** — unless explicitly requested and gated
-- `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)**
-- **Platform cross-tenant audit viewer** — unless explicit platform product need
-- **`supabase-rls-tenant-policies-v1`** — only if Data API tenant access is product-required
+**`dat-production-smoke-hosted-verification-v1`** (P0 ops)
 
-**Audit log note:** Core write + read + viewer foundation is **done**. `audit-log-viewer-export-v1` is **optional polish**, not a gate. Do **not** treat audit log as “do not open” wholesale.
+1. Re-confirm Production deployment and served commit (merge of this docs slice may create a new deployment)
+2. Confirm full fixture IDs in operator vault → fill `DAT_SMOKE_*`
+3. Fixture preflight → hosted read-only → hosted mutations
+4. Reconcile results and close the runbook
 
-**Product direction (backlog — post-production polish):**
+Runbook: `driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md`
 
-- **Mobile/tablet** — review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports **done**
-- **`competitive-product-discovery-v1`** — **done** (2026-07-10); see [competitive-product-discovery.md](../../docs/product/competitive-product-discovery.md). Prevalence: reminders + balances **8/9**, self-booking/requests **6/9** (9 eligible direct competitors; HIGH/MEDIUM per row)
-- **`dat-plan-naming-and-doc-hygiene-v1`** — **done** (DEC-058): DAT Core / DAT Plus / DAT Premium display names; Basic/Standard superseded planning labels
-- **`platform-commercial-catalog-schema-plan-v1`** — **done** (DEC-060): hybrid catalogue schema plan; [platform-commercial-catalog-schema-plan.md](../../docs/architecture/platform-commercial-catalog-schema-plan.md)
-- **`platform-commercial-catalog-schema-foundation-v1`** — **done (repo)** (DEC-061): additive migration + schema; not deployed
-- **`platform-commercial-catalog-seed-v1`** — **done (repo)**: seed code + dedicated `--apply` CLI present; not executed; DEC-062 local-only legacy seed; incident 2026-07-17 smoke reset (test-only; IDs stale); no DB catalogue rows confirmed
-- **`dat-production-smoke-reconcile-v1`** — **done (inspect tooling)** (DEC-063)
-- **`dat-production-smoke-canonical-fixtures-v1`** — **done (code + smoke DB)** (DEC-064; human apply 2026-07-28; inspector green; idempotent dry-run)
-- **`student-invite-accept-student-link-repair-v1`** — **done (repo + remote)**; human repair apply 2026-07-28
-- **P0 next ops:** `dat-production-smoke-hosted-verification-v1`
-- **P1 / engineering excellence — planned (analysis-only):** `engineering-excellence-audit-v1` (not executed; not P2)
-- **P1 parallel:** `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065)
-- **Canonical after hosted smoke + engineering audit:** `platform-separation-architecture-plan-v1`, then audit-derived refactor slices
-- Product backlog preserved: `lesson-reminders-email-product-plan-v1`, `school-balances-ledger-product-plan-v1`, controlled lesson requests, student progress by competencies, import/export commercial packaging
+### After P0 (planned order)
 
-**Deferred (not next — RLS revoke-only track closed):**
+1. `engineering-excellence-audit-v1` — P1 analysis-only; **planned; not executed**
+2. `platform-separation-architecture-plan-v1`
+3. Small audit-approved refactor slices (one scope per branch)
 
-- `supabase-rls-tenant-policies-v1` — P2 tenant `CREATE POLICY`; separate from v1b; only if Data API tenant access is product-required
-- `i18n-framework-planning-v1` — deferred until dedicated batch
+**P1 parallel (preserved):** `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065).
 
-**Daily Super-Agent:** default **Manual daily Super-Agent check** ([cursor-automations-prompts.md](../../docs/ops/cursor-automations-prompts.md)) at no extra cost; Cursor Automations only if free on current plan.
+Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded Platform without the separation plan.
+
+**Abandoned:** `platform-admin-access-and-smoke-reconcile-v1` (superseded by DEC-063).
+
+### Do not open next (unless explicit approval)
+
+- `calendar-lessons-polish-v1e-student-warnings` (P3)
+- Billing / checkout / PSP runtime
+- Prisma migrations / schema changes (unless gated)
+- `people-management-ux-unification-instructor-route-split-v1` (D4)
+- Platform cross-tenant audit viewer
+- `supabase-rls-tenant-policies-v1` (only if Data API tenant access is product-required)
+
+**Done (do not list as future):** mobile/tablet readiness; competitive product discovery; tenant-aware audit viewer CSV export (`audit-log-viewer-export-v1`). Audit write + read + viewer foundation is **done**. Platform cross-tenant viewer remains deferred.
+
+**Deferred:** `i18n-framework-planning-v1`; RLS revoke-only track closed (`supabase-rls-tenant-policies-v1` separate P2).
+
+**Daily Super-Agent:** Manual daily check ([cursor-automations-prompts.md](../../docs/ops/cursor-automations-prompts.md)); Automations only if free on current plan.
 
 If a task conflicts with project memory, **stop and report the conflict** before editing.
 
@@ -498,6 +402,8 @@ Before recommending recovery, rollback, release branching, or final release:
 Full commands: [git-tags-and-recovery-runbook.md](../../docs/ops/git-tags-and-recovery-runbook.md) — do not duplicate the complete runbook here.
 
 **Current safety baseline:** `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — **code/recovery comparison only**, not a database backup.
+
+**Distinct tags:** `archive-schedule-and-vehicles-b101112` is **historical archive only** (not a release/recovery baseline). Entry baseline for this memory slice: `b408075` — re-confirm Production served commit before hosted smoke.
 
 ## Database command safety (DEC-062)
 
