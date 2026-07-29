@@ -6,7 +6,31 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 
 ---
 
-## DAT_3.4 / DAT_3.5 closed state
+## Canonical current state
+
+**Verified at entry of `canonical-state-reconciliation-v1` (2026-07-29).** Canonical memory and verified operational evidence take precedence over historical summaries.
+
+| Topic | Current truth |
+| ----- | ------------- |
+| **Entry baseline** | Commit `b408075` (`Merge branch 'engineering-excellence-audit-roadmap-v1'`). Verified entry baseline for this docs slice — **not** an eternal SHA. Re-confirm the commit served in Production before hosted smoke (merge of this slice may create a new deployment). |
+| **Git / CI** | Local `main` = `origin/main` at entry. GitLab pipeline `#2712551669` **Passed** (zero failed / skipped / manual). |
+| **Deployment** | Vercel project `meengine-dat` — Production **Ready** on source commit `b408075`. |
+| **Hosts (shared deployment)** | `www.meengine.io`, `platform.meengine.io`, `demo.meengine.io`, `meengine-dat.vercel.app` currently share the **same** Vercel app/deployment. DAT/Platform separation is **planned**, not yet physical. |
+| **Smoke fixtures** | DEC-064 closed 2026-07-28 (**human**): repair apply + fixture apply (`changesApplied=18`); inspector no blockers; fixtures all-ready; idempotent dry-run; Sarah/Bob/John Doe preserved; commercial catalogue untouched; no `PLATFORM_ADMIN` recreate. Full IDs in operator vault only. |
+| **Remote ops closed** | Do **not** re-run repair or fixture apply without new evidence + explicit human authorization. `student-invite-accept-student-link-repair-v1` **done** (repo + remote). |
+| **Hosted smoke validity** | Pre–2026-07-17 hosted smoke evidence does **not** substitute for a new verification after the incident reset. |
+| **Next P0** | `dat-production-smoke-hosted-verification-v1` — re-confirm deployment/commit → vault `DAT_SMOKE_*` → fixture preflight → hosted read-only → hosted mutations → runbook close. |
+| **After P0** | (1) `engineering-excellence-audit-v1` (planned, not executed) → (2) `platform-separation-architecture-plan-v1` → (3) small audit-approved refactor slices. |
+| **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
+| **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
+| **Archive tag** | `archive-schedule-and-vehicles-b101112` — historical archive only; **not** a release or recovery baseline. |
+| **Cutline** | Controlled B2B: invite-only, `PUBLIC_SIGNUP_ENABLED=false`, no live self-service billing today (DEC-032). |
+
+Runbooks: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md), [production-smoke-reconciliation-inspect.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-reconciliation-inspect.md).
+
+---
+
+## Historical — DAT_3.4 / DAT_3.5 closed state
 
 The following are **implemented and validated** at a baseline suitable for controlled demo and production auth/email:
 
@@ -28,9 +52,9 @@ Detail: `driving_school_platform/nextjs_space/docs/ops/release-checklist.md` and
 
 ---
 
-## DAT_3.6 closed state
+## Historical — DAT_3.6 closed state
 
-**DAT_3.6** implemented and **Preview QA validated**:
+**DAT_3.6** implemented and **Preview QA validated** (historical evidence; not a substitute for current hosted smoke):
 
 | Area | Status |
 | ---- | ------ |
@@ -55,9 +79,9 @@ Detail: `driving_school_platform/nextjs_space/docs/ops/release-checklist.md` and
 
 ---
 
-## DAT_3.6 QA validation evidence
+## Historical — DAT_3.6 QA validation evidence
 
-Functional results recorded during Preview QA (representative checklist):
+Functional results recorded during Preview QA (representative checklist; historical):
 
 - Manual student creation — **passed**
 - Manual practical lesson history — **passed**
@@ -71,9 +95,9 @@ Functional results recorded during Preview QA (representative checklist):
 
 ---
 
-## Recent migrations
+## Historical — early operational migrations
 
-Committed migration folders (DAT_3.6 student/lesson operational work):
+Committed migration folders (DAT_3.6 student/lesson operational work; later migrations exist — always check `prisma migrate status` on the target env):
 
 | Migration | Topic |
 | --------- | ----- |
@@ -93,30 +117,13 @@ pnpm exec prisma migrate status
 
 ## Known UX / product observations
 
-**`/admin/users` today** exposes a technical split that confuses school admins:
+**People Management (current):** Admin **People** hub at `/admin/users` — Students / Instructors L1 tabs with Profiles + Onboarding; English UI baseline; unified Edit Student / Edit Instructor; app-access remove/reactivate; change email (student + instructor + pending invitations); instructor invite lifecycle clarity on Profiles (**done** — `people-management-instructor-profile-invite-badge-v1`, `people-management-ux-unification-instructor-invitations-v1`). Route split to `/admin/instructors` remains **deferred (D4)**.
 
-- All Users
-- Fichas Registadas
-- Invitations
+**Import/export (current):** Student export/import (dry-run + apply) on registered student records; practical lessons export/import (preview + apply) on `/admin/lessons` Driving tab; demo guards on apply.
 
-**Product feedback:** “Alunos → Fichas Registadas” is more natural than “All Users” as the primary mental model.
+**Delete/removal (implemented):** School Admin (`SUPER_ADMIN`) may hard-delete a `MANUAL_ONLY` student ficha with no linked User, invitations, lessons of any `LessonSource`, lesson counters, lesson requests, exam registrations, or payments. Blocked deletes return stable **409** codes. Soft-delete/archive remains deferred. Retention review: [student-delete-retention-policy-review.md](./student-delete-retention-policy-review.md).
 
-**IA v1 (done):** `people-management-information-architecture-v1` — Admin **People** hub at `/admin/users` (route unchanged); page prioritizes **Students / Registered student records**; **Instructors** section (read-only operational view); flat login list labeled **App accounts**; helper copy for student record vs app account vs instructor. **Invitations-on-record v1 (done):** `people-management-ux-unification-invitations-v1` — Send/Revoke on student row, `pendingInvitation` in list API, English access copy on invitation slice; global Invitations section retained for instructors. **Instructors section v1 (done):** `people-management-ux-unification-instructors-section-v1` — first-class Instructors block on same page; no route split.
-
-**People UX (tabs + profiles polish done):** **`people-management-internal-tabs-v1`** — L1 tabs; **`people-management-onboarding-reframe-v1`** — Onboarding flows; **`people-management-profiles-status-and-pagination-v1`** — Students → **Profiles**, profile origin + app-access badges, label guide, list limit 15 + Load more, instructor client search + Load more, Pending invitations copy (list retained). **`people-management-record-status-badges-v1`** absorbed by profiles batch. **`people-management-app-accounts-demote-v1`** — App Accounts removed from L1 tabs (historical; Advanced accounts UI removed in **`people-management-advanced-accounts-removal-and-profile-avatars-v1`**). Primary People UX is Students/Instructors only. **`people-management-advanced-accounts-removal-and-profile-avatars-v1`** — Advanced accounts section removed; profile initials avatars (`PeopleProfileAvatar`). **`people-management-student-profile-operational-fields-v1`** — license category + transmission on Student profile (not App access); MANUAL_ONLY App access section in Edit Student. **`people-management-onboarding-unlinked-invitations-v1`** — Students → Onboarding unlinked pending invites only. **`people-management-ux-unification-instructor-route-split-v1`** **deferred (D4)**. Next polish: instructor invite on profile (see roadmap).
-
-Student records **export/import** UI on registered student records is implemented (`import-export-ui-students-export-v1`, `import-export-ui-students-import-dry-run-v1`, `import-export-ui-students-import-apply-v1`).
-
-**Agreed direction (DAT_3.7):**
-
-- **Alunos** and **Instrutores** should be the primary management entities.
-- **All Users** → downgrade/rename to **Contas da App** / **Acessos**.
-- **Invitation / app access** should live **inside** the student or instructor person record.
-- **Import/export** should be UI buttons, not raw API URLs. **Student** export/import on Fichas registadas; **practical lessons export + import (preview + apply)** on `/admin/lessons` (Driving tab).
-
-**Delete/removal (implemented):** School Admin (`SUPER_ADMIN`) may hard-delete a `MANUAL_ONLY` student ficha with no linked User, invitations, lessons of any `LessonSource`, lesson counters, lesson requests, exam registrations, or payments. Blocked deletes return stable **409** codes. Demo org uses the existing user-management mutation guard. Soft-delete/archive remains deferred. Retention review: [student-delete-retention-policy-review.md](./student-delete-retention-policy-review.md).
-
-**Product UI language:** baseline is **English** for new product surfaces. `/admin/users` People Management copy reconciled in `product-ui-language-baseline-english-v1` (English labels; route `/admin/users` unchanged). Future locale work via proper i18n, not scattered literals (see [roadmap-todo.md](./roadmap-todo.md)).
+**Product UI language:** English baseline for product surfaces. Future locale work via proper i18n (see [roadmap-todo.md](./roadmap-todo.md)).
 
 ---
 
@@ -138,23 +145,21 @@ Documented and in use (docs/rules only; no runtime change):
 
 ## Production cutline (DEC-032) — current deployed core
 
-**Historical cutline:** invite-only, `PUBLIC_SIGNUP_ENABLED=false`, **no live self-service billing** on the **current deployed core**. See [production-readiness-cutline.md](./production-readiness-cutline.md).
+Invite-only, `PUBLIC_SIGNUP_ENABLED=false`, **no live self-service billing** on the **current deployed core**. See [production-readiness-cutline.md](./production-readiness-cutline.md).
 
-**Target DAT v1.0 (DEC-046–058):** sellable/subscribable product with Platform-owned tenant billing, DAT Core / DAT Plus / DAT Premium, License self-service, email reminders, optional school ledger. Planning: [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md).
+**Target DAT v1.0 (DEC-046–058):** sellable/subscribable product with Platform-owned tenant billing, DAT Core / DAT Plus / DAT Premium. Planning: [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md).
 
-**Safety baseline tag:** `dat-v1-core-baseline-95b833e` → commit `95b833e` (DEC-056). Runbook: [git-tags-and-recovery-runbook.md](../ops/git-tags-and-recovery-runbook.md).
-
-**Cutline doc:** [production-readiness-cutline.md](./production-readiness-cutline.md) (`production-readiness-cutline-doc-v1`).
-
-**First-client onboarding:** [first-client-onboarding-record.md](./first-client-onboarding-record.md) (`production-first-client-onboarding-record-v1`, DEC-043). Real client **A Conquistadora** — provision via Platform when commercial path ready (DEC-053).
+**First-client onboarding:** [first-client-onboarding-record.md](./first-client-onboarding-record.md) (DEC-043). Real client **A Conquistadora** — provision via Platform when commercial path ready (DEC-053).
 
 **Do not open without approval:** billing/checkout runtime, Prisma migrations for commercial catalog, `calendar-lessons-polish-v1e-student-warnings`.
 
+**Deployment note:** DAT, Platform, and Demo hosts still share one Vercel app today — physical separation awaits `platform-separation-architecture-plan-v1`.
+
 ---
 
-## Current recommended next phase
+## Closed slices (reference archive)
 
-**Production path** — controlled first B2B client (see [production-readiness-cutline.md](./production-readiness-cutline.md) and [roadmap-todo.md](./roadmap-todo.md)).
+Detailed closed-slice inventory below is **historical reference**. For **what to do next**, use the [Canonical current state](#canonical-current-state) section and [roadmap-todo.md](./roadmap-todo.md).
 
 ### Done (v1)
 
@@ -243,7 +248,7 @@ Documented and in use (docs/rules only; no runtime change):
 - `production-smoke-e2e-readonly-v1` — test infra (DEC-036): hybrid read-only automated smoke — `pnpm e2e:smoke:api`, `e2e:smoke:readonly`, `e2e:smoke:prod`; env guards (`DAT_E2E_ALLOW_PRODUCTION`, `DAT_SMOKE_ALLOWED_HOSTS`); API health + signup blocked + Playwright auth/page loads; zero persisted writes; not in `pnpm check`/CI default. Runbook: `driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md`.
 - `instructor-invite-auto-approve-v1` — auth/invitations fix (DEC-037): invitation accept sets `isApproved=true` for all invited roles (including INSTRUCTOR); public signup policy unchanged; no schema/migration/RLS changes. Validated via `pnpm check`.
 - `instructor-invite-license-fields-v1` — People/invitations data integrity (DEC-038): INSTRUCTOR invite requires license number + expiration date; stored on `UserInvitation`; accept uses stored values (no `INVITE-PENDING-*`); placeholder detection in Profiles; migration `20260623120000_add_instructor_license_fields_to_invitations`; DEC-037 and public signup unchanged. Validated via `pnpm check`.
-- `production-smoke-e2e-fixture-preflight-v1` — zero-write smoke fixture preflight (DEC-039): `pnpm e2e:smoke:fixture-preflight`; explicit `DAT_SMOKE_ORG_ID` + student/instructor/vehicle IDs + optional `DAT_SMOKE_EXPECTED_*`; admin login + read-only admin API checks; technical smoke tenant **`DAT Production Smoke`** on `www.meengine.io` (DEC-045); hosted green.
+- `production-smoke-e2e-fixture-preflight-v1` — zero-write smoke fixture preflight (DEC-039): `pnpm e2e:smoke:fixture-preflight`; explicit `DAT_SMOKE_ORG_ID` + student/instructor/vehicle IDs + optional `DAT_SMOKE_EXPECTED_*`; admin login + read-only admin API checks; technical smoke tenant **`DAT Production Smoke`** on `www.meengine.io` (DEC-045). Pre–2026-07-17 hosted runs are **historical** — do not treat as current verification.
 - `production-smoke-e2e-lesson-mutations-v1` — lesson mutation smoke (DEC-040): `pnpm e2e:smoke:mutations`; dual opt-in `DAT_E2E_ALLOW_PRODUCTION_MUTATIONS`; API-first create + time-shift update; fixture preflight inside spec; immutable smoke trail (no delete/cleanup); not in `pnpm check`/CI.
 - `instructor-qualified-categories-management-v1b` — School Admin can view/edit instructor qualified license categories via People → Edit Instructor; PATCH `/api/admin/instructors/[id]`; M2M `_InstructorCategories`; no migration. Validated via `pnpm check`.
 - `production-smoke-e2e-testids-v1` — smoke testids + booking readiness metadata (DEC-041): `lib/smoke/smoke-testids.ts`; `qualifiedCategoryNames` / `instructorLicenseExpiry` on `GET /api/admin/instructors/all?forBooking=true`; fixture preflight category B hard-fail when exposed; improved readiness messages; not in `pnpm check`/CI.
@@ -298,38 +303,30 @@ Documented and in use (docs/rules only; no runtime change):
 
 ### Likely next (canonical sequence)
 
-1. **P0 ops (immediate):** `dat-production-smoke-hosted-verification-v1` — vault capture of full fixture IDs → fill `DAT_SMOKE_*` → fixture preflight → hosted read-only smoke → hosted mutation smoke → runbook validation
-2. **P1 / engineering excellence — planned (analysis-only):** `engineering-excellence-audit-v1` — global maintainability audit (**planned; not executed**); does not replace or delay hosted smoke
-3. **`platform-separation-architecture-plan-v1`** — autonomous MeEngine Platform vs DAT (after hosted smoke + engineering audit)
-4. **Small refactor slices** approved by the audit (not pre-created; one small scope per branch)
-
-**P1 parallel (preserved):** `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). **Commercial catalogue read-services** remain gated by Platform separation plan.
-
-Planning reference: [dat-v1-commercial-release-plan.md](./dat-v1-commercial-release-plan.md); catalogue plan: [platform-commercial-catalog-schema-plan.md](./platform-commercial-catalog-schema-plan.md); smoke inspect: [production-smoke-reconciliation-inspect.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-reconciliation-inspect.md).
+See [Canonical current state](#canonical-current-state). Single recommended next: **`dat-production-smoke-hosted-verification-v1`**. After that: engineering excellence audit → Platform separation plan → audit-approved refactors. P1 parallel and product backlog: [roadmap-todo.md](./roadmap-todo.md).
 
 ### Engineering excellence (audit status)
 
-- Localized refactors and hygiene have occurred across many prior slices (People, Calendar/Lessons, import/export, audit log, tenant/RLS, etc.).
-- A **global, systematic** maintainability / internal-quality audit has **not** been executed.
-- Slice **`engineering-excellence-audit-v1`** is **planned** as **P1 / engineering excellence — planned (analysis-only)** in [roadmap-todo.md](./roadmap-todo.md). No concrete audit findings are claimed in this memory batch; derived refactor slices are **not** pre-created.
+- Localized refactors and hygiene have occurred across many prior slices.
+- A **global, systematic** maintainability audit has **not** been executed.
+- Slice **`engineering-excellence-audit-v1`** is **planned** (P1 analysis-only) in [roadmap-todo.md](./roadmap-todo.md). No concrete audit findings claimed here.
 
 ### Operator housekeeping (local / Git — human-executed)
 
-- **Git housekeeping completed** (human operator): obsolete remote branch `feature/schedule-and-vehicles` removed after preserving unintegrated historical commit `b101112` (`DAT v2`, 2025-11-29) via annotated published tag **`archive-schedule-and-vehicles-b101112`**.
-- That tag is **historical archive only** — **not** a release, **not** a recovery baseline, **not** a canonical current version. No DEC for this archive operation.
-- Docker/local runner cleanup was also completed by the human operator (ephemeral container/volume IDs are **not** recorded in architectural memory).
+- Obsolete remote branch `feature/schedule-and-vehicles` removed; historical commit `b101112` preserved via annotated tag **`archive-schedule-and-vehicles-b101112`** (**historical archive only** — not a release or recovery baseline).
+- Docker/local runner cleanup completed by human operator (ephemeral IDs not recorded here).
 
 ### Deferred (not next)
 
-- **`calendar-lessons-polish-v1e-student-warnings`** (P3) — product policy first
+- **`calendar-lessons-polish-v1e-student-warnings`** (P3)
 - `people-management-ux-unification-instructor-route-split-v1` — **deferred (D4)**
-- Audit log — **write paths complete + read API + viewer UI + CSV export**; `/admin/audit-logs` URL-only (no main navbar); coverage at [audit-log-coverage-readiness-review.md](./audit-log-coverage-readiness-review.md)
+- Platform cross-tenant audit viewer — deferred; tenant-aware CSV export from `/admin/audit-logs` is **done**
 
 ### Product direction (backlog — post-production polish)
 
-**Mobile/tablet readiness (done):** review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports — [mobile-tablet-readiness-review.md](./mobile-tablet-readiness-review.md). Opt-in viewport smoke: `pnpm e2e:mobile-viewports`. **Not production blockers** (DEC-032).
+**Done:** mobile/tablet readiness; competitive product discovery; commercial cutline planning; catalogue schema foundation + seed **code** (not executed); DEC-063/064 smoke reconcile + fixtures; student invite link repair.
 
-**Competitive/Product Discovery (`competitive-product-discovery-v1`, done 2026-07-10):** Market comparison complete — [competitive-product-discovery.md](../product/competitive-product-discovery.md). **Commercial cutline planning done:** `dat-v1-commercial-platform-cutline-plan-v1` (2026-07-14, DEC-046–057). **Catalogue schema plan done:** `platform-commercial-catalog-schema-plan-v1` (DEC-060). **Catalogue schema foundation done (repo):** `platform-commercial-catalog-schema-foundation-v1` (DEC-061) — migration authored, not deployed. **Catalogue seed code done (repo):** `platform-commercial-catalog-seed-v1` — identities + DRAFT shell + dedicated `--apply` CLI; not executed; no DB catalogue rows confirmed; legacy `prisma db seed` is local-only (DEC-062). **Incident 2026-07-17:** remote technical smoke DB reset/reseeded with test-only data — prior smoke org/entity IDs are **historical pre-incident identifiers**, **stale after 2026-07-17**, **must not be used in `DAT_SMOKE_*` configuration**. **DEC-063:** do not recreate embedded Platform Admin; inspect tooling done via `dat-production-smoke-reconcile-v1`. **DEC-064 fixtures done (code + smoke DB, 2026-07-28 human apply):** repair + fixture `--apply` + inspector green + idempotent dry-run; catalogue untouched; no `PLATFORM_ADMIN` recreate. **Next P0 ops:** `dat-production-smoke-hosted-verification-v1`. **P1 planned (analysis-only):** `engineering-excellence-audit-v1`. **After hosted smoke + engineering audit:** `platform-separation-architecture-plan-v1`. **Identifiers Settings plan (backlog):** `school-person-identifiers-settings-product-plan-v1` (DEC-065). Product backlog preserved: `lesson-reminders-email-product-plan-v1`, `school-balances-ledger-product-plan-v1`, controlled lesson requests, student progress by competencies, import/export commercial packaging.
+**Open product backlog:** `lesson-reminders-email-product-plan-v1`, `school-balances-ledger-product-plan-v1`, controlled lesson requests, student progress by competencies, import/export commercial packaging; `school-person-identifiers-settings-product-plan-v1` (DEC-065). Commercial catalogue read-services gated by Platform separation plan.
 
 ---
 

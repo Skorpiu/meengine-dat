@@ -2,9 +2,11 @@
 
 Automated smoke for controlled B2B production readiness. Complements manual checklists ([smoke-test-checklist.md](./smoke-test-checklist.md), [production-smoke-baseline.md](./production-smoke-baseline.md)).
 
-**Decisions:** [DEC-036](../../../../docs/architecture/decision-log.md) (read-only v1a); [DEC-039](../../../../docs/architecture/decision-log.md) (fixture preflight); [DEC-040](../../../../docs/architecture/decision-log.md) (lesson mutation smoke v1); [DEC-041](../../../../docs/architecture/decision-log.md) (smoke testids + booking readiness metadata); [DEC-043](../../../../docs/architecture/decision-log.md) (first client onboarding record); [DEC-045](../../../../docs/architecture/decision-log.md) (smoke tenant identity + School Admin terminology).
+**Decisions:** [DEC-036](../../../../docs/architecture/decision-log.md) (read-only v1a); [DEC-039](../../../../docs/architecture/decision-log.md) (fixture preflight); [DEC-040](../../../../docs/architecture/decision-log.md) (lesson mutation smoke v1); [DEC-041](../../../../docs/architecture/decision-log.md) (smoke testids + booking readiness metadata); [DEC-043](../../../../docs/architecture/decision-log.md) (first client onboarding record); [DEC-045](../../../../docs/architecture/decision-log.md) (smoke tenant identity + School Admin terminology); [DEC-063](../../../../docs/architecture/decision-log.md) (smoke reconcile / no embedded Platform Admin recreate); [DEC-064](../../../../docs/architecture/decision-log.md) (canonical smoke fixtures).
 
 **First real client:** use [first-client-onboarding-record.md](../../../../docs/architecture/first-client-onboarding-record.md) — do **not** treat this smoke tenant as the client onboarding record.
+
+**P0 close slice:** `dat-production-smoke-hosted-verification-v1` — see [P0 closure criteria](#p0-closure-criteria-dat-production-smoke-hosted-verification-v1).
 
 ---
 
@@ -12,19 +14,42 @@ Automated smoke for controlled B2B production readiness. Complements manual chec
 
 | Suite                     | Tag                  | Writes  | Script                             |
 | ------------------------- | -------------------- | ------- | ---------------------------------- |
+| Fixture preflight         | `@fixture-preflight` | **No**  | `pnpm e2e:smoke:fixture-preflight` |
 | API health + signup guard | —                    | **No**  | `pnpm e2e:smoke:api`               |
 | Read-only UI smoke        | `@readonly`          | **No**  | `pnpm e2e:smoke:readonly`          |
-| Fixture preflight         | `@fixture-preflight` | **No**  | `pnpm e2e:smoke:fixture-preflight` |
 | Lesson mutations          | `@mutations`         | **Yes** | `pnpm e2e:smoke:mutations`         |
 | Mobile/tablet viewports   | `@mobile-viewport`   | **No**  | `pnpm e2e:mobile-viewports`        |
 
-Combined readonly hosted run: `pnpm e2e:smoke:prod` (API + `@readonly` only).
+**Canonical hosted order for P0 close:** fixture preflight → hosted read-only (`e2e:smoke:api` + `e2e:smoke:readonly`, or `e2e:smoke:prod`) → hosted mutations.
 
-Optional full hosted run (API + readonly + fixture preflight + mutations): `pnpm e2e:smoke:prod:full` — requires mutation dual opt-in.
+Combined readonly hosted helper: `pnpm e2e:smoke:prod` (API + `@readonly` only) — useful **after** preflight passes; **not** a substitute for preflight.
+
+Optional full hosted helper: `pnpm e2e:smoke:prod:full` — requires mutation dual opt-in. **Not** the canonical P0 close command; prefer **separate suite runs** so passed / skipped / failed counts are unambiguous.
 
 Optional mobile/tablet viewport smoke (read-only admin surfaces): `pnpm e2e:mobile-viewports` — not in `pnpm check`/CI default. See [Mobile/tablet viewport smoke](#mobiletablet-viewport-smoke-opt-in).
 
-**Fixture preflight must pass before mutation smoke** (mutations spec runs preflight internally).
+**Skipped does not equal passed.** Credential-skip or guard-skip outcomes validate discovery/config only — they do **not** close P0.
+
+**Fixture preflight must pass before mutation smoke** (mutations spec also runs preflight internally).
+
+---
+
+## P0 closure criteria (`dat-production-smoke-hosted-verification-v1`)
+
+Before marking this P0 closed, re-confirm the **Production deployment** and the **commit actually served** (merge of memory/docs slices may create a new deployment). Use **post-incident** fixture IDs from the operator vault only — never historical pre–2026-07-17 IDs.
+
+Run suites **separately** and require:
+
+| Suite                                                  | Required result                                                                                          |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| Fixture preflight (`pnpm e2e:smoke:fixture-preflight`) | **1 passed**, **0 skipped**, **0 failed**                                                                |
+| API health + signup guard (`pnpm e2e:smoke:api`)       | TypeScript script (**not** Playwright): **exit code 0**; health must pass; public signup must be blocked |
+| Hosted read-only UI (`pnpm e2e:smoke:readonly`)        | Playwright: **4 passed**, **0 skipped**, **0 failed**                                                    |
+| Mutations (`pnpm e2e:smoke:mutations`)                 | **1 passed**, **0 skipped**, **0 failed**                                                                |
+
+The helper `pnpm e2e:smoke:prod` must satisfy **both** the API exit-code gate and the Playwright 4/0/0 gate, but evidence for each gate must be recorded **separately** (do not merge into a single ambiguous “suite passed” claim).
+
+Do **not** treat `e2e:smoke:prod:full` as the canonical close command. Do **not** put IDs, full emails, secrets, or sensitive URLs in this document.
 
 ---
 
@@ -335,6 +360,8 @@ export DAT_SMOKE_ALLOWED_HOSTS=www.meengine.io
 
 All commands assume working directory `driving_school_platform/nextjs_space` and **Git Bash** on Windows.
 
+**P0 hosted close order:** (0) re-confirm Production deployment + served commit → (1) fixture preflight → (2) hosted read-only → (3) hosted mutations. See [P0 closure criteria](#p0-closure-criteria-dat-production-smoke-hosted-verification-v1).
+
 1. **Local (read-only):**
 
 ```bash
@@ -342,19 +369,22 @@ pnpm e2e:smoke:api
 pnpm e2e:smoke:readonly
 ```
 
-2. **Hosted (read-only):**
-
-```bash
-pnpm e2e:smoke:prod
-```
-
-3. **Hosted (zero-write fixture preflight):**
+2. **Hosted (zero-write fixture preflight) — run first for P0:**
 
 ```bash
 pnpm e2e:smoke:fixture-preflight
 ```
 
-4. **Hosted (persisted mutations; dual opt-in):**
+3. **Hosted (read-only) — after preflight passes:**
+
+```bash
+pnpm e2e:smoke:api
+pnpm e2e:smoke:readonly
+# or combined helper (not a substitute for preflight):
+pnpm e2e:smoke:prod
+```
+
+4. **Hosted (persisted mutations; dual opt-in) — after preflight + read-only:**
 
 ```bash
 pnpm e2e:smoke:mutations
@@ -367,6 +397,8 @@ pnpm e2e:mobile-viewports
 # or list only:
 pnpm exec playwright test --config=playwright.mobile-viewports.config.ts --list
 ```
+
+Do **not** use `pnpm e2e:smoke:prod:full` as the canonical P0 close command.
 
 ### Playwright install (once per machine)
 
@@ -448,6 +480,8 @@ Hosted targets require the same opt-in guards as other smoke suites (`DAT_E2E_AL
 
 ## Hosted / production run (explicit opt-in)
 
+**Before any hosted suite:** re-confirm the Vercel Production deployment is Ready and note the **source commit actually served**. Fill `DAT_SMOKE_*` from the operator vault with **post-incident** IDs only.
+
 Assumed shell: Git Bash
 
 ```bash
@@ -461,16 +495,11 @@ export DAT_SMOKE_ADMIN_PASSWORD=<secret>
 export DAT_SMOKE_INSTRUCTOR_EMAIL=<smoke-instructor>
 export DAT_SMOKE_INSTRUCTOR_PASSWORD=<secret>
 export E2E_SKIP_WEB_SERVER=1
-
-pnpm e2e:smoke:api
-pnpm e2e:smoke:readonly
-# or combined:
-pnpm e2e:smoke:prod
 ```
 
-### Fixture preflight (hosted)
+### 1. Fixture preflight (hosted) — first
 
-Add fixture IDs and expected identity checks (recommended for `www.meengine.io`):
+Add fixture IDs and expected identity checks from the vault:
 
 ```bash
 export DAT_SMOKE_ORG_ID=<current-smoke-org-id-from-vault>
@@ -486,9 +515,27 @@ export DAT_SMOKE_EXPECTED_LESSON_CATEGORY=B
 pnpm e2e:smoke:fixture-preflight
 ```
 
-Use **explicit smoke fixture IDs** only. Read-only and fixture suites perform **zero persisted writes**.
+**Closure gate:** 1 passed, 0 skipped, 0 failed. Use **explicit smoke fixture IDs** only. Zero persisted writes.
 
-### Lesson mutations (hosted)
+### 2. Hosted read-only — after preflight
+
+```bash
+pnpm e2e:smoke:api
+pnpm e2e:smoke:readonly
+# or combined helper (must still satisfy both gates below with separate evidence):
+pnpm e2e:smoke:prod
+```
+
+**Closure gates (record separately):**
+
+| Gate                      | Required result                                                                             |
+| ------------------------- | ------------------------------------------------------------------------------------------- |
+| `pnpm e2e:smoke:api`      | TypeScript script (**not** Playwright): **exit code 0**; health pass; public signup blocked |
+| `pnpm e2e:smoke:readonly` | Playwright: **4 passed**, **0 skipped**, **0 failed**                                       |
+
+Skipped ≠ passed. Do not collapse these two gates into one ambiguous “read-only suite” count.
+
+### 3. Lesson mutations (hosted) — after preflight + read-only
 
 Requires fixture preflight vars **plus** mutation dual opt-in:
 
@@ -497,11 +544,12 @@ export DAT_E2E_ALLOW_PRODUCTION_MUTATIONS=true
 export DAT_SMOKE_RUN_ID=manual-$(date +%Y%m%d%H%M%S)
 export DAT_SMOKE_EXPECTED_LESSON_CATEGORY=B
 
-pnpm e2e:smoke:fixture-preflight
 pnpm e2e:smoke:mutations
 ```
 
-Created lessons are retained as an immutable smoke trail (no cleanup in v1).
+**Closure gate:** 1 passed, 0 skipped, 0 failed. Created lessons are retained as an immutable smoke trail (no cleanup in v1).
+
+Do **not** treat `pnpm e2e:smoke:prod:full` as the canonical P0 close command.
 
 ---
 
