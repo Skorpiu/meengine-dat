@@ -2,7 +2,7 @@
 
 **Status:** Active cutline for **current deployed core** — controlled first B2B client production.
 **Decision:** [DEC-032](./decision-log.md) — `production-readiness-cutline-doc-v1`.
-**Entry baseline (this memory reconciliation):** `b408075` — verified at branch creation for `canonical-state-reconciliation-v1`; re-confirm served Production commit before hosted smoke.
+**Entry baseline (this memory reconciliation):** `c4f353b` — verified at branch creation for `canonical-memory-state-reconciliation-v1`; last operator-confirmed Production served commit was `07371e7` — re-confirm after every later deployment.
 **Safety tag:** `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only.
 **Commercial target:** [dat-v1-commercial-release-scope.md](../product/dat-v1-commercial-release-scope.md) — **final DAT v1.0 includes self-service billing**; this cutline describes what is **deployed today**, not the commercial end state.
 
@@ -54,7 +54,7 @@ Controlled production deployment for a **first B2B driving-school client** using
 | **Observability/audit** | Ready (foundation) | Tenant-aware `audit_logs` + write coverage + read API + viewer + **tenant CSV export**. Platform cross-tenant viewer deferred. |
 | **Mobile/tablet** | Done | Review + Schedule Map + PWA manifest + admin surfaces + Playwright viewports. |
 | **Competitive discovery** | Done | [competitive-product-discovery.md](../product/competitive-product-discovery.md) (2026-07-10). |
-| **Deployment/CI/QA** | Ready (gate) | GitLab CI = `pnpm check`. Operator deploy + smoke required per environment. Hosted smoke re-verification is **P0 ops** after fixture close. |
+| **Deployment/CI/QA** | Ready (gate) | GitLab CI = `pnpm check`. Operator deploy + smoke required per environment. Hosted smoke P0 **closed** 2026-07-31 (preflight 1/0/0; API exit 0; read-only 4/0/0; mutations 1/0/0). Re-confirm served commit after every deployment; re-run hosted gates after material runtime changes (e.g. Node 24). |
 
 **Summary:** DAT core is **production-ready enough** for controlled B2B production under invite-only, no public signup, no live billing assumptions.
 
@@ -62,25 +62,26 @@ Controlled production deployment for a **first B2B driving-school client** using
 
 ## P0 / P1 / P2 / P3
 
-### P0 — before controlled production (operational, not feature work)
+### P0 — release-enablement / operational discipline
 
 | Item | Notes |
 | ---- | ----- |
 | Credential policy | Vault + rotation; scoped accounts; never expose high-privilege secrets |
 | Target env deploy discipline | `prisma migrate status` (read-only); `pnpm check` green; post-deploy smoke. `migrate deploy` only when needed + explicit human authorization in an isolated block |
 | `PUBLIC_SIGNUP_ENABLED=false` | Mandatory for first B2B client production |
-| `dat-production-smoke-hosted-verification-v1` | **P0 immediate** — re-confirm deployment/commit → vault `DAT_SMOKE_*` → fixture preflight → hosted read-only → hosted mutations → runbook validation. Does **not** wait on engineering excellence audit. Pre–2026-07-17 hosted evidence is not current. |
+| `node-24-runtime-migration-v1` | **P0 current** — align Node 24 across local, package engines, `.nvmrc`, GitLab CI, Vercel, and docs; validate local + CI + deployment; repeat required hosted smoke gates. Dedicated slice only. |
+| `dat-production-smoke-hosted-verification-v1` | **Closed 2026-07-31** — runtime baseline `14bdc40`; docs merge `07371e7`; last confirmed Production served `07371e7`. Do not reopen as next. |
 
-### P1 — strongly recommended after P0
+### P1 — strongly recommended after Node 24
 
 | Item | Notes |
 | ---- | ----- |
-| `engineering-excellence-audit-v1` | **P1 / engineering excellence — planned (analysis-only)** — **not executed**; does **not** replace/delay hosted smoke P0 |
-| `platform-separation-architecture-plan-v1` | After hosted smoke + engineering audit |
+| `engineering-excellence-audit-v1` | **P1 / engineering excellence — planned (analysis-only)** — **not executed**; does **not** replace/delay Node 24 P0 |
+| `platform-separation-architecture-plan-v1` | After Node 24 + engineering audit |
 | Small audit-approved refactor slices | One small scope per branch; behavioural equivalence + `pnpm check` |
 | First-client operator smoke | People onboarding, Schedule Map, invite accept, lesson create/edit, import dry-run (when real client path opens) |
 
-**Canonical sequence (current):** (1) `dat-production-smoke-hosted-verification-v1` — P0; (2) `engineering-excellence-audit-v1` — P1 analysis-only; (3) `platform-separation-architecture-plan-v1`; (4) small audit-approved refactor slices.
+**Canonical sequence (current):** (1) `node-24-runtime-migration-v1` — P0 release-enablement; (2) `engineering-excellence-audit-v1` — P1 analysis-only; (3) `platform-separation-architecture-plan-v1`; (4) small audit-approved refactor slices.
 
 ### P2 — post-production or non-blocking
 
@@ -107,13 +108,13 @@ Controlled production deployment for a **first B2B driving-school client** using
 
 | # | Step | Type |
 | - | ---- | ---- |
-| 1 | `dat-production-smoke-hosted-verification-v1` | **P0 ops** — current next |
+| 1 | `node-24-runtime-migration-v1` | **P0 release-enablement** — current next |
 | 2 | `engineering-excellence-audit-v1` | P1 analysis-only — planned |
 | 3 | `platform-separation-architecture-plan-v1` | Docs/architecture |
 | 4 | Audit-approved refactor slices | Small, behavioural equivalence |
 | 5 | First-client operator onboarding | Human gate when commercial path ready |
 
-Historical cutline prep steps (`production-readiness-cutline-doc-v1`, smoke runbook sync, audit foundation plan, first-client record, lesson nullability review) are **done** — see [current-state.md](./current-state.md).
+Historical cutline prep steps and hosted production smoke verification are **done** — see [current-state.md](./current-state.md).
 
 ---
 
@@ -135,10 +136,11 @@ Historical cutline prep steps (`production-readiness-cutline-doc-v1`, smoke runb
 
 | Risk | Severity | Mitigation |
 | ---- | -------- | ---------- |
-| Stale hosted smoke evidence | P0 | Re-run `dat-production-smoke-hosted-verification-v1` with post-incident vault IDs; re-confirm deployed commit |
+| Node.js 20 deprecated on Vercel (future deploy capability risk) | P0 | Dedicated slice `node-24-runtime-migration-v1`: align local + engines + `.nvmrc` + GitLab CI + Vercel + docs; `pnpm check`; pipeline; Ready deployment; repeat required hosted smoke gates |
+| Hosted smoke evidence becoming stale after material runtime/deploy changes | Conditional P0 | Mitigated at the 2026-07-31 close; re-confirm the served commit and re-run the required hosted gates after Node 24 or another material deployment change |
 | Shared DAT/Platform/Demo deployment | P1 | Separation plan after engineering audit; do not assume separate products today |
 | Env-specific migrations | P1 | Never assume validated env = all envs; run gate per target |
-| Possible shared demo/production database | Historical / unconfirmed | Historical operational risk; **not revalidated** in `canonical-state-reconciliation-v1`. Do not treat as current verified fact. Dedicated org/host for client remains good practice. |
+| Possible shared demo/production database | Historical / unconfirmed | Historical operational risk; **not revalidated** in `canonical-memory-state-reconciliation-v1`. Do not treat as current verified fact. Dedicated org/host for client remains good practice. |
 | Audit platform cross-tenant view | P2 | Tenant foundation + CSV export exist; defer platform viewer until governance need is explicit |
 | Student UX minimal | P2 | Acceptable for B2B; polish after go-live if needed |
 
@@ -163,5 +165,5 @@ See [production-smoke-baseline.md](../../driving_school_platform/nextjs_space/do
 - [current-state.md](./current-state.md) — canonical present truth
 - [roadmap-todo.md](./roadmap-todo.md) — open backlog + single next slice
 - [first-client-onboarding-record.md](./first-client-onboarding-record.md) — controlled first B2B client checklist (DEC-043)
-- [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md) — hosted smoke P0 runbook
+- [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md) — hosted smoke runbook (P0 close record)
 - [command-batteries.md](../ops/command-batteries.md) — deploy and smoke commands

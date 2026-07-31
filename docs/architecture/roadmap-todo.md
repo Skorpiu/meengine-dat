@@ -10,13 +10,13 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| `dat-production-smoke-hosted-verification-v1` | **P0** ops | **Closed 2026-07-31** — Production `Ready`; served commit `14bdc40`; fixture preflight 1/0/0; API exit 0; read-only 4/0/0; mutations 1/0/0 |
+| `node-24-runtime-migration-v1` | **P0** release-enablement | **Next** — align Node 24 across local runtime, package engines, `.nvmrc`, GitLab CI, Vercel, and docs; validate local + CI + deployment; repeat required hosted smoke gates |
 
-Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md). Fixtures (DEC-064) and invite-link repair are **closed** — do not re-apply without new evidence + human authorization.
+**Closed context:** `dat-production-smoke-hosted-verification-v1` closed 2026-07-31 (runtime baseline `14bdc40`; docs merge `07371e7`; last confirmed Production served `07371e7`). Fixtures (DEC-064) and invite-link repair remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
 ---
 
-## Canonical sequence (after P0)
+## Canonical sequence
 
 <!-- node-24-runtime-migration-v1 -->
 1. `node-24-runtime-migration-v1` — **P0 release-enablement / next**; migrate all Node 20 pins to Node 24, validate local + CI + Vercel, deploy, and repeat the required hosted smoke gates
@@ -56,8 +56,8 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 | Slice | Priority | Notes |
 | ----- | -------- | ----- |
-| `engineering-excellence-audit-v1` | **P1** planned (analysis-only) | Global maintainability audit — **not executed**; does not delay P0 smoke |
-| `platform-separation-architecture-plan-v1` | **P1** backlog | After hosted smoke + engineering audit — autonomous MeEngine Platform vs DAT |
+| `engineering-excellence-audit-v1` | **P1** planned (analysis-only) | Global maintainability audit — **not executed**; does not replace or delay Node 24 P0 |
+| `platform-separation-architecture-plan-v1` | **P1** backlog | After Node 24 + engineering audit — autonomous MeEngine Platform vs DAT |
 | `people-instructor-invite-accept-list-refresh-v1` | **P1** bug | After INSTRUCTOR invite accept, instructor may not appear under People → Instructors despite correct DB rows |
 | `school-person-identifiers-settings-product-plan-v1` | **P1** plan first | DEC-065 — Admin → Settings → Identifiers & numbering; plan before implementation |
 | `platform-commercial-catalog-read-services-v1` | **P1** blocked | Gate after Platform separation plan — do not resume in embedded Platform |
@@ -93,7 +93,7 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 **Goal (future execution):** Global maintainability and internal-quality audit **without** changing functional behaviour during the audit itself.
 
-**Does not:** replace, delay, or mix with `dat-production-smoke-hosted-verification-v1` (P0); alter runtime/schema/data; mass-refactor; invent abstractions to cut lines; mix internal maintenance with new features.
+**Does not:** replace, delay, or mix with `node-24-runtime-migration-v1` (P0); alter runtime/schema/data; mass-refactor; invent abstractions to cut lines; mix internal maintenance with new features.
 
 **Scope (when executed):**
 

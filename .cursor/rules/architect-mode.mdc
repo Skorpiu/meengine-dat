@@ -418,15 +418,16 @@ When investigating code or tests:
 | `archive-schedule-and-vehicles-b101112` | **Historical archive only** — preserves unintegrated commit `b101112`; **not** a release, recovery, or current baseline |
 | `dat-v1-core-baseline-95b833e` @ `95b833e` | **Safety baseline** (DEC-056) — code/recovery comparison only; **not** a database backup |
 | `14bdc40` | **Hosted smoke runtime baseline** — Production commit against which `dat-production-smoke-hosted-verification-v1` gates passed |
-| `07371e7` | **Verified entry baseline** for `super-agent-project-state-sync-v1`; also the Production-served commit observed before this rules-only slice is merged. Not an eternal current SHA — re-confirm after every deployment. |
+| `07371e7` | Hosted-smoke docs merge on `main`; last **operator-confirmed** Production served commit before later `main` advances — re-confirm after every deployment |
+| `c4f353b` | **Verified entry baseline** for `canonical-memory-state-reconciliation-v1` (`Merge branch 'super-agent-project-state-sync-v1' into 'main'`). Not an eternal current SHA; do **not** claim it is served in Production without fresh Vercel confirmation |
 
-### Verified operational reality at entry to this rules slice
+### Verified operational reality at entry to this memory reconciliation
 
 | Fact | Status |
 | ---- | ------ |
-| Entry `main` / `origin/main` | `07371e7` — `Merge branch 'dat-production-smoke-hosted-verification-v1' into 'main'`; re-confirm after this rules slice is merged |
+| Entry `main` / `origin/main` | `c4f353b` — `Merge branch 'super-agent-project-state-sync-v1' into 'main'` |
 | Hosted smoke slice | **`dat-production-smoke-hosted-verification-v1` closed** (docs commit `5a10446`; merge `07371e7`) |
-| Vercel Production at entry | Project `meengine-dat` — deployment **Ready**; domain `www.meengine.io`; served commit **`07371e7`** at validation time; re-confirm after every later deployment |
+| Vercel Production (last operator-confirmed) | Project `meengine-dat` — deployment **Ready**; domain `www.meengine.io`; served commit **`07371e7`**; re-confirm after every later deployment (do not assume `c4f353b` is served) |
 | Smoke gates | Fixture preflight 1/0/0; API health+signup exit 0; read-only 4/0/0; mutations 1/0/0 |
 | Mutation trail | Lesson created by suite retained as immutable smoke trail — **do not clean up** |
 | Mutation opt-in | Not persisted |
@@ -440,7 +441,7 @@ When investigating code or tests:
 
 Do **not** re-run repair, fixture apply, smoke-lesson cleanup, or unauthorized remote writes without new evidence and explicit human authorization.
 
-**Entry drift record (out of scope for `super-agent-project-state-sync-v1`):** at branch creation, the top canonical snapshot in `current-state.md` still described hosted smoke as the next P0. Reconcile that document in a dedicated canonical-memory docs slice before starting Node 24; once reconciled, treat this sentence as historical entry context, not as a current override.
+**Entry drift record (historical):** at creation of `super-agent-project-state-sync-v1`, the top canonical snapshot in `current-state.md` still described hosted smoke as the next P0. **Reconciled** in `canonical-memory-state-reconciliation-v1` (2026-07-31). This sentence is historical context only — it does **not** block starting `node-24-runtime-migration-v1` after this memory slice merges.
 
 ### Production cutline (DEC-032) — current deployed core
 
@@ -509,7 +510,7 @@ Full commands: [git-tags-and-recovery-runbook.md](../../docs/ops/git-tags-and-re
 
 **Current safety baseline:** `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — **code/recovery comparison only**, not a database backup.
 
-**Distinct tags:** `archive-schedule-and-vehicles-b101112` is **historical archive only** (not a release/recovery baseline). Production served commit observed at entry: `07371e7` (hosted smoke closed against runtime baseline `14bdc40`). Re-confirm the served commit after every subsequent deployment before relying on hosted evidence.
+**Distinct tags:** `archive-schedule-and-vehicles-b101112` is **historical archive only** (not a release/recovery baseline). Last operator-confirmed Production served commit: `07371e7` (hosted smoke closed against runtime baseline `14bdc40`). Entry of this memory slice: `c4f353b`. Re-confirm the served commit after every subsequent deployment before relying on hosted evidence.
 
 ## Database command safety (DEC-062)
 
