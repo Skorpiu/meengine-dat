@@ -8,19 +8,20 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 
 ## Canonical current state
 
-**Verified at entry of `canonical-state-reconciliation-v1` (2026-07-29).** Canonical memory and verified operational evidence take precedence over historical summaries.
+**Verified at entry of `canonical-memory-state-reconciliation-v1` (2026-07-31).** Canonical memory and verified operational evidence take precedence over historical summaries.
 
 | Topic | Current truth |
 | ----- | ------------- |
-| **Entry baseline** | Commit `b408075` (`Merge branch 'engineering-excellence-audit-roadmap-v1'`). Verified entry baseline for this docs slice — **not** an eternal SHA. Re-confirm the commit served in Production before hosted smoke (merge of this slice may create a new deployment). |
-| **Git / CI** | Local `main` = `origin/main` at entry. GitLab pipeline `#2712551669` **Passed** (zero failed / skipped / manual). |
-| **Deployment** | Vercel project `meengine-dat` — Production **Ready** on source commit `b408075`. |
+| **Entry baseline** | Commit `c4f353b` (`Merge branch 'super-agent-project-state-sync-v1' into 'main'`). Verified entry baseline for this docs slice — **not** an eternal SHA. Re-confirm the commit served in Production after every new deployment. Do **not** claim `c4f353b` is served in Production without a fresh Vercel confirmation. |
+| **Git / CI** | Local `main` = `origin/main` = `c4f353b` at entry. Pipeline of `main` for the `super-agent-project-state-sync-v1` merge: **Passed**. |
+| **Deployment (last operator-confirmed)** | Vercel project `meengine-dat` — Production **Ready** on domain `www.meengine.io`; last explicitly confirmed served commit **`07371e7`**. Re-confirm after every later deployment (including after this docs slice merges). |
 | **Hosts (shared deployment)** | `www.meengine.io`, `platform.meengine.io`, `demo.meengine.io`, `meengine-dat.vercel.app` currently share the **same** Vercel app/deployment. DAT/Platform separation is **planned**, not yet physical. |
+| **Hosted smoke** | **`dat-production-smoke-hosted-verification-v1` closed** (runtime baseline `14bdc40`; docs merge `07371e7`; smoke branch deleted local + remote). Gates: fixture preflight **1/0/0**; API health + public signup guard **exit 0**; hosted read-only UI **4/0/0**; hosted mutations **1/0/0**. Mutation opt-in not persisted; suite lesson retained as immutable smoke trail (no cleanup in v1). |
 | **Smoke fixtures** | DEC-064 closed 2026-07-28 (**human**): repair apply + fixture apply (`changesApplied=18`); inspector no blockers; fixtures all-ready; idempotent dry-run; Sarah/Bob/John Doe preserved; commercial catalogue untouched; no `PLATFORM_ADMIN` recreate. Full IDs in operator vault only. |
-| **Remote ops closed** | Do **not** re-run repair or fixture apply without new evidence + explicit human authorization. `student-invite-accept-student-link-repair-v1` **done** (repo + remote). |
-| **Hosted smoke validity** | Pre–2026-07-17 hosted smoke evidence does **not** substitute for a new verification after the incident reset. |
-| **Next P0** | `dat-production-smoke-hosted-verification-v1` — re-confirm deployment/commit → vault `DAT_SMOKE_*` → fixture preflight → hosted read-only → hosted mutations → runbook close. |
-| **After P0** | (1) `engineering-excellence-audit-v1` (planned, not executed) → (2) `platform-separation-architecture-plan-v1` → (3) small audit-approved refactor slices. |
+| **Remote ops closed** | Do **not** re-run repair, fixture apply, or smoke-lesson cleanup without new evidence + explicit human authorization. `student-invite-accept-student-link-repair-v1` **done** (repo + remote). |
+| **Node.js runtime** | Still pinned to **Node 20** (engines / `.nvmrc` / GitLab CI / docs). Vercel Node.js 20 deprecation warning observed — migrate only in `node-24-runtime-migration-v1`. |
+| **Next P0** | `node-24-runtime-migration-v1` — **P0 release-enablement**: align Node 24 across local, package engines, `.nvmrc`, GitLab CI, Vercel, and docs; validate local + CI + deployment; repeat required hosted smoke gates. |
+| **After Node 24** | (1) `engineering-excellence-audit-v1` (planned, not executed) → (2) `platform-separation-architecture-plan-v1` → (3) small audit-approved refactor slices. |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
 | **Archive tag** | `archive-schedule-and-vehicles-b101112` — historical archive only; **not** a release or recovery baseline. |
@@ -303,7 +304,7 @@ Detailed closed-slice inventory below is **historical reference**. For **what to
 
 ### Likely next (canonical sequence)
 
-See [Canonical current state](#canonical-current-state). Single recommended next: **`dat-production-smoke-hosted-verification-v1`**. After that: engineering excellence audit → Platform separation plan → audit-approved refactors. P1 parallel and product backlog: [roadmap-todo.md](./roadmap-todo.md).
+See [Canonical current state](#canonical-current-state). Single recommended next: **`node-24-runtime-migration-v1`**. After that: engineering excellence audit → Platform separation plan → audit-approved refactors. P1 parallel and product backlog: [roadmap-todo.md](./roadmap-todo.md).
 
 ### Engineering excellence (audit status)
 
@@ -341,11 +342,13 @@ The P0 slice `dat-production-smoke-hosted-verification-v1` is operationally comp
 
 **Deployment provenance**
 
-- Vercel Production status: **Ready**.
+- Vercel Production status at smoke close: **Ready**.
 - Production domain verified: `www.meengine.io`.
-- Source commit served: `14bdc40` — `Merge branch 'canonical-state-reconciliation-v1'`.
+- Runtime commit against which hosted gates passed: `14bdc40` — `Merge branch 'canonical-state-reconciliation-v1'`.
+- Hosted-smoke docs merge on `main`: `07371e7`.
+- Last operator-confirmed Production served commit (after that merge): **`07371e7`**. Re-confirm after every later deployment; do **not** assert a newer `main` SHA is served without fresh Vercel evidence.
 - The Vercel dashboard displayed `1d ago` when checked on 2026-07-31; an exact deployment timestamp was not captured.
-- Local closure branch was based on the same canonical runtime commit.
+- Local closure branch was based on the same canonical runtime commit (`14bdc40`).
 
 **Hosted verification evidence**
 
