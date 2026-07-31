@@ -10,7 +10,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| `dat-production-smoke-hosted-verification-v1` | **P0** ops | **Next** — re-confirm Production deployment/commit → vault `DAT_SMOKE_*` → fixture preflight → hosted read-only → hosted mutations → runbook close |
+| `dat-production-smoke-hosted-verification-v1` | **P0** ops | **Closed 2026-07-31** — Production `Ready`; served commit `14bdc40`; fixture preflight 1/0/0; API exit 0; read-only 4/0/0; mutations 1/0/0 |
 
 Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md). Fixtures (DEC-064) and invite-link repair are **closed** — do not re-apply without new evidence + human authorization.
 
@@ -18,9 +18,11 @@ Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/do
 
 ## Canonical sequence (after P0)
 
-1. `engineering-excellence-audit-v1` — **P1 / engineering excellence — planned (analysis-only)**; **not executed**
-2. `platform-separation-architecture-plan-v1`
-3. Small audit-approved refactor slices (one scope per branch; behavioural equivalence + `pnpm check`)
+<!-- node-24-runtime-migration-v1 -->
+1. `node-24-runtime-migration-v1` — **P0 release-enablement / next**; migrate all Node 20 pins to Node 24, validate local + CI + Vercel, deploy, and repeat the required hosted smoke gates
+2. `engineering-excellence-audit-v1` — **P1 / engineering excellence — planned (analysis-only)**; **not executed**
+3. `platform-separation-architecture-plan-v1`
+4. Small audit-approved refactor slices (one scope per branch; behavioural equivalence + `pnpm check`)
 
 **P1 parallel (preserved):** `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065).
 

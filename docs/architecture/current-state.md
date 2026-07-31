@@ -333,3 +333,30 @@ See [Canonical current state](#canonical-current-state). Single recommended next
 ## Lesson ↔ Student nullability policy (review)
 
 Docs-only review completed: [lesson-student-nullability-policy-review.md](./lesson-student-nullability-policy-review.md).
+
+<!-- hosted-production-smoke-closure-2026-07-31 -->
+## Hosted Production smoke verification — closed 2026-07-31
+
+The P0 slice `dat-production-smoke-hosted-verification-v1` is operationally complete.
+
+**Deployment provenance**
+
+- Vercel Production status: **Ready**.
+- Production domain verified: `www.meengine.io`.
+- Source commit served: `14bdc40` — `Merge branch 'canonical-state-reconciliation-v1'`.
+- The Vercel dashboard displayed `1d ago` when checked on 2026-07-31; an exact deployment timestamp was not captured.
+- Local closure branch was based on the same canonical runtime commit.
+
+**Hosted verification evidence**
+
+- Fixture preflight: **1 passed, 0 skipped, 0 failed**.
+- API health + public signup guard: **exit code 0**; health passed and public signup returned the expected disabled response.
+- Hosted read-only UI: **4 passed, 0 skipped, 0 failed**.
+- Hosted lesson mutations: **1 passed, 0 skipped, 0 failed**.
+- The created lesson was retained as the required immutable smoke trail.
+- The production mutation opt-in was process-local and was not persisted.
+- No fixture repair, reseed, cleanup, schema change, or unapproved database operation was performed.
+
+**Operational follow-up**
+
+The deployment log reported that Node.js 20 is deprecated for future Vercel deployments. Handle this only in the separate slice `node-24-runtime-migration-v1`; do not mix the runtime migration into the completed hosted-smoke slice.
