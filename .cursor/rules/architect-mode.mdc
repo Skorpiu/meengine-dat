@@ -269,14 +269,109 @@ For **runtime / API / UI / sensitive** batches, final reports must also include 
 
 See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol** and `docs/ops/command-batteries.md` — Human-controlled close/merge battery + **Prepare next recommended branch**.
 
-- Do **not** run merge/push/branch-delete/archive commands by default.
+- Branch creation, branch switching, publication, merge, and deletion are **human-executed only**; Cursor provides guarded Git Bash commands but does not execute those lifecycle operations. Do not run archive commands by default.
 - At batch close, provide Rui a **complete** manual battery (**Git Bash**, copy-paste-safe): pre-staging status, diff stat, `git add` paths, staged diff stat, commit, switch main, pull `--ff-only`, merge `--no-ff`, `pnpm check`, push, delete merged feature branch, ZIP (`rm -f DAT-*.zip`, `SHA=$(…)`, archive), final status — **no omitted steps**.
 - Then provide **`Prepare next recommended branch`**: `git pull --ff-only`, `git switch -c <concrete-next-slice>`, `git status --short` — use the real next slice name from `current-state.md` / `roadmap-todo.md` when known (recommendation only, not authorization).
 - **Daily Branch Housekeeping Protocol** — default list-only (`git branch --merged` / `--no-merged`); may suggest `git branch -d` for merged locals only; never delete unmerged or remote branches unless Rui explicitly asks.
 - **Memory Consistency Gate** — required in every final report (see operating model); incomplete gate blocks merge readiness.
 - Batteries must start with **`Assumed shell: Git Bash`** and use **single-line** Conventional Commits (no multiline heredocs).
-- **Merge/push remains a human control point** — Rui merges when the batch is ready.
-- If Rui **explicitly asks** Cursor to run merge/push (or commit/switch/pull/merge/branch-delete/archive), first **restate risks**, the **command plan**, and **working tree assumptions**; confirm before executing; still use Git Bash syntax unless Rui asked for PowerShell.
+- **Branch lifecycle and publication remain human control points** — Rui creates, switches, publishes, merges, and deletes branches when the slice is ready.
+- Cursor may create a local commit only when the prepared branch and prompt explicitly authorize it. Branch creation, switching, publication, merge, rebase, cherry-pick, and deletion remain operator-executed even when discussed; provide the guarded Git Bash battery instead of executing them.
+
+## Branch and engineering guardrails
+
+<!-- human-owned-branch-lifecycle-v1 -->
+### Human-owned branch lifecycle
+
+- The operator exclusively creates, opens, renames, publishes, integrates, and deletes branches.
+- The Super Agent must never execute `git switch -c`, `git checkout -b`, `git branch <name>`, branch rename, branch push, merge, rebase, cherry-pick, remote branch deletion, or local branch deletion.
+- The Super Agent may inspect refs, validate the already-prepared branch, and provide copy-paste-safe Git Bash command batteries for the operator.
+- If the current branch or HEAD differs from the approved entry state, stop and report the discrepancy; never self-correct by creating or switching branches.
+- Local commit creation is allowed only when explicitly requested and only inside the operator-prepared branch.
+
+### One scope per branch
+
+- Each branch corresponds to **one coherent slice**.
+- A slice may be functional, documentary, operational, architectural, or maintenance — but must **not** combine independent concerns.
+- An out-of-scope discovery must **not** silently expand the current branch.
+- Record the discovery as backlog, audit input, or a future branch — do **not** implement adjacent “while we are here” changes.
+
+### Scope drift prevention
+
+**Before editing**, declare and confirm:
+
+1. Current branch name
+2. Slice objective
+3. Expected file paths
+4. Forbidden operations for this slice
+5. Working tree is clean
+6. Base / HEAD commit matches the approved entry point
+
+**Before commit:**
+
+1. Run `git diff --check`
+2. Confirm changed paths match the declared scope (no stranger files)
+3. Stage **explicit** paths only (`git add <path>…`)
+4. Review the staged diff
+5. Validate commit parent and subject before creating the commit
+
+### Safe realignment (commit on wrong branch)
+
+When a commit was created on the wrong branch:
+
+1. Do **not** delete the commit
+2. Create a preservation reference or branch first
+3. Verify that reference points at the correct SHA
+4. Only then realign the original branch
+5. Never force-push without necessity, a recovery plan, and **explicit human authorization**
+
+### Branch lifecycle (delete only after gates)
+
+A branch may be deleted only after confirming **all** of:
+
+1. Commit validated
+2. Push completed
+3. Branch pipeline green
+4. Merge completed
+5. Source commit integrated on `main`
+6. `main` pipeline green
+7. Applicable deployment is **Ready**
+8. Served commit identified
+9. Local `main` aligned with `origin/main`
+10. Working tree clean
+
+After those gates (human-executed unless explicitly authorized):
+
+- Delete the remote branch if it still exists
+- `git fetch --prune origin`
+- Delete the local branch with `git branch -d` (never `git branch -D` unless the branch is unequivocally integrated and the operator explicitly authorizes force-delete)
+- Confirm local, remote, and remote-tracking refs are gone
+- Never delete a branch merely because a Merge Request was opened
+- Never delete branches that still hold unintegrated preserved work
+
+### Remote writes
+
+- No automatic push, merge, remote branch delete, deploy, or database write.
+- Each command block may contain **at most one** remote write.
+- Remote writes require **explicit human authorization**.
+- Remote database operations require a target guard and unambiguous human confirmation (see DEC-062).
+- Do not print secrets, passwords, tokens, full sensitive URLs, or unnecessary IDs.
+- Destructive or mutation opt-ins should be **process-local** whenever possible and must **not** be persisted by default.
+
+### Structural investigation
+
+When investigating code or tests:
+
+1. Start from the real entrypoint
+2. Follow imports, calls, and dependencies
+3. Search the exact error or text
+4. Run a repository-wide `git grep` before concluding absence or misplacement
+5. Distinguish navigation friction from a **confirmed** structural defect
+6. Do not recommend moving files for aesthetic preference alone
+7. Do not assume `e2e/helpers/` (or similar shared helper dirs) automatically means incorrect structure
+8. Keep behavioural equivalence during audits and refactors; structural moves belong in separate slices
+
+**Preserved local input (do not mix into unrelated slices):** branch `production-smoke-module-structure-audit-record-v1` @ `a4bea9d` holds a candidate for `engineering-excellence-audit-v1`. Not approved for implementation; do not cherry-pick, merge, or delete that branch from an unrelated slice.
 
 ## Hard rules
 
@@ -314,7 +409,7 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 
 ## Current operational navigator (verify memory docs)
 
-**Source of truth:** `docs/architecture/current-state.md` and `docs/architecture/roadmap-todo.md`. This section is a Cursor navigator only; if drift, trust those docs and [decision-log.md](../../docs/architecture/decision-log.md). Full closed-slice history lives in `current-state.md` — do **not** treat this rule as an archive.
+**Source of truth:** `docs/architecture/current-state.md` and `docs/architecture/roadmap-todo.md`. This section is a Cursor navigator only; if drift, prefer **verified operational evidence** and [decision-log.md](../../docs/architecture/decision-log.md), then reconcile memory docs in a dedicated docs slice. Full closed-slice history lives in `current-state.md` — do **not** treat this rule as an archive.
 
 ### Baseline anchors (distinct meanings)
 
@@ -322,22 +417,30 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 | ------ | ------- |
 | `archive-schedule-and-vehicles-b101112` | **Historical archive only** — preserves unintegrated commit `b101112`; **not** a release, recovery, or current baseline |
 | `dat-v1-core-baseline-95b833e` @ `95b833e` | **Safety baseline** (DEC-056) — code/recovery comparison only; **not** a database backup |
-| `b408075` | **Verified entry baseline** for slice `canonical-state-reconciliation-v1` (main at branch creation). Not an eternal SHA; re-confirm the commit served in Production before hosted smoke |
+| `14bdc40` | **Hosted smoke runtime baseline** — Production commit against which `dat-production-smoke-hosted-verification-v1` gates passed |
+| `07371e7` | **Verified entry baseline** for `super-agent-project-state-sync-v1`; also the Production-served commit observed before this rules-only slice is merged. Not an eternal current SHA — re-confirm after every deployment. |
 
-### Verified operational reality (entry of this slice)
+### Verified operational reality at entry to this rules slice
 
 | Fact | Status |
 | ---- | ------ |
-| Entry commit | `b408075` — `Merge branch 'engineering-excellence-audit-roadmap-v1'` |
-| GitLab CI | Pipeline `#2712551669` Passed (zero failed / skipped / manual) |
-| Vercel Production | Project `meengine-dat` — deployment **Ready** on source commit `b408075` |
+| Entry `main` / `origin/main` | `07371e7` — `Merge branch 'dat-production-smoke-hosted-verification-v1' into 'main'`; re-confirm after this rules slice is merged |
+| Hosted smoke slice | **`dat-production-smoke-hosted-verification-v1` closed** (docs commit `5a10446`; merge `07371e7`) |
+| Vercel Production at entry | Project `meengine-dat` — deployment **Ready**; domain `www.meengine.io`; served commit **`07371e7`** at validation time; re-confirm after every later deployment |
+| Smoke gates | Fixture preflight 1/0/0; API health+signup exit 0; read-only 4/0/0; mutations 1/0/0 |
+| Mutation trail | Lesson created by suite retained as immutable smoke trail — **do not clean up** |
+| Mutation opt-in | Not persisted |
+| Smoke branch cleanup | `dat-production-smoke-hosted-verification-v1` deleted locally and remotely after merge + pipeline + Ready deployment — **do not recreate** |
 | Shared hosts | `www.meengine.io`, `platform.meengine.io`, `demo.meengine.io`, `meengine-dat.vercel.app` — **same** Vercel app/deployment today |
 | DAT / Platform separation | **Decided and planned** — **not** yet physical separate products/deployments |
 | Smoke fixtures (DEC-064) | Closed 2026-07-28 by **human** operator — repair + fixture apply (`changesApplied=18`); inspector no blockers; fixtures all-ready; idempotent dry-run; Sarah/Bob/John Doe preserved; catalogue untouched; no `PLATFORM_ADMIN` recreate; full IDs in vault only |
 | Student invite link repair | **Done** (repo + remote) — accept path persists `studentId`; remote repair human-applied 2026-07-28 |
-| Pre-incident hosted smoke | Evidence **before** the 2026-07-17 smoke reset does **not** substitute for a new hosted verification |
+| Node.js runtime | Still pinned to **Node 20** in engines / `.nvmrc` / GitLab CI / docs; Vercel deprecation warning observed — migrate only in `node-24-runtime-migration-v1` |
+| Preserved local branch | `production-smoke-module-structure-audit-record-v1` @ `a4bea9d` — audit candidate input only; **do not** merge/cherry-pick/delete from unrelated slices |
 
-Do **not** re-run repair or fixture apply without new evidence and explicit human authorization.
+Do **not** re-run repair, fixture apply, smoke-lesson cleanup, or unauthorized remote writes without new evidence and explicit human authorization.
+
+**Entry drift record (out of scope for `super-agent-project-state-sync-v1`):** at branch creation, the top canonical snapshot in `current-state.md` still described hosted smoke as the next P0. Reconcile that document in a dedicated canonical-memory docs slice before starting Node 24; once reconciled, treat this sentence as historical entry context, not as a current override.
 
 ### Production cutline (DEC-032) — current deployed core
 
@@ -347,18 +450,18 @@ Controlled B2B: invite-only, `PUBLIC_SIGNUP_ENABLED=false`, no live self-service
 
 ### Single recommended next slice
 
-**`dat-production-smoke-hosted-verification-v1`** (P0 ops)
+**`node-24-runtime-migration-v1`** (P0 release-enablement)
 
-1. Re-confirm Production deployment and served commit (merge of this docs slice may create a new deployment)
-2. Confirm full fixture IDs in operator vault → fill `DAT_SMOKE_*`
-3. Fixture preflight → hosted read-only → hosted mutations
-4. Reconcile results and close the runbook
+1. Align local runtime, `package.json` `engines`, `.nvmrc` files, GitLab CI image, Vercel Node setting, and related docs to **Node 24**
+2. Run `pnpm -C driving_school_platform/nextjs_space check`
+3. Validate GitLab pipeline and Vercel deployment **Ready**
+4. Repeat required hosted smoke gates after the runtime change
 
-Runbook: `driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md`
+Do **not** implement Node 24 inside Super-Agent sync or unrelated slices.
 
-### After P0 (planned order)
+### After Node 24 (planned order)
 
-1. `engineering-excellence-audit-v1` — P1 analysis-only; **planned; not executed**
+1. `engineering-excellence-audit-v1` — P1 analysis-only; **planned; not executed** (may consume audit candidate from `production-smoke-module-structure-audit-record-v1`)
 2. `platform-separation-architecture-plan-v1`
 3. Small audit-approved refactor slices (one scope per branch)
 
@@ -368,6 +471,8 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 **Abandoned:** `platform-admin-access-and-smoke-reconcile-v1` (superseded by DEC-063).
 
+**Closed P0 (do not reopen as next):** `dat-production-smoke-hosted-verification-v1`.
+
 ### Do not open next (unless explicit approval)
 
 - `calendar-lessons-polish-v1e-student-warnings` (P3)
@@ -376,8 +481,9 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 - `people-management-ux-unification-instructor-route-split-v1` (D4)
 - Platform cross-tenant audit viewer
 - `supabase-rls-tenant-policies-v1` (only if Data API tenant access is product-required)
+- `production-smoke-module-structure-v1` (audit candidate only — not approved)
 
-**Done (do not list as future):** mobile/tablet readiness; competitive product discovery; tenant-aware audit viewer CSV export (`audit-log-viewer-export-v1`). Audit write + read + viewer foundation is **done**. Platform cross-tenant viewer remains deferred.
+**Done (do not list as future):** mobile/tablet readiness; competitive product discovery; tenant-aware audit viewer CSV export (`audit-log-viewer-export-v1`); hosted production smoke verification. Audit write + read + viewer foundation is **done**. Platform cross-tenant viewer remains deferred.
 
 **Deferred:** `i18n-framework-planning-v1`; RLS revoke-only track closed (`supabase-rls-tenant-policies-v1` separate P2).
 
@@ -403,7 +509,7 @@ Full commands: [git-tags-and-recovery-runbook.md](../../docs/ops/git-tags-and-re
 
 **Current safety baseline:** `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — **code/recovery comparison only**, not a database backup.
 
-**Distinct tags:** `archive-schedule-and-vehicles-b101112` is **historical archive only** (not a release/recovery baseline). Entry baseline for this memory slice: `b408075` — re-confirm Production served commit before hosted smoke.
+**Distinct tags:** `archive-schedule-and-vehicles-b101112` is **historical archive only** (not a release/recovery baseline). Production served commit observed at entry: `07371e7` (hosted smoke closed against runtime baseline `14bdc40`). Re-confirm the served commit after every subsequent deployment before relying on hosted evidence.
 
 ## Database command safety (DEC-062)
 
