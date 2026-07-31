@@ -51,6 +51,30 @@ The helper `pnpm e2e:smoke:prod` must satisfy **both** the API exit-code gate an
 
 Do **not** treat `e2e:smoke:prod:full` as the canonical close command. Do **not** put IDs, full emails, secrets, or sensitive URLs in this document.
 
+<!-- hosted-production-smoke-closure-2026-07-31 -->
+
+### Closure record — 2026-07-31
+
+`dat-production-smoke-hosted-verification-v1` satisfied the P0 closure criteria.
+
+| Evidence                            | Result                                                            |
+| ----------------------------------- | ----------------------------------------------------------------- |
+| Production deployment               | Vercel **Ready**                                                  |
+| Production domain                   | `www.meengine.io`                                                 |
+| Source commit served                | `14bdc40` — canonical reconciliation merge                        |
+| Deployment age displayed            | `1d ago` when checked on 2026-07-31; exact timestamp not captured |
+| Fixture preflight                   | **1 passed, 0 skipped, 0 failed**                                 |
+| API health + signup guard           | **exit code 0**                                                   |
+| Hosted read-only UI                 | **4 passed, 0 skipped, 0 failed**                                 |
+| Hosted mutations                    | **1 passed, 0 skipped, 0 failed**                                 |
+| Mutation trail                      | Retained as the required immutable smoke trail                    |
+| Persisted mutation opt-in           | Not enabled                                                       |
+| Repository state after verification | Clean                                                             |
+
+The hosted verification used the post-incident canonical fixtures. No historical fixture IDs were restored, no fixture repair was applied, and no cleanup was performed.
+
+A Node.js 20 deprecation warning was observed in the deployment log. The runtime migration is explicitly out of scope for this closed slice and belongs to `node-24-runtime-migration-v1`.
+
 ---
 
 ## Temporary production smoke tenant (operator policy)
