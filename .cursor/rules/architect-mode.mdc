@@ -436,7 +436,7 @@ When investigating code or tests:
 | DAT / Platform separation | **Decided and planned** — **not** yet physical separate products/deployments |
 | Smoke fixtures (DEC-064) | Closed 2026-07-28 by **human** operator — repair + fixture apply (`changesApplied=18`); inspector no blockers; fixtures all-ready; idempotent dry-run; Sarah/Bob/John Doe preserved; catalogue untouched; no `PLATFORM_ADMIN` recreate; full IDs in vault only |
 | Student invite link repair | **Done** (repo + remote) — accept path persists `studentId`; remote repair human-applied 2026-07-28 |
-| Node.js runtime | Still pinned to **Node 20** in engines / `.nvmrc` / GitLab CI / docs; Vercel deprecation warning observed — migrate only in `node-24-runtime-migration-v1` |
+| Node.js runtime | **Node 24 migration active** in `node-24-runtime-migration-v1`; local compatibility, the GitLab `node:24` pipeline, and the Vercel Preview on `e5ddc39` passed; the Vercel Project Setting is aligned to Node 24.x; main merge, Production deployment, and post-deploy hosted verification remain pending |
 | Preserved local branch | `production-smoke-module-structure-audit-record-v1` @ `a4bea9d` — audit candidate input only; **do not** merge/cherry-pick/delete from unrelated slices |
 
 Do **not** re-run repair, fixture apply, smoke-lesson cleanup, or unauthorized remote writes without new evidence and explicit human authorization.
