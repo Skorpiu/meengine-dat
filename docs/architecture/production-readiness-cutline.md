@@ -136,8 +136,8 @@ Historical cutline prep steps and hosted production smoke verification are **don
 
 | Risk | Severity | Mitigation |
 | ---- | -------- | ---------- |
-| Node.js 20 deprecated on Vercel (future deploy capability risk) | P0 | Dedicated slice `node-24-runtime-migration-v1`: align local + engines + `.nvmrc` + GitLab CI + Vercel + docs; `pnpm check`; pipeline; Ready deployment; repeat required hosted smoke gates |
-| Hosted smoke evidence becoming stale after material runtime/deploy changes | Conditional P0 | Mitigated at the 2026-07-31 close; re-confirm the served commit and re-run the required hosted gates after Node 24 or another material deployment change |
+| Node.js 20 deprecated on Vercel (future deploy capability risk) | Closed P0 | `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility; repository, CI and Vercel alignment; full checks and pipelines passed; Preview and Production Ready on Node 24.x |
+| Hosted smoke evidence becoming stale after material runtime/deploy changes | Conditional P0 | Re-mitigated after the Node 24 Production deployment on 2026-08-04: served commit `909b69a` confirmed; fixture preflight **1/0/0**, API guard **exit 0**, and read-only UI **4/0/0** passed. Repeat after the next material deployment change |
 | Shared DAT/Platform/Demo deployment | P1 | Separation plan after engineering audit; do not assume separate products today |
 | Env-specific migrations | P1 | Never assume validated env = all envs; run gate per target |
 | Possible shared demo/production database | Historical / unconfirmed | Historical operational risk; **not revalidated** in `canonical-memory-state-reconciliation-v1`. Do not treat as current verified fact. Dedicated org/host for client remains good practice. |

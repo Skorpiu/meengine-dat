@@ -10,19 +10,20 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| `node-24-runtime-migration-v1` | **P0** release-enablement | **Next** — align Node 24 across local runtime, package engines, `.nvmrc`, GitLab CI, Vercel, and docs; validate local + CI + deployment; repeat required hosted smoke gates |
+| `engineering-excellence-audit-v1` | **P1** engineering excellence | **Next — analysis-only**; inspect maintainability and internal quality, record evidence and recommendations, but do not refactor or change runtime/schema/data in the audit slice |
 
-**Closed context:** `dat-production-smoke-hosted-verification-v1` closed 2026-07-31 (runtime baseline `14bdc40`; docs merge `07371e7`; last confirmed Production served `07371e7`). Fixtures (DEC-064) and invite-link repair remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
+**Closed context:** `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
 ---
 
 ## Canonical sequence
 
-<!-- node-24-runtime-migration-v1 -->
-1. `node-24-runtime-migration-v1` — **P0 release-enablement / next**; migrate all Node 20 pins to Node 24, validate local + CI + Vercel, deploy, and repeat the required hosted smoke gates
-2. `engineering-excellence-audit-v1` — **P1 / engineering excellence — planned (analysis-only)**; **not executed**
-3. `platform-separation-architecture-plan-v1`
-4. Small audit-approved refactor slices (one scope per branch; behavioural equivalence + `pnpm check`)
+<!-- node-24-runtime-migration-v1 closed 2026-08-04 at 909b69a -->
+**Closed prerequisite:** `node-24-runtime-migration-v1` merged to `main` at `909b69a`; GitLab `node:24`, Vercel Preview/Production Node 24.x, and required post-deploy non-destructive hosted gates passed.
+
+1. `engineering-excellence-audit-v1` — **P1 / engineering excellence — next, analysis-only**; **not executed**
+2. `platform-separation-architecture-plan-v1`
+3. Small audit-approved refactor slices (one scope per branch; behavioural equivalence + `pnpm check`)
 
 **P1 parallel (preserved):** `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065).
 
@@ -56,8 +57,8 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 | Slice | Priority | Notes |
 | ----- | -------- | ----- |
-| `engineering-excellence-audit-v1` | **P1** planned (analysis-only) | Global maintainability audit — **not executed**; does not replace or delay Node 24 P0 |
-| `platform-separation-architecture-plan-v1` | **P1** backlog | After Node 24 + engineering audit — autonomous MeEngine Platform vs DAT |
+| `engineering-excellence-audit-v1` | **P1** next (analysis-only) | Global maintainability audit — **not executed**; Node 24 P0 prerequisite is closed; the audit itself authorizes no refactor implementation |
+| `platform-separation-architecture-plan-v1` | **P1** backlog | After the engineering audit — autonomous MeEngine Platform vs DAT; Node 24 prerequisite is closed |
 | `people-instructor-invite-accept-list-refresh-v1` | **P1** bug | After INSTRUCTOR invite accept, instructor may not appear under People → Instructors despite correct DB rows |
 | `school-person-identifiers-settings-product-plan-v1` | **P1** plan first | DEC-065 — Admin → Settings → Identifiers & numbering; plan before implementation |
 | `platform-commercial-catalog-read-services-v1` | **P1** blocked | Gate after Platform separation plan — do not resume in embedded Platform |
@@ -93,7 +94,7 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 **Goal (future execution):** Global maintainability and internal-quality audit **without** changing functional behaviour during the audit itself.
 
-**Does not:** replace, delay, or mix with `node-24-runtime-migration-v1` (P0); alter runtime/schema/data; mass-refactor; invent abstractions to cut lines; mix internal maintenance with new features.
+**Does not:** reopen or mix with the closed `node-24-runtime-migration-v1` P0; alter runtime/schema/data; mass-refactor; invent abstractions to cut lines; mix internal maintenance with new features.
 
 **Scope (when executed):**
 
