@@ -53,7 +53,7 @@ MSYS_NO_PATHCONV=1 docker exec -it gitlab-runner gitlab-runner register \
   --url "https://gitlab.com/" \
   --token "<GITLAB_RUNNER_TOKEN>" \
   --executor "docker" \
-  --docker-image "node:20" \
+  --docker-image "node:24" \
   --description "DAT local docker runner"
 ```
 
@@ -63,7 +63,7 @@ After registration, open the runner in GitLab and ensure tag **`dat`** is set so
 
 ## 4. Docker executor cache, volumes, and pull policy (recommended)
 
-On Windows, naive cache bind mounts are easy to misconfigure (for example Git Bash rewriting paths, pointing at `C:/Program Files/Git/cache`, or duplicating `/cache` entries). A **simple, reliable** local setup is to disable the runner’s Docker executor cache, use no extra volumes, and (for a **private project runner on one machine**) set **`pull_policy = "if-not-present"`** so jobs prefer the local `node:20` image instead of always pulling from the registry.
+On Windows, naive cache bind mounts are easy to misconfigure (for example Git Bash rewriting paths, pointing at `C:/Program Files/Git/cache`, or duplicating `/cache` entries). A **simple, reliable** local setup is to disable the runner’s Docker executor cache, use no extra volumes, and (for a **private project runner on one machine**) set **`pull_policy = "if-not-present"`** so jobs prefer the local `node:24` image instead of always pulling from the registry.
 
 ```toml
 [runners.docker]
@@ -76,21 +76,21 @@ If the runner is **shared** or **exposed beyond your own laptop**, review GitLab
 
 Edit the runner’s `config.toml` inside the config volume (for example by `docker exec` with an editor, or by inspecting the volume mount path from Docker Desktop’s docs). **Never** commit a file that contains your real `token =` line.
 
-## 5. Timeouts while pulling `node:20` (effective pull policy `always`)
+## 5. Timeouts while pulling `node:24` (effective pull policy `always`)
 
 **Symptom:** a job sits for a long time and eventually times out while the log shows something like:
 
 - `Using effective pull policy of [always]`
-- `Pulling docker image node:20 ...`
+- `Pulling docker image node:24 ...`
 
-**Why:** depending on runner defaults and registration, the effective Docker executor pull policy can be **`always`**, so every job tries to pull `node:20` from the registry. On a slow or flaky network (common on a home or mobile connection), that step can exceed the job’s patience window even though the image would work if it were already local.
+**Why:** depending on runner defaults and registration, the effective Docker executor pull policy can be **`always`**, so every job tries to pull `node:24` from the registry. On a slow or flaky network (common on a home or mobile connection), that step can exceed the job’s patience window even though the image would work if it were already local.
 
 **Mitigation (private project runner on your machine):**
 
 1. **Pre-pull the image on the Docker host** (same machine where Docker Desktop runs):
 
    ```bash
-   docker pull node:20
+   docker pull node:24
    ```
 
 2. **Set `pull_policy = "if-not-present"`** under `[runners.docker]` in `/etc/gitlab-runner/config.toml` inside the runner container (merge with the fragment in section 4; keep **`disable_cache = true`** and **`volumes = []`** unless you have a deliberate, tested reason to change them). Edit without exposing secrets—for example open a shell and use an editor on the file:
@@ -118,7 +118,7 @@ Edit the runner’s `config.toml` inside the config volume (for example by `dock
 **Same commands without `MSYS_NO_PATHCONV=1`** (for example **PowerShell** or **Command Prompt** on the Docker host):
 
 ```bash
-docker pull node:20
+docker pull node:24
 docker exec -it gitlab-runner sh -lc 'vi /etc/gitlab-runner/config.toml'
 docker restart gitlab-runner
 docker exec -it gitlab-runner gitlab-runner verify
@@ -143,7 +143,7 @@ Re-running uses the same commit and `.gitlab-ci.yml` unless you start a new pipe
 
 ## 8. Non-blocking warnings (troubleshooting)
 
-After a working setup (for example **`disable_cache = true`**, **`volumes = []`**, **`pull_policy = "if-not-present"`**, and **`node:20`** present locally), job logs may still show warnings that **do not** stop the job from finishing successfully.
+After a working setup (for example **`disable_cache = true`**, **`volumes = []`**, **`pull_policy = "if-not-present"`**, and **`node:24`** present locally), job logs may still show warnings that **do not** stop the job from finishing successfully.
 
 - **Cache adapter / “cache factory not found”** — With the Docker executor cache **disabled** and **no** cache volume or S3-style backend configured, the runner may log that it **could not create a cache adapter** or that a **cache factory** is missing. That reflects “no cache backend,” not a broken pipeline. It is expected noise for this minimal local layout unless you intentionally add a supported cache configuration.
 
