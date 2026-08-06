@@ -33,7 +33,7 @@ Stop before consequential work if Git state or canonical documents disagree.
 ## Current verified repository state
 
 - Active branch at snapshot creation: `engineering-excellence-audit-v1`
-- Previous continuity checkpoint: `4c019d8e027c70ff8670253dab5b4ce402aff996`
+- Previous continuity checkpoint: `4ca37f5d1b6093c72c9a8efc3b0c40e46dfd13f7`
 - `origin/main` baseline: `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - Branch purpose: P1 analysis-only engineering-excellence audit
 - Branch publication: not pushed at snapshot creation
@@ -70,6 +70,9 @@ Stop before consequential work if Git state or canonical documents disagree.
 <!-- ui-struct-001-people-manager-orchestration-concentration -->
 <!-- a11y-001-people-search-accessible-names -->
 <!-- a11y-002-people-badge-help-touch-discoverability -->
+<!-- api-dup-001-config-route-skeleton-duplication -->
+<!-- api-struct-001-vehicle-route-domain-concentration -->
+<!-- small-typed-helpers-over-generic-route-factories-v1 -->
 ## Confirmed code findings
 
 | ID | Status | Summary |
@@ -80,6 +83,8 @@ Stop before consequential work if Git state or canonical documents disagree.
 | `UI-STRUCT-001` | Confirmed; deferred | People managers concentrate multiple workflows and local reconciliation states without direct component tests |
 | `A11Y-001` | Confirmed; not implemented | People search controls lack complete programmatic accessible names |
 | `A11Y-002` | Confirmed; not implemented | Detailed People badge help remains tooltip-dependent and is not touch-discoverable |
+| `API-DUP-001` | Confirmed; not implemented | Settings and Feature Flags duplicate a substantial route skeleton |
+| `API-STRUCT-001` | Confirmed; not implemented | Vehicles route combines transport, access, validation, projection, business rules, and persistence |
 
 ## Approved implementation direction
 
@@ -125,6 +130,14 @@ No implementation belongs in the current analysis branch.
 - Future slices: `people-search-accessible-names-v1` and `people-badge-help-accessibility-v1`.
 - Performance review produced no finding; do not reopen without measured evidence.
 
+## Administrative route follow-up
+
+- `admin-config-route-helpers-v1`: small typed common helpers; no generic CRUD factory.
+- `vehicle-route-domain-services-v1`: typed validation and focused Vehicle domain helpers/services.
+- Preserve domain-specific schemas, DTOs, persistence, responses, and audit payloads.
+- Configuration-history logging remains best-effort.
+- Inspect repeated local `requireSuperAdminTenant` implementations before approving a broader shared helper.
+
 ## Preserved unrelated branch
 
 - Branch: `production-smoke-module-structure-audit-record-v1`
@@ -134,7 +147,7 @@ No implementation belongs in the current analysis branch.
 
 ## Current next action
 
-Continue the engineering-excellence audit read-only with route-service boundary inspection. Preserve the three atomicity/contract slices as the first implementation sequence, followed by the two localized accessibility slices and then the deferred `UI-STRUCT-001` work; no runtime implementation is authorized in the audit branch.
+Continue the engineering-excellence audit read-only by inspecting repeated local SUPER_ADMIN and tenant-context helpers. Preserve small typed helpers over generic route factories. No runtime implementation is authorized in the audit branch.
 
 ## Continuity update obligation
 

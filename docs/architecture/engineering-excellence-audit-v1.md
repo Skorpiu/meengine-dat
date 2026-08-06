@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** People accessibility findings confirmed; route-service boundary evidence collection starting
-- **Confirmed findings:** 8 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 6 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`)
+- **Current phase:** administrative route duplication and Vehicles responsibility findings confirmed; shared admin-context evidence collection starting
+- **Confirmed findings:** 10 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 8 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`)
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -462,3 +462,80 @@ Student profiles use cursor pagination and an explicit Load more action. Instruc
 The components do perform local overlay reconciliation and router refreshes, but no measured user-visible performance degradation was established. Their structural cost is already represented by `UI-STRUCT-001`.
 
 Do not create a performance remediation slice without measured evidence or a reproducible user-visible symptom.
+
+<!-- api-dup-001-config-route-skeleton-duplication -->
+## `API-DUP-001` — Configuration-route skeleton duplication
+
+- **Classification:** confirmed code finding
+- **Priority:** P2 maintainability follow-up
+- **Dimensions:** duplication, maintainability, consistency, testability
+- **Implementation authorized in this branch:** no
+
+### Exact proposition
+
+`settings/route.ts` and `feature-flags/route.ts` duplicate a substantial HTTP, authorization, tenant, demo, CRUD, audit, response, and error-handling skeleton while applying different domain schemas and persistence models.
+
+### Evidence
+
+- Both routes expose GET, POST, PUT, and DELETE.
+- Their normalized line similarity is 0.7739.
+- Corresponding methods have closely aligned sizes, await counts, response counts, guards, persistence order, and audit calls.
+- Their Zod schemas and domain data differ materially.
+
+### Approved resolution
+
+`admin-config-route-helpers-v1` must use small typed auxiliary functions for only the proven common mechanics.
+
+Candidate helper responsibilities:
+
+- resolve the authenticated SUPER_ADMIN and organization context;
+- apply tenant validation;
+- apply the common configuration mutation demo guard;
+- normalize validation-error responses where contracts are identical.
+
+SystemSetting and FeatureFlag schemas, DTOs, persistence, response payloads, and audit payloads remain explicit and domain-specific.
+
+### Rejected resolution
+
+Do not create a generic CRUD route factory, generic repository, callback-heavy route builder, or broad configuration framework.
+
+<!-- api-struct-001-vehicle-route-domain-concentration -->
+## `API-STRUCT-001` — Vehicles route domain concentration
+
+- **Classification:** confirmed code finding
+- **Priority:** P2 maintainability and testability follow-up
+- **Dimensions:** cohesion, maintainability, validation, testability
+- **Implementation authorized in this branch:** no
+
+### Exact proposition
+
+The Vehicles route combines transport and response handling with authorization, feature policy, tenant and demo guards, input conversion, identifier uniqueness, operational-status projection, persistence, and deletion-eligibility rules.
+
+### Evidence
+
+- GET reads Vehicles, Lessons, and legacy Exams and derives effective vehicle status.
+- POST and PUT repeat registration-number and VIN conflict handling.
+- POST and PUT map extensive unvalidated request bodies directly into persistence inputs.
+- DELETE resolves usage counts and applies a domain-level deletion prohibition.
+- Existing extraction is limited primarily to access helpers.
+
+### Approved resolution
+
+`vehicle-route-domain-services-v1` should introduce small typed domain functions and services for:
+
+- mutation-input validation and normalization;
+- registration-number and VIN conflict resolution;
+- effective operational-status projection;
+- deletion eligibility;
+- domain persistence boundaries.
+
+The route must remain responsible for HTTP composition and must preserve all current role, feature, tenant, demo, response, and error contracts.
+
+<!-- configuration-audit-failure-no-finding-v1 -->
+## Configuration audit failure classification
+
+- **Classification:** no finding
+
+`logConfigurationChange` catches and logs its own persistence failures. A configuration mutation is therefore not converted into an HTTP failure solely because configuration-history persistence failed.
+
+This best-effort contract must be preserved unless a separate product or compliance decision changes the required audit guarantee.

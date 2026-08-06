@@ -137,6 +137,19 @@ Each implementation must be a separate smallest-safe branch. No runtime implemen
 
 **Performance conclusion:** no separate finding. Student cursor pagination and Instructor visible-count slicing bound list rendering; revisit only with measured user-visible evidence.
 
+<!-- api-dup-001-config-route-skeleton-duplication -->
+**Confirmed finding `API-DUP-001`:** Settings and Feature Flags duplicate authenticated tenant-scoped CRUD, mutation guarding, audit composition, response, and error-handling mechanics.
+
+<!-- small-typed-helpers-over-generic-route-factories-v1 -->
+**Approved future slice:** `admin-config-route-helpers-v1` — extract only proven common behavior into small typed helpers. Keep schemas, DTOs, persistence, domain rules, and audit payloads specific. Do not create a generic CRUD route factory.
+
+<!-- api-struct-001-vehicle-route-domain-concentration -->
+**Confirmed finding `API-STRUCT-001`:** the Vehicles route owns several independently changing domain and transport responsibilities.
+
+**Approved future slice:** `vehicle-route-domain-services-v1` — extract typed input validation, identifier-conflict checks, effective-status projection, deletion eligibility, and domain persistence seams while preserving the existing HTTP contract.
+
+**Configuration audit conclusion:** no separate finding. Audit-history writes are best-effort and catch their own errors.
+
 **Goal (future execution):** Global maintainability and internal-quality audit **without** changing functional behaviour during the audit itself.
 
 **Does not:** reopen or mix with the closed `node-24-runtime-migration-v1` P0; alter runtime/schema/data; mass-refactor; invent abstractions to cut lines; mix internal maintenance with new features.

@@ -338,7 +338,14 @@ See [Canonical current state](#canonical-current-state). Single recommended next
 <!-- a11y-002-people-badge-help-touch-discoverability -->
 - `A11Y-002` confirmed: badge explanations remain tooltip-dependent and are not reliably discoverable on touch.
 - Performance review completed with no separate finding: list rendering is bounded and no measured user-visible cost was established.
-- The next read-only audit target is route-service responsibility in the largest administrative routes.
+<!-- api-dup-001-config-route-skeleton-duplication -->
+- `API-DUP-001` confirmed: Settings and Feature Flags duplicate a substantial route skeleton; normalized similarity measured 0.7739.
+<!-- api-struct-001-vehicle-route-domain-concentration -->
+- `API-STRUCT-001` confirmed: Vehicles combines transport, access, business rules, projection, validation, and persistence.
+<!-- small-typed-helpers-over-generic-route-factories-v1 -->
+- Approved direction: small typed auxiliary functions and domain-specific services; no generic CRUD route factory.
+- Configuration audit logging remains best-effort and does not propagate its own persistence failures.
+- The next read-only target is repeated local admin authentication and tenant-context helpers.
 
 ### Operator housekeeping (local / Git — human-executed)
 

@@ -576,7 +576,17 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 - Performance classification: no finding — Student rows are cursor-paginated, Instructor rows are bounded by visible-count slicing, and no measured user-visible regression was found
 - Overlay and refresh complexity remains covered by `UI-STRUCT-001`; do not duplicate it as a performance finding
 - Future accessibility order: atomicity/contract slices first, then accessible search names and tap/keyboard-friendly badge help, before broad structural extraction
-- Next audit focus: route-service boundaries in the largest administrative routes
+<!-- api-dup-001-config-route-skeleton-duplication -->
+- Confirmed code finding `API-DUP-001`: Settings and Feature Flags routes duplicate a substantial authenticated, tenant-scoped, demo-guarded CRUD and audit skeleton
+<!-- api-struct-001-vehicle-route-domain-concentration -->
+- Confirmed code finding `API-STRUCT-001`: the Vehicles route retains HTTP, access policy, validation, persistence, operational-status projection, identifier uniqueness, and deletion-eligibility responsibilities
+<!-- small-typed-helpers-over-generic-route-factories-v1 -->
+- Architectural decision: eliminate confirmed duplication through small, typed, explicit helper functions; do not introduce a generic CRUD route factory, generic repository adapter, or opaque configuration framework
+- Shared helpers may own identical context resolution, mutation guarding, validation-error mapping, and other proven common mechanics
+- SystemSetting, FeatureFlag, and Vehicle schemas, DTOs, rules, persistence, and audit payloads remain domain-specific
+- Configuration audit failure is not a finding: `logConfigurationChange` is explicitly best-effort and catches its own persistence errors
+- Future slices: `admin-config-route-helpers-v1` and `vehicle-route-domain-services-v1`
+- Next audit focus: inspect repeated local `requireSuperAdminTenant` helpers and determine the smallest justified shared admin-route context boundary
 - No runtime implementation is authorized in this analysis-only branch
 
 **Audit evidence protocol:** start from actual entrypoints; trace imports and call paths; distinguish orchestration, validation, service, DTO, persistence, UI, and tests; separate confirmed evidence from navigation friction; never infer a defect from size or one narrow search.
