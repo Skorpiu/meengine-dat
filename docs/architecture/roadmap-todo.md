@@ -120,6 +120,11 @@ Each implementation must be a separate smallest-safe branch. No runtime implemen
 <!-- super-agent-continuity-recovery-v1 -->
 **Super Agent continuity:** every material phase must update `docs/ops/super-agent-continuity-state.md` and pass a read-only recovery reconstruction drill.
 
+<!-- ui-struct-001-people-manager-orchestration-concentration -->
+**Confirmed finding `UI-STRUCT-001`:** the Student and Instructor managers coordinate several independently changing workflows and local reconciliation states without direct component-level regression tests.
+
+**Deferred To-Do:** after `student-profile-atomic-update-v1`, `instructor-profile-atomic-update-v1`, and `generic-user-update-contract-narrowing-v1`, evaluate separate Student and Instructor orchestration seams and add regression coverage. Do not perform a broad rewrite or introduce a generic shared People manager.
+
 **Goal (future execution):** Global maintainability and internal-quality audit **without** changing functional behaviour during the audit itself.
 
 **Does not:** reopen or mix with the closed `node-24-runtime-migration-v1` P0; alter runtime/schema/data; mass-refactor; invent abstractions to cut lines; mix internal maintenance with new features.

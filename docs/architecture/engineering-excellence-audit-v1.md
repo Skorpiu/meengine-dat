@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** cross-aggregate atomicity findings confirmed; solution order and Super Agent continuity checkpoint being recorded
-- **Confirmed findings:** 5 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 3 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`)
+- **Current phase:** people-manager structural finding confirmed; accessibility and performance evidence collection pending
+- **Confirmed findings:** 6 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 4 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`)
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -371,3 +371,35 @@ The DAT team requires the Super Agent to remain at the same verified knowledge l
 `docs/ops/super-agent-continuity-state.md` is now the canonical recovery index. It records current baselines, findings, decisions, branch state, safety boundaries, implementation order, and the Recovery Startup Procedure.
 
 This continuity mechanism is a knowledge and operational backup. Git, hosted configuration, secrets, databases, and infrastructure still require their own backup and disaster-recovery controls.
+
+<!-- ui-struct-001-people-manager-orchestration-concentration -->
+## `UI-STRUCT-001` — People-manager orchestration concentration
+
+- **Classification:** confirmed code finding
+- **Priority:** P2 deferred structural follow-up
+- **Dimensions:** maintainability, cohesion, reliability, testability
+- **Known production defect:** none demonstrated
+- **Implementation authorized in this branch:** no
+
+### Exact proposition
+
+`StudentRecordsManager` and `InstructorRecordsManager` each coordinate multiple independently changing workflows and local reconciliation states, while no direct component-level tests were found for either manager.
+
+### Evidence
+
+- The Student manager owns list loading/pagination, search, import/export, editing, account synchronization, invitations, email changes, deletion, history, and app-access lifecycle.
+- The Instructor manager owns search/list projection, profile/licence/category editing, email changes, deletion, deactivation, and reactivation.
+- Both maintain local reconciliation state after server mutations and refreshes.
+- No direct manager tests or component test files were found.
+
+### Non-findings
+
+- File size and hook counts alone do not prove a defect.
+- Existing extraction into helpers, services, policies, dialogs, and unit tests is substantial.
+- Current evidence does not justify a generic shared People manager.
+
+### To-Do sequencing
+
+Complete the three approved atomicity and contract slices first. Then evaluate Student and Instructor orchestration separately, adding regression coverage and extracting only boundaries supported by evidence.
+
+Accessibility and performance remain separate unclassified audit dimensions.

@@ -329,6 +329,11 @@ See [Canonical current state](#canonical-current-state). Single recommended next
 - No runtime implementation is authorized in this analysis-only branch.
 <!-- super-agent-continuity-recovery-v1 -->
 - Conversation-independent Super Agent continuity is now mandatory through `docs/ops/super-agent-continuity-state.md` and the Recovery Reconstruction Drill.
+<!-- ui-struct-001-people-manager-orchestration-concentration -->
+- `UI-STRUCT-001` confirmed: both people-management components retain multiple workflows and local reconciliation states without direct component tests.
+- Structural simplification is deferred until the approved atomicity and generic-contract slices are complete.
+- No generic cross-domain People manager is recommended.
+- Accessibility and performance remain under read-only review.
 
 ### Operator housekeeping (local / Git — human-executed)
 

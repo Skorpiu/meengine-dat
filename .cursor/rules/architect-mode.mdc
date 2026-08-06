@@ -562,7 +562,14 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 - Approved architectural direction: use aggregate-specific transactional services behind the existing student and instructor PATCH contracts; migrate role-specific callers away from the generic user-update route
 - Required implementation order: student atomic profile slice, instructor atomic profile slice, then generic user-update contract narrowing
 - Implementation status: no runtime implementation is authorized in this analysis-only branch
-- Next audit focus: continue evidence collection while preserving these implementation recommendations as separate smallest-safe future slices
+<!-- ui-struct-001-people-manager-orchestration-concentration -->
+- Confirmed code finding `UI-STRUCT-001`: the Student and Instructor managers retain multiple independently changing workflows and local reconciliation states without direct component-level tests
+- File size and hook counts are supporting signals only, not the finding
+- Existing domain services, helpers, policies, dialogs, and unit tests are substantial and must be preserved
+- Do not introduce a generic shared People manager from the current evidence
+- Structural simplification is deferred until the three approved atomicity and generic-contract slices are complete
+- Accessibility and performance remain under separate read-only investigation
+- No runtime implementation is authorized in this analysis-only branch
 
 **Audit evidence protocol:** start from actual entrypoints; trace imports and call paths; distinguish orchestration, validation, service, DTO, persistence, UI, and tests; separate confirmed evidence from navigation friction; never infer a defect from size or one narrow search.
 

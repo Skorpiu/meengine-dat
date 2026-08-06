@@ -33,7 +33,7 @@ Stop before consequential work if Git state or canonical documents disagree.
 ## Current verified repository state
 
 - Active branch at snapshot creation: `engineering-excellence-audit-v1`
-- Snapshot parent commit: `9b4ce8261c4a3bb2f5edad6b1a3a9157bfc9e86e`
+- Previous continuity checkpoint: `ee8259d6ba76fdf45f931b1eff3f544a7e113716`
 - `origin/main` baseline: `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - Branch purpose: P1 analysis-only engineering-excellence audit
 - Branch publication: not pushed at snapshot creation
@@ -67,6 +67,7 @@ Stop before consequential work if Git state or canonical documents disagree.
 | `SA-GOV-003` | APTO | Canonical Merge readiness criteria are the operational Definition of Done |
 | `SA-GOV-004` | Confirmed and fixed | Proportional multidimensional Engineering Quality Review is mandatory |
 
+<!-- ui-struct-001-people-manager-orchestration-concentration -->
 ## Confirmed code findings
 
 | ID | Status | Summary |
@@ -74,6 +75,7 @@ Stop before consequential work if Git state or canonical documents disagree.
 | `UI-ORCH-001` | Confirmed; not implemented | Student edit can commit Student before linked User update fails |
 | `API-ATOM-001` | Confirmed; not implemented | Generic user update commits User before Student/Instructor role-specific update |
 | `UI-ORCH-002` | Confirmed; not implemented | Instructor profile/licence and qualified-category updates are separate writes |
+| `UI-STRUCT-001` | Confirmed; deferred | People managers concentrate multiple workflows and local reconciliation states without direct component tests |
 
 ## Approved implementation direction
 
@@ -109,6 +111,14 @@ No implementation belongs in the current analysis branch.
 - no stale overlays or misleading complete-success messages;
 - canonical Node 24 validation.
 
+## Deferred structural To-Do
+
+- Execute only after the three approved atomicity and generic-contract slices.
+- Evaluate Student and Instructor orchestration separately.
+- Add direct regression coverage around the remaining orchestration.
+- Do not create a generic shared People manager from the current evidence.
+- Accessibility and performance remain unclassified.
+
 ## Preserved unrelated branch
 
 - Branch: `production-smoke-module-structure-audit-record-v1`
@@ -118,7 +128,7 @@ No implementation belongs in the current analysis branch.
 
 ## Current next action
 
-Continue the engineering-excellence audit read-only. Keep the three implementation slices in the approved order, but do not modify runtime code until an implementation branch is explicitly authorized.
+Continue the engineering-excellence audit read-only with targeted accessibility and performance inspection. Preserve the three atomicity/contract slices as the first implementation sequence and `UI-STRUCT-001` as the deferred structural To-Do; no runtime implementation is authorized in the audit branch.
 
 ## Continuity update obligation
 
