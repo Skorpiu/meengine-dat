@@ -355,7 +355,12 @@ See [Canonical current state](#canonical-current-state). Single recommended next
 - Day is structurally distinct and should remain a separate timeline view.
 - Schedule Map already has meaningful modular extraction that must be preserved.
 - No generic calendar framework is recommended.
-- The next read-only target is LessonForm orchestration and its existing module boundaries.
+<!-- ui-struct-003-lesson-form-orchestration-concentration -->
+- `UI-STRUCT-003` confirmed: LessonForm coordinates option loading, form state, role/mode/type policies, validation, payload composition, and all visual sections.
+- Existing create/update request builders, edit hook, parsers, services, styles, and Student option mapping are positive modular boundaries.
+- No create/edit HTTP-contract duplication finding was confirmed.
+- LessonForm should remain the composition root while focused policies, option loading, and sections move to typed modules.
+- The next read-only target is client/server lesson-policy consistency and form accessibility.
 
 ### Operator housekeeping (local / Git — human-executed)
 

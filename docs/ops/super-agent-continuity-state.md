@@ -33,7 +33,7 @@ Stop before consequential work if Git state or canonical documents disagree.
 ## Current verified repository state
 
 - Active branch at snapshot creation: `engineering-excellence-audit-v1`
-- Previous continuity checkpoint: `e7f2a9d5235c4ba0e8f3c3302ea783a5992ae60a`
+- Previous continuity checkpoint: `e01cddef501d574e9be97414e759cde0b44f3285`
 - `origin/main` baseline: `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - Branch purpose: P1 analysis-only engineering-excellence audit
 - Branch publication: not pushed at snapshot creation
@@ -76,6 +76,7 @@ Stop before consequential work if Git state or canonical documents disagree.
 <!-- api-dup-002-local-super-admin-tenant-helper-duplication -->
 <!-- domain-modular-design-and-thin-route-adapters-v1 -->
 <!-- ui-struct-002-schedule-map-view-orchestration -->
+<!-- ui-struct-003-lesson-form-orchestration-concentration -->
 ## Confirmed code findings
 
 | ID | Status | Summary |
@@ -90,6 +91,7 @@ Stop before consequential work if Git state or canonical documents disagree.
 | `API-STRUCT-001` | Confirmed; not implemented | Vehicles route combines transport, access, validation, projection, business rules, and persistence |
 | `API-DUP-002` | Confirmed; not implemented | SUPER_ADMIN, organization, tenant-host, and actor-context resolution is repeated across administrative routes |
 | `UI-STRUCT-002` | Confirmed; not implemented | Schedule Map Month/Week duplication and residual orchestration concentration |
+| `UI-STRUCT-003` | Confirmed; not implemented | LessonForm coordinates option data, state, policies, validation, payload composition, and all visual sections |
 
 ## Approved implementation direction
 
@@ -163,6 +165,16 @@ No implementation belongs in the current analysis branch.
 - Do not create a generic calendar framework.
 - Keep `LD-008` as a separate existing DTO item.
 
+## LessonForm follow-up
+
+- `lesson-form-policy-module-v1`: pure typed UI policy and payload helpers.
+- `lesson-form-option-data-hook-v1`: instructor, Student, and Vehicle option loading and parsing.
+- `lesson-form-sections-v1`: explicit participant, vehicle, schedule, and status sections after policy/data stabilization.
+- Preserve create/update request builders, `useEditLessonForm`, response parsers, server services, styles, and Student option mapping.
+- LessonForm remains the composition root.
+- Server validation remains authoritative.
+- Do not create a generic form framework or add dependencies solely for this work.
+
 ## Preserved unrelated branch
 
 - Branch: `production-smoke-module-structure-audit-record-v1`
@@ -172,7 +184,7 @@ No implementation belongs in the current analysis branch.
 
 ## Current next action
 
-Continue the engineering-excellence audit read-only by locating and inspecting LessonForm orchestration and existing module boundaries. Preserve the Schedule Map finding, its existing modules, and the separate Day timeline. No runtime implementation is authorized in the audit branch.
+Continue the engineering-excellence audit read-only by comparing LessonForm policies with authoritative server validation and inspecting accessible field associations. Preserve the existing form modules and keep LessonForm as the composition root. No runtime implementation is authorized in the audit branch.
 
 ## Continuity update obligation
 

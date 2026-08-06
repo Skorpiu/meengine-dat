@@ -607,7 +607,16 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 - Absence of direct component-transition coverage is part of the structural risk; use the existing test toolchain without dependency upgrades
 - Existing `LD-008` remains a separate P3 DTO item and must not be duplicated
 - Future slices: `schedule-map-wide-grid-components-v1` followed by `schedule-map-data-orchestration-v1`
-- Next audit focus: locate and inspect LessonForm orchestration and existing module boundaries
+<!-- ui-struct-003-lesson-form-orchestration-concentration -->
+- Confirmed code finding `UI-STRUCT-003`: LessonForm retains option loading, form state, role/mode/type policy, validation, payload composition, and all field-section rendering
+- Positive evidence: create/update request builders, edit orchestration, response parsing, server services, styles, and Student option mapping are already extracted and tested
+- Create/edit HTTP contract duplication is rejected as a finding
+- Client/server lesson-policy duplication remains unclassified until contextual comparison distinguishes UX validation from authoritative server enforcement
+- Approved modular direction: pure typed policy module, focused option-data hook, and explicit form sections
+- Preserve LessonForm as the composition root
+- Do not introduce a generic form framework, dynamic schema-driven renderer, or dependency upgrade
+- Future slices: `lesson-form-policy-module-v1`, `lesson-form-option-data-hook-v1`, and `lesson-form-sections-v1`
+- Next audit focus: compare LessonForm policies with authoritative server validation and inspect accessible field associations
 - No runtime implementation is authorized in this analysis-only branch
 
 **Audit evidence protocol:** start from actual entrypoints; trace imports and call paths; distinguish orchestration, validation, service, DTO, persistence, UI, and tests; separate confirmed evidence from navigation friction; never infer a defect from size or one narrow search.

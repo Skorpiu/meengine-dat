@@ -169,6 +169,19 @@ Each implementation must be a separate smallest-safe branch. No runtime implemen
 
 **Rejected resolution:** no universal Day/Week/Month renderer and no generic calendar framework.
 
+<!-- ui-struct-003-lesson-form-orchestration-concentration -->
+**Confirmed finding `UI-STRUCT-003`:** LessonForm retains several independently changing data, policy, validation, state, payload, and presentation responsibilities.
+
+**Approved future slice:** `lesson-form-policy-module-v1` — extract pure typed lesson-type, role, mode, student-selection, vehicle-requirement, and payload-policy functions. Server validation remains authoritative.
+
+**Approved future slice:** `lesson-form-option-data-hook-v1` — encapsulate instructor, Student, and Vehicle option loading, parsing, loading state, and cancellation.
+
+**Deferred presentation slice:** `lesson-form-sections-v1` — separate explicit participant, vehicle, schedule, and status sections after policy and option-data boundaries are stable.
+
+**Testing requirement:** unit-test pure policy/data modules and use the existing Playwright toolchain for create/edit/type-transition flows; do not add dependencies solely for this refactor.
+
+**Rejected resolution:** no generic form framework, dynamic schema-renderer, oversized shared hook, or domain-erasing form abstraction.
+
 **Goal (future execution):** Global maintainability and internal-quality audit **without** changing functional behaviour during the audit itself.
 
 **Does not:** reopen or mix with the closed `node-24-runtime-migration-v1` P0; alter runtime/schema/data; mass-refactor; invent abstractions to cut lines; mix internal maintenance with new features.

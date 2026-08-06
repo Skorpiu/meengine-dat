@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** Schedule Map structural finding confirmed; LessonForm module-boundary evidence collection starting
-- **Confirmed findings:** 12 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 10 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`, `UI-STRUCT-002`)
+- **Current phase:** LessonForm structural finding confirmed; client/server lesson-policy and form-accessibility evidence collection starting
+- **Confirmed findings:** 13 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 11 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`, `UI-STRUCT-002`, `UI-STRUCT-003`)
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -620,3 +620,43 @@ Schedule Map has meaningful existing module extraction, but its Month and Week b
 - Keep existing Lesson, Student, Vehicle, responsive, and smoke-test contracts.
 - Do not create a generic calendar framework or universal renderer.
 - Do not duplicate the existing `LD-008` CalendarLessonDto item.
+
+<!-- ui-struct-003-lesson-form-orchestration-concentration -->
+## `UI-STRUCT-003` — LessonForm orchestration concentration
+
+- **Classification:** confirmed code finding
+- **Priority:** P2 maintainability and testability follow-up
+- **Dimensions:** cohesion, modularity, testability, consistency
+- **Implementation authorized in this branch:** no
+
+### Exact proposition
+
+`LessonForm` delegates persistence contracts and server orchestration appropriately, but still coordinates three option-data sources, all form state, role/mode/type policies, client validation, payload composition, and every visual section without direct component-transition coverage.
+
+### Positive modular evidence
+
+- Create and update request-body builders are separate and unit-tested.
+- Edit loading/submission is coordinated through `useEditLessonForm`.
+- Server creation and update/delete behavior resides in focused services.
+- Student option mapping, styles, and response parsing are extracted.
+
+### Residual concentration
+
+- Instructor, Student, and Vehicle options are loaded directly by the component.
+- Lesson-type, role, mode, Student-limit, vehicle-requirement, and status policies are evaluated throughout initialization, validation, payload composition, and JSX.
+- All participant, vehicle, date/time, status, search, and action sections remain in one component.
+- No test directly mounts or exercises LessonForm state transitions.
+
+### Approved resolution
+
+1. `lesson-form-policy-module-v1`: pure typed UI policy and payload helpers.
+2. `lesson-form-option-data-hook-v1`: focused option loading and parsing.
+3. `lesson-form-sections-v1`: explicit sections after the preceding contracts stabilize.
+
+LessonForm remains the composition root. Server validation remains authoritative.
+
+### Rejected findings and resolutions
+
+- No create/edit HTTP-contract duplication finding.
+- No generic form framework or dynamic schema renderer.
+- No separate client/server policy-duplication finding until the next contextual comparison.
