@@ -549,7 +549,13 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 - Rulebook classification: `SA-GOV-002` authority hierarchy is **APTO** — roles, D0–D4 authority, human approval, and canonical-source conflict precedence are explicit
 - Rulebook classification: `SA-GOV-003` Definition of Done is **APTO** — the canonical Merge readiness criteria, evidence, conformance, memory, and close-battery gates provide the operational Definition of Done; do not duplicate it
 - Rulebook finding: `SA-GOV-004` confirmed and fixed — every slice must receive a proportional, evidence-based Engineering Quality Review across applicable dimensions
-- Next audit focus: production UI orchestration, beginning with `components/admin/student-records-manager.tsx` and its route/service/test boundaries
+<!-- ui-orch-001-linked-student-profile-split-mutation -->
+- Confirmed code finding `UI-ORCH-001`: linked student profile editing performs a Student PATCH followed by a linked User PUT; the first write can remain committed when the second fails
+- Existing mitigation: explicit partial-success feedback and list reload; no silent success is reported
+- Missing guarantee: no single server transaction, compensation, or direct orchestration regression test
+- Finding scope: reliability, data consistency, orchestration ownership, and testability; no security or tenant-isolation failure identified
+- Implementation status: not authorized in this analysis branch
+- Next audit focus: map the smallest safe server-side transaction/service boundary and required regression tests without modifying runtime code
 
 **Audit evidence protocol:** start from actual entrypoints; trace imports and call paths; distinguish orchestration, validation, service, DTO, persistence, UI, and tests; separate confirmed evidence from navigation friction; never infer a defect from size or one narrow search.
 

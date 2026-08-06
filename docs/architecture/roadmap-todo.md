@@ -98,7 +98,12 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 **Rulebook audit:** `SA-GOV-001` semantic gates fixed; `SA-GOV-002` authority hierarchy apt; `SA-GOV-003` operational Definition of Done apt through the canonical Merge readiness criteria; `SA-GOV-004` confirmed and fixed through the Engineering Quality Review Protocol.
 
-**Current audit evidence focus:** production UI orchestration — begin with `components/admin/student-records-manager.tsx`, then inspect its route, service, test, modal, and data-loading boundaries before classifying a code finding.
+<!-- ui-orch-001-linked-student-profile-split-mutation -->
+**Confirmed finding `UI-ORCH-001`:** linked student profile editing persists the `Student` update before attempting the linked `User` update. Failure of the second request produces an acknowledged partial success but can leave the two records divergent.
+
+**Priority:** P1 engineering-quality follow-up — data consistency, reliability, orchestration ownership, and regression protection.
+
+**Current evidence focus:** identify whether the smallest safe future slice should introduce a dedicated transactional service/endpoint or extend the tenant-scoped student patch contract. Preserve all current authorization, demo, audit, DTO, and error contracts.
 
 **Goal (future execution):** Global maintainability and internal-quality audit **without** changing functional behaviour during the audit itself.
 

@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** Super Agent governance review complete; production UI orchestration evidence collection starting
-- **Confirmed findings:** 2 governance findings (`SA-GOV-001`, `SA-GOV-004`); no code maintainability findings yet
+- **Current phase:** first production UI orchestration finding confirmed; smallest-safe solution boundary under read-only inspection
+- **Confirmed findings:** 3 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 1 code finding (`UI-ORCH-001`)
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -256,3 +256,48 @@ Reversibility was already present in decision recommendations and recovery proto
 The Super Agent is correctly positioned for the DAT team and now has sufficiently explicit rules for authority, semantic gates, completion, evidence, engineering quality, human-controlled lifecycle, memory continuity, and safe operational execution.
 
 The engineering audit now proceeds to code evidence. The first investigation target is `components/admin/student-records-manager.tsx`; no structural finding is assumed in advance.
+
+<!-- ui-orch-001-linked-student-profile-split-mutation -->
+## `UI-ORCH-001` — Linked student profile split mutation
+
+- **Classification:** confirmed code finding
+- **Priority:** P1 engineering-quality follow-up
+- **Dimensions:** reliability, data consistency, orchestration ownership, testability
+- **Security/tenancy classification:** no failure identified
+- **Implementation authorized:** no
+
+### Exact proposition
+
+Editing an `APP_USER` student may persist changes to the `Student` row before attempting the linked `User` update. When the second request fails, the application has no transaction or compensation that restores the first write.
+
+### Evidence
+
+1. `StudentRecordsManager.handleEdit` sends `PATCH /api/admin/students/[id]` first.
+2. When linked profile fields changed, it subsequently sends `PUT /api/users/update`.
+3. A failed User update returns after the Student write has already succeeded.
+4. The client displays an explicit partial-success message and reloads the student list.
+5. No combined server transaction or compensating write was found for this flow.
+6. Existing test matches cover routes and payload helpers, but no direct component/orchestration test exercises `Student success + User failure`.
+
+### Impact
+
+`Student` and linked `User` can retain different values for shared profile fields. Consumers that read different records or fallback orders can therefore expose inconsistent profile information until an operator retries or manually repairs the state.
+
+The explicit partial-success message is a useful mitigation and prevents false success reporting, but it does not restore consistency.
+
+### Smallest-safe future-slice hypothesis
+
+Prefer one tenant-scoped server operation that validates and updates the allowed `Student` and linked `User` fields inside one transaction, while preserving current authorization, demo restrictions, audit evidence, DTOs, sanitized errors, and behavior for manual-only students.
+
+This is a hypothesis pending boundary inspection. No runtime implementation is authorized by this audit record.
+
+### Required regression evidence for a future implementation
+
+- all-or-nothing behavior when the User update fails;
+- Student-only update when no linked User synchronization is needed;
+- tenant and role rejection;
+- demo mutation rejection;
+- unchanged email-specific workflow;
+- audit-event preservation;
+- client behavior for success and server failure;
+- no duplicate or stale local overlay after reload.

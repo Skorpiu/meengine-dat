@@ -318,7 +318,10 @@ See [Canonical current state](#canonical-current-state). Single recommended next
 - Rulebook audit finding `SA-GOV-001` is confirmed and fixed in the audit branch: blocking gates must validate exact propositions, inspect semantic context, distinguish current from historical evidence, and explicitly account for untracked files.
 - Rulebook validation completed: `SA-GOV-002` authority hierarchy is apt; `SA-GOV-003` is satisfied by the canonical Merge readiness criteria and must not be duplicated.
 - Governance finding `SA-GOV-004` is confirmed and fixed in the audit branch through a proportional, evidence-based Engineering Quality Review Protocol and reviewer expectations.
-- Governance review is complete; the audit now proceeds to production UI orchestration, starting with `student-records-manager.tsx`.
+<!-- ui-orch-001-linked-student-profile-split-mutation -->
+- Production UI finding `UI-ORCH-001` confirmed: linked student profile editing uses two sequential writes (`Student` then linked `User`) and may leave the records divergent if the second write fails.
+- The client reports partial success and reloads the persisted student state, but no atomic server operation, compensation, or direct orchestration test exists.
+- No implementation has been authorized; the audit is mapping the smallest safe server-side boundary and required regression evidence.
 
 ### Operator housekeeping (local / Git — human-executed)
 
