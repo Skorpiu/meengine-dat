@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** shared admin-context duplication confirmed; Schedule Map module-boundary evidence collection starting
-- **Confirmed findings:** 11 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 9 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`)
+- **Current phase:** Schedule Map structural finding confirmed; LessonForm module-boundary evidence collection starting
+- **Confirmed findings:** 12 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 10 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`, `UI-STRUCT-002`)
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -585,3 +585,38 @@ Do not introduce a generic route superclass, middleware framework, CRUD factory,
 ## Modular design rule
 
 DAT should continue to organize production code by domain or capability. HTTP routes should remain thin adapters, domain services should own business behavior, and shared modules should contain only stable cross-cutting mechanics with explicit contracts.
+
+<!-- ui-struct-002-schedule-map-view-orchestration -->
+## `UI-STRUCT-002` — Schedule Map view duplication and orchestration
+
+- **Classification:** confirmed code finding
+- **Priority:** P2 maintainability and testability follow-up
+- **Dimensions:** duplication, modularity, cohesion, testability
+- **Implementation authorized in this branch:** no
+
+### Exact proposition
+
+Schedule Map has meaningful existing module extraction, but its Month and Week branches substantially duplicate the same wide-grid lesson-card and interaction implementation while the parent component continues to coordinate data loading, filters, navigation, printing, selection, editing, deletion, and all three views.
+
+### Contextual evidence
+
+- Normalized Month/Week similarity is 0.8595.
+- Both branches use the same seven-column structure, day selection, expanded details, warnings, and edit/delete interactions.
+- Day similarity is approximately 0.40 because it implements a distinct continuous timeline with duration, overlap, position, and current-time behavior.
+- Card, navigation, responsive, viewport, student-display, and lesson-display logic is already meaningfully extracted.
+- No component-level tests exercise Schedule Map state transitions directly.
+- Existing helper, viewport, DTO integration, and smoke tests partially mitigate the risk.
+
+### Approved resolution
+
+1. `schedule-map-wide-grid-components-v1`: extract a focused Month/Week grid and reusable lesson details/actions.
+2. Preserve Month-specific maximum-visible behavior and Week-specific full-day listing as explicit configuration.
+3. Preserve Day as a separate timeline component.
+4. `schedule-map-data-orchestration-v1`: subsequently evaluate lesson fetching, instructor filtering, refresh registration, and interaction state as focused hooks or modules.
+
+### Preserved boundaries
+
+- Keep `schedule-map-card.ts`, `schedule-map-navigation.ts`, `schedule-map-responsive.ts`, and `use-schedule-map-wide-viewport.ts`.
+- Keep existing Lesson, Student, Vehicle, responsive, and smoke-test contracts.
+- Do not create a generic calendar framework or universal renderer.
+- Do not duplicate the existing `LD-008` CalendarLessonDto item.

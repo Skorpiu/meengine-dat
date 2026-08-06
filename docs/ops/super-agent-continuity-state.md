@@ -33,7 +33,7 @@ Stop before consequential work if Git state or canonical documents disagree.
 ## Current verified repository state
 
 - Active branch at snapshot creation: `engineering-excellence-audit-v1`
-- Previous continuity checkpoint: `4b55ccf39766b950d1400bfaccfaa2e943738b83`
+- Previous continuity checkpoint: `e7f2a9d5235c4ba0e8f3c3302ea783a5992ae60a`
 - `origin/main` baseline: `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - Branch purpose: P1 analysis-only engineering-excellence audit
 - Branch publication: not pushed at snapshot creation
@@ -75,6 +75,7 @@ Stop before consequential work if Git state or canonical documents disagree.
 <!-- small-typed-helpers-over-generic-route-factories-v1 -->
 <!-- api-dup-002-local-super-admin-tenant-helper-duplication -->
 <!-- domain-modular-design-and-thin-route-adapters-v1 -->
+<!-- ui-struct-002-schedule-map-view-orchestration -->
 ## Confirmed code findings
 
 | ID | Status | Summary |
@@ -88,6 +89,7 @@ Stop before consequential work if Git state or canonical documents disagree.
 | `API-DUP-001` | Confirmed; not implemented | Settings and Feature Flags duplicate a substantial route skeleton |
 | `API-STRUCT-001` | Confirmed; not implemented | Vehicles route combines transport, access, validation, projection, business rules, and persistence |
 | `API-DUP-002` | Confirmed; not implemented | SUPER_ADMIN, organization, tenant-host, and actor-context resolution is repeated across administrative routes |
+| `UI-STRUCT-002` | Confirmed; not implemented | Schedule Map Month/Week duplication and residual orchestration concentration |
 
 ## Approved implementation direction
 
@@ -151,6 +153,16 @@ No implementation belongs in the current analysis branch.
 - Configuration-history logging remains best-effort.
 - Inspect repeated local `requireSuperAdminTenant` implementations before approving a broader shared helper.
 
+## Schedule Map follow-up
+
+- `schedule-map-wide-grid-components-v1`: shared focused Month/Week grid plus reusable lesson details and actions.
+- `schedule-map-data-orchestration-v1`: evaluate focused lesson-loading, instructor-filter, refresh, and interaction-state boundaries.
+- Month and Week remain explicit modes of one wide-grid family.
+- Day timeline remains separate.
+- Preserve all existing Schedule Map helper modules and tests.
+- Do not create a generic calendar framework.
+- Keep `LD-008` as a separate existing DTO item.
+
 ## Preserved unrelated branch
 
 - Branch: `production-smoke-module-structure-audit-record-v1`
@@ -160,7 +172,7 @@ No implementation belongs in the current analysis branch.
 
 ## Current next action
 
-Continue the engineering-excellence audit read-only with Schedule Map module-boundary inspection. Preserve domain-oriented modules, thin routes, and small typed cross-cutting helpers. No runtime implementation is authorized in the audit branch.
+Continue the engineering-excellence audit read-only by locating and inspecting LessonForm orchestration and existing module boundaries. Preserve the Schedule Map finding, its existing modules, and the separate Day timeline. No runtime implementation is authorized in the audit branch.
 
 ## Continuity update obligation
 

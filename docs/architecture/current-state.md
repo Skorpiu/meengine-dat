@@ -350,7 +350,12 @@ See [Canonical current state](#canonical-current-state). Single recommended next
 <!-- domain-modular-design-and-thin-route-adapters-v1 -->
 - The repository already follows a domain-modular direction; the correction is to place proven cross-cutting behavior in a focused admin-route-access module.
 - Domain access, demo, feature, schema, DTO, persistence, and audit rules remain in their existing modules.
-- The next read-only target is the Schedule Map orchestration and its current module boundaries.
+<!-- ui-struct-002-schedule-map-view-orchestration -->
+- `UI-STRUCT-002` confirmed: Month and Week substantially duplicate the same wide-grid card and interaction structure.
+- Day is structurally distinct and should remain a separate timeline view.
+- Schedule Map already has meaningful modular extraction that must be preserved.
+- No generic calendar framework is recommended.
+- The next read-only target is LessonForm orchestration and its existing module boundaries.
 
 ### Operator housekeeping (local / Git — human-executed)
 

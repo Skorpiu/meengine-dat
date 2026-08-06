@@ -158,6 +158,17 @@ Each implementation must be a separate smallest-safe branch. No runtime implemen
 
 **Modularity rule:** organize by domain/capability, keep routes thin, extract proven common mechanics, and avoid generic frameworks or an unbounded shared-utils module.
 
+<!-- ui-struct-002-schedule-map-view-orchestration -->
+**Confirmed finding `UI-STRUCT-002`:** Schedule Map Month and Week views duplicate substantially the same seven-column grid, lesson selection, expanded details, warnings, and edit/delete actions. Day remains a separate timeline responsibility.
+
+**Approved future slice:** `schedule-map-wide-grid-components-v1` — extract a focused shared Month/Week grid plus reusable lesson details/actions while preserving explicit mode differences.
+
+**Follow-up slice:** `schedule-map-data-orchestration-v1` — evaluate focused lesson-loading, instructor-filter, refresh, and interaction-state boundaries after the view extraction.
+
+**Testing requirement:** preserve existing helper and E2E coverage and add regression evidence for view switching, lesson expansion, filtering, refresh/focus, and edit/delete eligibility using the existing toolchain.
+
+**Rejected resolution:** no universal Day/Week/Month renderer and no generic calendar framework.
+
 **Goal (future execution):** Global maintainability and internal-quality audit **without** changing functional behaviour during the audit itself.
 
 **Does not:** reopen or mix with the closed `node-24-runtime-migration-v1` P0; alter runtime/schema/data; mass-refactor; invent abstractions to cut lines; mix internal maintenance with new features.

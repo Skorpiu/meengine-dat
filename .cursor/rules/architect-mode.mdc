@@ -597,7 +597,17 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 - Preserve domain mutation and feature guards in their respective User, Vehicle, Lesson, and other modules
 - Do not use route inheritance, generic CRUD builders, callback-heavy factories, service locators, or a single oversized shared-utils module
 - Future slice: `admin-route-context-helper-v1`
-- Next audit focus: inspect `schedule-map.tsx` and its existing module boundaries without treating file size as a finding
+<!-- ui-struct-002-schedule-map-view-orchestration -->
+- Confirmed code finding `UI-STRUCT-002`: Schedule Map retains substantial Month/Week view duplication and page-level orchestration despite meaningful existing domain extraction
+- Month and Week are members of the same wide-grid view family; normalized similarity is 0.8595 and their expanded-card interactions are materially equivalent
+- Day is a legitimately separate timeline view with duration, overlap, position, and current-time behavior
+- Approved direction: shared focused wide-grid, lesson-detail, and lesson-action components; preserve a separate Day timeline
+- Existing card, navigation, responsive, viewport, DTO, and domain modules must be preserved
+- Do not create a generic calendar framework or force all three views into one universal renderer
+- Absence of direct component-transition coverage is part of the structural risk; use the existing test toolchain without dependency upgrades
+- Existing `LD-008` remains a separate P3 DTO item and must not be duplicated
+- Future slices: `schedule-map-wide-grid-components-v1` followed by `schedule-map-data-orchestration-v1`
+- Next audit focus: locate and inspect LessonForm orchestration and existing module boundaries
 - No runtime implementation is authorized in this analysis-only branch
 
 **Audit evidence protocol:** start from actual entrypoints; trace imports and call paths; distinguish orchestration, validation, service, DTO, persistence, UI, and tests; separate confirmed evidence from navigation friction; never infer a defect from size or one narrow search.
