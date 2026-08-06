@@ -345,7 +345,12 @@ See [Canonical current state](#canonical-current-state). Single recommended next
 <!-- small-typed-helpers-over-generic-route-factories-v1 -->
 - Approved direction: small typed auxiliary functions and domain-specific services; no generic CRUD route factory.
 - Configuration audit logging remains best-effort and does not propagate its own persistence failures.
-- The next read-only target is repeated local admin authentication and tenant-context helpers.
+<!-- api-dup-002-local-super-admin-tenant-helper-duplication -->
+- `API-DUP-002` confirmed: 17 routes declare a local SUPER_ADMIN/organization/tenant context helper, with 16 local implementation variants.
+<!-- domain-modular-design-and-thin-route-adapters-v1 -->
+- The repository already follows a domain-modular direction; the correction is to place proven cross-cutting behavior in a focused admin-route-access module.
+- Domain access, demo, feature, schema, DTO, persistence, and audit rules remain in their existing modules.
+- The next read-only target is the Schedule Map orchestration and its current module boundaries.
 
 ### Operator housekeeping (local / Git — human-executed)
 

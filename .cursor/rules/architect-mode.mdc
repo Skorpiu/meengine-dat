@@ -586,7 +586,18 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 - SystemSetting, FeatureFlag, and Vehicle schemas, DTOs, rules, persistence, and audit payloads remain domain-specific
 - Configuration audit failure is not a finding: `logConfigurationChange` is explicitly best-effort and catches its own persistence errors
 - Future slices: `admin-config-route-helpers-v1` and `vehicle-route-domain-services-v1`
-- Next audit focus: inspect repeated local `requireSuperAdminTenant` helpers and determine the smallest justified shared admin-route context boundary
+<!-- api-dup-002-local-super-admin-tenant-helper-duplication -->
+- Confirmed code finding `API-DUP-002`: 17 route files declare a local `requireSuperAdminTenant`; 16 retain a local implementation variant and one is already a thin delegate
+- The proven common responsibility is session, SUPER_ADMIN, organization, tenant-host, and actor-context resolution
+<!-- domain-modular-design-and-thin-route-adapters-v1 -->
+- Architectural rule: preserve domain-oriented modules and thin route adapters
+- Cross-domain behavior may move to a small typed module only when its semantics and error contract are genuinely identical
+- Approved shared boundary: `lib/admin/admin-route-access.ts` with a canonical `requireSuperAdminTenantContext` result
+- Preserve `requireStudentRecordsAccess` because Student read access has a different role contract
+- Preserve domain mutation and feature guards in their respective User, Vehicle, Lesson, and other modules
+- Do not use route inheritance, generic CRUD builders, callback-heavy factories, service locators, or a single oversized shared-utils module
+- Future slice: `admin-route-context-helper-v1`
+- Next audit focus: inspect `schedule-map.tsx` and its existing module boundaries without treating file size as a finding
 - No runtime implementation is authorized in this analysis-only branch
 
 **Audit evidence protocol:** start from actual entrypoints; trace imports and call paths; distinguish orchestration, validation, service, DTO, persistence, UI, and tests; separate confirmed evidence from navigation friction; never infer a defect from size or one narrow search.

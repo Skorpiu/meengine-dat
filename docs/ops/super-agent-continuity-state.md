@@ -33,7 +33,7 @@ Stop before consequential work if Git state or canonical documents disagree.
 ## Current verified repository state
 
 - Active branch at snapshot creation: `engineering-excellence-audit-v1`
-- Previous continuity checkpoint: `4ca37f5d1b6093c72c9a8efc3b0c40e46dfd13f7`
+- Previous continuity checkpoint: `9e88d5473a9d61e47afb65adb5c194d731b1d8e8`
 - `origin/main` baseline: `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - Branch purpose: P1 analysis-only engineering-excellence audit
 - Branch publication: not pushed at snapshot creation
@@ -73,6 +73,8 @@ Stop before consequential work if Git state or canonical documents disagree.
 <!-- api-dup-001-config-route-skeleton-duplication -->
 <!-- api-struct-001-vehicle-route-domain-concentration -->
 <!-- small-typed-helpers-over-generic-route-factories-v1 -->
+<!-- api-dup-002-local-super-admin-tenant-helper-duplication -->
+<!-- domain-modular-design-and-thin-route-adapters-v1 -->
 ## Confirmed code findings
 
 | ID | Status | Summary |
@@ -85,6 +87,7 @@ Stop before consequential work if Git state or canonical documents disagree.
 | `A11Y-002` | Confirmed; not implemented | Detailed People badge help remains tooltip-dependent and is not touch-discoverable |
 | `API-DUP-001` | Confirmed; not implemented | Settings and Feature Flags duplicate a substantial route skeleton |
 | `API-STRUCT-001` | Confirmed; not implemented | Vehicles route combines transport, access, validation, projection, business rules, and persistence |
+| `API-DUP-002` | Confirmed; not implemented | SUPER_ADMIN, organization, tenant-host, and actor-context resolution is repeated across administrative routes |
 
 ## Approved implementation direction
 
@@ -130,6 +133,14 @@ No implementation belongs in the current analysis branch.
 - Future slices: `people-search-accessible-names-v1` and `people-badge-help-accessibility-v1`.
 - Performance review produced no finding; do not reopen without measured evidence.
 
+## Modular design rule
+
+- Organize production code by domain or capability.
+- Keep HTTP routes as thin adapters.
+- Use small typed modules for proven cross-cutting mechanics.
+- Preserve domain-specific services, guards, schemas, DTOs, persistence, and audit behavior.
+- Avoid generic route frameworks, service locators, callback-heavy builders, and unbounded shared-utils modules.
+
 ## Administrative route follow-up
 
 - `admin-config-route-helpers-v1`: small typed common helpers; no generic CRUD factory.
@@ -147,7 +158,7 @@ No implementation belongs in the current analysis branch.
 
 ## Current next action
 
-Continue the engineering-excellence audit read-only by inspecting repeated local SUPER_ADMIN and tenant-context helpers. Preserve small typed helpers over generic route factories. No runtime implementation is authorized in the audit branch.
+Continue the engineering-excellence audit read-only with Schedule Map module-boundary inspection. Preserve domain-oriented modules, thin routes, and small typed cross-cutting helpers. No runtime implementation is authorized in the audit branch.
 
 ## Continuity update obligation
 

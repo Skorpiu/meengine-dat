@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** administrative route duplication and Vehicles responsibility findings confirmed; shared admin-context evidence collection starting
-- **Confirmed findings:** 10 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 8 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`)
+- **Current phase:** shared admin-context duplication confirmed; Schedule Map module-boundary evidence collection starting
+- **Confirmed findings:** 11 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 9 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`)
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -539,3 +539,49 @@ The route must remain responsible for HTTP composition and must preserve all cur
 `logConfigurationChange` catches and logs its own persistence failures. A configuration mutation is therefore not converted into an HTTP failure solely because configuration-history persistence failed.
 
 This best-effort contract must be preserved unless a separate product or compliance decision changes the required audit guarantee.
+
+<!-- api-dup-002-local-super-admin-tenant-helper-duplication -->
+## `API-DUP-002` — Local SUPER_ADMIN tenant-context helper duplication
+
+- **Classification:** confirmed code finding
+- **Priority:** P2 maintainability and consistency follow-up
+- **Dimensions:** duplication, modularity, security consistency, testability
+- **Implementation authorized in this branch:** no
+
+### Exact proposition
+
+Seventeen administrative route files declare a local `requireSuperAdminTenant` helper. Sixteen retain a local implementation variant of the same session, SUPER_ADMIN, organization, tenant-host, and actor-context resolution; the Student collection route is already a thin delegate.
+
+### Contextual evidence
+
+- Most variants obtain the NextAuth session, require an authenticated SUPER_ADMIN, require an organization, validate the tenant host, and return actor information.
+- Some variants return only the organization; others rename actor fields as `currentUserId`, `actorRole`, or `actorEmail`.
+- These return-shape differences do not represent different authorization semantics.
+- Shared domain modules and route-access helpers already exist, demonstrating that the repository is intentionally modular.
+
+### Approved resolution
+
+`admin-route-context-helper-v1` should introduce:
+
+- `lib/admin/admin-route-access.ts`;
+- a canonical typed `requireSuperAdminTenantContext(request)` result;
+- focused unit tests for unauthenticated, wrong-role, missing-organization, tenant-mismatch, and success paths;
+- incremental route migration with unchanged endpoint contracts.
+
+Routes may destructure only the fields they need from the canonical context.
+
+### Preserved domain boundaries
+
+- Student read/write role policy remains in `requireStudentRecordsAccess`.
+- User-management demo rules remain in the User domain.
+- Vehicle feature and demo rules remain in the Vehicle domain.
+- Lesson, import, email, lifecycle, schema, persistence, and audit behavior remain domain-specific.
+
+### Rejected resolution
+
+Do not introduce a generic route superclass, middleware framework, CRUD factory, callback-heavy builder, service locator, or unbounded shared-utils module.
+
+<!-- domain-modular-design-and-thin-route-adapters-v1 -->
+## Modular design rule
+
+DAT should continue to organize production code by domain or capability. HTTP routes should remain thin adapters, domain services should own business behavior, and shared modules should contain only stable cross-cutting mechanics with explicit contracts.

@@ -150,6 +150,14 @@ Each implementation must be a separate smallest-safe branch. No runtime implemen
 
 **Configuration audit conclusion:** no separate finding. Audit-history writes are best-effort and catch their own errors.
 
+<!-- api-dup-002-local-super-admin-tenant-helper-duplication -->
+**Confirmed finding `API-DUP-002`:** local SUPER_ADMIN, organization, tenant-host, and actor-context resolution is repeated across 17 administrative route files.
+
+<!-- domain-modular-design-and-thin-route-adapters-v1 -->
+**Approved future slice:** `admin-route-context-helper-v1` — introduce `lib/admin/admin-route-access.ts` and a small typed `requireSuperAdminTenantContext` helper. Migrate routes incrementally while preserving their domain-specific guards and response contracts.
+
+**Modularity rule:** organize by domain/capability, keep routes thin, extract proven common mechanics, and avoid generic frameworks or an unbounded shared-utils module.
+
 **Goal (future execution):** Global maintainability and internal-quality audit **without** changing functional behaviour during the audit itself.
 
 **Does not:** reopen or mix with the closed `node-24-runtime-migration-v1` P0; alter runtime/schema/data; mass-refactor; invent abstractions to cut lines; mix internal maintenance with new features.
