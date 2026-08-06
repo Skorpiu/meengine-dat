@@ -13,15 +13,15 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 | Topic | Current truth |
 | ----- | ------------- |
 | **Entry baseline** | `main` merge commit `909b69a` (`Merge branch 'node-24-runtime-migration-v1' into 'main'`). This is the verified baseline for the Node 24 closure record — **not** an eternal SHA. Re-confirm the commit served in Production after every later deployment. |
-| **Git / CI** | Local `main` = `origin/main` = `909b69a` at closure inventory. The GitLab pipeline for the Node 24 merge on `main` **Passed** using Docker image `node:24`. |
+| **Git / CI** | Local `main` = `origin/main` = `da5aea6` after the docs-only closure integration. Node 24 runtime application merge `909b69a` and closure record `a397054` are integrated; the verified GitLab `main` pipeline passed using Docker image `node:24`. |
 | **Deployment (last operator-confirmed)** | Vercel project `meengine-dat` — Production runtime validation completed on application merge commit **`909b69a`**, with the Vercel Project Setting and effective runtime aligned to Node **24.x**. A later docs-only closure deployment may advance the served commit without changing this validated runtime baseline; re-confirm after any later application or runtime deployment. |
 | **Hosts (shared deployment)** | `www.meengine.io`, `platform.meengine.io`, `demo.meengine.io`, `meengine-dat.vercel.app` currently share the **same** Vercel app/deployment. DAT/Platform separation is **planned**, not yet physical. |
 | **Hosted smoke** | Original full hosted verification remains closed with mutation evidence **1/0/0** and its immutable lesson trail. After the Node 24 Production deployment at `909b69a`, the operator re-ran the required non-destructive gates: fixture preflight **1/0/0**, API health + public signup guard **exit 0**, and hosted read-only UI **4/0/0**. Mutation smoke was intentionally not repeated because the slice changed runtime/configuration only and another Production write would add little signal. |
 | **Smoke fixtures** | DEC-064 closed 2026-07-28 (**human**): repair apply + fixture apply (`changesApplied=18`); inspector no blockers; fixtures all-ready; idempotent dry-run; Sarah/Bob/John Doe preserved; commercial catalogue untouched; no `PLATFORM_ADMIN` recreate. Full IDs in operator vault only. |
 | **Remote ops closed** | Do **not** re-run repair, fixture apply, or smoke-lesson cleanup without new evidence + explicit human authorization. `student-invite-accept-student-link-repair-v1` **done** (repo + remote). |
 | **Node.js runtime** | **Node 24 migration closed.** Local compatibility passed on Node 24.18.0; repository pins, package engines, `.nvmrc`, GitLab CI and runner documentation are aligned; branch and `main` pipelines passed using `node:24`; Vercel Preview and Production deployed successfully with Project Settings and effective runtime on Node 24.x; post-deploy non-destructive hosted gates passed at `909b69a`. |
-| **Next recommended** | `engineering-excellence-audit-v1` — **P1 analysis-only**, planned and not executed. Node 24 P0 is closed; no refactor implementation is authorized by the audit itself. |
-| **Ordered next** | (1) `engineering-excellence-audit-v1` (planned, analysis-only, not executed) → (2) `platform-separation-architecture-plan-v1` → (3) small audit-approved refactor slices. |
+| **Active analysis** | `engineering-excellence-audit-v1` — **P1 analysis-only**, active on base `da5aea6`. Normalized inventory is complete; no findings or refactor implementation are yet authorized. Detailed evidence: [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md). |
+| **Ordered next** | (1) complete `engineering-excellence-audit-v1` analysis and approve findings → (2) `platform-separation-architecture-plan-v1` → (3) only then implement small, audit-approved refactor slices. |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
 | **Archive tag** | `archive-schedule-and-vehicles-b101112` — historical archive only; **not** a release or recovery baseline. |
@@ -309,8 +309,12 @@ See [Canonical current state](#canonical-current-state). Single recommended next
 ### Engineering excellence (audit status)
 
 - Localized refactors and hygiene have occurred across many prior slices.
-- A **global, systematic** maintainability audit has **not** been executed.
-- Slice **`engineering-excellence-audit-v1`** is **planned** (P1 analysis-only) in [roadmap-todo.md](./roadmap-todo.md). No concrete audit findings claimed here.
+- The global, systematic maintainability audit **started on 2026-08-06** in `engineering-excellence-audit-v1`, based on `da5aea6`.
+- The normalized inventory phase is complete: 661 TypeScript/TSX files, 438 production files, 223 test/E2E files, 58 API routes, 96 components, 9 hooks, 369 `lib` files, and 27 scripts.
+- No concrete finding, severity, extraction target, file move, or refactor slice is confirmed yet.
+- Detailed evidence and audit invariants are maintained in [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md).
+- The audit inherits the closed Node 24 baseline: local Node `v24.18.0`, repository engine `24.x`, GitLab `node:24`, Vercel Node 24.x, application merge `909b69a`, closure/main baseline `da5aea6`, 207 test files / 1738 tests, production build, and post-deploy read-only smoke passed.
+- The Super Agent remains the reusable repository-aware operational worker, but remote writes, production mutation, destructive actions, and behavioural changes always require explicit human authorization.
 
 ### Operator housekeeping (local / Git — human-executed)
 

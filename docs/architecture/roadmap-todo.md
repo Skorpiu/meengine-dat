@@ -10,7 +10,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| `engineering-excellence-audit-v1` | **P1** engineering excellence | **Next — analysis-only**; inspect maintainability and internal quality, record evidence and recommendations, but do not refactor or change runtime/schema/data in the audit slice |
+| `engineering-excellence-audit-v1` | **P1** engineering excellence | **Active — analysis-only**; normalized inventory complete; inspect responsibilities and call paths before confirming findings; no runtime/schema/data or refactor implementation |
 
 **Closed context:** `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
@@ -21,7 +21,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 <!-- node-24-runtime-migration-v1 closed 2026-08-04 at 909b69a -->
 **Closed prerequisite:** `node-24-runtime-migration-v1` merged to `main` at `909b69a`; GitLab `node:24`, Vercel Preview/Production Node 24.x, and required post-deploy non-destructive hosted gates passed.
 
-1. `engineering-excellence-audit-v1` — **P1 / engineering excellence — next, analysis-only**; **not executed**
+1. `engineering-excellence-audit-v1` — **P1 / engineering excellence — active, analysis-only**; normalized inventory complete; no findings confirmed
 2. `platform-separation-architecture-plan-v1`
 3. Small audit-approved refactor slices (one scope per branch; behavioural equivalence + `pnpm check`)
 
@@ -57,7 +57,7 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 | Slice | Priority | Notes |
 | ----- | -------- | ----- |
-| `engineering-excellence-audit-v1` | **P1** next (analysis-only) | Global maintainability audit — **not executed**; Node 24 P0 prerequisite is closed; the audit itself authorizes no refactor implementation |
+| `engineering-excellence-audit-v1` | **P1** active (analysis-only) | Normalized inventory complete on `da5aea6`; no findings confirmed; audit report records evidence; audit itself authorizes no refactor implementation |
 | `platform-separation-architecture-plan-v1` | **P1** backlog | After the engineering audit — autonomous MeEngine Platform vs DAT; Node 24 prerequisite is closed |
 | `people-instructor-invite-accept-list-refresh-v1` | **P1** bug | After INSTRUCTOR invite accept, instructor may not appear under People → Instructors despite correct DB rows |
 | `school-person-identifiers-settings-product-plan-v1` | **P1** plan first | DEC-065 — Admin → Settings → Identifiers & numbering; plan before implementation |
@@ -90,7 +90,11 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 ### `engineering-excellence-audit-v1`
 
-**Status:** **P1** — **planned**; analysis-only; **not executed**. No findings claimed; no refactor slices pre-created. No runtime / schema / data changes during the audit.
+**Status:** **P1 — active**; analysis-only. Normalized inventory completed on 2026-08-06. No findings, severity ratings, or refactor slices are yet approved. No runtime, schema, data, or functional changes during the audit. Detailed evidence: [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md).
+
+**Inherited baseline:** Node 24 P0 is closed (`909b69a` runtime merge; `da5aea6` current main/audit base). Local Node `v24.18.0`, repository engine `24.x`, GitLab `node:24`, Vercel Node 24.x, 207 test files / 1738 tests, production build, and post-deploy read-only smoke are validated. No dependency or runtime upgrades belong in this audit.
+
+**Super Agent role:** reusable DAT operational worker for repository investigation, guarded command preparation, canonical memory maintenance, and smallest-safe-slice planning. It does not autonomously authorize remote writes, production mutations, destructive operations, or behavioural changes.
 
 **Goal (future execution):** Global maintainability and internal-quality audit **without** changing functional behaviour during the audit itself.
 

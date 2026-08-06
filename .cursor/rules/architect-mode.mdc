@@ -462,7 +462,48 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 
 ### Single recommended next slice and planned order
 
-1. `engineering-excellence-audit-v1` — P1 analysis-only; **planned; not executed** (may consume audit candidate from `production-smoke-module-structure-audit-record-v1`)
+1. `engineering-excellence-audit-v1` — P1 analysis-only; **active**; normalized inventory complete; no findings confirmed and no refactor implementation authorized
+
+<!-- engineering-excellence-audit-v1-live-state -->
+**Live audit state (2026-08-06; base `da5aea6`):**
+
+<!-- super-agent-runtime-and-worker-memory-v1 -->
+**Persistent Super Agent operating memory:**
+
+- The Super Agent is the DAT repository-aware operational worker. It may inspect code, trace call paths, prepare guarded commands, maintain canonical documentation, analyze evidence, and propose smallest-safe slices whenever requested.
+- The Super Agent is not an autonomous approval authority. Human authorization remains mandatory for commit publication, push, merge, branch deletion, hosted configuration changes, database writes, production mutation tests, destructive operations, and any behavioural change.
+- All commands must remain guarded, fail closed, avoid `exit 1` in interactive shell blocks, preserve one remote write per block, and never print secrets or complete sensitive URLs or identifiers.
+- Canonical validation remains `pnpm -C driving_school_platform/nextjs_space check` unless a narrower read-only inspection is explicitly appropriate.
+
+**Persistent Node 24 runtime baseline:**
+
+- Node 24 migration P0 is closed.
+- Portable local runtime: `$HOME/.dat-toolchains/node-v24.18.0-win-x64/node.exe` reporting `v24.18.0`.
+- Repository pins: root and app `.nvmrc` = `24.18.0`; app `package.json` engine = `24.x`.
+- CI baseline: GitLab uses `node:24`.
+- Hosted baseline: Vercel Project Settings, Preview, and Production use Node 24.x.
+- Package/tool baseline retained during migration: pnpm `10.24.0`, Prisma `6.19.0`, Next.js `14.2.28`.
+- Runtime implementation commit: `e5ddc39`; validation-evidence commit: `f23e423`; application merge on main: `909b69a`.
+- Closure record commit: `a397054`; current closed main baseline: `da5aea6`.
+- Local Node 24 validation passed 207 test files / 1738 tests plus the production build.
+- GitLab feature and main pipelines passed under Node 24; Vercel Preview and Production were Ready.
+- Post-deploy Production verification passed fixture preflight, API checks, and four read-only UI smoke tests.
+- Production mutation smoke was intentionally not repeated because the migration changed runtime/configuration only and prior mutation evidence remained valid; do not repeat writes without fresh evidence and explicit authorization.
+- Both `node-24-runtime-migration-v1` and `node-24-runtime-closure-record-v1` were removed locally and remotely after integration verification.
+- Do not opportunistically upgrade Node, pnpm, npm, Prisma, Next.js, or dependencies during unrelated slices.
+- Any future runtime change must be a dedicated slice with local compatibility, CI, Preview, Production, documentation, and post-deploy verification gates.
+
+- Canonical report: `docs/architecture/engineering-excellence-audit-v1.md`
+- Normalized inventory: 661 TypeScript/TSX files; 438 production; 223 test/E2E; 207 unit-test files including 49 integration tests; 58 API routes; 96 components; 9 hooks; 369 `lib` files; 27 scripts
+- Initial metric error corrected: hooks/scripts were first reported as zero because of incomplete pathspecs
+- Preserved input `production-smoke-module-structure-audit-record-v1` @ `a4bea9d` was inspected only; do not merge, cherry-pick, copy wholesale, or delete it during the audit
+- Current signals include large UI orchestrators, API routes, operational smoke modules, import/export services, and scripts; size/proxy counts are not findings by themselves
+- No concrete finding, severity, refactor target, or implementation slice has been approved yet
+- Required next step: inspect responsibilities, imports, call paths, tests, duplication, safety boundaries, and ownership before classification
+- Memory rule: after every material audit phase, synchronize this live state, the audit report, `current-state.md`, and `roadmap-todo.md`
+
+**Audit evidence protocol:** start from actual entrypoints; trace imports and call paths; distinguish orchestration, validation, service, DTO, persistence, UI, and tests; separate confirmed evidence from navigation friction; never infer a defect from size or one narrow search.
+
 2. `platform-separation-architecture-plan-v1`
 3. Small audit-approved refactor slices (one scope per branch)
 
