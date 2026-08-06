@@ -96,7 +96,9 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 **Super Agent role:** reusable DAT operational worker for repository investigation, guarded command preparation, canonical memory maintenance, and smallest-safe-slice planning. It does not autonomously authorize remote writes, production mutations, destructive operations, or behavioural changes.
 
-**Rulebook audit:** `SA-GOV-001` confirmed and fixed — Semantic Gate Precision Protocol added to the Super Agent navigator and canonical operating model. Remaining `needs confirmation`: authority precedence, Definition of Done, and multidimensional quality review.
+**Rulebook audit:** `SA-GOV-001` semantic gates fixed; `SA-GOV-002` authority hierarchy apt; `SA-GOV-003` operational Definition of Done apt through the canonical Merge readiness criteria; `SA-GOV-004` confirmed and fixed through the Engineering Quality Review Protocol.
+
+**Current audit evidence focus:** production UI orchestration — begin with `components/admin/student-records-manager.tsx`, then inspect its route, service, test, modal, and data-loading boundaries before classifying a code finding.
 
 **Goal (future execution):** Global maintainability and internal-quality audit **without** changing functional behaviour during the audit itself.
 

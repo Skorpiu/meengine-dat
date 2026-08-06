@@ -1123,3 +1123,75 @@ The `engineering-excellence-audit-v1` rulebook review identified three false blo
 1. `git grep` omitted an untracked audit report and undercounted Super Agent role references.
 2. A broad date count mixed the audit start date with legitimate historical Node 24 closure dates.
 3. A broad phrase search treated negative and future statements as positive implementation findings.
+
+<!-- engineering-quality-review-protocol-v1 -->
+## Engineering Quality Review Protocol
+
+### Purpose
+
+Ensure that completion and merge-readiness decisions consider engineering quality beyond whether tests merely pass. The review must remain proportional to the approved scope and actual risk.
+
+This protocol does not authorize drive-by improvements. It identifies evidence, confirms applicable risks, and records out-of-scope follow-ups separately.
+
+### Required output
+
+For each applicable dimension, report:
+
+| Dimension | Applicable | Evidence | Result | Follow-up |
+| --- | --- | --- | --- | --- |
+| `<dimension>` | yes / no | path, diff, test, command output, or contextual observation | PASS / RISK / NEEDS_CONFIRMATION / NOT_APPLICABLE | none or smallest-safe follow-up |
+
+`NOT_APPLICABLE` requires a short scope-based reason. An empty cell is not equivalent to `NOT_APPLICABLE`.
+
+### Quality dimensions
+
+1. **Correctness and contracts**
+   - approved behavior, API/UI contracts, domain invariants, backward compatibility, and behavioural equivalence where required.
+
+2. **Security, privacy, authorization, and tenancy**
+   - authentication, authorization, tenant scope, secret/token exposure, abuse surface, and sanitized provider/internal errors.
+
+3. **Data integrity and concurrency**
+   - transactions, all-or-nothing behavior, zero-write dry-runs, identifiers, uniqueness, ordering, idempotency, races, and destructive boundaries.
+
+4. **Maintainability and structure**
+   - cohesion, coupling, duplication, complexity, ownership, discoverability, naming, responsibility boundaries, and obsolete paths.
+
+5. **Testability and regression protection**
+   - unit/integration/E2E coverage, failure paths, test clarity, brittle mocks, and manual QA requirements.
+
+6. **Performance and scalability**
+   - query/load behavior, rendering, network calls, INP-sensitive UI, batch size, algorithmic cost, and evidence of material impact.
+
+7. **Accessibility, usability, and responsiveness**
+   - keyboard and screen-reader behavior, semantics, validation feedback, responsive layout, operator clarity, and destructive-action comprehension.
+
+8. **Observability and diagnostics**
+   - useful logs, audit events, actionable errors, correlation/trace context where applicable, and absence of sensitive leakage.
+
+9. **Reliability and resilience**
+   - predictable failure behavior, retry/idempotency behavior, provider failure, partial failure, concurrency, and fail-closed boundaries.
+
+10. **Operability, reversibility, rollback, and recovery**
+    - safe deployment, rollback or revert path, recovery evidence, migration/data implications, human operator steps, and reversibility classification.
+
+11. **Runtime, dependencies, deployment, and compatibility**
+    - Node/pnpm/Prisma/Next.js baselines, environment/configuration impact, hosted behavior, dependency changes, and browser/runtime compatibility.
+
+12. **Documentation and canonical memory**
+    - current-state, roadmap, decision log, architect rule, system design, runbooks, limitations, and next-slice consistency.
+
+### Proportionality
+
+- Docs-only work normally needs correctness, maintainability, evidence quality, memory consistency, and scope review; runtime-only dimensions may be `NOT_APPLICABLE` with reasons.
+- UI work must consider correctness, maintainability, testability, accessibility, usability, responsiveness, performance, and relevant security/data boundaries.
+- API/data work must consider contracts, authorization, tenant scope, integrity, concurrency, observability, reliability, and rollback.
+- Sensitive work must use the full relevant review plus the Sensitive Batch Gate, Final Evidence Pack, Critical Claim Evidence, and Implementation Conformance Matrix.
+
+### Evidence and blocking policy
+
+- File size, hook counts, keyword matches, or broad searches are investigation signals, not findings.
+- A finding requires contextual evidence showing a concrete maintenance, correctness, security, operational, or quality impact.
+- A critical applicable `RISK` or unresolved `NEEDS_CONFIRMATION` blocks merge readiness when it can affect correctness, security, tenancy, data integrity, production safety, or an approved critical requirement.
+- Non-critical, out-of-scope findings become Deferred recommendations with priority, evidence, and a smallest-safe follow-up.
+- Do not expand the current slice to fix a newly discovered quality issue without explicit approval.

@@ -316,7 +316,9 @@ See [Canonical current state](#canonical-current-state). Single recommended next
 - The audit inherits the closed Node 24 baseline: local Node `v24.18.0`, repository engine `24.x`, GitLab `node:24`, Vercel Node 24.x, application merge `909b69a`, closure/main baseline `da5aea6`, 207 test files / 1738 tests, production build, and post-deploy read-only smoke passed.
 - The Super Agent remains the reusable repository-aware operational worker, but remote writes, production mutation, destructive actions, and behavioural changes always require explicit human authorization.
 - Rulebook audit finding `SA-GOV-001` is confirmed and fixed in the audit branch: blocking gates must validate exact propositions, inspect semantic context, distinguish current from historical evidence, and explicitly account for untracked files.
-- Authority precedence, explicit Definition of Done, and multidimensional quality review remain under cross-document validation; they are not yet classified as system-wide gaps.
+- Rulebook validation completed: `SA-GOV-002` authority hierarchy is apt; `SA-GOV-003` is satisfied by the canonical Merge readiness criteria and must not be duplicated.
+- Governance finding `SA-GOV-004` is confirmed and fixed in the audit branch through a proportional, evidence-based Engineering Quality Review Protocol and reviewer expectations.
+- Governance review is complete; the audit now proceeds to production UI orchestration, starting with `student-records-manager.tsx`.
 
 ### Operator housekeeping (local / Git — human-executed)
 

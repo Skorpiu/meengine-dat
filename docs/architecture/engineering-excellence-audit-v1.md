@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** normalized inventory complete; Super Agent rulebook governance audit in progress
-- **Confirmed findings:** 1 governance finding (`SA-GOV-001`); no code maintainability findings yet
+- **Current phase:** Super Agent governance review complete; production UI orchestration evidence collection starting
+- **Confirmed findings:** 2 governance findings (`SA-GOV-001`, `SA-GOV-004`); no code maintainability findings yet
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -208,3 +208,49 @@ The new Semantic Gate Precision Protocol requires exact propositions, appropriat
 | `SA-GOV-004` | Multidimensional engineering quality review | Needs cross-document confirmation |
 
 Absence from `architect-mode.mdc` alone is not sufficient to classify these as system-wide gaps. The next read-only phase must inspect `cursor-operating-model.md`, `reviewer-workflow.md`, `system-design.md`, and `command-batteries.md` before confirming or dismissing them.
+
+<!-- sa-rulebook-audit-phase-2 -->
+## Super Agent rulebook audit — phase 2
+
+### `SA-GOV-002` — Authority hierarchy and conflict precedence
+
+- **Classification:** APTO
+- **Finding:** no
+
+Roles and authority are explicit: the User/Product Owner owns priorities, final decisions, approvals, and merge; ChatGPT acts as architect/reviewer/QA lead; the Super Agent is the repository executor. D0–D4 constrain autonomous decisions, and recommendations are separated from authorization.
+
+Canonical-source conflicts also have an explicit precedence: verified operational evidence, latest approved DEC, current-state, roadmap, then historical evidence.
+
+No additional authority protocol is required. Duplicating it would create another source capable of drifting.
+
+### `SA-GOV-003` — Operational Definition of Done
+
+- **Classification:** APTO
+- **Finding:** no
+
+The canonical Merge readiness criteria are the operational Definition of Done. They require approved scope conformance, successful validation, Final Evidence Pack, Implementation Conformance Matrix where applicable, Memory Consistency Gate, forbidden-area confirmation, and complete close/next-branch batteries.
+
+The reviewer workflow contains corresponding rejection criteria. A second standalone Definition of Done would duplicate this contract and increase inconsistency risk.
+
+### `SA-GOV-004` — Multidimensional engineering quality review
+
+- **Classification:** confirmed governance finding
+- **Severity:** P1 internal engineering quality
+- **State:** fixed in the audit branch
+- **Runtime/schema/data impact:** none
+
+The existing model strongly covered scope, validation, sensitive areas, evidence, conformance, and merge mechanics, but did not require one proportional review across all engineering-quality dimensions applicable to a slice.
+
+The Engineering Quality Review Protocol now covers correctness, security, tenancy, integrity, structure, testability, performance, accessibility, observability, reliability, reversibility, runtime compatibility, documentation, and canonical memory.
+
+The protocol is proportional: non-applicable dimensions require reasons, proxy metrics remain signals, and out-of-scope findings remain deferred instead of expanding the current branch.
+
+### Reversibility
+
+Reversibility was already present in decision recommendations and recovery protocols. It is now also an explicit quality-review dimension, together with rollback, recovery, and operational failure behavior. No separate governance finding is necessary.
+
+### Governance conclusion
+
+The Super Agent is correctly positioned for the DAT team and now has sufficiently explicit rules for authority, semantic gates, completion, evidence, engineering quality, human-controlled lifecycle, memory continuity, and safe operational execution.
+
+The engineering audit now proceeds to code evidence. The first investigation target is `components/admin/student-records-manager.tsx`; no structural finding is assumed in advance.

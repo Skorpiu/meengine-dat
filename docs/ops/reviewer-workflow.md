@@ -446,3 +446,29 @@ ZIP must **not** be committed. Do not merge before review if reviewer requested 
 - `.cursor/rules/architect-mode.mdc`
 - `.cursor/rules/02-dat-guardrails.mdc`
 - `driving_school_platform/nextjs_space/docs/engineering/engineering-excellence-audit.md`
+
+<!-- engineering-quality-review-reviewer-expectations-v1 -->
+## Engineering Quality Review reviewer expectations
+
+Before accepting completion or merge readiness, the reviewer must verify that the Engineering Quality Review Protocol in `cursor-operating-model.md` was applied proportionally to the actual slice.
+
+Verify:
+
+- applicable dimensions are explicitly reviewed;
+- `NOT_APPLICABLE` entries contain scope-based reasons;
+- evidence supports each `PASS`, `RISK`, or `NEEDS_CONFIRMATION` result;
+- signals such as file size, hook counts, or keyword matches were not presented as findings without context;
+- correctness, security, tenant isolation, data integrity, and approved critical requirements have no unresolved applicable risk;
+- UI work considered accessibility, usability, responsiveness, performance, maintainability, and testability where relevant;
+- API/data work considered contracts, authorization, integrity, concurrency, reliability, observability, and rollback where relevant;
+- out-of-scope findings were reported as Deferred recommendations instead of drive-by fixes;
+- reversibility and the safe recovery path are stated for consequential changes.
+
+Reject merge readiness when:
+
+- a materially applicable dimension was silently omitted;
+- `NOT_APPLICABLE` is used without a credible scope reason;
+- a critical result is `RISK` or `NEEDS_CONFIRMATION` without explicit resolution or approved deferral;
+- a finding relies only on a proxy metric or generic best practice;
+- quality findings caused unapproved scope expansion;
+- the stated rollback or recovery path is unsupported for a consequential change.

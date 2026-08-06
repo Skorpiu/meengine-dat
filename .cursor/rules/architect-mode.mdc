@@ -278,6 +278,30 @@ Rules:
 
 Full operating protocol: `docs/ops/cursor-operating-model.md` — Semantic Gate Precision Protocol.
 
+<!-- super-agent-engineering-quality-review-v1 -->
+### Engineering Quality Review Protocol
+
+Before claiming completion or merge readiness, review the quality dimensions applicable to the slice. The review must be proportional to scope and risk; a dimension may be `not applicable`, but the reason must be explicit.
+
+Required dimensions:
+
+1. correctness and preserved contracts;
+2. security, privacy, authorization, and tenant isolation;
+3. data integrity, transactions, identifiers, and concurrency;
+4. maintainability, cohesion, coupling, duplication, and complexity;
+5. testability, regression coverage, and failure paths;
+6. performance and scalability;
+7. accessibility, usability, and responsive behavior;
+8. observability, diagnostics, logging, and sanitized errors;
+9. reliability, resilience, idempotency, and operational failure behavior;
+10. operability, reversibility, rollback, and recovery;
+11. runtime, dependency, deployment, and compatibility impact;
+12. documentation and canonical-memory impact.
+
+A metric, file size, keyword match, or generic best practice is only a signal. Findings require contextual evidence. Out-of-scope improvements must be reported, not silently implemented.
+
+Full protocol: `docs/ops/cursor-operating-model.md` — Engineering Quality Review Protocol.
+
 For **runtime / API / UI / sensitive** batches, final reports must also include an **Implementation Conformance Matrix** (see `docs/ops/cursor-operating-model.md` — Implementation Conformance Matrix):
 
 - Explicitly map **approved requirements** to actual implementation files, tests, and evidence.
@@ -522,7 +546,10 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 - Required next step: inspect responsibilities, imports, call paths, tests, duplication, safety boundaries, and ownership before classification
 - Memory rule: after every material audit phase, synchronize this live state, the audit report, `current-state.md`, and `roadmap-todo.md`
 - Rulebook audit: `SA-GOV-001` confirmed and fixed — semantic gates must prove exact propositions, distinguish negation/current-vs-historical context, include untracked evidence where relevant, and treat unconfirmed heuristics as warnings rather than absolute blockers
-- Remaining rulebook validation: authority precedence, explicit Definition of Done, and multidimensional quality review are `needs confirmation` across the canonical operating documents
+- Rulebook classification: `SA-GOV-002` authority hierarchy is **APTO** — roles, D0–D4 authority, human approval, and canonical-source conflict precedence are explicit
+- Rulebook classification: `SA-GOV-003` Definition of Done is **APTO** — the canonical Merge readiness criteria, evidence, conformance, memory, and close-battery gates provide the operational Definition of Done; do not duplicate it
+- Rulebook finding: `SA-GOV-004` confirmed and fixed — every slice must receive a proportional, evidence-based Engineering Quality Review across applicable dimensions
+- Next audit focus: production UI orchestration, beginning with `components/admin/student-records-manager.tsx` and its route/service/test boundaries
 
 **Audit evidence protocol:** start from actual entrypoints; trace imports and call paths; distinguish orchestration, validation, service, DTO, persistence, UI, and tests; separate confirmed evidence from navigation friction; never infer a defect from size or one narrow search.
 
