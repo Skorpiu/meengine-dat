@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** LessonForm structural finding confirmed; client/server lesson-policy and form-accessibility evidence collection starting
-- **Confirmed findings:** 13 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 11 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`, `UI-STRUCT-002`, `UI-STRUCT-003`)
+- **Current phase:** LessonForm accessibility finding confirmed; EXAM edit-participant contract evidence collection starting
+- **Confirmed findings:** 14 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 12 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`, `UI-STRUCT-002`, `UI-STRUCT-003`, `A11Y-003`)
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -660,3 +660,43 @@ LessonForm remains the composition root. Server validation remains authoritative
 - No create/edit HTTP-contract duplication finding.
 - No generic form framework or dynamic schema renderer.
 - No separate client/server policy-duplication finding until the next contextual comparison.
+
+<!-- a11y-003-lesson-form-control-associations -->
+## `A11Y-003` — LessonForm accessible control associations
+
+- **Classification:** confirmed code finding
+- **Priority:** P2 accessibility correction
+- **Affected surface:** shared LessonForm create/edit flows
+- **Implementation authorized in this branch:** no
+
+### Exact proposition
+
+LessonForm displays labels for its Select controls without programmatically associating those labels with the SelectTrigger elements. Its two Student search fields depend on placeholder text, and their icon-only clear buttons have no accessible name.
+
+### Evidence
+
+- Labels reference lessonType, instructor, student, vehicle, and status.
+- The corresponding five SelectTrigger elements have no matching ID or accessible-label association.
+- Both Student search inputs lack an ID, associated label, and aria-label.
+- Both clear actions contain only an X icon and have no accessible name.
+
+### Positive evidence
+
+- Date, start-time, and end-time inputs have matching IDs and labels.
+- Multi-Student checkboxes have matching IDs and per-Student labels.
+- Cancel and submit actions contain visible text.
+
+### Smallest-safe future slice
+
+`lesson-form-accessible-controls-v1`: correct only the incomplete Select, search, and clear-action associations and add accessible-role/name regression assertions.
+
+<!-- lesson-form-client-server-policy-classification-v1 -->
+## LessonForm client/server policy classification
+
+- **Classification:** no broad duplication finding
+
+Client and server agree on the central Student-selection rules: exams require one or more Students, THEORY may have no Student, and DRIVING requires one Student.
+
+The client currently hard-codes the practical-exam maximum as `2`, while the server uses `VALIDATION_RULES.MAX_STUDENTS_PER_EXAM`. This consistency risk is already covered by `UI-STRUCT-003` and `lesson-form-policy-module-v1`; it is not counted as a separate finding.
+
+Server validation remains authoritative. Vehicle-requirement consistency remains pending until the intended product contract is confirmed.

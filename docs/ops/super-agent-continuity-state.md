@@ -33,7 +33,7 @@ Stop before consequential work if Git state or canonical documents disagree.
 ## Current verified repository state
 
 - Active branch at snapshot creation: `engineering-excellence-audit-v1`
-- Previous continuity checkpoint: `e01cddef501d574e9be97414e759cde0b44f3285`
+- Previous continuity checkpoint: `e7646076183764990a265391ed01284d7008f9a7`
 - `origin/main` baseline: `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - Branch purpose: P1 analysis-only engineering-excellence audit
 - Branch publication: not pushed at snapshot creation
@@ -77,6 +77,8 @@ Stop before consequential work if Git state or canonical documents disagree.
 <!-- domain-modular-design-and-thin-route-adapters-v1 -->
 <!-- ui-struct-002-schedule-map-view-orchestration -->
 <!-- ui-struct-003-lesson-form-orchestration-concentration -->
+<!-- a11y-003-lesson-form-control-associations -->
+<!-- lesson-form-client-server-policy-classification-v1 -->
 ## Confirmed code findings
 
 | ID | Status | Summary |
@@ -92,6 +94,7 @@ Stop before consequential work if Git state or canonical documents disagree.
 | `API-DUP-002` | Confirmed; not implemented | SUPER_ADMIN, organization, tenant-host, and actor-context resolution is repeated across administrative routes |
 | `UI-STRUCT-002` | Confirmed; not implemented | Schedule Map Month/Week duplication and residual orchestration concentration |
 | `UI-STRUCT-003` | Confirmed; not implemented | LessonForm coordinates option data, state, policies, validation, payload composition, and all visual sections |
+| `A11Y-003` | Confirmed; not implemented | LessonForm Select, Student search, and icon-only clear controls have incomplete accessible names or associations |
 
 ## Approved implementation direction
 
@@ -175,6 +178,15 @@ No implementation belongs in the current analysis branch.
 - Server validation remains authoritative.
 - Do not create a generic form framework or add dependencies solely for this work.
 
+## LessonForm accessibility and policy follow-up
+
+- `lesson-form-accessible-controls-v1`: correct Select, Student search, and clear-action accessible associations.
+- Preserve correct date/time and Student-checkbox associations.
+- No broad client/server policy-duplication finding.
+- Move the hard-coded practical-exam limit into the typed policy boundary already planned by `lesson-form-policy-module-v1`.
+- Server validation remains authoritative.
+- Confirm the EXAM/THEORY_EXAM edit participant contract before classifying another finding.
+
 ## Preserved unrelated branch
 
 - Branch: `production-smoke-module-structure-audit-record-v1`
@@ -184,7 +196,7 @@ No implementation belongs in the current analysis branch.
 
 ## Current next action
 
-Continue the engineering-excellence audit read-only by comparing LessonForm policies with authoritative server validation and inspecting accessible field associations. Preserve the existing form modules and keep LessonForm as the composition root. No runtime implementation is authorized in the audit branch.
+Continue the engineering-excellence audit read-only by confirming the EXAM/THEORY_EXAM edit participant contract across LessonForm, EditLessonDialog, useEditLessonForm, and the update request builder. Preserve server authority and all existing form modules. No runtime implementation is authorized in the audit branch.
 
 ## Continuity update obligation
 

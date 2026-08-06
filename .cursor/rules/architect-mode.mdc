@@ -616,7 +616,16 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 - Preserve LessonForm as the composition root
 - Do not introduce a generic form framework, dynamic schema-driven renderer, or dependency upgrade
 - Future slices: `lesson-form-policy-module-v1`, `lesson-form-option-data-hook-v1`, and `lesson-form-sections-v1`
-- Next audit focus: compare LessonForm policies with authoritative server validation and inspect accessible field associations
+<!-- a11y-003-lesson-form-control-associations -->
+- Confirmed code finding `A11Y-003`: LessonForm Select labels are not programmatically associated with their triggers, and Student search/clear controls lack accessible names
+- Positive accessibility evidence: date/time fields and per-Student checkboxes have explicit ID/label associations; action buttons contain visible text
+<!-- lesson-form-client-server-policy-classification-v1 -->
+- Client/server policy classification: no broad duplication finding — exam Student requirements, optional THEORY Student, and required DRIVING Student are aligned
+- The client hard-codes the practical-exam Student limit as `2`, while the server uses `VALIDATION_RULES.MAX_STUDENTS_PER_EXAM`; correct this inside `lesson-form-policy-module-v1` rather than create a duplicate finding
+- Server validation remains authoritative
+- Vehicle requirement consistency remains unclassified pending an explicit product-contract comparison
+- Future accessibility slice: `lesson-form-accessible-controls-v1`
+- Next audit focus: confirm the EXAM/THEORY_EXAM edit participant contract across LessonForm, EditLessonDialog, useEditLessonForm, and the update request builder
 - No runtime implementation is authorized in this analysis-only branch
 
 **Audit evidence protocol:** start from actual entrypoints; trace imports and call paths; distinguish orchestration, validation, service, DTO, persistence, UI, and tests; separate confirmed evidence from navigation friction; never infer a defect from size or one narrow search.

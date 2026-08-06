@@ -360,7 +360,13 @@ See [Canonical current state](#canonical-current-state). Single recommended next
 - Existing create/update request builders, edit hook, parsers, services, styles, and Student option mapping are positive modular boundaries.
 - No create/edit HTTP-contract duplication finding was confirmed.
 - LessonForm should remain the composition root while focused policies, option loading, and sections move to typed modules.
-- The next read-only target is client/server lesson-policy consistency and form accessibility.
+<!-- a11y-003-lesson-form-control-associations -->
+- `A11Y-003` confirmed: LessonForm Select labels are not associated with their triggers, while Student search inputs and icon-only clear actions lack accessible names.
+- Existing date/time and Student checkbox associations remain positive.
+<!-- lesson-form-client-server-policy-classification-v1 -->
+- No broad client/server lesson-policy duplication finding was confirmed.
+- The hard-coded client EXAM limit belongs in `lesson-form-policy-module-v1`; server validation remains authoritative.
+- The next read-only target is the EXAM/THEORY_EXAM edit participant contract.
 
 ### Operator housekeeping (local / Git — human-executed)
 

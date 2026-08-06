@@ -182,6 +182,18 @@ Each implementation must be a separate smallest-safe branch. No runtime implemen
 
 **Rejected resolution:** no generic form framework, dynamic schema-renderer, oversized shared hook, or domain-erasing form abstraction.
 
+<!-- a11y-003-lesson-form-control-associations -->
+**Confirmed finding `A11Y-003`:** LessonForm Select labels are not programmatically associated with their triggers; Student search fields and icon-only clear actions lack accessible names.
+
+**Approved future slice:** `lesson-form-accessible-controls-v1` — add stable SelectTrigger IDs or equivalent accessible associations, label both search inputs, name both clear actions, and preserve the existing correct checkbox/date/time associations.
+
+**Testing requirement:** assert fields and actions through accessible roles and names using the existing test toolchain.
+
+<!-- lesson-form-client-server-policy-classification-v1 -->
+**Lesson policy conclusion:** no broad client/server duplication finding. Move stable UI policy into `lesson-form-policy-module-v1`, consume the canonical practical-exam Student limit, and preserve authoritative server validation.
+
+**Pending contract audit:** confirm whether EXAM/THEORY_EXAM participant editing is supported consistently by LessonForm and the update contract.
+
 **Goal (future execution):** Global maintainability and internal-quality audit **without** changing functional behaviour during the audit itself.
 
 **Does not:** reopen or mix with the closed `node-24-runtime-migration-v1` P0; alter runtime/schema/data; mass-refactor; invent abstractions to cut lines; mix internal maintenance with new features.
