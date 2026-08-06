@@ -321,7 +321,14 @@ See [Canonical current state](#canonical-current-state). Single recommended next
 <!-- ui-orch-001-linked-student-profile-split-mutation -->
 - Production UI finding `UI-ORCH-001` confirmed: linked student profile editing uses two sequential writes (`Student` then linked `User`) and may leave the records divergent if the second write fails.
 - The client reports partial success and reloads the persisted student state, but no atomic server operation, compensation, or direct orchestration test exists.
-- No implementation has been authorized; the audit is mapping the smallest safe server-side boundary and required regression evidence.
+<!-- api-atom-001-generic-user-update-split-write -->
+- `API-ATOM-001` confirmed: `/api/users/update` can persist `User` before a related `Student` or `Instructor` write fails because the route has no transaction or compensation.
+<!-- ui-orch-002-instructor-profile-category-split-mutation -->
+- `UI-ORCH-002` confirmed: instructor editing performs profile/license and qualified-category writes separately and can produce an explicitly reported partial success.
+- Approved planning direction: move student and instructor edits to aggregate-specific transactional services behind their existing PATCH routes, then narrow the generic user-update contract.
+- No runtime implementation is authorized in this analysis-only branch.
+<!-- super-agent-continuity-recovery-v1 -->
+- Conversation-independent Super Agent continuity is now mandatory through `docs/ops/super-agent-continuity-state.md` and the Recovery Reconstruction Drill.
 
 ### Operator housekeeping (local / Git — human-executed)
 

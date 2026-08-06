@@ -103,7 +103,22 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 **Priority:** P1 engineering-quality follow-up — data consistency, reliability, orchestration ownership, and regression protection.
 
-**Current evidence focus:** identify whether the smallest safe future slice should introduce a dedicated transactional service/endpoint or extend the tenant-scoped student patch contract. Preserve all current authorization, demo, audit, DTO, and error contracts.
+<!-- api-atom-001-generic-user-update-split-write -->
+**Confirmed finding `API-ATOM-001`:** `/api/users/update` writes the generic `User` record before role-specific `Student` or `Instructor` data without transaction or compensation.
+
+<!-- ui-orch-002-instructor-profile-category-split-mutation -->
+**Confirmed finding `UI-ORCH-002`:** instructor profile/license and qualified-category updates are separate requests and may leave an acknowledged partial result.
+
+**Approved future implementation sequence:**
+
+1. `student-profile-atomic-update-v1` — aggregate-specific transactional service behind `PATCH /api/admin/students/[id]`; resolves `UI-ORCH-001` and the student branch of `API-ATOM-001`.
+2. `instructor-profile-atomic-update-v1` — aggregate-specific transactional service behind `PATCH /api/admin/instructors/[id]`; resolves `UI-ORCH-002` and the instructor branch of `API-ATOM-001`.
+3. `generic-user-update-contract-narrowing-v1` — remove Student/Instructor aggregate responsibilities from `/api/users/update` after all callers migrate.
+
+Each implementation must be a separate smallest-safe branch. No runtime implementation belongs in `engineering-excellence-audit-v1`.
+
+<!-- super-agent-continuity-recovery-v1 -->
+**Super Agent continuity:** every material phase must update `docs/ops/super-agent-continuity-state.md` and pass a read-only recovery reconstruction drill.
 
 **Goal (future execution):** Global maintainability and internal-quality audit **without** changing functional behaviour during the audit itself.
 

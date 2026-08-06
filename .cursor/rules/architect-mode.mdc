@@ -555,7 +555,14 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 - Missing guarantee: no single server transaction, compensation, or direct orchestration regression test
 - Finding scope: reliability, data consistency, orchestration ownership, and testability; no security or tenant-isolation failure identified
 - Implementation status: not authorized in this analysis branch
-- Next audit focus: map the smallest safe server-side transaction/service boundary and required regression tests without modifying runtime code
+<!-- api-atom-001-generic-user-update-split-write -->
+- Confirmed code finding `API-ATOM-001`: `PUT /api/users/update` writes `User` before its role-specific `Student` or `Instructor` record without a transaction, rollback, compensation, or failure-injection coverage
+<!-- ui-orch-002-instructor-profile-category-split-mutation -->
+- Confirmed code finding `UI-ORCH-002`: the instructor editor writes profile/license first and qualified categories second; an acknowledged partial success can leave the form only partially persisted
+- Approved architectural direction: use aggregate-specific transactional services behind the existing student and instructor PATCH contracts; migrate role-specific callers away from the generic user-update route
+- Required implementation order: student atomic profile slice, instructor atomic profile slice, then generic user-update contract narrowing
+- Implementation status: no runtime implementation is authorized in this analysis-only branch
+- Next audit focus: continue evidence collection while preserving these implementation recommendations as separate smallest-safe future slices
 
 **Audit evidence protocol:** start from actual entrypoints; trace imports and call paths; distinguish orchestration, validation, service, DTO, persistence, UI, and tests; separate confirmed evidence from navigation friction; never infer a defect from size or one narrow search.
 
@@ -640,3 +647,22 @@ When discussing or managing **Cursor Automations**, apply **Cursor Automations O
 ## Docs-only batches
 
 Do not change runtime, Prisma schema, APIs, UI, tests, or dependencies unless explicitly requested.
+
+<!-- super-agent-continuity-recovery-v1 -->
+### Super Agent Continuity and Recovery Protocol
+
+The Super Agent must be able to reconstruct the DAT project state without relying on chat history, temporary context, or undocumented operator memory.
+
+Rules:
+
+1. After every material investigation, decision, implementation, validation, deployment, rollback, or closure phase, update `docs/ops/super-agent-continuity-state.md` in the same documentation checkpoint.
+2. Record verified branch state, relevant commits, baselines, confirmed findings, rejected candidates, approved directions, unresolved questions, forbidden actions, next steps, and recovery commands.
+3. Never present conversational memory as the sole evidence for current repository state.
+4. The continuity state is an index and recovery map; canonical domain detail remains in current-state, roadmap, decisions, architecture, runbooks, and audit reports.
+5. Resolve live Git state with commands. Do not treat a hard-coded historical HEAD as eternal current truth.
+6. Before consequential work, perform the Recovery Startup Procedure in the continuity-state document.
+7. After a continuity checkpoint, run the Recovery Reconstruction Drill and confirm that the committed documents reproduce the working state.
+8. If the repository and conversational memory disagree, verified repository evidence and the canonical-source precedence rules win.
+9. The Super Agent is a knowledge-continuity and operational-recovery mechanism, not a substitute for Git remotes, database backups, hosted configuration backups, secrets management, or infrastructure disaster recovery.
+
+Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.

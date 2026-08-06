@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** first production UI orchestration finding confirmed; smallest-safe solution boundary under read-only inspection
-- **Confirmed findings:** 3 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 1 code finding (`UI-ORCH-001`)
+- **Current phase:** cross-aggregate atomicity findings confirmed; solution order and Super Agent continuity checkpoint being recorded
+- **Confirmed findings:** 5 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 3 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`)
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -301,3 +301,73 @@ This is a hypothesis pending boundary inspection. No runtime implementation is a
 - audit-event preservation;
 - client behavior for success and server failure;
 - no duplicate or stale local overlay after reload.
+
+<!-- api-atom-001-generic-user-update-split-write -->
+## `API-ATOM-001` — Generic user update split write
+
+- **Classification:** confirmed code finding
+- **Priority:** P1 engineering-quality follow-up
+- **Dimensions:** data consistency, reliability, transaction ownership, testability
+- **Security/tenancy classification:** no guard failure identified
+- **Implementation authorized in this branch:** no
+
+### Exact proposition
+
+`PUT /api/users/update` persists the tenant-scoped `User` update before attempting role-specific `Student` or `Instructor` updates. A role-specific failure therefore does not roll back the already committed User write.
+
+### Evidence
+
+1. The route performs `prisma.user.updateMany` first.
+2. It later performs `prisma.student.updateMany` or `prisma.instructor.updateMany` depending on the body role.
+3. No `$transaction`, rollback, compensation, or retry path was found.
+4. The route tests cover authorization, demo restrictions, tenant scope, role rejection, and email exclusion, but no injected role-specific write failure.
+
+### Impact
+
+Profile, licence, category, or transmission information may diverge across the User and operational role record after a partial failure.
+
+### Recommended resolution
+
+Remove Student and Instructor aggregate mutations from the generic route after aggregate-specific transactional PATCH services are available.
+
+<!-- ui-orch-002-instructor-profile-category-split-mutation -->
+## `UI-ORCH-002` — Instructor profile and category split mutation
+
+- **Classification:** confirmed code finding
+- **Priority:** P1 engineering-quality follow-up
+- **Dimensions:** data consistency, reliability, orchestration ownership, testability
+- **Security/tenancy classification:** no guard failure identified
+- **Implementation authorized in this branch:** no
+
+### Exact proposition
+
+The unified instructor edit form sends profile and licence changes to `/api/users/update`, then sends qualified-category changes to `/api/admin/instructors/[id]`. Failure of the second request leaves the first operation committed.
+
+### Existing mitigation
+
+The UI explicitly reports that the instructor profile was saved while qualified categories failed. The failure is therefore not silently represented as full success.
+
+### Missing guarantee
+
+No single server-side transaction or compensating operation covers the complete instructor edit form, and no direct orchestration failure test was identified.
+
+### Recommended resolution
+
+Extend the aggregate-specific instructor PATCH contract through a transactional domain service that updates allowed User profile fields, instructor licence fields, and qualified categories together.
+
+## Approved implementation order
+
+1. Student atomic profile update.
+2. Instructor atomic profile update.
+3. Generic user-update contract narrowing after caller migration.
+
+The three changes must remain separate smallest-safe slices. This audit branch records evidence and direction only.
+
+<!-- super-agent-continuity-recovery-v1 -->
+## Super Agent continuity checkpoint
+
+The DAT team requires the Super Agent to remain at the same verified knowledge level as the human operator and architecture/review workflow, independently of conversation history.
+
+`docs/ops/super-agent-continuity-state.md` is now the canonical recovery index. It records current baselines, findings, decisions, branch state, safety boundaries, implementation order, and the Recovery Startup Procedure.
+
+This continuity mechanism is a knowledge and operational backup. Git, hosted configuration, secrets, databases, and infrastructure still require their own backup and disaster-recovery controls.

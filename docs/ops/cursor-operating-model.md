@@ -1195,3 +1195,66 @@ For each applicable dimension, report:
 - A critical applicable `RISK` or unresolved `NEEDS_CONFIRMATION` blocks merge readiness when it can affect correctness, security, tenancy, data integrity, production safety, or an approved critical requirement.
 - Non-critical, out-of-scope findings become Deferred recommendations with priority, evidence, and a smallest-safe follow-up.
 - Do not expand the current slice to fix a newly discovered quality issue without explicit approval.
+
+<!-- super-agent-continuity-recovery-protocol-v1 -->
+## Super Agent Continuity and Recovery Protocol
+
+### Objective
+
+Maintain conversation-independent knowledge continuity so that the Super Agent can act as an operational backup for the DAT team when prior chat context, an individual operator, or a working session is unavailable.
+
+### Required canonical checkpoint
+
+After every material phase, synchronize:
+
+- `.cursor/rules/architect-mode.mdc`;
+- `docs/ops/super-agent-continuity-state.md`;
+- `docs/architecture/current-state.md`;
+- `docs/architecture/roadmap-todo.md`;
+- the active audit, runbook, decision, or implementation document;
+- any additional canonical surface directly affected by the work.
+
+A material phase includes:
+
+- a confirmed or rejected finding;
+- an approved architectural or product direction;
+- a commit, merge, deployment, rollback, or branch closure;
+- a runtime, dependency, schema, data, hosted, or configuration change;
+- a validation result that changes readiness or risk;
+- a meaningful change to next steps, limitations, or authority.
+
+### Recovery Startup Procedure
+
+1. Resolve the repository root and run `git status --short --branch`.
+2. Resolve `git branch --show-current`, `git rev-parse HEAD`, and `git rev-parse refs/remotes/origin/main`.
+3. Verify that no unexpected staged, modified, deleted, renamed, or untracked paths exist.
+4. Read `architect-mode.mdc` and `super-agent-continuity-state.md`.
+5. Read the referenced current-state, roadmap, active audit, decisions, and runbooks in canonical precedence order.
+6. Confirm runtime/toolchain baselines from repository files and verified commands.
+7. Reconstruct active findings, approved directions, prohibited actions, and the smallest safe next action.
+8. Stop and report inconsistencies before any consequential write.
+
+### Recovery Reconstruction Drill
+
+A successful drill must demonstrate that a fresh operator can determine, from committed repository evidence:
+
+- the active branch and purpose;
+- the verified main/runtime baseline;
+- the current findings and their status;
+- the approved implementation order;
+- which actions remain unauthorized;
+- the next read-only or implementation step;
+- the exact validation and recovery expectations.
+
+The drill is documentary and read-only. It must not use a deployment, database mutation, hosted mutation, merge, push, or destructive operation as proof of continuity.
+
+### Failure policy
+
+If the continuity state is stale, incomplete, contradictory, or missing:
+
+- do not guess;
+- do not begin consequential implementation;
+- preserve the repository state;
+- reconstruct evidence from Git and canonical documents;
+- repair continuity in a dedicated documentation checkpoint;
+- repeat the Recovery Reconstruction Drill.
