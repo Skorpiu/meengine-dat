@@ -125,6 +125,18 @@ Each implementation must be a separate smallest-safe branch. No runtime implemen
 
 **Deferred To-Do:** after `student-profile-atomic-update-v1`, `instructor-profile-atomic-update-v1`, and `generic-user-update-contract-narrowing-v1`, evaluate separate Student and Instructor orchestration seams and add regression coverage. Do not perform a broad rewrite or introduce a generic shared People manager.
 
+<!-- a11y-001-people-search-accessible-names -->
+**Confirmed finding `A11Y-001`:** add explicit labels/IDs to Student and Instructor search inputs and accessible names to their icon-only search actions.
+
+**Future slice:** `people-search-accessible-names-v1` — localized accessibility correction with regression assertions using accessible roles/names.
+
+<!-- a11y-002-people-badge-help-touch-discoverability -->
+**Confirmed finding `A11Y-002`:** replace tooltip-dependent People badge explanations with a tap- and keyboard-discoverable help mechanism while preserving concise visible badges.
+
+**Future slice:** `people-badge-help-accessibility-v1` — preserve the existing label guide and badge semantics; avoid a broad People redesign.
+
+**Performance conclusion:** no separate finding. Student cursor pagination and Instructor visible-count slicing bound list rendering; revisit only with measured user-visible evidence.
+
 **Goal (future execution):** Global maintainability and internal-quality audit **without** changing functional behaviour during the audit itself.
 
 **Does not:** reopen or mix with the closed `node-24-runtime-migration-v1` P0; alter runtime/schema/data; mass-refactor; invent abstractions to cut lines; mix internal maintenance with new features.

@@ -568,7 +568,15 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 - Existing domain services, helpers, policies, dialogs, and unit tests are substantial and must be preserved
 - Do not introduce a generic shared People manager from the current evidence
 - Structural simplification is deferred until the three approved atomicity and generic-contract slices are complete
-- Accessibility and performance remain under separate read-only investigation
+<!-- a11y-001-people-search-accessible-names -->
+- Confirmed code finding `A11Y-001`: Student and Instructor search inputs depend on placeholders and their icon-only submit buttons have no explicit accessible names
+<!-- a11y-002-people-badge-help-touch-discoverability -->
+- Confirmed code finding `A11Y-002`: detailed People badge help remains tooltip-dependent and is not reliably discoverable through touch interaction
+- Accessibility non-findings: dialog titles/descriptions are present; primary edit inputs generally have associated labels; most action buttons contain visible text
+- Performance classification: no finding — Student rows are cursor-paginated, Instructor rows are bounded by visible-count slicing, and no measured user-visible regression was found
+- Overlay and refresh complexity remains covered by `UI-STRUCT-001`; do not duplicate it as a performance finding
+- Future accessibility order: atomicity/contract slices first, then accessible search names and tap/keyboard-friendly badge help, before broad structural extraction
+- Next audit focus: route-service boundaries in the largest administrative routes
 - No runtime implementation is authorized in this analysis-only branch
 
 **Audit evidence protocol:** start from actual entrypoints; trace imports and call paths; distinguish orchestration, validation, service, DTO, persistence, UI, and tests; separate confirmed evidence from navigation friction; never infer a defect from size or one narrow search.

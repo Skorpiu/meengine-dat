@@ -33,7 +33,7 @@ Stop before consequential work if Git state or canonical documents disagree.
 ## Current verified repository state
 
 - Active branch at snapshot creation: `engineering-excellence-audit-v1`
-- Previous continuity checkpoint: `ee8259d6ba76fdf45f931b1eff3f544a7e113716`
+- Previous continuity checkpoint: `4c019d8e027c70ff8670253dab5b4ce402aff996`
 - `origin/main` baseline: `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - Branch purpose: P1 analysis-only engineering-excellence audit
 - Branch publication: not pushed at snapshot creation
@@ -68,6 +68,8 @@ Stop before consequential work if Git state or canonical documents disagree.
 | `SA-GOV-004` | Confirmed and fixed | Proportional multidimensional Engineering Quality Review is mandatory |
 
 <!-- ui-struct-001-people-manager-orchestration-concentration -->
+<!-- a11y-001-people-search-accessible-names -->
+<!-- a11y-002-people-badge-help-touch-discoverability -->
 ## Confirmed code findings
 
 | ID | Status | Summary |
@@ -76,6 +78,8 @@ Stop before consequential work if Git state or canonical documents disagree.
 | `API-ATOM-001` | Confirmed; not implemented | Generic user update commits User before Student/Instructor role-specific update |
 | `UI-ORCH-002` | Confirmed; not implemented | Instructor profile/licence and qualified-category updates are separate writes |
 | `UI-STRUCT-001` | Confirmed; deferred | People managers concentrate multiple workflows and local reconciliation states without direct component tests |
+| `A11Y-001` | Confirmed; not implemented | People search controls lack complete programmatic accessible names |
+| `A11Y-002` | Confirmed; not implemented | Detailed People badge help remains tooltip-dependent and is not touch-discoverable |
 
 ## Approved implementation direction
 
@@ -117,7 +121,9 @@ No implementation belongs in the current analysis branch.
 - Evaluate Student and Instructor orchestration separately.
 - Add direct regression coverage around the remaining orchestration.
 - Do not create a generic shared People manager from the current evidence.
-- Accessibility and performance remain unclassified.
+- Accessibility findings `A11Y-001` and `A11Y-002` are confirmed.
+- Future slices: `people-search-accessible-names-v1` and `people-badge-help-accessibility-v1`.
+- Performance review produced no finding; do not reopen without measured evidence.
 
 ## Preserved unrelated branch
 
@@ -128,7 +134,7 @@ No implementation belongs in the current analysis branch.
 
 ## Current next action
 
-Continue the engineering-excellence audit read-only with targeted accessibility and performance inspection. Preserve the three atomicity/contract slices as the first implementation sequence and `UI-STRUCT-001` as the deferred structural To-Do; no runtime implementation is authorized in the audit branch.
+Continue the engineering-excellence audit read-only with route-service boundary inspection. Preserve the three atomicity/contract slices as the first implementation sequence, followed by the two localized accessibility slices and then the deferred `UI-STRUCT-001` work; no runtime implementation is authorized in the audit branch.
 
 ## Continuity update obligation
 

@@ -333,7 +333,12 @@ See [Canonical current state](#canonical-current-state). Single recommended next
 - `UI-STRUCT-001` confirmed: both people-management components retain multiple workflows and local reconciliation states without direct component tests.
 - Structural simplification is deferred until the approved atomicity and generic-contract slices are complete.
 - No generic cross-domain People manager is recommended.
-- Accessibility and performance remain under read-only review.
+<!-- a11y-001-people-search-accessible-names -->
+- `A11Y-001` confirmed: People search fields and icon-only search actions lack complete programmatic accessible names.
+<!-- a11y-002-people-badge-help-touch-discoverability -->
+- `A11Y-002` confirmed: badge explanations remain tooltip-dependent and are not reliably discoverable on touch.
+- Performance review completed with no separate finding: list rendering is bounded and no measured user-visible cost was established.
+- The next read-only audit target is route-service responsibility in the largest administrative routes.
 
 ### Operator housekeeping (local / Git — human-executed)
 

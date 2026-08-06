@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** people-manager structural finding confirmed; accessibility and performance evidence collection pending
-- **Confirmed findings:** 6 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 4 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`)
+- **Current phase:** People accessibility findings confirmed; route-service boundary evidence collection starting
+- **Confirmed findings:** 8 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 6 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`)
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -403,3 +403,62 @@ This continuity mechanism is a knowledge and operational backup. Git, hosted con
 Complete the three approved atomicity and contract slices first. Then evaluate Student and Instructor orchestration separately, adding regression coverage and extracting only boundaries supported by evidence.
 
 Accessibility and performance remain separate unclassified audit dimensions.
+
+<!-- a11y-001-people-search-accessible-names -->
+## `A11Y-001` — People search accessible names
+
+- **Classification:** confirmed code finding
+- **Priority:** P2 accessibility correction
+- **Affected surfaces:** Student and Instructor profile search
+- **Implementation authorized in this branch:** no
+
+### Exact proposition
+
+Both People search inputs depend on placeholder text and the corresponding icon-only submit buttons have no explicit accessible name.
+
+### Evidence
+
+- Student search input has no `id`, associated Label, or `aria-label`.
+- Instructor search input has no `id`, associated Label, or `aria-label`.
+- Both submit buttons contain only a Search icon and no visible or programmatic name.
+- Existing mobile viewport tests verify page presence/layout, not these accessible names.
+
+### Smallest-safe future slice
+
+`people-search-accessible-names-v1`: add stable input IDs, visible or screen-reader labels, explicit search-action names, and accessible-role/name regression assertions.
+
+Do not add `aria-label` mechanically to every button; buttons with visible text already have an accessible name.
+
+<!-- a11y-002-people-badge-help-touch-discoverability -->
+## `A11Y-002` — People badge help touch discoverability
+
+- **Classification:** confirmed code finding
+- **Priority:** P2 accessibility and mobile-usability correction
+- **Production blocker:** no
+- **Implementation authorized in this branch:** no
+
+### Exact proposition
+
+Detailed explanations for Student and Instructor profile badges are presented through tooltips and are not reliably discoverable through touch interaction.
+
+### Evidence
+
+- Student profile, operational, and app-access badges use Badge elements as tooltip triggers.
+- Instructor role and status badges use the same pattern.
+- The prior mobile/tablet review explicitly records hover-dependent People tooltips as losing context on touch.
+- Concise badge labels and the existing People label guide remain positive fallback context, so this is P2 rather than a production blocker.
+
+### Smallest-safe future slice
+
+`people-badge-help-accessibility-v1`: provide a tap- and keyboard-discoverable help mechanism while preserving concise badges and the existing PeopleProfileLabelGuide. Do not perform a broad People redesign.
+
+<!-- people-manager-performance-no-finding-v1 -->
+## People-manager performance classification
+
+- **Classification:** no finding
+
+Student profiles use cursor pagination and an explicit Load more action. Instructor profiles use an initial visible count of 15 and memoized slicing.
+
+The components do perform local overlay reconciliation and router refreshes, but no measured user-visible performance degradation was established. Their structural cost is already represented by `UI-STRUCT-001`.
+
+Do not create a performance remediation slice without measured evidence or a reproducible user-visible symptom.
