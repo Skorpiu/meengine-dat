@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** normalized repository inventory completed
-- **Confirmed findings:** none yet
+- **Current phase:** normalized inventory complete; Super Agent rulebook governance audit in progress
+- **Confirmed findings:** 1 governance finding (`SA-GOV-001`); no code maintainability findings yet
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -172,3 +172,39 @@ The legacy seed is safety-sensitive and local-only. Size alone cannot justify to
 The normalized inventory phase is complete. Several modules are large enough to justify deeper inspection, but **no maintainability defect, extraction target, file move, or implementation slice is confirmed yet**.
 
 The next phase must map responsibilities, imports, exported symbols, call paths, tests, and duplication for the four workstreams before assigning severity or recommending slices.
+
+<!-- sa-rulebook-audit-phase-1 -->
+## Super Agent rulebook audit — phase 1
+
+### Overall assessment
+
+The Super Agent is correctly positioned as the repository-aware operational worker: it investigates, prepares guarded work, maintains canonical memory, and proposes smallest-safe slices. It is not an autonomous approval authority.
+
+Branch discipline, scope control, remote-write safety, destructive-operation safety, memory governance, repository navigation, runtime discipline, and human-controlled publication are strongly represented.
+
+### `SA-GOV-001` — Semantic gate precision
+
+- **Classification:** confirmed governance finding
+- **Severity:** P1 internal engineering quality
+- **State:** fixed in the audit branch
+- **Runtime/schema/data impact:** none
+
+The rulebook previously contained only a partial instruction to report patches that omit untracked files. It did not formally require a gate to prove its exact proposition or distinguish negation, historical context, untracked content, and heuristic evidence.
+
+Observed regressions:
+
+1. `git grep` undercounted role references because the audit report was untracked.
+2. A broad `2026-08-04` count mixed an incorrect audit-start date with correct historical Node 24 closure dates.
+3. A broad finding search treated negative and future statements as positive implementation claims.
+
+The new Semantic Gate Precision Protocol requires exact propositions, appropriate evidence sources, contextual interpretation, explicit Git-state handling, and non-blocking treatment of unconfirmed heuristics.
+
+### Remaining rulebook validation queue
+
+| ID | Aspect | Current status |
+| --- | --- | --- |
+| `SA-GOV-002` | Authority hierarchy and instruction-conflict precedence | Needs cross-document confirmation |
+| `SA-GOV-003` | Explicit operational Definition of Done | Needs cross-document confirmation |
+| `SA-GOV-004` | Multidimensional engineering quality review | Needs cross-document confirmation |
+
+Absence from `architect-mode.mdc` alone is not sufficient to classify these as system-wide gaps. The next read-only phase must inspect `cursor-operating-model.md`, `reviewer-workflow.md`, `system-design.md`, and `command-batteries.md` before confirming or dismissing them.

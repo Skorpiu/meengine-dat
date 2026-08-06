@@ -1062,3 +1062,64 @@ Every automation run must use this structure:
 
 Durable decisions, workflow changes, migrations, runbooks, client-specific product decisions, and future To-Dos must be reflected in the appropriate docs under `docs/` (architecture and ops), following the [Memory Update Protocol](#memory-update-protocol).
 
+<!-- semantic-gate-precision-protocol-v1 -->
+## Semantic Gate Precision Protocol
+
+### Purpose
+
+Prevent false positives and false negatives in automated or manually prepared gates. A gate is trustworthy only when its evidence directly proves the proposition being evaluated.
+
+### Required gate design
+
+Every blocking gate must define:
+
+1. **Proposition** — the exact statement that must be true or false.
+2. **Scope** — repositories, paths, files, Git states, environments, or records inspected.
+3. **Evidence source** — structured command, exact marker, direct file read, test, API response, or operator-confirmed output.
+4. **Expected result** — exact value, cardinality, path set, status, or invariant.
+5. **Actual result** — the evidence observed.
+6. **Entailment** — why the actual result logically proves success or failure.
+
+### Semantic interpretation requirements
+
+- Negated statements do not prove positive claims.
+- Candidate, planned, proposed, deferred, historical, superseded, archived, and example content must not be interpreted as current implementation or authorization.
+- A matching word or date is not sufficient when the same value can legitimately occur in multiple contexts.
+- Broad regular expressions and aggregate counts are discovery tools unless the proposition itself is explicitly about that exact count.
+- If a match can represent more than one semantic state, inspect the surrounding context before deciding.
+
+### Git evidence requirements
+
+- `git grep` searches tracked repository content; it does not prove that an untracked file is absent.
+- Use `git diff` for unstaged tracked changes.
+- Use `git diff --cached` for staged changes.
+- Use `git status --short` to identify modified, staged, deleted, renamed, and untracked paths.
+- Read relevant untracked files directly when their content participates in a gate.
+- When comparing expected scope, include all applicable Git states and compare normalized exact path sets.
+
+### Blocking policy
+
+- Exact, context-confirmed evidence may pass or fail a gate.
+- Heuristic evidence may produce `warning`, `signal`, or `needs confirmation`.
+- Heuristic evidence alone must not authorize or block commit, merge, deployment, database writes, destructive actions, or production mutation.
+- When ambiguity remains, stop consequential work and request or collect the missing evidence; do not guess.
+
+### Gate failure report
+
+A failed gate must show:
+
+- the exact proposition;
+- the inspected scope;
+- the evidence command or source;
+- expected and actual results;
+- relevant matched context;
+- why the evidence proves failure;
+- the safe next action.
+
+### Regression examples recorded by the engineering audit
+
+The `engineering-excellence-audit-v1` rulebook review identified three false blockers that this protocol prevents:
+
+1. `git grep` omitted an untracked audit report and undercounted Super Agent role references.
+2. A broad date count mixed the audit start date with legitimate historical Node 24 closure dates.
+3. A broad phrase search treated negative and future statements as positive implementation findings.

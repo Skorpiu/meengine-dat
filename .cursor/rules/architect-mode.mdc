@@ -258,6 +258,26 @@ For **runtime / API / UI / sensitive** batches, final reports must also include 
 - Do **not** ask for merge readiness based only on a prose summary.
 - If a generated patch is empty, stale, or omits untracked files, say so explicitly and regenerate evidence correctly (`git diff` vs `git diff --cached`; list `??` files separately).
 
+<!-- super-agent-semantic-gate-precision-v1 -->
+### Semantic Gate Precision Protocol
+
+A gate must validate the **exact proposition** it claims to prove. Broad text matches and proxy counts may identify investigation signals, but they must not become absolute blockers without contextual confirmation.
+
+Rules:
+
+1. State the proposition being validated before selecting the command, pattern, scope, and expected result.
+2. Prefer structured values, exact anchors, explicit paths, known markers, and expected cardinality over broad regular expressions.
+3. Distinguish a positive claim from negation, warnings, candidate hypotheses, examples, future plans, and statements that explicitly say the condition is not true.
+4. Distinguish current operational truth from historical records, preserved evidence, superseded baselines, examples, and archival context.
+5. Select evidence according to Git state: `git diff` for unstaged tracked changes, `git diff --cached` for staged changes, and `git status --short` plus direct filesystem inspection for untracked files.
+6. Never treat absence from `git grep` as absence from the working tree when relevant files may be untracked; `git grep` searches tracked content.
+7. A heuristic or broad search may emit a warning or `needs confirmation`, but must not fail a critical gate until the matched context has been inspected.
+8. Before blocking, confirm that the evidence logically entails the failed proposition rather than merely containing similar words.
+9. If evidence is incomplete, ambiguous, or internally conflicting, stop consequential work, preserve the current state, and report exactly what still requires confirmation.
+10. A failed gate must report the proposition, inspected scope, concrete evidence, expected value, actual value, and why the evidence proves the failure.
+
+Full operating protocol: `docs/ops/cursor-operating-model.md` — Semantic Gate Precision Protocol.
+
 For **runtime / API / UI / sensitive** batches, final reports must also include an **Implementation Conformance Matrix** (see `docs/ops/cursor-operating-model.md` — Implementation Conformance Matrix):
 
 - Explicitly map **approved requirements** to actual implementation files, tests, and evidence.
@@ -501,6 +521,8 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 - No concrete finding, severity, refactor target, or implementation slice has been approved yet
 - Required next step: inspect responsibilities, imports, call paths, tests, duplication, safety boundaries, and ownership before classification
 - Memory rule: after every material audit phase, synchronize this live state, the audit report, `current-state.md`, and `roadmap-todo.md`
+- Rulebook audit: `SA-GOV-001` confirmed and fixed — semantic gates must prove exact propositions, distinguish negation/current-vs-historical context, include untracked evidence where relevant, and treat unconfirmed heuristics as warnings rather than absolute blockers
+- Remaining rulebook validation: authority precedence, explicit Definition of Done, and multidimensional quality review are `needs confirmation` across the canonical operating documents
 
 **Audit evidence protocol:** start from actual entrypoints; trace imports and call paths; distinguish orchestration, validation, service, DTO, persistence, UI, and tests; separate confirmed evidence from navigation friction; never infer a defect from size or one narrow search.
 

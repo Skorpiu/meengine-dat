@@ -96,6 +96,8 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 **Super Agent role:** reusable DAT operational worker for repository investigation, guarded command preparation, canonical memory maintenance, and smallest-safe-slice planning. It does not autonomously authorize remote writes, production mutations, destructive operations, or behavioural changes.
 
+**Rulebook audit:** `SA-GOV-001` confirmed and fixed — Semantic Gate Precision Protocol added to the Super Agent navigator and canonical operating model. Remaining `needs confirmation`: authority precedence, Definition of Done, and multidimensional quality review.
+
 **Goal (future execution):** Global maintainability and internal-quality audit **without** changing functional behaviour during the audit itself.
 
 **Does not:** reopen or mix with the closed `node-24-runtime-migration-v1` P0; alter runtime/schema/data; mass-refactor; invent abstractions to cut lines; mix internal maintenance with new features.
