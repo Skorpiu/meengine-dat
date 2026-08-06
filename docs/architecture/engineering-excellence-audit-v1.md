@@ -199,13 +199,15 @@ Observed regressions:
 
 The new Semantic Gate Precision Protocol requires exact propositions, appropriate evidence sources, contextual interpretation, explicit Git-state handling, and non-blocking treatment of unconfirmed heuristics.
 
-### Remaining rulebook validation queue
+### Phase-1 validation queue — historical snapshot
+
+These were the unresolved states at the end of phase 1. They were resolved by the contextual review recorded in phase 2 below and must not be interpreted as current classifications.
 
 | ID | Aspect | Current status |
 | --- | --- | --- |
-| `SA-GOV-002` | Authority hierarchy and instruction-conflict precedence | Needs cross-document confirmation |
-| `SA-GOV-003` | Explicit operational Definition of Done | Needs cross-document confirmation |
-| `SA-GOV-004` | Multidimensional engineering quality review | Needs cross-document confirmation |
+| `SA-GOV-002` | Authority hierarchy and instruction-conflict precedence | Resolved in phase 2: **APTO** |
+| `SA-GOV-003` | Explicit operational Definition of Done | Resolved in phase 2: **APTO** through canonical Merge readiness criteria |
+| `SA-GOV-004` | Multidimensional engineering quality review | Resolved in phase 2: **confirmed and fixed** |
 
 Absence from `architect-mode.mdc` alone is not sufficient to classify these as system-wide gaps. The next read-only phase must inspect `cursor-operating-model.md`, `reviewer-workflow.md`, `system-design.md`, and `command-batteries.md` before confirming or dismissing them.
 
