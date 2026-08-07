@@ -47,7 +47,8 @@ Stop before consequential work if Git state or canonical documents disagree.
 - Main after closure integration: `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - Required runtime: Node `24.x`
 - Verified portable Node: `$HOME/.dat-toolchains/node-v24.18.0-win-x64/node.exe`
-- Canonical validation: `pnpm -C driving_school_platform/nextjs_space check`
+- Canonical validation target: `pnpm -C driving_school_platform/nextjs_space check`.
+- Local Windows/Git Bash execution rule: bare `pnpm` currently routes through Volta/Node `v20.20.0`. An explicitly Node-24-launched outer pnpm is also insufficient by itself because nested bare pnpm can fall back to Volta. Full local Node-24 evidence must prove transitive provenance for direct and nested pnpm execution using the guarded routing procedure recorded in the Super Agent rulebook.
 
 ## Super Agent role
 
@@ -214,3 +215,17 @@ A fresh SA session must be able to state from committed repository evidence:
 - exact next step;
 - canonical validation command;
 - relevant recovery and rollback expectations.
+
+<!-- dat-toolchain-rationalization-v1 -->
+## Toolchain rationalization queue
+
+- Confirmed: `TOOLCHAIN-001` — stale project Volta Node `20.20.0` conflicts with canonical Node `24.x`.
+- Queued: `toolchain-volta-decoupling-v1`.
+- Queued: `toolchain-local-runtime-standardization-v1` — must establish durable transitive Node-24 provenance for outer and nested pnpm execution without retaining a machine-specific temporary shim as the permanent design.
+- Queued/evidence-first: `toolchain-e2e-runtime-provenance-v1` — explicitly prove the runtime used by Playwright `pnpm dev` web-server subprocesses because nested bare-pnpm fallback to Volta Node 20 is now confirmed as a real execution mode.
+- Queued/evidence-first: `toolchain-unused-dev-dependencies-v1`.
+- Vitest and Playwright remain intentionally separate test layers.
+- `tsx` remains active.
+- npm/npx are not authoritative DAT package-management workflows.
+- Corepack remains justified in CI pending any future design decision.
+- The EXAM edit-participant contract remains the active product/code audit frontier after the toolchain evidence checkpoint.

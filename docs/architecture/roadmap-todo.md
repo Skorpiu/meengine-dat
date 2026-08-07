@@ -94,6 +94,9 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 **Inherited baseline:** Node 24 P0 is closed (`909b69a` runtime merge; `da5aea6` current main/audit base). Local Node `v24.18.0`, repository engine `24.x`, GitLab `node:24`, Vercel Node 24.x, 207 test files / 1738 tests, production build, and post-deploy read-only smoke are validated. No dependency or runtime upgrades belong in this audit.
 
+<!-- node24-local-runtime-chain-v1 -->
+**Local validation routing:** on the current Windows/Git Bash workstation, bare `pnpm` resolves through Volta and currently runs under Node `v20.20.0`. Even an explicitly Node-24-launched outer pnpm can invoke nested bare pnpm processes that fall back to Node 20. Full Node-24 evidence therefore requires transitive provenance. On 2026-08-07 a guarded temporary PATH shim forced direct and nested pnpm calls through portable Node `v24.18.0` + pnpm `10.24.0`; 9 shim invocations were recorded and the check passed 207/207 test files, 1738/1738 tests, and the production build. The shim was removed after validation.
+
 **Super Agent role:** reusable DAT operational worker for repository investigation, guarded command preparation, canonical memory maintenance, and smallest-safe-slice planning. It does not autonomously authorize remote writes, production mutations, destructive operations, or behavioural changes.
 
 **Rulebook audit:** `SA-GOV-001` semantic gates fixed; `SA-GOV-002` authority hierarchy apt; `SA-GOV-003` operational Definition of Done apt through the canonical Merge readiness criteria; `SA-GOV-004` confirmed and fixed through the Engineering Quality Review Protocol.
@@ -272,3 +275,38 @@ Longer-running topics; prefer audit-derived slices over inventing mass refactors
 - `supabase-rls-tenant-policies-v1` unless Data API product-required
 - Commercial catalogue read-services inside embedded Platform without separation plan
 - Re-running DEC-064 repair/fixture apply without new evidence + human authorization
+
+<!-- dat-toolchain-rationalization-v1 -->
+## Engineering Excellence — toolchain follow-up slices
+
+These slices are implementation follow-ups discovered by the analysis-only engineering audit. They are queued, not authorized for implementation merely by appearing here.
+
+### `toolchain-volta-decoupling-v1`
+
+- **Status:** queued.
+- **Source:** `TOOLCHAIN-001`.
+- **Goal:** remove the stale project-level Volta Node 20 contract from DAT without requiring removal of Volta from the workstation.
+- **Must preserve:** Node 24 runtime baseline, pnpm `10.24.0`, lockfile integrity, CI and hosted runtime behaviour.
+- **Implementation authority:** human approval required; Super Agent may prepare evidence and patch.
+
+### `toolchain-local-runtime-standardization-v1`
+
+- **Status:** queued after `toolchain-volta-decoupling-v1` evidence/design.
+- **Goal:** provide one documented, reproducible local Node 24 + pnpm execution contract with **transitive runtime provenance**, so outer pnpm, nested pnpm lifecycle calls, test/build subprocesses, and development orchestration cannot silently fall back to Volta Node 20.
+- **Design preference:** align local semantics with the existing Node 24 + pnpm/Corepack CI contract where safe; prefer one durable repository-supported execution strategy over a permanent machine-specific shim, and do not introduce another tool solely to solve tool proliferation.
+- **Implementation authority:** human approval required.
+
+### `toolchain-e2e-runtime-provenance-v1`
+
+- **Status:** evidence-first queued slice.
+- **Goal:** prove and, only if required, correct the runtime used by Playwright web-server commands currently expressed as bare `pnpm dev`.
+- **Risk:** E2E may otherwise launch the application dev server under Volta Node 20 even when Playwright itself starts under Node 24. The nested-runtime probe has confirmed that this class of fallback is real for bare pnpm commands; the Playwright web-server path must therefore be proven explicitly.
+- **Implementation authority:** evidence first; behavior/config change requires human approval.
+
+### `toolchain-unused-dev-dependencies-v1`
+
+- **Status:** evidence-first queued slice.
+- **Goal:** identify and remove only direct development dependencies proven to have no required repository responsibility.
+- **Initial candidate:** `ts-node`; also verify Node type-package alignment and any other obsolete runner/tool residue.
+- **Explicit non-targets unless new evidence appears:** Vitest, Playwright, `tsx`, pnpm, Prisma, ESLint, Prettier.
+- **Implementation authority:** dependency removal requires human approval and full validation.

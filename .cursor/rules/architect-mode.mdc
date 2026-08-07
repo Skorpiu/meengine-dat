@@ -517,7 +517,30 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 - The Super Agent is the DAT repository-aware operational worker. It may inspect code, trace call paths, prepare guarded commands, maintain canonical documentation, analyze evidence, and propose smallest-safe slices whenever requested.
 - The Super Agent is not an autonomous approval authority. Human authorization remains mandatory for commit publication, push, merge, branch deletion, hosted configuration changes, database writes, production mutation tests, destructive operations, and any behavioural change.
 - All commands must remain guarded, fail closed, avoid `exit 1` in interactive shell blocks, preserve one remote write per block, and never print secrets or complete sensitive URLs or identifiers.
-- Canonical validation remains `pnpm -C driving_school_platform/nextjs_space check` unless a narrower read-only inspection is explicitly appropriate.
+- The canonical project validation target remains `pnpm -C driving_school_platform/nextjs_space check`, but executable runtime provenance must be proven rather than inferred.
+
+<!-- node24-local-runtime-chain-v1 -->
+**Windows / Git Bash Node 24 execution rule:**
+
+- In the current workstation, bare `node` resolves to the portable Node `v24.18.0`, but bare `pnpm` resolves through Volta `2.0.2`.
+- Volta currently has Node `v20.20.0` as its default runtime and launches its pnpm tool under that Node version.
+- Therefore `node --version == v24.18.0` does **not** prove that a subsequent bare `pnpm ...` command is running under Node 24.
+- Bare `pnpm` must not be accepted as Node-24 validation evidence on this workstation until its child runtime is explicitly proven to be Node 24.
+- Current proven pnpm package: `10.24.0`, with CLI entrypoint `$HOME/AppData/Local/Volta/tools/image/packages/pnpm/node_modules/pnpm/bin/pnpm.cjs`.
+- Canonical local Node-24 invocation:
+  - `NODE24_EXE="$HOME/.dat-toolchains/node-v24.18.0-win-x64/node.exe"`
+  - `PNPM_CJS="$HOME/AppData/Local/Volta/tools/image/packages/pnpm/node_modules/pnpm/bin/pnpm.cjs"`
+  - runtime proof: `"$NODE24_EXE" "$PNPM_CJS" -C driving_school_platform/nextjs_space exec node -p 'process.version + " " + process.execPath'`
+  - full validation: `"$NODE24_EXE" "$PNPM_CJS" -C driving_school_platform/nextjs_space check`
+- Required runtime proof before accepting a local full check: both direct and nested pnpm execution must remain on Node `v24.18.0`. Proving only the outer pnpm process or one direct child is insufficient.
+- An initial explicit outer chain (`Node v24.18.0` → pnpm `10.24.0`) produced a green check, but later probing proved that nested bare `pnpm` invocations fell through to Volta and ran under Node `v20.20.0`; that outer-only run is therefore functional evidence, not full Node-24 provenance evidence.
+- Full local Node-24 validation requires **transitive runtime provenance**: every nested `pnpm` launched by package scripts, lifecycle hooks, test/build commands, dev-server orchestration, or other subprocesses must also resolve through Node `v24.18.0`.
+- On 2026-08-07 a guarded temporary pnpm shim was placed ahead of Volta in `PATH`; both Git Bash and Windows `pnpm.cmd` routing were forced through portable Node `v24.18.0` and pnpm `10.24.0`.
+- Transitive proof passed: direct child Node `v24.18.0`, nested pnpm child Node `v24.18.0`, Windows-shell nested child Node `v24.18.0`, and 9 recorded shim invocations covering nested `lint`, `typecheck`, `env:check`, `test:run`, and `build` pnpm calls.
+- The resulting full check passed 207/207 test files, 1738/1738 tests, and the Next.js production build with exit `0`; repository scope remained unchanged and the temporary shim was removed successfully.
+- An earlier post-checkpoint check launched through bare Volta pnpm ran under Node `v20.20.0`; it passed functionally but is **not** Node-24 runtime evidence. It was superseded by the explicit Node-24 validation above.
+- Do not change the Volta default, reinstall pnpm, activate Corepack, or upgrade Node/pnpm merely to work around this local routing. Runtime/tool changes require their own authorized slice.
+- Git Bash operational note: prefer `where.exe` directly for Windows command resolution; avoid `cmd.exe /d /c ...` from Git Bash because MSYS argument conversion can unexpectedly enter interactive `cmd.exe`.
 
 **Persistent Node 24 runtime baseline:**
 
@@ -730,3 +753,34 @@ Rules:
 9. The Super Agent is a knowledge-continuity and operational-recovery mechanism, not a substitute for Git remotes, database backups, hosted configuration backups, secrets management, or infrastructure disaster recovery.
 
 Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
+
+<!-- dat-toolchain-rationalization-v1 -->
+## DAT toolchain rationalization policy
+
+- Every repository tool must have one explicit responsibility. Tool presence is not justification for continued use.
+- Prefer one authoritative tool per responsibility unless distinct layers require distinct tools.
+- Confirm usage and call paths before removing a dependency, runtime manager, test runner, CLI, or configuration.
+- A tool that is bundled with another tool but is not part of the DAT workflow is not automatically a removal candidate; it must simply not become a competing workflow.
+- Current authoritative package manager: pnpm `10.24.0`.
+- npm/npx are bundled with Node but are not authoritative DAT package-management workflows.
+- Vitest owns unit/integration testing; Playwright owns real-browser/E2E testing. They are complementary, not duplicates.
+- `tsx` is actively used by operational scripts.
+- Jest and Cypress are not active DAT test runners.
+- Corepack currently has a concrete CI responsibility: activate pnpm `10.24.0` under the Node 24 CI image.
+- `TOOLCHAIN-001` is confirmed: `package.json` declares Node engine `24.x` while its Volta configuration pins Node `20.20.0`. The Volta pnpm launcher was empirically proven to execute under Node `20.20.0`, conflicting with the closed Node 24 runtime baseline.
+- Do not remove or reconfigure Volta globally during this audit. The DAT should first be decoupled from the stale project-level Volta contract in a dedicated authorized slice.
+- `ts-node` is a usage-audit candidate only; no removal is authorized until repository evidence proves it has no required responsibility.
+- Playwright web-server commands using bare `pnpm dev` require runtime-provenance investigation because child processes may resolve through Volta.
+- Every confirmed implementation follow-up must be added to `roadmap-todo.md` as a named slice before implementation.
+- The Super Agent may investigate and prepare any queued slice, but implementation, dependency removal, package/config changes, commit publication, push, merge, and destructive operations remain human-gated.
+
+<!-- audit-semantic-consistency-gate-v1 -->
+## Audit semantic consistency gate
+
+- Presence-only grep checks are insufficient for canonical-memory consistency.
+- Gates that validate counts, taxonomies, statuses, or conclusions must test the exact proposition being claimed.
+- Confirmed-finding totals must agree with the explicit classified finding set and category totals.
+- A state such as `14 confirmed findings` plus an additional explicitly confirmed `TOOLCHAIN-001` must fail closed rather than pass because both strings happen to exist.
+- Current-state wording must distinguish `finding confirmed` from `implementation authorized`; a confirmed finding does not by itself authorize implementation.
+- Runtime provenance is transitive: validating an outer Node/pnpm process does not validate nested package-manager or lifecycle processes.
+- When a gate itself fails to detect a contradiction, repair the gate logic in the same documentation checkpoint; do not create a separate governance finding unless new evidence shows a distinct systemic defect beyond an already established governance principle.

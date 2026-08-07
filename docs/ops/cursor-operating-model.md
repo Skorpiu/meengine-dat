@@ -1258,3 +1258,16 @@ If the continuity state is stale, incomplete, contradictory, or missing:
 - reconstruct evidence from Git and canonical documents;
 - repair continuity in a dedicated documentation checkpoint;
 - repeat the Recovery Reconstruction Drill.
+
+<!-- dat-toolchain-rationalization-v1 -->
+## Local Node 24 toolchain execution override
+
+The canonical validation target remains:
+
+`pnpm -C driving_school_platform/nextjs_space check`
+
+However, on the current Windows/Git Bash workstation, bare `pnpm` is a Volta launcher whose active Node is `v20.20.0`. Therefore a bare pnpm command is not acceptable as Node-24 runtime evidence.
+
+Until the dedicated toolchain cleanup slice is implemented, local Node-24 evidence must prove transitive runtime provenance. The outer portable Node `v24.18.0` → pnpm `10.24.0` chain alone is insufficient because nested bare pnpm calls can route back through Volta Node `v20.20.0`. Use the guarded temporary routing procedure recorded in `.cursor/rules/architect-mode.mdc` so direct and nested pnpm processes remain on Node 24 before accepting the full check.
+
+This is an execution-provenance rule, not a change to the logical canonical check target.

@@ -20,7 +20,7 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 | **Smoke fixtures** | DEC-064 closed 2026-07-28 (**human**): repair apply + fixture apply (`changesApplied=18`); inspector no blockers; fixtures all-ready; idempotent dry-run; Sarah/Bob/John Doe preserved; commercial catalogue untouched; no `PLATFORM_ADMIN` recreate. Full IDs in operator vault only. |
 | **Remote ops closed** | Do **not** re-run repair, fixture apply, or smoke-lesson cleanup without new evidence + explicit human authorization. `student-invite-accept-student-link-repair-v1` **done** (repo + remote). |
 | **Node.js runtime** | **Node 24 migration closed.** Local compatibility passed on Node 24.18.0; repository pins, package engines, `.nvmrc`, GitLab CI and runner documentation are aligned; branch and `main` pipelines passed using `node:24`; Vercel Preview and Production deployed successfully with Project Settings and effective runtime on Node 24.x; post-deploy non-destructive hosted gates passed at `909b69a`. |
-| **Active analysis** | `engineering-excellence-audit-v1` — **P1 analysis-only**, active on base `da5aea6`. Normalized inventory is complete; no findings or refactor implementation are yet authorized. Detailed evidence: [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md). |
+| **Active analysis** | `engineering-excellence-audit-v1` — **P1 analysis-only**, active on base `da5aea6`. Normalized inventory and multiple targeted evidence phases are complete; 15 findings are confirmed, while no code/toolchain refactor implementation is authorized in the audit branch. Detailed evidence: [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md). |
 | **Ordered next** | (1) complete `engineering-excellence-audit-v1` analysis and approve findings → (2) `platform-separation-architecture-plan-v1` → (3) only then implement small, audit-approved refactor slices. |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
@@ -314,6 +314,8 @@ See [Canonical current state](#canonical-current-state). Single recommended next
 - No concrete finding, severity, extraction target, file move, or refactor slice is confirmed yet.
 - Detailed evidence and audit invariants are maintained in [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md).
 - The audit inherits the closed Node 24 baseline: local Node `v24.18.0`, repository engine `24.x`, GitLab `node:24`, Vercel Node 24.x, application merge `909b69a`, closure/main baseline `da5aea6`, 207 test files / 1738 tests, production build, and post-deploy read-only smoke passed.
+<!-- node24-local-runtime-chain-v1 -->
+- Local Windows/Git Bash runtime-chain clarification (2026-08-07): bare `pnpm` is a Volta shim currently executed with Volta's Node `v20.20.0`. Explicitly launching only the outer pnpm process with portable Node 24 is also insufficient because nested bare pnpm calls can fall back to Volta/Node 20. Full transitive Node-24 validation was proven with a temporary guarded PATH shim forcing direct and nested pnpm calls through portable Node `v24.18.0` + pnpm `10.24.0`; 9 nested shim invocations were recorded and the resulting check passed 207/207 test files, 1738/1738 tests, and the production build before the shim was removed.
 - The Super Agent remains the reusable repository-aware operational worker, but remote writes, production mutation, destructive actions, and behavioural changes always require explicit human authorization.
 - Rulebook audit finding `SA-GOV-001` is confirmed and fixed in the audit branch: blocking gates must validate exact propositions, inspect semantic context, distinguish current from historical evidence, and explicitly account for untracked files.
 - Rulebook validation completed: `SA-GOV-002` authority hierarchy is apt; `SA-GOV-003` is satisfied by the canonical Merge readiness criteria and must not be duplicated.
@@ -419,3 +421,14 @@ The P0 slice `dat-production-smoke-hosted-verification-v1` is operationally comp
 **Operational follow-up**
 
 The deployment log reported that Node.js 20 is deprecated for future Vercel deployments. Handle this only in the separate slice `node-24-runtime-migration-v1`; do not mix the runtime migration into the completed hosted-smoke slice.
+
+<!-- dat-toolchain-rationalization-v1 -->
+### Toolchain rationalization state
+
+- `TOOLCHAIN-001` confirmed: project `engines.node=24.x` conflicts with project Volta Node `20.20.0`; bare Volta pnpm was proven to execute under Node 20.
+- pnpm `10.24.0` is the sole authoritative package manager.
+- Vitest and Playwright have distinct unit/integration and browser/E2E ownership respectively.
+- `tsx` is actively required by repository scripts.
+- Corepack currently remains justified in CI.
+- `ts-node` and Playwright child-runtime provenance require targeted read-only evidence before any cleanup decision.
+- No tool removal or runtime/package/config change is authorized in the active audit slice.

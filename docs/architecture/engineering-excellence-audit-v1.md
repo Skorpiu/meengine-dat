@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** LessonForm accessibility finding confirmed; EXAM edit-participant contract evidence collection starting
-- **Confirmed findings:** 14 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`) and 12 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`, `UI-STRUCT-002`, `UI-STRUCT-003`, `A11Y-003`)
+- **Current phase:** toolchain rationalization checkpoint recorded after confirming `TOOLCHAIN-001`; the EXAM edit-participant contract remains the active product/code evidence frontier
+- **Confirmed findings:** 15 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`), 12 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`, `UI-STRUCT-002`, `UI-STRUCT-003`, `A11Y-003`), and 1 toolchain/configuration finding (`TOOLCHAIN-001`)
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -42,6 +42,26 @@ It is not an autonomous approval authority. Pushes, merges, remote branch deleti
 - Node 24 migration and closure branches were removed locally and remotely after verified integration.
 
 The audit must not change this baseline or introduce dependency/runtime upgrades. Any future runtime change requires a separate explicitly authorized slice.
+
+<!-- node24-local-runtime-chain-v1 -->
+### Local Node 24 runtime-chain correction — 2026-08-07
+
+A post-checkpoint validation exposed an environment-specific routing issue on the Windows/Git Bash workstation. Direct `node` resolution used the portable Node `v24.18.0`, while bare `pnpm` resolved through Volta `2.0.2`. Volta's active default Node is `v20.20.0`, so pnpm child processes launched through the bare Volta shim also used Node `v20.20.0`.
+
+The earlier bare-pnpm check passed functionally, but it is not accepted as Node-24 runtime evidence.
+
+The runtime chain was then explicitly pinned and revalidated using:
+
+- Node: `$HOME/.dat-toolchains/node-v24.18.0-win-x64/node.exe`
+- pnpm package: `10.24.0`
+- pnpm CLI: `$HOME/AppData/Local/Volta/tools/image/packages/pnpm/node_modules/pnpm/bin/pnpm.cjs`
+- child-runtime proof: Node `v24.18.0` using the portable `node.exe`
+- outer-only result: 207/207 test files passed, 1738/1738 tests passed, production build succeeded, check exit `0`; later probing showed nested bare pnpm calls could still execute under Volta Node `v20.20.0`, so this run is not full Node-24 provenance evidence
+- final transitive result: a guarded temporary PATH shim forced all nested pnpm routing through portable Node `v24.18.0` + pnpm `10.24.0`; direct, nested, and Windows-shell child probes all reported Node `v24.18.0`; 9 shim invocations were recorded; 207/207 test files and 1738/1738 tests passed; production build succeeded; check exit `0`; the shim was then removed successfully
+
+For this workstation, future Node-24 validation must prove **transitive** package-manager provenance. Invoking the outer pnpm CLI through portable Node is not sufficient because nested bare pnpm calls can resolve back through Volta Node `v20.20.0`. Until a permanent local-runtime standardization slice is implemented, full local Node-24 evidence requires guarded routing that keeps both direct and nested pnpm invocations on Node `v24.18.0`.
+
+This correction changes no application behaviour, dependency, runtime configuration, schema, data, hosted setting, or production state.
 
 ## Audit invariants
 
@@ -169,7 +189,7 @@ The legacy seed is safety-sensitive and local-only. Size alone cannot justify to
 
 ## Current conclusion
 
-The normalized inventory and multiple targeted evidence phases are complete. The audit currently has **14 confirmed findings**: two governance findings (`SA-GOV-001`, `SA-GOV-004`) and twelve code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`, `UI-STRUCT-002`, `UI-STRUCT-003`, `A11Y-003`).
+The normalized inventory and multiple targeted evidence phases are complete. The audit currently has **15 confirmed findings**: two governance findings (`SA-GOV-001`, `SA-GOV-004`), twelve code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`, `UI-STRUCT-002`, `UI-STRUCT-003`, `A11Y-003`), and one toolchain/configuration finding (`TOOLCHAIN-001`).
 
 These findings are evidence-backed audit conclusions and may include approved future resolution directions, but **no refactor implementation is authorized by this analysis slice**.
 
@@ -704,3 +724,63 @@ Client and server agree on the central Student-selection rules: exams require on
 The client currently hard-codes the practical-exam maximum as `2`, while the server uses `VALIDATION_RULES.MAX_STUDENTS_PER_EXAM`. This consistency risk is already covered by `UI-STRUCT-003` and `lesson-form-policy-module-v1`; it is not counted as a separate finding.
 
 Server validation remains authoritative. Vehicle-requirement consistency remains pending until the intended product contract is confirmed.
+
+<!-- dat-toolchain-rationalization-v1 -->
+## Toolchain rationalization audit
+
+### Confirmed finding `TOOLCHAIN-001` — stale Volta runtime contract
+
+**Classification:** confirmed configuration/toolchain finding.
+
+Repository evidence:
+
+- `package.json` declares `packageManager: pnpm@10.24.0`.
+- `package.json` declares `engines.node: 24.x`.
+- the same `package.json` declares Volta Node `20.20.0` and Volta pnpm `10.24.0`.
+- the workstation's bare `pnpm` resolves through Volta.
+- `pnpm exec node` launched through that shim was proven to run Node `v20.20.0`.
+- the explicit portable Node `v24.18.0` → pnpm `10.24.0` chain was independently proven and passed 207/207 test files, 1738/1738 tests, and the production build.
+
+Conclusion:
+
+The project-level Volta Node pin is stale and conflicts with the closed canonical Node 24 runtime baseline. This can make apparently valid local commands execute under Node 20 while repository and hosted configuration require Node 24.
+
+No implementation is authorized in the audit branch.
+
+### Tool ownership conclusions
+
+- pnpm is the single authoritative package manager; only `pnpm-lock.yaml` exists.
+- npm/npx are bundled utilities and are not a second DAT package-management workflow.
+- Vitest owns unit/integration tests.
+- Playwright owns browser/E2E tests.
+- `tsx` is actively used by operational scripts.
+- Jest and Cypress are not active runners.
+- Corepack has a distinct CI responsibility and is not currently redundant there.
+- `ts-node` remains unclassified pending exact usage evidence.
+- the previous repository-wide `npm ` count was invalid because the substring also matched `pnpm `; it must not be used as evidence.
+
+### Follow-up evidence frontier
+
+Before dependency-removal recommendations, inspect exact `ts-node`, `@types/node`, npm/npx, and Playwright web-server runtime usage. In particular, determine whether the two Playwright `pnpm dev` web-server commands can fall back to the Volta Node 20 path.
+
+<!-- toolchain-transitive-provenance-evidence-v1 -->
+### `TOOLCHAIN-001` transitive provenance evidence
+
+A targeted nested-runtime probe established that explicit Node-24 invocation of the outer pnpm process does not automatically propagate to nested bare pnpm commands. Without PATH interception, a nested `pnpm exec node` returned Node `v20.20.0` from the Volta image.
+
+A temporary guarded PATH shim was then used outside the repository to route both `pnpm` and `pnpm.cmd` through portable Node `v24.18.0` and the existing pnpm `10.24.0` CLI. This produced:
+
+- direct child: Node `v24.18.0`;
+- nested pnpm child: Node `v24.18.0`;
+- Windows-shell nested child: Node `v24.18.0`;
+- 9 recorded shim invocations, including nested `lint`, `typecheck`, `env:check`, `test:run`, and `build` calls;
+- 207/207 test files passed;
+- 1738/1738 tests passed;
+- successful Next.js production build;
+- full check exit `0`;
+- unchanged tracked repository scope;
+- successful temporary-shim cleanup.
+
+Therefore the canonical Node-24 requirement is **transitive**, not merely outer-process based.
+
+The failed earlier presence-oriented pre-commit consistency inspection is also recorded as a gate-design lesson under the already established `SA-GOV-001` semantic-gate principle: exact propositions must be validated, including taxonomy/count agreement. No additional governance finding is created for the same underlying principle.
