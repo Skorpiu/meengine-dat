@@ -268,7 +268,7 @@ A fresh SA session must be able to state from committed repository evidence:
 
 - Snapshot HEAD remains `5eded00ae3d0dedde8b1a251d393a9180911814b`.
 - Safe snapshot remains 817 files / SHA-256 `9e61686d43458901c798d06ef8ba501d310aa2ea6c6a0c5ba7315bf71957a043`.
-- Current total: 46 confirmed findings = 2 governance + 40 code/runtime/security/architecture/test + 4 toolchain/configuration/dependency-security.
+- Static-snapshot total before hosted Wave A1: 46 confirmed findings = 2 governance + 40 code/runtime/security/architecture/test + 4 toolchain/configuration/dependency-security.
 - Second pass adds 19 confirmed findings.
 - Highest implementation priorities are security/commercial containment: billing authenticity, billing idempotency, JWT revocation and Next security containment.
 - Next priority tier includes entitlement authority, license-key security, login-rate alignment, trusted security-link origin, privileged password policy, API-error sanitization and CSV export hardening.
@@ -281,10 +281,22 @@ A fresh SA session must be able to state from committed repository evidence:
 - No stage, commit, code/package/schema/data/billing/hosted/production mutation is authorized by this synchronization.
 
 <!-- exhaustive-audit-master-remediation-ledger-v1 -->
-## Master 46-finding queue coverage
+## Master 47-finding queue coverage
 
-- Roadmap coverage: **46/46 confirmed findings mapped**.
+- Roadmap coverage: **47/47 confirmed findings mapped**.
 - One previously deferred structural finding now has an explicit name: `UI-STRUCT-001` → `people-manager-orchestration-seams-v1`.
 - Additional non-finding evidence/cleanup slices remain explicitly listed and do not inflate the finding count.
 - Security containment remains first; test prerequisites and dependency order are explicit in the roadmap execution waves.
 - SA and roadmap must be updated together whenever a finding changes status or a slice is split/merged.
+
+<!-- hosted-security-wave-a1-headers-v1 -->
+## Hosted security Wave A1 checkpoint
+
+- Audit HEAD at probe: `2925f17813300821a4a5aa9c575ba1bea683d938`.
+- Current total: 47 confirmed findings = 2 governance + 41 code/runtime/security/architecture/test + 4 toolchain/configuration/dependency-security.
+- HTTPS 308 redirect and HSTS `max-age=63072000` are present on both public hosts.
+- Anonymous GET to tenant license/features, settings and feature-flags APIs returns 401.
+- Billing webhook route is deployed on both tenant and Platform public hosts; GET returns 405 and no mutation probe was performed.
+- `SEC-HEADERS-001` confirmed: measured responses lack CSP/anti-framing, `X-Content-Type-Options`, `Referrer-Policy` and `Permissions-Policy`.
+- `security-response-headers-verification-v1` is complete and promoted to `security-response-headers-hardening-v1`.
+- Roadmap/SA coverage is now 47/47.

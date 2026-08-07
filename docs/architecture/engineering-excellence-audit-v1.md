@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** exhaustive static analysis of snapshot HEAD `5eded00ae3d0` is complete. The second transversal pass resolved the remaining static signals and confirmed 19 additional findings. Data-sensitive, hosted and concurrency validations remain follow-up slice work; no implementation is authorized in the audit branch.
-- **Confirmed findings:** 46 total — 2 governance findings, 40 code/runtime/security/architecture/test findings, and 4 toolchain/configuration/dependency-security findings. The second exhaustive pass adds 19 confirmed findings and leaves no unclassified static snapshot signal.
+- **Current phase:** exhaustive static snapshot analysis is complete and hosted/read-only evidence work is active. Wave A1 verified production transport, anonymous API boundaries and response-security headers, promoting `SEC-HEADERS-001`. Data-sensitive and concurrency validations remain follow-up slice work; no implementation is authorized in the audit branch.
+- **Confirmed findings:** 47 total — 2 governance findings, 41 code/runtime/security/architecture/test findings, and 4 toolchain/configuration/dependency-security findings. Hosted Wave A1 adds `SEC-HEADERS-001`; static snapshot discovery remains complete.
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -189,7 +189,7 @@ The legacy seed is safety-sensitive and local-only. Size alone cannot justify to
 
 ## Current conclusion
 
-The normalized inventory, targeted evidence phases, and exhaustive static snapshot analysis are complete. The audit currently has **46 confirmed findings**: two governance findings, forty code/runtime/security/architecture/test findings, and four toolchain/configuration/dependency-security findings. Remaining target-environment, data-sensitive and execution validations belong to their queued slices; runtime implementation remains unauthorized in this analysis branch.
+The normalized inventory, targeted evidence phases, exhaustive static snapshot analysis, and hosted Wave A1 header/boundary probe are complete. The audit currently has **47 confirmed findings**: two governance findings, forty-one code/runtime/security/architecture/test findings, and four toolchain/configuration/dependency-security findings. Remaining target-environment, data-sensitive and execution validations belong to their queued slices; runtime implementation remains unauthorized in this analysis branch.
 
 These findings are evidence-backed audit conclusions and may include approved future resolution directions, but **no refactor implementation is authorized by this analysis slice**.
 
@@ -1139,3 +1139,43 @@ No code, package, lockfile, schema, data, billing, hosted or production mutation
 ### Remediation coverage checkpoint
 
 All **46 confirmed findings** now have an explicit roadmap remediation/disposition mapping. Cross-cutting cleanup/evidence items remain separate from the finding count. This mapping is planning evidence only and does not authorize implementation.
+
+<!-- hosted-security-wave-a1-headers-v1 -->
+## Hosted security Wave A1 — response boundary evidence
+
+**Probe baseline:** audit HEAD `2925f17813300821a4a5aa9c575ba1bea683d938`; read-only unauthenticated GET/header probes only.
+
+### Positive controls
+
+- `www.meengine.io` and `platform.meengine.io` redirect HTTP to HTTPS with `308 Permanent Redirect`.
+- both HTTPS roots return `Strict-Transport-Security: max-age=63072000`.
+- no `x-powered-by` disclosure was observed in the filtered response set.
+- unauthenticated GET requests to school license/features, settings and feature-flags APIs return `401 Unauthorized` on the tenant host.
+
+### Hosted reinforcement of `BILLING-SEC-001`
+
+- GET to `/api/billing/webhooks/sibs` returns `405 Method Not Allowed` on both `www.meengine.io` and `platform.meengine.io`.
+- this proves the webhook route is deployed on both public host surfaces without requiring any mutation probe.
+- no POST was performed; the existing static finding remains the authority for missing webhook authenticity verification.
+
+### Confirmed finding `SEC-HEADERS-001` — baseline browser hardening headers are absent on deployed responses
+
+**Priority:** P1/P2 security hardening.
+
+- the measured tenant and Platform HTML/API responses expose HSTS but no `Content-Security-Policy` or report-only CSP;
+- no `X-Content-Type-Options` was observed;
+- no `Referrer-Policy` was observed;
+- no `Permissions-Policy` was observed;
+- no `X-Frame-Options` was observed and no CSP `frame-ancestors` policy was present;
+- no COOP/CORP/COEP policy was observed; those headers require product-specific necessity assessment rather than automatic enforcement.
+
+**Finding:** HTTPS/HSTS transport protection is present, but the deployed browser-response boundary lacks the baseline defense-in-depth policies used to constrain script/resource execution, framing, MIME interpretation, referrer leakage and browser capabilities.
+
+**Implementation guard:** do not deploy an untested enforcing CSP directly to Production. Inventory required origins, use Preview and staged/report-only validation where appropriate, then enforce the smallest policy that preserves intended application behavior.
+
+### Signals retained for later hosted evidence
+
+- `/login` returned 404 and is treated only as an incorrect probe pathname, not a finding.
+- unauthenticated API responses use `Cache-Control: public, max-age=0, must-revalidate`; authenticated/sensitive-response cache behavior still requires a separate read-only session-aware probe before classification.
+
+No authentication, cookie, POST, database, billing, hosted-configuration or production mutation was performed.

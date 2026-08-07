@@ -10,7 +10,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| `engineering-excellence-audit-v1` | **P1** engineering excellence | **Active — analysis-only**; exhaustive static snapshot analysis complete; 46 findings confirmed; no unclassified static signal remains; no audit-branch implementation |
+| `engineering-excellence-audit-v1` | **P1** engineering excellence | **Active — analysis-only**; exhaustive static snapshot analysis complete; 47 findings confirmed; no unclassified static signal remains; no audit-branch implementation |
 
 **Closed context:** `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
@@ -21,7 +21,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 <!-- node-24-runtime-migration-v1 closed 2026-08-04 at 909b69a -->
 **Closed prerequisite:** `node-24-runtime-migration-v1` merged to `main` at `909b69a`; GitLab `node:24`, Vercel Preview/Production Node 24.x, and required post-deploy non-destructive hosted gates passed.
 
-1. `engineering-excellence-audit-v1` — **P1 / engineering excellence — active, analysis-only**; exhaustive static snapshot analysis complete; 46 findings confirmed; implementation remains separate and human-authorized
+1. `engineering-excellence-audit-v1` — **P1 / engineering excellence — active, analysis-only**; exhaustive static snapshot analysis complete; 47 findings confirmed; implementation remains separate and human-authorized
 2. `platform-separation-architecture-plan-v1`
 3. Small audit-approved refactor slices (one scope per branch; behavioural equivalence + `pnpm check`)
 
@@ -57,7 +57,7 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 | Slice | Priority | Notes |
 | ----- | -------- | ----- |
-| `engineering-excellence-audit-v1` | **P1** active (analysis-only) | Exhaustive static snapshot analysis completed on audit HEAD `5eded00`; 46 findings confirmed; audit report records evidence; audit itself authorizes no implementation |
+| `engineering-excellence-audit-v1` | **P1** active (analysis-only) | Exhaustive static snapshot analysis completed on audit HEAD `5eded00`; 47 findings confirmed; audit report records evidence; audit itself authorizes no implementation |
 | `platform-separation-architecture-plan-v1` | **P1** backlog | After the engineering audit — autonomous MeEngine Platform vs DAT; Node 24 prerequisite is closed |
 | `people-instructor-invite-accept-list-refresh-v1` | **P1** bug | After INSTRUCTOR invite accept, instructor may not appear under People → Instructors despite correct DB rows |
 | `school-person-identifiers-settings-product-plan-v1` | **P1** plan first | DEC-065 — Admin → Settings → Identifiers & numbering; plan before implementation |
@@ -579,10 +579,14 @@ Security comes first. Within the same priority tier, dependency order and prereq
 - **Classification:** release gate, not a current vulnerability finding.
 - Keep public signup fail-closed until real verification, abuse controls and trusted-origin behavior are complete.
 
-### `security-response-headers-verification-v1`
+### `security-response-headers-hardening-v1`
 
-- **Classification:** evidence-first hosted security check.
-- Read-only inspect Preview/Production response headers before deciding whether repository or platform configuration must add CSP/HSTS/XFO-related protection.
+- **Priority:** P1/P2.
+- **Source:** `SEC-HEADERS-001`.
+- **Evidence:** hosted Wave A1 confirmed HTTPS/HSTS but no CSP, anti-framing policy, `X-Content-Type-Options`, `Referrer-Policy` or `Permissions-Policy` on the measured tenant/Platform responses.
+- Add low-risk hardening headers first; inventory required origins before CSP.
+- Validate CSP in Preview and use staged/report-only evidence where appropriate before enforcement.
+- Do not add COOP/CORP/COEP mechanically; require an application-specific need and compatibility proof.
 
 ### `legacy-vehicle-status-route-disposition-v1`
 
@@ -618,7 +622,7 @@ Security comes first. Within the same priority tier, dependency order and prereq
 - Promote only actual failures, not heuristic candidates.
 
 <!-- exhaustive-audit-master-remediation-ledger-v1 -->
-## Master remediation ledger — 46 findings
+## Master remediation ledger — 47 findings
 
 This is the canonical finding-to-work mapping for the engineering audit. A finding may map to more than one smallest-safe slice; several findings may intentionally converge on one shared primitive. Presence in this ledger does **not** authorize implementation.
 
@@ -670,12 +674,13 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 | `AUTH-PASSWORD-001` | `privileged-password-policy-alignment-v1` |
 | `TEST-GATE-001` | `ci-critical-e2e-gate-v1` |
 | `TEST-ARCH-001` | `database-integration-test-harness-v1` |
+| `SEC-HEADERS-001` | `security-response-headers-hardening-v1` |
 
 ### Additional evidence / cleanup slices from the exhaustive audit
 
 - `email-template-safety-helper-v1` — centralize repeated HTML escaping and test once.
 - `public-signup-production-readiness-v1` — fail-closed release gate before any self-service signup.
-- `security-response-headers-verification-v1` — hosted read-only evidence before config changes.
+- `security-response-headers-verification-v1` — **completed by hosted Wave A1**; evidence promoted to `SEC-HEADERS-001` and `security-response-headers-hardening-v1`.
 - `legacy-vehicle-status-route-disposition-v1` — verify telemetry/external consumers before retirement.
 - `auth-request-page-shell-v1` — safe request-page shell deduplication.
 - `nextauth-v4-security-patch-alignment-v1` — evidence-first v4 patch review.
@@ -685,7 +690,7 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 
 1. **Immediate containment:** `billing-webhook-authenticity-gate-v1`; `next-security-patch-containment-v1`.
 2. **Security foundations / proof:** `database-integration-test-harness-v1`; `e2e-suite-contract-repair-v1`; then `billing-projection-atomic-idempotency-v1`, `jwt-session-revocation-v1`, `license-key-security-hardening-v1`.
-3. **Authority / credential boundaries:** `provider-owned-entitlement-mutation-boundary-v1`, `nextauth-credentials-rate-limit-alignment-v1`, `auth-email-link-trusted-origin-v1`, `privileged-password-policy-alignment-v1`, `api-500-error-sanitization-v1`, `csv-formula-injection-hardening-v1`.
+3. **Authority / credential / browser boundaries:** `provider-owned-entitlement-mutation-boundary-v1`, `nextauth-credentials-rate-limit-alignment-v1`, `auth-email-link-trusted-origin-v1`, `privileged-password-policy-alignment-v1`, `api-500-error-sanitization-v1`, `csv-formula-injection-hardening-v1`, `security-response-headers-hardening-v1`.
 4. **Integrity / onboarding:** `user-create-atomicity-v1`, `platform-onboarding-transaction-boundary-v1`, `instructor-direct-create-activation-contract-v1`.
 5. **Test gates / contract alignment:** `smoke-effective-entitlements-alignment-v1`, `ci-critical-e2e-gate-v1`, then the remaining test/evidence slices.
 6. **Structural consolidation and pruning:** stable helpers/services first; notification migration before orphan UI deletion; then dependency pruning.
