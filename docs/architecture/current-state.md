@@ -20,7 +20,7 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 | **Smoke fixtures** | DEC-064 closed 2026-07-28 (**human**): repair apply + fixture apply (`changesApplied=18`); inspector no blockers; fixtures all-ready; idempotent dry-run; Sarah/Bob/John Doe preserved; commercial catalogue untouched; no `PLATFORM_ADMIN` recreate. Full IDs in operator vault only. |
 | **Remote ops closed** | Do **not** re-run repair, fixture apply, or smoke-lesson cleanup without new evidence + explicit human authorization. `student-invite-accept-student-link-repair-v1` **done** (repo + remote). |
 | **Node.js runtime** | **Node 24 migration closed.** Local compatibility passed on Node 24.18.0; repository pins, package engines, `.nvmrc`, GitLab CI and runner documentation are aligned; branch and `main` pipelines passed using `node:24`; Vercel Preview and Production deployed successfully with Project Settings and effective runtime on Node 24.x; post-deploy non-destructive hosted gates passed at `909b69a`. |
-| **Active analysis** | `engineering-excellence-audit-v1` — **P1 analysis-only**, active on base `da5aea6`. Normalized inventory and multiple targeted evidence phases are complete; 15 findings are confirmed, while no code/toolchain refactor implementation is authorized in the audit branch. Detailed evidence: [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md). |
+| **Active analysis** | `engineering-excellence-audit-v1` — **P1 analysis-only**, active on base `da5aea6`. Normalized inventory and multiple targeted evidence phases are complete; 16 findings are confirmed, while no code/toolchain refactor implementation is authorized in the audit branch. Detailed evidence: [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md). |
 | **Ordered next** | (1) complete `engineering-excellence-audit-v1` analysis and approve findings → (2) `platform-separation-architecture-plan-v1` → (3) only then implement small, audit-approved refactor slices. |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
@@ -432,3 +432,12 @@ The deployment log reported that Node.js 20 is deprecated for future Vercel depl
 - Corepack currently remains justified in CI.
 - `ts-node` and Playwright child-runtime provenance require targeted read-only evidence before any cleanup decision.
 - No tool removal or runtime/package/config change is authorized in the active audit slice.
+
+<!-- lesson-edit-contract-finding-v1 -->
+### Lesson edit contract audit state
+
+- `UI-CONTRACT-001` confirmed: edit mode exposes EXAM/THEORY_EXAM participant multi-select and lesson-type changes that the current PUT contract cannot persist.
+- Exam edit currently operates on one persisted Lesson row with one `studentId`; no grouped-exam update path was found.
+- `studentIds` and `lessonType` are silently dropped before or at the update boundary.
+- no implementation is authorized in the audit branch.
+- remediation is queued as `lesson-edit-contract-alignment-v1`.

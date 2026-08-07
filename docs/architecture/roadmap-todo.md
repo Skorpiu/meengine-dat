@@ -310,3 +310,17 @@ These slices are implementation follow-ups discovered by the analysis-only engin
 - **Initial candidate:** `ts-node`; also verify Node type-package alignment and any other obsolete runner/tool residue.
 - **Explicit non-targets unless new evidence appears:** Vitest, Playwright, `tsx`, pnpm, Prisma, ESLint, Prettier.
 - **Implementation authority:** dependency removal requires human approval and full validation.
+
+<!-- lesson-edit-contract-finding-v1 -->
+### `lesson-edit-contract-alignment-v1`
+
+- **Status:** queued from `UI-CONTRACT-001`; implementation not yet authorized.
+- **Goal:** make the lesson edit UI and PUT persistence contract describe exactly the same editable fields and semantics.
+- **Current persistence baseline:** one Lesson row has at most one operational `studentId`; multi-student EXAM/THEORY_EXAM creation produces multiple Lesson rows.
+- **Required product/architecture decision:** preserve row-level exam editing or deliberately introduce grouped-exam editing. Do not infer grouped ownership from the unused `Exam` / `ExamRegistration` models.
+- **Minimum safe behavior:** no editable control may report success for data that is discarded by the request builder or server.
+- **Participant requirement:** if edit remains row-level, initialize/display the existing participant correctly and constrain participant editing to semantics the single-row PUT can persist.
+- **Lesson-type requirement:** either make lesson type immutable in edit mode or implement type transition end-to-end with server validation and reconciliation of student, vehicle, practical-lesson numbering, and other type-specific fields.
+- **Testing requirement:** add explicit EXAM and THEORY_EXAM edit coverage, existing-participant initialization coverage, request-body contract coverage, and supported/forbidden lesson-type transition coverage.
+- **Safety:** no schema migration or adoption of the separate Exam models unless independently justified by product/architecture evidence.
+- **Likely executor:** Super Agent after human GO.

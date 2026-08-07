@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** toolchain rationalization checkpoint recorded after confirming `TOOLCHAIN-001`; the EXAM edit-participant contract remains the active product/code evidence frontier
-- **Confirmed findings:** 15 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`), 12 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`, `UI-STRUCT-002`, `UI-STRUCT-003`, `A11Y-003`), and 1 toolchain/configuration finding (`TOOLCHAIN-001`)
+- **Current phase:** EXAM edit-participant contract traced; `UI-CONTRACT-001` confirmed. No implementation is authorized; the audit must distinguish the current row-level Lesson persistence contract from any future grouped-exam editing semantics.
+- **Confirmed findings:** 16 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`), 13 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`, `UI-STRUCT-002`, `UI-STRUCT-003`, `A11Y-003`, `UI-CONTRACT-001`), and 1 toolchain/configuration finding (`TOOLCHAIN-001`)
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -189,7 +189,7 @@ The legacy seed is safety-sensitive and local-only. Size alone cannot justify to
 
 ## Current conclusion
 
-The normalized inventory and multiple targeted evidence phases are complete. The audit currently has **15 confirmed findings**: two governance findings (`SA-GOV-001`, `SA-GOV-004`), twelve code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`, `UI-STRUCT-002`, `UI-STRUCT-003`, `A11Y-003`), and one toolchain/configuration finding (`TOOLCHAIN-001`).
+The normalized inventory and multiple targeted evidence phases are complete. The audit currently has **16 confirmed findings**: two governance findings (`SA-GOV-001`, `SA-GOV-004`), thirteen code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`, `UI-STRUCT-002`, `UI-STRUCT-003`, `A11Y-003`, `UI-CONTRACT-001`), and one toolchain/configuration finding (`TOOLCHAIN-001`).
 
 These findings are evidence-backed audit conclusions and may include approved future resolution directions, but **no refactor implementation is authorized by this analysis slice**.
 
@@ -784,3 +784,34 @@ A temporary guarded PATH shim was then used outside the repository to route both
 Therefore the canonical Node-24 requirement is **transitive**, not merely outer-process based.
 
 The failed earlier presence-oriented pre-commit consistency inspection is also recorded as a gate-design lesson under the already established `SA-GOV-001` semantic-gate principle: exact propositions must be validated, including taxonomy/count agreement. No additional governance finding is created for the same underlying principle.
+
+<!-- lesson-edit-contract-finding-v1 -->
+### Confirmed finding `UI-CONTRACT-001` — lesson edit UI exposes fields the update contract silently discards
+
+**Classification:** confirmed UI/client-server contract finding.
+
+**Observed contract:**
+
+- `LessonForm` is reused for create and edit and explicitly advertises multi-student support.
+- in edit mode, `EXAM` and `THEORY_EXAM` render the multi-select participant UI.
+- the persisted `Lesson` row has one optional `studentId`; multi-student exam creation is represented by multiple Lesson rows rather than multiple participants on one Lesson row.
+- `selectedStudents` initializes as an empty array and the edit synchronization effect restores `studentId` but does not initialize `selectedStudents` from the existing exam Lesson participant.
+- submitting `EXAM` or `THEORY_EXAM` writes the chosen participants to `LessonFormPayload.studentIds`.
+- `buildAdminLessonUpdateRequestBody` accepts only singular `studentId`; `studentIds` is therefore silently discarded.
+- the PUT route accepts only singular `studentId`, and `updateAdminLesson` updates exactly one Lesson row.
+- edit mode exposes all four `lessonType` values, but the update request builder, PUT route, and update service do not accept or persist `lessonType`; a type selection made by the user is silently discarded.
+- existing update tests cover singular `studentId`, primarily through DRIVING semantics, but do not cover EXAM/THEORY_EXAM participant editing or lesson-type transitions.
+
+**Impact:**
+
+The edit UI can communicate that an exam participant set or lesson type has been changed while the network contract cannot persist that change. This is a silent-success/contract-integrity problem rather than merely missing functionality.
+
+**Architecture note:**
+
+The current active lesson surface is row-oriented: one Lesson row has at most one student. The separate Prisma `Exam` / `ExamRegistration` models exist but were not found in this update call path and must not be introduced into the fix merely because they exist.
+
+**Implementation boundary:**
+
+A dedicated slice must first make edit semantics explicit. The smallest safe design is expected to preserve row-level Lesson ownership unless product evidence requires grouped-exam editing. Unsupported fields must be disabled/hidden in edit mode or be implemented end-to-end; they must never be accepted by the UI and silently discarded.
+
+No code change is authorized in this audit branch.

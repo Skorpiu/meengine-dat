@@ -229,3 +229,15 @@ A fresh SA session must be able to state from committed repository evidence:
 - npm/npx are not authoritative DAT package-management workflows.
 - Corepack remains justified in CI pending any future design decision.
 - The EXAM edit-participant contract remains the active product/code audit frontier after the toolchain evidence checkpoint.
+
+<!-- lesson-edit-contract-finding-v1 -->
+## EXAM edit-participant checkpoint
+
+- Confirmed finding: `UI-CONTRACT-001`.
+- Audit total: 16 confirmed findings = 2 governance + 13 code + 1 toolchain/configuration.
+- Proven mismatch: EXAM/THEORY_EXAM edit submits `studentIds`, while the update builder/PUT/service support only singular `studentId`.
+- Proven mismatch: edit exposes `lessonType`, while the update builder/PUT/service do not persist it.
+- `selectedStudents` is not initialized from the existing exam Lesson participant.
+- Current persistence/update unit is one Lesson row; no grouped-exam update path was found.
+- Queued slice: `lesson-edit-contract-alignment-v1`.
+- Super Agent may prepare the slice after GO; no audit-branch implementation is authorized.

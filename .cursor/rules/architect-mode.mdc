@@ -784,3 +784,15 @@ Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
 - Current-state wording must distinguish `finding confirmed` from `implementation authorized`; a confirmed finding does not by itself authorize implementation.
 - Runtime provenance is transitive: validating an outer Node/pnpm process does not validate nested package-manager or lifecycle processes.
 - When a gate itself fails to detect a contradiction, repair the gate logic in the same documentation checkpoint; do not create a separate governance finding unless new evidence shows a distinct systemic defect beyond an already established governance principle.
+
+<!-- lesson-edit-contract-finding-v1 -->
+## Lesson edit contract rule
+
+- `UI-CONTRACT-001` is confirmed: the current edit UI exposes EXAM/THEORY_EXAM multi-participant and lesson-type controls that are not represented by the PUT contract.
+- Treat client payload → request builder → HTTP route → service payload → persistence as one semantic contract.
+- Extra properties being structurally accepted by TypeScript does not prove persistence support; verify what the request builder actually serializes.
+- A successful response must not be treated as evidence that every visible form change was persisted.
+- When create and edit reuse one form, explicitly audit mode-specific capabilities instead of assuming create semantics are valid for edit.
+- Current lesson persistence is row-oriented: one Lesson row has at most one `studentId`. Do not infer grouped-exam mutation semantics without evidence.
+- Existing but unused schema models are not an implementation mandate.
+- `lesson-edit-contract-alignment-v1` is queued. The Super Agent may investigate and prepare it, but implementation requires human authorization.
