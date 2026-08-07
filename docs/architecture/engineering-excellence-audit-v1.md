@@ -34,7 +34,7 @@ It is not an autonomous approval authority. Pushes, merges, remote branch deleti
 - Runtime evidence: `f23e423`.
 - Application merge: `909b69a`.
 - Closure record: `a397054`.
-- Current audit/main baseline: `da5aea6`.
+- Audit entry baseline and current `main` baseline: `da5aea6`.
 - Local validation passed 207 test files, 1738 tests, and the production build.
 - GitLab and Vercel gates passed.
 - Production fixture preflight, API verification, and four read-only UI smoke tests passed.
@@ -169,9 +169,13 @@ The legacy seed is safety-sensitive and local-only. Size alone cannot justify to
 
 ## Current conclusion
 
-The normalized inventory phase is complete. Several modules are large enough to justify deeper inspection, but **no maintainability defect, extraction target, file move, or implementation slice is confirmed yet**.
+The normalized inventory and multiple targeted evidence phases are complete. The audit currently has **14 confirmed findings**: two governance findings (`SA-GOV-001`, `SA-GOV-004`) and twelve code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`, `UI-STRUCT-002`, `UI-STRUCT-003`, `A11Y-003`).
 
-The next phase must map responsibilities, imports, exported symbols, call paths, tests, and duplication for the four workstreams before assigning severity or recommending slices.
+These findings are evidence-backed audit conclusions and may include approved future resolution directions, but **no refactor implementation is authorized by this analysis slice**.
+
+The active evidence frontier is now the **EXAM edit-participant contract**. The next audit phase must trace its entrypoints, client/server contract, validation, persistence behaviour, tests, atomicity, and failure semantics before deciding whether another finding exists.
+
+The audit remains analysis-only. Runtime, schema, data, hosted configuration, and functional behaviour must remain unchanged.
 
 <!-- sa-rulebook-audit-phase-1 -->
 ## Super Agent rulebook audit — phase 1
