@@ -10,7 +10,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| `engineering-excellence-audit-v1` | **P1** engineering excellence | **Active — analysis-only**; normalized inventory complete; inspect responsibilities and call paths before confirming findings; no runtime/schema/data or refactor implementation |
+| `engineering-excellence-audit-v1` | **P1** engineering excellence | **Active — analysis-only**; exhaustive static snapshot analysis complete; 46 findings confirmed; no unclassified static signal remains; no audit-branch implementation |
 
 **Closed context:** `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
@@ -21,7 +21,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 <!-- node-24-runtime-migration-v1 closed 2026-08-04 at 909b69a -->
 **Closed prerequisite:** `node-24-runtime-migration-v1` merged to `main` at `909b69a`; GitLab `node:24`, Vercel Preview/Production Node 24.x, and required post-deploy non-destructive hosted gates passed.
 
-1. `engineering-excellence-audit-v1` — **P1 / engineering excellence — active, analysis-only**; normalized inventory complete; no findings confirmed
+1. `engineering-excellence-audit-v1` — **P1 / engineering excellence — active, analysis-only**; exhaustive static snapshot analysis complete; 46 findings confirmed; implementation remains separate and human-authorized
 2. `platform-separation-architecture-plan-v1`
 3. Small audit-approved refactor slices (one scope per branch; behavioural equivalence + `pnpm check`)
 
@@ -57,7 +57,7 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 | Slice | Priority | Notes |
 | ----- | -------- | ----- |
-| `engineering-excellence-audit-v1` | **P1** active (analysis-only) | Normalized inventory complete on `da5aea6`; no findings confirmed; audit report records evidence; audit itself authorizes no refactor implementation |
+| `engineering-excellence-audit-v1` | **P1** active (analysis-only) | Exhaustive static snapshot analysis completed on audit HEAD `5eded00`; 46 findings confirmed; audit report records evidence; audit itself authorizes no implementation |
 | `platform-separation-architecture-plan-v1` | **P1** backlog | After the engineering audit — autonomous MeEngine Platform vs DAT; Node 24 prerequisite is closed |
 | `people-instructor-invite-accept-list-refresh-v1` | **P1** bug | After INSTRUCTOR invite accept, instructor may not appear under People → Instructors despite correct DB rows |
 | `school-person-identifiers-settings-product-plan-v1` | **P1** plan first | DEC-065 — Admin → Settings → Identifiers & numbering; plan before implementation |
@@ -70,7 +70,7 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 | `import-export-business-packaging-v1` | **P2** | Tier vs self-service UI enforcement |
 | `provider-assisted-import-runbook-v1` | **P2** | Operator import runbook |
 | `school-operational-alerts-v1` | **P2** | Vehicle expiry/inspection/maintenance lead times |
-| `platform-settings-and-feature-flags-boundary-v1` | **P2** | Future Platform ownership of flags/system settings |
+| `platform-settings-and-feature-flags-boundary-v1` | **P2** confirmed boundary | `AUTHZ-OPERATOR-001` — move internal settings/flags authority away from tenant School Admin; hidden navigation is not authorization |
 | `i18n-framework-planning-v1` | **P2** | Real i18n; switcher, fallback, plan tie-in |
 
 **Payment domains (DEC-046 / DEC-052) — keep separate; no implementation authorization:**
@@ -90,7 +90,7 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 ### `engineering-excellence-audit-v1`
 
-**Status:** **P1 — active**; analysis-only. Normalized inventory completed on 2026-08-06. No findings, severity ratings, or refactor slices are yet approved. No runtime, schema, data, or functional changes during the audit. Detailed evidence: [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md).
+**Status:** **P1 — active**; analysis-only. Normalized inventory, targeted evidence and exhaustive static snapshot analysis are complete. 46 findings are confirmed and mapped to implementation, refactor, evidence or disposition slices; appearance in the roadmap does not authorize implementation. No runtime, schema, data, billing or functional changes belong in the audit branch. Detailed evidence: [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md).
 
 **Inherited baseline:** Node 24 P0 is closed (`909b69a` runtime merge; `da5aea6` current main/audit base). Local Node `v24.18.0`, repository engine `24.x`, GitLab `node:24`, Vercel Node 24.x, 207 test files / 1738 tests, production build, and post-deploy read-only smoke are validated. No dependency or runtime upgrades belong in this audit.
 
@@ -269,7 +269,7 @@ Longer-running topics; prefer audit-derived slices over inventing mass refactors
 
 ## Explicitly do not open next
 
-- Billing / checkout / PSP runtime (sensitive gate per slice)
+- Billing feature/checkout/PSP expansion remains blocked. Security containment for confirmed `BILLING-SEC-001` is the exception and may proceed only as a dedicated human-authorized P0 slice.
 - Prisma migrations / schema changes unless gated
 - Platform cross-tenant audit viewer (tenant CSV export is **done**)
 - `supabase-rls-tenant-policies-v1` unless Data API product-required
@@ -307,7 +307,7 @@ These slices are implementation follow-ups discovered by the analysis-only engin
 
 - **Status:** evidence-first queued slice.
 - **Goal:** identify and remove only direct development dependencies proven to have no required repository responsibility.
-- **Initial candidate:** `ts-node`; also verify Node type-package alignment and any other obsolete runner/tool residue.
+- **Initial candidates:** `ts-node` and direct `@next/swc-wasm-nodejs`, neither of which has a repository responsibility proven by the snapshot reference scan; also verify Node type-package alignment and any other obsolete runner/tool residue before removal.
 - **Explicit non-targets unless new evidence appears:** Vitest, Playwright, `tsx`, pnpm, Prisma, ESLint, Prettier.
 - **Implementation authority:** dependency removal requires human approval and full validation.
 
@@ -324,3 +324,369 @@ These slices are implementation follow-ups discovered by the analysis-only engin
 - **Testing requirement:** add explicit EXAM and THEORY_EXAM edit coverage, existing-participant initialization coverage, request-body contract coverage, and supported/forbidden lesson-type transition coverage.
 - **Safety:** no schema migration or adoption of the separate Exam models unless independently justified by product/architecture evidence.
 - **Likely executor:** Super Agent after human GO.
+
+<!-- exhaustive-snapshot-audit-5eded00-v1 -->
+## Engineering Excellence — exhaustive snapshot follow-up
+
+These slices come from confirmed full-snapshot findings. They are queued only; implementation requires explicit human GO and a separate branch.
+
+### `billing-webhook-authenticity-gate-v1`
+
+- **Priority:** P0.
+- **Source:** `BILLING-SEC-001`.
+- **Goal:** fail closed before any webhook event can mutate billing/subscription/entitlement state unless provider authenticity is proven.
+- **Minimum safe baseline while live PSP integration is unfinished:** disable or reject externally supplied billing webhook processing by default rather than trusting envelope contents.
+- **Future provider path:** provider-specific signature verification must precede event persistence/application.
+- **Tests:** missing/invalid authenticity proof must cause zero billing-event/commercial-state writes; valid/replay behavior must remain idempotent.
+- **Scope guard:** do not turn this security containment slice into checkout/PSP feature implementation.
+
+### `provider-owned-entitlement-mutation-boundary-v1`
+
+- **Priority:** P1.
+- **Source:** `LICENSING-001`.
+- **Goal:** ensure tenant School Admin can read effective plan/module state but cannot directly self-enable provider-owned Premium entitlements.
+- **Boundary:** mutation belongs to verified Platform/operator/provider authority, not hidden tenant UI.
+- **Preserve:** school-facing read-only plan experience and entitlement resolver semantics unless independently justified.
+
+### `platform-settings-and-feature-flags-boundary-v1`
+
+- **Priority:** P2; existing roadmap slice, now explicitly backed by `AUTHZ-OPERATOR-001`.
+- **Goal:** enforce operator/Platform ownership server-side for internal settings and feature flags.
+- **Rule:** hiding navigation or labeling a page internal is not an authorization boundary.
+- **No duplicate slice:** this heading enriches the already-existing backlog item.
+
+### `legacy-login-endpoint-retirement-v1`
+
+- **Priority:** P2.
+- **Source:** `AUTH-LEGACY-001`.
+- **Goal:** prove there is no required external consumer, then retire the parallel `/api/auth/login` credential path and keep NextAuth Credentials authoritative.
+- **Preserve:** tenant-domain and approval/email-verification policy in the authoritative path.
+
+### `nextauth-credentials-rate-limit-alignment-v1`
+
+- **Priority:** P1.
+- **Source:** `AUTH-RATE-001`.
+- **Goal:** put distributed brute-force protection on the actual NextAuth Credentials login path.
+- **Tests:** IP/email limit, correct-password behavior, tenant mismatch and lockout/reset semantics on the real login path.
+- **Avoid:** two independent rate-limit implementations after the legacy endpoint is retired.
+
+### `user-create-atomicity-v1`
+
+- **Priority:** P1.
+- **Source:** `API-ATOM-002`.
+- **Goal:** make User + Student/Instructor aggregate creation atomic.
+- **Required proof:** downstream profile-create failure leaves no orphan User.
+- **Design:** validate deterministic input before the transaction where possible; follow the existing signup transactional precedent.
+
+### `instructor-direct-create-activation-contract-v1`
+
+- **Priority:** P1.
+- **Source:** `ONBOARD-001`.
+- **Goal:** give a directly created Instructor a secure, explicit production activation/set-password path or replace direct account creation with the invitation workflow.
+- **Security:** do not solve this by emailing a raw temporary password.
+- **Consistency:** use the current EmailVerificationToken/activation architecture rather than the legacy User token fields unless an explicit migration decision says otherwise.
+
+### `unused-ui-scaffold-pruning-v1`
+
+- **Priority:** P2 cleanup.
+- **Source:** `CODE-HYGIENE-001`.
+- **Evidence baseline:** 25 zero-inbound `components/ui/*` modules, 3 zero-inbound hooks, 2 zero-inbound production helpers, and 16 runtime dependencies referenced exclusively by the orphan UI set.
+- **Removal rule:** exact reference proof first; remove in small batches; canonical Node-24-transitive `check` after changes.
+- **Do not remove:** packages merely because a literal import was not found when framework/config/tool responsibilities remain possible.
+
+### `role-aware-booking-dialog-consolidation-v1`
+
+- **Priority:** P2.
+- **Source:** `UI-DUP-001`.
+- **Goal:** consolidate duplicated admin/instructor booking orchestration while preserving role-specific authority and presentation.
+- **Evidence:** duplicated copies already have different error-decoding behavior for the same lesson-create endpoint.
+- **Design guard:** prefer a small role-aware shared handler/container over a generic form framework.
+
+### `legacy-exam-model-disposition-v1`
+
+- **Priority:** P2 evidence-first / data-sensitive.
+- **Source:** `SCHEMA-LEGACY-001`.
+- **Goal:** determine whether legacy `Exam` / `ExamRegistration` rows still exist on target environments and choose retain/archive/migrate/remove deliberately.
+- **First step:** read-only counts and reference inventory only.
+- **No schema/data mutation:** migration or deletion requires separate human authorization and a data-safe plan.
+
+### `toolchain-next-env-alignment-v1`
+
+- **Priority:** P2/P3.
+- **Source:** `TOOLCHAIN-002`.
+- **Goal:** eliminate the unintentional Next 14 / direct `@next/env` 16 dual-major contract without upgrading Next as part of this slice.
+- **Validation:** exercise the 17 env-loading operator/demo scripts plus the full canonical check under proven Node-24 transitive execution.
+- **No opportunistic framework upgrade.**
+
+<!-- exhaustive-snapshot-audit-5eded00-v2 -->
+## Engineering Excellence — second exhaustive-pass queue
+
+Security comes first. Within the same priority tier, dependency order and prerequisite tests determine execution order. Every entry remains human-authorized per slice.
+
+### `billing-projection-atomic-idempotency-v1`
+
+- **Priority:** P0/P1.
+- **Source:** `BILLING-SEC-002`.
+- Put billing projection plus lifecycle completion behind an atomic/idempotent contract.
+- Add failure-injection and retry tests proving already-applied commercial effects cannot duplicate.
+
+### `jwt-session-revocation-v1`
+
+- **Priority:** P0/P1.
+- **Source:** `AUTH-SESSION-001`.
+- Replace DB-Session deletion as the revocation primitive for JWT sessions with a server-verifiable revocation/version contract.
+- Cover access removal, deactivation, email change and password reset.
+
+### `auth-email-link-trusted-origin-v1`
+
+- **Priority:** P1.
+- **Source:** `AUTH-LINK-001`.
+- Resolve public reset/verification links from the account's trusted organization/domain authority, not an arbitrary request-derived origin.
+- Add tenant-mismatch and canonical-domain tests.
+
+### `platform-onboarding-transaction-boundary-v1`
+
+- **Priority:** P1.
+- **Source:** `PLATFORM-ATOM-001`.
+- Keep organization/domain/admin/license aggregate creation inside one explicit transaction boundary or make the non-transactional step an intentional post-commit workflow.
+- Add a real-DB integration test for all-or-nothing behavior.
+
+### `license-key-security-hardening-v1`
+
+- **Priority:** P1.
+- **Source:** `LICENSING-002`.
+- Use cryptographically secure license-key generation.
+- Consume single-use keys atomically and make entitlement effects concurrency-safe/idempotent.
+- Add concurrent activation tests.
+
+### `api-500-error-sanitization-v1`
+
+- **Priority:** P1/P2.
+- **Source:** `API-ERROR-001`.
+- Keep detailed exceptions in structured server logs while returning a stable non-sensitive 500 message to clients.
+
+### `notification-stack-consolidation-v1`
+
+- **Priority:** P1/P2.
+- **Source:** `UI-FEEDBACK-001`.
+- Select one notification stack, migrate active consumers and remove the unmounted custom toast path plus redundant dependencies.
+- This slice precedes final orphan-UI pruning.
+
+### `smoke-effective-entitlements-alignment-v1`
+
+- **Priority:** P1/P2.
+- **Source:** `TEST-CONTRACT-001`.
+- Make feature smoke validate the same effective-entitlement boundary the product uses.
+
+### `e2e-suite-contract-repair-v1`
+
+- **Priority:** P2.
+- **Source:** `TEST-HYGIENE-001`.
+- Remove external Playwright scaffold and repair THEORY_EXAM operational Student-id semantics.
+- Establish deterministic fixture ownership before the E2E CI gate.
+
+### `tenant-row-lock-helper-consolidation-v1`
+
+- **Priority:** P2.
+- **Source:** `DB-DUP-001`.
+- Centralize Student/Instructor/Invitation tenant-scoped locking into small typed helpers.
+- Do not create a dynamic table-name SQL abstraction.
+
+### `client-http-response-helper-v1`
+
+- **Priority:** P2.
+- **Source:** `CLIENT-DUP-001`.
+- Extract only stable safe-JSON and error-message primitives used across client fetch flows.
+
+### `import-workflow-consolidation-v1`
+
+- **Priority:** P2.
+- **Source:** `UI-DUP-002`.
+- Share preview/apply/confirm/result orchestration while keeping domain payload parsers and endpoints explicit.
+
+### `toolchain-node-types-alignment-v1`
+
+- **Priority:** P2/P3.
+- **Source:** `TOOLCHAIN-003`.
+- Align Node type definitions with the Node 24 runtime contract without changing the runtime itself.
+
+### `next-security-patch-containment-v1`
+
+- **Priority:** P0.
+- **Source:** `DEP-SEC-001`.
+- Apply the smallest safe security containment for the current Next 14 line first, with full regression validation.
+- Do not combine this containment slice with broad framework migration.
+
+### `next-supported-lts-migration-v1`
+
+- **Priority:** P1.
+- **Source:** `DEP-SEC-001`.
+- After containment, design and execute a controlled move from unsupported Next 14 to a currently supported LTS line.
+- No opportunistic unrelated dependency upgrades.
+
+### `dormant-operational-model-disposition-v1`
+
+- **Priority:** P2 / data-sensitive.
+- **Source:** `SCHEMA-LEGACY-002`.
+- Read-only inspect LessonRequest, Payment and Notification data/provenance on target environments.
+- Decide retain/complete/archive/remove only from evidence.
+
+### `csv-formula-injection-hardening-v1`
+
+- **Priority:** P1/P2.
+- **Source:** `EXPORT-SEC-001`.
+- Create one tested CSV-cell safety primitive and use it across Student, Practical Lesson and audit exports.
+
+### `privileged-password-policy-alignment-v1`
+
+- **Priority:** P1.
+- **Source:** `AUTH-PASSWORD-001`.
+- Make School Admin and Platform Admin provisioning obey one server-authoritative privileged password policy.
+
+### `ci-critical-e2e-gate-v1`
+
+- **Priority:** P1/P2.
+- **Source:** `TEST-GATE-001`.
+- After E2E repair, gate a small deterministic critical-path Playwright subset in CI.
+- Do not run production mutation smoke as normal CI.
+
+### `database-integration-test-harness-v1`
+
+- **Priority:** P1/P2.
+- **Source:** `TEST-ARCH-001`.
+- Add disposable Postgres integration infrastructure for contracts mocks cannot prove.
+- Initial suite: billing retry, license concurrency, platform onboarding, aggregate user creation and row locks.
+- Keep unit tests fast; do not convert the full suite to DB integration tests.
+
+### `direct-dependency-responsibility-pruning-v1`
+
+- **Classification:** evidence/cleanup slice under `CODE-HYGIENE-001`, not a new finding.
+- Build a ledger for every direct dependency: active responsibility, justified implicit/framework responsibility, or remove.
+- Remove the 16 orphan-UI-only runtime dependencies once their source consumers are safely removed.
+
+### `legacy-inmemory-rate-limit-retirement-v1`
+
+- **Classification:** safe cleanup.
+- Remove the unused in-memory rate-limit option/primitive after exact reference proof; authoritative auth limiting is the distributed path.
+
+### `email-template-safety-helper-v1`
+
+- **Classification:** safe security-sensitive deduplication.
+- Centralize repeated HTML escaping used by email templates and unit-test it once.
+
+### `public-signup-production-readiness-v1`
+
+- **Classification:** release gate, not a current vulnerability finding.
+- Keep public signup fail-closed until real verification, abuse controls and trusted-origin behavior are complete.
+
+### `security-response-headers-verification-v1`
+
+- **Classification:** evidence-first hosted security check.
+- Read-only inspect Preview/Production response headers before deciding whether repository or platform configuration must add CSP/HSTS/XFO-related protection.
+
+### `legacy-vehicle-status-route-disposition-v1`
+
+- **Classification:** contract-disposition investigation.
+- The route has no internal consumer but is documented/tested; verify telemetry/external consumers before retirement.
+
+### `auth-request-page-shell-v1`
+
+- **Classification:** safe UI refactor candidate.
+- Consolidate strongly duplicated forgot-password/resend-verification request-page shell without coupling domain behavior.
+
+### `nextauth-v4-security-patch-alignment-v1`
+
+- **Classification:** evidence-first dependency maintenance.
+- Review the current v4 security-patch release against the DAT Credentials-only usage and upgrade separately if compatible.
+- Do not misclassify EmailProvider/getToken-specific advisories as active DAT findings without a matching path.
+
+### `dependency-security-monitoring-v1`
+
+- **Classification:** engineering-security control.
+- Establish a reproducible advisory/lockfile security check in CI once the security baseline is clean.
+- No uncontrolled automatic upgrades.
+
+### `operator-documentation-runtime-reconciliation-v1`
+
+- **Classification:** recurrence of `SA-GOV-001`, not a new governance finding.
+- Reconcile stale Node/runtime/rate-limit/security descriptions after technical slices establish the new authoritative contracts.
+
+### `accessibility-regression-sweep-v1`
+
+- **Classification:** evidence-first quality sweep.
+- Validate remaining icon-button accessible names and stable critical flows with role/name assertions or axe-style checks where appropriate.
+- Promote only actual failures, not heuristic candidates.
+
+<!-- exhaustive-audit-master-remediation-ledger-v1 -->
+## Master remediation ledger — 46 findings
+
+This is the canonical finding-to-work mapping for the engineering audit. A finding may map to more than one smallest-safe slice; several findings may intentionally converge on one shared primitive. Presence in this ledger does **not** authorize implementation.
+
+| Finding | Remediation / disposition slice(s) |
+| --- | --- |
+| `SA-GOV-001` | `governance guard + operator-documentation-runtime-reconciliation-v1` |
+| `SA-GOV-004` | `Engineering Quality Review Protocol (remediation already recorded)` |
+| `UI-ORCH-001` | `student-profile-atomic-update-v1` |
+| `API-ATOM-001` | `student-profile-atomic-update-v1`; `instructor-profile-atomic-update-v1`; `generic-user-update-contract-narrowing-v1` |
+| `UI-ORCH-002` | `instructor-profile-atomic-update-v1` |
+| `UI-STRUCT-001` | `people-manager-orchestration-seams-v1` |
+| `A11Y-001` | `people-search-accessible-names-v1` |
+| `A11Y-002` | `people-badge-help-accessibility-v1` |
+| `API-DUP-001` | `admin-config-route-helpers-v1` |
+| `API-STRUCT-001` | `vehicle-route-domain-services-v1` |
+| `API-DUP-002` | `admin-route-context-helper-v1` |
+| `UI-STRUCT-002` | `schedule-map-wide-grid-components-v1`; `schedule-map-data-orchestration-v1` |
+| `UI-STRUCT-003` | `lesson-form-policy-module-v1`; `lesson-form-option-data-hook-v1`; `lesson-form-sections-v1` |
+| `A11Y-003` | `lesson-form-accessible-controls-v1` |
+| `UI-CONTRACT-001` | `lesson-edit-contract-alignment-v1` |
+| `TOOLCHAIN-001` | `toolchain-volta-decoupling-v1`; `toolchain-local-runtime-standardization-v1`; `toolchain-e2e-runtime-provenance-v1`; `toolchain-unused-dev-dependencies-v1` |
+| `BILLING-SEC-001` | `billing-webhook-authenticity-gate-v1` |
+| `LICENSING-001` | `provider-owned-entitlement-mutation-boundary-v1` |
+| `AUTHZ-OPERATOR-001` | `platform-settings-and-feature-flags-boundary-v1` |
+| `AUTH-LEGACY-001` | `legacy-login-endpoint-retirement-v1` |
+| `AUTH-RATE-001` | `nextauth-credentials-rate-limit-alignment-v1` |
+| `API-ATOM-002` | `user-create-atomicity-v1` |
+| `ONBOARD-001` | `instructor-direct-create-activation-contract-v1` |
+| `CODE-HYGIENE-001` | `notification-stack-consolidation-v1`; `unused-ui-scaffold-pruning-v1`; `direct-dependency-responsibility-pruning-v1`; `legacy-inmemory-rate-limit-retirement-v1` |
+| `UI-DUP-001` | `role-aware-booking-dialog-consolidation-v1` |
+| `SCHEMA-LEGACY-001` | `legacy-exam-model-disposition-v1` |
+| `TOOLCHAIN-002` | `toolchain-next-env-alignment-v1` |
+| `BILLING-SEC-002` | `billing-projection-atomic-idempotency-v1` |
+| `AUTH-SESSION-001` | `jwt-session-revocation-v1` |
+| `AUTH-LINK-001` | `auth-email-link-trusted-origin-v1` |
+| `PLATFORM-ATOM-001` | `platform-onboarding-transaction-boundary-v1` |
+| `LICENSING-002` | `license-key-security-hardening-v1` |
+| `API-ERROR-001` | `api-500-error-sanitization-v1` |
+| `UI-FEEDBACK-001` | `notification-stack-consolidation-v1` |
+| `TEST-CONTRACT-001` | `smoke-effective-entitlements-alignment-v1` |
+| `TEST-HYGIENE-001` | `e2e-suite-contract-repair-v1` |
+| `DB-DUP-001` | `tenant-row-lock-helper-consolidation-v1` |
+| `CLIENT-DUP-001` | `client-http-response-helper-v1` |
+| `UI-DUP-002` | `import-workflow-consolidation-v1` |
+| `TOOLCHAIN-003` | `toolchain-node-types-alignment-v1` |
+| `DEP-SEC-001` | `next-security-patch-containment-v1`; `next-supported-lts-migration-v1`; `dependency-security-monitoring-v1` |
+| `SCHEMA-LEGACY-002` | `dormant-operational-model-disposition-v1` |
+| `EXPORT-SEC-001` | `csv-formula-injection-hardening-v1` |
+| `AUTH-PASSWORD-001` | `privileged-password-policy-alignment-v1` |
+| `TEST-GATE-001` | `ci-critical-e2e-gate-v1` |
+| `TEST-ARCH-001` | `database-integration-test-harness-v1` |
+
+### Additional evidence / cleanup slices from the exhaustive audit
+
+- `email-template-safety-helper-v1` — centralize repeated HTML escaping and test once.
+- `public-signup-production-readiness-v1` — fail-closed release gate before any self-service signup.
+- `security-response-headers-verification-v1` — hosted read-only evidence before config changes.
+- `legacy-vehicle-status-route-disposition-v1` — verify telemetry/external consumers before retirement.
+- `auth-request-page-shell-v1` — safe request-page shell deduplication.
+- `nextauth-v4-security-patch-alignment-v1` — evidence-first v4 patch review.
+- `accessibility-regression-sweep-v1` — promote only actual accessibility failures.
+
+### Security-first execution waves
+
+1. **Immediate containment:** `billing-webhook-authenticity-gate-v1`; `next-security-patch-containment-v1`.
+2. **Security foundations / proof:** `database-integration-test-harness-v1`; `e2e-suite-contract-repair-v1`; then `billing-projection-atomic-idempotency-v1`, `jwt-session-revocation-v1`, `license-key-security-hardening-v1`.
+3. **Authority / credential boundaries:** `provider-owned-entitlement-mutation-boundary-v1`, `nextauth-credentials-rate-limit-alignment-v1`, `auth-email-link-trusted-origin-v1`, `privileged-password-policy-alignment-v1`, `api-500-error-sanitization-v1`, `csv-formula-injection-hardening-v1`.
+4. **Integrity / onboarding:** `user-create-atomicity-v1`, `platform-onboarding-transaction-boundary-v1`, `instructor-direct-create-activation-contract-v1`.
+5. **Test gates / contract alignment:** `smoke-effective-entitlements-alignment-v1`, `ci-critical-e2e-gate-v1`, then the remaining test/evidence slices.
+6. **Structural consolidation and pruning:** stable helpers/services first; notification migration before orphan UI deletion; then dependency pruning.
+7. **Data-sensitive disposition / modernization:** legacy/dormant model read-only evidence, toolchain alignment, and supported-LTS migration in their prerequisite order.

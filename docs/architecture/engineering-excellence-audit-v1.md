@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** EXAM edit-participant contract traced; `UI-CONTRACT-001` confirmed. No implementation is authorized; the audit must distinguish the current row-level Lesson persistence contract from any future grouped-exam editing semantics.
-- **Confirmed findings:** 16 total — 2 governance findings (`SA-GOV-001`, `SA-GOV-004`), 13 code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`, `UI-STRUCT-002`, `UI-STRUCT-003`, `A11Y-003`, `UI-CONTRACT-001`), and 1 toolchain/configuration finding (`TOOLCHAIN-001`)
+- **Current phase:** exhaustive static analysis of snapshot HEAD `5eded00ae3d0` is complete. The second transversal pass resolved the remaining static signals and confirmed 19 additional findings. Data-sensitive, hosted and concurrency validations remain follow-up slice work; no implementation is authorized in the audit branch.
+- **Confirmed findings:** 46 total — 2 governance findings, 40 code/runtime/security/architecture/test findings, and 4 toolchain/configuration/dependency-security findings. The second exhaustive pass adds 19 confirmed findings and leaves no unclassified static snapshot signal.
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -189,7 +189,7 @@ The legacy seed is safety-sensitive and local-only. Size alone cannot justify to
 
 ## Current conclusion
 
-The normalized inventory and multiple targeted evidence phases are complete. The audit currently has **16 confirmed findings**: two governance findings (`SA-GOV-001`, `SA-GOV-004`), thirteen code findings (`UI-ORCH-001`, `API-ATOM-001`, `UI-ORCH-002`, `UI-STRUCT-001`, `A11Y-001`, `A11Y-002`, `API-DUP-001`, `API-STRUCT-001`, `API-DUP-002`, `UI-STRUCT-002`, `UI-STRUCT-003`, `A11Y-003`, `UI-CONTRACT-001`), and one toolchain/configuration finding (`TOOLCHAIN-001`).
+The normalized inventory, targeted evidence phases, and exhaustive static snapshot analysis are complete. The audit currently has **46 confirmed findings**: two governance findings, forty code/runtime/security/architecture/test findings, and four toolchain/configuration/dependency-security findings. Remaining target-environment, data-sensitive and execution validations belong to their queued slices; runtime implementation remains unauthorized in this analysis branch.
 
 These findings are evidence-backed audit conclusions and may include approved future resolution directions, but **no refactor implementation is authorized by this analysis slice**.
 
@@ -815,3 +815,327 @@ The current active lesson surface is row-oriented: one Lesson row has at most on
 A dedicated slice must first make edit semantics explicit. The smallest safe design is expected to preserve row-level Lesson ownership unless product evidence requires grouped-exam editing. Unsupported fields must be disabled/hidden in edit mode or be implemented end-to-end; they must never be accepted by the UI and silently discarded.
 
 No code change is authorized in this audit branch.
+
+<!-- exhaustive-snapshot-audit-5eded00-v1 -->
+## Full-project snapshot audit — first transversal pass
+
+**Snapshot:** HEAD `5eded00ae3d0dedde8b1a251d393a9180911814b`.
+
+- Safe archive: 817 tracked files; only the two `.env.example` files were intentionally excluded.
+- Repository inventory remains 819 tracked files and 661 TypeScript/TSX files.
+- Snapshot SHA-256: `9e61686d43458901c798d06ef8ba501d310aa2ea6c6a0c5ba7315bf71957a043`.
+- The pass crossed imports, API boundaries, auth, tenant ownership, billing/licensing, Prisma models, operational scripts, tests, duplication, dead-code signals, and toolchain contracts.
+- Signals are not promoted merely because they appear in static analysis; the findings below have cross-file evidence sufficient for audit classification.
+
+### Confirmed finding `BILLING-SEC-001` — billing webhook authenticity is not enforced before commercial-state mutation
+
+**Priority:** P0 safety/security containment.
+
+- `/api/billing/webhooks/[provider]` explicitly states that real provider signatures/cryptographic parsing are not implemented.
+- no repository-level authentication, provider-signature verification, secret gate, middleware gate, or environment-disable boundary was found in front of the route.
+- provider adapters accept normalized envelope data including `providerEventId` and `organizationId`.
+- accepted events are persisted and immediately passed to `processPersistedBillingEventLifecycle`.
+- the lifecycle calls `applyBillingProjectionForOrganization`, which can update `Organization.subscriptionTier`, `subscriptionStatus`, `subscriptionEndsAt`, and create/expire billing `EntitlementGrant` rows.
+- the PREMIUM and ENTERPRISE plan mappings contain all nine licensed feature keys.
+
+**Finding:** repository code does not prove authenticity before externally supplied webhook data can reach commercial-state mutation. No exploitation or production incident is asserted.
+
+### Confirmed finding `LICENSING-001` — School Admin can mutate provider-owned Premium entitlements
+
+**Priority:** P1 commercial authorization boundary.
+
+- the school-facing Plan & features page is read-only and explicitly says plan/module changes are managed by the software provider.
+- `POST /api/admin/license/features` nevertheless authorizes tenant role `SUPER_ADMIN`, which is the DAT School Admin role.
+- the route calls `LicenseService.enableFeature` / `disableFeature` for the School Admin's organization.
+- `enableFeature` persists `OrganizationFeature.isEnabled` through an upsert.
+- all current feature definitions are PREMIUM.
+- effective entitlement resolution treats enabled manual `OrganizationFeature` rows as strongest and non-expiring for the same feature key.
+
+**Finding:** hiding the school-facing mutation UI did not establish provider-only mutation authority at the server boundary.
+
+### Confirmed finding `AUTHZ-OPERATOR-001` — internal Settings / Feature Flags remain School-Admin-authorized
+
+**Priority:** P2 ownership boundary.
+
+- `/admin/settings` labels itself internal/operator tooling and says it is not school-facing.
+- direct access is still allowed to tenant `SUPER_ADMIN`.
+- `/api/admin/settings` and `/api/admin/feature-flags` expose mutation methods to the same tenant role.
+- a prior visibility audit already queued `platform-settings-and-feature-flags-boundary-v1`; that slice is reused rather than duplicated.
+
+### Confirmed finding `AUTH-LEGACY-001` — parallel custom login endpoint diverges from the authoritative NextAuth path
+
+**Priority:** P2 auth-surface reduction.
+
+- the actual login page uses `signIn("credentials")` and NextAuth.
+- no product runtime consumer of `/api/auth/login` was found.
+- the custom endpoint validates credentials and returns `Login successful` but does not create the NextAuth session used by the application.
+- NextAuth rejects users whose email is not verified; the parallel route does not apply that rule.
+
+### Confirmed finding `AUTH-RATE-001` — distributed login rate limiting protects the non-authoritative login path
+
+**Priority:** P1 security.
+
+- `enforceLoginRateLimits` is called by `/api/auth/login`.
+- the actual login UI enters through NextAuth Credentials.
+- no application-level invocation of `enforceLoginRateLimits` was found in the NextAuth Credentials `authorize` path.
+- no external WAF/provider protection is assumed by this finding; the repository simply does not prove equivalent application-level protection on the actual path.
+
+### Confirmed finding `API-ATOM-002` — `/api/users/create` can leave User/profile creation partially persisted
+
+**Priority:** P1 data integrity.
+
+- the route creates `User` first and subsequently creates `Student` or `Instructor` without a Prisma transaction.
+- manual compensation exists only for one precondition branch where instructor license fields are missing.
+- a downstream role-profile create failure can therefore leave the already-created User row.
+- the signup path provides a repository precedent by using `prisma.$transaction` for aggregate creation.
+
+### Confirmed finding `ONBOARD-001` — direct Instructor creation lacks a usable production activation handoff
+
+**Priority:** P1 onboarding/product integrity.
+
+- the current New instructor UI uses `/api/users/create` and describes the result as an app login account plus operational Instructor profile.
+- the route generates a random temporary password and creates the user with `isEmailVerified=false`.
+- production responses intentionally omit the temporary password.
+- the route contains a TODO to send the verification email / password rather than a completed activation handoff.
+- the legacy token fields written on User are not the token records consumed by the current `EmailVerificationToken` verification service.
+- NextAuth requires email verification.
+
+**Finding:** a production direct-create success can create the account/profile without completing the login-activation contract promised by the UI.
+
+### Confirmed finding `CODE-HYGIENE-001` — orphan scaffold and dependency surface remains in the project
+
+**Priority:** P2 cleanup.
+
+- the 661-file TS/TSX import graph found 25 `components/ui/*` modules with zero inbound literal static/dynamic importers.
+- three hooks (`use-optimistic-update`, `use-async`, `use-loading-states`) and two production helpers (`lib/cache.ts`, `lib/date-utils.ts`) also have zero inbound code importers.
+- sixteen runtime dependencies are referenced exclusively from the orphan UI set.
+- deletion is not authorized from static evidence alone; the cleanup slice must repeat exact reference checks and run the full canonical validation after every removal batch.
+
+### Confirmed finding `UI-DUP-001` — role-specific booking shells are duplicated and already drifting
+
+**Priority:** P2 safe structural consolidation.
+
+- admin and instructor exam-booking dialogs are approximately structurally identical, with role plumbing as the primary difference.
+- admin and instructor dashboard clients show the same pattern.
+- lesson-booking copies already differ in HTTP error parsing despite calling the same `/api/admin/lessons` contract.
+
+**Finding:** the duplication has crossed from cosmetic repetition into independently evolving behavior.
+
+### Confirmed finding `SCHEMA-LEGACY-001` — legacy Exam domain remains coupled to current Lesson-based exams
+
+**Priority:** P2 evidence-first architecture/data disposition.
+
+- active EXAM/THEORY_EXAM creation persists Lesson rows, one row per student.
+- Prisma still contains full `Exam` and `ExamRegistration` models.
+- the vehicles API explicitly labels `Exam` as a legacy table and still queries it when determining vehicles currently in use.
+- legacy Exam/ExamRegistration data also participates in deletion policies, smoke inspection, seed/cleanup and tenant backfill/reporting scripts.
+
+**Finding:** DAT currently carries two exam representations with real operational coupling. No model/data removal is authorized without read-only target-DB evidence and a dedicated migration decision.
+
+### Confirmed finding `TOOLCHAIN-002` — direct `@next/env` contract is two majors ahead of Next
+
+**Priority:** P2/P3 toolchain alignment.
+
+- application Next.js is `14.2.28`.
+- direct devDependency `@next/env` is `^16.1.6`.
+- the lockfile contains both `@next/env@14.2.28` and `@next/env@16.1.6`.
+- seventeen operational/demo scripts directly use `loadEnvConfig` from `@next/env`.
+
+**Finding:** this is a dual-major framework-adjacent contract and upgrade/maintenance risk; no current runtime incompatibility is asserted.
+
+### Snapshot signals from the first pass — resolved
+
+- billing projection retry/atomicity is confirmed as `BILLING-SEC-002`;
+- repeated tenant-scoped row locks are confirmed as `DB-DUP-001`;
+- duplicated import workflow orchestration is confirmed as `UI-DUP-002`;
+- the auth request-page shell remains a safe-refactor candidate, not a separate defect;
+- broad direct-dependency responsibility is assigned to an evidence-first pruning slice under `CODE-HYGIENE-001`; no literal-import-only bulk deletion is authorized;
+- Node runtime type-package divergence is confirmed as `TOOLCHAIN-003`;
+- the detected import cycles are type-only/barrel cycles erased from runtime and are not findings.
+
+No runtime, package, schema, data, hosted, billing, or production mutation was performed by this snapshot audit.
+
+<!-- exhaustive-snapshot-audit-5eded00-v2 -->
+## Full-project snapshot audit — second exhaustive pass
+
+**Static snapshot analysis status:** complete for HEAD `5eded00ae3d0dedde8b1a251d393a9180911814b`.
+
+The second pass prioritized security, commercial authority, credential/session boundaries, transaction integrity, exports, test architecture, dependency security, dormant schema, duplication and dead-code disposition.
+
+### Confirmed finding `BILLING-SEC-002` — billing projection and lifecycle completion are not one atomic idempotent unit
+
+**Priority:** P0/P1 commercial integrity.
+
+- billing projection runs before the BillingEvent is independently marked PROCESSED;
+- projection updates Organization and entitlement state through separate writes without one encompassing transaction;
+- FAILED/RECEIVED events are retryable;
+- EntitlementGrant has no uniqueness guarantee that makes repeated grant creation intrinsically idempotent;
+- a failure after commercial projection but before lifecycle completion can therefore be retried against already-applied effects.
+
+### Confirmed finding `AUTH-SESSION-001` — database Session deletion does not revoke active JWT-strategy sessions
+
+**Priority:** P0/P1 access revocation.
+
+- NextAuth uses `session.strategy = "jwt"`;
+- access-removal, deactivation and email-change services delete Session rows as a revocation primitive;
+- password reset also does not invalidate already-issued JWTs;
+- the authoritative JWT callback/session path does not perform a per-request revocation/version lookup.
+
+### Confirmed finding `AUTH-LINK-001` — public security-email links derive origin from the incoming request instead of the account's trusted tenant
+
+**Priority:** P1 tenant/security identity.
+
+- public password-reset and email-verification request flows derive their base URL from `new URL(request.url).origin`;
+- the user is resolved by email, but the generated link origin is not resolved from that user's trusted organization/domain registry;
+- tenant-admin invitation routes using request origin are not included in this finding because they first enforce tenant-host ownership.
+
+### Confirmed finding `PLATFORM-ATOM-001` — organization onboarding escapes its Prisma transaction for license creation
+
+**Priority:** P1 integrity.
+
+- organization/domain/admin creation uses a transaction client;
+- inside that transaction the onboarding code calls `LicenseService.createLicenseKey`, which uses the global DB client rather than the transaction client;
+- license creation failure can therefore sit outside the aggregate atomicity boundary and is not surfaced as a hard onboarding failure.
+
+### Confirmed finding `LICENSING-002` — commercial license keys use weak generation and a race-prone single-use activation contract
+
+**Priority:** P1 commercial security.
+
+- license keys are generated from `Date.now()` plus `Math.random()` rather than a cryptographically secure source;
+- `isUsed` is checked before the activation transaction;
+- the in-transaction update is not conditional on `isUsed=false`;
+- concurrent activations can pass the pre-check and attempt duplicate entitlement creation.
+
+### Confirmed finding `API-ERROR-001` — generic API 500 handling returns internal Error.message to clients
+
+**Priority:** P1/P2 security hardening.
+
+- the shared `withErrorHandling` wrapper logs the exception and also uses the underlying `Error.message` as the external 500 response;
+- routes using this wrapper can therefore expose implementation/database detail that should remain server-side.
+
+### Confirmed finding `UI-FEEDBACK-001` — one active toast API has no mounted renderer
+
+**Priority:** P1/P2 functional integrity and cleanup.
+
+- the root layout mounts Sonner and react-hot-toast;
+- active Schedule Map, lessons-management and practical-import code also use the custom `useToast` store;
+- the matching custom Toaster is not mounted and is itself zero-inbound;
+- the project therefore carries three notification stacks while one active stack can emit messages with no visible renderer.
+
+### Confirmed finding `TEST-CONTRACT-001` — feature smoke validates FeatureFlag rather than the effective entitlement boundary used by the product
+
+**Priority:** P1/P2 test confidence.
+
+- the smoke helper queries `/api/config/features`, backed by FeatureFlag;
+- live product gating uses LicenseService/effective OrganizationFeature + EntitlementGrant resolution;
+- the smoke can therefore pass without proving the commercial feature boundary that users actually exercise.
+
+### Confirmed finding `TEST-HYGIENE-001` — Playwright includes external scaffold and a stale THEORY_EXAM participant contract
+
+**Priority:** P2.
+
+- the configured E2E tree still contains the default external Playwright example;
+- the theory-exam spec sources User ids and sends them where the active lesson-create contract requires operational Student ids;
+- these tests reduce signal quality and can encode an obsolete contract.
+
+### Confirmed finding `DB-DUP-001` — tenant-scoped row-lock SQL is duplicated across mutation services
+
+**Priority:** P2 safe concurrency refactor.
+
+- equivalent `FOR UPDATE` primitives are repeated across Student, Instructor and Invitation mutation services;
+- concurrency/security SQL should have one tested domain-aware implementation per locked aggregate rather than copy-pasted raw SQL.
+
+### Confirmed finding `CLIENT-DUP-001` — client JSON/error response parsing is repeated across many live surfaces
+
+**Priority:** P2.
+
+- `tryReadJson` and equivalent safe-JSON/error extraction logic are reproduced across numerous components and hooks;
+- the copies already differ in error behavior;
+- a small shared HTTP response primitive is justified without creating a generic API framework.
+
+### Confirmed finding `UI-DUP-002` — Student and Practical Lesson imports duplicate the same orchestration state machine
+
+**Priority:** P2.
+
+- both dialogs implement file selection, preview/dry-run, findings, confirmation, apply and result/loading orchestration;
+- their duplicated implementations already differ in notification/error handling;
+- shared workflow primitives can remove redundancy while preserving domain-specific parsers and endpoints.
+
+### Confirmed finding `TOOLCHAIN-003` — Node type definitions lag the declared Node 24 runtime
+
+**Priority:** P2/P3 toolchain alignment.
+
+- the runtime contract is Node 24.x;
+- direct `@types/node` remains 20.6.2;
+- the compiler therefore describes an older Node API generation than the runtime contract.
+
+### Confirmed finding `DEP-SEC-001` — Next.js 14.2.28 is below applicable security patches and outside the supported release lines
+
+**Priority:** P0/P1 dependency security.
+
+- DAT uses Next 14.2.28 with App Router;
+- applicable published fixes for the 14.x security line require later 14.2.x patches, including the complete 14.2.35 follow-up;
+- Next 14 is no longer a currently supported release line;
+- containment and supported-LTS migration must be separate, controlled slices rather than an opportunistic framework upgrade.
+
+### Confirmed finding `SCHEMA-LEGACY-002` — dormant operational models remain coupled to runtime/history without current write flows
+
+**Priority:** P2 data-sensitive architecture.
+
+- LessonRequest, Payment and Notification remain represented in Prisma and operational counts/policies/scripts;
+- no current non-test runtime create/update flow was found for those domains;
+- they are not safe to delete blindly because historical rows can still affect dashboards, cleanup or deletion policy.
+
+### Confirmed finding `EXPORT-SEC-001` — Student and Practical Lesson CSV exports do not neutralize spreadsheet formulas
+
+**Priority:** P1/P2 export security.
+
+- the shared Student/Practical export helper performs CSV quoting but does not neutralize leading `=`, `+`, `-` or `@`;
+- exported values include user-controlled text;
+- the audit-log exporter already contains formula-injection hardening, proving an existing repository precedent.
+
+### Confirmed finding `AUTH-PASSWORD-001` — privileged account provisioning bypasses the canonical password-strength policy
+
+**Priority:** P1.
+
+- the canonical user password schema requires length, uppercase, numeric and special-character constraints;
+- Platform School Admin onboarding only requires minimum length;
+- Platform Admin provisioning accepts any non-empty password;
+- the weakest rules therefore apply to highly privileged account-creation paths.
+
+### Confirmed finding `TEST-GATE-001` — critical E2E coverage is not a CI/canonical gate
+
+**Priority:** P1/P2 release confidence.
+
+- canonical `check` runs lint, typecheck, Vitest and build;
+- GitLab runs that check but no Playwright job;
+- E2E suites therefore exist without gating ordinary integration changes.
+
+### Confirmed finding `TEST-ARCH-001` — the project lacks a real database integration layer for transaction/FK/concurrency contracts
+
+**Priority:** P1/P2 engineering safety.
+
+- 49 tests are named `*.integration.unit.test.ts`, but no real `*.integration.test.ts` database layer was found;
+- many of those tests mock the DB boundary;
+- transaction-client escape, FK visibility and concurrency races therefore require a disposable real-Postgres integration harness.
+
+### Resolution ledger — signals intentionally not promoted
+
+- a generic tenant-host bypass across API routes was rejected after tracing indirect host guards and organization-scoped services;
+- import file-size/row-count handling is bounded server-side; no unbounded-import finding;
+- no runtime SQL-injection path was found; the operational unsafe-query helper is SELECT-only guarded;
+- no runtime input-driven eval or shell-execution path was found;
+- remaining import cycles are type-only/barrel cycles and do not form runtime cycles;
+- Category and TransmissionType are legitimate read-only reference data, not dormant models;
+- the public signup path remains fail-closed in the intended production cutline; its incomplete verification path becomes a release-readiness gate rather than an active vulnerability finding;
+- tenant-admin invitation routes derive origin from the request but first enforce tenant-host ownership; they are not included in `AUTH-LINK-001`;
+- no clear production N+1 query finding survived the final await-in-loop review;
+- security-response headers cannot be classified from repository static analysis alone and require a hosted read-only probe;
+- accessibility icon-button candidates remain evidence-first and are assigned to a regression sweep rather than promoted from heuristic evidence alone.
+
+No code, package, lockfile, schema, data, billing, hosted or production mutation was performed by this second pass.
+
+<!-- exhaustive-audit-master-remediation-ledger-v1 -->
+### Remediation coverage checkpoint
+
+All **46 confirmed findings** now have an explicit roadmap remediation/disposition mapping. Cross-cutting cleanup/evidence items remain separate from the finding count. This mapping is planning evidence only and does not authorize implementation.

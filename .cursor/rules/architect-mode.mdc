@@ -506,7 +506,7 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 
 ### Single recommended next slice and planned order
 
-1. `engineering-excellence-audit-v1` — P1 analysis-only; **active**; normalized inventory complete; no findings confirmed and no refactor implementation authorized
+1. `engineering-excellence-audit-v1` — P1 analysis-only; **active**; exhaustive static snapshot analysis complete; 46 findings confirmed; no audit-branch implementation authorized
 
 <!-- engineering-excellence-audit-v1-live-state -->
 **Live audit state (2026-08-06; base `da5aea6`):**
@@ -565,8 +565,8 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 - Initial metric error corrected: hooks/scripts were first reported as zero because of incomplete pathspecs
 - Preserved input `production-smoke-module-structure-audit-record-v1` @ `a4bea9d` was inspected only; do not merge, cherry-pick, copy wholesale, or delete it during the audit
 - Current signals include large UI orchestrators, API routes, operational smoke modules, import/export services, and scripts; size/proxy counts are not findings by themselves
-- No concrete finding, severity, refactor target, or implementation slice has been approved yet
-- Required next step: inspect responsibilities, imports, call paths, tests, duplication, safety boundaries, and ownership before classification
+- 46 findings are currently confirmed in the canonical audit report; follow-up slices are queued but do not self-authorize implementation
+- Static snapshot discovery is complete. Remaining work is execution/read-only validation of queued slices; preserve the distinction between confirmed findings, evidence-first dispositions and documented false positives.
 - Memory rule: after every material audit phase, synchronize this live state, the audit report, `current-state.md`, and `roadmap-todo.md`
 - Rulebook audit: `SA-GOV-001` confirmed and fixed — semantic gates must prove exact propositions, distinguish negation/current-vs-historical context, include untracked evidence where relevant, and treat unconfirmed heuristics as warnings rather than absolute blockers
 - Rulebook classification: `SA-GOV-002` authority hierarchy is **APTO** — roles, D0–D4 authority, human approval, and canonical-source conflict precedence are explicit
@@ -796,3 +796,50 @@ Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
 - Current lesson persistence is row-oriented: one Lesson row has at most one `studentId`. Do not infer grouped-exam mutation semantics without evidence.
 - Existing but unused schema models are not an implementation mandate.
 - `lesson-edit-contract-alignment-v1` is queued. The Super Agent may investigate and prepare it, but implementation requires human authorization.
+
+<!-- exhaustive-snapshot-audit-5eded00-v1 -->
+## Full-snapshot audit operating rules
+
+- Current audit total: 46 confirmed findings = 2 governance + 40 code/runtime/security/architecture/test + 4 toolchain/configuration/dependency-security.
+- A route that mutates commercial/security state must fail closed when authenticity or operator authority is not proven.
+- Hidden navigation, an `internal` label, or a read-only UI does not establish a server authorization boundary.
+- Security controls must be traced onto the path the product actually uses; protecting an unused parallel endpoint does not protect the authoritative flow.
+- Auth flows must have one authoritative credential/session path unless a second path has an explicit, tested responsibility.
+- Multi-record aggregate creation/update must be audited for transaction/compensation semantics; successful first writes followed by failed dependent writes are findings when no atomic guarantee exists.
+- Account creation is not complete until its production activation/login handoff is usable and consistent with the authoritative verification/token architecture.
+- Dead-code/dependency pruning requires exact consumer proof plus full validation; import-graph zero-inbound is strong evidence, not deletion authority.
+- Legacy Prisma model disposal is data-sensitive: inspect target data read-only first; no schema/data removal without separate authorization.
+- Framework-adjacent direct packages should have an intentional version contract with the framework; version divergence is investigated in its own slice, not fixed through opportunistic upgrades.
+- Security-first implementation order begins with `billing-webhook-authenticity-gate-v1`, `billing-projection-atomic-idempotency-v1`, `jwt-session-revocation-v1` and `next-security-patch-containment-v1`, subject to explicit human authorization and prerequisite validation.
+
+<!-- exhaustive-snapshot-audit-5eded00-v2 -->
+## Exhaustive-audit completion rules
+
+- Static snapshot analysis is complete at 46 confirmed findings.
+- Security and access/commercial authority take precedence over cosmetic cleanup.
+- A confirmed vulnerability/security boundary is not deferred behind refactoring convenience.
+- When repeated code represents the same stable semantic primitive, extract a small typed helper/service and remove the copies.
+- Do not create generic abstraction frameworks merely because two files look similar.
+- Proven dead scaffold is removed after exact reference proof; Git history is not a reason to keep unused runtime surface.
+- Orphan source deletion and dependency pruning happen in small validated batches.
+- Notification-stack consolidation precedes deletion of the orphan custom Toaster path because active callers still exist.
+- Every direct dependency must eventually have an explicit responsibility or be removed; literal-import absence alone is never sufficient for framework/tooling packages.
+- Tests are added by risk, not by coverage percentage.
+- Real DB integration tests are mandatory for transaction, constraint, lock and concurrency contracts that mocks cannot prove.
+- Critical deterministic E2E belongs in CI after the suite contract is repaired; production mutation smoke does not.
+- Every audit signal must end in one of four states: confirmed finding, named evidence/refactor slice, documented false positive, or externally blocked validation with an explicit next probe.
+- Data-sensitive legacy/dormant model disposition starts read-only and requires separate authorization before schema/data mutation.
+- Dependency-security remediation is isolated from opportunistic upgrade work.
+- Existing P0/P1 findings determine implementation sequence after human GO; audit discovery itself never self-authorizes a write.
+
+<!-- exhaustive-audit-master-remediation-ledger-v1 -->
+## Master remediation coverage contract
+
+- The canonical audit contains **46 findings**, and the roadmap master remediation ledger maps **46/46** to explicit remediation, disposition, or already-recorded governance work.
+- The Super Agent must consult that ledger before proposing the next slice and must never silently drop a finding because a newer discovery is more interesting.
+- Security-first execution order is authoritative: immediate containment precedes structural cleanup.
+- Prerequisite tests may precede a deeper security fix when they are required to prove transaction/concurrency correctness, but they do not justify delaying a simple fail-closed containment.
+- Repeated semantics converge on small typed helpers/services; repeated appearance alone is not enough to create an abstraction.
+- `people-manager-orchestration-seams-v1` is now the named follow-up for `UI-STRUCT-001`, after atomic People mutations stabilize.
+- Orphan UI/dependency pruning is blocked on `notification-stack-consolidation-v1` for the active custom-toast consumers, then proceeds in exact-reference batches.
+- At the end of each implemented slice, update the finding ledger status and continuity state; a completed slice must not disappear from historical traceability.

@@ -20,7 +20,7 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 | **Smoke fixtures** | DEC-064 closed 2026-07-28 (**human**): repair apply + fixture apply (`changesApplied=18`); inspector no blockers; fixtures all-ready; idempotent dry-run; Sarah/Bob/John Doe preserved; commercial catalogue untouched; no `PLATFORM_ADMIN` recreate. Full IDs in operator vault only. |
 | **Remote ops closed** | Do **not** re-run repair, fixture apply, or smoke-lesson cleanup without new evidence + explicit human authorization. `student-invite-accept-student-link-repair-v1` **done** (repo + remote). |
 | **Node.js runtime** | **Node 24 migration closed.** Local compatibility passed on Node 24.18.0; repository pins, package engines, `.nvmrc`, GitLab CI and runner documentation are aligned; branch and `main` pipelines passed using `node:24`; Vercel Preview and Production deployed successfully with Project Settings and effective runtime on Node 24.x; post-deploy non-destructive hosted gates passed at `909b69a`. |
-| **Active analysis** | `engineering-excellence-audit-v1` — **P1 analysis-only**, active on base `da5aea6`. Normalized inventory and multiple targeted evidence phases are complete; 16 findings are confirmed, while no code/toolchain refactor implementation is authorized in the audit branch. Detailed evidence: [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md). |
+| **Active analysis** | `engineering-excellence-audit-v1` — **P1 analysis-only**, active on base `da5aea6`. Normalized inventory and multiple targeted evidence phases are complete; 46 findings are confirmed, while no code/toolchain refactor implementation is authorized in the audit branch. Detailed evidence: [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md). |
 | **Ordered next** | (1) complete `engineering-excellence-audit-v1` analysis and approve findings → (2) `platform-separation-architecture-plan-v1` → (3) only then implement small, audit-approved refactor slices. |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
@@ -441,3 +441,32 @@ The deployment log reported that Node.js 20 is deprecated for future Vercel depl
 - `studentIds` and `lessonType` are silently dropped before or at the update boundary.
 - no implementation is authorized in the audit branch.
 - remediation is queued as `lesson-edit-contract-alignment-v1`.
+
+<!-- exhaustive-snapshot-audit-5eded00-v1 -->
+### Full-project engineering audit snapshot
+
+- Snapshot HEAD: `5eded00ae3d0dedde8b1a251d393a9180911814b`.
+- First transversal pass: 817 safe-snapshot files / 661 TS/TSX files.
+- Audit total after exhaustive second pass: 46 confirmed findings = 2 governance + 40 code/runtime/security/architecture/test + 4 toolchain/configuration/dependency-security.
+- Highest-priority new safety finding: `BILLING-SEC-001`.
+- Other P1 additions: `LICENSING-001`, `AUTH-RATE-001`, `API-ATOM-002`, `ONBOARD-001`.
+- P2 additions: `AUTHZ-OPERATOR-001`, `AUTH-LEGACY-001`, `CODE-HYGIENE-001`, `UI-DUP-001`, `SCHEMA-LEGACY-001`.
+- Toolchain addition: `TOOLCHAIN-002`.
+- No implementation is authorized in the engineering audit branch.
+
+<!-- exhaustive-snapshot-audit-5eded00-v2 -->
+### Exhaustive engineering audit — static snapshot completion
+
+- Static snapshot discovery is complete for HEAD `5eded00ae3d0dedde8b1a251d393a9180911814b`.
+- Current total: 46 confirmed findings = 2 governance + 40 code/runtime/security/architecture/test + 4 toolchain/configuration/dependency-security.
+- Security is the implementation-order priority.
+- P0/P1 security containment leads with billing authenticity/idempotency, JWT revocation and Next security patching.
+- Every remaining static signal has been resolved as a confirmed finding, a named evidence/refactor slice, or a documented false positive.
+- Data-sensitive model disposition, hosted headers and real concurrency behavior still require their explicitly queued read-only/execution validations.
+- No implementation is authorized in this audit branch.
+
+<!-- exhaustive-audit-master-remediation-ledger-v1 -->
+### Finding-to-slice coverage
+
+- 46/46 confirmed findings have an explicit remediation/disposition mapping in `roadmap-todo.md`.
+- Security-first execution waves are defined; DAT_4.4 should start only after audit evidence/disposition work is sufficiently delineated for slice execution.

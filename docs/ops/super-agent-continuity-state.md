@@ -228,16 +228,63 @@ A fresh SA session must be able to state from committed repository evidence:
 - `tsx` remains active.
 - npm/npx are not authoritative DAT package-management workflows.
 - Corepack remains justified in CI pending any future design decision.
-- The EXAM edit-participant contract remains the active product/code audit frontier after the toolchain evidence checkpoint.
+- The EXAM edit-participant frontier is closed as `UI-CONTRACT-001`; the audit has moved to full-snapshot cross-domain evidence and targeted follow-up of unresolved signals.
 
 <!-- lesson-edit-contract-finding-v1 -->
 ## EXAM edit-participant checkpoint
 
 - Confirmed finding: `UI-CONTRACT-001`.
-- Audit total: 16 confirmed findings = 2 governance + 13 code + 1 toolchain/configuration.
+- Audit total before full-snapshot pass: 16 confirmed findings = 2 governance + 13 code + 1 toolchain/configuration.
 - Proven mismatch: EXAM/THEORY_EXAM edit submits `studentIds`, while the update builder/PUT/service support only singular `studentId`.
 - Proven mismatch: edit exposes `lessonType`, while the update builder/PUT/service do not persist it.
 - `selectedStudents` is not initialized from the existing exam Lesson participant.
 - Current persistence/update unit is one Lesson row; no grouped-exam update path was found.
 - Queued slice: `lesson-edit-contract-alignment-v1`.
 - Super Agent may prepare the slice after GO; no audit-branch implementation is authorized.
+
+<!-- exhaustive-snapshot-audit-5eded00-v1 -->
+## Full-project snapshot audit checkpoint
+
+- Snapshot HEAD: `5eded00ae3d0dedde8b1a251d393a9180911814b`.
+- Safe snapshot: 817 files; SHA-256 `9e61686d43458901c798d06ef8ba501d310aa2ea6c6a0c5ba7315bf71957a043`.
+- First-pass total: 27 confirmed findings = 2 governance + 23 code/runtime/security/architecture + 2 toolchain/configuration.
+- New P0: `BILLING-SEC-001` → `billing-webhook-authenticity-gate-v1`.
+- New P1: `LICENSING-001` → `provider-owned-entitlement-mutation-boundary-v1`.
+- New P1: `AUTH-RATE-001` → `nextauth-credentials-rate-limit-alignment-v1`.
+- New P1: `API-ATOM-002` → `user-create-atomicity-v1`.
+- New P1: `ONBOARD-001` → `instructor-direct-create-activation-contract-v1`.
+- New P2: `AUTHZ-OPERATOR-001` → existing `platform-settings-and-feature-flags-boundary-v1`.
+- New P2: `AUTH-LEGACY-001` → `legacy-login-endpoint-retirement-v1`.
+- New P2: `CODE-HYGIENE-001` → `unused-ui-scaffold-pruning-v1`.
+- New P2: `UI-DUP-001` → `role-aware-booking-dialog-consolidation-v1`.
+- New P2/data-sensitive: `SCHEMA-LEGACY-001` → `legacy-exam-model-disposition-v1`.
+- New toolchain P2/P3: `TOOLCHAIN-002` → `toolchain-next-env-alignment-v1`.
+- Existing `toolchain-unused-dev-dependencies-v1` gains `@next/swc-wasm-nodejs` alongside `ts-node` as an evidence-first candidate.
+- Unpromoted signals remain investigation-only, including billing projection failure/idempotency, additional duplication candidates, broad zero-reference packages, and Node type-package alignment.
+- No implementation, package, schema, data, hosted, billing, or production mutation is authorized by this checkpoint.
+
+<!-- exhaustive-snapshot-audit-5eded00-v2 -->
+## Exhaustive static audit completion checkpoint
+
+- Snapshot HEAD remains `5eded00ae3d0dedde8b1a251d393a9180911814b`.
+- Safe snapshot remains 817 files / SHA-256 `9e61686d43458901c798d06ef8ba501d310aa2ea6c6a0c5ba7315bf71957a043`.
+- Current total: 46 confirmed findings = 2 governance + 40 code/runtime/security/architecture/test + 4 toolchain/configuration/dependency-security.
+- Second pass adds 19 confirmed findings.
+- Highest implementation priorities are security/commercial containment: billing authenticity, billing idempotency, JWT revocation and Next security containment.
+- Next priority tier includes entitlement authority, license-key security, login-rate alignment, trusted security-link origin, privileged password policy, API-error sanitization and CSV export hardening.
+- Integrity/onboarding then follows with User/profile atomicity, Platform onboarding transaction boundary and Instructor activation contract.
+- Test architecture is strengthened with real-Postgres integration and a deterministic critical E2E CI gate.
+- Cleanup thereafter removes orphan scaffold/dependencies and consolidates stable repeated primitives instead of preserving redundant implementations.
+- The 25 zero-inbound UI components are removal candidates after notification-stack migration and a repeated exact reference scan.
+- Dormant/legacy data models remain read-only disposition work until target-environment evidence exists.
+- All remaining static signals have a disposition: finding, named slice or documented false positive.
+- No stage, commit, code/package/schema/data/billing/hosted/production mutation is authorized by this synchronization.
+
+<!-- exhaustive-audit-master-remediation-ledger-v1 -->
+## Master 46-finding queue coverage
+
+- Roadmap coverage: **46/46 confirmed findings mapped**.
+- One previously deferred structural finding now has an explicit name: `UI-STRUCT-001` → `people-manager-orchestration-seams-v1`.
+- Additional non-finding evidence/cleanup slices remain explicitly listed and do not inflate the finding count.
+- Security containment remains first; test prerequisites and dependency order are explicit in the roadmap execution waves.
+- SA and roadmap must be updated together whenever a finding changes status or a slice is split/merged.
