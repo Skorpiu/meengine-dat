@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** exhaustive static snapshot analysis is complete and hosted/read-only evidence work is active. Wave A1 verified production transport, anonymous API boundaries and response-security headers, promoting `SEC-HEADERS-001`. Data-sensitive and concurrency validations remain follow-up slice work; no implementation is authorized in the audit branch.
-- **Confirmed findings:** 47 total — 2 governance findings, 41 code/runtime/security/architecture/test findings, and 4 toolchain/configuration/dependency-security findings. Hosted Wave A1 adds `SEC-HEADERS-001`; static snapshot discovery remains complete.
+- **Current phase:** exhaustive static snapshot analysis is complete and security evidence work is active. Hosted Wave A1 promoted `SEC-HEADERS-001`; dependency Wave A2/A2.1 classified the current lockfile and promoted `DEP-SEC-002`. Data-sensitive, session-aware hosted and concurrency validations remain follow-up work; no implementation is authorized in the audit branch.
+- **Confirmed findings:** 48 total — 2 governance findings, 41 code/runtime/security/architecture/test findings, and 5 toolchain/configuration/dependency-security findings. Dependency Wave A2 adds `DEP-SEC-002`; static snapshot discovery remains complete.
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -189,7 +189,7 @@ The legacy seed is safety-sensitive and local-only. Size alone cannot justify to
 
 ## Current conclusion
 
-The normalized inventory, targeted evidence phases, exhaustive static snapshot analysis, and hosted Wave A1 header/boundary probe are complete. The audit currently has **47 confirmed findings**: two governance findings, forty-one code/runtime/security/architecture/test findings, and four toolchain/configuration/dependency-security findings. Remaining target-environment, data-sensitive and execution validations belong to their queued slices; runtime implementation remains unauthorized in this analysis branch.
+The normalized inventory, targeted evidence phases, exhaustive static snapshot analysis, hosted Wave A1, and dependency Wave A2/A2.1 are complete. The audit currently has **48 confirmed findings**: two governance findings, forty-one code/runtime/security/architecture/test findings, and five toolchain/configuration/dependency-security findings. Remaining target-environment, data-sensitive and execution validations belong to their queued slices; runtime implementation remains unauthorized in this analysis branch.
 
 These findings are evidence-backed audit conclusions and may include approved future resolution directions, but **no refactor implementation is authorized by this analysis slice**.
 
@@ -1179,3 +1179,65 @@ All **46 confirmed findings** now have an explicit roadmap remediation/dispositi
 - unauthenticated API responses use `Cache-Control: public, max-age=0, must-revalidate`; authenticated/sensitive-response cache behavior still requires a separate read-only session-aware probe before classification.
 
 No authentication, cookie, POST, database, billing, hosted-configuration or production mutation was performed.
+
+<!-- security-wave-a2-dependency-audit-v1 -->
+## Security Wave A2 — dependency and lockfile evidence
+
+**Baseline:** audit HEAD `335528ffead00ac9d77c84a889f8a4729629c1d3`; Node `24.18.0`; pnpm `10.24.0`; registry audit and static path applicability only.
+
+### Dependency inventory
+
+- 88 direct production dependencies + 25 direct development dependencies = 113 direct dependencies.
+- pnpm audit returned 81 unique advisories across the complete graph: 2 critical, 40 high, 33 moderate and 6 low.
+- production graph: 61 unique advisories = 1 critical, 26 high, 29 moderate and 5 low.
+- development graph: 32 unique advisories = 1 critical, 20 high, 10 moderate and 1 low.
+- audit reports were generated outside the repository; no audit fix/install/package/lockfile mutation was performed.
+
+### `DEP-SEC-001` refinement — Next.js containment and supported-LTS migration remain separate
+
+- DAT declares `next@14.2.28` and contains 130 App Router code files.
+- the December 2025 App Router Server Components DoS advisory includes `14.2.28` in the affected range and provides 14.2.34 followed by 14.2.35 as the complete 14.x fix sequence.
+- therefore `next-security-patch-containment-v1` remains a valid immediate P0 containment slice: move the current 14.2.28 baseline to at least the complete 14.2.35 security level and fully regress it.
+- this containment does not close `DEP-SEC-001`: Next 14 is outside the supported LTS policy and must subsequently move to a supported line through `next-supported-lts-migration-v1`.
+- the A2.1 path probe found zero `use server` directives, zero middleware files, zero custom server files, zero rewrites, image optimization disabled and zero `beforeInteractive` references.
+- advisories whose exploit preconditions specifically require Server Actions, middleware/proxy routing, custom-server WebSocket handling, rewrites, Image Optimizer or `beforeInteractive` are therefore not promoted as separate active DAT findings from current evidence.
+
+### NextAuth disposition
+
+- DAT declares `next-auth@4.24.11`.
+- the code imports the Credentials provider once, imports no other NextAuth provider, and contains zero `getToken()` call files.
+- current audit advisories for Email-provider normalization/misdelivery, OAuth state/nonce/PKCE cross-provider handling and malformed-Bearer `getToken()` therefore do not match the authoritative DAT login path.
+- `nextauth-v4-security-patch-alignment-v1` remains an evidence-first maintenance/security-alignment slice rather than a separate active vulnerability finding.
+
+### Vitest / Vite / PostCSS disposition
+
+- Vitest UI/browser/API-server exposure is not configured; Vite network host exposure was not found; Vitest uses the Node environment.
+- PostCSS has zero application-code importers and remains present as build configuration.
+- the current advisories in these families are retained as development/build dependency maintenance evidence unless a future path introduces the advisory's attacker-controlled input/exposure precondition.
+
+### Direct-root pruning evidence
+
+- nine direct production dependency roots have zero literal code importers in the tracked application: `lodash`, `webpack`, `formik`, `recharts`, `mapbox-gl`, `plotly.js`, `react-use`, `gray-matter`, `react-select`.
+- zero importer count is not deletion authority: scripts, configuration, peer/framework and build responsibilities must still be checked.
+- these nine roots are added to `direct-dependency-responsibility-pruning-v1`; genuinely responsibility-free roots should be removed rather than security-upgraded solely to preserve dead surface.
+
+### Confirmed finding `DEP-SEC-002` — dependency advisory drift is not continuously gated
+
+**Priority:** P1/P2 engineering security.
+
+- the current lockfile resolves 81 unique advisories, including critical/high entries;
+- `.gitlab-ci.yml` and package scripts contain no pnpm/npm audit, OSV, Snyk, Dependabot-equivalent gate, dependency-check or comparable advisory-drift control;
+- repository validation can therefore remain green while newly disclosed vulnerabilities accumulate in the exact locked dependency graph;
+- this finding is about absence of continuous detection/governance, not a claim that every advisory is exploitable by DAT.
+
+**Finding:** dependency security is currently point-in-time/manual rather than a reproducible engineering gate.
+
+**Remediation:** `dependency-security-monitoring-v1` must create a deterministic advisory policy after the current baseline is triaged: path-aware exceptions with rationale, no uncontrolled automatic upgrades, and a CI failure policy for new unreviewed material security advisories.
+
+### A2 evidence hashes
+
+- all-dependency report SHA-256: `574b3071d38c823768461506e8bfe469e4fd2fd0d408ecf6b88d6ec10ed21e10`.
+- production report SHA-256: `c68ba65d1bddd14ce6b816cc24d3520ba39e2b268ad5251c01f389b531fb4c42`.
+- development report SHA-256: `0bc8de10ba8c11a32270d5b0c54accc74ee3a3a00e32a81834e8cf8941ae54ef`.
+
+No dependency update, package install, audit fix, code, database, hosted or production mutation was performed.

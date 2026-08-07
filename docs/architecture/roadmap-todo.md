@@ -10,7 +10,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| `engineering-excellence-audit-v1` | **P1** engineering excellence | **Active — analysis-only**; exhaustive static snapshot analysis complete; 47 findings confirmed; no unclassified static signal remains; no audit-branch implementation |
+| `engineering-excellence-audit-v1` | **P1** engineering excellence | **Active — analysis-only**; exhaustive static snapshot analysis complete; 48 findings confirmed; no unclassified static signal remains; no audit-branch implementation |
 
 **Closed context:** `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
@@ -21,7 +21,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 <!-- node-24-runtime-migration-v1 closed 2026-08-04 at 909b69a -->
 **Closed prerequisite:** `node-24-runtime-migration-v1` merged to `main` at `909b69a`; GitLab `node:24`, Vercel Preview/Production Node 24.x, and required post-deploy non-destructive hosted gates passed.
 
-1. `engineering-excellence-audit-v1` — **P1 / engineering excellence — active, analysis-only**; exhaustive static snapshot analysis complete; 47 findings confirmed; implementation remains separate and human-authorized
+1. `engineering-excellence-audit-v1` — **P1 / engineering excellence — active, analysis-only**; exhaustive static snapshot analysis complete; 48 findings confirmed; implementation remains separate and human-authorized
 2. `platform-separation-architecture-plan-v1`
 3. Small audit-approved refactor slices (one scope per branch; behavioural equivalence + `pnpm check`)
 
@@ -57,7 +57,7 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 | Slice | Priority | Notes |
 | ----- | -------- | ----- |
-| `engineering-excellence-audit-v1` | **P1** active (analysis-only) | Exhaustive static snapshot analysis completed on audit HEAD `5eded00`; 47 findings confirmed; audit report records evidence; audit itself authorizes no implementation |
+| `engineering-excellence-audit-v1` | **P1** active (analysis-only) | Exhaustive static snapshot analysis completed on audit HEAD `5eded00`; 48 findings confirmed; audit report records evidence; audit itself authorizes no implementation |
 | `platform-separation-architecture-plan-v1` | **P1** backlog | After the engineering audit — autonomous MeEngine Platform vs DAT; Node 24 prerequisite is closed |
 | `people-instructor-invite-accept-list-refresh-v1` | **P1** bug | After INSTRUCTOR invite accept, instructor may not appear under People → Instructors despite correct DB rows |
 | `school-person-identifiers-settings-product-plan-v1` | **P1** plan first | DEC-065 — Admin → Settings → Identifiers & numbering; plan before implementation |
@@ -514,15 +514,17 @@ Security comes first. Within the same priority tier, dependency order and prereq
 
 - **Priority:** P0.
 - **Source:** `DEP-SEC-001`.
-- Apply the smallest safe security containment for the current Next 14 line first, with full regression validation.
-- Do not combine this containment slice with broad framework migration.
+- Immediate containment: move `next@14.2.28` to at least the complete `14.2.35` security level for the current 14.x line, with full canonical/E2E regression validation.
+- Treat this as short-lived containment only: Next 14 is unsupported and this slice does not close the supported-LTS migration requirement.
+- Do not combine this containment slice with broad framework migration or unrelated dependency upgrades.
 
 ### `next-supported-lts-migration-v1`
 
 - **Priority:** P1.
 - **Source:** `DEP-SEC-001`.
-- After containment, design and execute a controlled move from unsupported Next 14 to a currently supported LTS line.
-- No opportunistic unrelated dependency upgrades.
+- After 14.x containment, design a controlled move to a supported LTS line; at execution time re-evaluate the latest patched 15.x Maintenance LTS and 16.x Active LTS releases and select the safest target from compatibility evidence.
+- The migration must include React/Next compatibility, App Router behavior, build/runtime, auth, tenant routing and Playwright regression gates.
+- No canary production target and no opportunistic unrelated dependency upgrades.
 
 ### `dormant-operational-model-disposition-v1`
 
@@ -563,6 +565,8 @@ Security comes first. Within the same priority tier, dependency order and prereq
 - **Classification:** evidence/cleanup slice under `CODE-HYGIENE-001`, not a new finding.
 - Build a ledger for every direct dependency: active responsibility, justified implicit/framework responsibility, or remove.
 - Remove the 16 orphan-UI-only runtime dependencies once their source consumers are safely removed.
+- A2.1 adds nine direct-prod zero-importer roots for exact responsibility proof: `lodash`, `webpack`, `formik`, `recharts`, `mapbox-gl`, `plotly.js`, `react-use`, `gray-matter`, `react-select`.
+- Prefer removal over version maintenance when a root has no legitimate runtime/build/config/peer responsibility.
 
 ### `legacy-inmemory-rate-limit-retirement-v1`
 
@@ -606,9 +610,12 @@ Security comes first. Within the same priority tier, dependency order and prereq
 
 ### `dependency-security-monitoring-v1`
 
-- **Classification:** engineering-security control.
-- Establish a reproducible advisory/lockfile security check in CI once the security baseline is clean.
-- No uncontrolled automatic upgrades.
+- **Priority:** P1/P2.
+- **Source:** `DEP-SEC-002`.
+- Establish a reproducible lockfile advisory check in CI after the current baseline is triaged.
+- Distinguish new unreviewed advisories from reviewed path-not-applicable/dev-only/transitive exceptions; every exception requires advisory ID, responsibility and rationale.
+- Fail closed for new material unreviewed security advisories according to an explicit severity policy.
+- No uncontrolled automatic upgrades and no blind `audit --fix`.
 
 ### `operator-documentation-runtime-reconciliation-v1`
 
@@ -622,7 +629,7 @@ Security comes first. Within the same priority tier, dependency order and prereq
 - Promote only actual failures, not heuristic candidates.
 
 <!-- exhaustive-audit-master-remediation-ledger-v1 -->
-## Master remediation ledger — 47 findings
+## Master remediation ledger — 48 findings
 
 This is the canonical finding-to-work mapping for the engineering audit. A finding may map to more than one smallest-safe slice; several findings may intentionally converge on one shared primitive. Presence in this ledger does **not** authorize implementation.
 
@@ -675,6 +682,7 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 | `TEST-GATE-001` | `ci-critical-e2e-gate-v1` |
 | `TEST-ARCH-001` | `database-integration-test-harness-v1` |
 | `SEC-HEADERS-001` | `security-response-headers-hardening-v1` |
+| `DEP-SEC-002` | `dependency-security-monitoring-v1` |
 
 ### Additional evidence / cleanup slices from the exhaustive audit
 

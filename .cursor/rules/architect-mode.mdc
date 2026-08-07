@@ -506,7 +506,7 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 
 ### Single recommended next slice and planned order
 
-1. `engineering-excellence-audit-v1` — P1 analysis-only; **active**; exhaustive static snapshot analysis complete and hosted evidence active; 47 findings confirmed; no audit-branch implementation authorized
+1. `engineering-excellence-audit-v1` — P1 analysis-only; **active**; exhaustive static snapshot analysis complete and security evidence active; 48 findings confirmed; no audit-branch implementation authorized
 
 <!-- engineering-excellence-audit-v1-live-state -->
 **Live audit state (2026-08-06; base `da5aea6`):**
@@ -565,7 +565,7 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 - Initial metric error corrected: hooks/scripts were first reported as zero because of incomplete pathspecs
 - Preserved input `production-smoke-module-structure-audit-record-v1` @ `a4bea9d` was inspected only; do not merge, cherry-pick, copy wholesale, or delete it during the audit
 - Current signals include large UI orchestrators, API routes, operational smoke modules, import/export services, and scripts; size/proxy counts are not findings by themselves
-- 47 findings are currently confirmed in the canonical audit report; follow-up slices are queued but do not self-authorize implementation
+- 48 findings are currently confirmed in the canonical audit report; follow-up slices are queued but do not self-authorize implementation
 - Static snapshot discovery is complete. Remaining work is execution/read-only validation of queued slices; preserve the distinction between confirmed findings, evidence-first dispositions and documented false positives.
 - Memory rule: after every material audit phase, synchronize this live state, the audit report, `current-state.md`, and `roadmap-todo.md`
 - Rulebook audit: `SA-GOV-001` confirmed and fixed — semantic gates must prove exact propositions, distinguish negation/current-vs-historical context, include untracked evidence where relevant, and treat unconfirmed heuristics as warnings rather than absolute blockers
@@ -800,7 +800,7 @@ Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
 <!-- exhaustive-snapshot-audit-5eded00-v1 -->
 ## Full-snapshot audit operating rules
 
-- Current audit total: 47 confirmed findings = 2 governance + 41 code/runtime/security/architecture/test + 4 toolchain/configuration/dependency-security.
+- Current audit total: 48 confirmed findings = 2 governance + 41 code/runtime/security/architecture/test + 5 toolchain/configuration/dependency-security.
 - A route that mutates commercial/security state must fail closed when authenticity or operator authority is not proven.
 - Hidden navigation, an `internal` label, or a read-only UI does not establish a server authorization boundary.
 - Security controls must be traced onto the path the product actually uses; protecting an unused parallel endpoint does not protect the authoritative flow.
@@ -835,7 +835,7 @@ Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
 <!-- exhaustive-audit-master-remediation-ledger-v1 -->
 ## Master remediation coverage contract
 
-- The canonical audit contains **47 findings**, and the roadmap master remediation ledger maps **47/47** to explicit remediation, disposition, or already-recorded governance work.
+- The canonical audit contains **48 findings**, and the roadmap master remediation ledger maps **48/48** to explicit remediation, disposition, or already-recorded governance work.
 - The Super Agent must consult that ledger before proposing the next slice and must never silently drop a finding because a newer discovery is more interesting.
 - Security-first execution order is authoritative: immediate containment precedes structural cleanup.
 - Prerequisite tests may precede a deeper security fix when they are required to prove transaction/concurrency correctness, but they do not justify delaying a simple fail-closed containment.
@@ -856,3 +856,15 @@ Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
 - Anti-framing must be explicit through CSP `frame-ancestors` and/or a compatible legacy X-Frame-Options policy.
 - Do not add COOP/CORP/COEP merely to maximize header count; require a demonstrated product/security need.
 - Hosted GET=405 evidence is sufficient to prove billing route deployment; never POST to a production billing webhook merely to prove exposure.
+
+<!-- security-wave-a2-dependency-audit-v1 -->
+## Dependency-security evidence rule
+
+- `pnpm audit` output is an inventory signal, not an automatic finding count.
+- Classify every advisory by locked version, direct/transitive responsibility, production/dev scope and actual DAT path applicability before promotion.
+- A version-range match without the vulnerable feature/path does not become an active DAT vulnerability finding.
+- `DEP-SEC-002` is the systemic absence of continuous dependency-advisory detection; it is independent of the exploitability of each current advisory.
+- Dependency security CI must be deterministic and reviewable: explicit advisory IDs, path-aware exceptions and no blind automatic upgrades.
+- For dead direct roots, prefer removing the root and its transitive advisory surface rather than upgrading code that has no responsibility.
+- Next 14 containment and supported-LTS migration remain separate: first reduce the known 14.2.28 exposure, then migrate deliberately from the unsupported major.
+- Re-check current advisories at the start and end of every dependency/security slice because advisory state can change between planning and implementation.

@@ -281,9 +281,9 @@ A fresh SA session must be able to state from committed repository evidence:
 - No stage, commit, code/package/schema/data/billing/hosted/production mutation is authorized by this synchronization.
 
 <!-- exhaustive-audit-master-remediation-ledger-v1 -->
-## Master 47-finding queue coverage
+## Master 48-finding queue coverage
 
-- Roadmap coverage: **47/47 confirmed findings mapped**.
+- Roadmap coverage: **48/48 confirmed findings mapped**.
 - One previously deferred structural finding now has an explicit name: `UI-STRUCT-001` → `people-manager-orchestration-seams-v1`.
 - Additional non-finding evidence/cleanup slices remain explicitly listed and do not inflate the finding count.
 - Security containment remains first; test prerequisites and dependency order are explicit in the roadmap execution waves.
@@ -300,3 +300,16 @@ A fresh SA session must be able to state from committed repository evidence:
 - `SEC-HEADERS-001` confirmed: measured responses lack CSP/anti-framing, `X-Content-Type-Options`, `Referrer-Policy` and `Permissions-Policy`.
 - `security-response-headers-verification-v1` is complete and promoted to `security-response-headers-hardening-v1`.
 - Roadmap/SA coverage is now 47/47.
+
+<!-- security-wave-a2-dependency-audit-v1 -->
+## Security dependency Wave A2 checkpoint
+
+- Audit HEAD during A2/A2.1: `335528ffead00ac9d77c84a889f8a4729629c1d3`.
+- Current total: 48 confirmed findings = 2 governance + 41 code/runtime/security/architecture/test + 5 toolchain/configuration/dependency-security.
+- pnpm audit inventory: 81 unique advisories overall; 61 production; 32 development.
+- `DEP-SEC-001` refined: `next-security-patch-containment-v1` retains immediate 14.2.35-level containment; `next-supported-lts-migration-v1` remains a separate supported-LTS migration.
+- New `DEP-SEC-002`: no continuous dependency-security/advisory-drift CI control; maps to promoted `dependency-security-monitoring-v1`.
+- NextAuth current advisories are version-matched but current Credentials-only/no-getToken path evidence does not establish exploitability.
+- nine direct-prod zero-importer roots are queued for exact responsibility proof under `direct-dependency-responsibility-pruning-v1`.
+- A2/A2.1 performed no install, audit-fix, package, lockfile, code, database, hosted or production mutation.
+- Roadmap/SA master coverage is now 48/48.
