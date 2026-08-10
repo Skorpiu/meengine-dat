@@ -1025,3 +1025,16 @@ Do not rely on assistant conversational memory as the sole source of any audit d
 - Stage B remote application requires explicit human GO even after every technical preflight passes.
 - next phase: `legacy-model-migration-authoring-contract-v1`.
 - immediately checkpoint Super Agent after that phase.
+
+<!-- data-wave-b52-authoring-and-data-wave-b-closure-v1 -->
+## Data Wave B5.2 recovery rule
+
+- Findings remain 51 with 51/51 remediation coverage.
+- Data Wave B is audit-complete; do not reopen broad legacy-model discovery without contradictory evidence.
+- No isolated migration-authoring database/harness exists in the current repo.
+- Do not run migration-authoring commands through automatic local env resolution while CONFIG-ENV-001 remains open.
+- Safe authoring belongs to local-development-database-isolation-v1 plus database-integration-test-harness-v1.
+- Remote migration writes belong to migration-deploy-target-safety-gate-v1 and explicit human GO.
+- Preserve staged legacy retirement: runtime decoupling deployed/verified before schema retirement.
+- DAT_4.3 remains audit-first; no implementation merely because this wave is implementation-ready.
+- next phase: `audit-surface-completeness-reconciliation-v1`.

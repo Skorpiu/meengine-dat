@@ -617,3 +617,14 @@ The deployment log reported that Node.js 20 is deprecated for future Vercel depl
 - Stage B therefore requires a purpose-scoped migration-write target gate rather than raw env trust.
 - migration authoring workflow is the remaining Data Wave contract gap.
 - next phase: `legacy-model-migration-authoring-contract-v1`.
+
+<!-- data-wave-b52-authoring-and-data-wave-b-closure-v1 -->
+### Data Wave B5.2 / Wave B closure
+
+- Findings remain **51**.
+- Remediation coverage remains **51/51**.
+- No new authoring finding: ownership is already covered by CONFIG-ENV-001, TEST-ARCH-001 and DB-MIGRATION-001.
+- no isolated local/Supabase/test/shadow DB authoring workflow currently exists.
+- Data Wave B audit/disposition is closed.
+- legacy-model retirement has a staged implementation contract with explicit prerequisites; implementation remains unauthorized in DAT_4.3.
+- next phase: `audit-surface-completeness-reconciliation-v1`.

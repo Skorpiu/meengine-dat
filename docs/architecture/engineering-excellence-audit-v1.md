@@ -1885,3 +1885,76 @@ The audit is now at **51 confirmed findings with 51/51 remediation coverage**.
 `legacy-model-migration-authoring-contract-v1`
 
 Close only the migration-authoring/test workflow needed for Stage B: safe development target, creation strategy, generated SQL review, migration test strategy and handoff into the human-operated deploy path. No DB/schema mutation.
+
+<!-- data-wave-b52-authoring-and-data-wave-b-closure-v1 -->
+## Data Wave B5.2 — migration authoring contract and Wave B closure
+
+B5.2 closed the final migration-authoring evidence gap for the legacy-model retirement plan. No new finding was promoted. The audit remains at **51 confirmed findings with 51/51 remediation coverage**.
+
+### Current authoring capability
+
+- Prisma configuration declares schema, migration path and seed but no shadow database;
+- the datasource uses DATABASE_URL and DIRECT_URL;
+- repository evidence contains zero `migrate dev --create-only` references;
+- zero `migrate diff` references;
+- zero `db push` references;
+- zero tracked Supabase-local workflow;
+- zero tracked Docker Compose development database workflow;
+- zero TEST_DATABASE_URL / INTEGRATION_DATABASE_URL-style contract;
+- zero shadow-database contract.
+
+### Interpretation
+
+- DAT does not currently provide an implementation-ready isolated migration-authoring environment;
+- this is not promoted as a separate finding because its safety responsibility is already covered by CONFIG-ENV-001 / `local-development-database-isolation-v1` and its real-database validation responsibility is covered by TEST-ARCH-001 / `database-integration-test-harness-v1`;
+- DB-MIGRATION-001 separately owns the remote migration-write target gate;
+- creating another overlapping finding/safety mechanism would duplicate ownership.
+
+### Future migration authoring contract
+
+After `local-development-database-isolation-v1` and the database integration harness exist:
+
+1. use an explicit disposable non-Production Postgres-compatible target;
+2. create only a new forward migration; never modify applied migration history;
+3. generate or author migration SQL against the isolated target;
+4. review the complete generated SQL before commit;
+5. permit deliberate SQL editing where the migration contract requires explicit FK/table ordering or security semantics;
+6. exercise the complete migration history plus new migration against a disposable database;
+7. run Prisma generate plus targeted tests and canonical recursive Node24 check;
+8. commit the reviewed migration;
+9. hand remote deployment to the separately human-operated, purpose-gated migration-deploy workflow.
+
+Production `migrate dev`, Production `db push`, ad-hoc DROP/reset and automatic migration application remain forbidden.
+
+### Migration style evidence
+
+- 29 tracked migration SQL files;
+- 9 contain CREATE TABLE;
+- 19 contain ALTER TABLE without CREATE TABLE;
+- 8 include policy/RLS/security SQL;
+- 21 are comment-heavy;
+- the repository therefore has a mixed migration history where explicit SQL review is appropriate rather than treating migration output as an opaque generated artifact.
+
+### Migration-test evidence
+
+- only one tracked test file contains migration/schema-artifact signals;
+- no disposable real-Postgres migration application harness was identified;
+- real database migration validation belongs in `database-integration-test-harness-v1` rather than a new overlapping test system.
+
+### Data Wave B final disposition
+
+- five target models were proven zero-row on the observed authorized remote target;
+- runtime/domain/policy/ops responsibilities are semantically classified;
+- Exam, ExamRegistration, LessonRequest, Payment and Notification are retirement-ready at the semantic layer;
+- runtime decoupling and schema retirement are explicitly separated;
+- physical target FK ordering is known;
+- deployment ownership is known;
+- remote migration target-safety deficiency is mapped to DB-MIGRATION-001;
+- safe authoring prerequisites are mapped to existing findings/slices;
+- Data Wave B requires no further discovery before implementation planning/execution in DAT_4.4.
+
+### Next DAT_4.3 phase
+
+`audit-surface-completeness-reconciliation-v1`
+
+Remain analysis-only. Reconcile all 51 findings and additional slices against the audited repository surfaces, identify which are already implementation-ready versus which still need evidence/disposition work, and select the next unresolved audit frontier. Do not implement findings merely because Data Wave B is closed.

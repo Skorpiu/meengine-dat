@@ -835,3 +835,17 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 - `legacy-model-schema-retirement-v1` depends on `migration-deploy-target-safety-gate-v1` before any remote Stage B application.
 - `local-development-database-isolation-v1` remains prerequisite to ordinary local migration authoring.
 - next evidence-only prerequisite: `legacy-model-migration-authoring-contract-v1`.
+
+<!-- data-wave-b52-authoring-and-data-wave-b-closure-v1 -->
+### Data Wave B5.2 — authoring disposition and Wave B closure
+
+- Master ledger remains 51/51.
+- No additional migration-authoring finding is created.
+- `local-development-database-isolation-v1` owns safe local/development DB target isolation.
+- `database-integration-test-harness-v1` owns disposable real-DB validation capability.
+- `migration-deploy-target-safety-gate-v1` owns remote schema-write target identity.
+- `legacy-model-runtime-decoupling-v1` owns Stage A.
+- `legacy-model-schema-retirement-v1` owns Stage B.
+- avoid creating a second migration safety stack with overlapping responsibility.
+- Data Wave B requires no further evidence before DAT_4.4 implementation planning.
+- DAT_4.3 continues with `audit-surface-completeness-reconciliation-v1`.
