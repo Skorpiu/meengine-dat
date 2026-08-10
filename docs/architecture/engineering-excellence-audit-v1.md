@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** exhaustive static snapshot analysis, Security Wave A, Data Wave B1 and environment/configuration evidence E1-E7 are complete. `CONFIG-ENV-001` remains the sole finding promoted by the environment audit; E5-E7 completed the per-key KEEP/REMOVE/CONSOLIDATE/DEFER disposition and prepared cleanup slices. The audit remains analysis-only at 51 confirmed findings; remaining Wave B and execution-readiness evidence continue.
-- **Confirmed findings:** 49 total — 2 governance findings, 41 code/runtime/security/architecture/test findings, and 5 toolchain/configuration/dependency-security findings. Dependency Wave A2 adds `DEP-SEC-002`; static snapshot discovery remains complete.
+- **Current phase:** exhaustive static snapshot analysis, Security Wave A, environment/configuration evidence E1-E7, and Data Wave B1-B5.2 are complete. Data Wave B is audit-complete. The audit remains analysis-only in `audit-surface-completeness-reconciliation-v1`: reconcile all confirmed findings and additional slices against the audited repository surfaces, classify implementation readiness versus remaining evidence/disposition needs, and select the next unresolved audit frontier.
+- **Confirmed findings:** 51 total, with 51/51 remediation coverage. Historical phase checkpoints below retain the finding counts that were current when each evidence phase completed.
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -189,11 +189,11 @@ The legacy seed is safety-sensitive and local-only. Size alone cannot justify to
 
 ## Current conclusion
 
-The normalized inventory, targeted evidence phases, exhaustive static snapshot analysis, Security Wave A1-A4, Data Wave B1, and environment/configuration evidence E1-E7 are complete. The audit remains at **49 confirmed findings**: two governance findings, forty-one code/runtime/security/architecture/test findings, and six toolchain/configuration/dependency-security findings. `CONFIG-ENV-001` remains confirmed; E5-E7 added no new finding and completed the environment-key disposition ledger. Runtime implementation remains unauthorized in this analysis branch.
+The normalized inventory, targeted evidence phases, exhaustive static snapshot analysis, Security Wave A1-A4, environment/configuration evidence E1-E7, and Data Wave B1-B5.2 are complete. Data Wave B is audit-complete. The audit currently contains **51 confirmed findings with 51/51 remediation coverage**.
 
 These findings are evidence-backed audit conclusions and may include approved future resolution directions, but **no refactor implementation is authorized by this analysis slice**.
 
-The active evidence frontier is now the **EXAM edit-participant contract**. The next audit phase must trace its entrypoints, client/server contract, validation, persistence behaviour, tests, atomicity, and failure semantics before deciding whether another finding exists.
+The active evidence frontier is `audit-surface-completeness-reconciliation-v1`: reconcile all 51 findings and the additional evidence/cleanup slices against the audited repository surfaces, distinguish implementation-ready remediation from work that still requires evidence or disposition, and select the next unresolved audit frontier.
 
 The audit remains analysis-only. Runtime, schema, data, hosted configuration, and functional behaviour must remain unchanged.
 
