@@ -703,3 +703,13 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 5. **Test gates / contract alignment:** `smoke-effective-entitlements-alignment-v1`, `ci-critical-e2e-gate-v1`, then the remaining test/evidence slices.
 6. **Structural consolidation and pruning:** stable helpers/services first; notification migration before orphan UI deletion; then dependency pruning.
 7. **Data-sensitive disposition / modernization:** legacy/dormant model read-only evidence, toolchain alignment, and supported-LTS migration in their prerequisite order.
+
+<!-- security-wave-a3-hosted-auth-v1 -->
+### Hosted auth/session evidence disposition — A3 complete
+
+- **Finding count impact:** none; master remediation ledger remains 48/48.
+- Secure/HttpOnly/SameSite=Lax/host-only NextAuth cookie scope is confirmed on tenant and Platform hosts.
+- Session CDN probes remained `x-vercel-cache=MISS` with `age=0`; no shared-session-cache finding is promoted.
+- `/api/auth/signin` resolves to the existing `/auth/login` page on both hosts.
+- This positive browser/edge evidence does **not** close `AUTH-SESSION-001`; `jwt-session-revocation-v1` must still implement a server-verifiable revocation contract.
+- Reuse the A3 cookie/cache observations as regression expectations during auth/security remediation rather than re-opening discovery.

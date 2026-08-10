@@ -7,7 +7,7 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** exhaustive static snapshot analysis is complete and security evidence work is active. Hosted Wave A1 promoted `SEC-HEADERS-001`; dependency Wave A2/A2.1 classified the current lockfile and promoted `DEP-SEC-002`. Data-sensitive, session-aware hosted and concurrency validations remain follow-up work; no implementation is authorized in the audit branch.
+- **Current phase:** exhaustive static snapshot analysis is complete and security/read-only evidence work is active. Hosted Waves A1-A3 have verified response hardening, dependency security and anonymous auth/session/cookie boundaries. A3 closes without a new finding; data-sensitive, billing/licensing and concurrency validations remain follow-up work; no implementation is authorized in the audit branch.
 - **Confirmed findings:** 48 total — 2 governance findings, 41 code/runtime/security/architecture/test findings, and 5 toolchain/configuration/dependency-security findings. Dependency Wave A2 adds `DEP-SEC-002`; static snapshot discovery remains complete.
 - **Refactor implementation authorized:** no
 
@@ -189,7 +189,7 @@ The legacy seed is safety-sensitive and local-only. Size alone cannot justify to
 
 ## Current conclusion
 
-The normalized inventory, targeted evidence phases, exhaustive static snapshot analysis, hosted Wave A1, and dependency Wave A2/A2.1 are complete. The audit currently has **48 confirmed findings**: two governance findings, forty-one code/runtime/security/architecture/test findings, and five toolchain/configuration/dependency-security findings. Remaining target-environment, data-sensitive and execution validations belong to their queued slices; runtime implementation remains unauthorized in this analysis branch.
+The normalized inventory, targeted evidence phases, exhaustive static snapshot analysis, and security Waves A1-A3 are complete. The audit remains at **48 confirmed findings**: two governance findings, forty-one code/runtime/security/architecture/test findings, and five toolchain/configuration/dependency-security findings. A3 produced positive cookie/cache/routing evidence and no additional finding. Remaining billing/licensing, target-environment, data-sensitive and execution validations belong to their queued slices; runtime implementation remains unauthorized in this analysis branch.
 
 These findings are evidence-backed audit conclusions and may include approved future resolution directions, but **no refactor implementation is authorized by this analysis slice**.
 
@@ -1241,3 +1241,47 @@ No authentication, cookie, POST, database, billing, hosted-configuration or prod
 - development report SHA-256: `0bc8de10ba8c11a32270d5b0c54accc74ee3a3a00e32a81834e8cf8941ae54ef`.
 
 No dependency update, package install, audit fix, code, database, hosted or production mutation was performed.
+
+<!-- security-wave-a3-hosted-auth-v1 -->
+## Security Wave A3 — hosted authentication/session boundary
+
+**Baseline:** audit HEAD `9696552b98f77f4bea8d846e4b9fa69c801b86e1`; anonymous read-only GET/header probes only.
+
+### Probe validity
+
+- the initial A3 shell/awk parser attempt was inconclusive because header parsing failed while the outer gate remained green;
+- no security conclusion is derived from that invalid attempt;
+- A3.1 replaced parsing with explicit Node 24 fail-closed parsing;
+- all eight A3.1 endpoint parses succeeded, all eight header captures were present, temporary evidence was deleted and the repository remained unchanged;
+- A3.2 repeated cache-specific probes with explicit Vercel/CDN header inspection and also completed cleanly.
+
+### Cookie boundary — positive evidence
+
+- tenant and Platform CSRF cookies use `__Host-next-auth.csrf-token`;
+- CSRF cookies are `Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/` and host-only;
+- callback cookies use `__Secure-next-auth.callback-url` and are also `Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/` and host-only;
+- no cross-subdomain `Domain=.meengine.io` cookie scope was observed;
+- current evidence therefore does not support a cookie-scope isolation finding between tenant and Platform hosts.
+
+### Sign-in routing — positive evidence
+
+- `/api/auth/signin` returns 302 to `/auth/login` on both tenant and Platform hosts;
+- `/auth/login` itself returns 200 on both hosts;
+- the earlier `/login=404` A1 observation was an incorrect guessed pathname and is explicitly closed as a false positive.
+
+### Session/CDN cache boundary — positive evidence
+
+- anonymous `/api/auth/session` requests on both hosts returned `x-vercel-cache=MISS`, `age=0` and no ETag;
+- repeated requests remained MISS;
+- a request carrying the fixed non-auth audit cookie `dat-audit-probe=1` also remained MISS;
+- public `/auth/login` can be cached/prerendered (`HIT`/`PRERENDER`), which is consistent with a public login page and is not evidence of session caching;
+- `Cache-Control: public, max-age=0, must-revalidate` remains semantically broad, but current edge behavior does not establish shared-cache session leakage.
+
+### Relationship to existing findings
+
+- A3 creates no new finding; audit total remains 48.
+- `AUTH-SESSION-001` remains fully open: secure cookies and edge-cache isolation do not provide server-side revocation of already-issued stateless JWT sessions.
+- `SEC-HEADERS-001` remains open: A3 auth surfaces again lacked the browser hardening headers already captured by A1; this is reinforcing evidence, not a second finding.
+- an authenticated cache probe is not required for current classification; it may be used later as regression evidence during auth remediation.
+
+No credential, real session cookie, login POST, CSRF token output, callback mutation, database, hosted-configuration or production mutation was performed.

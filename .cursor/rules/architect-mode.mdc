@@ -506,7 +506,7 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 
 ### Single recommended next slice and planned order
 
-1. `engineering-excellence-audit-v1` — P1 analysis-only; **active**; exhaustive static snapshot analysis complete and security evidence active; 48 findings confirmed; no audit-branch implementation authorized
+1. `engineering-excellence-audit-v1` — P1 analysis-only; **active**; exhaustive static snapshot analysis complete; security Waves A1-A3 complete; 48 findings confirmed; no audit-branch implementation authorized
 
 <!-- engineering-excellence-audit-v1-live-state -->
 **Live audit state (2026-08-06; base `da5aea6`):**
@@ -868,3 +868,15 @@ Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
 - For dead direct roots, prefer removing the root and its transitive advisory surface rather than upgrading code that has no responsibility.
 - Next 14 containment and supported-LTS migration remain separate: first reduce the known 14.2.28 exposure, then migrate deliberately from the unsupported major.
 - Re-check current advisories at the start and end of every dependency/security slice because advisory state can change between planning and implementation.
+
+<!-- security-wave-a3-hosted-auth-v1 -->
+## Hosted authentication evidence rule
+
+- A3 is the authoritative current hosted cookie/session-cache baseline.
+- Do not reopen `/login=404`; the configured NextAuth sign-in route is `/auth/login` and returns 200.
+- Preserve host-only cookie isolation between tenant and Platform.
+- Preserve Secure + HttpOnly + SameSite=Lax + Path=/ for current NextAuth CSRF/callback cookies unless a future auth architecture explicitly requires a reviewed change.
+- Do not equate browser cookie security with JWT revocation: `AUTH-SESSION-001` remains open until the server can invalidate already-issued stateless sessions.
+- Current Vercel evidence for `/api/auth/session` is repeated MISS/age=0; do not promote cache leakage without contradictory authenticated/edge evidence.
+- Public login-page cache HIT/PRERENDER is not itself a security finding.
+- Parsing/normalization failures in evidence tooling must propagate fail-closed to the final audit gate.

@@ -313,3 +313,16 @@ A fresh SA session must be able to state from committed repository evidence:
 - nine direct-prod zero-importer roots are queued for exact responsibility proof under `direct-dependency-responsibility-pruning-v1`.
 - A2/A2.1 performed no install, audit-fix, package, lockfile, code, database, hosted or production mutation.
 - Roadmap/SA master coverage is now 48/48.
+
+<!-- security-wave-a3-hosted-auth-v1 -->
+## Security hosted-auth Wave A3 checkpoint
+
+- Audit HEAD during A3.1/A3.2: `9696552b98f77f4bea8d846e4b9fa69c801b86e1`.
+- Finding total remains 48 and roadmap/SA coverage remains 48/48.
+- A3.1 authoritative cookie evidence: Secure + HttpOnly + SameSite=Lax + Path=/ + host-only on tenant and Platform.
+- authoritative hosted login page is `/auth/login` on both hosts.
+- A3.2 session cache evidence: repeated anonymous and dummy-cookie requests remained Vercel MISS with age=0 and no ETag.
+- login page caching is public-page behavior and is not promoted as a finding.
+- `AUTH-SESSION-001` remains unresolved because JWT revocation is independent of cookie/cache transport properties.
+- initial awk-based A3 attempt is explicitly non-authoritative; A3.1/A3.2 are the valid evidence.
+- no credential, login mutation, real-session cookie output, database or hosted mutation occurred.
