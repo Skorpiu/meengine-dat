@@ -7,8 +7,8 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** exhaustive static snapshot analysis and Security Wave A are complete. Data Wave B has started; B1 proved the five legacy/dormant operational models contain zero rows in the currently configured remote Supabase target. The audit remains analysis-only at 48 confirmed findings; environment/configuration responsibility and remaining execution-readiness evidence are pending.
-- **Confirmed findings:** 48 total — 2 governance findings, 41 code/runtime/security/architecture/test findings, and 5 toolchain/configuration/dependency-security findings. Dependency Wave A2 adds `DEP-SEC-002`; static snapshot discovery remains complete.
+- **Current phase:** exhaustive static snapshot analysis, Security Wave A, Data Wave B1 and environment/configuration evidence E1-E4 are complete. E4 promoted `CONFIG-ENV-001`: automatic local application configuration can resolve to the Production operator database target without an explicit isolation guard. The audit remains analysis-only at 49 confirmed findings; configuration pruning and remaining execution-readiness evidence are pending.
+- **Confirmed findings:** 49 total — 2 governance findings, 41 code/runtime/security/architecture/test findings, and 5 toolchain/configuration/dependency-security findings. Dependency Wave A2 adds `DEP-SEC-002`; static snapshot discovery remains complete.
 - **Refactor implementation authorized:** no
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
@@ -189,7 +189,7 @@ The legacy seed is safety-sensitive and local-only. Size alone cannot justify to
 
 ## Current conclusion
 
-The normalized inventory, targeted evidence phases, exhaustive static snapshot analysis, Security Wave A1-A4, and Data Wave B1 are complete. The audit remains at **48 confirmed findings**: two governance findings, forty-one code/runtime/security/architecture/test findings, and five toolchain/configuration/dependency-security findings. B1 found zero rows in `Exam`, `ExamRegistration`, `LessonRequest`, `Payment`, and `Notification` on the currently configured remote Supabase target, materially strengthening the existing legacy-schema disposition findings without creating a new one. Runtime implementation remains unauthorized in this analysis branch.
+The normalized inventory, targeted evidence phases, exhaustive static snapshot analysis, Security Wave A1-A4, Data Wave B1, and environment/configuration evidence E1-E4 are complete. The audit now has **49 confirmed findings**: two governance findings, forty-one code/runtime/security/architecture/test findings, and six toolchain/configuration/dependency-security findings. `CONFIG-ENV-001` records the lack of an explicit local-versus-Production database isolation guard. Runtime implementation remains unauthorized in this analysis branch.
 
 These findings are evidence-backed audit conclusions and may include approved future resolution directions, but **no refactor implementation is authorized by this analysis slice**.
 
@@ -1372,3 +1372,61 @@ No webhook POST, billing event, license activation, entitlement mutation, creden
 - B1 creates no new finding; audit total remains 48 and remediation coverage remains 48/48.
 
 No INSERT, UPDATE, DELETE, schema change, hosted configuration change or production mutation was performed.
+
+<!-- environment-configuration-responsibility-audit-v1 -->
+## Environment configuration responsibility audit — E1-E4
+
+### Inventory and profile responsibilities
+
+- five real local env profiles plus two tracked `.env.example` files were observed;
+- `.env.operator.production.local` contains 23 keys and `.env.smoke.production.local` contains 15 keys;
+- the operator and smoke profiles have zero key overlap and together cover 38 of 40 real local keys (95%);
+- both operational profiles are ignored/untracked;
+- historical Production Smoke workflows explicitly load the operator and smoke profiles together, so the smoke profile is not considered orphaned merely because its filename has no current tracked literal reference;
+- no direct Client Component reference to a non-public env key and no secret-like `NEXT_PUBLIC_*` name was detected.
+
+### Configuration duplication
+
+- ten real local keys are duplicated across local profiles;
+- eight duplicated keys currently have equal values;
+- `NEXTAUTH_URL` and `NEXT_PUBLIC_APP_URL` intentionally differ because `.env.local` provides loopback/local-development URL overrides while the operator profile uses the remote hosted role;
+- `DATABASE_URL` and `DIRECT_URL` are logically aligned between the automatic app profile and the Production operator profile.
+
+### Central validation architecture
+
+- `lib/env.ts` exists and uses Zod-based validation signals;
+- its only direct importer is `scripts/env-check.ts`; the runtime does not consume all configuration through one central config object;
+- package lifecycle hooks run `env:check` before development/typecheck/tests/build;
+- this validation architecture is not itself classified as defective: specialized runtime, email, operator and E2E boundaries may retain distinct configuration responsibilities.
+
+### Confirmed finding `CONFIG-ENV-001` — local development can resolve to the Production operator database target
+
+**Priority:** P0/P1 operational safety.
+
+- no shell override for `DATABASE_URL` or `DIRECT_URL` was present during E4;
+- automatic local resolution selects `nextjs_space/.env` for both database URLs;
+- that automatic app database identity matches the explicit Production operator target;
+- `nextjs_space/.env.local` does not provide a `DATABASE_URL` override;
+- `env-check.ts` / `lib/env.ts` contain no explicit Production target identity guard, expected DB host/name/project-ref guard, localhost/loopback guard, or reuse of the existing remote operator target guard;
+- therefore starting a local application or another write-capable workflow that relies on automatic env loading can target the Production operator database without an explicit fail-closed environment-isolation decision.
+
+**Remediation slice:** `local-development-database-isolation-v1`.
+
+**Required contract:**
+
+- local development must not resolve silently to the Production operator database;
+- development must use an explicitly separate local/development database target or fail closed;
+- Production/operator access remains deliberate and uses the explicit operator profile plus target guards;
+- no generic escape hatch may make Production the normal development default;
+- add regression tests for target classification and startup refusal.
+
+### Cleanup / consolidation evidence retained
+
+- `environment-configuration-contract-consolidation-v1` will rationalize ownership and duplication after the isolation slice;
+- `public-env-pruning-v1` will prove implicit/build responsibility before removing `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, or `NEXT_PUBLIC_SUPABASE_URL`; current scans found no tracked/client consumers;
+- inspect `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_SECRET` versus `NEXTAUTH_SECRET`, `LICENSE_TIER`, and `VERCEL_OIDC_TOKEN` before any removal;
+- do not merge the operator and smoke profiles: their zero-overlap responsibility split is intentional and useful.
+
+E4's direct-runtime scanner reported 13 candidates but one was `nextjs_space/docs/engineering/email-provider-evaluation.md`; the corrected runtime candidate count is 12.
+
+No env value, secret, URL, host, database name, username, password or token was recorded in canonical evidence.

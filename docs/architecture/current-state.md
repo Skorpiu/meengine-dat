@@ -20,7 +20,7 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 | **Smoke fixtures** | DEC-064 closed 2026-07-28 (**human**): repair apply + fixture apply (`changesApplied=18`); inspector no blockers; fixtures all-ready; idempotent dry-run; Sarah/Bob/John Doe preserved; commercial catalogue untouched; no `PLATFORM_ADMIN` recreate. Full IDs in operator vault only. |
 | **Remote ops closed** | Do **not** re-run repair, fixture apply, or smoke-lesson cleanup without new evidence + explicit human authorization. `student-invite-accept-student-link-repair-v1` **done** (repo + remote). |
 | **Node.js runtime** | **Node 24 migration closed.** Local compatibility passed on Node 24.18.0; repository pins, package engines, `.nvmrc`, GitLab CI and runner documentation are aligned; branch and `main` pipelines passed using `node:24`; Vercel Preview and Production deployed successfully with Project Settings and effective runtime on Node 24.x; post-deploy non-destructive hosted gates passed at `909b69a`. |
-| **Active analysis** | `engineering-excellence-audit-v1` — **P1 analysis-only**, active on base `da5aea6`. Exhaustive static analysis and Security Wave A are complete; Data Wave B1 is complete and confirms zero rows across the five legacy/dormant target models on the observed Supabase target. 48 findings remain confirmed with 48/48 roadmap coverage; environment/configuration responsibility evidence is next. |
+| **Active analysis** | `engineering-excellence-audit-v1` — **P1 analysis-only**, active on base `da5aea6`. Exhaustive static analysis, Security Wave A, Data Wave B1 and environment/configuration E1-E4 are complete. `CONFIG-ENV-001` is confirmed, bringing the audit to 49 findings with 49/49 roadmap coverage. Local-development database isolation is now a safety prerequisite before ordinary write-capable local runtime use. |
 | **Ordered next** | (1) complete `engineering-excellence-audit-v1` analysis and approve findings → (2) `platform-separation-architecture-plan-v1` → (3) only then implement small, audit-approved refactor slices. |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
@@ -523,3 +523,16 @@ The deployment log reported that Node.js 20 is deprecated for future Vercel depl
 - `Exam`, `ExamRegistration`, `LessonRequest`, `Payment`, and `Notification` each contain 0 rows.
 - `SCHEMA-LEGACY-001` and `SCHEMA-LEGACY-002` are therefore stronger removal/disposition candidates, but deletion remains unauthorized until runtime/migration/environment responsibility is proven.
 - current `DATABASE_URL` source is local `.env`; environment/configuration responsibility audit is the next evidence slice.
+
+<!-- environment-configuration-responsibility-audit-v1 -->
+### Environment configuration E1-E4 checkpoint
+
+- Current total: 49 confirmed findings = 2 governance + 41 code/runtime/security/architecture/test + 6 toolchain/configuration/dependency-security.
+- `CONFIG-ENV-001` is confirmed.
+- automatic local `DATABASE_URL`/`DIRECT_URL` resolution currently selects `.env` and matches the Production operator database target.
+- `.env.local` provides no database override.
+- current `env:check` has no explicit Production database identity/isolation guard.
+- remediation: `local-development-database-isolation-v1`.
+- operator and smoke production profiles remain intentionally separate; they have zero key overlap.
+- follow-up cleanup: `environment-configuration-contract-consolidation-v1` and `public-env-pruning-v1`.
+- until isolation is implemented, ordinary local write-capable runtime workflows must not rely blindly on automatic `.env` database resolution.

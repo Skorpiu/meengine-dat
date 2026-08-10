@@ -353,3 +353,19 @@ A fresh SA session must be able to state from committed repository evidence:
 - `SCHEMA-LEGACY-001` and `SCHEMA-LEGACY-002` remain findings, now with zero-data evidence for this target.
 - next evidence slice: `environment-configuration-responsibility-audit-v1`.
 - no database or repository mutation occurred.
+
+<!-- environment-configuration-responsibility-audit-v1 -->
+## Environment configuration E1-E4 checkpoint
+
+- Audit HEAD during E1-E4: `ccb11b7739fa5f89af6a54241bc347521490f8cf`.
+- Finding total moves 48 → 49; roadmap/SA coverage becomes 49/49.
+- new finding: `CONFIG-ENV-001`.
+- remediation: `local-development-database-isolation-v1`.
+- automatic local DATABASE_URL/DIRECT_URL resolve from app `.env` and match the Production operator database identity.
+- no app-local DATABASE_URL override exists.
+- current predev/env-check lifecycle does not contain an explicit Production-target identity guard.
+- operator profile: 23 keys; smoke profile: 15 keys; overlap 0; combined coverage 95% of real local keys.
+- eight of ten duplicated local keys currently agree; URL differences are intentional local-loopback overrides.
+- follow-up cleanup slices: `environment-configuration-contract-consolidation-v1`, `public-env-pruning-v1`.
+- corrected direct-runtime env candidate count is 12 because one E4 result was a nested documentation file.
+- no env value or secret was persisted in audit evidence.

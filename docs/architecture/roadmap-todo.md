@@ -629,7 +629,7 @@ Security comes first. Within the same priority tier, dependency order and prereq
 - Promote only actual failures, not heuristic candidates.
 
 <!-- exhaustive-audit-master-remediation-ledger-v1 -->
-## Master remediation ledger — 48 findings
+## Master remediation ledger — 49 findings
 
 This is the canonical finding-to-work mapping for the engineering audit. A finding may map to more than one smallest-safe slice; several findings may intentionally converge on one shared primitive. Presence in this ledger does **not** authorize implementation.
 
@@ -684,6 +684,8 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 | `SEC-HEADERS-001` | `security-response-headers-hardening-v1` |
 | `DEP-SEC-002` | `dependency-security-monitoring-v1` |
 
+| `CONFIG-ENV-001` | `local-development-database-isolation-v1` |
+
 ### Additional evidence / cleanup slices from the exhaustive audit
 
 - `email-template-safety-helper-v1` — centralize repeated HTML escaping and test once.
@@ -733,3 +735,16 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 - zero rows removes the known data-migration blocker on this target but does not authorize Prisma model/table removal.
 - before removal: prove zero runtime writers/readers, inspect migrations/seeds/scripts/ops, determine other database-environment exposure, then create an explicit schema-change/rollback plan.
 - next evidence slice: `environment-configuration-responsibility-audit-v1`.
+
+<!-- environment-configuration-responsibility-audit-v1 -->
+### Environment configuration responsibility — E1-E4 complete
+
+- **Finding count:** 49; master remediation coverage 49/49.
+- `CONFIG-ENV-001` → `local-development-database-isolation-v1`.
+- P0/P1 prerequisite: local/development runtime must not silently inherit the Production operator database target.
+- preserve `.env.operator.production.local` as the deliberate Production/operator profile.
+- preserve `.env.smoke.production.local` as the separate Production Smoke fixture/credential profile.
+- `environment-configuration-contract-consolidation-v1`: consolidate duplicate ownership only after target isolation exists.
+- `public-env-pruning-v1`: prove implicit framework/build responsibility, then remove unused public env keys rather than preserving dead configuration.
+- candidates requiring explicit responsibility proof: `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_SECRET`, `LICENSE_TIER`, `VERCEL_OIDC_TOKEN`.
+- no env variable is removed merely to minimize the count; secrets and genuine environment-specific configuration remain env-backed.
