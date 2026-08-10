@@ -559,3 +559,15 @@ The deployment log reported that Node.js 20 is deprecated for future Vercel depl
 - `Payment`: 3 runtime delegates including instructor/student deletion logic.
 - `Notification`: 1 runtime/ops delegate.
 - next evidence-only phase: `legacy-model-runtime-responsibility-classification-v1`.
+
+<!-- data-wave-b3-runtime-responsibility-v1 -->
+### Data Wave B3 checkpoint
+
+- Findings remain 49 / 49 mappings.
+- No target model has a runtime write; all writes are destructive-local-seed compatibility only.
+- `ExamRegistration`: retirement candidate, active business blocker none.
+- `Notification`: retirement candidate, active business blocker none.
+- `Payment`: retirement candidate after defensive delete/retention decoupling.
+- `Exam`: blocked by one admin-vehicles API read that requires semantic classification.
+- `LessonRequest`: blocked by two active page counts on instructor/student pages.
+- next evidence phase: `legacy-model-blocker-semantic-closure-v1`.

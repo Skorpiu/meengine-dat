@@ -466,3 +466,63 @@ Do not execute `legacy-exam-model-disposition-v1` or `dormant-operational-model-
 ### Human approval boundary
 
 The Super Agent is a context-recovery and execution assistant, not approval authority. Commits/pushes/merges, destructive changes, database writes, hosted configuration changes and Production writes remain explicit human-gated operations.
+
+<!-- data-wave-b3-runtime-responsibility-v1 -->
+## Super Agent recovery handoff — Data Wave B3
+
+### Recovery anchor
+
+- Branch: `engineering-excellence-audit-v1`.
+- Validated pre-B3 HEAD: `ab024f40eed7cf80fc9c3f2140d9c9434b20b76c`.
+- Mode: P1 analysis-only.
+- Findings: 49.
+- Coverage: 49/49.
+- B3 was static/read-only and made no source/schema/env/package/DB/hosted/Production mutation.
+
+### B3 critical discovery
+
+- all five legacy/dormant models have zero runtime writes;
+- their only writes are `deleteMany()` calls in destructive local seed compatibility;
+- no target model has a tracked Prisma model-type import/binding;
+- most remaining model coupling is therefore semantic behavior, ops inspection, demo/seed maintenance and schema relations.
+
+### Readiness
+
+`Exam`:
+- 6 reads + 1 seed write;
+- no active page behavior;
+- blocker: admin vehicles API `db.exam.findMany()` semantics;
+- remaining responsibility is ops/demo/tenant-maintenance/seed.
+
+`ExamRegistration`:
+- 3 reads + 1 seed write;
+- no active business or defensive runtime behavior;
+- retirement candidate once ops/demo/seed/schema references are removed.
+
+`LessonRequest`:
+- 9 reads + 1 seed write;
+- two active page reads: instructor page and student page;
+- not removal-ready.
+
+`Payment`:
+- 6 reads + 1 seed write;
+- two defensive delete/retention reads;
+- no active business flow identified;
+- retirement candidate after delete policy decoupling.
+
+`Notification`:
+- 2 reads + 1 seed write;
+- no active business behavior;
+- retirement candidate once Smoke/seed/schema references are removed.
+
+### Exact next phase
+
+`legacy-model-blocker-semantic-closure-v1`
+
+Inspect only:
+- admin vehicles API → `Exam`;
+- instructor/student pages → `LessonRequest`;
+- instructor/student record delete → `Payment`;
+- Smoke/seed/demo mechanical retirement contract.
+
+Do not repeat broad model scanning unless new evidence contradicts B1-B3.

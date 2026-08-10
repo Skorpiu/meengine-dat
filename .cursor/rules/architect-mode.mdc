@@ -959,3 +959,16 @@ Do not rely on assistant conversational memory as the sole source of any audit d
 - Data Wave B1 proved zero rows for `Exam`, `ExamRegistration`, `LessonRequest`, `Payment`, `Notification` on the observed remote Supabase target;
 - Data Wave B2 proved all five still retain technical responsibility and therefore are not yet schema-removal-ready;
 - next evidence phase: `legacy-model-runtime-responsibility-classification-v1`.
+
+<!-- data-wave-b3-runtime-responsibility-v1 -->
+## Data Wave B3 recovery rule
+
+- Finding count remains 49 / 49 mappings.
+- Zero rows plus zero runtime writes is not sufficient by itself for schema deletion.
+- Distinguish product/domain terminology from Prisma model coupling; B3 found zero Prisma type-bound target-model source files.
+- `ExamRegistration` and `Notification` currently have no active-business blocker.
+- `Payment` is blocked only by defensive delete/retention semantics plus mechanical legacy references.
+- `Exam` requires one admin-vehicles API semantic classification.
+- `LessonRequest` retains two active page-level reads and cannot be retired until their product responsibility is resolved.
+- next phase is evidence-only: `legacy-model-blocker-semantic-closure-v1`.
+- update the Super Agent continuity state again immediately after that phase.

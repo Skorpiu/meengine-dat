@@ -1554,3 +1554,66 @@ B2 statically classified schema, runtime, script, test and migration responsibil
 - incidental type/text responsibility.
 
 Only after that classification can `legacy-exam-model-disposition-v1` and `dormant-operational-model-disposition-v1` become schema-removal implementation-ready.
+
+<!-- data-wave-b3-runtime-responsibility-v1 -->
+## Data Wave B3 — runtime responsibility classification
+
+B3 classified the actual Prisma operations behind the remaining B2 references. No new finding was promoted; the audit remains at 49 findings with 49/49 remediation coverage.
+
+### Cross-model result
+
+- none of the five models has a runtime write responsibility;
+- each model has one script write only: destructive local seed `deleteMany()` compatibility;
+- no target model is imported as a Prisma model type in tracked source;
+- therefore schema retirement is blocked by semantic behavior and relation cleanup, not Prisma type coupling.
+
+### `Exam`
+
+- 7 delegate operations: 6 reads, 1 seed-only write.
+- no active page behavior.
+- one unresolved API read in `app/api/admin/vehicles/route.ts` using `db.exam.findMany()`.
+- remaining reads are Production Smoke, demo cleanup, tenant maintenance and seed compatibility.
+- 17 source files contain token-only `Exam` references but zero Prisma type-bound files.
+- important distinction: the product/domain concept `Exam` is not equivalent to the legacy Prisma model.
+- current disposition: **blocked only by API semantic classification plus coordinated ops/schema cleanup**.
+
+### `ExamRegistration`
+
+- 4 delegate operations: 3 reads, 1 seed-only write.
+- zero active business behavior.
+- zero defensive-delete behavior.
+- remaining responsibility is Production Smoke, demo cleanup and seed compatibility.
+- current disposition: **retirement candidate; no active business runtime blocker identified**.
+
+### `LessonRequest`
+
+- 10 delegate operations: 9 reads, 1 seed-only write.
+- active page behavior exists in `app/instructor/page.tsx` and `app/student/page.tsx`, both using `lessonRequest.count()`.
+- remaining operations are Smoke/demo/tenant-maintenance/seed compatibility.
+- current disposition: **not removal-ready because active product/page behavior remains**.
+
+### `Payment`
+
+- 7 delegate operations: 6 reads, 1 seed-only write.
+- zero active business flow identified.
+- two runtime reads are defensive delete/retention checks in instructor and student record deletion.
+- remaining responsibility is Smoke/demo/seed compatibility.
+- current disposition: **retirement candidate after delete/retention semantics are decoupled from the legacy table**.
+
+### `Notification`
+
+- 3 delegate operations: 2 reads, 1 seed-only write.
+- zero active business behavior.
+- remaining responsibility is Production Smoke inspection/wrapper and destructive seed compatibility.
+- current disposition: **retirement candidate; no active business runtime blocker identified**.
+
+### Next phase
+
+`legacy-model-blocker-semantic-closure-v1` must inspect only the remaining semantic blockers:
+
+1. determine why the admin vehicles API reads `Exam` and whether the behavior is defensive/reference-integrity only;
+2. determine what user-visible behavior the two `LessonRequest` page counts drive and whether that feature remains product-authoritative;
+3. determine exactly what `Payment` protects during student/instructor deletion and define the replacement delete/retention contract;
+4. confirm Production Smoke/seed/demo references can be removed mechanically with model retirement.
+
+Do not start schema removal until these blocker semantics are closed.

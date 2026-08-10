@@ -770,3 +770,15 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 - B1 zero-row evidence lowers migration/data-retention risk but is not deletion authority.
 - B2 proves current references must be semantically retired/replaced before schema removal.
 - eventual schema retirement must use a new forward Prisma migration; never rewrite applied migration history.
+
+<!-- data-wave-b3-runtime-responsibility-v1 -->
+### Data Wave B3 — retirement readiness
+
+- No new finding; master ledger remains 49/49.
+- `ExamRegistration`: retirement candidate under `dormant-operational-model-disposition-v1`.
+- `Notification`: retirement candidate under `dormant-operational-model-disposition-v1`.
+- `Payment`: retirement candidate after defensive delete/retention replacement under `dormant-operational-model-disposition-v1`.
+- `Exam`: `legacy-exam-model-disposition-v1` remains blocked by semantic classification of the admin vehicles API read.
+- `LessonRequest`: `dormant-operational-model-disposition-v1` remains blocked by active instructor/student page responsibility.
+- evidence-only next prerequisite: `legacy-model-blocker-semantic-closure-v1`.
+- model retirement must also update Production Smoke inspection, demo cleanup, tenant maintenance, destructive local seed and Prisma relations before the forward DROP migration.
