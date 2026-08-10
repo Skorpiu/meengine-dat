@@ -20,7 +20,7 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 | **Smoke fixtures** | DEC-064 closed 2026-07-28 (**human**): repair apply + fixture apply (`changesApplied=18`); inspector no blockers; fixtures all-ready; idempotent dry-run; Sarah/Bob/John Doe preserved; commercial catalogue untouched; no `PLATFORM_ADMIN` recreate. Full IDs in operator vault only. |
 | **Remote ops closed** | Do **not** re-run repair, fixture apply, or smoke-lesson cleanup without new evidence + explicit human authorization. `student-invite-accept-student-link-repair-v1` **done** (repo + remote). |
 | **Node.js runtime** | **Node 24 migration closed.** Local compatibility passed on Node 24.18.0; repository pins, package engines, `.nvmrc`, GitLab CI and runner documentation are aligned; branch and `main` pipelines passed using `node:24`; Vercel Preview and Production deployed successfully with Project Settings and effective runtime on Node 24.x; post-deploy non-destructive hosted gates passed at `909b69a`. |
-| **Active analysis** | `engineering-excellence-audit-v1` — **P1 analysis-only**, active on base `da5aea6`. Exhaustive static analysis, Security Wave A, Data Wave B1 and environment/configuration E1-E7 are complete. 49 findings remain confirmed with 49/49 roadmap coverage. Environment cleanup is fully dispositioned; local-development database isolation remains the prerequisite before write-capable local runtime use. |
+| **Active analysis** | `engineering-excellence-audit-v1` — **P1 analysis-only**, active on base `da5aea6`. Exhaustive static analysis, Security Wave A, Data Wave B1 and environment/configuration E1-E7 are complete. 50 findings remain confirmed with 50/50 roadmap coverage. Environment cleanup is fully dispositioned; local-development database isolation remains the prerequisite before write-capable local runtime use. |
 | **Ordered next** | (1) complete `engineering-excellence-audit-v1` analysis and approve findings → (2) `platform-separation-architecture-plan-v1` → (3) only then implement small, audit-approved refactor slices. |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
@@ -582,3 +582,14 @@ The deployment log reported that Node.js 20 is deprecated for future Vercel depl
 - `Payment`: near retirement-ready; only zero-dependency delete-policy semantics remain to close.
 - `LessonRequest`: previous active-page classification weakened; both observed page count results are discarded by tuple destructuring, but instructor Pending Requests JSX requires one final data-flow proof.
 - next evidence phase: `legacy-model-blocker-final-semantic-closure-v1`.
+
+<!-- data-wave-b41-final-semantics-ui-data-001-v1 -->
+### Data Wave B4.1 checkpoint
+
+- Findings: **50**.
+- Remediation coverage: **50/50**.
+- New finding: `UI-DATA-001` → `dashboard-statistics-contract-alignment-v1`.
+- instructor dashboard visibly renders two misbound statistics; true pending LessonRequest count is discarded.
+- student pending LessonRequest count is dead/unconsumed work.
+- all five B1 zero-row models are now retirement-ready at the semantic layer, subject to coordinated relation/policy/ops/schema cleanup and execution-time safety gates.
+- next evidence/planning phase: `legacy-model-retirement-execution-contract-v1`.

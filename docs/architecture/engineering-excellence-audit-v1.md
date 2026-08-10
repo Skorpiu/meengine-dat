@@ -7,7 +7,7 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** exhaustive static snapshot analysis, Security Wave A, Data Wave B1 and environment/configuration evidence E1-E7 are complete. `CONFIG-ENV-001` remains the sole finding promoted by the environment audit; E5-E7 completed the per-key KEEP/REMOVE/CONSOLIDATE/DEFER disposition and prepared cleanup slices. The audit remains analysis-only at 49 confirmed findings; remaining Wave B and execution-readiness evidence continue.
+- **Current phase:** exhaustive static snapshot analysis, Security Wave A, Data Wave B1 and environment/configuration evidence E1-E7 are complete. `CONFIG-ENV-001` remains the sole finding promoted by the environment audit; E5-E7 completed the per-key KEEP/REMOVE/CONSOLIDATE/DEFER disposition and prepared cleanup slices. The audit remains analysis-only at 50 confirmed findings; remaining Wave B and execution-readiness evidence continue.
 - **Confirmed findings:** 49 total — 2 governance findings, 41 code/runtime/security/architecture/test findings, and 5 toolchain/configuration/dependency-security findings. Dependency Wave A2 adds `DEP-SEC-002`; static snapshot discovery remains complete.
 - **Refactor implementation authorized:** no
 
@@ -1680,3 +1680,75 @@ B4 inspected only the semantic blockers retained by B3. No new finding is promot
 4. `student-record-delete-policy.ts` payment dependency behavior/block code.
 
 Do not repeat B1-B4 broad discovery.
+
+<!-- data-wave-b41-final-semantics-ui-data-001-v1 -->
+## Data Wave B4.1 — final semantic closure and UI-DATA-001
+
+B4.1 completed the final targeted semantic inspection for the five zero-row legacy/dormant models and proved a new user-visible dashboard data-binding defect.
+
+The audit is now at **50 confirmed findings with 50/50 remediation coverage**.
+
+### `UI-DATA-001` — instructor dashboard statistics are misbound
+
+- the instructor dashboard `Promise.all()` executes three queries in this order:
+  1. scheduled Lesson count;
+  2. completed Lesson count for the current month;
+  3. pending LessonRequest count;
+- the result is destructured as `[completedLessonsThisMonth, pendingRequests]`, retaining only the first two positions;
+- therefore `completedLessonsThisMonth` receives the scheduled Lesson count;
+- `pendingRequests` receives the completed-current-month Lesson count;
+- the actual pending LessonRequest count is discarded;
+- both misbound variables are rendered in visible dashboard cards;
+- the `This Month / Lessons completed` card therefore displays the wrong metric;
+- the `Pending Requests / Awaiting approval` card also displays the wrong metric;
+- remediation slice: `dashboard-statistics-contract-alignment-v1`.
+
+The student dashboard does not have the same visible binding defect: its two displayed bindings match the first two Lesson queries. Its third pending LessonRequest query is unused and has no Pending Requests card, making that query dead work rather than an active LessonRequest feature.
+
+### Final model semantic disposition
+
+`Exam`:
+- retirement-ready at the semantic layer;
+- remove the explicit legacy vehicle-status fallback;
+- remove vehicle `_count.exams` deletion guard;
+- remove instructor delete-policy `HAS_EXAMS` dependency;
+- retire ops/demo/tenant-maintenance/seed/schema references together.
+
+`ExamRegistration`:
+- retirement-ready at the semantic layer;
+- remove student delete-policy `HAS_EXAM_REGISTRATIONS` dependency;
+- retire ops/demo/seed/schema references together.
+
+`LessonRequest`:
+- retirement-ready at the semantic layer;
+- no runtime writer was found;
+- the dashboard queries do not prove an active workflow: student result is discarded and instructor result is discarded while other tuple positions are rendered incorrectly;
+- remove instructor/student delete-policy `HAS_LESSON_REQUESTS` dependencies;
+- align/remove affected dashboard statistics through `dashboard-statistics-contract-alignment-v1`;
+- retire ops/demo/tenant-maintenance/seed/schema references together.
+
+`Payment`:
+- retirement-ready at the semantic layer;
+- remaining runtime responsibility is only zero-dependency hard-delete protection;
+- instructor policy blocks on `counts.payments > 0` with `instructor_has_payments`;
+- student policy blocks on `counts.payments > 0` with `student_has_payments`;
+- remove counts, stable block codes and corresponding policy-test cases together with retirement;
+- retire Smoke/demo/seed/schema references together.
+
+`Notification`:
+- retirement-ready at the semantic layer;
+- no product/runtime business responsibility was found;
+- retire Smoke/seed/schema references together.
+
+### Safety boundary
+
+- semantic retirement-ready does not authorize schema deletion;
+- B1 zero-row evidence applies only to the observed configured remote Supabase target;
+- execution requires target/environment guards, a new forward Prisma migration, validation and explicit human GO;
+- never rewrite applied migration history.
+
+### Next phase
+
+`legacy-model-retirement-execution-contract-v1`
+
+Prepare exact implementation-ready retirement scope, relation/drop ordering, expected files, tests, migration/rollback contract, target guards and validation for `legacy-exam-model-disposition-v1` and `dormant-operational-model-disposition-v1` without changing runtime/schema yet.

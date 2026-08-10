@@ -574,3 +574,59 @@ Do not repeat broad model scanning unless new evidence contradicts B1-B3.
 `legacy-model-blocker-final-semantic-closure-v1`
 
 Inspect only dashboard stat bindings/rendering and the two delete-policy modules. Do not repeat broad model discovery.
+
+<!-- data-wave-b41-final-semantics-ui-data-001-v1 -->
+## Super Agent recovery handoff — Data Wave B4.1
+
+### Recovery anchor
+
+- Branch: `engineering-excellence-audit-v1`.
+- Validated pre-B4.1 HEAD: `0a1e9dc6d47aac70d538567aa5b876f522294bfe`.
+- Mode: P1 analysis-only.
+- Findings after B4.1: **50**.
+- Coverage: **50/50**.
+
+### New finding
+
+`UI-DATA-001` → `dashboard-statistics-contract-alignment-v1`
+
+- instructor stats query order: scheduled Lesson, completed-current-month Lesson, pending LessonRequest;
+- destructuring binds only `[completedLessonsThisMonth, pendingRequests]`;
+- visible This Month card therefore renders scheduled count;
+- visible Pending Requests card therefore renders completed-current-month count;
+- real pending LessonRequest count is discarded;
+- student dashboard binds the first two Lesson counts correctly but discards its third LessonRequest result.
+
+### Legacy model final semantic status
+
+`Exam`:
+- semantic retirement-ready;
+- remove legacy status fallback, vehicle exam relation/delete guard, instructor HAS_EXAMS delete guard, ops/scripts/schema coupling.
+
+`ExamRegistration`:
+- semantic retirement-ready;
+- remove student HAS_EXAM_REGISTRATIONS delete guard plus ops/demo/seed/schema coupling.
+
+`LessonRequest`:
+- semantic retirement-ready;
+- no runtime writer;
+- dashboard counts do not establish active product authority;
+- remove instructor/student HAS_LESSON_REQUESTS delete guards;
+- align dashboard through UI-DATA-001 without reviving dormant workflow;
+- remove remaining ops/maintenance/demo/seed/schema coupling.
+
+`Payment`:
+- semantic retirement-ready;
+- instructor `counts.payments > 0` → `instructor_has_payments`;
+- student `counts.payments > 0` → `student_has_payments`;
+- remove counts/codes/tests and mechanical references with retirement.
+
+`Notification`:
+- semantic retirement-ready;
+- only mechanical Smoke/seed/schema responsibility remains.
+
+### Exact next phase
+
+`legacy-model-retirement-execution-contract-v1`
+
+Produce an implementation-ready contract only: exact affected files, Prisma relation changes, migration/drop ordering, tests, rollback strategy, target/environment guards, data-preflight requirements, canonical Node24 validation, and hosted verification. No schema/runtime mutation without separate human GO.

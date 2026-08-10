@@ -506,7 +506,7 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 
 ### Single recommended next slice and planned order
 
-1. `engineering-excellence-audit-v1` — P1 analysis-only; **active**; exhaustive static snapshot analysis + Security Wave A + Data Wave B1 + environment E1-E7 complete; 49 findings confirmed; environment disposition complete and remaining Wave B/execution-readiness evidence continues; no audit-branch implementation authorized
+1. `engineering-excellence-audit-v1` — P1 analysis-only; **active**; exhaustive static snapshot analysis + Security Wave A + Data Wave B1 + environment E1-E7 complete; 50 findings confirmed; environment disposition complete and remaining Wave B/execution-readiness evidence continues; no audit-branch implementation authorized
 
 <!-- engineering-excellence-audit-v1-live-state -->
 **Live audit state (2026-08-06; base `da5aea6`):**
@@ -984,3 +984,16 @@ Do not rely on assistant conversational memory as the sole source of any audit d
 - LessonRequest page queries execute but their third Promise.all results are discarded; do not describe them as active product behavior without the final JSX proof.
 - next phase: `legacy-model-blocker-final-semantic-closure-v1`.
 - immediately checkpoint the Super Agent again after final semantic closure.
+
+<!-- data-wave-b41-final-semantics-ui-data-001-v1 -->
+## Data Wave B4.1 recovery rule
+
+- Canonical findings are now 50 with 50/50 remediation coverage.
+- `UI-DATA-001` is confirmed and maps to `dashboard-statistics-contract-alignment-v1`.
+- Instructor dashboard scheduled/completed/pending statistics are positionally misbound and user-visible.
+- Student LessonRequest count is dead/unconsumed work.
+- All five legacy/dormant target models are semantically retirement-ready but schema deletion remains unauthorized.
+- Retirement must include relation-count delete guards and stable policy codes/tests, not only direct Prisma delegates.
+- Never fix the instructor Pending Requests card by reactivating the dormant LessonRequest domain without an explicit product decision.
+- next phase: `legacy-model-retirement-execution-contract-v1`.
+- checkpoint the Super Agent after that planning phase.

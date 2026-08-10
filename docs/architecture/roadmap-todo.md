@@ -629,7 +629,7 @@ Security comes first. Within the same priority tier, dependency order and prereq
 - Promote only actual failures, not heuristic candidates.
 
 <!-- exhaustive-audit-master-remediation-ledger-v1 -->
-## Master remediation ledger — 49 findings
+## Master remediation ledger — 50 findings
 
 This is the canonical finding-to-work mapping for the engineering audit. A finding may map to more than one smallest-safe slice; several findings may intentionally converge on one shared primitive. Presence in this ledger does **not** authorize implementation.
 
@@ -685,6 +685,8 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 | `DEP-SEC-002` | `dependency-security-monitoring-v1` |
 
 | `CONFIG-ENV-001` | `local-development-database-isolation-v1` |
+
+| `UI-DATA-001` | `dashboard-statistics-contract-alignment-v1` |
 
 ### Additional evidence / cleanup slices from the exhaustive audit
 
@@ -793,3 +795,14 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 - LessonRequest is no longer proven active merely because the dashboards query it; both observed query results are discarded.
 - possible dashboard-statistics defect remains evidence-only until JSX/data-flow confirmation.
 - next evidence-only prerequisite: `legacy-model-blocker-final-semantic-closure-v1`.
+
+<!-- data-wave-b41-final-semantics-ui-data-001-v1 -->
+### Data Wave B4.1 — final disposition
+
+- Master ledger is now 50/50.
+- `UI-DATA-001` → `dashboard-statistics-contract-alignment-v1`.
+- `legacy-exam-model-disposition-v1`: semantic blockers closed; execution contract still required.
+- `dormant-operational-model-disposition-v1`: ExamRegistration, LessonRequest, Payment and Notification semantic blockers closed; execution contract still required.
+- delete-policy retirement must remove legacy dependency counts/codes/tests for Exam, ExamRegistration, LessonRequest and Payment.
+- `dashboard-statistics-contract-alignment-v1` must not accidentally reactivate LessonRequest as a product source of truth; align the instructor cards with the authoritative Lesson metrics and remove dead LessonRequest dashboard work unless a separately authorized product decision says otherwise.
+- next prerequisite: `legacy-model-retirement-execution-contract-v1`.
