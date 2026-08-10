@@ -326,3 +326,18 @@ A fresh SA session must be able to state from committed repository evidence:
 - `AUTH-SESSION-001` remains unresolved because JWT revocation is independent of cookie/cache transport properties.
 - initial awk-based A3 attempt is explicitly non-authoritative; A3.1/A3.2 are the valid evidence.
 - no credential, login mutation, real-session cookie output, database or hosted mutation occurred.
+
+<!-- security-wave-a4-commercial-evidence-v1 -->
+## Security commercial Wave A4 checkpoint
+
+- Audit HEAD during A4: `6fd33024cd2bccc1e4b6db0209137d8519014139`.
+- finding total remains 48; roadmap/SA coverage remains 48/48.
+- five commercial/admin route surfaces were inventoried.
+- billing webhook is POST-only, deployed on both public hosts and contains zero detected authenticity-verification signals in the route.
+- license/features, settings and feature-flags return anonymous 401 on tenant and Platform hosts.
+- no anonymous commercial 200 surface was discovered.
+- `BILLING-SEC-001`, `BILLING-SEC-002`, `LICENSING-001`, `LICENSING-002` and `AUTHZ-OPERATOR-001` all remain open according to their existing contracts.
+- A4 creates no new finding.
+- Security Wave A1-A4 is complete.
+- next phase: Wave B read-only data disposition for legacy/dormant operational models.
+- no commercial mutation, database operation or hosted configuration change occurred.

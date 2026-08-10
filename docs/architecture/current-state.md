@@ -20,7 +20,7 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 | **Smoke fixtures** | DEC-064 closed 2026-07-28 (**human**): repair apply + fixture apply (`changesApplied=18`); inspector no blockers; fixtures all-ready; idempotent dry-run; Sarah/Bob/John Doe preserved; commercial catalogue untouched; no `PLATFORM_ADMIN` recreate. Full IDs in operator vault only. |
 | **Remote ops closed** | Do **not** re-run repair, fixture apply, or smoke-lesson cleanup without new evidence + explicit human authorization. `student-invite-accept-student-link-repair-v1` **done** (repo + remote). |
 | **Node.js runtime** | **Node 24 migration closed.** Local compatibility passed on Node 24.18.0; repository pins, package engines, `.nvmrc`, GitLab CI and runner documentation are aligned; branch and `main` pipelines passed using `node:24`; Vercel Preview and Production deployed successfully with Project Settings and effective runtime on Node 24.x; post-deploy non-destructive hosted gates passed at `909b69a`. |
-| **Active analysis** | `engineering-excellence-audit-v1` — **P1 analysis-only**, active on base `da5aea6`. Exhaustive static analysis is complete and security/read-only evidence is active; Waves A1-A3 are complete, 48 findings remain confirmed, and no code/toolchain refactor implementation is authorized in the audit branch. Detailed evidence: [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md). |
+| **Active analysis** | `engineering-excellence-audit-v1` — **P1 analysis-only**, active on base `da5aea6`. Exhaustive static analysis and Security Wave A1-A4 are complete; 48 findings remain confirmed with 48/48 roadmap coverage. Wave B data-sensitive read-only disposition is next; no implementation is authorized in the audit branch. Detailed evidence: [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md). |
 | **Ordered next** | (1) complete `engineering-excellence-audit-v1` analysis and approve findings → (2) `platform-separation-architecture-plan-v1` → (3) only then implement small, audit-approved refactor slices. |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
@@ -502,3 +502,15 @@ The deployment log reported that Node.js 20 is deprecated for future Vercel depl
 - session endpoint edge probes remained Vercel MISS with age=0 across repeat and dummy-cookie requests.
 - no new auth-cookie/cache finding was promoted.
 - `AUTH-SESSION-001` remains open because stateless JWT revocation is a separate server-side contract.
+
+<!-- security-wave-a4-commercial-evidence-v1 -->
+### Commercial security Wave A4 checkpoint
+
+- Current total remains 48 confirmed findings = 2 governance + 41 code/runtime/security/architecture/test + 5 toolchain/configuration/dependency-security.
+- billing webhook is POST-only, publicly deployed on both hosts and contains no detected authenticity-verification signal in its route.
+- commercial/admin endpoints fail closed anonymously with 401 on both hosts.
+- no new anonymous commercial exposure was found.
+- A4 reinforces `BILLING-SEC-001`, `LICENSING-001` and `AUTHZ-OPERATOR-001`; it does not create another finding.
+- `BILLING-SEC-002` and `LICENSING-002` remain open and were intentionally not mutation-tested.
+- Security Wave A1-A4 is complete.
+- next evidence phase: Wave B data-sensitive read-only model disposition.

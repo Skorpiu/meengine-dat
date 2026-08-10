@@ -713,3 +713,13 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 - `/api/auth/signin` resolves to the existing `/auth/login` page on both hosts.
 - This positive browser/edge evidence does **not** close `AUTH-SESSION-001`; `jwt-session-revocation-v1` must still implement a server-verifiable revocation contract.
 - Reuse the A3 cookie/cache observations as regression expectations during auth/security remediation rather than re-opening discovery.
+
+<!-- security-wave-a4-commercial-evidence-v1 -->
+### Commercial deployment-state evidence disposition — A4 complete
+
+- **Finding count impact:** none; master remediation ledger remains 48/48.
+- `BILLING-SEC-001` gains hosted proof that `/api/billing/webhooks/[provider]` is publicly deployed on both main hosts plus static proof of zero detected authenticity-verification signals in the route.
+- anonymous GET to commercial/admin endpoints fails closed; this does not resolve authenticated authority findings.
+- retain `BILLING-SEC-002`, `LICENSING-001`, `LICENSING-002` and `AUTHZ-OPERATOR-001` unchanged.
+- no provider-operational-state conclusion may be inferred from absence of provider env-key names in the constrained static scan.
+- Security Wave A is complete; advance evidence work to Wave B before implementation slices.

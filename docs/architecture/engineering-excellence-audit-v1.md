@@ -7,7 +7,7 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** exhaustive static snapshot analysis is complete and security/read-only evidence work is active. Hosted Waves A1-A3 have verified response hardening, dependency security and anonymous auth/session/cookie boundaries. A3 closes without a new finding; data-sensitive, billing/licensing and concurrency validations remain follow-up work; no implementation is authorized in the audit branch.
+- **Current phase:** exhaustive static snapshot analysis and Security Wave A are complete. Waves A1-A4 verified hosted response hardening, dependency security, authentication/session boundaries and commercial billing/licensing deployment boundaries. The audit remains analysis-only at 48 confirmed findings; data-sensitive Wave B and later execution-readiness work remain pending.
 - **Confirmed findings:** 48 total — 2 governance findings, 41 code/runtime/security/architecture/test findings, and 5 toolchain/configuration/dependency-security findings. Dependency Wave A2 adds `DEP-SEC-002`; static snapshot discovery remains complete.
 - **Refactor implementation authorized:** no
 
@@ -189,7 +189,7 @@ The legacy seed is safety-sensitive and local-only. Size alone cannot justify to
 
 ## Current conclusion
 
-The normalized inventory, targeted evidence phases, exhaustive static snapshot analysis, and security Waves A1-A3 are complete. The audit remains at **48 confirmed findings**: two governance findings, forty-one code/runtime/security/architecture/test findings, and five toolchain/configuration/dependency-security findings. A3 produced positive cookie/cache/routing evidence and no additional finding. Remaining billing/licensing, target-environment, data-sensitive and execution validations belong to their queued slices; runtime implementation remains unauthorized in this analysis branch.
+The normalized inventory, targeted evidence phases, exhaustive static snapshot analysis, and Security Wave A1-A4 are complete. The audit remains at **48 confirmed findings**: two governance findings, forty-one code/runtime/security/architecture/test findings, and five toolchain/configuration/dependency-security findings. A4 reinforced existing billing/licensing/authority findings without promoting a new one. Data-sensitive Wave B and later execution-readiness validations remain queued; runtime implementation remains unauthorized in this analysis branch.
 
 These findings are evidence-backed audit conclusions and may include approved future resolution directions, but **no refactor implementation is authorized by this analysis slice**.
 
@@ -1285,3 +1285,58 @@ No dependency update, package install, audit fix, code, database, hosted or prod
 - an authenticated cache probe is not required for current classification; it may be used later as regression evidence during auth remediation.
 
 No credential, real session cookie, login POST, CSRF token output, callback mutation, database, hosted-configuration or production mutation was performed.
+
+<!-- security-wave-a4-commercial-evidence-v1 -->
+## Security Wave A4 — billing/licensing deployment-state evidence
+
+**Baseline:** audit HEAD `6fd33024cd2bccc1e4b6db0209137d8519014139`; static repository reads plus anonymous hosted GETs only.
+
+### Static commercial surface
+
+- five commercial/admin route files were identified:
+  - `/api/admin/feature-flags` — GET/POST/PUT/DELETE;
+  - `/api/admin/license/activate` — POST;
+  - `/api/admin/license/features` — GET/POST;
+  - `/api/admin/settings` — GET/POST/PUT/DELETE;
+  - `/api/billing/webhooks/[provider]` — POST.
+- the billing webhook route contains zero detected signature/HMAC/timing-safe/webhook-secret authenticity signals.
+- this directly reinforces `BILLING-SEC-001`; it does not create a duplicate finding.
+
+### Configuration evidence boundary
+
+- within the commercial-file scan, the only detected environment-key name was `DEMO_ORGANIZATION_ID`.
+- no environment values were read or printed.
+- absence of a provider-specific key from this constrained scan is not evidence that a billing provider is unconfigured in hosted infrastructure.
+- provider operational configuration therefore remains intentionally unproven and is not required to establish the current billing findings.
+
+### Authority evidence
+
+- feature-flags, license activation, license features and settings routes contain session-authentication signals.
+- no anonymous hosted access was observed.
+- static A4 does not overturn `LICENSING-001` or `AUTHZ-OPERATOR-001`, because those findings concern authority after authentication rather than anonymous access.
+
+### Hosted deployment-state evidence
+
+- billing webhook GET returned 405 on both tenant and Platform hosts, proving the POST route is deployed on both public surfaces without invoking it.
+- license/features, settings and feature-flags GET returned 401 on both public hosts.
+- all eight commercial probes returned Vercel MISS with age=0.
+- no unexpected anonymous 200 commercial/admin surface was identified.
+
+### Finding disposition
+
+- `BILLING-SEC-001` remains open and is reinforced by both static zero-authenticity-signal evidence and public route deployment evidence.
+- `BILLING-SEC-002` remains open; A4 performs no mutation/retry and therefore does not attempt to prove runtime idempotency.
+- `LICENSING-001` remains open; anonymous 401 does not prove correct authenticated entitlement authority.
+- `LICENSING-002` remains open; no license activation/key mutation was exercised.
+- `AUTHZ-OPERATOR-001` remains open; A4 confirms anonymous fail-closed behavior only.
+- A4 promotes no new finding; audit total remains 48 and roadmap coverage remains 48/48.
+
+### Security Wave A closure
+
+- A1 response/header boundary: complete;
+- A2/A2.1 dependency-security classification: complete;
+- A3/A3.1/A3.2 auth/session/cookie/cache boundary: complete;
+- A4 commercial billing/licensing hosted boundary: complete;
+- Security Wave A is therefore complete and the next evidence phase is Wave B data-sensitive read-only disposition.
+
+No webhook POST, billing event, license activation, entitlement mutation, credential, database write, hosted configuration change or production mutation was performed.
