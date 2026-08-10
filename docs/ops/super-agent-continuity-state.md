@@ -341,3 +341,15 @@ A fresh SA session must be able to state from committed repository evidence:
 - Security Wave A1-A4 is complete.
 - next phase: Wave B read-only data disposition for legacy/dormant operational models.
 - no commercial mutation, database operation or hosted configuration change occurred.
+
+<!-- data-wave-b1-legacy-dormant-inventory-v1 -->
+## Data Wave B1 checkpoint
+
+- Audit HEAD during B1: `2fb2cf407bb720f871e3c5894bde78548fe1f3ec`.
+- finding total remains 48; roadmap/SA coverage remains 48/48.
+- remote Supabase target guard passed and PostgreSQL reported `transaction_read_only=on`.
+- current target row counts: Exam 0; ExamRegistration 0; LessonRequest 0; Payment 0; Notification 0.
+- one Organization row exists in the observed target.
+- `SCHEMA-LEGACY-001` and `SCHEMA-LEGACY-002` remain findings, now with zero-data evidence for this target.
+- next evidence slice: `environment-configuration-responsibility-audit-v1`.
+- no database or repository mutation occurred.

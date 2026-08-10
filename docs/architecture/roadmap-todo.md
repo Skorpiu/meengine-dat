@@ -723,3 +723,13 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 - retain `BILLING-SEC-002`, `LICENSING-001`, `LICENSING-002` and `AUTHZ-OPERATOR-001` unchanged.
 - no provider-operational-state conclusion may be inferred from absence of provider env-key names in the constrained static scan.
 - Security Wave A is complete; advance evidence work to Wave B before implementation slices.
+
+<!-- data-wave-b1-legacy-dormant-inventory-v1 -->
+### Data disposition evidence — B1 complete
+
+- **Finding count impact:** none; master remediation ledger remains 48/48.
+- `legacy-exam-model-disposition-v1`: observed target row counts are `Exam=0` and `ExamRegistration=0`.
+- `dormant-operational-model-disposition-v1`: observed target row counts are `LessonRequest=0`, `Payment=0`, and `Notification=0`.
+- zero rows removes the known data-migration blocker on this target but does not authorize Prisma model/table removal.
+- before removal: prove zero runtime writers/readers, inspect migrations/seeds/scripts/ops, determine other database-environment exposure, then create an explicit schema-change/rollback plan.
+- next evidence slice: `environment-configuration-responsibility-audit-v1`.

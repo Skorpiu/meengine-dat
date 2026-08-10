@@ -506,7 +506,7 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 
 ### Single recommended next slice and planned order
 
-1. `engineering-excellence-audit-v1` — P1 analysis-only; **active**; exhaustive static snapshot analysis and Security Wave A1-A4 complete; 48 findings confirmed; Wave B data-sensitive evidence next; no audit-branch implementation authorized
+1. `engineering-excellence-audit-v1` — P1 analysis-only; **active**; exhaustive static snapshot analysis + Security Wave A + Data Wave B1 complete; 48 findings confirmed; environment/configuration responsibility evidence next; no audit-branch implementation authorized
 
 <!-- engineering-excellence-audit-v1-live-state -->
 **Live audit state (2026-08-06; base `da5aea6`):**
@@ -892,3 +892,13 @@ Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
 - Do not probe license activation, entitlement grants, webhook retries or billing idempotency in Production for audit discovery.
 - Security Wave A is complete.
 - The next audit evidence phase is Wave B: read-only data-sensitive model disposition.
+
+<!-- data-wave-b1-legacy-dormant-inventory-v1 -->
+## Data Wave B1 evidence rule
+
+- B1 is authoritative only for the currently configured remote Supabase target; do not silently generalize it to every historical/preview/production database environment.
+- Current observed counts: `Exam=0`, `ExamRegistration=0`, `LessonRequest=0`, `Payment=0`, `Notification=0`.
+- Zero rows are strong deletion/disposition evidence, not deletion authorization.
+- Schema-removal slices must still prove no runtime responsibility and inspect migrations, seeds, scripts, ops and environment scope.
+- Preserve the rule that database evidence queries are aggregate-only and run inside an explicitly confirmed read-only transaction.
+- `DATABASE_URL` was sourced from local `.env`; this becomes input evidence for `environment-configuration-responsibility-audit-v1`.

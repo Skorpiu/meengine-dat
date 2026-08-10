@@ -7,7 +7,7 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** exhaustive static snapshot analysis and Security Wave A are complete. Waves A1-A4 verified hosted response hardening, dependency security, authentication/session boundaries and commercial billing/licensing deployment boundaries. The audit remains analysis-only at 48 confirmed findings; data-sensitive Wave B and later execution-readiness work remain pending.
+- **Current phase:** exhaustive static snapshot analysis and Security Wave A are complete. Data Wave B has started; B1 proved the five legacy/dormant operational models contain zero rows in the currently configured remote Supabase target. The audit remains analysis-only at 48 confirmed findings; environment/configuration responsibility and remaining execution-readiness evidence are pending.
 - **Confirmed findings:** 48 total — 2 governance findings, 41 code/runtime/security/architecture/test findings, and 5 toolchain/configuration/dependency-security findings. Dependency Wave A2 adds `DEP-SEC-002`; static snapshot discovery remains complete.
 - **Refactor implementation authorized:** no
 
@@ -189,7 +189,7 @@ The legacy seed is safety-sensitive and local-only. Size alone cannot justify to
 
 ## Current conclusion
 
-The normalized inventory, targeted evidence phases, exhaustive static snapshot analysis, and Security Wave A1-A4 are complete. The audit remains at **48 confirmed findings**: two governance findings, forty-one code/runtime/security/architecture/test findings, and five toolchain/configuration/dependency-security findings. A4 reinforced existing billing/licensing/authority findings without promoting a new one. Data-sensitive Wave B and later execution-readiness validations remain queued; runtime implementation remains unauthorized in this analysis branch.
+The normalized inventory, targeted evidence phases, exhaustive static snapshot analysis, Security Wave A1-A4, and Data Wave B1 are complete. The audit remains at **48 confirmed findings**: two governance findings, forty-one code/runtime/security/architecture/test findings, and five toolchain/configuration/dependency-security findings. B1 found zero rows in `Exam`, `ExamRegistration`, `LessonRequest`, `Payment`, and `Notification` on the currently configured remote Supabase target, materially strengthening the existing legacy-schema disposition findings without creating a new one. Runtime implementation remains unauthorized in this analysis branch.
 
 These findings are evidence-backed audit conclusions and may include approved future resolution directions, but **no refactor implementation is authorized by this analysis slice**.
 
@@ -1340,3 +1340,35 @@ No credential, real session cookie, login POST, CSRF token output, callback muta
 - Security Wave A is therefore complete and the next evidence phase is Wave B data-sensitive read-only disposition.
 
 No webhook POST, billing event, license activation, entitlement mutation, credential, database write, hosted configuration change or production mutation was performed.
+
+<!-- data-wave-b1-legacy-dormant-inventory-v1 -->
+## Data Wave B1 — legacy/dormant model read-only inventory
+
+**Baseline:** audit HEAD `2fb2cf407bb720f871e3c5894bde78548fe1f3ec`; current local `DATABASE_URL`; aggregate-only read transaction.
+
+### Target and safety evidence
+
+- `DATABASE_URL` was sourced from local `.env`; `.env.local` exists but does not define `DATABASE_URL`.
+- target guard identified remote PostgreSQL on a Supabase host with pooler characteristics.
+- target database and user identifiers were emitted only as non-reversible short fingerprints.
+- PostgreSQL transaction state explicitly returned `transaction_read_only=on` before model queries.
+- no row content, PII, individual payment value, database URL, host, username or credential was printed.
+
+### Model results
+
+- `Exam`: schema/delegate present; 0 rows.
+- `ExamRegistration`: schema/delegate present; 0 rows.
+- `LessonRequest`: schema/delegate present; 0 rows.
+- `Payment`: schema/delegate present; 0 rows.
+- `Notification`: schema/delegate present; 0 rows.
+- current target contains 1 Organization row.
+
+### Finding disposition
+
+- `SCHEMA-LEGACY-001` remains confirmed but is materially refined: `Exam` and `ExamRegistration` have no data in the observed target.
+- `SCHEMA-LEGACY-002` remains confirmed but is materially refined: `LessonRequest`, `Payment`, and `Notification` have no data in the observed target.
+- absence of rows substantially lowers data-migration risk for these models on this target, but is not deletion authority.
+- before schema removal, the relevant disposition slices must prove zero current runtime responsibility, inspect migration/script/ops responsibility, and account for any other deployed database environments.
+- B1 creates no new finding; audit total remains 48 and remediation coverage remains 48/48.
+
+No INSERT, UPDATE, DELETE, schema change, hosted configuration change or production mutation was performed.
