@@ -629,7 +629,7 @@ Security comes first. Within the same priority tier, dependency order and prereq
 - Promote only actual failures, not heuristic candidates.
 
 <!-- exhaustive-audit-master-remediation-ledger-v1 -->
-## Master remediation ledger — 50 findings
+## Master remediation ledger — 51 findings
 
 This is the canonical finding-to-work mapping for the engineering audit. A finding may map to more than one smallest-safe slice; several findings may intentionally converge on one shared primitive. Presence in this ledger does **not** authorize implementation.
 
@@ -687,6 +687,8 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 | `CONFIG-ENV-001` | `local-development-database-isolation-v1` |
 
 | `UI-DATA-001` | `dashboard-statistics-contract-alignment-v1` |
+
+| `DB-MIGRATION-001` | `migration-deploy-target-safety-gate-v1` |
 
 ### Additional evidence / cleanup slices from the exhaustive audit
 
@@ -821,3 +823,15 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 - `lesson_requests` and `notifications` are independent of that target-to-target FK chain.
 - do not use the B5 token-reference graph as SQL drop-order authority.
 - next evidence-only prerequisite: `legacy-model-migration-workflow-closure-v1`.
+
+<!-- data-wave-b51-migration-workflow-db-migration-001-v1 -->
+### Data Wave B5.1 — migration ownership and target safety
+
+- Master ledger is now 51/51.
+- `DB-MIGRATION-001` → `migration-deploy-target-safety-gate-v1`.
+- remote migration deployment remains a human-authorized operator action; do not automate it merely to close this finding.
+- remediation must add fail-closed target identity before the write while preserving the human GO boundary.
+- reuse/refactor shared target-identity primitives where appropriate; do not silently widen an inspect-only authorization contract.
+- `legacy-model-schema-retirement-v1` depends on `migration-deploy-target-safety-gate-v1` before any remote Stage B application.
+- `local-development-database-isolation-v1` remains prerequisite to ordinary local migration authoring.
+- next evidence-only prerequisite: `legacy-model-migration-authoring-contract-v1`.

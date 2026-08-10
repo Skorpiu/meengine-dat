@@ -506,7 +506,7 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 
 ### Single recommended next slice and planned order
 
-1. `engineering-excellence-audit-v1` — P1 analysis-only; **active**; exhaustive static snapshot analysis + Security Wave A + Data Wave B1 + environment E1-E7 complete; 50 findings confirmed; environment disposition complete and remaining Wave B/execution-readiness evidence continues; no audit-branch implementation authorized
+1. `engineering-excellence-audit-v1` — P1 analysis-only; **active**; exhaustive static snapshot analysis + Security Wave A + Data Wave B1 + environment E1-E7 complete; 51 findings confirmed; environment disposition complete and remaining Wave B/execution-readiness evidence continues; no audit-branch implementation authorized
 
 <!-- engineering-excellence-audit-v1-live-state -->
 **Live audit state (2026-08-06; base `da5aea6`):**
@@ -1012,3 +1012,16 @@ Do not rely on assistant conversational memory as the sole source of any audit d
 - existing remote operator target guard should be reused if suitable; do not duplicate environment identity contracts without evidence.
 - next phase: `legacy-model-migration-workflow-closure-v1`.
 - checkpoint Super Agent immediately after that phase.
+
+<!-- data-wave-b51-migration-workflow-db-migration-001-v1 -->
+## Data Wave B5.1 recovery rule
+
+- Canonical findings are now 51 with 51/51 remediation coverage.
+- `DB-MIGRATION-001` maps to `migration-deploy-target-safety-gate-v1`.
+- Do not treat lack of automatic migration deployment as a defect; migration deploy is intentionally human-operated.
+- The defect is absence of a dedicated fail-closed write-purpose target gate before raw remote `prisma migrate deploy`.
+- Existing `remote-operator-target-guard.ts` is documented inspect-only; reuse identity primitives, not unrestricted authorization semantics.
+- Never allow the Super Agent to become migration approval authority.
+- Stage B remote application requires explicit human GO even after every technical preflight passes.
+- next phase: `legacy-model-migration-authoring-contract-v1`.
+- immediately checkpoint Super Agent after that phase.

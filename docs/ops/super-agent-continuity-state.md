@@ -693,3 +693,58 @@ Then:
 `legacy-model-migration-workflow-closure-v1`
 
 Prove canonical migration authoring/deploy ownership, exact CI/operator workflow, whether existing remote target guard can be safely reused, and the deployment ordering needed between Stage A and Stage B. Do not mutate schema or DB.
+
+<!-- data-wave-b51-migration-workflow-db-migration-001-v1 -->
+## Super Agent recovery handoff — Data Wave B5.1
+
+### Recovery anchor
+
+- Branch: `engineering-excellence-audit-v1`.
+- Validated pre-B5.1 HEAD: `8905b611540ef2f0de2b7772b0ccaed0b57dcd9b`.
+- Mode: P1 analysis-only.
+- Findings after B5.1: **51**.
+- Coverage: **51/51**.
+
+### Migration ownership
+
+- tracked CI files executing migrate deploy: 0;
+- tracked scripts executing migrate deploy: 0;
+- tracked package files executing migrate deploy: 0;
+- documented operator/runbook ownership exists across multiple docs;
+- canonical remote migration execution remains explicit human operator work;
+- Vercel build is not a migration executor.
+
+### New finding
+
+`DB-MIGRATION-001` → `migration-deploy-target-safety-gate-v1`
+
+- current remote migration path ultimately relies on raw `prisma migrate deploy` after human/env target verification;
+- no purpose-scoped executable migration-write identity gate exists;
+- existing remote operator guard validates expected host/database/Supabase project and DATABASE_URL/DIRECT_URL consistency;
+- that guard is explicitly documented as inspect-only;
+- do not widen it silently;
+- factor/reuse target-identity primitives and introduce explicit migration-write purpose gating;
+- human approval remains mandatory after technical preflight.
+
+### Stage B dependency update
+
+`legacy-model-schema-retirement-v1` requires:
+- `local-development-database-isolation-v1`;
+- `dashboard-statistics-contract-alignment-v1`;
+- deployed/validated `legacy-model-runtime-decoupling-v1`;
+- `migration-deploy-target-safety-gate-v1`;
+- exact target identity;
+- all five zero-row checks on that target;
+- explicit human GO.
+
+### Remaining Data Wave evidence
+
+Migration deployment ownership is closed.
+
+Migration authoring is not yet implementation-ready because repository evidence does not define one canonical safe authoring recipe.
+
+### Exact next phase
+
+`legacy-model-migration-authoring-contract-v1`
+
+Inspect only the safe migration-authoring/testing path required before Stage B. Do not repeat migration-deploy ownership discovery and do not mutate a database.

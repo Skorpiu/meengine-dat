@@ -7,7 +7,7 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** exhaustive static snapshot analysis, Security Wave A, Data Wave B1 and environment/configuration evidence E1-E7 are complete. `CONFIG-ENV-001` remains the sole finding promoted by the environment audit; E5-E7 completed the per-key KEEP/REMOVE/CONSOLIDATE/DEFER disposition and prepared cleanup slices. The audit remains analysis-only at 50 confirmed findings; remaining Wave B and execution-readiness evidence continue.
+- **Current phase:** exhaustive static snapshot analysis, Security Wave A, Data Wave B1 and environment/configuration evidence E1-E7 are complete. `CONFIG-ENV-001` remains the sole finding promoted by the environment audit; E5-E7 completed the per-key KEEP/REMOVE/CONSOLIDATE/DEFER disposition and prepared cleanup slices. The audit remains analysis-only at 51 confirmed findings; remaining Wave B and execution-readiness evidence continue.
 - **Confirmed findings:** 49 total — 2 governance findings, 41 code/runtime/security/architecture/test findings, and 5 toolchain/configuration/dependency-security findings. Dependency Wave A2 adds `DEP-SEC-002`; static snapshot discovery remains complete.
 - **Refactor implementation authorized:** no
 
@@ -1827,3 +1827,61 @@ Rollback:
 - migration deployment appears operator/runbook-owned;
 - existing `remote-operator-target-guard.ts` already owns expected DB host/name/Supabase-project identity and should be evaluated for reuse rather than inventing a second guard contract;
 - next evidence phase: `legacy-model-migration-workflow-closure-v1`.
+
+<!-- data-wave-b51-migration-workflow-db-migration-001-v1 -->
+## Data Wave B5.1 — migration workflow closure and DB-MIGRATION-001
+
+B5.1 proved the current migration deployment ownership and identified a missing purpose-scoped remote schema-write target gate.
+
+The audit is now at **51 confirmed findings with 51/51 remediation coverage**.
+
+### Migration deployment ownership
+
+- `prisma migrate deploy` is not owned by GitLab CI, a tracked script or a package lifecycle;
+- repository evidence found zero CI files, zero scripts and zero package files executing `migrate deploy`, while the command is intentionally documented across operator/runbook material;
+- current release policy therefore treats remote migration deploy as an explicit human-operator operation;
+- this is intentional and is not itself a defect;
+- Vercel builds must remain repeatable and non-destructive;
+- the Super Agent must never independently execute a remote/Production migration.
+
+### `DB-MIGRATION-001` — no write-purpose target gate for remote migration deploy
+
+- the canonical remote schema-write path ultimately invokes raw `prisma migrate deploy` after operator/environment verification;
+- there is no dedicated executable fail-closed migration wrapper that proves the target identity before the remote schema write;
+- this matters especially while `CONFIG-ENV-001` remains open;
+- the existing `remote-operator-target-guard.ts` already proves host/database/Supabase-project identity and validates DIRECT_URL project/database consistency;
+- however, its documented authorization contract is specifically inspect-only and must not silently become generic write authorization;
+- remediation slice: `migration-deploy-target-safety-gate-v1`.
+
+### Required remediation architecture
+
+`migration-deploy-target-safety-gate-v1` should:
+
+- preserve explicit human ownership of migration deployment;
+- extract or reuse safe target-identity parsing/comparison primitives rather than duplicate them;
+- keep operation authorization purpose-scoped;
+- require explicit expected DB host, DB name and Supabase project identity;
+- verify DATABASE_URL and DIRECT_URL target compatibility;
+- show only safe/redacted target identity;
+- fail closed before Prisma receives authority to perform a remote schema write;
+- require an explicit human GO after preflight;
+- never create an unattended Production migration path.
+
+### Existing guard boundary
+
+- the existing guard's comments state that it authorizes only application-level inspect-only operator tooling;
+- current callers already span inspection plus reconciliation/repair tooling, reinforcing the need to separate target identity validation from operation-purpose authorization;
+- do not weaken the existing local-only destructive-seed boundary.
+
+### Migration authoring remains open
+
+- B5.1 proved deployment ownership but did not prove a single canonical migration-authoring workflow;
+- `migrate dev` references are primarily prohibitions against Production use rather than an implementation-ready authoring recipe;
+- do not invent the authoring contract from convention;
+- `local-development-database-isolation-v1` remains a prerequisite to normal local migration-authoring workflows.
+
+### Next evidence phase
+
+`legacy-model-migration-authoring-contract-v1`
+
+Close only the migration-authoring/test workflow needed for Stage B: safe development target, creation strategy, generated SQL review, migration test strategy and handoff into the human-operated deploy path. No DB/schema mutation.
