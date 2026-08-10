@@ -526,3 +526,51 @@ Inspect only:
 - Smoke/seed/demo mechanical retirement contract.
 
 Do not repeat broad model scanning unless new evidence contradicts B1-B3.
+
+<!-- data-wave-b4-blocker-semantics-v1 -->
+## Super Agent recovery handoff — Data Wave B4
+
+### Recovery anchor
+
+- Branch: `engineering-excellence-audit-v1`.
+- Validated pre-B4 HEAD: `fa3fc4139cb99ea6051bb9afc4144f6f14e0fd04`.
+- Mode: P1 analysis-only.
+- Findings: 49.
+- Coverage: 49/49.
+- B4 was targeted static/read-only inspection.
+
+### `Exam`
+
+- admin vehicles GET derives live status from Lesson and explicitly treats Exam table access as legacy old-data fallback;
+- Lesson may already represent exams through lessonType EXAM;
+- vehicle DELETE still checks `_count.exams`, which is a second legacy schema coupling;
+- semantic retirement direction confirmed.
+
+### `ExamRegistration` / `Notification`
+
+- no business blocker found;
+- remaining responsibilities are mechanical ops/demo/seed/schema cleanup.
+
+### `LessonRequest`
+
+- instructor Promise.all has three queries but destructures only two values;
+- its third value is pending LessonRequest count and is discarded;
+- student Promise.all has the same three-value/two-binding shape and also discards LessonRequest count;
+- instructor tuple names are additionally shifted relative to the first two Lesson queries;
+- instructor JSX contains Pending Requests text, so final data-flow confirmation is required before promoting a stats defect or closing retirement.
+
+### `Payment`
+
+- remaining runtime counts feed instructor/student hard-delete eligibility policy;
+- no active payment workflow found;
+- inspect only the two policy modules next.
+
+### Mechanical retirement
+
+- Smoke counts/adapters, demo cleanup, tenant maintenance and destructive seed references can be removed in coordination with model retirement.
+
+### Exact next phase
+
+`legacy-model-blocker-final-semantic-closure-v1`
+
+Inspect only dashboard stat bindings/rendering and the two delete-policy modules. Do not repeat broad model discovery.

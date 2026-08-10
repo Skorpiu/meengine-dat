@@ -1617,3 +1617,66 @@ B3 classified the actual Prisma operations behind the remaining B2 references. N
 4. confirm Production Smoke/seed/demo references can be removed mechanically with model retirement.
 
 Do not start schema removal until these blocker semantics are closed.
+
+<!-- data-wave-b4-blocker-semantics-v1 -->
+## Data Wave B4 — blocker semantic closure
+
+B4 inspected only the semantic blockers retained by B3. No new finding is promoted yet; the audit remains at 49 findings with 49/49 remediation coverage.
+
+### `Exam`
+
+- the admin vehicles GET computes real-time vehicle usage from current `Lesson` rows;
+- its own comment states that lessons may represent exams through `lessonType = EXAM`;
+- the additional `db.exam.findMany()` is explicitly labelled a legacy-table fallback for old data;
+- both sources only contribute vehicle IDs used to derive `IN_USE` status;
+- vehicle DELETE also retains a legacy relational guard through `vehicle._count.exams`;
+- semantic disposition: **retirement-ready once the legacy status fallback and exam relation/delete guard are removed together with ops/scripts/schema references**;
+- the product concept of an exam remains supported through the current Lesson model and must not be confused with retirement of the legacy `Exam` table.
+
+### `ExamRegistration`
+
+- B4 found no new product responsibility;
+- remaining consumers are operational inspection, demo cleanup, destructive-local-seed compatibility and schema relations;
+- disposition: **retirement-ready subject to coordinated mechanical/schema retirement and execution-time data guards**.
+
+### `Notification`
+
+- B4 found no product responsibility;
+- remaining consumers are Production Smoke inspection/adapter, destructive-local-seed compatibility and schema relation cleanup;
+- disposition: **retirement-ready subject to coordinated mechanical/schema retirement and execution-time data guards**.
+
+### `LessonRequest` — B3 classification corrected
+
+- instructor and student dashboards both execute `lessonRequest.count()` for PENDING rows;
+- however, both Promise.all result arrays contain three values while their destructuring expressions retain only two;
+- instructor order is scheduled Lesson count, completed Lesson count, pending LessonRequest count, but destructuring is `[completedLessonsThisMonth, pendingRequests]`; therefore the LessonRequest result is discarded and the names are shifted relative to the first two queries;
+- student order is scheduled Lesson count, completed Lesson count, pending LessonRequest count, but destructuring is `[scheduledLessons, completedLessons]`; therefore the LessonRequest result is discarded;
+- B3's `active-page-behavior` classification therefore does not prove authoritative LessonRequest product behavior;
+- instructor JSX contains a `Pending Requests` label, so a final narrow data-flow inspection is required before either promoting a dashboard-statistics defect or declaring the model retirement-ready.
+
+### `Payment`
+
+- both remaining runtime reads are confirmed zero-dependency hard-delete guards;
+- instructor deletion counts Payment rows linked to the User and passes the result into `evaluateInstructorRecordDeleteEligibility()`;
+- student deletion counts Payment rows linked to the Student and passes the result into `evaluateStudentRecordDeleteEligibility()`;
+- no Payment business transaction flow was found;
+- disposition: **near retirement-ready**; inspect the two policy modules to prove the exact payment block condition/code and define its removal contract.
+
+### Operational references
+
+- Production Smoke only counts the target models and its Prisma adapter only exposes count delegates;
+- demo cleanup uses dependency counts;
+- tenant maintenance references only Exam/LessonRequest historical scope checks;
+- destructive local seed only performs model cleanup deleteMany calls;
+- these are mechanical retirement consumers, not independent business blockers.
+
+### Final evidence required
+
+`legacy-model-blocker-final-semantic-closure-v1` must inspect only:
+
+1. instructor dashboard JSX/data flow for `completedLessonsThisMonth`, `pendingRequests` and the Pending Requests card;
+2. student dashboard JSX/data flow for its stats tuple and confirmation that the third result is unused;
+3. `instructor-record-delete-policy.ts` payment dependency behavior/block code;
+4. `student-record-delete-policy.ts` payment dependency behavior/block code.
+
+Do not repeat B1-B4 broad discovery.

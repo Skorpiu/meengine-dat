@@ -972,3 +972,15 @@ Do not rely on assistant conversational memory as the sole source of any audit d
 - `LessonRequest` retains two active page-level reads and cannot be retired until their product responsibility is resolved.
 - next phase is evidence-only: `legacy-model-blocker-semantic-closure-v1`.
 - update the Super Agent continuity state again immediately after that phase.
+
+<!-- data-wave-b4-blocker-semantics-v1 -->
+## Data Wave B4 recovery rule
+
+- Findings remain 49 / 49 mappings until final dashboard-stat data-flow evidence proves whether a new functional defect exists.
+- `Exam` is an explicitly legacy storage fallback; current exam scheduling responsibility can be represented by Lesson with lessonType EXAM.
+- Exam retirement must also remove vehicle `_count.exams` relation/delete guarding; do not remove only the direct delegate query.
+- ExamRegistration and Notification have no remaining business semantic blocker.
+- Payment is a delete-eligibility dependency only, pending exact policy-rule closure.
+- LessonRequest page queries execute but their third Promise.all results are discarded; do not describe them as active product behavior without the final JSX proof.
+- next phase: `legacy-model-blocker-final-semantic-closure-v1`.
+- immediately checkpoint the Super Agent again after final semantic closure.

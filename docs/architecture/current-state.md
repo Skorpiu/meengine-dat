@@ -571,3 +571,14 @@ The deployment log reported that Node.js 20 is deprecated for future Vercel depl
 - `Exam`: blocked by one admin-vehicles API read that requires semantic classification.
 - `LessonRequest`: blocked by two active page counts on instructor/student pages.
 - next evidence phase: `legacy-model-blocker-semantic-closure-v1`.
+
+<!-- data-wave-b4-blocker-semantics-v1 -->
+### Data Wave B4 checkpoint
+
+- Findings remain 49 / 49 mappings.
+- `Exam`: semantic legacy fallback confirmed; retirement-ready after legacy vehicle-status/delete-relation cleanup plus mechanical/schema retirement.
+- `ExamRegistration`: retirement-ready pending coordinated ops/demo/seed/schema retirement.
+- `Notification`: retirement-ready pending coordinated Smoke/seed/schema retirement.
+- `Payment`: near retirement-ready; only zero-dependency delete-policy semantics remain to close.
+- `LessonRequest`: previous active-page classification weakened; both observed page count results are discarded by tuple destructuring, but instructor Pending Requests JSX requires one final data-flow proof.
+- next evidence phase: `legacy-model-blocker-final-semantic-closure-v1`.

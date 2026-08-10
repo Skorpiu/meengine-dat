@@ -782,3 +782,14 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 - `LessonRequest`: `dormant-operational-model-disposition-v1` remains blocked by active instructor/student page responsibility.
 - evidence-only next prerequisite: `legacy-model-blocker-semantic-closure-v1`.
 - model retirement must also update Production Smoke inspection, demo cleanup, tenant maintenance, destructive local seed and Prisma relations before the forward DROP migration.
+
+<!-- data-wave-b4-blocker-semantics-v1 -->
+### Data Wave B4 — semantic blockers narrowed
+
+- No new finding yet; master ledger remains 49/49.
+- `legacy-exam-model-disposition-v1`: semantic retirement direction confirmed; implementation must remove legacy vehicle-status fallback and Exam relation/delete guard before forward schema retirement.
+- `dormant-operational-model-disposition-v1`: ExamRegistration and Notification are retirement-ready at the semantic layer.
+- Payment is blocked only by exact delete-policy contract closure.
+- LessonRequest is no longer proven active merely because the dashboards query it; both observed query results are discarded.
+- possible dashboard-statistics defect remains evidence-only until JSX/data-flow confirmation.
+- next evidence-only prerequisite: `legacy-model-blocker-final-semantic-closure-v1`.
