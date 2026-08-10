@@ -806,3 +806,18 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 - delete-policy retirement must remove legacy dependency counts/codes/tests for Exam, ExamRegistration, LessonRequest and Payment.
 - `dashboard-statistics-contract-alignment-v1` must not accidentally reactivate LessonRequest as a product source of truth; align the instructor cards with the authoritative Lesson metrics and remove dead LessonRequest dashboard work unless a separately authorized product decision says otherwise.
 - next prerequisite: `legacy-model-retirement-execution-contract-v1`.
+
+<!-- data-wave-b5-retirement-execution-contract-v1 -->
+### Data Wave B5 — staged retirement execution contract
+
+- No new finding; master ledger remains 50/50.
+- `SCHEMA-LEGACY-001` / `legacy-exam-model-disposition-v1` execution is decomposed into shared Stage A and Stage B retirement slices.
+- `SCHEMA-LEGACY-002` / `dormant-operational-model-disposition-v1` uses the same staged retirement boundary.
+- child implementation slice: `legacy-model-runtime-decoupling-v1`.
+- child implementation slice: `legacy-model-schema-retirement-v1`.
+- Stage A depends on/co-ordinates with `dashboard-statistics-contract-alignment-v1`.
+- Stage B depends on `local-development-database-isolation-v1` and a deployed/validated Stage A.
+- physical FK order for related target tables: `payments` before `exam_registrations` before `exams`.
+- `lesson_requests` and `notifications` are independent of that target-to-target FK chain.
+- do not use the B5 token-reference graph as SQL drop-order authority.
+- next evidence-only prerequisite: `legacy-model-migration-workflow-closure-v1`.

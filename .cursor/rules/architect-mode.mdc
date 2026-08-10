@@ -997,3 +997,18 @@ Do not rely on assistant conversational memory as the sole source of any audit d
 - Never fix the instructor Pending Requests card by reactivating the dormant LessonRequest domain without an explicit product decision.
 - next phase: `legacy-model-retirement-execution-contract-v1`.
 - checkpoint the Super Agent after that planning phase.
+
+<!-- data-wave-b5-retirement-execution-contract-v1 -->
+## Data Wave B5 recovery rule
+
+- Findings remain 50 / 50 mappings.
+- Preserve two-stage retirement: runtime decoupling first; schema retirement only after the decoupled application is deployed and verified.
+- B5 raw target dependency cycles are false for SQL ordering because Prisma inverse relation fields were counted as dependency edges.
+- Historical migration DDL is authoritative for physical FK direction.
+- related target drop order: Payment -> ExamRegistration -> Exam.
+- LessonRequest and Notification do not participate in that target-to-target FK chain.
+- avoid blind `DROP ... CASCADE`; enumerate intended relation/table retirement explicitly.
+- `local-development-database-isolation-v1` is a prerequisite to ordinary local migration-authoring workflows.
+- existing remote operator target guard should be reused if suitable; do not duplicate environment identity contracts without evidence.
+- next phase: `legacy-model-migration-workflow-closure-v1`.
+- checkpoint Super Agent immediately after that phase.

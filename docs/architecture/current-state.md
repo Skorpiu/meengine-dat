@@ -593,3 +593,15 @@ The deployment log reported that Node.js 20 is deprecated for future Vercel depl
 - student pending LessonRequest count is dead/unconsumed work.
 - all five B1 zero-row models are now retirement-ready at the semantic layer, subject to coordinated relation/policy/ops/schema cleanup and execution-time safety gates.
 - next evidence/planning phase: `legacy-model-retirement-execution-contract-v1`.
+
+<!-- data-wave-b5-retirement-execution-contract-v1 -->
+### Data Wave B5 checkpoint
+
+- Findings remain 50 / 50 mappings.
+- Runtime-decoupling candidate scope: 20 files.
+- Targeted affected tests detected: at least 7.
+- B5 raw Prisma-reference graph falsely suggested target cycles; historical DDL proves physical FK order `payments -> exam_registrations -> exams`.
+- Stage A: `legacy-model-runtime-decoupling-v1`.
+- Stage B: `legacy-model-schema-retirement-v1`.
+- Stage B requires completed local DB isolation, validated deployed Stage A, exact target identity, five zero-row preflights and explicit human GO.
+- next evidence phase: `legacy-model-migration-workflow-closure-v1`.

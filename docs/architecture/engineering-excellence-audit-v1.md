@@ -1752,3 +1752,78 @@ The student dashboard does not have the same visible binding defect: its two dis
 `legacy-model-retirement-execution-contract-v1`
 
 Prepare exact implementation-ready retirement scope, relation/drop ordering, expected files, tests, migration/rollback contract, target guards and validation for `legacy-exam-model-disposition-v1` and `dormant-operational-model-disposition-v1` without changing runtime/schema yet.
+
+<!-- data-wave-b5-retirement-execution-contract-v1 -->
+## Data Wave B5 — legacy model retirement execution contract
+
+B5 converted the final B1-B4.1 semantic disposition into a staged execution contract. No new finding was promoted; the audit remains at 50 findings with 50/50 remediation coverage.
+
+### Execution scope
+
+- static coupling scan identified 20 candidate application/test/script files requiring review or change during runtime decoupling;
+- targeted test scan identified at least 7 directly affected tests;
+- the five target tables remain `exams`, `exam_registrations`, `lesson_requests`, `payments`, and `notifications`.
+
+### Important B5 scanner correction
+
+- the raw target-to-target graph reported cycles between Exam/ExamRegistration and ExamRegistration/Payment;
+- those cycles are a scanner artefact because the graph treated Prisma inverse relation fields as if every reference represented a database foreign key;
+- the actual historical DDL shows the physical target-to-target FK chain is `payments.examRegistrationId -> exam_registrations.id -> exams.id`;
+- there is no physical `exams -> exam_registrations` FK and no physical `exam_registrations -> payments` FK;
+- therefore the target tables do not form a SQL dependency cycle.
+
+### Explicit Stage B drop order
+
+Among the mutually related legacy tables:
+
+1. `payments`;
+2. `exam_registrations`;
+3. `exams`.
+
+`lesson_requests` and `notifications` are independent of that target-to-target chain. The final forward migration should use explicit relation/table operations rather than a blind generic CASCADE strategy.
+
+### Stage A — runtime decoupling
+
+Slice: `legacy-model-runtime-decoupling-v1`.
+
+Goal:
+- remove runtime/API/delete-policy/UI-helper/Smoke/demo/maintenance/seed dependencies on all five legacy models while leaving the Prisma models/tables present;
+- update affected tests;
+- remove dead LessonRequest dashboard work;
+- coordinate with `dashboard-statistics-contract-alignment-v1` so instructor statistics are corrected without reviving LessonRequest as a product source of truth.
+
+Validation:
+- targeted policy/route/ops tests;
+- canonical recursive Node24 `check`;
+- deployed Preview/hosted read-only verification appropriate to the affected surfaces;
+- prove deployed application no longer requires the five Prisma delegates before Stage B.
+
+### Stage B — schema retirement
+
+Slice: `legacy-model-schema-retirement-v1`.
+
+Dependencies:
+- `local-development-database-isolation-v1` completed before normal migration-authoring workflows;
+- `dashboard-statistics-contract-alignment-v1` completed;
+- `legacy-model-runtime-decoupling-v1` deployed and validated;
+- explicit environment/database identity;
+- all five target table counts re-proven equal to zero on the exact authorized target;
+- explicit human GO before any remote schema write.
+
+Action:
+- remove Prisma inverse relations from surviving models;
+- remove the five target Prisma models;
+- create a new forward migration;
+- apply explicit FK/table retirement in a dependency-safe order;
+- never rewrite applied migration history.
+
+Rollback:
+- before Stage B, Stage A is conventionally reversible by reverting the application decoupling;
+- after Stage B is applied, rollback must be a new forward recovery migration plus compatible application contract; never edit applied migration history.
+
+### Migration workflow still to close
+
+- application package lifecycles run `prisma generate`, but B5 did not prove a canonical in-package migration-deploy command;
+- migration deployment appears operator/runbook-owned;
+- existing `remote-operator-target-guard.ts` already owns expected DB host/name/Supabase-project identity and should be evaluated for reuse rather than inventing a second guard contract;
+- next evidence phase: `legacy-model-migration-workflow-closure-v1`.

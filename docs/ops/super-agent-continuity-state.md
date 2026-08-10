@@ -630,3 +630,66 @@ Inspect only dashboard stat bindings/rendering and the two delete-policy modules
 `legacy-model-retirement-execution-contract-v1`
 
 Produce an implementation-ready contract only: exact affected files, Prisma relation changes, migration/drop ordering, tests, rollback strategy, target/environment guards, data-preflight requirements, canonical Node24 validation, and hosted verification. No schema/runtime mutation without separate human GO.
+
+<!-- data-wave-b5-retirement-execution-contract-v1 -->
+## Super Agent recovery handoff — Data Wave B5
+
+### Recovery anchor
+
+- Branch: `engineering-excellence-audit-v1`.
+- Validated pre-B5 HEAD: `71e063dff3f1642a459ee4ce0ca057c66ef0fe8d`.
+- Mode: P1 analysis-only.
+- Findings: 50.
+- Coverage: 50/50.
+- B5 performed static execution-contract analysis only.
+
+### Execution scope
+
+- 20 candidate decoupling files identified;
+- at least 7 directly affected tests identified;
+- no schema/runtime mutation performed.
+
+### Critical scanner correction
+
+- raw B5 token graph reported ExamRegistration <-> Exam and Payment <-> ExamRegistration cycles;
+- this is not a physical DB cycle;
+- Prisma back-reference arrays caused false reverse edges;
+- historical DDL proves `payments.examRegistrationId` references `exam_registrations.id`, which references `exams.id`;
+- Stage B related-table drop order is Payment -> ExamRegistration -> Exam;
+- LessonRequest and Notification are independent of that target chain.
+
+### Stage A
+
+`legacy-model-runtime-decoupling-v1`
+
+- remove all application/policy/UI-helper/ops/script dependencies while schema remains;
+- update targeted tests;
+- coordinate with UI-DATA-001 slice;
+- canonical Node24 validation;
+- deploy and verify before Stage B.
+
+### Stage B
+
+`legacy-model-schema-retirement-v1`
+
+Prerequisites:
+- `local-development-database-isolation-v1` complete;
+- Stage A deployed/validated;
+- explicit authorized environment identity;
+- explicit database target guard;
+- all five table counts equal zero on that exact target;
+- explicit human GO.
+
+Then:
+- remove surviving Prisma inverse relation fields;
+- remove five Prisma models;
+- create new forward migration;
+- retire explicit FKs/tables in safe order;
+- validate generate/typecheck/tests/build/migration;
+- never rewrite applied migration history.
+
+### Exact next phase
+
+`legacy-model-migration-workflow-closure-v1`
+
+Prove canonical migration authoring/deploy ownership, exact CI/operator workflow, whether existing remote target guard can be safely reused, and the deployment ordering needed between Stage A and Stage B. Do not mutate schema or DB.
