@@ -928,3 +928,34 @@ Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
 - `VERCEL_OIDC_TOKEN` has no DAT functional responsibility, but external tooling ownership must be checked before deletion.
 - Preserve `NEXTAUTH_URL` and its intentional local-versus-remote environment-specific values.
 - Execute local database isolation before relying on ordinary local write-capable runtime validation.
+
+<!-- data-wave-b2-responsibility-and-sa-handoff-v1 -->
+## Super Agent recovery-memory contract
+
+The repository, not chat history, is the authoritative recovery mechanism for the Engineering Excellence Audit.
+
+After every material evidence phase, the Super Agent continuity state and canonical audit documents must be updated before moving to the next material phase.
+
+A context-reset recovery must be possible from repository state alone. At minimum the continuity state must preserve:
+
+- active branch and latest validated audit HEAD;
+- canonical finding count and remediation coverage;
+- completed evidence phases;
+- confirmed findings and newly created/updated slices;
+- important negative findings and false positives that must not be reopened;
+- safety constraints and human-approval gates;
+- current blockers and execution prerequisites;
+- exact next evidence phase;
+- enough evidence summary to avoid repeating completed investigation.
+
+The Super Agent is permitted to reconstruct context from these canonical documents, prepare guarded analysis and execute separately authorized slices, but it does not gain publication, destructive-operation, database-write, hosted-write or Production-write approval authority.
+
+Do not rely on assistant conversational memory as the sole source of any audit decision.
+
+### Current B2 recovery state
+
+- audit remains at 49 findings / 49 mappings;
+- environment audit E1-E7 and disposition are complete;
+- Data Wave B1 proved zero rows for `Exam`, `ExamRegistration`, `LessonRequest`, `Payment`, `Notification` on the observed remote Supabase target;
+- Data Wave B2 proved all five still retain technical responsibility and therefore are not yet schema-removal-ready;
+- next evidence phase: `legacy-model-runtime-responsibility-classification-v1`.

@@ -759,3 +759,14 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 - `legacy-environment-key-pruning-v1`: retire `LICENSE_TIER`; classify/remove `VERCEL_OIDC_TOKEN` only after external Vercel-tool ownership verification.
 - `environment-configuration-contract-consolidation-v1`: normalize surviving `.env.example`, local profiles, CI, docs and hosted environment responsibilities after the targeted removals.
 - execution dependency: `local-development-database-isolation-v1` precedes ordinary environment cleanup validation.
+
+<!-- data-wave-b2-responsibility-and-sa-handoff-v1 -->
+### Data Wave B2 — runtime responsibility classification required
+
+- No new finding; master ledger remains 49/49.
+- Existing `SCHEMA-LEGACY-001` → `legacy-exam-model-disposition-v1` remains open.
+- Existing `SCHEMA-LEGACY-002` → `dormant-operational-model-disposition-v1` remains open.
+- add evidence-only prerequisite `legacy-model-runtime-responsibility-classification-v1`.
+- B1 zero-row evidence lowers migration/data-retention risk but is not deletion authority.
+- B2 proves current references must be semantically retired/replaced before schema removal.
+- eventual schema retirement must use a new forward Prisma migration; never rewrite applied migration history.

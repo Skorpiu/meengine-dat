@@ -1478,3 +1478,79 @@ Removal slices:
 6. run canonical Node24 validation plus Preview/hosted verification appropriate to each changed responsibility.
 
 Hosted environment keys must be verified by name and environment before deletion; local/static zero responsibility is not authority for blind hosted removal.
+
+<!-- data-wave-b2-responsibility-and-sa-handoff-v1 -->
+## Data Wave B2 — legacy/dormant model responsibility
+
+B2 statically classified schema, runtime, script, test and migration responsibility for the five models that B1 proved contain zero rows on the currently configured remote Supabase target.
+
+### B2 interpretation
+
+- zero observed rows do **not** currently make any of the five models immediately removable;
+- all five remain represented in the Prisma relation graph;
+- all five retain at least one Prisma delegate responsibility in runtime/ops/scripts;
+- historic migrations are provenance and must not be edited; eventual removal requires a new forward migration;
+- no new finding is created; B2 deepens `SCHEMA-LEGACY-001` and `SCHEMA-LEGACY-002`.
+
+### `Exam`
+
+- B1 observed rows: 0.
+- inbound schema relations: `Category`, `ExamRegistration`, `Instructor`, `Organization`, `Vehicle`.
+- runtime delegates: `app/api/admin/vehicles/route.ts`, `lib/ops/production-smoke-reconciliation-inspection.ts`.
+- script responsibility: 5 files.
+- tests mentioning the domain: 2.
+- migration provenance: 4 migrations.
+- disposition: **not removal-ready**; classify runtime references semantically before retirement.
+
+### `ExamRegistration`
+
+- B1 observed rows: 0.
+- inbound schema relations: `Exam`, `Payment`, `Student`.
+- runtime delegate: `lib/ops/production-smoke-reconciliation-inspection.ts`.
+- script responsibility: 3 files.
+- direct test responsibility: 0.
+- migration provenance: 2 migrations.
+- disposition: **not removal-ready**, although current responsibility may be primarily legacy/ops.
+
+### `LessonRequest`
+
+- B1 observed rows: 0.
+- inbound schema relations: `Category`, `Instructor`, `Lesson`, `Organization`, `Student`, `User`, `Vehicle`.
+- runtime delegates: `app/instructor/page.tsx`, `app/student/page.tsx`, `lib/ops/production-smoke-reconciliation-inspection.ts`.
+- script responsibility: 5 files.
+- direct test responsibility: 0.
+- migration provenance: 4 migrations.
+- disposition: **not removal-ready**; live page-level responsibility must be explained or retired first.
+
+### `Payment`
+
+- B1 observed rows: 0.
+- inbound schema relations: `ExamRegistration`, `Lesson`, `Student`, `User`.
+- runtime delegates: `lib/instructors/instructor-record-delete.ts`, `lib/students/student-record-delete.ts`, `lib/ops/production-smoke-reconciliation-inspection.ts`.
+- script responsibility: 3 files.
+- direct test responsibility: 0.
+- migration provenance: 2 migrations.
+- disposition: **not removal-ready**; delete/retention policy responsibility must be resolved first.
+
+### `Notification`
+
+- B1 observed rows: 0.
+- inbound schema relation: `User`.
+- runtime delegate: `lib/ops/production-smoke-reconciliation-inspection.ts`.
+- script responsibility: 2 files.
+- direct test responsibility: 0.
+- migration provenance: 2 migrations.
+- disposition: **not removal-ready**, likely requiring ops/seed retirement rather than business-flow replacement.
+
+### Next evidence phase
+
+`legacy-model-runtime-responsibility-classification-v1` must classify every remaining delegate/reference as one of:
+
+- active business behavior;
+- defensive deletion/retention behavior;
+- operator/Production Smoke observation;
+- seed/demo compatibility;
+- historical/legacy compatibility;
+- incidental type/text responsibility.
+
+Only after that classification can `legacy-exam-model-disposition-v1` and `dormant-operational-model-disposition-v1` become schema-removal implementation-ready.

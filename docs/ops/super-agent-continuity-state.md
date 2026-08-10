@@ -384,3 +384,85 @@ A fresh SA session must be able to state from committed repository evidence:
 - new cleanup slices: `auth-secret-alias-consolidation-v1`, `supabase-environment-contract-retirement-v1`, `legacy-environment-key-pruning-v1`.
 - existing cleanup slices retained: `public-env-pruning-v1`, `environment-configuration-contract-consolidation-v1`.
 - environment discovery/disposition is complete enough for implementation planning; hosted deletions remain explicit execution-time gates.
+
+<!-- data-wave-b2-responsibility-and-sa-handoff-v1 -->
+## Super Agent recovery handoff — Data Wave B2
+
+### Recovery anchor
+
+- Branch: `engineering-excellence-audit-v1`.
+- Validated pre-B2 HEAD: `092810b70f591ae89ee1d2467b587f7bb8dde29e`.
+- Mode: P1 analysis-only.
+- Canonical findings: 49.
+- Remediation coverage: 49/49.
+- No source/schema/env/package/DB/hosted/Production mutation was performed by B2.
+
+### Major completed evidence
+
+- Node24 runtime migration and closure complete.
+- exhaustive static Engineering Excellence snapshot complete.
+- Security Wave A1-A4 complete.
+- dependency-security applicability completed.
+- Data Wave B1 complete.
+- Environment configuration audit E1-E7 and final KEEP/REMOVE/CONSOLIDATE/DEFER disposition complete.
+- Data Wave B2 responsibility inventory complete.
+
+### Current environment conclusions
+
+- `CONFIG-ENV-001` confirmed → `local-development-database-isolation-v1`.
+- KEEP: `NEXTAUTH_SECRET`, `NEXTAUTH_URL`.
+- consolidate/remove alias: `AUTH_SECRET`.
+- remove after execution gates: `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LICENSE_TIER`.
+- `VERCEL_OIDC_TOKEN`: zero DAT responsibility; external ownership must be verified before deletion.
+- operator and Production Smoke env profiles remain intentionally separate.
+
+### Data B1/B2 model state
+
+`Exam`:
+- observed rows: 0;
+- inbound relations: Category, ExamRegistration, Instructor, Organization, Vehicle;
+- runtime delegates: admin vehicles API + Production Smoke reconciliation inspection;
+- 5 scripts; 2 tests; 4 migration provenance files.
+
+`ExamRegistration`:
+- observed rows: 0;
+- inbound relations: Exam, Payment, Student;
+- runtime/ops delegate: Production Smoke reconciliation inspection;
+- 3 scripts; 0 tests; 2 migration provenance files.
+
+`LessonRequest`:
+- observed rows: 0;
+- inbound relations: Category, Instructor, Lesson, Organization, Student, User, Vehicle;
+- runtime delegates: instructor page, student page, Production Smoke reconciliation inspection;
+- 5 scripts; 0 tests; 4 migration provenance files.
+
+`Payment`:
+- observed rows: 0;
+- inbound relations: ExamRegistration, Lesson, Student, User;
+- runtime delegates: instructor-record-delete, student-record-delete, Production Smoke reconciliation inspection;
+- 3 scripts; 0 tests; 2 migration provenance files.
+
+`Notification`:
+- observed rows: 0;
+- inbound relation: User;
+- runtime/ops delegate: Production Smoke reconciliation inspection;
+- 2 scripts; 0 tests; 2 migration provenance files.
+
+### Interpretation
+
+- zero-row evidence materially lowers data-migration risk but does not authorize deletion;
+- none of the five models is currently schema-removal-ready;
+- applied migrations are immutable historical provenance;
+- eventual retirement requires removing/replacing active responsibilities first and then creating a new forward migration.
+
+### Exact next phase
+
+`legacy-model-runtime-responsibility-classification-v1`
+
+Classify each remaining model reference/delegate as active business behavior, defensive delete/retention, operator/Smoke inspection, demo/seed compatibility, historical compatibility, or incidental text/type responsibility.
+
+Do not execute `legacy-exam-model-disposition-v1` or `dormant-operational-model-disposition-v1` until this classification is complete.
+
+### Human approval boundary
+
+The Super Agent is a context-recovery and execution assistant, not approval authority. Commits/pushes/merges, destructive changes, database writes, hosted configuration changes and Production writes remain explicit human-gated operations.

@@ -547,3 +547,15 @@ The deployment log reported that Node.js 20 is deprecated for future Vercel depl
 - DEFER external ownership: `VERCEL_OIDC_TOKEN`; zero DAT responsibility is proven, but external-tool ownership must be verified before deletion.
 - cleanup implementation remains unauthorized on the audit branch.
 - `local-development-database-isolation-v1` remains the first environment execution slice.
+
+<!-- data-wave-b2-responsibility-and-sa-handoff-v1 -->
+### Data Wave B2 checkpoint
+
+- Findings remain 49 with 49/49 remediation coverage.
+- The five B1 zero-row models are **not yet removal-ready** because B2 found remaining schema/runtime/ops/script responsibilities.
+- `Exam`: 2 runtime delegates.
+- `ExamRegistration`: 1 runtime/ops delegate.
+- `LessonRequest`: 3 runtime delegates including instructor/student pages.
+- `Payment`: 3 runtime delegates including instructor/student deletion logic.
+- `Notification`: 1 runtime/ops delegate.
+- next evidence-only phase: `legacy-model-runtime-responsibility-classification-v1`.
