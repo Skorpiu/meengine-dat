@@ -7,7 +7,7 @@
 - **Mode:** analysis-only
 - **Entry baseline:** `da5aea6fe4150e86d5bf568bb56b26dd53f7abeb`
 - **Started:** 2026-08-06
-- **Current phase:** exhaustive static snapshot analysis, Security Wave A, Data Wave B1 and environment/configuration evidence E1-E4 are complete. E4 promoted `CONFIG-ENV-001`: automatic local application configuration can resolve to the Production operator database target without an explicit isolation guard. The audit remains analysis-only at 49 confirmed findings; configuration pruning and remaining execution-readiness evidence are pending.
+- **Current phase:** exhaustive static snapshot analysis, Security Wave A, Data Wave B1 and environment/configuration evidence E1-E7 are complete. `CONFIG-ENV-001` remains the sole finding promoted by the environment audit; E5-E7 completed the per-key KEEP/REMOVE/CONSOLIDATE/DEFER disposition and prepared cleanup slices. The audit remains analysis-only at 49 confirmed findings; remaining Wave B and execution-readiness evidence continue.
 - **Confirmed findings:** 49 total — 2 governance findings, 41 code/runtime/security/architecture/test findings, and 5 toolchain/configuration/dependency-security findings. Dependency Wave A2 adds `DEP-SEC-002`; static snapshot discovery remains complete.
 - **Refactor implementation authorized:** no
 
@@ -189,7 +189,7 @@ The legacy seed is safety-sensitive and local-only. Size alone cannot justify to
 
 ## Current conclusion
 
-The normalized inventory, targeted evidence phases, exhaustive static snapshot analysis, Security Wave A1-A4, Data Wave B1, and environment/configuration evidence E1-E4 are complete. The audit now has **49 confirmed findings**: two governance findings, forty-one code/runtime/security/architecture/test findings, and six toolchain/configuration/dependency-security findings. `CONFIG-ENV-001` records the lack of an explicit local-versus-Production database isolation guard. Runtime implementation remains unauthorized in this analysis branch.
+The normalized inventory, targeted evidence phases, exhaustive static snapshot analysis, Security Wave A1-A4, Data Wave B1, and environment/configuration evidence E1-E7 are complete. The audit remains at **49 confirmed findings**: two governance findings, forty-one code/runtime/security/architecture/test findings, and six toolchain/configuration/dependency-security findings. `CONFIG-ENV-001` remains confirmed; E5-E7 added no new finding and completed the environment-key disposition ledger. Runtime implementation remains unauthorized in this analysis branch.
 
 These findings are evidence-backed audit conclusions and may include approved future resolution directions, but **no refactor implementation is authorized by this analysis slice**.
 
@@ -1430,3 +1430,51 @@ No INSERT, UPDATE, DELETE, schema change, hosted configuration change or product
 E4's direct-runtime scanner reported 13 candidates but one was `nextjs_space/docs/engineering/email-provider-evaluation.md`; the corrected runtime candidate count is 12.
 
 No env value, secret, URL, host, database name, username, password or token was recorded in canonical evidence.
+
+<!-- environment-configuration-disposition-e5-e7-v1 -->
+## Environment configuration disposition — E5-E7
+
+E5-E7 narrowed the environment audit from discovery to exact responsibility and final disposition. No new finding was promoted; the audit remains at 49 findings with 49/49 remediation coverage.
+
+### KEEP
+
+- `NEXTAUTH_SECRET` — canonical authentication secret variable for the current NextAuth v4 contract.
+- `NEXTAUTH_URL` — legitimate NextAuth environment-specific URL; local loopback override and remote operator value have distinct intentional responsibilities.
+
+### CONSOLIDATE / REMOVE ALIAS
+
+- `AUTH_SECRET` — remove from DAT-managed configuration in favor of `NEXTAUTH_SECRET`.
+- installed NextAuth 4.24.11 source resolves `NEXTAUTH_SECRET ?? AUTH_SECRET`; `AUTH_SECRET` is a fallback alias.
+- the operator profile currently defines both aliases with equal values, proving redundant local source-of-truth duplication.
+- remediation slice: `auth-secret-alias-consolidation-v1`.
+
+### REMOVE
+
+- `NEXT_PUBLIC_APP_URL` — no functional consumer outside `lib/env.ts`; remove from the DAT environment contract and validation/docs where no longer needed.
+- `NEXT_PUBLIC_SUPABASE_URL` — no functional consumer outside `lib/env.ts`.
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — no functional consumer outside `lib/env.ts`.
+- `SUPABASE_SERVICE_ROLE_KEY` — no functional environment consumer outside `lib/env.ts`; current application has no direct Supabase SDK/client responsibility.
+- `LICENSE_TIER` — zero functional tracked consumers; legacy env contract only.
+
+Removal slices:
+
+- `public-env-pruning-v1` — `NEXT_PUBLIC_APP_URL`.
+- `supabase-environment-contract-retirement-v1` — Supabase public URL/anon key/service-role env contract.
+- `legacy-environment-key-pruning-v1` — `LICENSE_TIER` and externally-owned residual-key disposition.
+
+### DEFER / external ownership
+
+- `VERCEL_OIDC_TOKEN` has zero functional DAT consumer and no tracked Vercel CLI env workflow.
+- classify it as outside the DAT application contract; do not blindly delete external/hosted ownership.
+- before removal from any local or hosted environment, verify whether current Vercel tooling generated or owns it.
+
+### Execution ordering
+
+1. execute `local-development-database-isolation-v1` first;
+2. execute `auth-secret-alias-consolidation-v1`;
+3. execute `supabase-environment-contract-retirement-v1` and `public-env-pruning-v1`;
+4. execute `legacy-environment-key-pruning-v1` with Vercel ownership verification;
+5. execute `environment-configuration-contract-consolidation-v1` to normalize the surviving contract and documentation;
+6. run canonical Node24 validation plus Preview/hosted verification appropriate to each changed responsibility.
+
+Hosted environment keys must be verified by name and environment before deletion; local/static zero responsibility is not authority for blind hosted removal.

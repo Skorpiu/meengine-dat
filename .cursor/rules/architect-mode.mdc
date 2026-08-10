@@ -506,7 +506,7 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 
 ### Single recommended next slice and planned order
 
-1. `engineering-excellence-audit-v1` — P1 analysis-only; **active**; exhaustive static snapshot analysis + Security Wave A + Data Wave B1 + environment E1-E4 complete; 49 findings confirmed; configuration pruning/execution-readiness evidence continues; no audit-branch implementation authorized
+1. `engineering-excellence-audit-v1` — P1 analysis-only; **active**; exhaustive static snapshot analysis + Security Wave A + Data Wave B1 + environment E1-E7 complete; 49 findings confirmed; environment disposition complete and remaining Wave B/execution-readiness evidence continues; no audit-branch implementation authorized
 
 <!-- engineering-excellence-audit-v1-live-state -->
 **Live audit state (2026-08-06; base `da5aea6`):**
@@ -916,3 +916,15 @@ Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
 - Do not delete an env key from static-zero-reference evidence alone when a framework/library may consume it implicitly.
 - Cleanup sequence: isolate development target → prove env responsibility → consolidate duplicates → prune dead public/legacy variables → validate lifecycle hooks and operator/smoke workflows.
 - Never print env values, credentials, full database URLs, database identities or secrets in audit output.
+
+<!-- environment-configuration-disposition-e5-e7-v1 -->
+## Environment E5-E7 execution rule
+
+- Canonical auth secret variable: `NEXTAUTH_SECRET`.
+- `AUTH_SECRET` is a NextAuth fallback alias and is redundant in DAT because the operator copies equal values into both aliases.
+- Never remove an auth-secret alias from an environment until `NEXTAUTH_SECRET` presence is proven for that same environment.
+- Remove the unused Supabase/public environment contract only after proving the hosted environment key names and preserving any infrastructure-only responsibility outside DAT.
+- `LICENSE_TIER` has no functional DAT consumer and is cleanup-ready.
+- `VERCEL_OIDC_TOKEN` has no DAT functional responsibility, but external tooling ownership must be checked before deletion.
+- Preserve `NEXTAUTH_URL` and its intentional local-versus-remote environment-specific values.
+- Execute local database isolation before relying on ordinary local write-capable runtime validation.

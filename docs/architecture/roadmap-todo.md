@@ -748,3 +748,14 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 - `public-env-pruning-v1`: prove implicit framework/build responsibility, then remove unused public env keys rather than preserving dead configuration.
 - candidates requiring explicit responsibility proof: `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_SECRET`, `LICENSE_TIER`, `VERCEL_OIDC_TOKEN`.
 - no env variable is removed merely to minimize the count; secrets and genuine environment-specific configuration remain env-backed.
+
+<!-- environment-configuration-disposition-e5-e7-v1 -->
+### Environment disposition — E5-E7 complete
+
+- **Finding count impact:** none; master ledger remains 49/49.
+- `auth-secret-alias-consolidation-v1`: standardize on `NEXTAUTH_SECRET`; remove redundant `AUTH_SECRET` only after each DAT-managed environment is proven to contain the canonical secret.
+- `public-env-pruning-v1`: retire unused `NEXT_PUBLIC_APP_URL`.
+- `supabase-environment-contract-retirement-v1`: retire `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` from the DAT contract after hosted name-only verification.
+- `legacy-environment-key-pruning-v1`: retire `LICENSE_TIER`; classify/remove `VERCEL_OIDC_TOKEN` only after external Vercel-tool ownership verification.
+- `environment-configuration-contract-consolidation-v1`: normalize surviving `.env.example`, local profiles, CI, docs and hosted environment responsibilities after the targeted removals.
+- execution dependency: `local-development-database-isolation-v1` precedes ordinary environment cleanup validation.

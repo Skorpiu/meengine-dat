@@ -369,3 +369,18 @@ A fresh SA session must be able to state from committed repository evidence:
 - follow-up cleanup slices: `environment-configuration-contract-consolidation-v1`, `public-env-pruning-v1`.
 - corrected direct-runtime env candidate count is 12 because one E4 result was a nested documentation file.
 - no env value or secret was persisted in audit evidence.
+
+<!-- environment-configuration-disposition-e5-e7-v1 -->
+## Environment E5-E7 disposition checkpoint
+
+- Audit HEAD during E5-E7: `da8a1ce159232a09ea34e6a15a449f25fc847984`.
+- findings remain 49; roadmap coverage remains 49/49.
+- NextAuth 4.24.11 source proves canonical precedence `NEXTAUTH_SECRET ?? AUTH_SECRET`.
+- operator profile contains both aliases with equal values.
+- KEEP: NEXTAUTH_SECRET, NEXTAUTH_URL.
+- REMOVE/CONSOLIDATE: AUTH_SECRET.
+- REMOVE: NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, LICENSE_TIER.
+- DEFER external ownership: VERCEL_OIDC_TOKEN.
+- new cleanup slices: `auth-secret-alias-consolidation-v1`, `supabase-environment-contract-retirement-v1`, `legacy-environment-key-pruning-v1`.
+- existing cleanup slices retained: `public-env-pruning-v1`, `environment-configuration-contract-consolidation-v1`.
+- environment discovery/disposition is complete enough for implementation planning; hosted deletions remain explicit execution-time gates.
