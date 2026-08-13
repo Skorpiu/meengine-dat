@@ -10,7 +10,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| `engineering-excellence-audit-v1` | **P1** engineering excellence | **Active — analysis-only**; exhaustive static snapshot analysis complete; 48 findings confirmed; no unclassified static signal remains; no audit-branch implementation |
+| `engineering-excellence-audit-v1` | **P1** engineering excellence | **Active — analysis-only**; exhaustive static/security/environment/data analysis plus DAT_4.4 surface-completeness reconciliation complete; 51 findings confirmed with 51/51 remediation coverage; Final Engineering Quality Review / audit closure gate next; no audit-branch implementation |
 
 **Closed context:** `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
@@ -21,7 +21,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 <!-- node-24-runtime-migration-v1 closed 2026-08-04 at 909b69a -->
 **Closed prerequisite:** `node-24-runtime-migration-v1` merged to `main` at `909b69a`; GitLab `node:24`, Vercel Preview/Production Node 24.x, and required post-deploy non-destructive hosted gates passed.
 
-1. `engineering-excellence-audit-v1` — **P1 / engineering excellence — active, analysis-only**; exhaustive static snapshot analysis complete; 48 findings confirmed; implementation remains separate and human-authorized
+1. `engineering-excellence-audit-v1` — **P1 / engineering excellence — active, analysis-only**; repository-static audit discovery and surface-completeness reconciliation complete; 51 findings confirmed with 51/51 remediation coverage; Final Engineering Quality Review / audit closure gate next; implementation remains separate and human-authorized
 2. `platform-separation-architecture-plan-v1`
 3. Small audit-approved refactor slices (one scope per branch; behavioural equivalence + `pnpm check`)
 
@@ -57,7 +57,7 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 | Slice | Priority | Notes |
 | ----- | -------- | ----- |
-| `engineering-excellence-audit-v1` | **P1** active (analysis-only) | Exhaustive static snapshot analysis completed on audit HEAD `5eded00`; 48 findings confirmed; audit report records evidence; audit itself authorizes no implementation |
+| `engineering-excellence-audit-v1` | **P1** active (analysis-only) | Repository-static audit discovery, Security Wave A, environment/configuration E1-E7, Data Wave B, and DAT_4.4 surface-completeness reconciliation complete; 51 findings / 51/51 remediation coverage; Final Engineering Quality Review / audit closure gate next; audit itself authorizes no implementation |
 | `platform-separation-architecture-plan-v1` | **P1** backlog | After the engineering audit — autonomous MeEngine Platform vs DAT; Node 24 prerequisite is closed |
 | `people-instructor-invite-accept-list-refresh-v1` | **P1** bug | After INSTRUCTOR invite accept, instructor may not appear under People → Instructors despite correct DB rows |
 | `school-person-identifiers-settings-product-plan-v1` | **P1** plan first | DEC-065 — Admin → Settings → Identifiers & numbering; plan before implementation |
@@ -90,7 +90,21 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 ### `engineering-excellence-audit-v1`
 
-**Status:** **P1 — active**; analysis-only. Normalized inventory, targeted evidence and exhaustive static snapshot analysis are complete. 46 findings are confirmed and mapped to implementation, refactor, evidence or disposition slices; appearance in the roadmap does not authorize implementation. No runtime, schema, data, billing or functional changes belong in the audit branch. Detailed evidence: [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md).
+**Status:** **P1 — active**; analysis-only. Normalized inventory, targeted evidence, exhaustive static snapshot analysis, Security Wave A, environment/configuration E1-E7, Data Wave B1-B5.2, and DAT_4.4 surface-completeness reconciliation are complete. 51 findings are confirmed with 51/51 remediation coverage; appearance in the roadmap does not authorize implementation. No unresolved repository-static evidence frontier remains. The Final Engineering Quality Review / audit closure gate is next. No runtime, schema, data, billing or functional changes belong in the audit branch. Detailed evidence: [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md).
+
+<!-- dat-44-surface-completeness-final-disposition-v1 -->
+### DAT_4.4 surface-completeness reconciliation disposition
+
+- **Status:** complete.
+- **Finding count:** 51.
+- **Remediation coverage:** 51/51.
+- **Repository-static unresolved frontier:** none.
+- Evidence-first or prerequisite-gated slices remain valid future work; they do not require global audit discovery to remain open.
+- No new finding was promoted by the final dependency/rate-limit/static-responsibility probes.
+- `legacy-inmemory-rate-limit-retirement-v1` is specifically a dormant-contract cleanup: the old limiter is imported by `lib/api-utils.ts`, but no current `withErrorHandling` caller activates the `rateLimit` option.
+- `toolchain-e2e-runtime-provenance-v1` remains gated by local-development database isolation; no unsafe local dev-server probe is required for audit closure.
+- **Next:** Final Engineering Quality Review / audit closure gate.
+
 
 **Inherited baseline:** Node 24 P0 is closed (`909b69a` runtime merge; `da5aea6` current main/audit base). Local Node `v24.18.0`, repository engine `24.x`, GitLab `node:24`, Vercel Node 24.x, 207 test files / 1738 tests, production build, and post-deploy read-only smoke are validated. No dependency or runtime upgrades belong in this audit.
 
