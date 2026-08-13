@@ -10,7 +10,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| `engineering-excellence-audit-v1` | **P1** engineering excellence | **Closure recommended — GO; awaiting explicit human closure authorization**; Final Engineering Quality Review PASS; 51 findings / 51/51 remediation coverage; post-audit execution queue prepared; no audit-branch implementation |
+| `engineering-excellence-audit-v1` | **P1** engineering excellence | **CLOSED 2026-08-13 — explicit human authorization**; Final Engineering Quality Review PASS; 0 closure blockers; 51 findings / 51/51 remediation coverage; findings retained in post-audit execution queue |
 
 **Closed context:** `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
@@ -21,7 +21,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 <!-- node-24-runtime-migration-v1 closed 2026-08-04 at 909b69a -->
 **Closed prerequisite:** `node-24-runtime-migration-v1` merged to `main` at `909b69a`; GitLab `node:24`, Vercel Preview/Production Node 24.x, and required post-deploy non-destructive hosted gates passed.
 
-1. `engineering-excellence-audit-v1` — Final Engineering Quality Review **PASS**; closure recommendation **GO**, awaiting explicit human closure authorization.
+1. `engineering-excellence-audit-v1` — **CLOSED 2026-08-13** by explicit human authorization; Final Engineering Quality Review PASS; 51 findings / 51/51 remediation coverage retained as active remediation debt.
 2. P0 containment — `billing-webhook-authenticity-gate-v1` → `next-security-patch-containment-v1`.
 3. P0 operational safety — `local-development-database-isolation-v1` and `migration-deploy-target-safety-gate-v1`, where independently applicable.
 4. `platform-separation-architecture-plan-v1` — parallel architecture lane after formal audit closure; does not block independent urgent P0 containment.
@@ -59,7 +59,7 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 | Slice | Priority | Notes |
 | ----- | -------- | ----- |
-| `engineering-excellence-audit-v1` | **P1** closure gate | Final Engineering Quality Review PASS; closure recommendation GO, awaiting explicit human closure authorization; 51 findings / 51/51 remediation coverage; execution queue prepared; audit itself authorizes no implementation |
+| `engineering-excellence-audit-v1` | **P1** closed | **Closed 2026-08-13 by explicit human authorization**; Final Engineering Quality Review PASS; 0 closure blockers; 51 findings / 51/51 remediation coverage; execution queue active; closure itself authorizes no implementation |
 | `platform-separation-architecture-plan-v1` | **P1** backlog | After the engineering audit — autonomous MeEngine Platform vs DAT; Node 24 prerequisite is closed |
 | `people-instructor-invite-accept-list-refresh-v1` | **P1** bug | After INSTRUCTOR invite accept, instructor may not appear under People → Instructors despite correct DB rows |
 | `school-person-identifiers-settings-product-plan-v1` | **P1** plan first | DEC-065 — Admin → Settings → Identifiers & numbering; plan before implementation |
@@ -92,7 +92,7 @@ Do **not** resume `platform-commercial-catalog-read-services-v1` inside embedded
 
 ### `engineering-excellence-audit-v1`
 
-**Status:** **P1 — closure recommended GO; awaiting explicit human closure authorization**. Final Engineering Quality Review passed with zero closure-blocking dimensions. 51 findings remain confirmed with 51/51 remediation coverage; appearance in the roadmap does not authorize implementation. No unresolved repository-static evidence frontier remains. The post-audit execution queue is prepared and security-first. No runtime, schema, data, billing or functional remediation belongs in the audit branch. Detailed evidence: [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md).
+**Status:** **CLOSED 2026-08-13 — explicit human authorization**. Final Engineering Quality Review passed with zero closure-blocking dimensions. 51 findings remain active remediation debt with 51/51 remediation coverage; audit closure does not authorize implementation. No unresolved repository-static evidence frontier remains. The post-audit execution queue is active and security-first. Detailed evidence: [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md).
 
 <!-- dat-44-surface-completeness-final-disposition-v1 -->
 ### DAT_4.4 surface-completeness reconciliation disposition
@@ -965,3 +965,18 @@ contracts are satisfied.
   explicit human authorization;
 - update the Super Agent recovery state at every material milestone;
 - documentation is part of the slice Definition of Done: update affected canonical state, roadmap/To-Do, decision/runbook/technical documentation and recovery evidence in the same controlled workstream; do not leave documentation knowingly stale behind a completed implementation.
+
+<!-- engineering-excellence-audit-v1-formal-closure-v1 -->
+### Engineering excellence audit — formal closure checkpoint
+
+- **Closed:** 2026-08-13.
+- **Authority:** explicit human GO.
+- **Final EQR:** PASS.
+- **Closure blockers:** 0.
+- **Findings:** 51.
+- **Remediation coverage:** 51/51.
+- **Unresolved repository-static audit frontier:** none.
+- **Findings remain active:** yes — audit closure is not remediation completion.
+- **First execution slice:** `billing-webhook-authenticity-gate-v1`.
+- **Execution model:** security-first, smallest-safe slices, documentation and
+  Super Agent continuity included in Definition of Done.

@@ -506,7 +506,7 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 
 ### Single recommended next slice and planned order
 
-1. `engineering-excellence-audit-v1` — P1 analysis-only; **closure recommended — GO, awaiting explicit human closure authorization**; Final Engineering Quality Review passed with 0 closure-blocking dimensions; 51 findings remain confirmed with 51/51 remediation coverage; post-audit execution is security-first, beginning with `billing-webhook-authenticity-gate-v1` then `next-security-patch-containment-v1`; no audit-branch remediation implementation is authorized
+1. `billing-webhook-authenticity-gate-v1` — **P0 next implementation slice** after formal closure of `engineering-excellence-audit-v1` on 2026-08-13; the audit closed with Final Engineering Quality Review PASS, 0 closure blockers, 51 findings and 51/51 remediation coverage; prepare the smallest-safe security slice on a separate branch; behavioural implementation, push, merge and branch deletion remain separately human-authorized
 
 <!-- engineering-excellence-audit-v1-live-state -->
 **Live audit state (2026-08-13; base `da5aea6`):**
@@ -1110,3 +1110,20 @@ but the affected authoritative documentation remains stale.
 
 Documentation quality is part of the proportional Engineering Quality Review
 and part of the milestone Definition of Done.
+
+<!-- engineering-excellence-audit-v1-formal-closure-v1 -->
+### Engineering excellence audit formal closure
+
+- Audit: `engineering-excellence-audit-v1`.
+- Formal closure date: 2026-08-13.
+- Closure authority: explicit human GO.
+- Final Engineering Quality Review: PASS.
+- Closure-blocking dimensions: 0.
+- Confirmed findings: 51.
+- Remediation coverage: 51/51.
+- Repository-static unresolved audit frontier: none.
+- Findings resolved by closure: no — they remain active remediation debt.
+- Audit-branch remediation implementation authorized by closure: no.
+- First post-audit implementation priority: `billing-webhook-authenticity-gate-v1`.
+- Second containment priority: `next-security-patch-containment-v1`.
+- Documentation and Super Agent continuity remain mandatory parts of every slice Definition of Done.

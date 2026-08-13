@@ -20,8 +20,8 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 | **Smoke fixtures** | DEC-064 closed 2026-07-28 (**human**): repair apply + fixture apply (`changesApplied=18`); inspector no blockers; fixtures all-ready; idempotent dry-run; Sarah/Bob/John Doe preserved; commercial catalogue untouched; no `PLATFORM_ADMIN` recreate. Full IDs in operator vault only. |
 | **Remote ops closed** | Do **not** re-run repair, fixture apply, or smoke-lesson cleanup without new evidence + explicit human authorization. `student-invite-accept-student-link-repair-v1` **done** (repo + remote). |
 | **Node.js runtime** | **Node 24 migration closed.** Local compatibility passed on Node 24.18.0; repository pins, package engines, `.nvmrc`, GitLab CI and runner documentation are aligned; branch and `main` pipelines passed using `node:24`; Vercel Preview and Production deployed successfully with Project Settings and effective runtime on Node 24.x; post-deploy non-destructive hosted gates passed at `909b69a`. |
-| **Audit closure gate** | `engineering-excellence-audit-v1` — **Final Engineering Quality Review PASS; closure recommendation GO, awaiting explicit human closure authorization**. 51 findings remain confirmed with 51/51 remediation coverage. No repository-static audit frontier remains. Post-audit execution queue is security-first; remediation implementation remains separate and human-authorized per slice. |
-| **Ordered next** | (1) formally close `engineering-excellence-audit-v1` after explicit human authorization → (2) begin independently safe P0 containment and operational-safety slices on separate approved branches; `platform-separation-architecture-plan-v1` starts as a parallel architecture lane after closure → (3) execute P1/P2 slices according to the post-audit priority queue; deeper Platform/DAT-boundary refactors wait for the architecture plan. |
+| **Engineering audit** | `engineering-excellence-audit-v1` — **CLOSED 2026-08-13 by explicit human authorization**. Final Engineering Quality Review PASS; 0 closure-blocking dimensions; 51 findings with 51/51 remediation coverage; no repository-static audit frontier remains. The findings remain active remediation debt in the post-audit execution queue. |
+| **Ordered next** | (1) transition safely from the closed audit branch to `billing-webhook-authenticity-gate-v1` as the first P0 implementation slice → (2) `next-security-patch-containment-v1`; progress `local-development-database-isolation-v1` and `migration-deploy-target-safety-gate-v1` where independently applicable; `platform-separation-architecture-plan-v1` runs as a parallel architecture lane → (3) P1/P2 according to the post-audit queue. |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
 | **Archive tag** | `archive-schedule-and-vehicles-b101112` — historical archive only; **not** a release or recovery baseline. |
@@ -628,3 +628,19 @@ The deployment log reported that Node.js 20 is deprecated for future Vercel depl
 - Data Wave B audit/disposition is closed.
 - legacy-model retirement has a staged implementation contract with explicit prerequisites; implementation remains unauthorized in DAT_4.3.
 - next phase: `audit-surface-completeness-reconciliation-v1`.
+
+<!-- engineering-excellence-audit-v1-formal-closure-v1 -->
+## Engineering excellence audit closure
+
+`engineering-excellence-audit-v1` was formally closed on **2026-08-13** after
+explicit human authorization and a Final Engineering Quality Review with zero
+closure-blocking dimensions.
+
+The audit closed with **51 confirmed findings and 51/51 remediation coverage**.
+Closure does not mean those findings are fixed; they remain active remediation
+debt governed by the post-audit execution queue.
+
+The first P0 execution priority is `billing-webhook-authenticity-gate-v1`,
+followed by `next-security-patch-containment-v1`. Database/migration safety
+foundations and the Platform separation architecture lane proceed according to
+their documented prerequisites and independence boundaries.
