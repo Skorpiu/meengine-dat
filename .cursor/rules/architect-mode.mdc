@@ -1153,3 +1153,24 @@ and part of the milestone Definition of Done.
   established.
 - Documentation, tests, proportional EQR and Super Agent recovery remain part
   of Definition of Done.
+
+<!-- deferred-commercial-billing-product-boundary-v1 -->
+### Deferred commercial Billing product boundary
+
+The active `billing-webhook-authenticity-gate-v1` slice is **security containment
+only**. Do not expand it into checkout, PSP integration, pricing, subscription
+productization or school/student payment implementation.
+
+Commercial Billing remains strategically required but deliberately deferred:
+
+1. **School -> MeEngine/DAT subscription domain:** depends on the autonomous
+   Platform being operational and authoritative for products, prices,
+   subscriptions, add-ons and commercial entitlements. DAT License may initiate
+   the experience; Platform/provider processing authorizes paid state.
+2. **Student -> driving-school payment domain:** separate DAT product domain and
+   future optional add-on/premium capability. Revisit only after the first client
+   web app is operating successfully in Production, when product, UX and payment
+   integration can be matured deliberately.
+
+Preserve the existing separation of payment domains (DEC-046..052). Do not
+recombine them into one generic Payment model or implementation slice.

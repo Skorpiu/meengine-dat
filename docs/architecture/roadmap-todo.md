@@ -285,7 +285,7 @@ Longer-running topics; prefer audit-derived slices over inventing mass refactors
 
 ## Explicitly do not open next
 
-- Billing feature/checkout/PSP expansion remains blocked. Security containment for confirmed `BILLING-SEC-001` is the exception and may proceed only as a dedicated human-authorized P0 slice.
+- Billing feature/checkout/PSP product expansion is deliberately deferred to the end-of-roadmap commercial Billing section below. The current `billing-webhook-authenticity-gate-v1` is security containment only and is the sole Billing implementation exception at this stage.
 - Prisma migrations / schema changes unless gated
 - Platform cross-tenant audit viewer (tenant CSV export is **done**)
 - `supabase-rls-tenant-policies-v1` unless Data API product-required
@@ -1002,3 +1002,57 @@ contracts are satisfied.
 - Completed local audit branch: removed after verified merge ancestry.
 - Current phase: implementation preflight.
 - Next containment slice after completion: `next-security-patch-containment-v1`.
+
+<!-- deferred-commercial-billing-after-first-client-v1 -->
+## Deferred / end-of-roadmap — commercial Billing and payments
+
+These items are intentionally placed at the **end of the active To-Do**. They
+remain strategically important for market competitiveness, but must not compete
+with getting the first client web app safely operational in Production.
+
+### `platform-commercial-billing-productization-v1` — Scenario 1
+
+**When:** only after the autonomous MeEngine Platform commercial authority is
+sufficiently operational.
+
+**Product intent:**
+
+- driving schools pay MeEngine/DAT for the service;
+- DAT Core / DAT Plus / DAT Premium remain the commercial plan family;
+- commercial modules/features may be bundled by plan or sold as add-ons;
+- a School Admin can initiate subscription/add-on lifecycle actions, but paid
+  activation/deactivation is authorized by Platform/provider state;
+- feature access is entitlement-driven rather than a tenant-editable raw flag;
+- current interval decision remains monthly/annual unless deliberately revised;
+- the Vehicles example is illustrative only and does not freeze final package
+  composition, duration or price.
+
+**Deferred decisions:** final package composition, pricing, PSP/provider,
+proration, trials/grace, upgrade/downgrade UX and exact cancellation semantics.
+
+### `school-student-payments-addon-v1` — Scenario 2
+
+**When:** revisit only after the first client has the DAT web app running
+successfully in Production.
+
+**Product intent:**
+
+- optional feature/add-on; it must not be mandatory for every school;
+- may ultimately be positioned as Premium and/or a separately purchasable
+  add-on according to the later commercial decision;
+- enables the school/student financial workflow and may later include actual
+  in-app student payments;
+- remains a separate payment domain from school-to-MeEngine/DAT subscription
+  billing;
+- requires its own product, UX, authorization, payment-provider, accounting and
+  operational design before implementation.
+
+### Current Billing exception
+
+`billing-webhook-authenticity-gate-v1` is **not product development**. It is the
+P0 security containment needed to ensure an unfinished Billing skeleton cannot
+accept unproven external events and mutate commercial state.
+
+The remaining audit Billing findings stay in the remediation ledger; their
+priority may be reassessed against the fail-closed boundary, but they are not
+silently considered fixed by product deferment.

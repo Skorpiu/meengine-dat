@@ -8,6 +8,7 @@ export const BILLING_WEBHOOK_CODES = {
   processingFailed: "billing_webhook_processing_failed",
   parseFailed: "billing_webhook_parse_failed",
   unsupportedProvider: "billing_webhook_unsupported_provider",
+  authenticityUnavailable: "billing_webhook_authenticity_unavailable",
   noEvents: "billing_webhook_no_events",
 } as const;
 

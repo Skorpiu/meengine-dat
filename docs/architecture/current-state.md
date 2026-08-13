@@ -671,3 +671,20 @@ behavioural remediation.
 - First phase: read-only implementation preflight.
 - Behavioural implementation remains separately controlled by slice evidence
   and normal authorization boundaries.
+
+<!-- deferred-commercial-billing-product-boundary-v1 -->
+## Deferred commercial Billing product boundary
+
+Commercial Billing is intentionally **not a current client-delivery feature**.
+
+- `billing-webhook-authenticity-gate-v1` exists only to remove the current
+  unauthenticated public mutation path.
+- School-to-MeEngine/DAT commercial subscriptions and feature add-ons depend on
+  the autonomous Platform commercial authority.
+- Student-to-school payments remain a separate optional DAT add-on/premium
+  product concept and are deferred until after the first client web app is live
+  and stable in Production.
+- Current documented commercial cadence remains monthly/annual unless a later
+  product decision explicitly changes it.
+- No current containment work determines final pricing, package composition,
+  PSP choice, proration, payment UX or student-payment workflow.
