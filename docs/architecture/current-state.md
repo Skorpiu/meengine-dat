@@ -13,15 +13,15 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 | Topic | Current truth |
 | ----- | ------------- |
 | **Entry baseline** | `main` merge commit `909b69a` (`Merge branch 'node-24-runtime-migration-v1' into 'main'`). This is the verified baseline for the Node 24 closure record — **not** an eternal SHA. Re-confirm the commit served in Production after every later deployment. |
-| **Git / CI** | Local `main` = `origin/main` = `909b69a` at closure inventory. The GitLab pipeline for the Node 24 merge on `main` **Passed** using Docker image `node:24`. |
+| **Git / CI** | Local `main` = `origin/main` = `da5aea6` after the docs-only closure integration. Node 24 runtime application merge `909b69a` and closure record `a397054` are integrated; the verified GitLab `main` pipeline passed using Docker image `node:24`. |
 | **Deployment (last operator-confirmed)** | Vercel project `meengine-dat` — Production runtime validation completed on application merge commit **`909b69a`**, with the Vercel Project Setting and effective runtime aligned to Node **24.x**. A later docs-only closure deployment may advance the served commit without changing this validated runtime baseline; re-confirm after any later application or runtime deployment. |
 | **Hosts (shared deployment)** | `www.meengine.io`, `platform.meengine.io`, `demo.meengine.io`, `meengine-dat.vercel.app` currently share the **same** Vercel app/deployment. DAT/Platform separation is **planned**, not yet physical. |
 | **Hosted smoke** | Original full hosted verification remains closed with mutation evidence **1/0/0** and its immutable lesson trail. After the Node 24 Production deployment at `909b69a`, the operator re-ran the required non-destructive gates: fixture preflight **1/0/0**, API health + public signup guard **exit 0**, and hosted read-only UI **4/0/0**. Mutation smoke was intentionally not repeated because the slice changed runtime/configuration only and another Production write would add little signal. |
 | **Smoke fixtures** | DEC-064 closed 2026-07-28 (**human**): repair apply + fixture apply (`changesApplied=18`); inspector no blockers; fixtures all-ready; idempotent dry-run; Sarah/Bob/John Doe preserved; commercial catalogue untouched; no `PLATFORM_ADMIN` recreate. Full IDs in operator vault only. |
 | **Remote ops closed** | Do **not** re-run repair, fixture apply, or smoke-lesson cleanup without new evidence + explicit human authorization. `student-invite-accept-student-link-repair-v1` **done** (repo + remote). |
 | **Node.js runtime** | **Node 24 migration closed.** Local compatibility passed on Node 24.18.0; repository pins, package engines, `.nvmrc`, GitLab CI and runner documentation are aligned; branch and `main` pipelines passed using `node:24`; Vercel Preview and Production deployed successfully with Project Settings and effective runtime on Node 24.x; post-deploy non-destructive hosted gates passed at `909b69a`. |
-| **Next recommended** | `engineering-excellence-audit-v1` — **P1 analysis-only**, planned and not executed. Node 24 P0 is closed; no refactor implementation is authorized by the audit itself. |
-| **Ordered next** | (1) `engineering-excellence-audit-v1` (planned, analysis-only, not executed) → (2) `platform-separation-architecture-plan-v1` → (3) small audit-approved refactor slices. |
+| **Engineering audit** | `engineering-excellence-audit-v1` — **CLOSED 2026-08-13 by explicit human authorization**. Final Engineering Quality Review PASS; 0 closure-blocking dimensions; 51 findings with 51/51 remediation coverage; no repository-static audit frontier remains. The findings remain active remediation debt in the post-audit execution queue. |
+| **Ordered next** | (1) transition safely from the closed audit branch to `billing-webhook-authenticity-gate-v1` as the first P0 implementation slice → (2) `next-security-patch-containment-v1`; progress `local-development-database-isolation-v1` and `migration-deploy-target-safety-gate-v1` where independently applicable; `platform-separation-architecture-plan-v1` runs as a parallel architecture lane → (3) P1/P2 according to the post-audit queue. |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
 | **Archive tag** | `archive-schedule-and-vehicles-b101112` — historical archive only; **not** a release or recovery baseline. |
@@ -309,8 +309,66 @@ See [Canonical current state](#canonical-current-state). Single recommended next
 ### Engineering excellence (audit status)
 
 - Localized refactors and hygiene have occurred across many prior slices.
-- A **global, systematic** maintainability audit has **not** been executed.
-- Slice **`engineering-excellence-audit-v1`** is **planned** (P1 analysis-only) in [roadmap-todo.md](./roadmap-todo.md). No concrete audit findings claimed here.
+- The global, systematic maintainability audit **started on 2026-08-06** in `engineering-excellence-audit-v1`, based on `da5aea6`.
+- The normalized inventory phase is complete: 661 TypeScript/TSX files, 438 production files, 223 test/E2E files, 58 API routes, 96 components, 9 hooks, 369 `lib` files, and 27 scripts.
+- No concrete finding, severity, extraction target, file move, or refactor slice is confirmed yet.
+- Detailed evidence and audit invariants are maintained in [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md).
+- The audit inherits the closed Node 24 baseline: local Node `v24.18.0`, repository engine `24.x`, GitLab `node:24`, Vercel Node 24.x, application merge `909b69a`, closure/main baseline `da5aea6`, 207 test files / 1738 tests, production build, and post-deploy read-only smoke passed.
+<!-- node24-local-runtime-chain-v1 -->
+- Local Windows/Git Bash runtime-chain clarification (2026-08-07): bare `pnpm` is a Volta shim currently executed with Volta's Node `v20.20.0`. Explicitly launching only the outer pnpm process with portable Node 24 is also insufficient because nested bare pnpm calls can fall back to Volta/Node 20. Full transitive Node-24 validation was proven with a temporary guarded PATH shim forcing direct and nested pnpm calls through portable Node `v24.18.0` + pnpm `10.24.0`; 9 nested shim invocations were recorded and the resulting check passed 207/207 test files, 1738/1738 tests, and the production build before the shim was removed.
+- The Super Agent remains the reusable repository-aware operational worker, but remote writes, production mutation, destructive actions, and behavioural changes always require explicit human authorization.
+- Rulebook audit finding `SA-GOV-001` is confirmed and fixed in the audit branch: blocking gates must validate exact propositions, inspect semantic context, distinguish current from historical evidence, and explicitly account for untracked files.
+- Rulebook validation completed: `SA-GOV-002` authority hierarchy is apt; `SA-GOV-003` is satisfied by the canonical Merge readiness criteria and must not be duplicated.
+- Governance finding `SA-GOV-004` is confirmed and fixed in the audit branch through a proportional, evidence-based Engineering Quality Review Protocol and reviewer expectations.
+<!-- ui-orch-001-linked-student-profile-split-mutation -->
+- Production UI finding `UI-ORCH-001` confirmed: linked student profile editing uses two sequential writes (`Student` then linked `User`) and may leave the records divergent if the second write fails.
+- The client reports partial success and reloads the persisted student state, but no atomic server operation, compensation, or direct orchestration test exists.
+<!-- api-atom-001-generic-user-update-split-write -->
+- `API-ATOM-001` confirmed: `/api/users/update` can persist `User` before a related `Student` or `Instructor` write fails because the route has no transaction or compensation.
+<!-- ui-orch-002-instructor-profile-category-split-mutation -->
+- `UI-ORCH-002` confirmed: instructor editing performs profile/license and qualified-category writes separately and can produce an explicitly reported partial success.
+- Approved planning direction: move student and instructor edits to aggregate-specific transactional services behind their existing PATCH routes, then narrow the generic user-update contract.
+- No runtime implementation is authorized in this analysis-only branch.
+<!-- super-agent-continuity-recovery-v1 -->
+- Conversation-independent Super Agent continuity is now mandatory through `docs/ops/super-agent-continuity-state.md` and the Recovery Reconstruction Drill.
+<!-- ui-struct-001-people-manager-orchestration-concentration -->
+- `UI-STRUCT-001` confirmed: both people-management components retain multiple workflows and local reconciliation states without direct component tests.
+- Structural simplification is deferred until the approved atomicity and generic-contract slices are complete.
+- No generic cross-domain People manager is recommended.
+<!-- a11y-001-people-search-accessible-names -->
+- `A11Y-001` confirmed: People search fields and icon-only search actions lack complete programmatic accessible names.
+<!-- a11y-002-people-badge-help-touch-discoverability -->
+- `A11Y-002` confirmed: badge explanations remain tooltip-dependent and are not reliably discoverable on touch.
+- Performance review completed with no separate finding: list rendering is bounded and no measured user-visible cost was established.
+<!-- api-dup-001-config-route-skeleton-duplication -->
+- `API-DUP-001` confirmed: Settings and Feature Flags duplicate a substantial route skeleton; normalized similarity measured 0.7739.
+<!-- api-struct-001-vehicle-route-domain-concentration -->
+- `API-STRUCT-001` confirmed: Vehicles combines transport, access, business rules, projection, validation, and persistence.
+<!-- small-typed-helpers-over-generic-route-factories-v1 -->
+- Approved direction: small typed auxiliary functions and domain-specific services; no generic CRUD route factory.
+- Configuration audit logging remains best-effort and does not propagate its own persistence failures.
+<!-- api-dup-002-local-super-admin-tenant-helper-duplication -->
+- `API-DUP-002` confirmed: 17 routes declare a local SUPER_ADMIN/organization/tenant context helper, with 16 local implementation variants.
+<!-- domain-modular-design-and-thin-route-adapters-v1 -->
+- The repository already follows a domain-modular direction; the correction is to place proven cross-cutting behavior in a focused admin-route-access module.
+- Domain access, demo, feature, schema, DTO, persistence, and audit rules remain in their existing modules.
+<!-- ui-struct-002-schedule-map-view-orchestration -->
+- `UI-STRUCT-002` confirmed: Month and Week substantially duplicate the same wide-grid card and interaction structure.
+- Day is structurally distinct and should remain a separate timeline view.
+- Schedule Map already has meaningful modular extraction that must be preserved.
+- No generic calendar framework is recommended.
+<!-- ui-struct-003-lesson-form-orchestration-concentration -->
+- `UI-STRUCT-003` confirmed: LessonForm coordinates option loading, form state, role/mode/type policies, validation, payload composition, and all visual sections.
+- Existing create/update request builders, edit hook, parsers, services, styles, and Student option mapping are positive modular boundaries.
+- No create/edit HTTP-contract duplication finding was confirmed.
+- LessonForm should remain the composition root while focused policies, option loading, and sections move to typed modules.
+<!-- a11y-003-lesson-form-control-associations -->
+- `A11Y-003` confirmed: LessonForm Select labels are not associated with their triggers, while Student search inputs and icon-only clear actions lack accessible names.
+- Existing date/time and Student checkbox associations remain positive.
+<!-- lesson-form-client-server-policy-classification-v1 -->
+- No broad client/server lesson-policy duplication finding was confirmed.
+- The hard-coded client EXAM limit belongs in `lesson-form-policy-module-v1`; server validation remains authoritative.
+- The next read-only target is the EXAM/THEORY_EXAM edit participant contract.
 
 ### Operator housekeeping (local / Git — human-executed)
 
@@ -363,3 +421,226 @@ The P0 slice `dat-production-smoke-hosted-verification-v1` is operationally comp
 **Operational follow-up**
 
 The deployment log reported that Node.js 20 is deprecated for future Vercel deployments. Handle this only in the separate slice `node-24-runtime-migration-v1`; do not mix the runtime migration into the completed hosted-smoke slice.
+
+<!-- dat-toolchain-rationalization-v1 -->
+### Toolchain rationalization state
+
+- `TOOLCHAIN-001` confirmed: project `engines.node=24.x` conflicts with project Volta Node `20.20.0`; bare Volta pnpm was proven to execute under Node 20.
+- pnpm `10.24.0` is the sole authoritative package manager.
+- Vitest and Playwright have distinct unit/integration and browser/E2E ownership respectively.
+- `tsx` is actively required by repository scripts.
+- Corepack currently remains justified in CI.
+- `ts-node` and Playwright child-runtime provenance require targeted read-only evidence before any cleanup decision.
+- No tool removal or runtime/package/config change is authorized in the active audit slice.
+
+<!-- lesson-edit-contract-finding-v1 -->
+### Lesson edit contract audit state
+
+- `UI-CONTRACT-001` confirmed: edit mode exposes EXAM/THEORY_EXAM participant multi-select and lesson-type changes that the current PUT contract cannot persist.
+- Exam edit currently operates on one persisted Lesson row with one `studentId`; no grouped-exam update path was found.
+- `studentIds` and `lessonType` are silently dropped before or at the update boundary.
+- no implementation is authorized in the audit branch.
+- remediation is queued as `lesson-edit-contract-alignment-v1`.
+
+<!-- exhaustive-snapshot-audit-5eded00-v1 -->
+### Full-project engineering audit snapshot
+
+- Snapshot HEAD: `5eded00ae3d0dedde8b1a251d393a9180911814b`.
+- First transversal pass: 817 safe-snapshot files / 661 TS/TSX files.
+- Audit total after exhaustive second pass: 46 confirmed findings = 2 governance + 40 code/runtime/security/architecture/test + 4 toolchain/configuration/dependency-security.
+- Highest-priority new safety finding: `BILLING-SEC-001`.
+- Other P1 additions: `LICENSING-001`, `AUTH-RATE-001`, `API-ATOM-002`, `ONBOARD-001`.
+- P2 additions: `AUTHZ-OPERATOR-001`, `AUTH-LEGACY-001`, `CODE-HYGIENE-001`, `UI-DUP-001`, `SCHEMA-LEGACY-001`.
+- Toolchain addition: `TOOLCHAIN-002`.
+- No implementation is authorized in the engineering audit branch.
+
+<!-- exhaustive-snapshot-audit-5eded00-v2 -->
+### Exhaustive engineering audit — static snapshot completion
+
+- Static snapshot discovery is complete for HEAD `5eded00ae3d0dedde8b1a251d393a9180911814b`.
+- Static-snapshot total before hosted Wave A1: 46 confirmed findings = 2 governance + 40 code/runtime/security/architecture/test + 4 toolchain/configuration/dependency-security.
+- Security is the implementation-order priority.
+- P0/P1 security containment leads with billing authenticity/idempotency, JWT revocation and Next security patching.
+- Every remaining static signal has been resolved as a confirmed finding, a named evidence/refactor slice, or a documented false positive.
+- Data-sensitive model disposition and real concurrency behavior still require their explicitly queued read-only/execution validations; hosted response headers are now confirmed as `SEC-HEADERS-001`.
+- No implementation is authorized in this audit branch.
+
+<!-- exhaustive-audit-master-remediation-ledger-v1 -->
+### Finding-to-slice coverage
+
+- 48/48 confirmed findings have an explicit remediation/disposition mapping in `roadmap-todo.md`.
+- Security-first execution waves are defined; DAT_4.4 should start only after audit evidence/disposition work is sufficiently delineated for slice execution.
+
+<!-- hosted-security-wave-a1-headers-v1 -->
+### Hosted security Wave A1 checkpoint
+
+- Current total after hosted Wave A1: 47 confirmed findings = 2 governance + 41 code/runtime/security/architecture/test + 4 toolchain/configuration/dependency-security.
+- HTTPS redirect and two-year HSTS are confirmed on tenant and Platform hosts.
+- Anonymous GET access to tenant license/features, settings and feature-flags APIs fails closed with 401.
+- Billing webhook route presence is confirmed on both public hosts by non-mutating GET=405 evidence, reinforcing `BILLING-SEC-001`.
+- New `SEC-HEADERS-001` maps to `security-response-headers-hardening-v1`.
+- No hosted mutation was performed.
+
+<!-- security-wave-a2-dependency-audit-v1 -->
+### Dependency security Wave A2 checkpoint
+
+- Current total after A2/A2.1: 48 confirmed findings = 2 governance + 41 code/runtime/security/architecture/test + 5 toolchain/configuration/dependency-security.
+- 113 direct dependencies; 81 unique lockfile advisories; 61 appear in the production graph.
+- `DEP-SEC-001` remains P0/P1: immediate Next 14.2.35-level containment followed by deliberate supported-LTS migration.
+- New `DEP-SEC-002` maps to `dependency-security-monitoring-v1`.
+- NextAuth advisory paths do not match the current Credentials-only/no-getToken application path; patch alignment remains evidence-first.
+- nine zero-importer direct-prod roots enter the dependency responsibility/pruning ledger.
+- no dependency mutation was performed.
+
+<!-- security-wave-a3-hosted-auth-v1 -->
+### Hosted authentication Wave A3 checkpoint
+
+- Current total remains 48 confirmed findings = 2 governance + 41 code/runtime/security/architecture/test + 5 toolchain/configuration/dependency-security.
+- NextAuth CSRF/callback cookies are Secure, HttpOnly, SameSite=Lax, Path=/ and host-only on both public hosts.
+- no cross-subdomain cookie Domain was observed.
+- authoritative hosted sign-in path is `/auth/login`; earlier `/login=404` is closed as a false positive.
+- session endpoint edge probes remained Vercel MISS with age=0 across repeat and dummy-cookie requests.
+- no new auth-cookie/cache finding was promoted.
+- `AUTH-SESSION-001` remains open because stateless JWT revocation is a separate server-side contract.
+
+<!-- security-wave-a4-commercial-evidence-v1 -->
+### Commercial security Wave A4 checkpoint
+
+- Current total remains 48 confirmed findings = 2 governance + 41 code/runtime/security/architecture/test + 5 toolchain/configuration/dependency-security.
+- billing webhook is POST-only, publicly deployed on both hosts and contains no detected authenticity-verification signal in its route.
+- commercial/admin endpoints fail closed anonymously with 401 on both hosts.
+- no new anonymous commercial exposure was found.
+- A4 reinforces `BILLING-SEC-001`, `LICENSING-001` and `AUTHZ-OPERATOR-001`; it does not create another finding.
+- `BILLING-SEC-002` and `LICENSING-002` remain open and were intentionally not mutation-tested.
+- Security Wave A1-A4 is complete.
+- next evidence phase: Wave B data-sensitive read-only model disposition.
+
+<!-- data-wave-b1-legacy-dormant-inventory-v1 -->
+### Data Wave B1 checkpoint
+
+- Current total remains 48 confirmed findings with 48/48 roadmap coverage.
+- B1 used an explicit PostgreSQL read-only transaction against the currently configured remote Supabase target.
+- `Exam`, `ExamRegistration`, `LessonRequest`, `Payment`, and `Notification` each contain 0 rows.
+- `SCHEMA-LEGACY-001` and `SCHEMA-LEGACY-002` are therefore stronger removal/disposition candidates, but deletion remains unauthorized until runtime/migration/environment responsibility is proven.
+- current `DATABASE_URL` source is local `.env`; environment/configuration responsibility audit is the next evidence slice.
+
+<!-- environment-configuration-responsibility-audit-v1 -->
+### Environment configuration E1-E4 checkpoint
+
+- Current total: 49 confirmed findings = 2 governance + 41 code/runtime/security/architecture/test + 6 toolchain/configuration/dependency-security.
+- `CONFIG-ENV-001` is confirmed.
+- automatic local `DATABASE_URL`/`DIRECT_URL` resolution currently selects `.env` and matches the Production operator database target.
+- `.env.local` provides no database override.
+- current `env:check` has no explicit Production database identity/isolation guard.
+- remediation: `local-development-database-isolation-v1`.
+- operator and smoke production profiles remain intentionally separate; they have zero key overlap.
+- follow-up cleanup: `environment-configuration-contract-consolidation-v1` and `public-env-pruning-v1`.
+- until isolation is implemented, ordinary local write-capable runtime workflows must not rely blindly on automatic `.env` database resolution.
+
+<!-- environment-configuration-disposition-e5-e7-v1 -->
+### Environment E5-E7 disposition checkpoint
+
+- Finding total remains 49 with 49/49 remediation coverage.
+- KEEP: `NEXTAUTH_SECRET`, `NEXTAUTH_URL`.
+- CONSOLIDATE: remove `AUTH_SECRET` alias and standardize DAT on `NEXTAUTH_SECRET`.
+- REMOVE: `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LICENSE_TIER`.
+- DEFER external ownership: `VERCEL_OIDC_TOKEN`; zero DAT responsibility is proven, but external-tool ownership must be verified before deletion.
+- cleanup implementation remains unauthorized on the audit branch.
+- `local-development-database-isolation-v1` remains the first environment execution slice.
+
+<!-- data-wave-b2-responsibility-and-sa-handoff-v1 -->
+### Data Wave B2 checkpoint
+
+- Findings remain 49 with 49/49 remediation coverage.
+- The five B1 zero-row models are **not yet removal-ready** because B2 found remaining schema/runtime/ops/script responsibilities.
+- `Exam`: 2 runtime delegates.
+- `ExamRegistration`: 1 runtime/ops delegate.
+- `LessonRequest`: 3 runtime delegates including instructor/student pages.
+- `Payment`: 3 runtime delegates including instructor/student deletion logic.
+- `Notification`: 1 runtime/ops delegate.
+- next evidence-only phase: `legacy-model-runtime-responsibility-classification-v1`.
+
+<!-- data-wave-b3-runtime-responsibility-v1 -->
+### Data Wave B3 checkpoint
+
+- Findings remain 49 / 49 mappings.
+- No target model has a runtime write; all writes are destructive-local-seed compatibility only.
+- `ExamRegistration`: retirement candidate, active business blocker none.
+- `Notification`: retirement candidate, active business blocker none.
+- `Payment`: retirement candidate after defensive delete/retention decoupling.
+- `Exam`: blocked by one admin-vehicles API read that requires semantic classification.
+- `LessonRequest`: blocked by two active page counts on instructor/student pages.
+- next evidence phase: `legacy-model-blocker-semantic-closure-v1`.
+
+<!-- data-wave-b4-blocker-semantics-v1 -->
+### Data Wave B4 checkpoint
+
+- Findings remain 49 / 49 mappings.
+- `Exam`: semantic legacy fallback confirmed; retirement-ready after legacy vehicle-status/delete-relation cleanup plus mechanical/schema retirement.
+- `ExamRegistration`: retirement-ready pending coordinated ops/demo/seed/schema retirement.
+- `Notification`: retirement-ready pending coordinated Smoke/seed/schema retirement.
+- `Payment`: near retirement-ready; only zero-dependency delete-policy semantics remain to close.
+- `LessonRequest`: previous active-page classification weakened; both observed page count results are discarded by tuple destructuring, but instructor Pending Requests JSX requires one final data-flow proof.
+- next evidence phase: `legacy-model-blocker-final-semantic-closure-v1`.
+
+<!-- data-wave-b41-final-semantics-ui-data-001-v1 -->
+### Data Wave B4.1 checkpoint
+
+- Findings: **50**.
+- Remediation coverage: **50/50**.
+- New finding: `UI-DATA-001` → `dashboard-statistics-contract-alignment-v1`.
+- instructor dashboard visibly renders two misbound statistics; true pending LessonRequest count is discarded.
+- student pending LessonRequest count is dead/unconsumed work.
+- all five B1 zero-row models are now retirement-ready at the semantic layer, subject to coordinated relation/policy/ops/schema cleanup and execution-time safety gates.
+- next evidence/planning phase: `legacy-model-retirement-execution-contract-v1`.
+
+<!-- data-wave-b5-retirement-execution-contract-v1 -->
+### Data Wave B5 checkpoint
+
+- Findings remain 50 / 50 mappings.
+- Runtime-decoupling candidate scope: 20 files.
+- Targeted affected tests detected: at least 7.
+- B5 raw Prisma-reference graph falsely suggested target cycles; historical DDL proves physical FK order `payments -> exam_registrations -> exams`.
+- Stage A: `legacy-model-runtime-decoupling-v1`.
+- Stage B: `legacy-model-schema-retirement-v1`.
+- Stage B requires completed local DB isolation, validated deployed Stage A, exact target identity, five zero-row preflights and explicit human GO.
+- next evidence phase: `legacy-model-migration-workflow-closure-v1`.
+
+<!-- data-wave-b51-migration-workflow-db-migration-001-v1 -->
+### Data Wave B5.1 checkpoint
+
+- Findings: **51**.
+- Remediation coverage: **51/51**.
+- New finding: `DB-MIGRATION-001` → `migration-deploy-target-safety-gate-v1`.
+- migration deploy remains intentionally human-operated; zero CI/script/package ownership was found.
+- the existing remote target guard is fail-closed and identity-aware but explicitly documented as inspect-only.
+- Stage B therefore requires a purpose-scoped migration-write target gate rather than raw env trust.
+- migration authoring workflow is the remaining Data Wave contract gap.
+- next phase: `legacy-model-migration-authoring-contract-v1`.
+
+<!-- data-wave-b52-authoring-and-data-wave-b-closure-v1 -->
+### Data Wave B5.2 / Wave B closure
+
+- Findings remain **51**.
+- Remediation coverage remains **51/51**.
+- No new authoring finding: ownership is already covered by CONFIG-ENV-001, TEST-ARCH-001 and DB-MIGRATION-001.
+- no isolated local/Supabase/test/shadow DB authoring workflow currently exists.
+- Data Wave B audit/disposition is closed.
+- legacy-model retirement has a staged implementation contract with explicit prerequisites; implementation remains unauthorized in DAT_4.3.
+- next phase: `audit-surface-completeness-reconciliation-v1`.
+
+<!-- engineering-excellence-audit-v1-formal-closure-v1 -->
+## Engineering excellence audit closure
+
+`engineering-excellence-audit-v1` was formally closed on **2026-08-13** after
+explicit human authorization and a Final Engineering Quality Review with zero
+closure-blocking dimensions.
+
+The audit closed with **51 confirmed findings and 51/51 remediation coverage**.
+Closure does not mean those findings are fixed; they remain active remediation
+debt governed by the post-audit execution queue.
+
+The first P0 execution priority is `billing-webhook-authenticity-gate-v1`,
+followed by `next-security-patch-containment-v1`. Database/migration safety
+foundations and the Platform separation architecture lane proceed according to
+their documented prerequisites and independence boundaries.

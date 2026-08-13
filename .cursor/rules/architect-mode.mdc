@@ -258,6 +258,50 @@ For **runtime / API / UI / sensitive** batches, final reports must also include 
 - Do **not** ask for merge readiness based only on a prose summary.
 - If a generated patch is empty, stale, or omits untracked files, say so explicitly and regenerate evidence correctly (`git diff` vs `git diff --cached`; list `??` files separately).
 
+<!-- super-agent-semantic-gate-precision-v1 -->
+### Semantic Gate Precision Protocol
+
+A gate must validate the **exact proposition** it claims to prove. Broad text matches and proxy counts may identify investigation signals, but they must not become absolute blockers without contextual confirmation.
+
+Rules:
+
+1. State the proposition being validated before selecting the command, pattern, scope, and expected result.
+2. Prefer structured values, exact anchors, explicit paths, known markers, and expected cardinality over broad regular expressions.
+3. Distinguish a positive claim from negation, warnings, candidate hypotheses, examples, future plans, and statements that explicitly say the condition is not true.
+4. Distinguish current operational truth from historical records, preserved evidence, superseded baselines, examples, and archival context.
+5. Select evidence according to Git state: `git diff` for unstaged tracked changes, `git diff --cached` for staged changes, and `git status --short` plus direct filesystem inspection for untracked files.
+6. Never treat absence from `git grep` as absence from the working tree when relevant files may be untracked; `git grep` searches tracked content.
+7. A heuristic or broad search may emit a warning or `needs confirmation`, but must not fail a critical gate until the matched context has been inspected.
+8. Before blocking, confirm that the evidence logically entails the failed proposition rather than merely containing similar words.
+9. If evidence is incomplete, ambiguous, or internally conflicting, stop consequential work, preserve the current state, and report exactly what still requires confirmation.
+10. A failed gate must report the proposition, inspected scope, concrete evidence, expected value, actual value, and why the evidence proves the failure.
+
+Full operating protocol: `docs/ops/cursor-operating-model.md` — Semantic Gate Precision Protocol.
+
+<!-- super-agent-engineering-quality-review-v1 -->
+### Engineering Quality Review Protocol
+
+Before claiming completion or merge readiness, review the quality dimensions applicable to the slice. The review must be proportional to scope and risk; a dimension may be `not applicable`, but the reason must be explicit.
+
+Required dimensions:
+
+1. correctness and preserved contracts;
+2. security, privacy, authorization, and tenant isolation;
+3. data integrity, transactions, identifiers, and concurrency;
+4. maintainability, cohesion, coupling, duplication, and complexity;
+5. testability, regression coverage, and failure paths;
+6. performance and scalability;
+7. accessibility, usability, and responsive behavior;
+8. observability, diagnostics, logging, and sanitized errors;
+9. reliability, resilience, idempotency, and operational failure behavior;
+10. operability, reversibility, rollback, and recovery;
+11. runtime, dependency, deployment, and compatibility impact;
+12. documentation and canonical-memory impact.
+
+A metric, file size, keyword match, or generic best practice is only a signal. Findings require contextual evidence. Out-of-scope improvements must be reported, not silently implemented.
+
+Full protocol: `docs/ops/cursor-operating-model.md` — Engineering Quality Review Protocol.
+
 For **runtime / API / UI / sensitive** batches, final reports must also include an **Implementation Conformance Matrix** (see `docs/ops/cursor-operating-model.md` — Implementation Conformance Matrix):
 
 - Explicitly map **approved requirements** to actual implementation files, tests, and evidence.
@@ -462,7 +506,153 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 
 ### Single recommended next slice and planned order
 
-1. `engineering-excellence-audit-v1` — P1 analysis-only; **planned; not executed** (may consume audit candidate from `production-smoke-module-structure-audit-record-v1`)
+1. `billing-webhook-authenticity-gate-v1` — **P0 next implementation slice** after formal closure of `engineering-excellence-audit-v1` on 2026-08-13; the audit closed with Final Engineering Quality Review PASS, 0 closure blockers, 51 findings and 51/51 remediation coverage; prepare the smallest-safe security slice on a separate branch; behavioural implementation, push, merge and branch deletion remain separately human-authorized
+
+<!-- engineering-excellence-audit-v1-live-state -->
+**Live audit state (2026-08-13; base `da5aea6`):**
+
+<!-- super-agent-runtime-and-worker-memory-v1 -->
+**Persistent Super Agent operating memory:**
+
+- The Super Agent is the DAT repository-aware operational worker. It may inspect code, trace call paths, prepare guarded commands, maintain canonical documentation, analyze evidence, and propose smallest-safe slices whenever requested.
+- The Super Agent is not an autonomous approval authority. Human authorization remains mandatory for commit publication, push, merge, branch deletion, hosted configuration changes, database writes, production mutation tests, destructive operations, and any behavioural change.
+- All commands must remain guarded, fail closed, avoid `exit 1` in interactive shell blocks, preserve one remote write per block, and never print secrets or complete sensitive URLs or identifiers.
+- The canonical project validation target remains `pnpm -C driving_school_platform/nextjs_space check`, but executable runtime provenance must be proven rather than inferred.
+
+<!-- node24-local-runtime-chain-v1 -->
+**Windows / Git Bash Node 24 execution rule:**
+
+- In the current workstation, bare `node` resolves to the portable Node `v24.18.0`, but bare `pnpm` resolves through Volta `2.0.2`.
+- Volta currently has Node `v20.20.0` as its default runtime and launches its pnpm tool under that Node version.
+- Therefore `node --version == v24.18.0` does **not** prove that a subsequent bare `pnpm ...` command is running under Node 24.
+- Bare `pnpm` must not be accepted as Node-24 validation evidence on this workstation until its child runtime is explicitly proven to be Node 24.
+- Current proven pnpm package: `10.24.0`, with CLI entrypoint `$HOME/AppData/Local/Volta/tools/image/packages/pnpm/node_modules/pnpm/bin/pnpm.cjs`.
+- Canonical local Node-24 invocation:
+  - `NODE24_EXE="$HOME/.dat-toolchains/node-v24.18.0-win-x64/node.exe"`
+  - `PNPM_CJS="$HOME/AppData/Local/Volta/tools/image/packages/pnpm/node_modules/pnpm/bin/pnpm.cjs"`
+  - runtime proof: `"$NODE24_EXE" "$PNPM_CJS" -C driving_school_platform/nextjs_space exec node -p 'process.version + " " + process.execPath'`
+  - full validation: `"$NODE24_EXE" "$PNPM_CJS" -C driving_school_platform/nextjs_space check`
+- Required runtime proof before accepting a local full check: both direct and nested pnpm execution must remain on Node `v24.18.0`. Proving only the outer pnpm process or one direct child is insufficient.
+- An initial explicit outer chain (`Node v24.18.0` → pnpm `10.24.0`) produced a green check, but later probing proved that nested bare `pnpm` invocations fell through to Volta and ran under Node `v20.20.0`; that outer-only run is therefore functional evidence, not full Node-24 provenance evidence.
+- Full local Node-24 validation requires **transitive runtime provenance**: every nested `pnpm` launched by package scripts, lifecycle hooks, test/build commands, dev-server orchestration, or other subprocesses must also resolve through Node `v24.18.0`.
+- On 2026-08-07 a guarded temporary pnpm shim was placed ahead of Volta in `PATH`; both Git Bash and Windows `pnpm.cmd` routing were forced through portable Node `v24.18.0` and pnpm `10.24.0`.
+- Transitive proof passed: direct child Node `v24.18.0`, nested pnpm child Node `v24.18.0`, Windows-shell nested child Node `v24.18.0`, and 9 recorded shim invocations covering nested `lint`, `typecheck`, `env:check`, `test:run`, and `build` pnpm calls.
+- The resulting full check passed 207/207 test files, 1738/1738 tests, and the Next.js production build with exit `0`; repository scope remained unchanged and the temporary shim was removed successfully.
+- An earlier post-checkpoint check launched through bare Volta pnpm ran under Node `v20.20.0`; it passed functionally but is **not** Node-24 runtime evidence. It was superseded by the explicit Node-24 validation above.
+- Do not change the Volta default, reinstall pnpm, activate Corepack, or upgrade Node/pnpm merely to work around this local routing. Runtime/tool changes require their own authorized slice.
+- Git Bash operational note: prefer `where.exe` directly for Windows command resolution; avoid `cmd.exe /d /c ...` from Git Bash because MSYS argument conversion can unexpectedly enter interactive `cmd.exe`.
+
+**Persistent Node 24 runtime baseline:**
+
+- Node 24 migration P0 is closed.
+- Portable local runtime: `$HOME/.dat-toolchains/node-v24.18.0-win-x64/node.exe` reporting `v24.18.0`.
+- Repository pins: root and app `.nvmrc` = `24.18.0`; app `package.json` engine = `24.x`.
+- CI baseline: GitLab uses `node:24`.
+- Hosted baseline: Vercel Project Settings, Preview, and Production use Node 24.x.
+- Package/tool baseline retained during migration: pnpm `10.24.0`, Prisma `6.19.0`, Next.js `14.2.28`.
+- Runtime implementation commit: `e5ddc39`; validation-evidence commit: `f23e423`; application merge on main: `909b69a`.
+- Closure record commit: `a397054`; current closed main baseline: `da5aea6`.
+- Local Node 24 validation passed 207 test files / 1738 tests plus the production build.
+- GitLab feature and main pipelines passed under Node 24; Vercel Preview and Production were Ready.
+- Post-deploy Production verification passed fixture preflight, API checks, and four read-only UI smoke tests.
+- Production mutation smoke was intentionally not repeated because the migration changed runtime/configuration only and prior mutation evidence remained valid; do not repeat writes without fresh evidence and explicit authorization.
+- Both `node-24-runtime-migration-v1` and `node-24-runtime-closure-record-v1` were removed locally and remotely after integration verification.
+- Do not opportunistically upgrade Node, pnpm, npm, Prisma, Next.js, or dependencies during unrelated slices.
+- Any future runtime change must be a dedicated slice with local compatibility, CI, Preview, Production, documentation, and post-deploy verification gates.
+
+- Canonical report: `docs/architecture/engineering-excellence-audit-v1.md`
+- Normalized inventory: 661 TypeScript/TSX files; 438 production; 223 test/E2E; 207 unit-test files including 49 integration tests; 58 API routes; 96 components; 9 hooks; 369 `lib` files; 27 scripts
+- Initial metric error corrected: hooks/scripts were first reported as zero because of incomplete pathspecs
+- Preserved input `production-smoke-module-structure-audit-record-v1` @ `a4bea9d` was inspected only; do not merge, cherry-pick, copy wholesale, or delete it during the audit
+- Current signals include large UI orchestrators, API routes, operational smoke modules, import/export services, and scripts; size/proxy counts are not findings by themselves
+- 48 findings are currently confirmed in the canonical audit report; follow-up slices are queued but do not self-authorize implementation
+- Static snapshot discovery is complete. Remaining work is execution/read-only validation of queued slices; preserve the distinction between confirmed findings, evidence-first dispositions and documented false positives.
+- Memory rule: after every material audit phase, synchronize this live state, the audit report, `current-state.md`, and `roadmap-todo.md`
+- Rulebook audit: `SA-GOV-001` confirmed and fixed — semantic gates must prove exact propositions, distinguish negation/current-vs-historical context, include untracked evidence where relevant, and treat unconfirmed heuristics as warnings rather than absolute blockers
+- Rulebook classification: `SA-GOV-002` authority hierarchy is **APTO** — roles, D0–D4 authority, human approval, and canonical-source conflict precedence are explicit
+- Rulebook classification: `SA-GOV-003` Definition of Done is **APTO** — the canonical Merge readiness criteria, evidence, conformance, memory, and close-battery gates provide the operational Definition of Done; do not duplicate it
+- Rulebook finding: `SA-GOV-004` confirmed and fixed — every slice must receive a proportional, evidence-based Engineering Quality Review across applicable dimensions
+<!-- ui-orch-001-linked-student-profile-split-mutation -->
+- Confirmed code finding `UI-ORCH-001`: linked student profile editing performs a Student PATCH followed by a linked User PUT; the first write can remain committed when the second fails
+- Existing mitigation: explicit partial-success feedback and list reload; no silent success is reported
+- Missing guarantee: no single server transaction, compensation, or direct orchestration regression test
+- Finding scope: reliability, data consistency, orchestration ownership, and testability; no security or tenant-isolation failure identified
+- Implementation status: not authorized in this analysis branch
+<!-- api-atom-001-generic-user-update-split-write -->
+- Confirmed code finding `API-ATOM-001`: `PUT /api/users/update` writes `User` before its role-specific `Student` or `Instructor` record without a transaction, rollback, compensation, or failure-injection coverage
+<!-- ui-orch-002-instructor-profile-category-split-mutation -->
+- Confirmed code finding `UI-ORCH-002`: the instructor editor writes profile/license first and qualified categories second; an acknowledged partial success can leave the form only partially persisted
+- Approved architectural direction: use aggregate-specific transactional services behind the existing student and instructor PATCH contracts; migrate role-specific callers away from the generic user-update route
+- Required implementation order: student atomic profile slice, instructor atomic profile slice, then generic user-update contract narrowing
+- Implementation status: no runtime implementation is authorized in this analysis-only branch
+<!-- ui-struct-001-people-manager-orchestration-concentration -->
+- Confirmed code finding `UI-STRUCT-001`: the Student and Instructor managers retain multiple independently changing workflows and local reconciliation states without direct component-level tests
+- File size and hook counts are supporting signals only, not the finding
+- Existing domain services, helpers, policies, dialogs, and unit tests are substantial and must be preserved
+- Do not introduce a generic shared People manager from the current evidence
+- Structural simplification is deferred until the three approved atomicity and generic-contract slices are complete
+<!-- a11y-001-people-search-accessible-names -->
+- Confirmed code finding `A11Y-001`: Student and Instructor search inputs depend on placeholders and their icon-only submit buttons have no explicit accessible names
+<!-- a11y-002-people-badge-help-touch-discoverability -->
+- Confirmed code finding `A11Y-002`: detailed People badge help remains tooltip-dependent and is not reliably discoverable through touch interaction
+- Accessibility non-findings: dialog titles/descriptions are present; primary edit inputs generally have associated labels; most action buttons contain visible text
+- Performance classification: no finding — Student rows are cursor-paginated, Instructor rows are bounded by visible-count slicing, and no measured user-visible regression was found
+- Overlay and refresh complexity remains covered by `UI-STRUCT-001`; do not duplicate it as a performance finding
+- Future accessibility order: atomicity/contract slices first, then accessible search names and tap/keyboard-friendly badge help, before broad structural extraction
+<!-- api-dup-001-config-route-skeleton-duplication -->
+- Confirmed code finding `API-DUP-001`: Settings and Feature Flags routes duplicate a substantial authenticated, tenant-scoped, demo-guarded CRUD and audit skeleton
+<!-- api-struct-001-vehicle-route-domain-concentration -->
+- Confirmed code finding `API-STRUCT-001`: the Vehicles route retains HTTP, access policy, validation, persistence, operational-status projection, identifier uniqueness, and deletion-eligibility responsibilities
+<!-- small-typed-helpers-over-generic-route-factories-v1 -->
+- Architectural decision: eliminate confirmed duplication through small, typed, explicit helper functions; do not introduce a generic CRUD route factory, generic repository adapter, or opaque configuration framework
+- Shared helpers may own identical context resolution, mutation guarding, validation-error mapping, and other proven common mechanics
+- SystemSetting, FeatureFlag, and Vehicle schemas, DTOs, rules, persistence, and audit payloads remain domain-specific
+- Configuration audit failure is not a finding: `logConfigurationChange` is explicitly best-effort and catches its own persistence errors
+- Future slices: `admin-config-route-helpers-v1` and `vehicle-route-domain-services-v1`
+<!-- api-dup-002-local-super-admin-tenant-helper-duplication -->
+- Confirmed code finding `API-DUP-002`: 17 route files declare a local `requireSuperAdminTenant`; 16 retain a local implementation variant and one is already a thin delegate
+- The proven common responsibility is session, SUPER_ADMIN, organization, tenant-host, and actor-context resolution
+<!-- domain-modular-design-and-thin-route-adapters-v1 -->
+- Architectural rule: preserve domain-oriented modules and thin route adapters
+- Cross-domain behavior may move to a small typed module only when its semantics and error contract are genuinely identical
+- Approved shared boundary: `lib/admin/admin-route-access.ts` with a canonical `requireSuperAdminTenantContext` result
+- Preserve `requireStudentRecordsAccess` because Student read access has a different role contract
+- Preserve domain mutation and feature guards in their respective User, Vehicle, Lesson, and other modules
+- Do not use route inheritance, generic CRUD builders, callback-heavy factories, service locators, or a single oversized shared-utils module
+- Future slice: `admin-route-context-helper-v1`
+<!-- ui-struct-002-schedule-map-view-orchestration -->
+- Confirmed code finding `UI-STRUCT-002`: Schedule Map retains substantial Month/Week view duplication and page-level orchestration despite meaningful existing domain extraction
+- Month and Week are members of the same wide-grid view family; normalized similarity is 0.8595 and their expanded-card interactions are materially equivalent
+- Day is a legitimately separate timeline view with duration, overlap, position, and current-time behavior
+- Approved direction: shared focused wide-grid, lesson-detail, and lesson-action components; preserve a separate Day timeline
+- Existing card, navigation, responsive, viewport, DTO, and domain modules must be preserved
+- Do not create a generic calendar framework or force all three views into one universal renderer
+- Absence of direct component-transition coverage is part of the structural risk; use the existing test toolchain without dependency upgrades
+- Existing `LD-008` remains a separate P3 DTO item and must not be duplicated
+- Future slices: `schedule-map-wide-grid-components-v1` followed by `schedule-map-data-orchestration-v1`
+<!-- ui-struct-003-lesson-form-orchestration-concentration -->
+- Confirmed code finding `UI-STRUCT-003`: LessonForm retains option loading, form state, role/mode/type policy, validation, payload composition, and all field-section rendering
+- Positive evidence: create/update request builders, edit orchestration, response parsing, server services, styles, and Student option mapping are already extracted and tested
+- Create/edit HTTP contract duplication is rejected as a finding
+- Client/server lesson-policy duplication remains unclassified until contextual comparison distinguishes UX validation from authoritative server enforcement
+- Approved modular direction: pure typed policy module, focused option-data hook, and explicit form sections
+- Preserve LessonForm as the composition root
+- Do not introduce a generic form framework, dynamic schema-driven renderer, or dependency upgrade
+- Future slices: `lesson-form-policy-module-v1`, `lesson-form-option-data-hook-v1`, and `lesson-form-sections-v1`
+<!-- a11y-003-lesson-form-control-associations -->
+- Confirmed code finding `A11Y-003`: LessonForm Select labels are not programmatically associated with their triggers, and Student search/clear controls lack accessible names
+- Positive accessibility evidence: date/time fields and per-Student checkboxes have explicit ID/label associations; action buttons contain visible text
+<!-- lesson-form-client-server-policy-classification-v1 -->
+- Client/server policy classification: no broad duplication finding — exam Student requirements, optional THEORY Student, and required DRIVING Student are aligned
+- The client hard-codes the practical-exam Student limit as `2`, while the server uses `VALIDATION_RULES.MAX_STUDENTS_PER_EXAM`; correct this inside `lesson-form-policy-module-v1` rather than create a duplicate finding
+- Server validation remains authoritative
+- Vehicle requirement consistency remains unclassified pending an explicit product-contract comparison
+- Future accessibility slice: `lesson-form-accessible-controls-v1`
+- Next audit focus: confirm the EXAM/THEORY_EXAM edit participant contract across LessonForm, EditLessonDialog, useEditLessonForm, and the update request builder
+- No runtime implementation is authorized in this analysis-only branch
+
+**Audit evidence protocol:** start from actual entrypoints; trace imports and call paths; distinguish orchestration, validation, service, DTO, persistence, UI, and tests; separate confirmed evidence from navigation friction; never infer a defect from size or one narrow search.
+
 2. `platform-separation-architecture-plan-v1`
 3. Small audit-approved refactor slices (one scope per branch)
 
@@ -544,3 +734,396 @@ When discussing or managing **Cursor Automations**, apply **Cursor Automations O
 ## Docs-only batches
 
 Do not change runtime, Prisma schema, APIs, UI, tests, or dependencies unless explicitly requested.
+
+<!-- super-agent-continuity-recovery-v1 -->
+### Super Agent Continuity and Recovery Protocol
+
+The Super Agent must be able to reconstruct the DAT project state without relying on chat history, temporary context, or undocumented operator memory.
+
+Rules:
+
+1. After every material investigation, decision, implementation, validation, deployment, rollback, or closure phase, update `docs/ops/super-agent-continuity-state.md` in the same documentation checkpoint.
+2. Record verified branch state, relevant commits, baselines, confirmed findings, rejected candidates, approved directions, unresolved questions, forbidden actions, next steps, and recovery commands.
+3. Never present conversational memory as the sole evidence for current repository state.
+4. The continuity state is an index and recovery map; canonical domain detail remains in current-state, roadmap, decisions, architecture, runbooks, and audit reports.
+5. Resolve live Git state with commands. Do not treat a hard-coded historical HEAD as eternal current truth.
+6. Before consequential work, perform the Recovery Startup Procedure in the continuity-state document.
+7. After a continuity checkpoint, run the Recovery Reconstruction Drill and confirm that the committed documents reproduce the working state.
+8. If the repository and conversational memory disagree, verified repository evidence and the canonical-source precedence rules win.
+9. The Super Agent is a knowledge-continuity and operational-recovery mechanism, not a substitute for Git remotes, database backups, hosted configuration backups, secrets management, or infrastructure disaster recovery.
+
+Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
+
+<!-- dat-toolchain-rationalization-v1 -->
+## DAT toolchain rationalization policy
+
+- Every repository tool must have one explicit responsibility. Tool presence is not justification for continued use.
+- Prefer one authoritative tool per responsibility unless distinct layers require distinct tools.
+- Confirm usage and call paths before removing a dependency, runtime manager, test runner, CLI, or configuration.
+- A tool that is bundled with another tool but is not part of the DAT workflow is not automatically a removal candidate; it must simply not become a competing workflow.
+- Current authoritative package manager: pnpm `10.24.0`.
+- npm/npx are bundled with Node but are not authoritative DAT package-management workflows.
+- Vitest owns unit/integration testing; Playwright owns real-browser/E2E testing. They are complementary, not duplicates.
+- `tsx` is actively used by operational scripts.
+- Jest and Cypress are not active DAT test runners.
+- Corepack currently has a concrete CI responsibility: activate pnpm `10.24.0` under the Node 24 CI image.
+- `TOOLCHAIN-001` is confirmed: `package.json` declares Node engine `24.x` while its Volta configuration pins Node `20.20.0`. The Volta pnpm launcher was empirically proven to execute under Node `20.20.0`, conflicting with the closed Node 24 runtime baseline.
+- Do not remove or reconfigure Volta globally during this audit. The DAT should first be decoupled from the stale project-level Volta contract in a dedicated authorized slice.
+- `ts-node` is a usage-audit candidate only; no removal is authorized until repository evidence proves it has no required responsibility.
+- Playwright web-server commands using bare `pnpm dev` require runtime-provenance investigation because child processes may resolve through Volta.
+- Every confirmed implementation follow-up must be added to `roadmap-todo.md` as a named slice before implementation.
+- The Super Agent may investigate and prepare any queued slice, but implementation, dependency removal, package/config changes, commit publication, push, merge, and destructive operations remain human-gated.
+
+<!-- audit-semantic-consistency-gate-v1 -->
+## Audit semantic consistency gate
+
+- Presence-only grep checks are insufficient for canonical-memory consistency.
+- Gates that validate counts, taxonomies, statuses, or conclusions must test the exact proposition being claimed.
+- Confirmed-finding totals must agree with the explicit classified finding set and category totals.
+- A state such as `14 confirmed findings` plus an additional explicitly confirmed `TOOLCHAIN-001` must fail closed rather than pass because both strings happen to exist.
+- Current-state wording must distinguish `finding confirmed` from `implementation authorized`; a confirmed finding does not by itself authorize implementation.
+- Runtime provenance is transitive: validating an outer Node/pnpm process does not validate nested package-manager or lifecycle processes.
+- When a gate itself fails to detect a contradiction, repair the gate logic in the same documentation checkpoint; do not create a separate governance finding unless new evidence shows a distinct systemic defect beyond an already established governance principle.
+
+<!-- lesson-edit-contract-finding-v1 -->
+## Lesson edit contract rule
+
+- `UI-CONTRACT-001` is confirmed: the current edit UI exposes EXAM/THEORY_EXAM multi-participant and lesson-type controls that are not represented by the PUT contract.
+- Treat client payload → request builder → HTTP route → service payload → persistence as one semantic contract.
+- Extra properties being structurally accepted by TypeScript does not prove persistence support; verify what the request builder actually serializes.
+- A successful response must not be treated as evidence that every visible form change was persisted.
+- When create and edit reuse one form, explicitly audit mode-specific capabilities instead of assuming create semantics are valid for edit.
+- Current lesson persistence is row-oriented: one Lesson row has at most one `studentId`. Do not infer grouped-exam mutation semantics without evidence.
+- Existing but unused schema models are not an implementation mandate.
+- `lesson-edit-contract-alignment-v1` is queued. The Super Agent may investigate and prepare it, but implementation requires human authorization.
+
+<!-- exhaustive-snapshot-audit-5eded00-v1 -->
+## Full-snapshot audit operating rules
+
+- Current audit total: 48 confirmed findings = 2 governance + 41 code/runtime/security/architecture/test + 5 toolchain/configuration/dependency-security.
+- A route that mutates commercial/security state must fail closed when authenticity or operator authority is not proven.
+- Hidden navigation, an `internal` label, or a read-only UI does not establish a server authorization boundary.
+- Security controls must be traced onto the path the product actually uses; protecting an unused parallel endpoint does not protect the authoritative flow.
+- Auth flows must have one authoritative credential/session path unless a second path has an explicit, tested responsibility.
+- Multi-record aggregate creation/update must be audited for transaction/compensation semantics; successful first writes followed by failed dependent writes are findings when no atomic guarantee exists.
+- Account creation is not complete until its production activation/login handoff is usable and consistent with the authoritative verification/token architecture.
+- Dead-code/dependency pruning requires exact consumer proof plus full validation; import-graph zero-inbound is strong evidence, not deletion authority.
+- Legacy Prisma model disposal is data-sensitive: inspect target data read-only first; no schema/data removal without separate authorization.
+- Framework-adjacent direct packages should have an intentional version contract with the framework; version divergence is investigated in its own slice, not fixed through opportunistic upgrades.
+- Security-first implementation order begins with `billing-webhook-authenticity-gate-v1`, `billing-projection-atomic-idempotency-v1`, `jwt-session-revocation-v1` and `next-security-patch-containment-v1`, subject to explicit human authorization and prerequisite validation.
+
+<!-- exhaustive-snapshot-audit-5eded00-v2 -->
+## Exhaustive-audit completion rules
+
+- Static snapshot analysis is complete at 46 confirmed findings.
+- Security and access/commercial authority take precedence over cosmetic cleanup.
+- A confirmed vulnerability/security boundary is not deferred behind refactoring convenience.
+- When repeated code represents the same stable semantic primitive, extract a small typed helper/service and remove the copies.
+- Do not create generic abstraction frameworks merely because two files look similar.
+- Proven dead scaffold is removed after exact reference proof; Git history is not a reason to keep unused runtime surface.
+- Orphan source deletion and dependency pruning happen in small validated batches.
+- Notification-stack consolidation precedes deletion of the orphan custom Toaster path because active callers still exist.
+- Every direct dependency must eventually have an explicit responsibility or be removed; literal-import absence alone is never sufficient for framework/tooling packages.
+- Tests are added by risk, not by coverage percentage.
+- Real DB integration tests are mandatory for transaction, constraint, lock and concurrency contracts that mocks cannot prove.
+- Critical deterministic E2E belongs in CI after the suite contract is repaired; production mutation smoke does not.
+- Every audit signal must end in one of four states: confirmed finding, named evidence/refactor slice, documented false positive, or externally blocked validation with an explicit next probe.
+- Data-sensitive legacy/dormant model disposition starts read-only and requires separate authorization before schema/data mutation.
+- Dependency-security remediation is isolated from opportunistic upgrade work.
+- Existing P0/P1 findings determine implementation sequence after human GO; audit discovery itself never self-authorizes a write.
+
+<!-- exhaustive-audit-master-remediation-ledger-v1 -->
+## Master remediation coverage contract
+
+- The canonical audit contains **48 findings**, and the roadmap master remediation ledger maps **48/48** to explicit remediation, disposition, or already-recorded governance work.
+- The Super Agent must consult that ledger before proposing the next slice and must never silently drop a finding because a newer discovery is more interesting.
+- Security-first execution order is authoritative: immediate containment precedes structural cleanup.
+- Prerequisite tests may precede a deeper security fix when they are required to prove transaction/concurrency correctness, but they do not justify delaying a simple fail-closed containment.
+- Repeated semantics converge on small typed helpers/services; repeated appearance alone is not enough to create an abstraction.
+- `people-manager-orchestration-seams-v1` is now the named follow-up for `UI-STRUCT-001`, after atomic People mutations stabilize.
+- Orphan UI/dependency pruning is blocked on `notification-stack-consolidation-v1` for the active custom-toast consumers, then proceeds in exact-reference batches.
+- At the end of each implemented slice, update the finding ledger status and continuity state; a completed slice must not disappear from historical traceability.
+
+<!-- hosted-security-wave-a1-headers-v1 -->
+## Hosted response-security rule
+
+- Hosted evidence can promote an evidence-only slice to a confirmed finding; when that happens, update audit report, roadmap master ledger, current state and continuity together.
+- Wave A1 confirms HTTPS redirect and HSTS; do not regress them while adding further hardening.
+- `SEC-HEADERS-001` is the authoritative response-header finding.
+- `security-response-headers-hardening-v1` replaces the completed verification slice.
+- CSP must be origin-aware and compatibility-tested; never paste an enforcing generic CSP directly into Production.
+- Prefer a staged browser boundary: low-risk headers, Preview verification, CSP inventory/reporting, then enforcement.
+- Anti-framing must be explicit through CSP `frame-ancestors` and/or a compatible legacy X-Frame-Options policy.
+- Do not add COOP/CORP/COEP merely to maximize header count; require a demonstrated product/security need.
+- Hosted GET=405 evidence is sufficient to prove billing route deployment; never POST to a production billing webhook merely to prove exposure.
+
+<!-- security-wave-a2-dependency-audit-v1 -->
+## Dependency-security evidence rule
+
+- `pnpm audit` output is an inventory signal, not an automatic finding count.
+- Classify every advisory by locked version, direct/transitive responsibility, production/dev scope and actual DAT path applicability before promotion.
+- A version-range match without the vulnerable feature/path does not become an active DAT vulnerability finding.
+- `DEP-SEC-002` is the systemic absence of continuous dependency-advisory detection; it is independent of the exploitability of each current advisory.
+- Dependency security CI must be deterministic and reviewable: explicit advisory IDs, path-aware exceptions and no blind automatic upgrades.
+- For dead direct roots, prefer removing the root and its transitive advisory surface rather than upgrading code that has no responsibility.
+- Next 14 containment and supported-LTS migration remain separate: first reduce the known 14.2.28 exposure, then migrate deliberately from the unsupported major.
+- Re-check current advisories at the start and end of every dependency/security slice because advisory state can change between planning and implementation.
+
+<!-- security-wave-a3-hosted-auth-v1 -->
+## Hosted authentication evidence rule
+
+- A3 is the authoritative current hosted cookie/session-cache baseline.
+- Do not reopen `/login=404`; the configured NextAuth sign-in route is `/auth/login` and returns 200.
+- Preserve host-only cookie isolation between tenant and Platform.
+- Preserve Secure + HttpOnly + SameSite=Lax + Path=/ for current NextAuth CSRF/callback cookies unless a future auth architecture explicitly requires a reviewed change.
+- Do not equate browser cookie security with JWT revocation: `AUTH-SESSION-001` remains open until the server can invalidate already-issued stateless sessions.
+- Current Vercel evidence for `/api/auth/session` is repeated MISS/age=0; do not promote cache leakage without contradictory authenticated/edge evidence.
+- Public login-page cache HIT/PRERENDER is not itself a security finding.
+- Parsing/normalization failures in evidence tooling must propagate fail-closed to the final audit gate.
+
+<!-- security-wave-a4-commercial-evidence-v1 -->
+## Commercial hosted-boundary evidence rule
+
+- A4 is the authoritative anonymous commercial deployment-state baseline.
+- Billing webhook GET=405 on both public hosts proves route deployment only; never POST merely to prove exposure.
+- Static zero authenticity signals reinforces `BILLING-SEC-001`; do not create a duplicate finding for the same defect.
+- Anonymous 401 on license/settings/feature-flags proves fail-closed behavior only; it does not prove authenticated role authority.
+- Do not treat environment-key-name absence in a constrained source scan as proof that a hosted provider is unconfigured.
+- Do not probe license activation, entitlement grants, webhook retries or billing idempotency in Production for audit discovery.
+- Security Wave A is complete.
+- The next audit evidence phase is Wave B: read-only data-sensitive model disposition.
+
+<!-- data-wave-b1-legacy-dormant-inventory-v1 -->
+## Data Wave B1 evidence rule
+
+- B1 is authoritative only for the currently configured remote Supabase target; do not silently generalize it to every historical/preview/production database environment.
+- Current observed counts: `Exam=0`, `ExamRegistration=0`, `LessonRequest=0`, `Payment=0`, `Notification=0`.
+- Zero rows are strong deletion/disposition evidence, not deletion authorization.
+- Schema-removal slices must still prove no runtime responsibility and inspect migrations, seeds, scripts, ops and environment scope.
+- Preserve the rule that database evidence queries are aggregate-only and run inside an explicitly confirmed read-only transaction.
+- `DATABASE_URL` was sourced from local `.env`; this becomes input evidence for `environment-configuration-responsibility-audit-v1`.
+
+<!-- environment-configuration-responsibility-audit-v1 -->
+## Environment configuration responsibility rule
+
+- `CONFIG-ENV-001` is confirmed and maps to `local-development-database-isolation-v1`.
+- Current automatic local database resolution selects `nextjs_space/.env` and matches the Production operator target.
+- `.env.local` currently does not override `DATABASE_URL`.
+- `env:check` currently lacks an explicit Production-target isolation guard.
+- Treat local-development database isolation as a safety prerequisite before ordinary write-capable local runtime execution.
+- Operator Production workflows must remain explicit and guarded; do not make Production the default development target.
+- Keep operator and smoke profiles separate; their zero-overlap split is intentional.
+- Do not delete an env key from static-zero-reference evidence alone when a framework/library may consume it implicitly.
+- Cleanup sequence: isolate development target → prove env responsibility → consolidate duplicates → prune dead public/legacy variables → validate lifecycle hooks and operator/smoke workflows.
+- Never print env values, credentials, full database URLs, database identities or secrets in audit output.
+
+<!-- environment-configuration-disposition-e5-e7-v1 -->
+## Environment E5-E7 execution rule
+
+- Canonical auth secret variable: `NEXTAUTH_SECRET`.
+- `AUTH_SECRET` is a NextAuth fallback alias and is redundant in DAT because the operator copies equal values into both aliases.
+- Never remove an auth-secret alias from an environment until `NEXTAUTH_SECRET` presence is proven for that same environment.
+- Remove the unused Supabase/public environment contract only after proving the hosted environment key names and preserving any infrastructure-only responsibility outside DAT.
+- `LICENSE_TIER` has no functional DAT consumer and is cleanup-ready.
+- `VERCEL_OIDC_TOKEN` has no DAT functional responsibility, but external tooling ownership must be checked before deletion.
+- Preserve `NEXTAUTH_URL` and its intentional local-versus-remote environment-specific values.
+- Execute local database isolation before relying on ordinary local write-capable runtime validation.
+
+<!-- data-wave-b2-responsibility-and-sa-handoff-v1 -->
+## Super Agent recovery-memory contract
+
+The repository, not chat history, is the authoritative recovery mechanism for the Engineering Excellence Audit.
+
+After every material evidence phase, the Super Agent continuity state and canonical audit documents must be updated before moving to the next material phase.
+
+A context-reset recovery must be possible from repository state alone. At minimum the continuity state must preserve:
+
+- active branch and latest validated audit HEAD;
+- canonical finding count and remediation coverage;
+- completed evidence phases;
+- confirmed findings and newly created/updated slices;
+- important negative findings and false positives that must not be reopened;
+- safety constraints and human-approval gates;
+- current blockers and execution prerequisites;
+- exact next evidence phase;
+- enough evidence summary to avoid repeating completed investigation.
+
+The Super Agent is permitted to reconstruct context from these canonical documents, prepare guarded analysis and execute separately authorized slices, but it does not gain publication, destructive-operation, database-write, hosted-write or Production-write approval authority.
+
+Do not rely on assistant conversational memory as the sole source of any audit decision.
+
+### Current B2 recovery state
+
+- audit remains at 49 findings / 49 mappings;
+- environment audit E1-E7 and disposition are complete;
+- Data Wave B1 proved zero rows for `Exam`, `ExamRegistration`, `LessonRequest`, `Payment`, `Notification` on the observed remote Supabase target;
+- Data Wave B2 proved all five still retain technical responsibility and therefore are not yet schema-removal-ready;
+- next evidence phase: `legacy-model-runtime-responsibility-classification-v1`.
+
+<!-- data-wave-b3-runtime-responsibility-v1 -->
+## Data Wave B3 recovery rule
+
+- Finding count remains 49 / 49 mappings.
+- Zero rows plus zero runtime writes is not sufficient by itself for schema deletion.
+- Distinguish product/domain terminology from Prisma model coupling; B3 found zero Prisma type-bound target-model source files.
+- `ExamRegistration` and `Notification` currently have no active-business blocker.
+- `Payment` is blocked only by defensive delete/retention semantics plus mechanical legacy references.
+- `Exam` requires one admin-vehicles API semantic classification.
+- `LessonRequest` retains two active page-level reads and cannot be retired until their product responsibility is resolved.
+- next phase is evidence-only: `legacy-model-blocker-semantic-closure-v1`.
+- update the Super Agent continuity state again immediately after that phase.
+
+<!-- data-wave-b4-blocker-semantics-v1 -->
+## Data Wave B4 recovery rule
+
+- Findings remain 49 / 49 mappings until final dashboard-stat data-flow evidence proves whether a new functional defect exists.
+- `Exam` is an explicitly legacy storage fallback; current exam scheduling responsibility can be represented by Lesson with lessonType EXAM.
+- Exam retirement must also remove vehicle `_count.exams` relation/delete guarding; do not remove only the direct delegate query.
+- ExamRegistration and Notification have no remaining business semantic blocker.
+- Payment is a delete-eligibility dependency only, pending exact policy-rule closure.
+- LessonRequest page queries execute but their third Promise.all results are discarded; do not describe them as active product behavior without the final JSX proof.
+- next phase: `legacy-model-blocker-final-semantic-closure-v1`.
+- immediately checkpoint the Super Agent again after final semantic closure.
+
+<!-- data-wave-b41-final-semantics-ui-data-001-v1 -->
+## Data Wave B4.1 recovery rule
+
+- Canonical findings are now 50 with 50/50 remediation coverage.
+- `UI-DATA-001` is confirmed and maps to `dashboard-statistics-contract-alignment-v1`.
+- Instructor dashboard scheduled/completed/pending statistics are positionally misbound and user-visible.
+- Student LessonRequest count is dead/unconsumed work.
+- All five legacy/dormant target models are semantically retirement-ready but schema deletion remains unauthorized.
+- Retirement must include relation-count delete guards and stable policy codes/tests, not only direct Prisma delegates.
+- Never fix the instructor Pending Requests card by reactivating the dormant LessonRequest domain without an explicit product decision.
+- next phase: `legacy-model-retirement-execution-contract-v1`.
+- checkpoint the Super Agent after that planning phase.
+
+<!-- data-wave-b5-retirement-execution-contract-v1 -->
+## Data Wave B5 recovery rule
+
+- Findings remain 50 / 50 mappings.
+- Preserve two-stage retirement: runtime decoupling first; schema retirement only after the decoupled application is deployed and verified.
+- B5 raw target dependency cycles are false for SQL ordering because Prisma inverse relation fields were counted as dependency edges.
+- Historical migration DDL is authoritative for physical FK direction.
+- related target drop order: Payment -> ExamRegistration -> Exam.
+- LessonRequest and Notification do not participate in that target-to-target FK chain.
+- avoid blind `DROP ... CASCADE`; enumerate intended relation/table retirement explicitly.
+- `local-development-database-isolation-v1` is a prerequisite to ordinary local migration-authoring workflows.
+- existing remote operator target guard should be reused if suitable; do not duplicate environment identity contracts without evidence.
+- next phase: `legacy-model-migration-workflow-closure-v1`.
+- checkpoint Super Agent immediately after that phase.
+
+<!-- data-wave-b51-migration-workflow-db-migration-001-v1 -->
+## Data Wave B5.1 recovery rule
+
+- Canonical findings are now 51 with 51/51 remediation coverage.
+- `DB-MIGRATION-001` maps to `migration-deploy-target-safety-gate-v1`.
+- Do not treat lack of automatic migration deployment as a defect; migration deploy is intentionally human-operated.
+- The defect is absence of a dedicated fail-closed write-purpose target gate before raw remote `prisma migrate deploy`.
+- Existing `remote-operator-target-guard.ts` is documented inspect-only; reuse identity primitives, not unrestricted authorization semantics.
+- Never allow the Super Agent to become migration approval authority.
+- Stage B remote application requires explicit human GO even after every technical preflight passes.
+- next phase: `legacy-model-migration-authoring-contract-v1`.
+- immediately checkpoint Super Agent after that phase.
+
+<!-- data-wave-b52-authoring-and-data-wave-b-closure-v1 -->
+## Data Wave B5.2 recovery rule
+
+- Findings remain 51 with 51/51 remediation coverage.
+- Data Wave B is audit-complete; do not reopen broad legacy-model discovery without contradictory evidence.
+- No isolated migration-authoring database/harness exists in the current repo.
+- Do not run migration-authoring commands through automatic local env resolution while CONFIG-ENV-001 remains open.
+- Safe authoring belongs to local-development-database-isolation-v1 plus database-integration-test-harness-v1.
+- Remote migration writes belong to migration-deploy-target-safety-gate-v1 and explicit human GO.
+- Preserve staged legacy retirement: runtime decoupling deployed/verified before schema retirement.
+- DAT_4.3 remains audit-first; no implementation merely because this wave is implementation-ready.
+- next phase: `audit-surface-completeness-reconciliation-v1`.
+
+<!-- super-agent-continuity-disaster-recovery-contract-v1 -->
+### Super Agent continuity and disaster-recovery contract
+
+The Super Agent has two equally important DAT responsibilities:
+
+1. **Operational worker** — repository-aware investigation, guarded command preparation, evidence analysis, canonical-state maintenance and smallest-safe-slice planning.
+2. **Continuity / disaster-recovery backup** — preserve enough authoritative project state that DAT work can be safely reconstructed after loss, truncation or replacement of the active ChatGPT conversation.
+
+The Super Agent must never rely on chat memory as the only source of operational continuity.
+
+For every material milestone or work-phase transition, the canonical Super Agent recovery state must preserve, as applicable:
+
+- current branch and authoritative Git checkpoint / relevant HEAD;
+- current project phase and whether it is active, complete, blocked or awaiting human approval;
+- confirmed finding count and remediation coverage;
+- completed evidence waves, decisions and boundaries that must not be reopened without contradictory evidence;
+- unresolved findings, prerequisite gates, product decisions, external evidence or execution-time validation still owned by future slices;
+- exact next recommended action;
+- prohibited actions and operations requiring explicit human authorization;
+- runtime, database, hosted, production and remote-write safety constraints;
+- relevant validation results and invariants;
+- canonical documents required for recovery;
+- enough context to distinguish historical checkpoints from live current state.
+
+### Recovery rule
+
+If conversational context is lost, incomplete or unreliable:
+
+1. inspect the actual Git branch, HEAD and worktree read-only;
+2. load the DAT canonical state surfaces;
+3. use the latest Super Agent recovery handoff together with current-state, roadmap, audit/decision evidence and repository state;
+4. reconcile any apparent disagreement using the established canonical-authority rules;
+5. fail closed on consequential mutations until current state and required human authorization are re-established;
+6. do not ask the human to reconstruct information that is recoverable from the repository.
+
+### Milestone Definition of Done
+
+A material DAT milestone is not fully closed from a continuity perspective until the Super Agent has a recovery handoff sufficient to resume the project safely without relying on the previous conversation.
+
+The continuity record is operational recovery state, not merely historical documentation.
+
+Historical evidence must remain historical; update live state or append a new recovery handoff rather than rewriting earlier checkpoints merely because the project later advanced.
+
+<!-- documentation-engineering-excellence-contract-v1 -->
+### Documentation engineering excellence contract
+
+Documentation is part of the DAT engineering product, not optional follow-up work.
+
+High-quality implementation with stale, incomplete or misleading documentation
+does not satisfy the DAT engineering standard.
+
+For every material implementation, remediation, architecture, operational or
+migration slice, determine which documentation surfaces are affected and update
+them in the same controlled workstream as applicable:
+
+- canonical current state;
+- roadmap / To-Do and execution status;
+- architecture or decision records;
+- operator/runbook documentation;
+- API, security, migration or deployment contracts;
+- validation and rollback evidence;
+- Super Agent continuity/disaster-recovery handoff.
+
+Documentation must describe the actual proven state, distinguish live state from
+historical checkpoints, and avoid claims stronger than the available evidence.
+
+A material DAT slice is not documentation-complete when code/tests have changed
+but the affected authoritative documentation remains stale.
+
+Documentation quality is part of the proportional Engineering Quality Review
+and part of the milestone Definition of Done.
+
+<!-- engineering-excellence-audit-v1-formal-closure-v1 -->
+### Engineering excellence audit formal closure
+
+- Audit: `engineering-excellence-audit-v1`.
+- Formal closure date: 2026-08-13.
+- Closure authority: explicit human GO.
+- Final Engineering Quality Review: PASS.
+- Closure-blocking dimensions: 0.
+- Confirmed findings: 51.
+- Remediation coverage: 51/51.
+- Repository-static unresolved audit frontier: none.
+- Findings resolved by closure: no — they remain active remediation debt.
+- Audit-branch remediation implementation authorized by closure: no.
+- First post-audit implementation priority: `billing-webhook-authenticity-gate-v1`.
+- Second containment priority: `next-security-patch-containment-v1`.
+- Documentation and Super Agent continuity remain mandatory parts of every slice Definition of Done.

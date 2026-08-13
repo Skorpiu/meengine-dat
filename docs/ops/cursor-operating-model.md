@@ -1062,3 +1062,212 @@ Every automation run must use this structure:
 
 Durable decisions, workflow changes, migrations, runbooks, client-specific product decisions, and future To-Dos must be reflected in the appropriate docs under `docs/` (architecture and ops), following the [Memory Update Protocol](#memory-update-protocol).
 
+<!-- semantic-gate-precision-protocol-v1 -->
+## Semantic Gate Precision Protocol
+
+### Purpose
+
+Prevent false positives and false negatives in automated or manually prepared gates. A gate is trustworthy only when its evidence directly proves the proposition being evaluated.
+
+### Required gate design
+
+Every blocking gate must define:
+
+1. **Proposition** — the exact statement that must be true or false.
+2. **Scope** — repositories, paths, files, Git states, environments, or records inspected.
+3. **Evidence source** — structured command, exact marker, direct file read, test, API response, or operator-confirmed output.
+4. **Expected result** — exact value, cardinality, path set, status, or invariant.
+5. **Actual result** — the evidence observed.
+6. **Entailment** — why the actual result logically proves success or failure.
+
+### Semantic interpretation requirements
+
+- Negated statements do not prove positive claims.
+- Candidate, planned, proposed, deferred, historical, superseded, archived, and example content must not be interpreted as current implementation or authorization.
+- A matching word or date is not sufficient when the same value can legitimately occur in multiple contexts.
+- Broad regular expressions and aggregate counts are discovery tools unless the proposition itself is explicitly about that exact count.
+- If a match can represent more than one semantic state, inspect the surrounding context before deciding.
+
+### Git evidence requirements
+
+- `git grep` searches tracked repository content; it does not prove that an untracked file is absent.
+- Use `git diff` for unstaged tracked changes.
+- Use `git diff --cached` for staged changes.
+- Use `git status --short` to identify modified, staged, deleted, renamed, and untracked paths.
+- Read relevant untracked files directly when their content participates in a gate.
+- When comparing expected scope, include all applicable Git states and compare normalized exact path sets.
+
+### Blocking policy
+
+- Exact, context-confirmed evidence may pass or fail a gate.
+- Heuristic evidence may produce `warning`, `signal`, or `needs confirmation`.
+- Heuristic evidence alone must not authorize or block commit, merge, deployment, database writes, destructive actions, or production mutation.
+- When ambiguity remains, stop consequential work and request or collect the missing evidence; do not guess.
+
+### Gate failure report
+
+A failed gate must show:
+
+- the exact proposition;
+- the inspected scope;
+- the evidence command or source;
+- expected and actual results;
+- relevant matched context;
+- why the evidence proves failure;
+- the safe next action.
+
+### Regression examples recorded by the engineering audit
+
+The `engineering-excellence-audit-v1` rulebook review identified three false blockers that this protocol prevents:
+
+1. `git grep` omitted an untracked audit report and undercounted Super Agent role references.
+2. A broad date count mixed the audit start date with legitimate historical Node 24 closure dates.
+3. A broad phrase search treated negative and future statements as positive implementation findings.
+
+<!-- engineering-quality-review-protocol-v1 -->
+## Engineering Quality Review Protocol
+
+### Purpose
+
+Ensure that completion and merge-readiness decisions consider engineering quality beyond whether tests merely pass. The review must remain proportional to the approved scope and actual risk.
+
+This protocol does not authorize drive-by improvements. It identifies evidence, confirms applicable risks, and records out-of-scope follow-ups separately.
+
+### Required output
+
+For each applicable dimension, report:
+
+| Dimension | Applicable | Evidence | Result | Follow-up |
+| --- | --- | --- | --- | --- |
+| `<dimension>` | yes / no | path, diff, test, command output, or contextual observation | PASS / RISK / NEEDS_CONFIRMATION / NOT_APPLICABLE | none or smallest-safe follow-up |
+
+`NOT_APPLICABLE` requires a short scope-based reason. An empty cell is not equivalent to `NOT_APPLICABLE`.
+
+### Quality dimensions
+
+1. **Correctness and contracts**
+   - approved behavior, API/UI contracts, domain invariants, backward compatibility, and behavioural equivalence where required.
+
+2. **Security, privacy, authorization, and tenancy**
+   - authentication, authorization, tenant scope, secret/token exposure, abuse surface, and sanitized provider/internal errors.
+
+3. **Data integrity and concurrency**
+   - transactions, all-or-nothing behavior, zero-write dry-runs, identifiers, uniqueness, ordering, idempotency, races, and destructive boundaries.
+
+4. **Maintainability and structure**
+   - cohesion, coupling, duplication, complexity, ownership, discoverability, naming, responsibility boundaries, and obsolete paths.
+
+5. **Testability and regression protection**
+   - unit/integration/E2E coverage, failure paths, test clarity, brittle mocks, and manual QA requirements.
+
+6. **Performance and scalability**
+   - query/load behavior, rendering, network calls, INP-sensitive UI, batch size, algorithmic cost, and evidence of material impact.
+
+7. **Accessibility, usability, and responsiveness**
+   - keyboard and screen-reader behavior, semantics, validation feedback, responsive layout, operator clarity, and destructive-action comprehension.
+
+8. **Observability and diagnostics**
+   - useful logs, audit events, actionable errors, correlation/trace context where applicable, and absence of sensitive leakage.
+
+9. **Reliability and resilience**
+   - predictable failure behavior, retry/idempotency behavior, provider failure, partial failure, concurrency, and fail-closed boundaries.
+
+10. **Operability, reversibility, rollback, and recovery**
+    - safe deployment, rollback or revert path, recovery evidence, migration/data implications, human operator steps, and reversibility classification.
+
+11. **Runtime, dependencies, deployment, and compatibility**
+    - Node/pnpm/Prisma/Next.js baselines, environment/configuration impact, hosted behavior, dependency changes, and browser/runtime compatibility.
+
+12. **Documentation and canonical memory**
+    - current-state, roadmap, decision log, architect rule, system design, runbooks, limitations, and next-slice consistency.
+
+### Proportionality
+
+- Docs-only work normally needs correctness, maintainability, evidence quality, memory consistency, and scope review; runtime-only dimensions may be `NOT_APPLICABLE` with reasons.
+- UI work must consider correctness, maintainability, testability, accessibility, usability, responsiveness, performance, and relevant security/data boundaries.
+- API/data work must consider contracts, authorization, tenant scope, integrity, concurrency, observability, reliability, and rollback.
+- Sensitive work must use the full relevant review plus the Sensitive Batch Gate, Final Evidence Pack, Critical Claim Evidence, and Implementation Conformance Matrix.
+
+### Evidence and blocking policy
+
+- File size, hook counts, keyword matches, or broad searches are investigation signals, not findings.
+- A finding requires contextual evidence showing a concrete maintenance, correctness, security, operational, or quality impact.
+- A critical applicable `RISK` or unresolved `NEEDS_CONFIRMATION` blocks merge readiness when it can affect correctness, security, tenancy, data integrity, production safety, or an approved critical requirement.
+- Non-critical, out-of-scope findings become Deferred recommendations with priority, evidence, and a smallest-safe follow-up.
+- Do not expand the current slice to fix a newly discovered quality issue without explicit approval.
+
+<!-- super-agent-continuity-recovery-protocol-v1 -->
+## Super Agent Continuity and Recovery Protocol
+
+### Objective
+
+Maintain conversation-independent knowledge continuity so that the Super Agent can act as an operational backup for the DAT team when prior chat context, an individual operator, or a working session is unavailable.
+
+### Required canonical checkpoint
+
+After every material phase, synchronize:
+
+- `.cursor/rules/architect-mode.mdc`;
+- `docs/ops/super-agent-continuity-state.md`;
+- `docs/architecture/current-state.md`;
+- `docs/architecture/roadmap-todo.md`;
+- the active audit, runbook, decision, or implementation document;
+- any additional canonical surface directly affected by the work.
+
+A material phase includes:
+
+- a confirmed or rejected finding;
+- an approved architectural or product direction;
+- a commit, merge, deployment, rollback, or branch closure;
+- a runtime, dependency, schema, data, hosted, or configuration change;
+- a validation result that changes readiness or risk;
+- a meaningful change to next steps, limitations, or authority.
+
+### Recovery Startup Procedure
+
+1. Resolve the repository root and run `git status --short --branch`.
+2. Resolve `git branch --show-current`, `git rev-parse HEAD`, and `git rev-parse refs/remotes/origin/main`.
+3. Verify that no unexpected staged, modified, deleted, renamed, or untracked paths exist.
+4. Read `architect-mode.mdc` and `super-agent-continuity-state.md`.
+5. Read the referenced current-state, roadmap, active audit, decisions, and runbooks in canonical precedence order.
+6. Confirm runtime/toolchain baselines from repository files and verified commands.
+7. Reconstruct active findings, approved directions, prohibited actions, and the smallest safe next action.
+8. Stop and report inconsistencies before any consequential write.
+
+### Recovery Reconstruction Drill
+
+A successful drill must demonstrate that a fresh operator can determine, from committed repository evidence:
+
+- the active branch and purpose;
+- the verified main/runtime baseline;
+- the current findings and their status;
+- the approved implementation order;
+- which actions remain unauthorized;
+- the next read-only or implementation step;
+- the exact validation and recovery expectations.
+
+The drill is documentary and read-only. It must not use a deployment, database mutation, hosted mutation, merge, push, or destructive operation as proof of continuity.
+
+### Failure policy
+
+If the continuity state is stale, incomplete, contradictory, or missing:
+
+- do not guess;
+- do not begin consequential implementation;
+- preserve the repository state;
+- reconstruct evidence from Git and canonical documents;
+- repair continuity in a dedicated documentation checkpoint;
+- repeat the Recovery Reconstruction Drill.
+
+<!-- dat-toolchain-rationalization-v1 -->
+## Local Node 24 toolchain execution override
+
+The canonical validation target remains:
+
+`pnpm -C driving_school_platform/nextjs_space check`
+
+However, on the current Windows/Git Bash workstation, bare `pnpm` is a Volta launcher whose active Node is `v20.20.0`. Therefore a bare pnpm command is not acceptable as Node-24 runtime evidence.
+
+Until the dedicated toolchain cleanup slice is implemented, local Node-24 evidence must prove transitive runtime provenance. The outer portable Node `v24.18.0` → pnpm `10.24.0` chain alone is insufficient because nested bare pnpm calls can route back through Volta Node `v20.20.0`. Use the guarded temporary routing procedure recorded in `.cursor/rules/architect-mode.mdc` so direct and nested pnpm processes remain on Node 24 before accepting the full check.
+
+This is an execution-provenance rule, not a change to the logical canonical check target.
