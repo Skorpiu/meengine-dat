@@ -1081,3 +1081,33 @@ Remote `main` publication and remote branch deletion have not occurred at this
 checkpoint and remain separate consequential operations.
 
 Do not reopen global audit discovery absent contradictory evidence.
+
+<!-- billing-webhook-authenticity-gate-v1-kickoff -->
+## P0 billing webhook authenticity — working-branch recovery checkpoint
+
+### Current recovery state
+
+- Active branch: `billing-webhook-authenticity-gate-v1`.
+- Parent integrated `main` HEAD: `25a656382f46b6d79868510aeef697c788341113`.
+- Audit merge commit: `81ec6079fb41289e951dfa900b7d90635aa03425`.
+- Audit source HEAD: `9d275cfa57bc7fe809c95f7c7a0326f339014809`.
+- Audit status: CLOSED.
+- Findings at audit closure: 51.
+- Remediation coverage: 51/51.
+- Local `engineering-excellence-audit-v1` branch: deleted after verified merge.
+- Remote publication of integrated `main`: not yet performed.
+- Remote audit-branch deletion: not performed by this checkpoint.
+
+### Exact next action
+
+Run a read-only implementation preflight for
+`billing-webhook-authenticity-gate-v1`.
+
+Determine the current webhook provider contract, authenticity evidence,
+mutation boundary, test seams, environment/configuration ownership, and the
+smallest fail-closed patch before modifying runtime behaviour.
+
+If product intent is ambiguous, obtain the human product decision rather than
+inventing behaviour.
+
+Documentation remains a mandatory deliverable throughout the slice.

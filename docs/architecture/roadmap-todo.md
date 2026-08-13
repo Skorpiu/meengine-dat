@@ -991,3 +991,14 @@ contracts are satisfied.
 - Next branch: `billing-webhook-authenticity-gate-v1`.
 - First objective: P0 billing webhook authenticity containment.
 - Remote publication remains a separate explicit operation.
+
+<!-- billing-webhook-authenticity-gate-v1-kickoff -->
+### Active execution slice
+
+`billing-webhook-authenticity-gate-v1` is now the active **P0** working slice.
+
+- Base: integrated local `main` at `25a656382f46b6d79868510aeef697c788341113`.
+- Audit merge: `81ec6079fb41289e951dfa900b7d90635aa03425`.
+- Completed local audit branch: removed after verified merge ancestry.
+- Current phase: implementation preflight.
+- Next containment slice after completion: `next-security-patch-containment-v1`.

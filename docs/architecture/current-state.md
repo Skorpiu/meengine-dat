@@ -660,3 +660,14 @@ locally into `main` using an explicit `--no-ff` merge.
 
 This integration does not itself publish `main` remotely or authorize a
 behavioural remediation.
+
+<!-- billing-webhook-authenticity-gate-v1-kickoff -->
+## Active P0 slice — billing webhook authenticity
+
+- Branch: `billing-webhook-authenticity-gate-v1`.
+- Parent integrated `main`: `25a656382f46b6d79868510aeef697c788341113`.
+- Priority: P0.
+- Audit branch local cleanup: complete.
+- First phase: read-only implementation preflight.
+- Behavioural implementation remains separately controlled by slice evidence
+  and normal authorization boundaries.
