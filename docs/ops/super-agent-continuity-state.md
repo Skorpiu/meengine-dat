@@ -1000,3 +1000,58 @@ Every material remediation milestone must append/update a Super Agent recovery
 handoff before it is considered continuity-complete.
 
 Documentation is also a mandatory engineering deliverable. A remediation milestone is not fully complete while affected canonical, architecture, decision, operational/runbook, roadmap or recovery documentation remains knowingly stale. Documentation quality must be reviewed alongside code, tests, security and operational safety.
+
+<!-- engineering-excellence-audit-v1-final-closure-recovery-v1 -->
+## Engineering excellence audit — final closure recovery handoff
+
+### Authoritative closure checkpoint
+
+- Audit: `engineering-excellence-audit-v1`.
+- Formal status: **CLOSED**.
+- Formal closure date: 2026-08-13.
+- Closure authority: explicit human GO.
+- Formal closure commit: `10ec999033ef12f6c0a0ebfb7d6d5682dcff56c5`.
+- Pre-closure EQR/execution checkpoint: `cc636ceec61ec78f2e3253588a319d2df88e7c13`.
+- Final Engineering Quality Review: PASS.
+- Closure-blocking dimensions: 0.
+- Confirmed findings at closure: 51.
+- Remediation coverage: 51/51.
+- Repository-static unresolved audit frontier: none.
+- Findings resolved merely by closure: no.
+- Audit-branch implementation authorized: no.
+
+### Recovery rule after audit closure
+
+Do **not** reopen global `engineering-excellence-audit-v1` discovery unless new
+contradictory evidence invalidates a closed audit conclusion.
+
+Recover from actual Git branch/HEAD/worktree and the canonical documentation.
+The 51 findings remain active remediation debt in the master ledger and
+post-audit execution queue.
+
+### Immediate execution order
+
+1. `billing-webhook-authenticity-gate-v1` — P0 first implementation slice.
+2. `next-security-patch-containment-v1` — P0 containment.
+3. `local-development-database-isolation-v1` and
+   `migration-deploy-target-safety-gate-v1` where independently applicable.
+4. `database-integration-test-harness-v1` and
+   `e2e-suite-contract-repair-v1`.
+5. P1 security/integrity and client-visible correctness according to the queue.
+6. `platform-separation-architecture-plan-v1` runs as a parallel architecture
+   lane and does not block independently safe urgent P0 containment.
+
+### Next operational action
+
+Integrate the completed audit branch into `main` using the guarded merge
+workflow, validate the integrated baseline, record the resulting `main`
+integration checkpoint in Super Agent continuity state, and only then create
+the first P0 implementation branch.
+
+Push, merge publication, branch deletion and behavioural implementation remain
+separate consequential actions subject to their explicit human authorization
+gates.
+
+Documentation remains part of every slice Definition of Done. Every material
+milestone must leave canonical documentation and Super Agent recovery state
+sufficient for safe continuation without relying on conversational memory.
