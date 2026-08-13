@@ -862,3 +862,82 @@ Continue `audit-surface-completeness-reconciliation-v1` by reconciling the compl
 Perform the Final Engineering Quality Review / audit closure gate. Review correctness, security, tenancy, integrity, structure, testability, performance, accessibility, observability, reliability, reversibility, runtime compatibility, documentation and canonical memory as applicable.
 
 If the review passes, request explicit human approval before closing the audit or changing branches. On a subsequent branch transition, remove superseded completed branch(es) rather than accumulating them, subject to the normal local/remote deletion safety and authorization gates.
+
+<!-- dat-44-post-reconciliation-sa-recovery-anchor-v1 -->
+## DAT_4.4 post-reconciliation Super Agent recovery anchor
+
+### Super Agent role
+
+The Super Agent is both:
+
+- the repository-aware DAT operational worker; and
+- the project's canonical continuity / disaster-recovery backup if conversational context is lost.
+
+A future conversation must be able to resume from repository evidence and this canonical recovery state without requiring the human to reconstruct prior DAT history manually.
+
+### Recovery checkpoint
+
+- Branch: `engineering-excellence-audit-v1`.
+- Surface-reconciliation checkpoint commit: `170fea7b331a2437df65f651fd9c1f2387769b11`.
+- Commit subject: `docs(audit): complete surface reconciliation`.
+- Worktree after that commit: clean, including untracked files.
+- Remote write at that checkpoint: none.
+- Merge at that checkpoint: none.
+- Branch transition/deletion at that checkpoint: none.
+- Audit mode: analysis-only.
+- Confirmed findings: 51.
+- Remediation coverage: 51/51.
+- Repository-static unresolved audit frontier: none.
+- DAT_4.4 surface-completeness reconciliation: complete.
+- New finding promoted by final reconciliation: no.
+- Refactor/remediation implementation authorized by the audit branch: no.
+
+### Closed evidence that must not be reopened without contradictory evidence
+
+- exhaustive static snapshot analysis;
+- Security Wave A;
+- environment/configuration evidence E1-E7;
+- Data Wave B1-B5.2;
+- Data Wave B semantic and migration-authoring discovery;
+- DAT_4.4 audit-surface completeness reconciliation.
+
+Remaining evidence-first, prerequisite-gated, external-consumer/telemetry-gated, product-decision-gated and execution-time validation work is already owned by named remediation/disposition slices and is not justification for reopening global audit discovery.
+
+### Important DAT_4.4 residual dispositions
+
+- `toolchain-e2e-runtime-provenance-v1` remains gated by `local-development-database-isolation-v1`; do not start a write-capable local development server merely to close audit discovery.
+- `ts-node` and direct `@next/swc-wasm-nodejs` remain evidence-first removal candidates; no package removal is authorized by their zero tracked non-manifest references alone.
+- direct dependency zero-reference evidence is not blind deletion authority; framework/build/config/peer responsibility remains an execution-time maintenance check.
+- `legacy-inmemory-rate-limit-retirement-v1` remains cleanup, not a new security finding: `lib/api-utils.ts` still contains the optional legacy path, but no current `withErrorHandling` caller activates `rateLimit`; DB-backed distributed auth rate limiting remains authoritative.
+- external-consumer/telemetry checks, maintenance-version review and accessibility regression sweeps remain explicitly owned future evidence work.
+
+### Immediate next action
+
+Perform the **Final Engineering Quality Review / audit closure gate**.
+
+Review the applicable dimensions:
+
+- correctness;
+- security;
+- tenancy;
+- integrity;
+- structure;
+- testability;
+- performance;
+- accessibility;
+- observability;
+- reliability;
+- reversibility;
+- runtime compatibility;
+- documentation;
+- canonical memory / continuity.
+
+The review asks whether already-collected evidence contains any blocker to formal audit closure. It is not another unrestricted discovery wave.
+
+If the review passes, request explicit human approval before formally closing `engineering-excellence-audit-v1`, integrating/transitioning work, pushing, merging, deleting branches or beginning remediation implementation.
+
+### Branch-transition continuity rule
+
+When a future approved transition creates a new working branch, completed superseded work branches should not be accumulated indefinitely.
+
+Verify safety first. Local deletion and especially remote deletion remain separate consequential operations subject to the normal human authorization and remote-write gates.

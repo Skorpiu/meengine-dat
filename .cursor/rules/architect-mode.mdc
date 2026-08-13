@@ -1038,3 +1038,46 @@ Do not rely on assistant conversational memory as the sole source of any audit d
 - Preserve staged legacy retirement: runtime decoupling deployed/verified before schema retirement.
 - DAT_4.3 remains audit-first; no implementation merely because this wave is implementation-ready.
 - next phase: `audit-surface-completeness-reconciliation-v1`.
+
+<!-- super-agent-continuity-disaster-recovery-contract-v1 -->
+### Super Agent continuity and disaster-recovery contract
+
+The Super Agent has two equally important DAT responsibilities:
+
+1. **Operational worker** — repository-aware investigation, guarded command preparation, evidence analysis, canonical-state maintenance and smallest-safe-slice planning.
+2. **Continuity / disaster-recovery backup** — preserve enough authoritative project state that DAT work can be safely reconstructed after loss, truncation or replacement of the active ChatGPT conversation.
+
+The Super Agent must never rely on chat memory as the only source of operational continuity.
+
+For every material milestone or work-phase transition, the canonical Super Agent recovery state must preserve, as applicable:
+
+- current branch and authoritative Git checkpoint / relevant HEAD;
+- current project phase and whether it is active, complete, blocked or awaiting human approval;
+- confirmed finding count and remediation coverage;
+- completed evidence waves, decisions and boundaries that must not be reopened without contradictory evidence;
+- unresolved findings, prerequisite gates, product decisions, external evidence or execution-time validation still owned by future slices;
+- exact next recommended action;
+- prohibited actions and operations requiring explicit human authorization;
+- runtime, database, hosted, production and remote-write safety constraints;
+- relevant validation results and invariants;
+- canonical documents required for recovery;
+- enough context to distinguish historical checkpoints from live current state.
+
+### Recovery rule
+
+If conversational context is lost, incomplete or unreliable:
+
+1. inspect the actual Git branch, HEAD and worktree read-only;
+2. load the DAT canonical state surfaces;
+3. use the latest Super Agent recovery handoff together with current-state, roadmap, audit/decision evidence and repository state;
+4. reconcile any apparent disagreement using the established canonical-authority rules;
+5. fail closed on consequential mutations until current state and required human authorization are re-established;
+6. do not ask the human to reconstruct information that is recoverable from the repository.
+
+### Milestone Definition of Done
+
+A material DAT milestone is not fully closed from a continuity perspective until the Super Agent has a recovery handoff sufficient to resume the project safely without relying on the previous conversation.
+
+The continuity record is operational recovery state, not merely historical documentation.
+
+Historical evidence must remain historical; update live state or append a new recovery handoff rather than rewriting earlier checkpoints merely because the project later advanced.
