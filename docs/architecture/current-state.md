@@ -688,3 +688,20 @@ Commercial Billing is intentionally **not a current client-delivery feature**.
   product decision explicitly changes it.
 - No current containment work determines final pricing, package composition,
   PSP choice, proration, payment UX or student-payment workflow.
+
+<!-- billing-sec-001-current-state-closure-v1 -->
+### `BILLING-SEC-001` remediation state
+
+`BILLING-SEC-001` is closed by containment for the current v1 public webhook
+boundary and is integrated into local `main`.
+
+Supported provider webhook requests currently fail closed before body parsing,
+provider parsing, persistence or subscription/entitlement mutation because
+provider authenticity verification has not yet been implemented.
+
+This state is intentionally temporary in product terms but complete as the
+current security remediation: any future reopening of provider webhook
+processing requires provider-specific cryptographic authenticity proof first.
+
+Implementation anchor: `b584f7608ae37c7ad5cbf62b37613b2823b84f37`.
+Local-main integration recovery anchor: `38812394107e96649cb2b61bbeae73ae6ae3be04`.

@@ -1056,3 +1056,20 @@ accept unproven external events and mutate commercial state.
 The remaining audit Billing findings stay in the remediation ledger; their
 priority may be reassessed against the fail-closed boundary, but they are not
 silently considered fixed by product deferment.
+
+<!-- billing-sec-001-remediation-closure-v1 -->
+### Completed remediation checkpoint — `billing-webhook-authenticity-gate-v1`
+
+- Source finding: `BILLING-SEC-001`.
+- Status: **completed and integrated into local `main`**.
+- Behavioral result: public supported-provider webhook processing fails closed
+  before parsing or commercial-state mutation while provider authenticity is
+  unavailable.
+- Implementation anchor: `b584f7608ae37c7ad5cbf62b37613b2823b84f37`.
+- Integration recovery anchor: `38812394107e96649cb2b61bbeae73ae6ae3be04`.
+- This completion does not start commercial Billing productization.
+- Future real webhook processing requires provider-specific cryptographic
+  authenticity verification.
+- `platform-commercial-billing-productization-v1` and
+  `school-student-payments-addon-v1` remain deferred according to their
+  existing product boundaries.

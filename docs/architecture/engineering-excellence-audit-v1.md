@@ -2071,3 +2071,50 @@ ledger and post-audit execution queue.
   Agent recovery handoff;
 - audit closure alone authorizes no behavioural implementation, push, merge,
   remote branch deletion, database write, hosted mutation or production mutation.
+
+<!-- billing-sec-001-post-audit-remediation-v1 -->
+## Post-audit remediation disposition — `BILLING-SEC-001`
+
+The historical audit evidence above is intentionally preserved unchanged. In
+particular, statements that `BILLING-SEC-001` "remains open" describe the
+repository and hosted evidence at the time of the audit snapshot and are not
+rewritten retrospectively.
+
+**Current remediation status:** CLOSED BY CONTAINMENT for the present v1 public
+webhook boundary.
+
+Subsequent remediation established the following boundary:
+
+- supported external Billing webhook requests fail closed with HTTP 503 while
+  real provider authenticity verification is unavailable;
+- rejection occurs before request-body parsing, provider parsing,
+  `BillingEvent` persistence, subscription projection or entitlement
+  lifecycle mutation;
+- unsupported providers retain deterministic HTTP 400 rejection;
+- no environment bypass or temporary authenticity override was introduced;
+- future real provider webhook processing remains prohibited until
+  provider-specific cryptographic authenticity verification is implemented
+  and evidenced.
+
+Implementation and recovery evidence:
+
+- runtime/tooling alignment: `c07ab7b5dd822f0a343193aadefd3fc1e3d68f15`;
+- Billing containment implementation: `b584f7608ae37c7ad5cbf62b37613b2823b84f37`;
+- slice recovery checkpoint: `f0e2580b2aedfb9424bb360465d5824083842278`;
+- local-main integration checkpoint: `38812394107e96649cb2b61bbeae73ae6ae3be04`;
+- targeted Billing tests: 7/7 passed under Node `24.18.0`;
+- canonical validation: 207/207 test files and 1737/1737 tests passed;
+- production build passed;
+- proportional Engineering Quality Review completed with zero blockers.
+
+Finding-accounting rule:
+
+- `BILLING-SEC-001` remains one of the original confirmed audit findings; the
+  historical finding count is not decremented or rewritten;
+- this post-audit disposition changes its remediation state, not the historical
+  audit inventory;
+- `BILLING-SEC-002`, licensing findings and other audit findings are not closed
+  by this containment.
+
+The deferred commercial Billing product remains a separate future roadmap
+concern and must not be confused with this security containment.
