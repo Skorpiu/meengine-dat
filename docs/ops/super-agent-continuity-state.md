@@ -1111,3 +1111,198 @@ If product intent is ambiguous, obtain the human product decision rather than
 inventing behaviour.
 
 Documentation remains a mandatory deliverable throughout the slice.
+
+<!-- billing-product-deferment-and-containment-go-v1 -->
+## Billing product deferment + containment authorization
+
+### Human product direction — 2026-08-13
+
+The human owner explicitly confirmed that full Billing product work is deferred
+to the end of the active To-Do while remaining strategically required.
+
+Two separate future domains must be preserved:
+
+1. **School -> MeEngine/DAT:** subscription/plans/add-ons depend on the autonomous
+   Platform commercial authority being operational.
+2. **Student -> school:** optional future DAT add-on/premium payment capability,
+   to be revisited only after the first client web app is live and stable in
+   Production.
+
+Do not merge these payment domains.
+
+### Active slice authorization
+
+Human GO is explicit for `billing-webhook-authenticity-gate-v1` **containment
+only**.
+
+Authorized behavioural scope:
+
+- supported public Billing webhook providers must fail closed while no real
+  provider authenticity verification exists;
+- rejection must occur before provider parsing, BillingEvent persistence and
+  subscription/entitlement lifecycle mutation;
+- unsupported providers retain deterministic rejection;
+- no environment switch may bypass authenticity;
+- no checkout, PSP, pricing, commercial package or student-payment implementation
+  belongs in this slice.
+
+### Recovery / next exact action
+
+Validate the route-level fail-closed containment, targeted tests and canonical
+`pnpm -C driving_school_platform/nextjs_space check`. Then perform the
+proportional Engineering Quality Review and update this recovery handoff with
+the proven implementation result before any commit/publication decision.
+
+<!-- billing-webhook-containment-precommit-evidence-v1 -->
+### Billing webhook containment — proven pre-commit evidence
+
+Slice: `billing-webhook-authenticity-gate-v1`.
+
+Proven implementation state:
+
+- public Billing webhook processing fails closed for all currently supported
+  provider identifiers while provider authenticity is unavailable;
+- supported-provider requests return sanitized HTTP 503 with
+  `billing_webhook_authenticity_unavailable`;
+- rejection occurs before request-body parsing;
+- provider `parseWebhook` is unreachable from the HTTP route;
+- BillingEvent persistence is unreachable from the HTTP route;
+- subscription/entitlement lifecycle processing is unreachable from the route;
+- no environment-variable bypass exists;
+- unsupported providers retain deterministic HTTP 400 rejection;
+- targeted Billing tests passed for SIBS, Stripe, PayPal, malformed input and
+  unsupported-provider behavior;
+- canonical application validation passed;
+- proportional Engineering Quality Review passed with zero blockers.
+
+Product boundary remains unchanged:
+
+- this slice is security containment only;
+- school -> MeEngine/DAT commercial Billing remains deferred and depends on
+  autonomous Platform commercial authority;
+- student -> school payments remain a separate future optional add-on/premium
+  capability after the first client is stable in Production.
+
+Next exact action:
+
+Create a guarded local implementation checkpoint only after human authorization.
+After the real implementation commit exists, update Super Agent continuity with
+that commit hash before integration/publication decisions.
+
+Absent separate human authorization: no push, merge, branch deletion, hosted
+mutation, database mutation or Production mutation.
+
+<!-- local-volta-node24-drift-resolution-v1 -->
+### Local Volta Node + pnpm runtime drift — fully resolved pre-checkpoint
+
+During `billing-webhook-authenticity-gate-v1` validation, local runtime drift
+was detected between the repository Node 24 contract and Volta-managed tools.
+
+Proven root cause:
+
+- root `.nvmrc`: `24.18.0`;
+- application `.nvmrc`: `24.18.0`;
+- application `engines.node`: `24.x`;
+- application Volta Node pin had been stale at `20.20.0`;
+- workstation Volta default had been Node `20.20.0`;
+- pnpm `10.24.0` remained installed as a legacy Volta package binary, preserving
+  its earlier Node runtime independently of the corrected Node default.
+
+Resolution:
+
+- workstation Volta default aligned to Node `24.18.0`;
+- application Volta Node pin aligned to `24.18.0`;
+- legacy Volta package installation of pnpm removed;
+- `VOLTA_FEATURE_PNPM=1` enabled for the current shell and persisted for the
+  Windows user;
+- pnpm `10.24.0` installed through Volta native pnpm support;
+- root Node, application Node and pnpm child Node resolve to `24.18.0`;
+- pnpm remains `10.24.0`;
+- targeted Billing tests pass under the corrected toolchain;
+- canonical DAT validation passes without an unsupported-engine warning or
+  Node `20.20.0` runtime signal;
+- full automated suite and production build pass.
+
+The earlier runtime-compatibility conclusion produced before the residual pnpm
+layer was understood is historical evidence only and is superseded by this
+proof.
+
+Git atomicity:
+
+The application `package.json` Volta Node pin correction is runtime/tooling
+work. Billing webhook containment remains a separate behavioral concern.
+
+Next exact action:
+
+After human authorization, create guarded local checkpoints while preserving
+runtime/tooling and Billing semantics, then record the real checkpoint hashes
+in Super Agent continuity before integration/publication.
+
+Absent separate human authorization: no push, merge, branch deletion, hosted
+mutation, database mutation or Production mutation.
+
+<!-- billing-runtime-local-checkpoints-v1 -->
+### Runtime alignment + Billing webhook containment — local checkpoints
+
+Canonical local checkpoint state:
+
+- branch: `billing-webhook-authenticity-gate-v1`;
+- pre-slice recovery anchor: `045e7ad332a59d8cbd1ab979d84734edfaab9abe`;
+- runtime/tooling implementation commit: `c07ab7b5dd822f0a343193aadefd3fc1e3d68f15`;
+- Billing webhook containment implementation commit: `b584f7608ae37c7ad5cbf62b37613b2823b84f37`.
+
+Runtime/tooling checkpoint proves:
+
+- application Volta Node pin is `24.18.0`;
+- repository root and application Node contract is Node 24;
+- workstation Volta default is Node `24.18.0`;
+- legacy Volta package installation of pnpm was removed;
+- native Volta pnpm support is enabled;
+- pnpm remains `10.24.0`;
+- pnpm child Node resolves to `24.18.0`;
+- canonical validation produced no Node `20.20.0` engine mismatch signal.
+
+Billing containment checkpoint proves:
+
+- supported external Billing webhook requests fail closed with HTTP 503 while
+  provider authenticity verification is unavailable;
+- rejection occurs before body parsing, provider parsing, event persistence or
+  subscription/entitlement lifecycle processing;
+- unsupported provider rejection remains deterministic HTTP 400;
+- no environment bypass was introduced;
+- targeted Billing tests passed 7/7 under Node `24.18.0`;
+- canonical validation passed with 207/207 test files and 1737/1737 tests;
+- production build passed;
+- proportional Engineering Quality Review completed with zero blockers.
+
+Finding status:
+
+- the current unauthenticated public commercial-state mutation exposure
+  represented by `BILLING-SEC-001` is contained for the present v1 boundary;
+- real future provider webhook processing MUST NOT be reopened until
+  provider-specific cryptographic authenticity verification is implemented and
+  evidenced;
+- this checkpoint does not close unrelated Billing, licensing, Platform or
+  dependency findings.
+
+Product boundary remains:
+
+- school -> MeEngine/DAT commercial subscription Billing is deferred until the
+  autonomous Platform commercial authority is implemented;
+- student -> school payments remain a separate future optional add-on/Premium
+  capability after the first client is stable in Production;
+- no checkout, PSP selection, pricing, proration, trial, cancellation or
+  student-payment implementation occurred in this slice.
+
+Recovery anchors:
+
+1. `045e7ad332a59d8cbd1ab979d84734edfaab9abe` — pre-slice recovery point.
+2. `c07ab7b5dd822f0a343193aadefd3fc1e3d68f15` — Node/Volta runtime tooling alignment.
+3. `b584f7608ae37c7ad5cbf62b37613b2823b84f37` — Billing webhook security containment.
+
+Next exact action:
+
+This local branch is ready for a separate human decision on
+publication/integration. No push, merge, branch deletion, hosted configuration
+change, database mutation or Production mutation is authorized by these local
+checkpoints.
