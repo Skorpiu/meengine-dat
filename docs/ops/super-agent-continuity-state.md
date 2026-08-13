@@ -1306,3 +1306,66 @@ This local branch is ready for a separate human decision on
 publication/integration. No push, merge, branch deletion, hosted configuration
 change, database mutation or Production mutation is authorized by these local
 checkpoints.
+
+<!-- billing-webhook-containment-local-main-integration-v1 -->
+### Billing webhook containment — integrated into local main
+
+Local integration completed by fast-forward only.
+
+Integration anchors:
+
+- local `main` before integration: `25a656382f46b6d79868510aeef697c788341113`;
+- runtime/tooling checkpoint: `c07ab7b5dd822f0a343193aadefd3fc1e3d68f15`;
+- Billing webhook containment checkpoint: `b584f7608ae37c7ad5cbf62b37613b2823b84f37`;
+- slice recovery checkpoint integrated into `main`: `f0e2580b2aedfb9424bb360465d5824083842278`.
+
+Integration proof:
+
+- `main` was an ancestor of the completed slice;
+- integration used `git merge --ff-only`;
+- no merge commit or conflict resolution was required;
+- runtime/tooling, Billing containment and the prior SA recovery checkpoint are
+  now ancestors of local `main`;
+- no source behavior changed during integration beyond the already validated
+  slice commits.
+
+Current finding state:
+
+- `BILLING-SEC-001` is remediated for the present v1 public webhook boundary
+  and integrated into local `main`;
+- supported external provider webhooks remain fail-closed before body parsing,
+  provider parsing, persistence or commercial-state lifecycle mutation while
+  provider authenticity verification is unavailable;
+- future real webhook processing MUST remain prohibited until
+  provider-specific cryptographic authenticity verification is implemented and
+  evidenced.
+
+Runtime state:
+
+- Node contract is `24.18.0`;
+- Volta application pin is `24.18.0`;
+- pnpm is `10.24.0`;
+- pnpm child Node resolves to Node `24.18.0`;
+- the earlier Node 20 / legacy pnpm drift is resolved.
+
+Validation carried forward unchanged from the integrated slice:
+
+- targeted Billing security tests: 7/7 passed;
+- canonical suite: 207/207 test files and 1737/1737 tests passed;
+- production build passed;
+- proportional Engineering Quality Review: zero blockers.
+
+Current phase:
+
+`BILLING-SEC-001` local implementation and local-main integration are complete.
+
+Exact next actions:
+
+1. local feature-branch cleanup only after separate human authorization;
+2. any fetch/push/remote publication or remote reconciliation requires a
+   separate human authorization and a fresh remote-state gate;
+3. after closure housekeeping, proceed to the next prioritized remediation
+   slice.
+
+Absent explicit authorization: no branch deletion, fetch, push, remote merge,
+hosted configuration change, database mutation or Production mutation.
