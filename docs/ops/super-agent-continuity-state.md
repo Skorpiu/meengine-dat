@@ -1369,3 +1369,51 @@ Exact next actions:
 
 Absent explicit authorization: no branch deletion, fetch, push, remote merge,
 hosted configuration change, database mutation or Production mutation.
+
+<!-- billing-sec-001-formal-closure-v1 -->
+### `BILLING-SEC-001` — formal post-audit closure
+
+The canonical engineering-excellence audit ledger has now been reconciled with
+the already integrated remediation.
+
+Final state:
+
+- finding: `BILLING-SEC-001`;
+- remediation disposition: **closed by containment for the present v1 public
+  webhook boundary**;
+- behavioral implementation: `b584f7608ae37c7ad5cbf62b37613b2823b84f37`;
+- prior local-main integration recovery checkpoint: `38812394107e96649cb2b61bbeae73ae6ae3be04`;
+- canonical audit/current-state/roadmap closure commit: `94e3f608c28c8dadee9b6a05808b125e87c1c8cd`;
+- historical audit text stating that the finding remained open is intentionally
+  preserved as snapshot evidence and is explicitly superseded by the new
+  post-audit remediation disposition.
+
+Safety boundary remains unchanged:
+
+- supported provider webhooks fail closed before parsing or commercial-state
+  mutation while authenticity verification is unavailable;
+- future provider webhook processing requires provider-specific cryptographic
+  authenticity verification before persistence/application;
+- `BILLING-SEC-002`, licensing findings and unrelated audit findings remain
+  open according to their own remediation contracts;
+- deferred commercial Billing productization remains separate.
+
+Validation carried forward:
+
+- targeted Billing tests: 7/7;
+- canonical suite: 207/207 test files, 1737/1737 tests;
+- production build: passed;
+- proportional EQR: zero blockers;
+- no source-code behavior changed during this documentary closure.
+
+Current phase:
+
+Solution #1 (`BILLING-SEC-001`) is implemented, validated, integrated into
+local `main`, formally reconciled in the audit ledger, and ready for completed
+feature-branch cleanup.
+
+Next exact action after branch cleanup: begin
+`next-security-patch-containment-v1`.
+
+No fetch, push, remote merge, hosted mutation, database mutation or Production
+mutation is authorized by this closure.
