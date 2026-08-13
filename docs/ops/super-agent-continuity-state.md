@@ -1055,3 +1055,29 @@ gates.
 Documentation remains part of every slice Definition of Done. Every material
 milestone must leave canonical documentation and Super Agent recovery state
 sufficient for safe continuation without relying on conversational memory.
+
+<!-- engineering-excellence-audit-main-integration-v1 -->
+## Main integration recovery checkpoint
+
+### Integrated baseline
+
+- Formal audit status: CLOSED.
+- Audit source branch: `engineering-excellence-audit-v1`.
+- Audit source HEAD: `9d275cfa57bc7fe809c95f7c7a0326f339014809`.
+- Formal closure commit: `10ec999033ef12f6c0a0ebfb7d6d5682dcff56c5`.
+- Local `main` merge commit: `81ec6079fb41289e951dfa900b7d90635aa03425`.
+- Merge strategy: explicit `--no-ff`.
+- Post-merge canonical validation: PASS.
+- Findings: 51.
+- Remediation coverage: 51/51.
+
+### Next exact action
+
+Create `billing-webhook-authenticity-gate-v1` from this integrated local `main`
+baseline, retire the completed local audit branch safely, then checkpoint the
+new working branch in Super Agent continuity state.
+
+Remote `main` publication and remote branch deletion have not occurred at this
+checkpoint and remain separate consequential operations.
+
+Do not reopen global audit discovery absent contradictory evidence.

@@ -644,3 +644,19 @@ The first P0 execution priority is `billing-webhook-authenticity-gate-v1`,
 followed by `next-security-patch-containment-v1`. Database/migration safety
 foundations and the Platform separation architecture lane proceed according to
 their documented prerequisites and independence boundaries.
+
+<!-- engineering-excellence-audit-main-integration-v1 -->
+## Engineering audit integration baseline
+
+The formally closed `engineering-excellence-audit-v1` audit was integrated
+locally into `main` using an explicit `--no-ff` merge.
+
+- Audit source HEAD: `9d275cfa57bc7fe809c95f7c7a0326f339014809`.
+- Main merge commit: `81ec6079fb41289e951dfa900b7d90635aa03425`.
+- Post-merge canonical validation: PASS.
+- Findings retained: 51.
+- Remediation coverage: 51/51.
+- Next working slice: `billing-webhook-authenticity-gate-v1`.
+
+This integration does not itself publish `main` remotely or authorize a
+behavioural remediation.
