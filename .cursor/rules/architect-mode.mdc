@@ -506,7 +506,7 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 
 ### Single recommended next slice and planned order
 
-1. `engineering-excellence-audit-v1` — P1 analysis-only; **active**; exhaustive static snapshot analysis, Security Wave A, environment/configuration E1-E7, Data Wave B1-B5.2, and DAT_4.4 audit-surface completeness reconciliation are complete; 51 findings remain confirmed with 51/51 remediation coverage; no unresolved repository-static evidence frontier remains; next phase is the Final Engineering Quality Review / audit closure gate; no audit-branch implementation is authorized
+1. `engineering-excellence-audit-v1` — P1 analysis-only; **closure recommended — GO, awaiting explicit human closure authorization**; Final Engineering Quality Review passed with 0 closure-blocking dimensions; 51 findings remain confirmed with 51/51 remediation coverage; post-audit execution is security-first, beginning with `billing-webhook-authenticity-gate-v1` then `next-security-patch-containment-v1`; no audit-branch remediation implementation is authorized
 
 <!-- engineering-excellence-audit-v1-live-state -->
 **Live audit state (2026-08-13; base `da5aea6`):**
@@ -1081,3 +1081,32 @@ A material DAT milestone is not fully closed from a continuity perspective until
 The continuity record is operational recovery state, not merely historical documentation.
 
 Historical evidence must remain historical; update live state or append a new recovery handoff rather than rewriting earlier checkpoints merely because the project later advanced.
+
+<!-- documentation-engineering-excellence-contract-v1 -->
+### Documentation engineering excellence contract
+
+Documentation is part of the DAT engineering product, not optional follow-up work.
+
+High-quality implementation with stale, incomplete or misleading documentation
+does not satisfy the DAT engineering standard.
+
+For every material implementation, remediation, architecture, operational or
+migration slice, determine which documentation surfaces are affected and update
+them in the same controlled workstream as applicable:
+
+- canonical current state;
+- roadmap / To-Do and execution status;
+- architecture or decision records;
+- operator/runbook documentation;
+- API, security, migration or deployment contracts;
+- validation and rollback evidence;
+- Super Agent continuity/disaster-recovery handoff.
+
+Documentation must describe the actual proven state, distinguish live state from
+historical checkpoints, and avoid claims stronger than the available evidence.
+
+A material DAT slice is not documentation-complete when code/tests have changed
+but the affected authoritative documentation remains stale.
+
+Documentation quality is part of the proportional Engineering Quality Review
+and part of the milestone Definition of Done.

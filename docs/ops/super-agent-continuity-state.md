@@ -941,3 +941,62 @@ If the review passes, request explicit human approval before formally closing `e
 When a future approved transition creates a new working branch, completed superseded work branches should not be accumulated indefinitely.
 
 Verify safety first. Local deletion and especially remote deletion remain separate consequential operations subject to the normal human authorization and remote-write gates.
+
+<!-- final-eqr-and-execution-priority-handoff-v1 -->
+## Final Engineering Quality Review and execution-priority recovery handoff
+
+### Recovery anchor
+
+- Branch: `engineering-excellence-audit-v1`.
+- Review baseline HEAD: `5c5ce0899bdfb1e52eeb7a09cd050475ec2bb4f7`.
+- Audit mode remains analysis-only until formally closed.
+- Confirmed findings: 51.
+- Remediation coverage: 51/51.
+- Final Engineering Quality Review: PASS across all fourteen closure dimensions.
+- Closure-blocking dimensions: 0.
+- Audit closure recommendation: GO.
+- Formal audit closure authorization: still required explicitly from the human.
+- Repository-static unresolved frontier: none.
+- Audit-branch remediation implementation authorized: no.
+
+### Execution priority after formal closure
+
+1. P0 containment:
+   `billing-webhook-authenticity-gate-v1`,
+   then `next-security-patch-containment-v1`.
+2. P0 operational safety:
+   `local-development-database-isolation-v1`,
+   `migration-deploy-target-safety-gate-v1`.
+3. P1 proof:
+   `database-integration-test-harness-v1`,
+   `e2e-suite-contract-repair-v1`.
+4. P1 core security/integrity:
+   billing atomicity, session revocation, license hardening, authority,
+   credential, trusted-origin, password, sanitized-error, CSV and header slices.
+5. P1 customer-visible correctness:
+   instructor invite/list refresh, lesson edit contract, dashboard statistics,
+   student/instructor profile atomicity and generic-user narrowing.
+6. `platform-separation-architecture-plan-v1` runs as a parallel architecture
+   lane after audit closure; it does not block urgent independent P0 containment.
+7. P2 structural/toolchain/accessibility/cleanup work.
+8. P2/P3 staged data modernization/legacy retirement only behind all relevant
+   database/migration safety gates.
+
+### First recommended implementation slice
+
+`billing-webhook-authenticity-gate-v1`
+
+Reason: P0 security containment; fail closed before unproven provider webhook
+authenticity can authorize billing/subscription/entitlement mutation.
+
+### Continuity rule
+
+If this conversation is lost after this checkpoint, do not reopen global audit
+discovery. Recover branch/HEAD/worktree, read the canonical state, confirm
+whether formal audit closure has since been authorized, then continue from the
+highest-priority still-open execution slice.
+
+Every material remediation milestone must append/update a Super Agent recovery
+handoff before it is considered continuity-complete.
+
+Documentation is also a mandatory engineering deliverable. A remediation milestone is not fully complete while affected canonical, architecture, decision, operational/runbook, roadmap or recovery documentation remains knowingly stale. Documentation quality must be reviewed alongside code, tests, security and operational safety.
