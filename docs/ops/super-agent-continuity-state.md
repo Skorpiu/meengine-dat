@@ -1417,3 +1417,70 @@ Next exact action after branch cleanup: begin
 
 No fetch, push, remote merge, hosted mutation, database mutation or Production
 mutation is authorized by this closure.
+
+<!-- dat-4-4-definitive-handoff-to-dat-4-5-v1 -->
+## DAT_4.4 definitive handoff to DAT_4.5
+
+### Closed DAT_4.4 state
+
+- DAT_4.4: complete.
+- Engineering Excellence Audit: formally CLOSED.
+- Findings at audit closure: 51.
+- Remediation coverage: 51/51.
+- Solution #1 / `BILLING-SEC-001` containment: CLOSED.
+- Solution #1 is integrated into `main`.
+- Pre-handoff `main` HEAD: `816cf1938e00c9a7ff003d8a6c05752ff3173e47`.
+- Canonical runtime: Node v24.18.0 / pnpm 10.24.0.
+- Final canonical command:
+  `pnpm -C driving_school_platform/nextjs_space check`.
+- Final canonical validation result: PASS.
+- Local working branches from the completed audit/Solution #1 cycle: retired.
+- Historical `production-smoke-module-structure-audit-record-v1` branch:
+  retired after explicit semantic reconciliation.
+- Its useful repository-navigation rules and Production Smoke audit hypothesis
+  remain preserved in canonical Architect/Audit documentation.
+- Local branch target at handoff: `main` only.
+- Worktree target: clean including untracked files.
+
+Historical recovery sections that refer to earlier audit or
+`billing-webhook-authenticity-gate-v1` active states remain historical evidence,
+not current live execution state.
+
+### DAT_4.5
+
+DAT_4.5 begins the systematic remediation/execution phase.
+
+Next smallest-safe implementation slice:
+
+`next-security-patch-containment-v1`
+
+This is Solution #2 in the current execution sequence.
+
+### Operating contract
+
+- Git state plus canonical repository documentation override conversational
+  memory.
+- Super Agent remains both repository-aware operator and disaster-recovery
+  continuity backup.
+- Update Super Agent at every material milestone.
+- Use surgical bounded prompts for repository-wide or code-heavy SA work.
+- Use `git archive` snapshots when direct whole-project validation by ChatGPT
+  is useful.
+- Documentation is part of Definition of Done.
+- Every completed slice receives proportional Engineering Quality Review.
+- Each implementation solution uses its own working branch.
+- No push, merge, branch deletion, DB write, hosted change or Production
+  mutation test without the applicable human authorization.
+- If product behaviour is ambiguous, ask the human rather than inventing it.
+- Do not reopen the global engineering-excellence audit without contradictory
+  evidence invalidating a closed conclusion.
+
+### Exact DAT_4.5 recovery action
+
+Start from authoritative published `main`, verify this continuity checkpoint
+against Git and the attached baseline archive, then perform a read-only
+preflight for `next-security-patch-containment-v1`.
+
+Do not begin behavioural implementation until that preflight establishes the
+current dependency state, exact applicable security patch target, regression
+surface, rollback boundary and smallest-safe change.
