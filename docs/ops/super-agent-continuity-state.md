@@ -3,7 +3,7 @@
 
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
-**Snapshot date:** 2026-08-06
+**Live recovery snapshot:** 2026-08-14 — DAT_4.5 `canonical-live-state-reconciliation-v1`. Historical section dates below remain the dates of those checkpoints.
 
 **Validity rule:** this snapshot is valid at the Git commit containing it. Resolve live branch and HEAD through Git; do not treat historical SHA values as eternal current state.
 
@@ -30,7 +30,33 @@ Then read, in this order:
 
 Stop before consequential work if Git state or canonical documents disagree.
 
-## Current verified repository state
+<!-- dat-45-live-recovery-navigator-v1 -->
+## LIVE recovery navigator (DAT_4.5)
+
+This section is the current operational recovery state. Older checkpoints below
+(including the 2026-08-06 audit-branch snapshot and later Billing
+working-branch checkpoints) are historical evidence and are not live execution
+state.
+
+- Authoritative published-`main` handoff baseline:
+  `b5b939393f73c44bec435ba24ca80560e5d7a77c`.
+- DAT_4.4: CLOSED.
+- Engineering Excellence Audit: **CLOSED** (explicit human GO).
+- Findings: 51. Remediation coverage: 51/51. Unresolved repository-static
+  frontier: none.
+- Do not reopen the global audit without contradictory evidence.
+- Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1`:
+  **CLOSED BY CONTAINMENT**, integrated into `main`.
+- Active product implementation branch at this checkpoint: **none**.
+- This `canonical-live-state-reconciliation-v1` branch is docs-only navigation
+  recovery. It is not the next product implementation solution.
+- Next smallest-safe implementation slice:
+  `next-security-patch-containment-v1` (source `DEP-SEC-001`).
+- That slice is immediate Next.js security containment only.
+  `next-supported-lts-migration-v1` and `dependency-security-monitoring-v1`
+  remain separate.
+
+## Historical snapshot — verified repository state (2026-08-06; audit branch)
 
 - Active branch at snapshot creation: `engineering-excellence-audit-v1`
 - Previous continuity checkpoint: `e7646076183764990a265391ed01284d7008f9a7`
@@ -195,7 +221,7 @@ No implementation belongs in the current analysis branch.
 - State: inspected only
 - Do not merge, cherry-pick, copy, delete, or modify until separately justified.
 
-## Current next action
+## Historical next action (2026-08-06 audit-branch checkpoint)
 
 Continue the engineering-excellence audit read-only by confirming the EXAM/THEORY_EXAM edit participant contract across LessonForm, EditLessonDialog, useEditLessonForm, and the update request builder. Preserve server authority and all existing form modules. No runtime implementation is authorized in the audit branch.
 
@@ -1071,7 +1097,7 @@ sufficient for safe continuation without relying on conversational memory.
 - Findings: 51.
 - Remediation coverage: 51/51.
 
-### Next exact action
+### Next exact action at this integration checkpoint (historical)
 
 Create `billing-webhook-authenticity-gate-v1` from this integrated local `main`
 baseline, retire the completed local audit branch safely, then checkpoint the
@@ -1083,11 +1109,11 @@ checkpoint and remain separate consequential operations.
 Do not reopen global audit discovery absent contradictory evidence.
 
 <!-- billing-webhook-authenticity-gate-v1-kickoff -->
-## P0 billing webhook authenticity — working-branch recovery checkpoint
+## P0 billing webhook authenticity — working-branch recovery checkpoint (historical)
 
-### Current recovery state
+### Recovery state at this checkpoint (historical)
 
-- Active branch: `billing-webhook-authenticity-gate-v1`.
+- Active branch at this checkpoint: `billing-webhook-authenticity-gate-v1`.
 - Parent integrated `main` HEAD: `25a656382f46b6d79868510aeef697c788341113`.
 - Audit merge commit: `81ec6079fb41289e951dfa900b7d90635aa03425`.
 - Audit source HEAD: `9d275cfa57bc7fe809c95f7c7a0326f339014809`.
@@ -1484,3 +1510,22 @@ preflight for `next-security-patch-containment-v1`.
 Do not begin behavioural implementation until that preflight establishes the
 current dependency state, exact applicable security patch target, regression
 surface, rollback boundary and smallest-safe change.
+
+<!-- dat-45-canonical-live-state-reconciliation-v1 -->
+## DAT_4.5 canonical live-state reconciliation checkpoint
+
+Docs-only navigation recovery after the DAT_4.5 read-only preflight confirmed
+stale live-state in Super Agent / current-state / roadmap navigators.
+
+Reconciled live state:
+
+- `main` handoff baseline: `b5b939393f73c44bec435ba24ca80560e5d7a77c`.
+- Engineering Excellence Audit: CLOSED.
+- Solution #1 / `BILLING-SEC-001`: CLOSED BY CONTAINMENT.
+- Active product implementation branch at this checkpoint: none.
+- Next implementation slice: `next-security-patch-containment-v1`
+  (`DEP-SEC-001`).
+- This reconciliation branch does not implement Solution #2.
+
+Older continuity checkpoints that describe the audit branch or
+`billing-webhook-authenticity-gate-v1` as active remain historical evidence.
