@@ -91,7 +91,7 @@ describe("Admin Invitation Revoke API", () => {
           method: "POST",
         },
       ) as any,
-      { params: { id: "inv-1" } },
+      { params: Promise.resolve({ id: "inv-1" }) },
     );
     expect(res.status).toBe(200);
 
@@ -147,7 +147,7 @@ describe("Admin Invitation Revoke API", () => {
           method: "POST",
         },
       ) as any,
-      { params: { id: "inv-1" } },
+      { params: Promise.resolve({ id: "inv-1" }) },
     );
     expect(res.status).toBe(403);
     expect(h.revokeInvitationMock).not.toHaveBeenCalled();
@@ -172,7 +172,7 @@ describe("Admin Invitation Revoke API", () => {
           method: "POST",
         },
       ) as any,
-      { params: { id: "inv-other" } },
+      { params: Promise.resolve({ id: "inv-other" }) },
     );
     expect(res.status).toBe(404);
     expect(h.revokeInvitationMock).toHaveBeenCalledWith({
@@ -204,7 +204,7 @@ describe("Admin Invitation Revoke API", () => {
           method: "POST",
         },
       ) as any,
-      { params: { id: "inv-1" } },
+      { params: Promise.resolve({ id: "inv-1" }) },
     );
 
     expect(res.status).toBe(200);

@@ -65,7 +65,7 @@ const writeQualifiedCategoriesAuditMock =
     typeof vi.fn
   >;
 
-const routeContext = { params: { id: "inst-1" } };
+const routeContext = { params: Promise.resolve({ id: "inst-1" }) };
 
 function req(method: string, url: string, body?: unknown): Request {
   return new Request(url, {
@@ -172,7 +172,7 @@ describe("DELETE /api/admin/instructors/[id]", () => {
         "DELETE",
         "http://school.example.com/api/admin/instructors/inst-9",
       ) as any,
-      { params: { id: "inst-9" } },
+      { params: Promise.resolve({ id: "inst-9" }) },
     );
 
     expect(res.status).toBe(404);
@@ -389,7 +389,7 @@ describe("PATCH /api/admin/instructors/[id]", () => {
       req("PATCH", "http://school.example.com/api/admin/instructors/inst-9", {
         qualifiedCategoryNames: [],
       }) as any,
-      { params: { id: "inst-9" } },
+      { params: Promise.resolve({ id: "inst-9" }) },
     );
 
     expect(res.status).toBe(404);

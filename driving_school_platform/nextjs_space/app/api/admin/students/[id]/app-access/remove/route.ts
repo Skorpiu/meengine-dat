@@ -15,7 +15,7 @@ import { writeStudentAppAccessRemoveAuditEvent } from "@/lib/audit/student-audit
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 async function requireSuperAdminTenant(request: NextRequest): Promise<
   | {
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const result = await removeStudentAppAccess({
       organizationId: auth.organizationId,
-      studentId: context.params.id,
+      studentId: (await context.params).id,
     });
 
     if (!result.ok) {
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     await writeStudentAppAccessRemoveAuditEvent({
       organizationId: auth.organizationId,
       actor: auth.actor,
-      studentId: context.params.id,
+      studentId: (await context.params).id,
       appAccessMode: result.student.appAccessMode,
       requestContext: extractAuditRequestContext(request),
     });

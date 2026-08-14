@@ -107,7 +107,9 @@ beforeEach(() => {
 
 describe("POST /api/admin/students/[id]/app-access/remove", () => {
   it("returns updated student on success", async () => {
-    const res = await POST(req() as any, { params: { id: "stu-1" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "stu-1" }),
+    });
 
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -136,7 +138,9 @@ describe("POST /api/admin/students/[id]/app-access/remove", () => {
       user: { id: "u1", role: "INSTRUCTOR", organizationId: "org-a" },
     });
 
-    const res = await POST(req() as any, { params: { id: "stu-1" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "stu-1" }),
+    });
     expect(res.status).toBe(401);
   });
 
@@ -146,7 +150,9 @@ describe("POST /api/admin/students/[id]/app-access/remove", () => {
       notFound: true,
     });
 
-    const res = await POST(req() as any, { params: { id: "missing" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "missing" }),
+    });
     expect(res.status).toBe(404);
   });
 
@@ -158,7 +164,9 @@ describe("POST /api/admin/students/[id]/app-access/remove", () => {
       error: "Only students with active app access can be removed.",
     });
 
-    const res = await POST(req() as any, { params: { id: "stu-1" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "stu-1" }),
+    });
     expect(res.status).toBe(409);
     const body = await res.json();
     expect(body.code).toBe(STUDENT_APP_ACCESS_REMOVE_CODE.STUDENT_NOT_APP_USER);
@@ -171,7 +179,9 @@ describe("POST /api/admin/students/[id]/app-access/remove", () => {
       }),
     );
 
-    const res = await POST(req() as any, { params: { id: "stu-1" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "stu-1" }),
+    });
     expect(res.status).toBe(403);
     expect(h.removeStudentAppAccessMock).not.toHaveBeenCalled();
   });
@@ -182,7 +192,9 @@ describe("POST /api/admin/students/[id]/app-access/remove", () => {
       notFound: true,
     });
 
-    const res = await POST(req() as any, { params: { id: "missing" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "missing" }),
+    });
     expect(res.status).toBe(404);
     expect(h.writeStudentAppAccessRemoveAuditEventMock).not.toHaveBeenCalled();
   });
@@ -193,7 +205,9 @@ describe("POST /api/admin/students/[id]/app-access/remove", () => {
       error: "db_down",
     });
 
-    const res = await POST(req() as any, { params: { id: "stu-1" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "stu-1" }),
+    });
 
     expect(res.status).toBe(200);
     expect(h.writeStudentAppAccessRemoveAuditEventMock).toHaveBeenCalled();

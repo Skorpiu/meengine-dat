@@ -129,7 +129,7 @@ describe("POST /api/admin/students/[id]/invite", () => {
     });
 
     const res = await POST(req({ email: "joao@school.test" }) as any, {
-      params: { id: "stu-1" },
+      params: Promise.resolve({ id: "stu-1" }),
     });
 
     expect(res.status).toBe(201);
@@ -177,7 +177,9 @@ describe("POST /api/admin/students/[id]/invite", () => {
       user: { id: "u1", role: "INSTRUCTOR", organizationId: "org-a" },
     });
 
-    const res = await POST(req() as any, { params: { id: "stu-1" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "stu-1" }),
+    });
     expect(res.status).toBe(401);
     expect(h.writeStudentInviteAuditEventMock).not.toHaveBeenCalled();
   });
@@ -190,7 +192,9 @@ describe("POST /api/admin/students/[id]/invite", () => {
       status: 409,
     });
 
-    const res = await POST(req() as any, { params: { id: "stu-1" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "stu-1" }),
+    });
     expect(res.status).toBe(409);
     const body = await res.json();
     expect(body.code).toBe("student_already_linked");
@@ -212,7 +216,7 @@ describe("POST /api/admin/students/[id]/invite", () => {
     });
 
     const res = await POST(req({ email: "joao@school.test" }) as any, {
-      params: { id: "stu-1" },
+      params: Promise.resolve({ id: "stu-1" }),
     });
 
     expect(res.status).toBe(201);
@@ -232,7 +236,7 @@ describe("POST /api/admin/students/[id]/invite", () => {
     );
 
     const res = await POST(req({ email: "joao@school.test" }) as any, {
-      params: { id: "stu-1" },
+      params: Promise.resolve({ id: "stu-1" }),
     });
 
     expect(res.status).toBe(403);

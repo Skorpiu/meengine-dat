@@ -68,7 +68,7 @@ const reactivateMock = reactivateInstructorRecord as unknown as ReturnType<
   typeof vi.fn
 >;
 
-const routeContext = { params: { id: "inst-1" } };
+const routeContext = { params: Promise.resolve({ id: "inst-1" }) };
 
 function req(url: string): Request {
   return new Request(url, { method: "POST" });
@@ -146,7 +146,7 @@ describe("POST /api/admin/instructors/[id]/reactivate", () => {
       req(
         "http://school.example.com/api/admin/instructors/inst-9/reactivate",
       ) as any,
-      { params: { id: "inst-9" } },
+      { params: Promise.resolve({ id: "inst-9" }) },
     );
 
     expect(res.status).toBe(404);

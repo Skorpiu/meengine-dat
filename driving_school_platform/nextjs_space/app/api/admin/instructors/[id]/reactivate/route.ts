@@ -16,7 +16,7 @@ import type { UserRole } from "@prisma/client";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 async function requireSuperAdminTenant(request: NextRequest): Promise<
   | {
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const result = await reactivateInstructorRecord({
       organizationId: auth.organizationId,
-      instructorId: context.params.id,
+      instructorId: (await context.params).id,
     });
 
     if (!result.ok) {
@@ -88,7 +88,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     const instructor = await prisma.instructor.findFirst({
-      where: { id: context.params.id, organizationId: auth.organizationId },
+      where: {
+        id: (await context.params).id,
+        organizationId: auth.organizationId,
+      },
       select: { userId: true },
     });
 
@@ -99,7 +102,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         role: auth.actor.role as UserRole,
         email: auth.actor.email,
       },
-      instructorId: context.params.id,
+      instructorId: (await context.params).id,
       targetUserId: instructor?.userId ?? null,
       alreadyActive: result.alreadyActive,
       requestContext: extractAuditRequestContext(request),

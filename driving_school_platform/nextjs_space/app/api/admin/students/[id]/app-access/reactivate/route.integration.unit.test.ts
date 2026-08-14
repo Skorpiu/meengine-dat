@@ -112,7 +112,9 @@ beforeEach(() => {
 
 describe("POST /api/admin/students/[id]/app-access/reactivate", () => {
   it("returns updated student on success", async () => {
-    const res = await POST(req() as any, { params: { id: "stu-1" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "stu-1" }),
+    });
 
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -146,7 +148,9 @@ describe("POST /api/admin/students/[id]/app-access/reactivate", () => {
       user: { id: "u1", role: "INSTRUCTOR", organizationId: "org-a" },
     });
 
-    const res = await POST(req() as any, { params: { id: "stu-1" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "stu-1" }),
+    });
     expect(res.status).toBe(401);
   });
 
@@ -156,7 +160,9 @@ describe("POST /api/admin/students/[id]/app-access/reactivate", () => {
       notFound: true,
     });
 
-    const res = await POST(req() as any, { params: { id: "missing" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "missing" }),
+    });
     expect(res.status).toBe(404);
   });
 
@@ -169,7 +175,9 @@ describe("POST /api/admin/students/[id]/app-access/reactivate", () => {
       status: 409,
     });
 
-    const res = await POST(req() as any, { params: { id: "stu-1" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "stu-1" }),
+    });
     expect(res.status).toBe(409);
     const body = await res.json();
     expect(body.code).toBe(
@@ -186,7 +194,9 @@ describe("POST /api/admin/students/[id]/app-access/reactivate", () => {
       status: 400,
     });
 
-    const res = await POST(req() as any, { params: { id: "stu-1" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "stu-1" }),
+    });
     expect(res.status).toBe(400);
   });
 
@@ -197,7 +207,9 @@ describe("POST /api/admin/students/[id]/app-access/reactivate", () => {
       }),
     );
 
-    const res = await POST(req() as any, { params: { id: "stu-1" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "stu-1" }),
+    });
     expect(res.status).toBe(403);
     expect(h.reactivateStudentAppAccessMock).not.toHaveBeenCalled();
   });
@@ -208,7 +220,9 @@ describe("POST /api/admin/students/[id]/app-access/reactivate", () => {
       notFound: true,
     });
 
-    const res = await POST(req() as any, { params: { id: "missing" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "missing" }),
+    });
     expect(res.status).toBe(404);
     expect(
       h.writeStudentAppAccessReactivateAuditEventMock,
@@ -221,7 +235,9 @@ describe("POST /api/admin/students/[id]/app-access/reactivate", () => {
       error: "db_down",
     });
 
-    const res = await POST(req() as any, { params: { id: "stu-1" } });
+    const res = await POST(req() as any, {
+      params: Promise.resolve({ id: "stu-1" }),
+    });
 
     expect(res.status).toBe(200);
     expect(h.writeStudentAppAccessReactivateAuditEventMock).toHaveBeenCalled();

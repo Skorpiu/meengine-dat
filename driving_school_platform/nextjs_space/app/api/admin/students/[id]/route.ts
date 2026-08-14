@@ -40,7 +40,7 @@ import type { Prisma } from "@prisma/client";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 async function requireSuperAdminTenant(request: NextRequest): Promise<
   | {
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     const student = await findStudentRecordById({
       organizationId: auth.organizationId,
-      studentId: context.params.id,
+      studentId: (await context.params).id,
     });
 
     if (!student) {
@@ -148,7 +148,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (data.email !== undefined) {
       const emailPatchAllowed = await validateStudentRecordEmailPatchAllowed({
         organizationId: auth.organizationId,
-        studentId: context.params.id,
+        studentId: (await context.params).id,
       });
       if (!emailPatchAllowed.ok) {
         if (emailPatchAllowed.notFound) {
@@ -197,7 +197,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       const duplicate = await findStudentBySchoolIdInOrg({
         organizationId: auth.organizationId,
         schoolStudentId: schoolId.parts.schoolStudentId,
-        excludeStudentId: context.params.id,
+        excludeStudentId: (await context.params).id,
       });
       if (duplicate) {
         return NextResponse.json(
@@ -247,7 +247,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     try {
       const student = await updateStudentRecord({
         organizationId: auth.organizationId,
-        studentId: context.params.id,
+        studentId: (await context.params).id,
         data: updateData,
       });
 
@@ -258,7 +258,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       await writeStudentProfileUpdateAuditEvent({
         organizationId: auth.organizationId,
         actor: auth.actor,
-        studentId: context.params.id,
+        studentId: (await context.params).id,
         changedFields,
         appAccessMode: student.appAccessMode,
         linkedUserId: student.userId,
@@ -299,7 +299,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     const result = await deleteStudentRecordIfEligible({
       organizationId: auth.organizationId,
-      studentId: context.params.id,
+      studentId: (await context.params).id,
     });
 
     if (!result.ok) {
@@ -319,7 +319,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     await writeStudentDeleteAuditEvent({
       organizationId: auth.organizationId,
       actor: auth.actor,
-      studentId: context.params.id,
+      studentId: (await context.params).id,
       appAccessMode: result.audit.appAccessMode,
       hadLinkedUser: result.audit.hadLinkedUser,
       lessonsCount: result.audit.lessonsCount,

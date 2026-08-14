@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 /**
  * Pagination Component
@@ -7,9 +6,9 @@
  * @module components/ui/pagination
  */
 
-import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from './button';
+import React from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "./button";
 
 interface PaginationProps {
   /** Current page number (1-indexed) */
@@ -29,7 +28,7 @@ interface PaginationProps {
 /**
  * Pagination Component
  * Provides page navigation with previous/next and direct page selection
- * 
+ *
  * @example
  * ```tsx
  * <Pagination
@@ -49,7 +48,7 @@ export function Pagination({
   showInfo = false,
   totalItems,
   pageSize,
-}: PaginationProps): JSX.Element {
+}: PaginationProps): React.JSX.Element {
   const canGoPrev = currentPage > 1;
   const canGoNext = currentPage < totalPages;
 
@@ -66,14 +65,14 @@ export function Pagination({
     }
 
     if (currentPage - delta > 2) {
-      range.unshift('...');
+      range.unshift("...");
     }
     if (totalPages > 0) {
       range.unshift(1);
     }
 
     if (currentPage + delta < totalPages - 1) {
-      range.push('...');
+      range.push("...");
     }
     if (totalPages > 1) {
       range.push(totalPages);
@@ -83,7 +82,7 @@ export function Pagination({
   };
 
   const getPaginationInfo = (): string => {
-    if (!totalItems || !pageSize) return '';
+    if (!totalItems || !pageSize) return "";
     const startItem = (currentPage - 1) * pageSize + 1;
     const endItem = Math.min(currentPage * pageSize, totalItems);
     return `Showing ${startItem}-${endItem} of ${totalItems}`;
@@ -100,7 +99,9 @@ export function Pagination({
   return (
     <div className="flex items-center justify-between px-2">
       {showInfo && totalItems && pageSize ? (
-        <div className="text-sm text-muted-foreground">{getPaginationInfo()}</div>
+        <div className="text-sm text-muted-foreground">
+          {getPaginationInfo()}
+        </div>
       ) : (
         <div />
       )}
@@ -120,21 +121,24 @@ export function Pagination({
         {/* Page Numbers */}
         <div className="flex items-center gap-1">
           {getPageNumbers().map((page, index) =>
-            page === '...' ? (
-              <span key={`ellipsis-${index}`} className="px-2 text-muted-foreground">
+            page === "..." ? (
+              <span
+                key={`ellipsis-${index}`}
+                className="px-2 text-muted-foreground"
+              >
                 ...
               </span>
             ) : (
               <Button
                 key={page}
-                variant={currentPage === page ? 'default' : 'outline'}
+                variant={currentPage === page ? "default" : "outline"}
                 size="sm"
                 onClick={() => onPageChange(page as number)}
                 className="min-w-[40px]"
               >
                 {page}
               </Button>
-            )
+            ),
           )}
         </div>
 

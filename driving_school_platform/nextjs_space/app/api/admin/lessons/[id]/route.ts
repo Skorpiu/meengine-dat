@@ -50,7 +50,10 @@ function instructorForbiddenResponse(
  * GET handler - Fetch a single lesson by ID
  */
 export const GET = withErrorHandling(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> },
+  ) => {
     const user = await verifyAuth([
       USER_ROLES.SUPER_ADMIN,
       USER_ROLES.INSTRUCTOR,
@@ -69,7 +72,7 @@ export const GET = withErrorHandling(
       return errorResponse(tenantGuard.error, tenantGuard.status);
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     const lesson = await prisma.lesson.findFirst({
       where: { id, organizationId: orgId },
@@ -91,7 +94,10 @@ export const GET = withErrorHandling(
  * PUT handler - Update a lesson
  */
 export const PUT = withErrorHandling(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> },
+  ) => {
     const user = await verifyAuth([
       USER_ROLES.SUPER_ADMIN,
       USER_ROLES.INSTRUCTOR,
@@ -168,7 +174,7 @@ export const PUT = withErrorHandling(
 
     const result = await updateAdminLesson({
       organizationId: orgId,
-      lessonId: params.id,
+      lessonId: (await params).id,
       actor: { id: user.id, role: user.role },
       payload: updatePayload,
     });
@@ -207,7 +213,10 @@ export const PUT = withErrorHandling(
  * DELETE handler - Delete a lesson
  */
 export const DELETE = withErrorHandling(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> },
+  ) => {
     const user = await verifyAuth([
       USER_ROLES.SUPER_ADMIN,
       USER_ROLES.INSTRUCTOR,
@@ -239,7 +248,7 @@ export const DELETE = withErrorHandling(
 
     const result = await deleteAdminLesson({
       organizationId: orgId,
-      lessonId: params.id,
+      lessonId: (await params).id,
       actor: { id: user.id, role: user.role },
     });
 

@@ -12,7 +12,7 @@ import { writeInvitationAuditEvent } from "@/lib/audit/invitation-audit";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return demoDenied;
     }
 
-    const invitationId = context.params.id?.trim();
+    const invitationId = (await context.params).id?.trim();
     if (!invitationId) {
       return NextResponse.json(
         { error: "Invitation id is required" },

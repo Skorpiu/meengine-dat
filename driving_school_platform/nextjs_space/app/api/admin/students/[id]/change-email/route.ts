@@ -23,7 +23,7 @@ import { writeStudentEmailChangeAuditEvent } from "@/lib/audit/student-audit";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 async function requireSuperAdminTenant(request: NextRequest): Promise<
   | {
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const result = await changeStudentEmail({
       organizationId: auth.organizationId,
-      studentId: context.params.id,
+      studentId: (await context.params).id,
       newEmail: validation.data.newEmail,
     });
 
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     await writeStudentEmailChangeAuditEvent({
       organizationId: auth.organizationId,
       actor: auth.actor,
-      studentId: context.params.id,
+      studentId: (await context.params).id,
       policyMode: result.audit.policyMode,
       hasLinkedUser: result.audit.hasLinkedUser,
       invitationRevoked: result.audit.invitationRevoked,

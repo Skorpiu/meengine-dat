@@ -3,7 +3,9 @@
 
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
-**Live recovery snapshot:** 2026-08-14 — DAT_4.5 `canonical-live-state-reconciliation-v1`. Historical section dates below remain the dates of those checkpoints.
+**Live recovery snapshot:** 2026-08-14 — DAT_4.5 Solution #2
+`next-supported-lts-security-remediation-v1`. Historical section dates below
+remain the dates of those checkpoints.
 
 **Validity rule:** this snapshot is valid at the Git commit containing it. Resolve live branch and HEAD through Git; do not treat historical SHA values as eternal current state.
 
@@ -34,12 +36,15 @@ Stop before consequential work if Git state or canonical documents disagree.
 ## LIVE recovery navigator (DAT_4.5)
 
 This section is the current operational recovery state. Older checkpoints below
-(including the 2026-08-06 audit-branch snapshot and later Billing
-working-branch checkpoints) are historical evidence and are not live execution
-state.
+(including the 2026-08-06 audit-branch snapshot, later Billing working-branch
+checkpoints, and the docs-only `canonical-live-state-reconciliation-v1`
+handoff) are historical evidence and are not live execution state.
 
-- Authoritative published-`main` handoff baseline:
-  `b5b939393f73c44bec435ba24ca80560e5d7a77c`.
+- Starting / still-published `main`:
+  `ccdc8490904b63bddcb8875df86f24c43654796d`.
+- Active solution branch: `next-supported-lts-security-remediation-v1` until
+  integration/publication completes. A later continuity/docs commit on this
+  branch may advance HEAD; that HEAD is not the implementation anchor.
 - DAT_4.4: CLOSED.
 - Engineering Excellence Audit: **CLOSED** (explicit human GO).
 - Findings: 51. Remediation coverage: 51/51. Unresolved repository-static
@@ -47,14 +52,122 @@ state.
 - Do not reopen the global audit without contradictory evidence.
 - Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1`:
   **CLOSED BY CONTAINMENT**, integrated into `main`.
-- Active product implementation branch at this checkpoint: **none**.
-- This `canonical-live-state-reconciliation-v1` branch is docs-only navigation
-  recovery. It is not the next product implementation solution.
+- Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1`:
+  **IMPLEMENTED + VALIDATED IN-BRANCH**; **Final EQR PASS**; **POST-COMMIT
+  CANONICAL VALIDATION PASS**; **NOT YET INTEGRATED/PUBLISHED** (DEC-067).
+  DAT_4.5 covers Solutions #2 through #11 inclusive.
+- Durable implementation anchor (not eternal branch HEAD):
+  `d0271f864ed8fb88f3876cd0ef27457176036e70`.
+- Accepted implementation tree:
+  `3609187fdf38809a9275baaafd968b4f427980a6`.
+- `DEP-SEC-001` is fully implemented and validated in this branch;
+  published-main closure occurs only after successful integration/publication.
+- Canonical documentation and Super Agent continuity are updated in each
+  solution branch. Do not create a separate documentation-only branch for
+  normal solution state. Do not document the SHA of a later continuity/docs
+  commit as a required recovery anchor.
 - Next smallest-safe implementation slice:
-  `next-security-patch-containment-v1` (source `DEP-SEC-001`).
-- That slice is immediate Next.js security containment only.
-  `next-supported-lts-migration-v1` and `dependency-security-monitoring-v1`
-  remain separate.
+  `local-development-database-isolation-v1` (source `CONFIG-ENV-001`) —
+  **QUEUED NEXT AFTER** successful integration/publication of Solution #2.
+  It is not active yet.
+- `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain separate.
+- No `pnpm dev` while `CONFIG-ENV-001` remains open.
+
+### Solution #2 implementation recovery facts
+
+- Exact packages: `next@16.3.1`, `react@19.2.8`, `react-dom@19.2.8`,
+  `next-auth@4.24.15`, `eslint@9.39.5`, `eslint-config-next@16.3.1`,
+  `@next/eslint-plugin-next@16.3.1`, `@types/react@19.2.18`,
+  `@types/react-dom@19.2.4`.
+- Lint gate: `eslint .` via `eslint.config.mjs`; `.eslintrc.json` removed;
+  Next `eslint.ignoreDuringBuilds` removed because Next 16 no longer lints
+  during build.
+- Async request APIs: awaited `headers()` on `/platform`; Promise `params`
+  on edit-lesson page, billing webhook, admin `[id]` route handlers, and
+  corresponding tests.
+- React 19: `JSX.Element` → `React.JSX.Element` in four UI helpers. No React
+  Compiler. No Radix / react-hook-form / framer-motion upgrades.
+- Production build: Next 16.3.1 default Turbopack, compiled successfully.
+- Canonical check: lint → typecheck (`next typegen && tsc --noEmit`) →
+  `test:run` → build. `pretypecheck` remains `env:check` + `prisma generate`.
+- Local implementation commit exists and is accepted
+  (`d0271f864ed8fb88f3876cd0ef27457176036e70`). Still **no** push, merge, DB
+  write, migration, hosted mutation, or Playwright. Worktree was clean at the
+  post-commit recovery checkpoint.
+
+### Solution #2 post-commit canonical validation
+
+Accepted against the **actual committed implementation tree** (not against a
+later continuity/docs working tree):
+
+- Commit: `d0271f864ed8fb88f3876cd0ef27457176036e70`
+- Tree: `3609187fdf38809a9275baaafd968b4f427980a6`
+- Canonical: `pnpm -C driving_school_platform/nextjs_space check`
+- Result: **PASS**
+- Evidence: lint 0 errors / 51 warnings; `next typegen` PASS; `tsc`/typecheck
+  PASS; Vitest 207/207 files; tests 1737/1737; Next 16.3.1 default Turbopack
+  production build PASS.
+- After that run: worktree remained clean; committed HEAD remained `d0271f…`;
+  committed tree remained `3609187…`; `origin/main` remained `ccdc849…`.
+- A later continuity/docs commit on this branch is **not** part of that
+  canonical run.
+
+### Solution #2 hook-induced tree incident
+
+- Pre-commit ChatGPT-reviewed staged tree:
+  `28f5082a897041975d8e9b6765e8ec73e885c970`.
+- During `git commit`, the existing pre-commit/lint-staged path ran formatting
+  including `prettier --write` and altered 16 files.
+- Resulting committed tree:
+  `3609187fdf38809a9275baaafd968b4f427980a6`.
+- Commit: `d0271f864ed8fb88f3876cd0ef27457176036e70`.
+- The tree-mismatch gate correctly quarantined the commit before push/merge.
+- Dedicated delta review: TS/TSX/config differences were mechanical
+  formatting; `pnpm-lock.yaml` had a large textual serialization/formatting
+  delta; package versions/resolutions were semantically unchanged by the hook;
+  application behaviour was unchanged by the hook.
+- The committed tree then passed the full canonical check.
+- Disposition: **ACCEPTED**. No reset, no amend, no rebuild. Hook behaviour
+  was not changed in this solution.
+- Standing rule: for high-assurance DAT commits, capture the reviewed staged
+  tree before commit and compare `HEAD^{tree}` afterwards; if hooks changed
+  the tree, quarantine publication and explicitly review the delta. Full
+  protocol: [cursor-operating-model.md](./cursor-operating-model.md)
+  Human-Controlled Merge — High-assurance commit tree comparison.
+
+### Incidental evidence discovered during Solution #2 (not closed here)
+
+- `browserslist` still includes `ie >= 11` while Next 16 does not support IE11;
+  caniuse-lite data is ~8 months old. Keep as a separate cleanup candidate.
+- `@next/swc-wasm-nodejs@13.5.1` remains a direct dependency with no DAT
+  consumer; pruning stays separate.
+- `CONFIG-ENV-001` remains open; `env:check` / `prebuild` still resolve the
+  existing local env path. Do not run `pnpm dev`.
+- `@next/env` remains a direct `^16.1.6` dependency (`TOOLCHAIN-002`).
+- React 19 peer warnings from Radix, framer-motion, react-hook-form-adjacent
+  UI packages, Headless UI, SWR, and others: residual, not upgraded.
+  Separate React 19 ecosystem peer review remains open.
+- Direct leftover `eslint-plugin-react-hooks@4.6.0` and
+  `@typescript-eslint/*@7.0.0` were removed in the authorized bounded
+  correction pass. Compatible hooks v7 and typescript-eslint v8 remain
+  available through `eslint-config-next@16.3.1`. Do not prune any other
+  dependency in this slice.
+- New `eslint-plugin-react-hooks` v7 compiler rules are residual lint debt,
+  not pre-existing error-gate regressions. Recorded counts:
+  `set-state-in-effect` 29, `immutability` 2, `purity` 1. Demoted to warn
+  to preserve the prior DAT error-level contract.
+- Existing lint warning debt also remains: `no-explicit-any`,
+  `no-unused-vars`, `no-empty-object-type`.
+- Turbopack CSS warning on `.print\\:hidden` in `app/globals.css` is
+  classified **BENIGN_WARNING** for this migration because compiled
+  production CSS also contains the correct Tailwind `.print\:hidden`
+  utility used by the app. Record a future cleanup candidate for the
+  malformed redundant selector; do not change `app/globals.css` in
+  Solution #2.
+- Next 16 rewrote `tsconfig.json` (`jsx: react-jsx`,
+  `.next/dev/types/**/*.ts`) and `next-env.d.ts` typed-route imports;
+  those tracked changes are retained as deterministic framework output.
+  Clean-checkout type generation uses `next typegen` before `tsc --noEmit`.
 
 ## Historical snapshot — verified repository state (2026-08-06; audit branch)
 
@@ -1526,6 +1639,10 @@ Reconciled live state:
 - Next implementation slice: `next-security-patch-containment-v1`
   (`DEP-SEC-001`).
 - This reconciliation branch does not implement Solution #2.
+
+**Historical only.** Later superseded by DEC-067 /
+`next-supported-lts-security-remediation-v1`. Live recovery is the
+navigator at the top of this file.
 
 Older continuity checkpoints that describe the audit branch or
 `billing-webhook-authenticity-gate-v1` as active remain historical evidence.

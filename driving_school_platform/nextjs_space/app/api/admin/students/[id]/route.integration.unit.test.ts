@@ -121,7 +121,7 @@ function req(method: string, url: string, payload?: unknown): Request {
   });
 }
 
-const routeContext = { params: { id: "stu-1" } };
+const routeContext = { params: Promise.resolve({ id: "stu-1" }) };
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -183,7 +183,7 @@ describe("GET /api/admin/students/[id]", () => {
 
     const res = await GET(
       req("GET", "http://school.example.com/api/admin/students/stu-9") as any,
-      { params: { id: "stu-9" } },
+      { params: Promise.resolve({ id: "stu-9" }) },
     );
 
     expect(res.status).toBe(404);
@@ -287,7 +287,7 @@ describe("PATCH /api/admin/students/[id]", () => {
       req("PATCH", "http://school.example.com/api/admin/students/stu-9", {
         firstName: "Maria",
       }) as any,
-      { params: { id: "stu-9" } },
+      { params: Promise.resolve({ id: "stu-9" }) },
     );
 
     expect(res.status).toBe(404);
@@ -480,7 +480,7 @@ describe("PATCH /api/admin/students/[id]", () => {
       req("PATCH", "http://school.example.com/api/admin/students/stu-9", {
         firstName: "Maria",
       }) as any,
-      { params: { id: "stu-9" } },
+      { params: Promise.resolve({ id: "stu-9" }) },
     );
 
     expect(res.status).toBe(404);
@@ -579,7 +579,7 @@ describe("DELETE /api/admin/students/[id]", () => {
         "DELETE",
         "http://school.example.com/api/admin/students/stu-9",
       ) as any,
-      { params: { id: "stu-9" } },
+      { params: Promise.resolve({ id: "stu-9" }) },
     );
 
     expect(res.status).toBe(404);
