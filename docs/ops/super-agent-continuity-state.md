@@ -40,9 +40,11 @@ This section is the current operational recovery state. Older checkpoints below
 checkpoints, and the docs-only `canonical-live-state-reconciliation-v1`
 handoff) are historical evidence and are not live execution state.
 
-- Published `main` before this solution:
+- Starting / still-published `main`:
   `ccdc8490904b63bddcb8875df86f24c43654796d`.
-- Active solution branch: `next-supported-lts-security-remediation-v1`.
+- Active solution branch: `next-supported-lts-security-remediation-v1` until
+  integration/publication completes. A later continuity/docs commit on this
+  branch may advance HEAD; that HEAD is not the implementation anchor.
 - DAT_4.4: CLOSED.
 - Engineering Excellence Audit: **CLOSED** (explicit human GO).
 - Findings: 51. Remediation coverage: 51/51. Unresolved repository-static
@@ -51,16 +53,23 @@ handoff) are historical evidence and are not live execution state.
 - Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1`:
   **CLOSED BY CONTAINMENT**, integrated into `main`.
 - Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1`:
-  **IMPLEMENTED + VALIDATED IN-BRANCH**; **NOT YET INTEGRATED/PUBLISHED**
-  (DEC-067). Awaiting ChatGPT Final EQR and human integration/publication.
+  **IMPLEMENTED + VALIDATED IN-BRANCH**; **Final EQR PASS**; **POST-COMMIT
+  CANONICAL VALIDATION PASS**; **NOT YET INTEGRATED/PUBLISHED** (DEC-067).
   DAT_4.5 covers Solutions #2 through #11 inclusive.
+- Durable implementation anchor (not eternal branch HEAD):
+  `d0271f864ed8fb88f3876cd0ef27457176036e70`.
+- Accepted implementation tree:
+  `3609187fdf38809a9275baaafd968b4f427980a6`.
+- `DEP-SEC-001` is fully implemented and validated in this branch;
+  published-main closure occurs only after successful integration/publication.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch. Do not create a separate documentation-only branch for
-  normal solution state.
+  normal solution state. Do not document the SHA of a later continuity/docs
+  commit as a required recovery anchor.
 - Next smallest-safe implementation slice:
   `local-development-database-isolation-v1` (source `CONFIG-ENV-001`) —
-  **QUEUED NEXT AFTER** successful review/integration/publication of
-  Solution #2.
+  **QUEUED NEXT AFTER** successful integration/publication of Solution #2.
+  It is not active yet.
 - `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain separate.
 - No `pnpm dev` while `CONFIG-ENV-001` remains open.
 
@@ -81,8 +90,50 @@ handoff) are historical evidence and are not live execution state.
 - Production build: Next 16.3.1 default Turbopack, compiled successfully.
 - Canonical check: lint → typecheck (`next typegen && tsc --noEmit`) →
   `test:run` → build. `pretypecheck` remains `env:check` + `prisma generate`.
-- No staging, commit, push, merge, DB write, migration, hosted mutation, or
-  Playwright in this solution.
+- Local implementation commit exists and is accepted
+  (`d0271f864ed8fb88f3876cd0ef27457176036e70`). Still **no** push, merge, DB
+  write, migration, hosted mutation, or Playwright. Worktree was clean at the
+  post-commit recovery checkpoint.
+
+### Solution #2 post-commit canonical validation
+
+Accepted against the **actual committed implementation tree** (not against a
+later continuity/docs working tree):
+
+- Commit: `d0271f864ed8fb88f3876cd0ef27457176036e70`
+- Tree: `3609187fdf38809a9275baaafd968b4f427980a6`
+- Canonical: `pnpm -C driving_school_platform/nextjs_space check`
+- Result: **PASS**
+- Evidence: lint 0 errors / 51 warnings; `next typegen` PASS; `tsc`/typecheck
+  PASS; Vitest 207/207 files; tests 1737/1737; Next 16.3.1 default Turbopack
+  production build PASS.
+- After that run: worktree remained clean; committed HEAD remained `d0271f…`;
+  committed tree remained `3609187…`; `origin/main` remained `ccdc849…`.
+- A later continuity/docs commit on this branch is **not** part of that
+  canonical run.
+
+### Solution #2 hook-induced tree incident
+
+- Pre-commit ChatGPT-reviewed staged tree:
+  `28f5082a897041975d8e9b6765e8ec73e885c970`.
+- During `git commit`, the existing pre-commit/lint-staged path ran formatting
+  including `prettier --write` and altered 16 files.
+- Resulting committed tree:
+  `3609187fdf38809a9275baaafd968b4f427980a6`.
+- Commit: `d0271f864ed8fb88f3876cd0ef27457176036e70`.
+- The tree-mismatch gate correctly quarantined the commit before push/merge.
+- Dedicated delta review: TS/TSX/config differences were mechanical
+  formatting; `pnpm-lock.yaml` had a large textual serialization/formatting
+  delta; package versions/resolutions were semantically unchanged by the hook;
+  application behaviour was unchanged by the hook.
+- The committed tree then passed the full canonical check.
+- Disposition: **ACCEPTED**. No reset, no amend, no rebuild. Hook behaviour
+  was not changed in this solution.
+- Standing rule: for high-assurance DAT commits, capture the reviewed staged
+  tree before commit and compare `HEAD^{tree}` afterwards; if hooks changed
+  the tree, quarantine publication and explicitly review the delta. Full
+  protocol: [cursor-operating-model.md](./cursor-operating-model.md)
+  Human-Controlled Merge — High-assurance commit tree comparison.
 
 ### Incidental evidence discovered during Solution #2 (not closed here)
 

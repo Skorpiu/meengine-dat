@@ -580,6 +580,23 @@ Merge and push remain **human-controlled actions**. Cursor prepares merge-readin
 - Even when explicitly asked, Cursor must **first restate the command plan** and **confirm the working tree state**.
 - For the DAT default workflow, **prefer Rui running close/merge commands manually**.
 
+### High-assurance commit tree comparison
+
+Commit hooks (pre-commit / lint-staged / formatters such as `prettier --write`)
+may mutate staged content. A reviewed staged tree is **not** the published tree
+until `HEAD^{tree}` matches it or the delta is explicitly accepted.
+
+For high-assurance DAT commits (security, auth, billing, runtime/framework
+migrations, or any commit whose staged tree was independently reviewed):
+
+1. Capture the reviewed staged tree before commit (`git write-tree`).
+2. After commit, compare `HEAD^{tree}` with that reviewed tree.
+3. If they differ, do **not** push or merge.
+4. Inspect the hook-induced delta.
+5. Explicitly accept the committed tree or reconstruct before publication.
+
+This protocol does **not** authorize changing hook configuration.
+
 ### Required close/merge battery output
 
 When a batch appears merge-ready, Cursor must provide Rui with a **complete** manual battery — not a shorthand summary. Incomplete batteries are **not merge-ready**.

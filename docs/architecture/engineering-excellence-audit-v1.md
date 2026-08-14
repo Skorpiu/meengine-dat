@@ -2128,9 +2128,9 @@ by a later supported-LTS migration describe the repository and advisory state
 at the audit snapshot and are not rewritten retrospectively.
 
 **Current remediation status:** **IMPLEMENTED + VALIDATED IN-BRANCH** by
-`next-supported-lts-security-remediation-v1` (DEC-067); **NOT YET
-INTEGRATED/PUBLISHED**. Published-main closure occurs only after successful
-integration/publication.
+`next-supported-lts-security-remediation-v1` (DEC-067); **Final EQR PASS**;
+**POST-COMMIT CANONICAL VALIDATION PASS**; **NOT YET INTEGRATED/PUBLISHED**.
+Published-main closure occurs only after successful integration/publication.
 
 Subsequent remediation established the following boundary:
 
@@ -2179,14 +2179,28 @@ Finding-accounting rule:
 
 Implementation and recovery evidence:
 
-- published starting baseline:
+- published starting / still-published `main`:
   `ccdc8490904b63bddcb8875df86f24c43654796d`;
-- solution branch: `next-supported-lts-security-remediation-v1`;
-- in-branch status: **IMPLEMENTED + VALIDATED IN-BRANCH**; **NOT YET
-  INTEGRATED/PUBLISHED**;
+- solution branch: `next-supported-lts-security-remediation-v1` (active until
+  integration/publication; a later continuity/docs commit may advance HEAD);
+- durable implementation anchor (not eternal branch HEAD):
+  `d0271f864ed8fb88f3876cd0ef27457176036e70`;
+- accepted implementation tree:
+  `3609187fdf38809a9275baaafd968b4f427980a6`;
+- in-branch status: **IMPLEMENTED + VALIDATED IN-BRANCH**; **Final EQR PASS**;
+  **POST-COMMIT CANONICAL VALIDATION PASS**; **NOT YET INTEGRATED/PUBLISHED**;
 - typecheck contract: `next typegen && tsc --noEmit` (after existing
   `pretypecheck` `env:check` + `prisma generate`);
-- canonical validation: lint 0 errors / 51 warnings, typecheck pass,
-  207/207 test files, 1737/1737 tests, Next 16.3.1 Turbopack production
-  build, `pnpm -C driving_school_platform/nextjs_space check` exit 0;
+- post-commit canonical validation against commit `d0271f…` / tree `3609187…`:
+  lint 0 errors / 51 warnings, `next typegen` PASS, `tsc`/typecheck PASS,
+  207/207 test files, 1737/1737 tests, Next 16.3.1 default Turbopack production
+  build, `pnpm -C driving_school_platform/nextjs_space check` exit 0; worktree
+  remained clean; committed HEAD and tree unchanged; `origin/main` remained
+  `ccdc849…`. That run does **not** include later continuity/docs edits;
+- hook-induced tree incident: ChatGPT-reviewed staged tree
+  `28f5082a897041975d8e9b6765e8ec73e885c970` became committed tree `3609187…`
+  after pre-commit/lint-staged `prettier --write` (16 files). Delta accepted
+  (mechanical formatting; `pnpm-lock.yaml` textual serialization only; no
+  package version/resolution or behaviour change). Disposition: ACCEPTED; no
+  reset/amend/rebuild; hook behaviour unchanged;
 - no database, hosted, or Production mutation.
