@@ -20,8 +20,10 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 | **Smoke fixtures** | DEC-064 closed 2026-07-28 (**human**): repair apply + fixture apply (`changesApplied=18`); inspector no blockers; fixtures all-ready; idempotent dry-run; Sarah/Bob/John Doe preserved; commercial catalogue untouched; no `PLATFORM_ADMIN` recreate. Full IDs in operator vault only. |
 | **Remote ops closed** | Do **not** re-run repair, fixture apply, or smoke-lesson cleanup without new evidence + explicit human authorization. `student-invite-accept-student-link-repair-v1` **done** (repo + remote). |
 | **Node.js runtime** | **Node 24 migration closed.** Local compatibility passed on Node 24.18.0; repository pins, package engines, `.nvmrc`, GitLab CI and runner documentation are aligned; branch and `main` pipelines passed using `node:24`; Vercel Preview and Production deployed successfully with Project Settings and effective runtime on Node 24.x; post-deploy non-destructive hosted gates passed at `909b69a`. |
-| **Engineering audit** | `engineering-excellence-audit-v1` — **CLOSED 2026-08-13 by explicit human authorization**. Final Engineering Quality Review PASS; 0 closure-blocking dimensions; 51 findings with 51/51 remediation coverage; no repository-static audit frontier remains. The findings remain active remediation debt in the post-audit execution queue. |
-| **Ordered next** | (1) transition safely from the closed audit branch to `billing-webhook-authenticity-gate-v1` as the first P0 implementation slice → (2) `next-security-patch-containment-v1`; progress `local-development-database-isolation-v1` and `migration-deploy-target-safety-gate-v1` where independently applicable; `platform-separation-architecture-plan-v1` runs as a parallel architecture lane → (3) P1/P2 according to the post-audit queue. |
+| **Engineering audit** | `engineering-excellence-audit-v1` — **CLOSED 2026-08-13 by explicit human authorization**. Final Engineering Quality Review PASS; 0 closure-blocking dimensions; 51 findings with 51/51 remediation coverage; no repository-static audit frontier remains. The findings remain active remediation debt in the post-audit execution queue. Do not reopen the global audit without contradictory evidence. |
+| **Solution #1** | `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` — **CLOSED BY CONTAINMENT** and integrated into `main`. No active Billing implementation branch at this recovery checkpoint. |
+| **DAT_4.5 handoff** | Authoritative published `main` at `b5b939393f73c44bec435ba24ca80560e5d7a77c`. Resolve live HEAD through Git; this is not an eternal served-in-Production SHA. |
+| **Ordered next** | (1) `next-security-patch-containment-v1` (source `DEP-SEC-001`; immediate Next.js 14.2.x security containment only; `next-supported-lts-migration-v1` and `dependency-security-monitoring-v1` remain separate) → (2) progress `local-development-database-isolation-v1` and `migration-deploy-target-safety-gate-v1` where independently applicable; `platform-separation-architecture-plan-v1` runs as a parallel architecture lane → (3) P1/P2 according to the post-audit queue. This docs-only live-state reconciliation is navigation recovery, not the next product implementation solution. |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
 | **Archive tag** | `archive-schedule-and-vehicles-b101112` — historical archive only; **not** a release or recovery baseline. |
@@ -302,14 +304,22 @@ Detailed closed-slice inventory below is **historical reference**. For **what to
 
 **Exists in repo (not Settings UI):** `Student.schoolStudentId` (+ `schoolStudentYearSuffix` / `schoolStudentSequence` / `schoolStudentIdSource`), helpers `lib/students/student-school-id.ts` (hardcoded **YY+NNN** 5-digit build/parse for A Conquistadora-style IDs), unit tests `student-school-id.unit.test.ts`; manual create/import paths set school IDs; tenant unique `@@unique([organizationId, schoolStudentId])`. **Also:** `Student.studentNumber` global `@unique` autoincrement; `Student.studentIdNumber` global `@unique` (nullable; often legacy/smoke labels). **Instructor:** `instructorIdNumber` global `@unique` (nullable); `instructorLicenseNumber` global `@unique` (official license — must not be reused as internal school number). **Unlinked invite accept** creates Student with `userId` + `organizationId` only — leaves `schoolStudentId` / `studentIdNumber` empty (gap vs manual create). **`/admin/settings`** has no identifiers/numbering product config (Settings currently operator/internal per DEC-026). Product plan backlog: **`school-person-identifiers-settings-product-plan-v1`** (DEC-065) — plan first; no schema/numbering system in this batch.
 
-### Likely next (canonical sequence)
+### Likely next (canonical sequence) — historical archive
 
-See [Canonical current state](#canonical-current-state). Single recommended next: **`node-24-runtime-migration-v1`**. After that: engineering excellence audit → Platform separation plan → audit-approved refactors. P1 parallel and product backlog: [roadmap-todo.md](./roadmap-todo.md).
+Superseded by [Canonical current state](#canonical-current-state). The sentence
+below is preserved historical sequence text and is **not** the live recommended next.
 
-### Engineering excellence (audit status)
+See [Canonical current state](#canonical-current-state). Historical sequence at
+the time of this archive: **`node-24-runtime-migration-v1`** (since closed).
+Live next is `next-security-patch-containment-v1`. After the closed Node 24 and
+audit work: Platform separation plan → audit-approved refactors. P1 parallel and
+product backlog: [roadmap-todo.md](./roadmap-todo.md).
+
+### Engineering excellence (audit status) — historical start snapshot
 
 - Localized refactors and hygiene have occurred across many prior slices.
 - The global, systematic maintainability audit **started on 2026-08-06** in `engineering-excellence-audit-v1`, based on `da5aea6`.
+- **Live supersession:** the audit is formally **CLOSED** (2026-08-13; explicit human GO) with 51 findings and 51/51 remediation coverage. Do not read the start-snapshot bullets below as current live status.
 - The normalized inventory phase is complete: 661 TypeScript/TSX files, 438 production files, 223 test/E2E files, 58 API routes, 96 components, 9 hooks, 369 `lib` files, and 27 scripts.
 - No concrete finding, severity, extraction target, file move, or refactor slice is confirmed yet.
 - Detailed evidence and audit invariants are maintained in [engineering-excellence-audit-v1.md](./engineering-excellence-audit-v1.md).
@@ -640,10 +650,14 @@ The audit closed with **51 confirmed findings and 51/51 remediation coverage**.
 Closure does not mean those findings are fixed; they remain active remediation
 debt governed by the post-audit execution queue.
 
-The first P0 execution priority is `billing-webhook-authenticity-gate-v1`,
-followed by `next-security-patch-containment-v1`. Database/migration safety
-foundations and the Platform separation architecture lane proceed according to
-their documented prerequisites and independence boundaries.
+**At this audit-closure checkpoint (historical):** the first P0 execution
+priority was `billing-webhook-authenticity-gate-v1`, followed by
+`next-security-patch-containment-v1`. Database/migration safety foundations and
+the Platform separation architecture lane proceed according to their documented
+prerequisites and independence boundaries.
+
+**Live supersession:** Solution #1 is CLOSED BY CONTAINMENT. The current next
+implementation slice is `next-security-patch-containment-v1`.
 
 <!-- engineering-excellence-audit-main-integration-v1 -->
 ## Engineering audit integration baseline
@@ -656,29 +670,34 @@ locally into `main` using an explicit `--no-ff` merge.
 - Post-merge canonical validation: PASS.
 - Findings retained: 51.
 - Remediation coverage: 51/51.
-- Next working slice: `billing-webhook-authenticity-gate-v1`.
+- Next working slice **at this integration checkpoint (historical):** `billing-webhook-authenticity-gate-v1`.
 
 This integration does not itself publish `main` remotely or authorize a
 behavioural remediation.
 
 <!-- billing-webhook-authenticity-gate-v1-kickoff -->
-## Active P0 slice — billing webhook authenticity
+## Historical P0 kickoff — billing webhook authenticity (CLOSED)
 
-- Branch: `billing-webhook-authenticity-gate-v1`.
+This section is the post-audit working-slice navigator as of kickoff. It is
+**not** current live state.
+
+- Historical branch: `billing-webhook-authenticity-gate-v1`.
 - Parent integrated `main`: `25a656382f46b6d79868510aeef697c788341113`.
 - Priority: P0.
 - Audit branch local cleanup: complete.
-- First phase: read-only implementation preflight.
-- Behavioural implementation remains separately controlled by slice evidence
-  and normal authorization boundaries.
+- First phase at kickoff: read-only implementation preflight.
+- **Supersession:** Solution #1 / `BILLING-SEC-001` is CLOSED BY CONTAINMENT and
+  integrated into `main`. There is no active Billing implementation branch at
+  the DAT_4.5 recovery checkpoint.
 
 <!-- deferred-commercial-billing-product-boundary-v1 -->
 ## Deferred commercial Billing product boundary
 
 Commercial Billing is intentionally **not a current client-delivery feature**.
 
-- `billing-webhook-authenticity-gate-v1` exists only to remove the current
-  unauthenticated public mutation path.
+- `billing-webhook-authenticity-gate-v1` **was** security containment only and
+  is now **CLOSED BY CONTAINMENT**. It existed to remove the unauthenticated
+  public mutation path; it is not a live implementation slice.
 - School-to-MeEngine/DAT commercial subscriptions and feature add-ons depend on
   the autonomous Platform commercial authority.
 - Student-to-school payments remain a separate optional DAT add-on/premium
@@ -705,3 +724,17 @@ processing requires provider-specific cryptographic authenticity proof first.
 
 Implementation anchor: `b584f7608ae37c7ad5cbf62b37613b2823b84f37`.
 Local-main integration recovery anchor: `38812394107e96649cb2b61bbeae73ae6ae3be04`.
+
+<!-- dat-45-live-navigator-v1 -->
+## DAT_4.5 live navigator
+
+- DAT_4.4: CLOSED.
+- Engineering Excellence Audit: **CLOSED** (explicit human GO). Findings 51;
+  coverage 51/51; repository-static frontier: none.
+- Solution #1: **CLOSED BY CONTAINMENT**, integrated into `main`.
+- Active product implementation slice at this recovery checkpoint: **none**.
+- Current durable next implementation slice: `next-security-patch-containment-v1`
+  (source `DEP-SEC-001`). Immediate Next.js security containment only.
+- `next-supported-lts-migration-v1` and `dependency-security-monitoring-v1`
+  remain separate.
+- This docs-only reconciliation is navigation recovery, not Solution #2.

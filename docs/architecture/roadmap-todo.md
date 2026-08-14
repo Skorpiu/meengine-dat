@@ -10,9 +10,9 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| `engineering-excellence-audit-v1` | **P1** engineering excellence | **CLOSED 2026-08-13 — explicit human authorization**; Final Engineering Quality Review PASS; 0 closure blockers; 51 findings / 51/51 remediation coverage; findings retained in post-audit execution queue |
+| `next-security-patch-containment-v1` | **P0** dependency security | Next smallest-safe **implementation** slice after DAT_4.4 / Solution #1 closure; source `DEP-SEC-001`; immediate Next.js 14.2.x containment only; does not close the finding; `next-supported-lts-migration-v1` and `dependency-security-monitoring-v1` remain separate. This docs-only live-state reconciliation is navigation recovery, not that implementation. |
 
-**Closed context:** `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
+**Closed context:** `engineering-excellence-audit-v1` closed 2026-08-13 by explicit human GO (51 findings / 51/51 coverage; no repository-static frontier). Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` is **CLOSED BY CONTAINMENT** and integrated into `main`. `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
 ---
 
@@ -22,7 +22,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 **Closed prerequisite:** `node-24-runtime-migration-v1` merged to `main` at `909b69a`; GitLab `node:24`, Vercel Preview/Production Node 24.x, and required post-deploy non-destructive hosted gates passed.
 
 1. `engineering-excellence-audit-v1` — **CLOSED 2026-08-13** by explicit human authorization; Final Engineering Quality Review PASS; 51 findings / 51/51 remediation coverage retained as active remediation debt.
-2. P0 containment — `billing-webhook-authenticity-gate-v1` → `next-security-patch-containment-v1`.
+2. P0 containment — `billing-webhook-authenticity-gate-v1` **CLOSED BY CONTAINMENT** → next: `next-security-patch-containment-v1`.
 3. P0 operational safety — `local-development-database-isolation-v1` and `migration-deploy-target-safety-gate-v1`, where independently applicable.
 4. `platform-separation-architecture-plan-v1` — parallel architecture lane after formal audit closure; does not block independent urgent P0 containment.
 5. P1/P2 implementation slices according to the post-audit execution priority queue, one smallest-safe scope per branch.
@@ -285,7 +285,7 @@ Longer-running topics; prefer audit-derived slices over inventing mass refactors
 
 ## Explicitly do not open next
 
-- Billing feature/checkout/PSP product expansion is deliberately deferred to the end-of-roadmap commercial Billing section below. The current `billing-webhook-authenticity-gate-v1` is security containment only and is the sole Billing implementation exception at this stage.
+- Billing feature/checkout/PSP product expansion is deliberately deferred to the end-of-roadmap commercial Billing section below. `billing-webhook-authenticity-gate-v1` **was** security containment only, is now **CLOSED BY CONTAINMENT**, and remains the sole completed Billing implementation exception at this stage. Do not reopen it as product Billing work.
 - Prisma migrations / schema changes unless gated
 - Platform cross-tenant audit viewer (tenant CSV export is **done**)
 - `supabase-rls-tenant-policies-v1` unless Data API product-required
@@ -348,7 +348,8 @@ These slices come from confirmed full-snapshot findings. They are queued only; i
 
 ### `billing-webhook-authenticity-gate-v1`
 
-- **Priority:** P0.
+- **Status:** **CLOSED BY CONTAINMENT** and integrated into `main`. Historical queue entry preserved.
+- **Priority:** P0 (completed).
 - **Source:** `BILLING-SEC-001`.
 - **Goal:** fail closed before any webhook event can mutate billing/subscription/entitlement state unless provider authenticity is proven.
 - **Minimum safe baseline while live PSP integration is unfinished:** disable or reject externally supplied billing webhook processing by default rather than trusting envelope contents.
@@ -718,7 +719,7 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 
 ### Security-first execution waves
 
-1. **Immediate containment:** `billing-webhook-authenticity-gate-v1`; `next-security-patch-containment-v1`.
+1. **Immediate containment:** `billing-webhook-authenticity-gate-v1` (**CLOSED BY CONTAINMENT**); `next-security-patch-containment-v1` (next implementation slice).
 2. **Security foundations / proof:** `database-integration-test-harness-v1`; `e2e-suite-contract-repair-v1`; then `billing-projection-atomic-idempotency-v1`, `jwt-session-revocation-v1`, `license-key-security-hardening-v1`.
 3. **Authority / credential / browser boundaries:** `provider-owned-entitlement-mutation-boundary-v1`, `nextauth-credentials-rate-limit-alignment-v1`, `auth-email-link-trusted-origin-v1`, `privileged-password-policy-alignment-v1`, `api-500-error-sanitization-v1`, `csv-formula-injection-hardening-v1`, `security-response-headers-hardening-v1`.
 4. **Integrity / onboarding:** `user-create-atomicity-v1`, `platform-onboarding-transaction-boundary-v1`, `instructor-direct-create-activation-contract-v1`.
@@ -874,8 +875,8 @@ ledger — 51 findings**. It does not replace or duplicate finding ownership.
 
 ### P0 — Immediate containment
 
-1. `billing-webhook-authenticity-gate-v1`
-2. `next-security-patch-containment-v1`
+1. `billing-webhook-authenticity-gate-v1` — **CLOSED BY CONTAINMENT**
+2. `next-security-patch-containment-v1` — **next smallest-safe implementation slice** (`DEP-SEC-001`)
 
 Execution intent: reduce the highest material security exposure first and show
 early risk-reduction progress without weakening validation standards.
@@ -977,7 +978,7 @@ contracts are satisfied.
 - **Remediation coverage:** 51/51.
 - **Unresolved repository-static audit frontier:** none.
 - **Findings remain active:** yes — audit closure is not remediation completion.
-- **First execution slice:** `billing-webhook-authenticity-gate-v1`.
+- **First execution slice at this closure checkpoint (historical):** `billing-webhook-authenticity-gate-v1`.
 - **Execution model:** security-first, smallest-safe slices, documentation and
   Super Agent continuity included in Definition of Done.
 
@@ -988,20 +989,24 @@ contracts are satisfied.
 - Audit source: `9d275cfa57bc7fe809c95f7c7a0326f339014809`.
 - Main merge commit: `81ec6079fb41289e951dfa900b7d90635aa03425`.
 - Validation after integration: PASS.
-- Next branch: `billing-webhook-authenticity-gate-v1`.
-- First objective: P0 billing webhook authenticity containment.
+- Next branch **at this integration checkpoint (historical):** `billing-webhook-authenticity-gate-v1`.
+- First objective at that checkpoint: P0 billing webhook authenticity containment.
 - Remote publication remains a separate explicit operation.
 
 <!-- billing-webhook-authenticity-gate-v1-kickoff -->
-### Active execution slice
+### Historical execution-slice kickoff — `billing-webhook-authenticity-gate-v1` (CLOSED)
 
-`billing-webhook-authenticity-gate-v1` is now the active **P0** working slice.
+This checkpoint recorded the live **P0** working slice immediately after audit
+integration. It is **not** current.
+
+`billing-webhook-authenticity-gate-v1` was the active P0 working slice at kickoff.
 
 - Base: integrated local `main` at `25a656382f46b6d79868510aeef697c788341113`.
 - Audit merge: `81ec6079fb41289e951dfa900b7d90635aa03425`.
 - Completed local audit branch: removed after verified merge ancestry.
-- Current phase: implementation preflight.
+- Phase at kickoff: implementation preflight.
 - Next containment slice after completion: `next-security-patch-containment-v1`.
+- **Supersession:** Solution #1 is CLOSED BY CONTAINMENT and integrated into `main`.
 
 <!-- deferred-commercial-billing-after-first-client-v1 -->
 ## Deferred / end-of-roadmap — commercial Billing and payments
@@ -1049,9 +1054,10 @@ successfully in Production.
 
 ### Current Billing exception
 
-`billing-webhook-authenticity-gate-v1` is **not product development**. It is the
+`billing-webhook-authenticity-gate-v1` **was not** product development. It was the
 P0 security containment needed to ensure an unfinished Billing skeleton cannot
-accept unproven external events and mutate commercial state.
+accept unproven external events and mutate commercial state. That containment is
+now **CLOSED BY CONTAINMENT** and integrated into `main`.
 
 The remaining audit Billing findings stay in the remediation ledger; their
 priority may be reassessed against the fail-closed boundary, but they are not
@@ -1073,3 +1079,15 @@ silently considered fixed by product deferment.
 - `platform-commercial-billing-productization-v1` and
   `school-student-payments-addon-v1` remain deferred according to their
   existing product boundaries.
+
+<!-- dat-45-live-navigator-v1 -->
+## DAT_4.5 live navigator
+
+- Engineering Excellence Audit: **CLOSED**.
+- Solution #1 / `billing-webhook-authenticity-gate-v1`: **CLOSED BY CONTAINMENT**.
+- Active product implementation slice at this recovery checkpoint: **none**.
+- **Single recommended next implementation slice:** `next-security-patch-containment-v1`
+  (source `DEP-SEC-001`).
+- Immediate Next.js security containment only; LTS migration and dependency
+  monitoring remain distinct.
+- This docs-only reconciliation is not that implementation.
