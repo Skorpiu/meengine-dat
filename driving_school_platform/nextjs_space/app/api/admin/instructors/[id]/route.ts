@@ -19,7 +19,7 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 async function requireSuperAdminTenant(request: NextRequest): Promise<
   | {
@@ -91,7 +91,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const result = await updateInstructorQualifiedCategories({
       organizationId: auth.organizationId,
-      instructorId: context.params.id,
+      instructorId: (await context.params).id,
       qualifiedCategoryNames,
     });
 
@@ -142,7 +142,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     const result = await deleteInstructorRecordIfEligible({
       organizationId: auth.organizationId,
-      instructorId: context.params.id,
+      instructorId: (await context.params).id,
       currentUserId: auth.currentUserId,
     });
 
@@ -167,7 +167,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
         role: auth.actorRole,
         email: auth.actorEmail,
       },
-      instructorId: context.params.id,
+      instructorId: (await context.params).id,
       hadLinkedUser: result.audit.hadLinkedUser,
       lessonsCount: result.audit.lessonsCount,
       linkedUserId: result.audit.linkedUserId,

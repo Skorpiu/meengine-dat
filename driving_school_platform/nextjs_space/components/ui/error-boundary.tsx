@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 /**
  * Error Boundary Component
@@ -7,10 +6,16 @@
  * @module components/ui/error-boundary
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertCircle, RefreshCw } from 'lucide-react';
-import { Button } from './button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
+import React, { Component, ErrorInfo, ReactNode } from "react";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { Button } from "./button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./card";
 
 interface Props {
   children: ReactNode;
@@ -32,7 +37,7 @@ interface State {
 /**
  * Error Boundary Component
  * Wraps children and catches errors in the component tree
- * 
+ *
  * @example
  * ```tsx
  * <ErrorBoundary>
@@ -58,13 +63,13 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log error to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error Boundary caught an error:', error, errorInfo);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error Boundary caught an error:", error, errorInfo);
     }
-    
+
     // Call onError callback if provided
     this.props.onError?.(error, errorInfo);
-    
+
     // In production, you might want to send error to logging service
     // Example: sendErrorToLoggingService(error, errorInfo);
   }
@@ -91,16 +96,16 @@ export class ErrorBoundary extends Component<Props, State> {
               <div className="flex items-center gap-2 mb-2">
                 <AlertCircle className="h-5 w-5 text-red-600" />
                 <CardTitle className="text-red-600">
-                  {this.props.errorTitle || 'Something went wrong'}
+                  {this.props.errorTitle || "Something went wrong"}
                 </CardTitle>
               </div>
               <CardDescription>
-                {this.props.errorMessage || 
-                  'An unexpected error occurred. Please try refreshing the page.'}
+                {this.props.errorMessage ||
+                  "An unexpected error occurred. Please try refreshing the page."}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+              {process.env.NODE_ENV === "development" && this.state.error && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-md">
                   <p className="text-sm font-mono text-red-800 break-all">
                     {this.state.error.message}
@@ -136,7 +141,7 @@ export class ErrorBoundary extends Component<Props, State> {
 /**
  * Hook-based error boundary wrapper
  * Use this if you prefer a function component approach
- * 
+ *
  * @example
  * ```tsx
  * function App() {
@@ -151,6 +156,6 @@ export class ErrorBoundary extends Component<Props, State> {
 export function WithErrorBoundary({
   children,
   ...props
-}: Props): JSX.Element {
+}: Props): React.JSX.Element {
   return <ErrorBoundary {...props}>{children}</ErrorBoundary>;
 }

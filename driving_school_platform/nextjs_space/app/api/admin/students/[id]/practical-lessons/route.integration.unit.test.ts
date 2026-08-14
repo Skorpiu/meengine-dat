@@ -153,7 +153,9 @@ beforeEach(() => {
 
 describe("GET /api/admin/students/[id]/practical-lessons", () => {
   it("returns practical lesson history for SUPER_ADMIN", async () => {
-    const res = await GET(req("GET") as any, { params: { id: studentId } });
+    const res = await GET(req("GET") as any, {
+      params: Promise.resolve({ id: studentId }),
+    });
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.success).toBe(true);
@@ -166,7 +168,9 @@ describe("GET /api/admin/students/[id]/practical-lessons", () => {
 
   it("returns 404 when student is missing in org", async () => {
     h.studentFindFirstMock.mockResolvedValueOnce(null);
-    const res = await GET(req("GET") as any, { params: { id: studentId } });
+    const res = await GET(req("GET") as any, {
+      params: Promise.resolve({ id: studentId }),
+    });
     expect(res.status).toBe(404);
     expect(h.listManualMock).not.toHaveBeenCalled();
   });
@@ -175,7 +179,9 @@ describe("GET /api/admin/students/[id]/practical-lessons", () => {
     getServerSessionMock.mockResolvedValueOnce({
       user: { id: "inst-1", role: "INSTRUCTOR", organizationId: "org-1" },
     });
-    const res = await GET(req("GET") as any, { params: { id: studentId } });
+    const res = await GET(req("GET") as any, {
+      params: Promise.resolve({ id: studentId }),
+    });
     expect(res.status).toBe(401);
   });
 });
@@ -191,7 +197,7 @@ describe("POST /api/admin/students/[id]/practical-lessons", () => {
 
   it("creates manual practical lesson (201)", async () => {
     const res = await POST(req("POST", payload) as any, {
-      params: { id: studentId },
+      params: Promise.resolve({ id: studentId }),
     });
     expect(res.status).toBe(201);
     const body = await res.json();
@@ -239,7 +245,7 @@ describe("POST /api/admin/students/[id]/practical-lessons", () => {
     });
 
     const res = await POST(req("POST", payload) as any, {
-      params: { id: studentId },
+      params: Promise.resolve({ id: studentId }),
     });
 
     expect(res.status).toBe(201);
@@ -256,7 +262,7 @@ describe("POST /api/admin/students/[id]/practical-lessons", () => {
     });
 
     const res = await POST(req("POST", payload) as any, {
-      params: { id: studentId },
+      params: Promise.resolve({ id: studentId }),
     });
     expect(res.status).toBe(409);
     const body = await res.json();
@@ -267,7 +273,7 @@ describe("POST /api/admin/students/[id]/practical-lessons", () => {
   it("does not emit audit when validation fails", async () => {
     const res = await POST(
       req("POST", { ...payload, practicalLessonNumber: -1 }) as any,
-      { params: { id: studentId } },
+      { params: Promise.resolve({ id: studentId }) },
     );
     expect(res.status).toBe(400);
     expect(h.createManualMock).not.toHaveBeenCalled();
@@ -283,7 +289,7 @@ describe("POST /api/admin/students/[id]/practical-lessons", () => {
     });
 
     const res = await POST(req("POST", payload) as any, {
-      params: { id: studentId },
+      params: Promise.resolve({ id: studentId }),
     });
     expect(res.status).toBe(403);
     expect(h.createManualMock).not.toHaveBeenCalled();

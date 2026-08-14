@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 /**
  * Confirmation Dialog Component
@@ -7,7 +6,7 @@
  * @module components/ui/confirmation-dialog
  */
 
-import React from 'react';
+import React from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +16,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 
 interface ConfirmationDialogProps {
   /** Whether dialog is open */
@@ -43,11 +42,11 @@ interface ConfirmationDialogProps {
 /**
  * Reusable Confirmation Dialog
  * Shows a modal dialog asking user to confirm an action
- * 
+ *
  * @example
  * ```tsx
  * const [open, setOpen] = useState(false);
- * 
+ *
  * <ConfirmationDialog
  *   open={open}
  *   onOpenChange={setOpen}
@@ -64,12 +63,12 @@ export function ConfirmationDialog({
   onOpenChange,
   title,
   description,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
+  confirmText = "Confirm",
+  cancelText = "Cancel",
   onConfirm,
   destructive = false,
   loading = false,
-}: ConfirmationDialogProps): JSX.Element {
+}: ConfirmationDialogProps): React.JSX.Element {
   const handleConfirm = () => {
     onConfirm();
     onOpenChange(false);
@@ -87,9 +86,9 @@ export function ConfirmationDialog({
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={loading}
-            className={destructive ? 'bg-red-600 hover:bg-red-700' : ''}
+            className={destructive ? "bg-red-600 hover:bg-red-700" : ""}
           >
-            {loading ? 'Processing...' : confirmText}
+            {loading ? "Processing..." : confirmText}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -100,18 +99,18 @@ export function ConfirmationDialog({
 /**
  * Hook for managing confirmation dialog state
  * Simplifies the usage of confirmation dialogs
- * 
+ *
  * @example
  * ```tsx
  * const confirm = useConfirmation();
- * 
+ *
  * const handleDelete = async () => {
  *   const confirmed = await confirm({
  *     title: 'Delete Vehicle',
  *     description: 'Are you sure?',
  *     destructive: true,
  *   });
- *   
+ *
  *   if (confirmed) {
  *     // Perform delete
  *   }
@@ -129,8 +128,8 @@ export function useConfirmation() {
     resolve?: (value: boolean) => void;
   }>({
     open: false,
-    title: '',
-    description: '',
+    title: "",
+    description: "",
   });
 
   const confirm = (options: {
@@ -160,7 +159,10 @@ export function useConfirmation() {
   };
 
   const ConfirmationDialogComponent = () => (
-    <AlertDialog open={config.open} onOpenChange={(open) => !open && handleCancel()}>
+    <AlertDialog
+      open={config.open}
+      onOpenChange={(open) => !open && handleCancel()}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{config.title}</AlertDialogTitle>
@@ -168,13 +170,13 @@ export function useConfirmation() {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={handleCancel}>
-            {config.cancelText || 'Cancel'}
+            {config.cancelText || "Cancel"}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
-            className={config.destructive ? 'bg-red-600 hover:bg-red-700' : ''}
+            className={config.destructive ? "bg-red-600 hover:bg-red-700" : ""}
           >
-            {config.confirmText || 'Confirm'}
+            {config.confirmText || "Confirm"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

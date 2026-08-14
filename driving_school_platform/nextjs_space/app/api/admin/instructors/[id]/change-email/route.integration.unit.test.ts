@@ -122,7 +122,7 @@ beforeEach(() => {
 describe("POST /api/admin/instructors/[id]/change-email", () => {
   it("returns updated user on success and emits audit", async () => {
     const res = await POST(req({ newEmail: "new@school.test" }) as any, {
-      params: { id: "inst-1" },
+      params: Promise.resolve({ id: "inst-1" }),
     });
 
     expect(res.status).toBe(200);
@@ -171,7 +171,7 @@ describe("POST /api/admin/instructors/[id]/change-email", () => {
     });
 
     const res = await POST(req({ newEmail: "new@school.test" }) as any, {
-      params: { id: "inst-1" },
+      params: Promise.resolve({ id: "inst-1" }),
     });
     expect(res.status).toBe(401);
     expect(h.writeInstructorEmailChangeAuditEventMock).not.toHaveBeenCalled();
@@ -184,7 +184,7 @@ describe("POST /api/admin/instructors/[id]/change-email", () => {
     });
 
     const res = await POST(req({ newEmail: "new@school.test" }) as any, {
-      params: { id: "inst-9" },
+      params: Promise.resolve({ id: "inst-9" }),
     });
     expect(res.status).toBe(404);
     expect(h.writeInstructorEmailChangeAuditEventMock).not.toHaveBeenCalled();
@@ -200,7 +200,7 @@ describe("POST /api/admin/instructors/[id]/change-email", () => {
     });
 
     const res = await POST(req({ newEmail: "taken@school.test" }) as any, {
-      params: { id: "inst-1" },
+      params: Promise.resolve({ id: "inst-1" }),
     });
     expect(res.status).toBe(409);
     const body = await res.json();
@@ -210,7 +210,7 @@ describe("POST /api/admin/instructors/[id]/change-email", () => {
 
   it("returns 400 for invalid email body", async () => {
     const res = await POST(req({ newEmail: "not-an-email" }) as any, {
-      params: { id: "inst-1" },
+      params: Promise.resolve({ id: "inst-1" }),
     });
     expect(res.status).toBe(400);
     expect(h.changeInstructorEmailMock).not.toHaveBeenCalled();
@@ -225,7 +225,7 @@ describe("POST /api/admin/instructors/[id]/change-email", () => {
     );
 
     const res = await POST(req({ newEmail: "new@school.test" }) as any, {
-      params: { id: "inst-1" },
+      params: Promise.resolve({ id: "inst-1" }),
     });
     expect(res.status).toBe(403);
     expect(h.changeInstructorEmailMock).not.toHaveBeenCalled();
@@ -239,7 +239,7 @@ describe("POST /api/admin/instructors/[id]/change-email", () => {
     });
 
     const res = await POST(req({ newEmail: "new@school.test" }) as any, {
-      params: { id: "inst-1" },
+      params: Promise.resolve({ id: "inst-1" }),
     });
 
     expect(res.status).toBe(200);

@@ -14,7 +14,7 @@ import { writeInstructorDeactivateAuditEvent } from "@/lib/audit/people-audit";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 async function requireSuperAdminTenant(request: NextRequest): Promise<
   | {
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const result = await deactivateInstructorRecord({
       organizationId: auth.organizationId,
-      instructorId: context.params.id,
+      instructorId: (await context.params).id,
       currentUserId: auth.currentUserId,
     });
 
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         role: auth.actorRole,
         email: auth.actorEmail,
       },
-      instructorId: context.params.id,
+      instructorId: (await context.params).id,
       alreadyInactive: result.alreadyInactive,
       warningCodes: result.warningCodes,
       futureLessonsCount: result.futureLessonsCount,

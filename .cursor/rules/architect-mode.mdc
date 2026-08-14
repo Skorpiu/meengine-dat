@@ -506,14 +506,16 @@ Do **not** reopen or mix the closed Node 24 migration with unrelated slices.
 
 ### Single recommended next slice and planned order
 
-DAT_4.5 live navigator. This docs-only reconciliation is **not** a product implementation solution.
+DAT_4.5 live navigator. Canonical documentation and Super Agent continuity
+are updated with each solution branch.
 
 - Engineering Excellence Audit: **CLOSED** (2026-08-13; explicit human GO). Findings **51**; remediation coverage **51/51**; unresolved repository-static frontier: **none**. Do not reopen the global audit without contradictory evidence.
 - Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1`: **CLOSED BY CONTAINMENT** and integrated into `main`.
-- Active product implementation slice at this recovery checkpoint: **none**.
-- Next smallest-safe implementation slice: `next-security-patch-containment-v1` (source `DEP-SEC-001`). Immediate Next.js 14.2.x security containment only.
-- Separate follow-ups: `next-supported-lts-migration-v1`; `dependency-security-monitoring-v1`.
-- Independently applicable P0 safety: `local-development-database-isolation-v1`; `migration-deploy-target-safety-gate-v1`. Parallel architecture lane: `platform-separation-architecture-plan-v1`. Then P1/P2 per the post-audit queue.
+- Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1`: **IMPLEMENTED + VALIDATED IN-BRANCH**; **NOT YET INTEGRATED/PUBLISHED** (DEC-067). DAT_4.5 covers Solutions #2 through #11 inclusive.
+- Active product implementation slice at this recovery checkpoint: `next-supported-lts-security-remediation-v1` (in-branch implementation complete and validated; awaiting ChatGPT Final EQR / human integration/publication).
+- Next smallest-safe implementation slice: `local-development-database-isolation-v1` (source `CONFIG-ENV-001`) — **QUEUED NEXT AFTER** successful review/integration/publication of Solution #2.
+- Separate follow-ups: `dependency-security-monitoring-v1`; `TOOLCHAIN-002`.
+- Independently applicable P0 safety continues with `migration-deploy-target-safety-gate-v1`. Parallel architecture lane: `platform-separation-architecture-plan-v1`. Then P1/P2 per the post-audit queue.
 
 <!-- engineering-excellence-audit-v1-live-state -->
 **Historical audit live-state snapshot (2026-08-13; base `da5aea6`; superseded for next-slice navigation):**
@@ -817,7 +819,7 @@ Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
 - Dead-code/dependency pruning requires exact consumer proof plus full validation; import-graph zero-inbound is strong evidence, not deletion authority.
 - Legacy Prisma model disposal is data-sensitive: inspect target data read-only first; no schema/data removal without separate authorization.
 - Framework-adjacent direct packages should have an intentional version contract with the framework; version divergence is investigated in its own slice, not fixed through opportunistic upgrades.
-- Security-first implementation order at the audit snapshot began with `billing-webhook-authenticity-gate-v1`, `billing-projection-atomic-idempotency-v1`, `jwt-session-revocation-v1` and `next-security-patch-containment-v1`, subject to explicit human authorization and prerequisite validation. **Live supersession:** `billing-webhook-authenticity-gate-v1` is CLOSED BY CONTAINMENT; the next implementation slice is `next-security-patch-containment-v1`.
+- Security-first implementation order at the audit snapshot began with `billing-webhook-authenticity-gate-v1`, `billing-projection-atomic-idempotency-v1`, `jwt-session-revocation-v1` and `next-security-patch-containment-v1`, subject to explicit human authorization and prerequisite validation. **Live supersession:** `billing-webhook-authenticity-gate-v1` is CLOSED BY CONTAINMENT; `DEP-SEC-001` remediation is fully implemented and validated in-branch by `next-supported-lts-security-remediation-v1` (DEC-067; the 14.2.35 containment plan is historical/superseded); published-main closure occurs only after successful integration/publication. `local-development-database-isolation-v1` is **QUEUED NEXT AFTER** that publication.
 
 <!-- exhaustive-snapshot-audit-5eded00-v2 -->
 ## Exhaustive-audit completion rules
@@ -1191,7 +1193,10 @@ recombine them into one generic Payment model or implementation slice.
 - DAT_4.4: CLOSED.
 - Engineering Excellence Audit: **CLOSED** (explicit human GO). Findings 51; coverage 51/51; repository-static frontier: none.
 - Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1`: **CLOSED BY CONTAINMENT**, integrated into `main`.
-- Active product implementation slice at this recovery checkpoint: **none**.
-- Next smallest-safe implementation slice: `next-security-patch-containment-v1` (source `DEP-SEC-001`).
-- That slice is immediate Next.js security containment only. `next-supported-lts-migration-v1` and `dependency-security-monitoring-v1` remain separate.
-- Authoritative published-`main` handoff baseline: `b5b939393f73c44bec435ba24ca80560e5d7a77c`. Resolve live HEAD through Git.
+- Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1`: **IMPLEMENTED + VALIDATED IN-BRANCH**; **NOT YET INTEGRATED/PUBLISHED** (DEC-067). DAT_4.5 covers Solutions #2 through #11 inclusive.
+- Published `main` before this solution: `ccdc8490904b63bddcb8875df86f24c43654796d`.
+- Active solution branch: `next-supported-lts-security-remediation-v1`.
+- Canonical documentation and Super Agent continuity are updated with each solution branch. Do not create separate documentation-only branches merely to record normal solution state.
+- Next smallest-safe implementation slice: `local-development-database-isolation-v1` (source `CONFIG-ENV-001`) — **QUEUED NEXT AFTER** successful review/integration/publication of Solution #2.
+- `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain separate.
+- Authoritative published-`main` handoff baseline before this solution: `ccdc8490904b63bddcb8875df86f24c43654796d`. Resolve live HEAD through Git.

@@ -17,8 +17,12 @@ type Params = { provider: string };
  * Reopening processing requires a dedicated future Billing implementation slice
  * with provider-specific authenticity verification and security evidence.
  */
-export async function POST(_request: Request, ctx: { params: Params }) {
-  const providerParam = ctx?.params?.provider ?? "";
+export async function POST(
+  _request: Request,
+  ctx: { params: Promise<Params> },
+) {
+  const params = await ctx.params;
+  const providerParam = params?.provider ?? "";
 
   if (!isSupportedBillingProviderId(providerParam)) {
     return billingWebhookJsonError(

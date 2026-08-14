@@ -153,7 +153,7 @@ describe("GET /api/admin/lessons/[id]", () => {
 
     const res = await GET(
       new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`) as any,
-      { params: { id: LESSON_ID } } as any,
+      { params: Promise.resolve({ id: LESSON_ID }) } as any,
     );
 
     expect(res.status).toBe(200);
@@ -193,7 +193,7 @@ describe("PUT /api/admin/lessons/[id]", () => {
           status: "SCHEDULED",
         }),
       }) as any,
-      { params: { id: LESSON_ID } } as any,
+      { params: Promise.resolve({ id: LESSON_ID }) } as any,
     );
 
     expect(res.status).toBe(200);
@@ -256,7 +256,7 @@ describe("PUT /api/admin/lessons/[id]", () => {
           studentId: STUDENT_ROW_ID,
         }),
       }) as any,
-      { params: { id: LESSON_ID } } as any,
+      { params: Promise.resolve({ id: LESSON_ID }) } as any,
     );
 
     expect(res.status).toBe(200);
@@ -285,7 +285,7 @@ describe("PUT /api/admin/lessons/[id]", () => {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ instructorId: UUID_C }),
       }) as any,
-      { params: { id: LESSON_ID } } as any,
+      { params: Promise.resolve({ id: LESSON_ID }) } as any,
     );
 
     expect(res.status).toBe(404);
@@ -301,7 +301,7 @@ describe("PUT /api/admin/lessons/[id]", () => {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ studentId: STUDENT_ROW_ID }),
       }) as any,
-      { params: { id: LESSON_ID } } as any,
+      { params: Promise.resolve({ id: LESSON_ID }) } as any,
     );
 
     expect(res.status).toBe(404);
@@ -321,7 +321,7 @@ describe("PUT /api/admin/lessons/[id]", () => {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ instructorId: UUID_C }),
       }) as any,
-      { params: { id: LESSON_ID } } as any,
+      { params: Promise.resolve({ id: LESSON_ID }) } as any,
     );
 
     expect(res.status).toBe(403);
@@ -337,7 +337,7 @@ describe("PUT /api/admin/lessons/[id]", () => {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ status: "SCHEDULED" }),
       }) as any,
-      { params: { id: LESSON_ID } } as any,
+      { params: Promise.resolve({ id: LESSON_ID }) } as any,
     );
 
     expect(res.status).toBe(404);
@@ -369,7 +369,7 @@ describe("PUT /api/admin/lessons/[id]", () => {
           status: "SCHEDULED",
         }),
       }) as any,
-      { params: { id: LESSON_ID } } as any,
+      { params: Promise.resolve({ id: LESSON_ID }) } as any,
     );
 
     expect(res.status).toBe(200);
@@ -391,7 +391,7 @@ describe("PUT /api/admin/lessons/[id]", () => {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ status: "SCHEDULED" }),
       }) as any,
-      { params: { id: LESSON_ID } } as any,
+      { params: Promise.resolve({ id: LESSON_ID }) } as any,
     );
 
     expect(res.status).toBe(403);
@@ -407,7 +407,7 @@ describe("DELETE /api/admin/lessons/[id]", () => {
       new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`, {
         method: "DELETE",
       }) as any,
-      { params: { id: LESSON_ID } } as any,
+      { params: Promise.resolve({ id: LESSON_ID }) } as any,
     );
 
     expect(res.status).toBe(200);
@@ -451,7 +451,7 @@ describe("DELETE /api/admin/lessons/[id]", () => {
       new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`, {
         method: "DELETE",
       }) as any,
-      { params: { id: LESSON_ID } } as any,
+      { params: Promise.resolve({ id: LESSON_ID }) } as any,
     );
 
     expect(res.status).toBe(404);
@@ -471,7 +471,7 @@ describe("DELETE /api/admin/lessons/[id]", () => {
       new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`, {
         method: "DELETE",
       }) as any,
-      { params: { id: LESSON_ID } } as any,
+      { params: Promise.resolve({ id: LESSON_ID }) } as any,
     );
 
     expect(res.status).toBe(400);
@@ -493,7 +493,7 @@ describe("DELETE /api/admin/lessons/[id]", () => {
       new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`, {
         method: "DELETE",
       }) as any,
-      { params: { id: LESSON_ID } } as any,
+      { params: Promise.resolve({ id: LESSON_ID }) } as any,
     );
 
     expect(res.status).toBe(403);
@@ -511,7 +511,7 @@ describe("DELETE /api/admin/lessons/[id]", () => {
       new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`, {
         method: "DELETE",
       }) as any,
-      { params: { id: LESSON_ID } } as any,
+      { params: Promise.resolve({ id: LESSON_ID }) } as any,
     );
 
     expect(res.status).toBe(200);
@@ -531,7 +531,7 @@ describe("DELETE /api/admin/lessons/[id]", () => {
       new Request(`http://localhost/api/admin/lessons/${LESSON_ID}`, {
         method: "DELETE",
       }) as any,
-      { params: { id: LESSON_ID } } as any,
+      { params: Promise.resolve({ id: LESSON_ID }) } as any,
     );
 
     expect(res.status).toBe(403);

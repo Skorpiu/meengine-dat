@@ -110,7 +110,7 @@ beforeEach(() => {
 describe("POST /api/admin/invitations/[id]/change-email", () => {
   it("returns invitation and inviteLink on success", async () => {
     const res = await POST(req({ newEmail: "new@school.test" }) as any, {
-      params: { id: "inv-1" },
+      params: Promise.resolve({ id: "inv-1" }),
     });
 
     expect(res.status).toBe(200);
@@ -156,7 +156,7 @@ describe("POST /api/admin/invitations/[id]/change-email", () => {
     });
 
     const res = await POST(req({ newEmail: "new@school.test" }) as any, {
-      params: { id: "inv-1" },
+      params: Promise.resolve({ id: "inv-1" }),
     });
     expect(res.status).toBe(401);
     expect(h.writeInvitationEmailChangeAuditEventMock).not.toHaveBeenCalled();
@@ -169,7 +169,7 @@ describe("POST /api/admin/invitations/[id]/change-email", () => {
     });
 
     const res = await POST(req({ newEmail: "new@school.test" }) as any, {
-      params: { id: "inv-other" },
+      params: Promise.resolve({ id: "inv-other" }),
     });
     expect(res.status).toBe(404);
     const body = await res.json();
@@ -187,7 +187,7 @@ describe("POST /api/admin/invitations/[id]/change-email", () => {
     });
 
     const res = await POST(req({ newEmail: "new@school.test" }) as any, {
-      params: { id: "inv-1" },
+      params: Promise.resolve({ id: "inv-1" }),
     });
     expect(res.status).toBe(404);
     const body = await res.json();
@@ -206,7 +206,7 @@ describe("POST /api/admin/invitations/[id]/change-email", () => {
     });
 
     const res = await POST(req({ newEmail: "new@school.test" }) as any, {
-      params: { id: "inv-1" },
+      params: Promise.resolve({ id: "inv-1" }),
     });
     expect(res.status).toBe(409);
     const body = await res.json();
@@ -224,7 +224,7 @@ describe("POST /api/admin/invitations/[id]/change-email", () => {
     });
 
     const res = await POST(req({ newEmail: "taken@school.test" }) as any, {
-      params: { id: "inv-1" },
+      params: Promise.resolve({ id: "inv-1" }),
     });
     expect(res.status).toBe(409);
     const body = await res.json();
@@ -241,7 +241,7 @@ describe("POST /api/admin/invitations/[id]/change-email", () => {
     });
 
     const res = await POST(req({ newEmail: "taken@school.test" }) as any, {
-      params: { id: "inv-1" },
+      params: Promise.resolve({ id: "inv-1" }),
     });
     expect(res.status).toBe(409);
     const body = await res.json();
@@ -250,7 +250,7 @@ describe("POST /api/admin/invitations/[id]/change-email", () => {
 
   it("returns 400 for invalid email body", async () => {
     const res = await POST(req({ newEmail: "not-an-email" }) as any, {
-      params: { id: "inv-1" },
+      params: Promise.resolve({ id: "inv-1" }),
     });
     expect(res.status).toBe(400);
     expect(h.changeInvitationEmailMock).not.toHaveBeenCalled();
@@ -264,7 +264,7 @@ describe("POST /api/admin/invitations/[id]/change-email", () => {
     });
 
     const res = await POST(req({ newEmail: "new@school.test" }) as any, {
-      params: { id: "inv-1" },
+      params: Promise.resolve({ id: "inv-1" }),
     });
 
     expect(res.status).toBe(200);
@@ -280,7 +280,7 @@ describe("POST /api/admin/invitations/[id]/change-email", () => {
     );
 
     const res = await POST(req({ newEmail: "new@school.test" }) as any, {
-      params: { id: "inv-1" },
+      params: Promise.resolve({ id: "inv-1" }),
     });
     expect(res.status).toBe(403);
     expect(h.changeInvitationEmailMock).not.toHaveBeenCalled();

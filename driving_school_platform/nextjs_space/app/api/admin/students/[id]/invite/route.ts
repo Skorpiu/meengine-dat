@@ -21,7 +21,7 @@ import type { UserRole } from "@prisma/client";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 async function requireSuperAdminTenant(request: NextRequest): Promise<
   | {
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const result = await inviteExistingStudentRecord({
       organizationId: auth.organizationId,
       createdByUserId: auth.actor.userId,
-      studentId: context.params.id,
+      studentId: (await context.params).id,
       email: validation.data.email,
       baseUrl: new URL(request.url).origin,
     });
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     await writeStudentInviteAuditEvent({
       organizationId: auth.organizationId,
       actor: auth.actor,
-      studentId: context.params.id,
+      studentId: (await context.params).id,
       invitationRole: result.audit.invitationRole,
       invitationStatus: result.audit.invitationStatus,
       previousAppAccessMode: result.audit.previousAppAccessMode,

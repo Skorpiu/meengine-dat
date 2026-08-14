@@ -25,7 +25,7 @@ import { createManualPracticalLessonBodySchema } from "@/lib/lessons/manual-prac
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 async function requireSuperAdminTenant(request: NextRequest): Promise<
   | {
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     const student = await findOperationalStudentInOrg({
       organizationId: auth.organizationId,
-      studentId: context.params.id,
+      studentId: (await context.params).id,
     });
     if (!student) {
       return errorResponse("Student not found", HTTP_STATUS.NOT_FOUND);
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const result = await createManualPracticalLesson({
       organizationId: auth.organizationId,
-      studentId: context.params.id,
+      studentId: (await context.params).id,
       body: validation.data,
     });
 

@@ -13,7 +13,7 @@ export default async function PlatformPage() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user) redirect("/auth/login");
-  const host = getRequestHost({ headers: headers() });
+  const host = getRequestHost({ headers: await headers() });
 
   const mappedOrgId = host ? await resolveOrganizationIdFromHost(host) : null;
   const access = decidePlatformSurfaceAccess({

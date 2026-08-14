@@ -2118,3 +2118,75 @@ Finding-accounting rule:
 
 The deferred commercial Billing product remains a separate future roadmap
 concern and must not be confused with this security containment.
+
+<!-- dep-sec-001-post-audit-remediation-v1 -->
+## Post-audit remediation disposition — `DEP-SEC-001`
+
+The historical audit evidence above is intentionally preserved unchanged. In
+particular, statements that `DEP-SEC-001` requires 14.2.35 containment followed
+by a later supported-LTS migration describe the repository and advisory state
+at the audit snapshot and are not rewritten retrospectively.
+
+**Current remediation status:** **IMPLEMENTED + VALIDATED IN-BRANCH** by
+`next-supported-lts-security-remediation-v1` (DEC-067); **NOT YET
+INTEGRATED/PUBLISHED**. Published-main closure occurs only after successful
+integration/publication.
+
+Subsequent remediation established the following boundary:
+
+- DAT now declares `next@16.3.1` (Next.js 16 Active LTS as of the 2026-08-14
+  registry guard; `dist-tags.latest` was exactly `16.3.1`, not canary/beta/RC);
+- React is `19.2.8` / `react-dom@19.2.8` with `@types/react@19.2.18` and
+  `@types/react-dom@19.2.4`;
+- NextAuth is `4.24.15`, whose published peer range includes Next 16;
+- the lint gate is the ESLint CLI (`eslint .`) with Next 16 flat config;
+  Next 16 no longer provides `next lint`;
+- production build uses the Next 16 default Turbopack path;
+- there is no rollback to Next 14 in this solution;
+- the older 14.2.35 containment plan remains historically valid for the
+  14.x CVE sequence and is superseded as the live remediation plan because
+  Next 14 is unsupported and 14.2.35 is no longer sufficient containment;
+- Next 15 Maintenance LTS was rejected as a short-lived intermediate
+  migration.
+
+Finding-accounting rule:
+
+- `DEP-SEC-001` remains one of the original confirmed audit findings; the
+  historical finding count is not decremented or rewritten (still 51/51);
+- this post-audit disposition changes its remediation state, not the
+  historical audit inventory;
+- the global Engineering Excellence Audit remains CLOSED and is not reopened;
+- `DEP-SEC-002` / `dependency-security-monitoring-v1` remains open;
+- `TOOLCHAIN-002` remains open;
+- `CONFIG-ENV-001` remains open;
+- `@next/swc-wasm-nodejs@13.5.1` pruning remains separate;
+- React 19 ecosystem peer review remains separate;
+- browserslist/IE11 cleanup remains separate;
+- leftover direct `eslint-plugin-react-hooks@4.6.0` and
+  `@typescript-eslint/*@7.0.0` were removed in the authorized bounded
+  correction pass; compatible hooks v7 / typescript-eslint v8 remain via
+  `eslint-config-next@16.3.1`;
+- residual lint debt (not error-gate regressions): React Hooks v7
+  `set-state-in-effect` 29, `immutability` 2, `purity` 1; plus existing
+  `no-explicit-any`, `no-unused-vars`, `no-empty-object-type` warnings;
+- Turbopack CSS `.print\\:hidden` is **BENIGN_WARNING** for this migration
+  (compiled production CSS also contains the correct `.print\:hidden`
+  utility); malformed redundant selector cleanup is a future candidate;
+  do not change `app/globals.css` in Solution #2;
+- incidental `next-auth@4.24.15` alignment does not close
+  `nextauth-v4-security-patch-alignment-v1` without that slice's acceptance
+  criteria.
+
+Implementation and recovery evidence:
+
+- published starting baseline:
+  `ccdc8490904b63bddcb8875df86f24c43654796d`;
+- solution branch: `next-supported-lts-security-remediation-v1`;
+- in-branch status: **IMPLEMENTED + VALIDATED IN-BRANCH**; **NOT YET
+  INTEGRATED/PUBLISHED**;
+- typecheck contract: `next typegen && tsc --noEmit` (after existing
+  `pretypecheck` `env:check` + `prisma generate`);
+- canonical validation: lint 0 errors / 51 warnings, typecheck pass,
+  207/207 test files, 1737/1737 tests, Next 16.3.1 Turbopack production
+  build, `pnpm -C driving_school_platform/nextjs_space check` exit 0;
+- no database, hosted, or Production mutation.

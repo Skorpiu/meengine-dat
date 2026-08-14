@@ -10,7 +10,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| `next-security-patch-containment-v1` | **P0** dependency security | Next smallest-safe **implementation** slice after DAT_4.4 / Solution #1 closure; source `DEP-SEC-001`; immediate Next.js 14.2.x containment only; does not close the finding; `next-supported-lts-migration-v1` and `dependency-security-monitoring-v1` remain separate. This docs-only live-state reconciliation is navigation recovery, not that implementation. |
+| `local-development-database-isolation-v1` | **P0** operational safety | **QUEUED NEXT AFTER** successful review/integration/publication of Solution #2 / `DEP-SEC-001` (DEC-067). Source `CONFIG-ENV-001`. Do not run ordinary local `pnpm dev` until this is resolved. `dependency-security-monitoring-v1` remains separate. |
 
 **Closed context:** `engineering-excellence-audit-v1` closed 2026-08-13 by explicit human GO (51 findings / 51/51 coverage; no repository-static frontier). Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` is **CLOSED BY CONTAINMENT** and integrated into `main`. `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
@@ -22,7 +22,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 **Closed prerequisite:** `node-24-runtime-migration-v1` merged to `main` at `909b69a`; GitLab `node:24`, Vercel Preview/Production Node 24.x, and required post-deploy non-destructive hosted gates passed.
 
 1. `engineering-excellence-audit-v1` — **CLOSED 2026-08-13** by explicit human authorization; Final Engineering Quality Review PASS; 51 findings / 51/51 remediation coverage retained as active remediation debt.
-2. P0 containment — `billing-webhook-authenticity-gate-v1` **CLOSED BY CONTAINMENT** → next: `next-security-patch-containment-v1`.
+2. P0 containment — `billing-webhook-authenticity-gate-v1` **CLOSED BY CONTAINMENT**; `next-supported-lts-security-remediation-v1` **IMPLEMENTED + VALIDATED IN-BRANCH**; **NOT YET INTEGRATED/PUBLISHED** (DEC-067; supersedes `next-security-patch-containment-v1` + `next-supported-lts-migration-v1`).
 3. P0 operational safety — `local-development-database-isolation-v1` and `migration-deploy-target-safety-gate-v1`, where independently applicable.
 4. `platform-separation-architecture-plan-v1` — parallel architecture lane after formal audit closure; does not block independent urgent P0 containment.
 5. P1/P2 implementation slices according to the post-audit execution priority queue, one smallest-safe scope per branch.
@@ -527,10 +527,19 @@ Security comes first. Within the same priority tier, dependency order and prereq
 - **Source:** `TOOLCHAIN-003`.
 - Align Node type definitions with the Node 24 runtime contract without changing the runtime itself.
 
+### `next-supported-lts-security-remediation-v1`
+
+- **Priority:** P0.
+- **Source:** `DEP-SEC-001`.
+- **Status:** **IMPLEMENTED + VALIDATED IN-BRANCH**; **NOT YET INTEGRATED/PUBLISHED** (DEC-067). Direct migration from Next 14.2.28 to Next 16.3.1 Active LTS with React 19.2.8 and next-auth 4.24.15.
+- Supersedes `next-security-patch-containment-v1` and `next-supported-lts-migration-v1`.
+- Does not close `DEP-SEC-002` / `dependency-security-monitoring-v1` or `TOOLCHAIN-002`.
+
 ### `next-security-patch-containment-v1`
 
 - **Priority:** P0.
 - **Source:** `DEP-SEC-001`.
+- **Status:** **superseded** by DEC-067 / `next-supported-lts-security-remediation-v1`. Historically valid as the 14.2.35 containment plan for the older 14.x CVE sequence; not the current remediation path.
 - Immediate containment: move `next@14.2.28` to at least the complete `14.2.35` security level for the current 14.x line, with full canonical/E2E regression validation.
 - Treat this as short-lived containment only: Next 14 is unsupported and this slice does not close the supported-LTS migration requirement.
 - Do not combine this containment slice with broad framework migration or unrelated dependency upgrades.
@@ -539,6 +548,7 @@ Security comes first. Within the same priority tier, dependency order and prereq
 
 - **Priority:** P1.
 - **Source:** `DEP-SEC-001`.
+- **Status:** **superseded** by DEC-067 / `next-supported-lts-security-remediation-v1`. Next 15 Maintenance LTS was rejected as a short-lived intermediate migration.
 - After 14.x containment, design a controlled move to a supported LTS line; at execution time re-evaluate the latest patched 15.x Maintenance LTS and 16.x Active LTS releases and select the safest target from compatibility evidence.
 - The migration must include React/Next compatibility, App Router behavior, build/runtime, auth, tenant routing and Playwright regression gates.
 - No canary production target and no opportunistic unrelated dependency upgrades.
@@ -692,7 +702,7 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 | `CLIENT-DUP-001` | `client-http-response-helper-v1` |
 | `UI-DUP-002` | `import-workflow-consolidation-v1` |
 | `TOOLCHAIN-003` | `toolchain-node-types-alignment-v1` |
-| `DEP-SEC-001` | `next-security-patch-containment-v1`; `next-supported-lts-migration-v1`; `dependency-security-monitoring-v1` |
+| `DEP-SEC-001` | `next-supported-lts-security-remediation-v1` (**IMPLEMENTED + VALIDATED IN-BRANCH**; **NOT YET INTEGRATED/PUBLISHED**, DEC-067); historical superseded plans: `next-security-patch-containment-v1`; `next-supported-lts-migration-v1`; monitoring remains `dependency-security-monitoring-v1` |
 | `SCHEMA-LEGACY-002` | `dormant-operational-model-disposition-v1` |
 | `EXPORT-SEC-001` | `csv-formula-injection-hardening-v1` |
 | `AUTH-PASSWORD-001` | `privileged-password-policy-alignment-v1` |
@@ -719,7 +729,7 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 
 ### Security-first execution waves
 
-1. **Immediate containment:** `billing-webhook-authenticity-gate-v1` (**CLOSED BY CONTAINMENT**); `next-security-patch-containment-v1` (next implementation slice).
+1. **Immediate containment:** `billing-webhook-authenticity-gate-v1` (**CLOSED BY CONTAINMENT**); `next-supported-lts-security-remediation-v1` (**IMPLEMENTED + VALIDATED IN-BRANCH**; **NOT YET INTEGRATED/PUBLISHED**, DEC-067).
 2. **Security foundations / proof:** `database-integration-test-harness-v1`; `e2e-suite-contract-repair-v1`; then `billing-projection-atomic-idempotency-v1`, `jwt-session-revocation-v1`, `license-key-security-hardening-v1`.
 3. **Authority / credential / browser boundaries:** `provider-owned-entitlement-mutation-boundary-v1`, `nextauth-credentials-rate-limit-alignment-v1`, `auth-email-link-trusted-origin-v1`, `privileged-password-policy-alignment-v1`, `api-500-error-sanitization-v1`, `csv-formula-injection-hardening-v1`, `security-response-headers-hardening-v1`.
 4. **Integrity / onboarding:** `user-create-atomicity-v1`, `platform-onboarding-transaction-boundary-v1`, `instructor-direct-create-activation-contract-v1`.
@@ -876,14 +886,14 @@ ledger — 51 findings**. It does not replace or duplicate finding ownership.
 ### P0 — Immediate containment
 
 1. `billing-webhook-authenticity-gate-v1` — **CLOSED BY CONTAINMENT**
-2. `next-security-patch-containment-v1` — **next smallest-safe implementation slice** (`DEP-SEC-001`)
+2. `next-supported-lts-security-remediation-v1` — **IMPLEMENTED + VALIDATED IN-BRANCH**; **NOT YET INTEGRATED/PUBLISHED** (DEC-067; supersedes `next-security-patch-containment-v1` + `next-supported-lts-migration-v1`)
 
 Execution intent: reduce the highest material security exposure first and show
 early risk-reduction progress without weakening validation standards.
 
 ### P0 / operational safety foundation
 
-1. `local-development-database-isolation-v1`
+1. `local-development-database-isolation-v1` — **QUEUED NEXT AFTER** successful review/integration/publication of Solution #2
 2. `migration-deploy-target-safety-gate-v1`
 
 These gates must precede unsafe local database work or remote migration-authority
@@ -1007,6 +1017,7 @@ integration. It is **not** current.
 - Phase at kickoff: implementation preflight.
 - Next containment slice after completion: `next-security-patch-containment-v1`.
 - **Supersession:** Solution #1 is CLOSED BY CONTAINMENT and integrated into `main`.
+  Solution #2 later superseded that planned Next 14 containment via DEC-067.
 
 <!-- deferred-commercial-billing-after-first-client-v1 -->
 ## Deferred / end-of-roadmap — commercial Billing and payments
@@ -1085,9 +1096,10 @@ silently considered fixed by product deferment.
 
 - Engineering Excellence Audit: **CLOSED**.
 - Solution #1 / `billing-webhook-authenticity-gate-v1`: **CLOSED BY CONTAINMENT**.
-- Active product implementation slice at this recovery checkpoint: **none**.
-- **Single recommended next implementation slice:** `next-security-patch-containment-v1`
-  (source `DEP-SEC-001`).
-- Immediate Next.js security containment only; LTS migration and dependency
-  monitoring remain distinct.
-- This docs-only reconciliation is not that implementation.
+- Solution #2 / `next-supported-lts-security-remediation-v1`: **IMPLEMENTED + VALIDATED IN-BRANCH**; **NOT YET INTEGRATED/PUBLISHED** (DEC-067).
+- DAT_4.5 covers Solutions #2 through #11 inclusive.
+- **Single recommended next implementation slice:** `local-development-database-isolation-v1`
+  (source `CONFIG-ENV-001`) — **QUEUED NEXT AFTER** successful review/integration/publication of Solution #2.
+- `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain distinct.
+- Canonical documentation and Super Agent continuity are updated in each
+  solution branch.

@@ -36,7 +36,7 @@ describe("Billing Webhooks authenticity containment", () => {
             },
           }),
         ),
-        { params: { provider: providerId } },
+        { params: Promise.resolve({ provider: providerId }) },
       );
 
       expect(res.status).toBe(503);
@@ -54,7 +54,7 @@ describe("Billing Webhooks authenticity containment", () => {
     const parseSpy = vi.spyOn(provider, "parseWebhook");
 
     const res = await POST(rawReq("{ definitely-not-valid-json"), {
-      params: { provider: "sibs" },
+      params: Promise.resolve({ provider: "sibs" }),
     });
 
     expect(res.status).toBe(503);
@@ -71,7 +71,7 @@ describe("Billing Webhooks authenticity containment", () => {
     const parseSpy = vi.spyOn(provider, "parseWebhook");
 
     const res = await POST(rawReq('{"providerEventId":"evt_1"}'), {
-      params: { provider: "nope" },
+      params: Promise.resolve({ provider: "nope" }),
     });
 
     expect(res.status).toBe(400);
