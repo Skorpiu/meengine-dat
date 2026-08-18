@@ -1420,6 +1420,8 @@ No INSERT, UPDATE, DELETE, schema change, hosted configuration change or product
 - no generic escape hatch may make Production the normal development default;
 - add regression tests for target classification and startup refusal.
 
+**Current remediation status (Solution #3 / DAT_4.5):** **IMPLEMENTED + VALIDATED IN-BRANCH** by `local-development-database-isolation-v1` (DEC-068). **NOT YET INTEGRATED/PUBLISHED**. The E4 discovery bullets above remain historically accurate. `scripts/env-check.ts` now fail-closes unless `DATABASE_URL` (and `DIRECT_URL` when present) resolve to the existing loopback/local allowlist, except when `VERCEL=1`. `CI` / `GITLAB_CI` / `NODE_ENV` are not remote-DB authorization. This does **not** make every Prisma CLI command safe; `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1` remains separate.
+
 ### Cleanup / consolidation evidence retained
 
 - `environment-configuration-contract-consolidation-v1` will rationalize ownership and duplication after the isolation slice;
@@ -2158,7 +2160,7 @@ Finding-accounting rule:
 - the global Engineering Excellence Audit remains CLOSED and is not reopened;
 - `DEP-SEC-002` / `dependency-security-monitoring-v1` remains open;
 - `TOOLCHAIN-002` remains open;
-- `CONFIG-ENV-001` remains open;
+- `CONFIG-ENV-001` is **IMPLEMENTED + VALIDATED IN-BRANCH** by `local-development-database-isolation-v1` (DEC-068) and is **NOT YET INTEGRATED/PUBLISHED**;
 - `@next/swc-wasm-nodejs@13.5.1` pruning remains separate;
 - React 19 ecosystem peer review remains separate;
 - browserslist/IE11 cleanup remains separate;

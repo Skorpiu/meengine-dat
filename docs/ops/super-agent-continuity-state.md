@@ -3,8 +3,8 @@
 
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
-**Live recovery snapshot:** 2026-08-14 — DAT_4.5 Solution #2
-`next-supported-lts-security-remediation-v1`. Historical section dates below
+**Live recovery snapshot:** 2026-08-18 — DAT_4.5 Solution #3
+`local-development-database-isolation-v1`. Historical section dates below
 remain the dates of those checkpoints.
 
 **Validity rule:** this snapshot is valid at the Git commit containing it. Resolve live branch and HEAD through Git; do not treat historical SHA values as eternal current state.
@@ -41,10 +41,8 @@ checkpoints, and the docs-only `canonical-live-state-reconciliation-v1`
 handoff) are historical evidence and are not live execution state.
 
 - Starting / still-published `main`:
-  `ccdc8490904b63bddcb8875df86f24c43654796d`.
-- Active solution branch: `next-supported-lts-security-remediation-v1` until
-  integration/publication completes. A later continuity/docs commit on this
-  branch may advance HEAD; that HEAD is not the implementation anchor.
+  `0409d92525940be751e6bc07c9da32668a834e53`.
+- Active solution branch: `local-development-database-isolation-v1`.
 - DAT_4.4: CLOSED.
 - Engineering Excellence Audit: **CLOSED** (explicit human GO).
 - Findings: 51. Remediation coverage: 51/51. Unresolved repository-static
@@ -53,25 +51,55 @@ handoff) are historical evidence and are not live execution state.
 - Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1`:
   **CLOSED BY CONTAINMENT**, integrated into `main`.
 - Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1`:
-  **IMPLEMENTED + VALIDATED IN-BRANCH**; **Final EQR PASS**; **POST-COMMIT
-  CANONICAL VALIDATION PASS**; **NOT YET INTEGRATED/PUBLISHED** (DEC-067).
+  **CLOSED + PUBLISHED**. Published merge
+  `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` is **CLOSED ON
+  PUBLISHED MAIN**. Solution #2 branch cleaned local + remote.
   DAT_4.5 covers Solutions #2 through #11 inclusive.
-- Durable implementation anchor (not eternal branch HEAD):
-  `d0271f864ed8fb88f3876cd0ef27457176036e70`.
-- Accepted implementation tree:
-  `3609187fdf38809a9275baaafd968b4f427980a6`.
-- `DEP-SEC-001` is fully implemented and validated in this branch;
-  published-main closure occurs only after successful integration/publication.
+- Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1`:
+  **ACTIVE**. **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **NOT YET
+  INTEGRATED/PUBLISHED**. Base
+  `0409d92525940be751e6bc07c9da32668a834e53`. Do not claim CLOSED ON MAIN.
+  Do not invent future commit SHAs.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch. Do not create a separate documentation-only branch for
-  normal solution state. Do not document the SHA of a later continuity/docs
-  commit as a required recovery anchor.
-- Next smallest-safe implementation slice:
-  `local-development-database-isolation-v1` (source `CONFIG-ENV-001`) —
-  **QUEUED NEXT AFTER** successful integration/publication of Solution #2.
-  It is not active yet.
+  normal solution state.
+- Next smallest-safe implementation slice after Solution #3 publication:
+  `migration-deploy-target-safety-gate-v1` (source `DB-MIGRATION-001`).
 - `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain separate.
-- No `pnpm dev` while `CONFIG-ENV-001` remains open.
+- Ordinary `pnpm dev` remains blocked on this workstation until local
+  `.env` / `.env.local` use loopback `DATABASE_URL` / `DIRECT_URL`. Do not
+  modify untracked `.env` files in this slice.
+
+### Solution #3 implementation recovery facts
+
+- Policy: DEC-068.
+- Guard: `lib/ops/local-development-database-guard.ts`.
+- Tests: `lib/ops/local-development-database-guard.unit.test.ts`.
+- Wiring: `scripts/env-check.ts` after existing `loadEnvConfig` + `lib/env`
+  schema validation.
+- Reuses `parseDatabaseTarget` and `isLocalDestructiveSeedHost` from
+  `lib/ops/destructive-seed-safety.ts` (DEC-062). IPv6 `::1` hostnames that
+  WHATWG URL reports as `[::1]` are normalized before the shared allowlist
+  check. Do not add Docker / RFC1918 hosts.
+- `VERCEL=1` is the only hosted-runtime exemption. `CI`, `GITLAB_CI`, and
+  `NODE_ENV` are not remote-DB authorization.
+- No generic escape hatch.
+- Failure messages never include username, password, full URL, hostname, or
+  project ref.
+- `lib/db.ts`, `package.json`, `prisma.config.ts`, env precedence, prestart,
+  migrations, and untracked `.env` files were not changed.
+- In-branch validation (no DB connection):
+  - targeted Vitest: new guard 28/28 + destructive-seed-safety 13/13;
+  - current unsafe local env `env:check`: non-zero, reason
+    `non_local_database_host` (safe message only) — expected PASS of the
+    security gate;
+  - process-local fake loopback `env:check`: PASS;
+  - canonical `pnpm -C driving_school_platform/nextjs_space check` with
+    process-local fake loopback URLs: PASS (lint 0 errors / 51 warnings;
+    typecheck; Vitest 208/208 files; 1765/1765 tests; Next production build).
+- Residual: this slice does not make `prisma migrate deploy`, `prisma db
+  push`, `next start`, or other PrismaClient scripts safe. Map migrate-deploy
+  safety to `DB-MIGRATION-001`.
 
 ### Solution #2 implementation recovery facts
 
@@ -141,8 +169,10 @@ later continuity/docs working tree):
   caniuse-lite data is ~8 months old. Keep as a separate cleanup candidate.
 - `@next/swc-wasm-nodejs@13.5.1` remains a direct dependency with no DAT
   consumer; pruning stays separate.
-- `CONFIG-ENV-001` remains open; `env:check` / `prebuild` still resolve the
-  existing local env path. Do not run `pnpm dev`.
+- `CONFIG-ENV-001` is **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068) and
+  **NOT YET INTEGRATED/PUBLISHED**; current workstation `.env` is expected to
+  fail `env:check` until loopback URLs are used. Do not run `pnpm dev`
+  against a hosted target. Do not modify untracked `.env` files here.
 - `@next/env` remains a direct `^16.1.6` dependency (`TOOLCHAIN-002`).
 - React 19 peer warnings from Radix, framer-motion, react-hook-form-adjacent
   UI packages, Headless UI, SWR, and others: residual, not upgraded.
