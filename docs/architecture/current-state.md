@@ -24,8 +24,8 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 | **Solution #1** | `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` — **CLOSED BY CONTAINMENT** and integrated into `main`. No active Billing implementation branch at this recovery checkpoint. |
 | **DAT_4.5 handoff** | Authoritative published `main`: `0409d92525940be751e6bc07c9da32668a834e53` (`merge: integrate Solution #2 Next 16 Active LTS`). Resolve live HEAD through Git; this is not an eternal served-in-Production SHA. |
 | **Solution #2** | `next-supported-lts-security-remediation-v1` / `DEP-SEC-001` — **CLOSED + PUBLISHED**. Published merge `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #2 branch cleaned local + remote. |
-| **Solution #3** | `local-development-database-isolation-v1` / `CONFIG-ENV-001` — **ACTIVE**. Branch `local-development-database-isolation-v1` (no remote branch at implementation start). Base `0409d92525940be751e6bc07c9da32668a834e53`. **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **NOT YET INTEGRATED/PUBLISHED**. Do not claim CLOSED ON MAIN. |
-| **Ordered next** | After successful ChatGPT Final EQR + human integration/publication of Solution #3: `migration-deploy-target-safety-gate-v1` (source `DB-MIGRATION-001`). Then `platform-separation-architecture-plan-v1` as a parallel architecture lane → `dependency-security-monitoring-v1` remains separate; then P1/P2 according to the post-audit queue. Do not run ordinary local `pnpm dev` until the local `.env` / `.env.local` database URLs are loopback (current hosted `.env` is expected to fail `env:check`). |
+| **Solution #3** | `local-development-database-isolation-v1` / `CONFIG-ENV-001` — **ACTIVE**. **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **Final EQR PASS**. **Hook-delta EQR PASS**. **POST-COMMIT CANONICAL VALIDATION PASS**. **SOURCE BRANCH PUBLISHED** (`origin/local-development-database-isolation-v1`; durable implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`). Base / still-published `main` `0409d92525940be751e6bc07c9da32668a834e53`. **NOT YET INTEGRATED ON MAIN**. **NOT CLOSED ON MAIN**. Do not claim `CONFIG-ENV-001` CLOSED ON PUBLISHED MAIN. Do not invent a future merge SHA. The implementation anchor is not an eternal branch HEAD. |
+| **Ordered next** | After Solution #3 is **CLOSED ON PUBLISHED MAIN**: `migration-deploy-target-safety-gate-v1` (source `DB-MIGRATION-001`). Then `platform-separation-architecture-plan-v1` as a parallel architecture lane → `dependency-security-monitoring-v1` remains separate; then P1/P2 according to the post-audit queue. Do not run ordinary local `pnpm dev` until the local `.env` / `.env.local` database URLs are loopback (current hosted `.env` is expected to fail `env:check`). |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
 | **Archive tag** | `archive-schedule-and-vehicles-b101112` — historical archive only; **not** a release or recovery baseline. |
@@ -664,7 +664,8 @@ prerequisites and independence boundaries.
 PUBLISHED** on `main` at `0409d92525940be751e6bc07c9da32668a834e53`.
 `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #3 /
 `CONFIG-ENV-001` / `local-development-database-isolation-v1` is **ACTIVE** and
-**IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068), **NOT YET INTEGRATED/PUBLISHED**.
+**IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068), **SOURCE BRANCH PUBLISHED**,
+**NOT YET INTEGRATED ON MAIN**, **NOT CLOSED ON MAIN**.
 
 <!-- engineering-excellence-audit-main-integration-v1 -->
 ## Engineering audit integration baseline
@@ -745,15 +746,23 @@ Local-main integration recovery anchor: `38812394107e96649cb2b61bbeae73ae6ae3be0
   `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #2 branch cleaned
   local + remote.
 - Solution #3 / `local-development-database-isolation-v1`: **ACTIVE**.
-  Branch `local-development-database-isolation-v1`. Base
-  `0409d92525940be751e6bc07c9da32668a834e53`. `CONFIG-ENV-001` is
-  **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **NOT YET
-  INTEGRATED/PUBLISHED**. Do not claim CLOSED ON MAIN.
+  **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **Final EQR PASS**.
+  **Hook-delta EQR PASS**. **POST-COMMIT CANONICAL VALIDATION PASS**.
+  **SOURCE BRANCH PUBLISHED** (`origin/local-development-database-isolation-v1`).
+  Durable implementation anchor
+  `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree
+  `5b9aa29649bdf929bf7df5f9f641eb950ce16275`. Base / still-published `main`
+  `0409d92525940be751e6bc07c9da32668a834e53`. `CONFIG-ENV-001` is **NOT YET
+  INTEGRATED ON MAIN** and **NOT CLOSED ON MAIN**. Do not claim CLOSED ON
+  PUBLISHED MAIN. Do not invent a future merge SHA. The implementation
+  anchor is not an eternal branch HEAD; a later continuity commit will
+  advance HEAD.
 - Starting / still-published `main`: `0409d92525940be751e6bc07c9da32668a834e53`.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch. Do not create a separate documentation-only branch for
   normal solution state. Do not invent future commit SHAs.
-- Current durable next implementation slice after Solution #3 publication:
+- Current durable next implementation slice after Solution #3 is **CLOSED ON
+  PUBLISHED MAIN**:
   `migration-deploy-target-safety-gate-v1` (source `DB-MIGRATION-001`).
 - `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain separate.
 - Residual Solution #3 risks (document, do not fix here): `prisma migrate

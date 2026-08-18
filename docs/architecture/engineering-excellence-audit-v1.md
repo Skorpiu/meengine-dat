@@ -1420,7 +1420,7 @@ No INSERT, UPDATE, DELETE, schema change, hosted configuration change or product
 - no generic escape hatch may make Production the normal development default;
 - add regression tests for target classification and startup refusal.
 
-**Current remediation status (Solution #3 / DAT_4.5):** **IMPLEMENTED + VALIDATED IN-BRANCH** by `local-development-database-isolation-v1` (DEC-068). **NOT YET INTEGRATED/PUBLISHED**. The E4 discovery bullets above remain historically accurate. `scripts/env-check.ts` now fail-closes unless `DATABASE_URL` (and `DIRECT_URL` when present) resolve to the existing loopback/local allowlist, except when `VERCEL=1`. `CI` / `GITLAB_CI` / `NODE_ENV` are not remote-DB authorization. This does **not** make every Prisma CLI command safe; `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1` remains separate.
+**Current remediation status (Solution #3 / DAT_4.5):** **ACTIVE**. **IMPLEMENTED + VALIDATED IN-BRANCH** by `local-development-database-isolation-v1` (DEC-068). **Final EQR PASS**. **Hook-delta EQR PASS**. **POST-COMMIT CANONICAL VALIDATION PASS**. **SOURCE BRANCH PUBLISHED** (`origin/local-development-database-isolation-v1`; durable implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`). **NOT YET INTEGRATED ON MAIN**. **NOT CLOSED ON MAIN**. Still-published `main`: `0409d92525940be751e6bc07c9da32668a834e53`. Do not invent a future merge SHA. The E4 discovery bullets above remain historically accurate. `scripts/env-check.ts` now fail-closes unless `DATABASE_URL` (and `DIRECT_URL` when present) resolve to the existing loopback/local allowlist, except when `VERCEL=1`. `CI` / `GITLAB_CI` / `NODE_ENV` are not remote-DB authorization. This does **not** make every Prisma CLI command safe; `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1` remains the next implementation slice after Solution #3 is **CLOSED ON PUBLISHED MAIN**.
 
 ### Cleanup / consolidation evidence retained
 
@@ -2160,7 +2160,7 @@ Finding-accounting rule:
 - the global Engineering Excellence Audit remains CLOSED and is not reopened;
 - `DEP-SEC-002` / `dependency-security-monitoring-v1` remains open;
 - `TOOLCHAIN-002` remains open;
-- `CONFIG-ENV-001` is **IMPLEMENTED + VALIDATED IN-BRANCH** by `local-development-database-isolation-v1` (DEC-068) and is **NOT YET INTEGRATED/PUBLISHED**;
+- `CONFIG-ENV-001` is **ACTIVE**, **IMPLEMENTED + VALIDATED IN-BRANCH** by `local-development-database-isolation-v1` (DEC-068), **SOURCE BRANCH PUBLISHED**, **NOT YET INTEGRATED ON MAIN**, and **NOT CLOSED ON MAIN** (implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`);
 - `@next/swc-wasm-nodejs@13.5.1` pruning remains separate;
 - React 19 ecosystem peer review remains separate;
 - browserslist/IE11 cleanup remains separate;

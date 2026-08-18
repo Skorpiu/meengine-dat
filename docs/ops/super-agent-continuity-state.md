@@ -42,7 +42,9 @@ handoff) are historical evidence and are not live execution state.
 
 - Starting / still-published `main`:
   `0409d92525940be751e6bc07c9da32668a834e53`.
-- Active solution branch: `local-development-database-isolation-v1`.
+- Active solution branch: `local-development-database-isolation-v1`
+  (`origin/local-development-database-isolation-v1` **SOURCE BRANCH
+  PUBLISHED**).
 - DAT_4.4: CLOSED.
 - Engineering Excellence Audit: **CLOSED** (explicit human GO).
 - Findings: 51. Remediation coverage: 51/51. Unresolved repository-static
@@ -56,23 +58,61 @@ handoff) are historical evidence and are not live execution state.
   PUBLISHED MAIN**. Solution #2 branch cleaned local + remote.
   DAT_4.5 covers Solutions #2 through #11 inclusive.
 - Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1`:
-  **ACTIVE**. **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **NOT YET
-  INTEGRATED/PUBLISHED**. Base
-  `0409d92525940be751e6bc07c9da32668a834e53`. Do not claim CLOSED ON MAIN.
-  Do not invent future commit SHAs.
+  **ACTIVE**. **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **Final EQR
+  PASS**. **Hook-delta EQR PASS**. **POST-COMMIT CANONICAL VALIDATION PASS**.
+  **SOURCE BRANCH PUBLISHED**. Durable implementation anchor
+  `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree
+  `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; still-published `main`
+  `0409d92525940be751e6bc07c9da32668a834e53`. **NOT YET INTEGRATED ON MAIN**.
+  **NOT CLOSED ON MAIN**. Do not claim `CONFIG-ENV-001` CLOSED ON PUBLISHED
+  MAIN. Do not invent a future merge SHA. The implementation anchor is not
+  an eternal branch HEAD; a later continuity commit will advance HEAD.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch. Do not create a separate documentation-only branch for
   normal solution state.
-- Next smallest-safe implementation slice after Solution #3 publication:
+- Next smallest-safe implementation slice after Solution #3 is **CLOSED ON
+  PUBLISHED MAIN**:
   `migration-deploy-target-safety-gate-v1` (source `DB-MIGRATION-001`).
 - `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain separate.
 - Ordinary `pnpm dev` remains blocked on this workstation until local
   `.env` / `.env.local` use loopback `DATABASE_URL` / `DIRECT_URL`. Do not
   modify untracked `.env` files in this slice.
 
+### Per-solution documentation and continuity lifecycle
+
+Each **normal solution** owns implementation, documentation, and Super Agent
+continuity in the **same** solution branch. Do **not** create a separate
+docs-only branch for ordinary solution-state updates.
+
+**Before merge:** implementation → validation/EQR → canonical docs + SA →
+implementation commit → source-branch publication → same-branch
+source-publication continuity update → continuity commit → publish that
+continuity commit.
+
+**Then, with explicit human authorization:** merge GO → `--no-ff` merge into
+`main` → validate merged `main` → publish `main` → delete the completed
+source branch → create the next solution branch.
+
+Do **not** invent a future merge SHA or completed branch-cleanup evidence
+before merge. Avoid a post-merge docs-only reconciliation branch: record the
+previous solution’s exact **CLOSED + PUBLISHED ON MAIN** state, merge SHA,
+and branch cleanup when establishing the **next** solution branch’s initial
+canonical continuity state.
+
+Distinguish permanently (these are **not** interchangeable): implementation
+anchor, continuity branch HEAD, main merge SHA, and published main state.
+
 ### Solution #3 implementation recovery facts
 
 - Policy: DEC-068.
+- Publication: **SOURCE BRANCH PUBLISHED** at
+  `origin/local-development-database-isolation-v1`.
+- Durable implementation anchor (not eternal branch HEAD):
+  `a717534ed351440fdfbf6800b218d56d6eb85282`.
+- Accepted implementation tree:
+  `5b9aa29649bdf929bf7df5f9f641eb950ce16275`.
+- Still-published `main`: `0409d92525940be751e6bc07c9da32668a834e53`.
+- **NOT YET INTEGRATED ON MAIN**. **NOT CLOSED ON MAIN**.
 - Guard: `lib/ops/local-development-database-guard.ts`.
 - Tests: `lib/ops/local-development-database-guard.unit.test.ts`.
 - Wiring: `scripts/env-check.ts` after existing `loadEnvConfig` + `lib/env`

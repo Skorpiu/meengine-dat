@@ -340,6 +340,35 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - An out-of-scope discovery must **not** silently expand the current branch.
 - Record the discovery as backlog, audit input, or a future branch — do **not** implement adjacent “while we are here” changes.
 
+<!-- per-solution-documentation-continuity-lifecycle-v1 -->
+### Per-solution documentation and continuity lifecycle
+
+Each **normal solution** owns its implementation, documentation, and Super Agent continuity in the **same** solution branch. Do **not** create a separate docs-only branch for ordinary solution-state updates.
+
+**Before merge:**
+
+1. implementation
+2. validation / EQR
+3. canonical docs + Super Agent continuity
+4. implementation commit
+5. source-branch publication
+6. same-branch source-publication continuity update
+7. continuity commit
+8. publish that continuity commit
+
+**Then, with explicit human authorization:**
+
+1. merge GO
+2. `--no-ff` merge into `main`
+3. validate merged `main`
+4. publish `main`
+5. delete the completed source branch
+6. create the next solution branch
+
+Do **not** invent a future merge SHA or completed branch-cleanup evidence before merge. Avoid a post-merge docs-only reconciliation branch: record the previous solution’s exact **CLOSED + PUBLISHED ON MAIN** state, merge SHA, and branch cleanup when establishing the **next** solution branch’s initial canonical continuity state.
+
+Distinguish permanently (these are **not** interchangeable): **implementation anchor**, **continuity branch HEAD**, **main merge SHA**, and **published main** state.
+
 ### Scope drift prevention
 
 **Before editing**, declare and confirm:
@@ -514,8 +543,8 @@ are updated with each solution branch.
 - Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1`: **CLOSED BY CONTAINMENT** and integrated into `main`.
 - Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1`: **CLOSED + PUBLISHED**. Published merge `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN**. Solution #2 branch cleaned local + remote. DAT_4.5 covers Solutions #2 through #11 inclusive.
 - Starting / still-published `main`: `0409d92525940be751e6bc07c9da32668a834e53`.
-- Active product implementation slice: `local-development-database-isolation-v1` (Solution #3 / `CONFIG-ENV-001`) — **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068); **NOT YET INTEGRATED/PUBLISHED**. Base `0409d92525940be751e6bc07c9da32668a834e53`. Do not claim CLOSED ON MAIN.
-- Next smallest-safe implementation slice after Solution #3 publication: `migration-deploy-target-safety-gate-v1` (source `DB-MIGRATION-001`).
+- Active product implementation slice: `local-development-database-isolation-v1` (Solution #3 / `CONFIG-ENV-001`) — **ACTIVE**; **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068); **Final EQR PASS**; **Hook-delta EQR PASS**; **POST-COMMIT CANONICAL VALIDATION PASS**; **SOURCE BRANCH PUBLISHED** (`origin/local-development-database-isolation-v1`; durable implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`). Base / still-published `main` `0409d92525940be751e6bc07c9da32668a834e53`. **NOT YET INTEGRATED ON MAIN**. **NOT CLOSED ON MAIN**. Do not claim `CONFIG-ENV-001` CLOSED ON PUBLISHED MAIN. Do not invent a future merge SHA. The implementation anchor is not an eternal branch HEAD; a later continuity commit will advance HEAD.
+- Next smallest-safe implementation slice after Solution #3 is **CLOSED ON PUBLISHED MAIN**: `migration-deploy-target-safety-gate-v1` (source `DB-MIGRATION-001`).
 - Separate follow-ups: `dependency-security-monitoring-v1`; `TOOLCHAIN-002`.
 - Independently applicable P0 safety continues with `migration-deploy-target-safety-gate-v1`. Parallel architecture lane: `platform-separation-architecture-plan-v1`. Then P1/P2 per the post-audit queue.
 
@@ -821,7 +850,7 @@ Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
 - Dead-code/dependency pruning requires exact consumer proof plus full validation; import-graph zero-inbound is strong evidence, not deletion authority.
 - Legacy Prisma model disposal is data-sensitive: inspect target data read-only first; no schema/data removal without separate authorization.
 - Framework-adjacent direct packages should have an intentional version contract with the framework; version divergence is investigated in its own slice, not fixed through opportunistic upgrades.
-- Security-first implementation order at the audit snapshot began with `billing-webhook-authenticity-gate-v1`, `billing-projection-atomic-idempotency-v1`, `jwt-session-revocation-v1` and `next-security-patch-containment-v1`, subject to explicit human authorization and prerequisite validation. **Live supersession:** `billing-webhook-authenticity-gate-v1` is CLOSED BY CONTAINMENT; `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN** by `next-supported-lts-security-remediation-v1` (DEC-067; published merge `0409d92525940be751e6bc07c9da32668a834e53`). `CONFIG-ENV-001` / `local-development-database-isolation-v1` is **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068) and **NOT YET INTEGRATED/PUBLISHED**. Next after publication: `migration-deploy-target-safety-gate-v1`.
+- Security-first implementation order at the audit snapshot began with `billing-webhook-authenticity-gate-v1`, `billing-projection-atomic-idempotency-v1`, `jwt-session-revocation-v1` and `next-security-patch-containment-v1`, subject to explicit human authorization and prerequisite validation. **Live supersession:** `billing-webhook-authenticity-gate-v1` is CLOSED BY CONTAINMENT; `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN** by `next-supported-lts-security-remediation-v1` (DEC-067; published merge `0409d92525940be751e6bc07c9da32668a834e53`). `CONFIG-ENV-001` / `local-development-database-isolation-v1` is **ACTIVE**, **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068), **SOURCE BRANCH PUBLISHED**, **NOT YET INTEGRATED ON MAIN**, **NOT CLOSED ON MAIN** (implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`). Next after Solution #3 is **CLOSED ON PUBLISHED MAIN**: `migration-deploy-target-safety-gate-v1`.
 
 <!-- exhaustive-snapshot-audit-5eded00-v2 -->
 ## Exhaustive-audit completion rules
@@ -918,7 +947,7 @@ Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
 ## Environment configuration responsibility rule
 
 - `CONFIG-ENV-001` is confirmed and maps to `local-development-database-isolation-v1`.
-- **Current remediation:** **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068); **NOT YET INTEGRATED/PUBLISHED**.
+- **Current remediation:** **ACTIVE**; **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068); **Final EQR PASS**; **Hook-delta EQR PASS**; **POST-COMMIT CANONICAL VALIDATION PASS**; **SOURCE BRANCH PUBLISHED** (`origin/local-development-database-isolation-v1`; implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`); **NOT YET INTEGRATED ON MAIN**; **NOT CLOSED ON MAIN**. Still-published `main`: `0409d92525940be751e6bc07c9da32668a834e53`. Do not invent a future merge SHA. The implementation anchor is not an eternal branch HEAD.
 - Ordinary `env:check` fail-closes unless `DATABASE_URL` (and `DIRECT_URL` if present) resolve to the existing loopback/local allowlist (`localhost`, `127.0.0.1`, `::1`, `*.localhost`), except when `VERCEL=1`.
 - `CI`, `GITLAB_CI`, and `NODE_ENV` are not remote-database authorization. No generic remote-DB escape hatch.
 - Current workstation `.env` may still point at a hosted operator target; that is an **expected block** until ordinary local development uses a loopback database. Do not "fix" this by pointing local `.env` at Production, and do not modify untracked `.env` files in this slice.
@@ -1200,9 +1229,9 @@ recombine them into one generic Payment model or implementation slice.
 - Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1`: **CLOSED BY CONTAINMENT**, integrated into `main`.
 - Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1`: **CLOSED + PUBLISHED**. Published merge `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN**. Solution #2 branch cleaned local + remote. DAT_4.5 covers Solutions #2 through #11 inclusive.
 - Starting / still-published `main`: `0409d92525940be751e6bc07c9da32668a834e53`.
-- Active solution branch: `local-development-database-isolation-v1`.
+- Active solution branch: `local-development-database-isolation-v1` (`origin/local-development-database-isolation-v1` **SOURCE BRANCH PUBLISHED**).
 - Canonical documentation and Super Agent continuity are updated with each solution branch. Do not create separate documentation-only branches merely to record normal solution state. Do not invent future commit SHAs.
-- Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1`: **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **NOT YET INTEGRATED/PUBLISHED**. Base `0409d92525940be751e6bc07c9da32668a834e53`.
-- Next smallest-safe implementation slice after Solution #3 publication: `migration-deploy-target-safety-gate-v1` (source `DB-MIGRATION-001`).
+- Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1`: **ACTIVE**. **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **Final EQR PASS**. **Hook-delta EQR PASS**. **POST-COMMIT CANONICAL VALIDATION PASS**. **SOURCE BRANCH PUBLISHED**. Durable implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; still-published `main` `0409d92525940be751e6bc07c9da32668a834e53`. **NOT YET INTEGRATED ON MAIN**. **NOT CLOSED ON MAIN**. Do not claim `CONFIG-ENV-001` CLOSED ON PUBLISHED MAIN. The implementation anchor is not an eternal branch HEAD; a later continuity commit will advance HEAD.
+- Next smallest-safe implementation slice after Solution #3 is **CLOSED ON PUBLISHED MAIN**: `migration-deploy-target-safety-gate-v1` (source `DB-MIGRATION-001`).
 - `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain separate.
 - Authoritative published-`main` handoff baseline: `0409d92525940be751e6bc07c9da32668a834e53`. Resolve live HEAD through Git.
