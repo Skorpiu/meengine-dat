@@ -3,10 +3,24 @@
 This document describes how configuration is split across **local development**, **GitLab CI**, **Vercel**, and **Supabase**, without listing real secrets.
 
 **Source of truth for “will `env-check` pass?”**  
-`lib/env.ts` is parsed when you run `pnpm exec tsx scripts/env-check.ts` (via `pretypecheck`, `prebuild`, `pretest:run`, `predev`). Only variables in that schema are validated there.
+`lib/env.ts` is parsed when you run `pnpm exec tsx scripts/env-check.ts` (via `pretypecheck`, `prebuild`, `pretest:run`, `predev`). Only variables in that schema are validated there. After schema validation, `env:check` also runs the local-development database isolation guard (`lib/ops/local-development-database-guard.ts`, DEC-068 / `CONFIG-ENV-001`).
 
-**Source of truth for the database**  
-Connection strings come from your **Supabase** (or other Postgres) project. Vercel and local `.env.local` hold the values; Supabase holds the actual database.
+**Database target contract (DEC-068)**
+
+Prisma reads `DATABASE_URL` / `DIRECT_URL` from the process environment. Ordinary local development must **not** point those variables at a hosted/Production database.
+
+| Context                        | `DATABASE_URL` / `DIRECT_URL`                                                                                                                             | Isolation rule                                                                                                             |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **Ordinary local development** | Loopback/local Postgres only (`localhost`, `127.0.0.1`, `::1`, or `*.localhost`). `DIRECT_URL` may be omitted; if present it must independently be local. | `env:check` fail-closes on a non-local target.                                                                             |
+| **GitLab CI**                  | Localhost/dummy placeholders already used for repository checks.                                                                                          | `CI=true` / `GITLAB_CI=true` is **not** authorization for a remote database. A remote URL in CI fails the same local rule. |
+| **Vercel Preview/Production**  | Hosted environment variables managed in the Vercel project.                                                                                               | Allowed only because `VERCEL=1`. This is the hosted-runtime exemption, not a generic escape hatch.                         |
+| **Production operator**        | Explicit `.env.operator.production.local` plus existing `DAT_OPS_EXPECTED_*` identity guard and approved operator scripts.                                | Not ordinary `pnpm dev` / `.env`. Do not copy a hosted URL into local `.env` to “make the app work”.                       |
+
+There is **no** generic bypass such as `ALLOW_PROD_DB`, `ALLOW_REMOTE_DB`, `SKIP_DB_GUARD`, or `DISABLE_DB_GUARD`.
+
+This guard does **not** make every Prisma command safe. Raw `prisma migrate deploy`, `prisma migrate dev`, `prisma db push`, `next start`, and scripts that construct `PrismaClient` without `env:check` remain residual risk. Migration deploy safety is `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1`.
+
+Never put a hosted/Production `DATABASE_URL` in ordinary `.env` or `.env.local`.
 
 ---
 
@@ -19,7 +33,7 @@ pnpm -C driving_school_platform/nextjs_space install
 pnpm -C driving_school_platform/nextjs_space check
 ```
 
-Copy `.env.example` to `.env.local`, fill in real values locally (never commit them). See **Files that must not be committed** below.
+Copy `.env.example` to `.env.local`, fill in **local** values (never commit them). For `DATABASE_URL` / `DIRECT_URL`, use a loopback Postgres target — not a hosted/Production URL. See **Files that must not be committed** below.
 
 ---
 
@@ -41,18 +55,18 @@ These paths are covered by `.gitignore`; keep them out of version control even i
 
 ## Variables validated by `lib/env.ts` / `env-check`
 
-| Variable                        | Required | Public (`NEXT_PUBLIC_*`) | Purpose                                                                                                                                                                       |
-| ------------------------------- | -------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                  | **Yes**  | No                       | Prisma Postgres connection URL (pooler or primary URL, depending on your setup).                                                                                              |
-| `NEXTAUTH_SECRET`               | **Yes**  | No                       | NextAuth signing secret; must be a strong random value in production.                                                                                                         |
-| `DIRECT_URL`                    | No       | No                       | Optional direct Postgres URL (e.g. for migrations) when it differs from `DATABASE_URL` (common with Supabase connection pooling).                                             |
-| `NEXTAUTH_URL`                  | No       | No                       | Canonical site URL for NextAuth (e.g. `http://localhost:3000` locally, `https://your-app.vercel.app` on Vercel). Set in production so callbacks and emails resolve correctly. |
-| `NEXT_PUBLIC_APP_URL`           | No       | **Yes**                  | Optional public base URL for the app when used from the browser.                                                                                                              |
-| `SUPABASE_URL`                  | No       | No                       | Supabase project URL (server-side).                                                                                                                                           |
-| `SUPABASE_ANON_KEY`             | No       | No                       | Supabase anon key (server-side if used only on server).                                                                                                                       |
-| `SUPABASE_SERVICE_ROLE_KEY`     | No       | No                       | Supabase service role key (**secret**, server-only, elevated privileges).                                                                                                     |
-| `NEXT_PUBLIC_SUPABASE_URL`      | No       | **Yes**                  | Supabase URL exposed to the browser when client code needs it.                                                                                                                |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | No       | **Yes**                  | Supabase anon key exposed to the browser when client code needs it.                                                                                                           |
+| Variable                        | Required | Public (`NEXT_PUBLIC_*`) | Purpose                                                                                                                                                                                                    |
+| ------------------------------- | -------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                  | **Yes**  | No                       | Prisma Postgres connection URL. Ordinary local development: loopback/local only. Vercel: hosted env. Operator: explicit operator profile, not ordinary `.env`.                                             |
+| `NEXTAUTH_SECRET`               | **Yes**  | No                       | NextAuth signing secret; must be a strong random value in production.                                                                                                                                      |
+| `DIRECT_URL`                    | No       | No                       | Optional direct Postgres URL when it differs from `DATABASE_URL`. If present, ordinary local development must also be loopback/local. A local `DATABASE_URL` with a remote `DIRECT_URL` fails `env:check`. |
+| `NEXTAUTH_URL`                  | No       | No                       | Canonical site URL for NextAuth (e.g. `http://localhost:3000` locally, `https://your-app.vercel.app` on Vercel). Set in production so callbacks and emails resolve correctly.                              |
+| `NEXT_PUBLIC_APP_URL`           | No       | **Yes**                  | Optional public base URL for the app when used from the browser.                                                                                                                                           |
+| `SUPABASE_URL`                  | No       | No                       | Supabase project URL (server-side).                                                                                                                                                                        |
+| `SUPABASE_ANON_KEY`             | No       | No                       | Supabase anon key (server-side if used only on server).                                                                                                                                                    |
+| `SUPABASE_SERVICE_ROLE_KEY`     | No       | No                       | Supabase service role key (**secret**, server-only, elevated privileges).                                                                                                                                  |
+| `NEXT_PUBLIC_SUPABASE_URL`      | No       | **Yes**                  | Supabase URL exposed to the browser when client code needs it.                                                                                                                                             |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | No       | **Yes**                  | Supabase anon key exposed to the browser when client code needs it.                                                                                                                                        |
 
 `NODE_ENV` is set by Node/Next (`development` / `production` / `test`); you normally do not set it manually in `.env.local`.
 
@@ -60,10 +74,10 @@ These paths are covered by `.gitignore`; keep them out of version control even i
 
 **Local development**
 
-| Kind          | Where                                                                                         |
-| ------------- | --------------------------------------------------------------------------------------------- |
-| Secrets + DB  | `.env.local` (preferred) or `.env` in `driving_school_platform/nextjs_space` (ignored by git) |
-| Copy template | Start from `.env.example`                                                                     |
+| Kind          | Where                                                                                                                                                                                                                            |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Secrets + DB  | `.env.local` (preferred) or `.env` in `driving_school_platform/nextjs_space` (ignored by git). `DATABASE_URL` / `DIRECT_URL` must be loopback/local. Do not store a hosted/Production database URL here for ordinary `pnpm dev`. |
+| Copy template | Start from `.env.example`                                                                                                                                                                                                        |
 
 **GitLab CI**
 
@@ -71,7 +85,7 @@ These paths are covered by `.gitignore`; keep them out of version control even i
 | --------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Dummy / placeholder values for `env-check` + Prisma | `variables` in `.gitlab-ci.yml` (see existing `DATABASE_URL`, `DIRECT_URL`, `NEXTAUTH_SECRET`) |
 
-CI uses non-production placeholder URLs so `prisma generate` and builds can run without a live database for unit tests.
+CI uses localhost placeholder URLs so `prisma generate` and builds can run without a live database for unit tests. Those placeholders pass the local isolation rule because they are loopback. Setting `CI=true` does **not** authorize a remote `DATABASE_URL`.
 
 **Vercel**
 
@@ -80,7 +94,15 @@ CI uses non-production placeholder URLs so `prisma generate` and builds can run 
 | Production / preview secrets | Project → **Settings** → **Environment Variables**                  |
 | `NEXT_PUBLIC_*`              | Same UI; values are embedded in client bundles—use only public keys |
 
-Set `DATABASE_URL` / `DIRECT_URL` from your Supabase connection strings. Set `NEXTAUTH_SECRET` and `NEXTAUTH_URL` per environment (Preview vs Production) as needed.
+Set hosted `DATABASE_URL` / `DIRECT_URL` in the Vercel project (Vercel sets `VERCEL=1`). Set `NEXTAUTH_SECRET` and `NEXTAUTH_URL` per environment (Preview vs Production) as needed. Preview-versus-Production database separation is out of scope for this isolation slice.
+
+**Production operator**
+
+| Kind                 | Where                                                                                                                                                                                           |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hosted DB + identity | `.env.operator.production.local` (gitignored) loaded only by approved operator scripts, plus `DAT_OPS_EXPECTED_DB_HOST` / `DAT_OPS_EXPECTED_DB_NAME` / `DAT_OPS_EXPECTED_SUPABASE_PROJECT_REF`. |
+
+Operator access is **not** ordinary local development. Do not copy operator URLs into `.env` / `.env.local`.
 
 **Supabase**
 
@@ -89,7 +111,7 @@ Set `DATABASE_URL` / `DIRECT_URL` from your Supabase connection strings. Set `NE
 | Database host, user, password, DB name | **Project Settings** → **Database** (connection strings, pooling vs direct) |
 | API URL and keys                       | **Project Settings** → **API** (`SUPABASE_URL`, anon key, service role key) |
 
-Supabase is the **source of truth** for the database and project API identifiers; Vercel and local env files **reference** those values.
+Supabase may hold a hosted database used by **Vercel** and **operator** workflows. Ordinary local development must use a separate loopback Postgres target, not the hosted operator/Production URL.
 
 **Data API vs Postgres URL:** the app’s primary data path is **Prisma over `DATABASE_URL` / `DIRECT_URL`**, not PostgREST/GraphQL. Optional `SUPABASE_*` / `NEXT_PUBLIC_SUPABASE_*` keys are validated in `lib/env.ts` for future or ancillary use; baseline runtime code does not call the Data API for `public` tables. Policy and Supabase grant timelines: **[supabase-data-api-grants.md](./supabase-data-api-grants.md)**.
 

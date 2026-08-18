@@ -10,7 +10,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| `local-development-database-isolation-v1` | **P0** operational safety | **QUEUED NEXT AFTER** successful integration/publication of Solution #2 / `DEP-SEC-001` (DEC-067). Source `CONFIG-ENV-001`. Solution #2 remains the active branch until that publication; this slice is **not** active yet. Do not run ordinary local `pnpm dev` until this is resolved. `dependency-security-monitoring-v1` remains separate. |
+| `local-development-database-isolation-v1` | **P0** operational safety | **ACTIVE** — Solution #3 / `CONFIG-ENV-001`. **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **Final EQR PASS**. **Hook-delta EQR PASS**. **POST-COMMIT CANONICAL VALIDATION PASS**. **SOURCE BRANCH PUBLISHED** (`origin/local-development-database-isolation-v1`; implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`). Base/published `main` `0409d92525940be751e6bc07c9da32668a834e53`. **NOT YET INTEGRATED ON MAIN**. **NOT CLOSED ON MAIN**. Do not claim CLOSED ON PUBLISHED MAIN. Ordinary local `pnpm dev` remains blocked until local `.env` / `.env.local` use loopback URLs. After Solution #3 is **CLOSED ON PUBLISHED MAIN**: `migration-deploy-target-safety-gate-v1`. `dependency-security-monitoring-v1` remains separate. |
 
 **Closed context:** `engineering-excellence-audit-v1` closed 2026-08-13 by explicit human GO (51 findings / 51/51 coverage; no repository-static frontier). Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` is **CLOSED BY CONTAINMENT** and integrated into `main`. `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
@@ -22,7 +22,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 **Closed prerequisite:** `node-24-runtime-migration-v1` merged to `main` at `909b69a`; GitLab `node:24`, Vercel Preview/Production Node 24.x, and required post-deploy non-destructive hosted gates passed.
 
 1. `engineering-excellence-audit-v1` — **CLOSED 2026-08-13** by explicit human authorization; Final Engineering Quality Review PASS; 51 findings / 51/51 remediation coverage retained as active remediation debt.
-2. P0 containment — `billing-webhook-authenticity-gate-v1` **CLOSED BY CONTAINMENT**; `next-supported-lts-security-remediation-v1` **IMPLEMENTED + VALIDATED IN-BRANCH**; **Final EQR PASS**; **NOT YET INTEGRATED/PUBLISHED** (DEC-067; supersedes `next-security-patch-containment-v1` + `next-supported-lts-migration-v1`).
+2. P0 containment — `billing-webhook-authenticity-gate-v1` **CLOSED BY CONTAINMENT**; `next-supported-lts-security-remediation-v1` **CLOSED + PUBLISHED** on `main` at `0409d92525940be751e6bc07c9da32668a834e53` (`DEP-SEC-001` **CLOSED ON PUBLISHED MAIN**; DEC-067).
 3. P0 operational safety — `local-development-database-isolation-v1` and `migration-deploy-target-safety-gate-v1`, where independently applicable.
 4. `platform-separation-architecture-plan-v1` — parallel architecture lane after formal audit closure; does not block independent urgent P0 containment.
 5. P1/P2 implementation slices according to the post-audit execution priority queue, one smallest-safe scope per branch.
@@ -531,8 +531,8 @@ Security comes first. Within the same priority tier, dependency order and prereq
 
 - **Priority:** P0.
 - **Source:** `DEP-SEC-001`.
-- **Status:** **IMPLEMENTED + VALIDATED IN-BRANCH**; **Final EQR PASS**; **POST-COMMIT CANONICAL VALIDATION PASS**; **NOT YET INTEGRATED/PUBLISHED** (DEC-067). Direct migration from Next 14.2.28 to Next 16.3.1 Active LTS with React 19.2.8 and next-auth 4.24.15.
-- Durable implementation anchor (not eternal branch HEAD): `d0271f864ed8fb88f3876cd0ef27457176036e70`. Accepted implementation tree: `3609187fdf38809a9275baaafd968b4f427980a6`. Starting / still-published `main`: `ccdc8490904b63bddcb8875df86f24c43654796d`.
+- **Status:** **CLOSED + PUBLISHED** on `main` `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN** (DEC-067). Direct migration from Next 14.2.28 to Next 16.3.1 Active LTS with React 19.2.8 and next-auth 4.24.15. Solution #2 branch cleaned local + remote.
+- Historical implementation anchor: `d0271f864ed8fb88f3876cd0ef27457176036e70`. Accepted implementation tree: `3609187fdf38809a9275baaafd968b4f427980a6`. Pre-publication `main` was `ccdc8490904b63bddcb8875df86f24c43654796d`.
 - Supersedes `next-security-patch-containment-v1` and `next-supported-lts-migration-v1`.
 - Does not close `DEP-SEC-002` / `dependency-security-monitoring-v1` or `TOOLCHAIN-002`.
 
@@ -703,7 +703,7 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 | `CLIENT-DUP-001` | `client-http-response-helper-v1` |
 | `UI-DUP-002` | `import-workflow-consolidation-v1` |
 | `TOOLCHAIN-003` | `toolchain-node-types-alignment-v1` |
-| `DEP-SEC-001` | `next-supported-lts-security-remediation-v1` (**IMPLEMENTED + VALIDATED IN-BRANCH**; **Final EQR PASS**; **NOT YET INTEGRATED/PUBLISHED**, DEC-067; implementation anchor `d0271f…` / tree `3609187…`); historical superseded plans: `next-security-patch-containment-v1`; `next-supported-lts-migration-v1`; monitoring remains `dependency-security-monitoring-v1` |
+| `DEP-SEC-001` | `next-supported-lts-security-remediation-v1` (**CLOSED + PUBLISHED** on `main` `0409d92525940be751e6bc07c9da32668a834e53`; `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN**, DEC-067); historical superseded plans: `next-security-patch-containment-v1`; `next-supported-lts-migration-v1`; monitoring remains `dependency-security-monitoring-v1` |
 | `SCHEMA-LEGACY-002` | `dormant-operational-model-disposition-v1` |
 | `EXPORT-SEC-001` | `csv-formula-injection-hardening-v1` |
 | `AUTH-PASSWORD-001` | `privileged-password-policy-alignment-v1` |
@@ -712,7 +712,7 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 | `SEC-HEADERS-001` | `security-response-headers-hardening-v1` |
 | `DEP-SEC-002` | `dependency-security-monitoring-v1` |
 
-| `CONFIG-ENV-001` | `local-development-database-isolation-v1` |
+| `CONFIG-ENV-001` | `local-development-database-isolation-v1` (**IMPLEMENTED + VALIDATED IN-BRANCH**; **SOURCE BRANCH PUBLISHED**; **NOT YET INTEGRATED ON MAIN**; **NOT CLOSED ON MAIN**, DEC-068) |
 
 | `UI-DATA-001` | `dashboard-statistics-contract-alignment-v1` |
 
@@ -730,7 +730,7 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 
 ### Security-first execution waves
 
-1. **Immediate containment:** `billing-webhook-authenticity-gate-v1` (**CLOSED BY CONTAINMENT**); `next-supported-lts-security-remediation-v1` (**IMPLEMENTED + VALIDATED IN-BRANCH**; **Final EQR PASS**; **NOT YET INTEGRATED/PUBLISHED**, DEC-067).
+1. **Immediate containment:** `billing-webhook-authenticity-gate-v1` (**CLOSED BY CONTAINMENT**); `next-supported-lts-security-remediation-v1` (**CLOSED + PUBLISHED** on `main` `0409d92525940be751e6bc07c9da32668a834e53`; `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN**, DEC-067).
 2. **Security foundations / proof:** `database-integration-test-harness-v1`; `e2e-suite-contract-repair-v1`; then `billing-projection-atomic-idempotency-v1`, `jwt-session-revocation-v1`, `license-key-security-hardening-v1`.
 3. **Authority / credential / browser boundaries:** `provider-owned-entitlement-mutation-boundary-v1`, `nextauth-credentials-rate-limit-alignment-v1`, `auth-email-link-trusted-origin-v1`, `privileged-password-policy-alignment-v1`, `api-500-error-sanitization-v1`, `csv-formula-injection-hardening-v1`, `security-response-headers-hardening-v1`.
 4. **Integrity / onboarding:** `user-create-atomicity-v1`, `platform-onboarding-transaction-boundary-v1`, `instructor-direct-create-activation-contract-v1`.
@@ -887,14 +887,14 @@ ledger — 51 findings**. It does not replace or duplicate finding ownership.
 ### P0 — Immediate containment
 
 1. `billing-webhook-authenticity-gate-v1` — **CLOSED BY CONTAINMENT**
-2. `next-supported-lts-security-remediation-v1` — **IMPLEMENTED + VALIDATED IN-BRANCH**; **Final EQR PASS**; **NOT YET INTEGRATED/PUBLISHED** (DEC-067; supersedes `next-security-patch-containment-v1` + `next-supported-lts-migration-v1`)
+2. `next-supported-lts-security-remediation-v1` — **CLOSED + PUBLISHED** on `main` `0409d92525940be751e6bc07c9da32668a834e53`; `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN** (DEC-067; supersedes `next-security-patch-containment-v1` + `next-supported-lts-migration-v1`)
 
 Execution intent: reduce the highest material security exposure first and show
 early risk-reduction progress without weakening validation standards.
 
 ### P0 / operational safety foundation
 
-1. `local-development-database-isolation-v1` — **QUEUED NEXT AFTER** successful integration/publication of Solution #2
+1. `local-development-database-isolation-v1` — **ACTIVE**; **IMPLEMENTED + VALIDATED IN-BRANCH**; **SOURCE BRANCH PUBLISHED**; **NOT YET INTEGRATED ON MAIN**; **NOT CLOSED ON MAIN** (DEC-068 / Solution #3)
 2. `migration-deploy-target-safety-gate-v1`
 
 These gates must precede unsafe local database work or remote migration-authority
@@ -1097,10 +1097,11 @@ silently considered fixed by product deferment.
 
 - Engineering Excellence Audit: **CLOSED**.
 - Solution #1 / `billing-webhook-authenticity-gate-v1`: **CLOSED BY CONTAINMENT**.
-- Solution #2 / `next-supported-lts-security-remediation-v1`: **IMPLEMENTED + VALIDATED IN-BRANCH**; **Final EQR PASS**; **POST-COMMIT CANONICAL VALIDATION PASS**; **NOT YET INTEGRATED/PUBLISHED** (DEC-067). Durable implementation anchor `d0271f864ed8fb88f3876cd0ef27457176036e70`; accepted tree `3609187fdf38809a9275baaafd968b4f427980a6` (not eternal branch HEAD).
+- Solution #2 / `next-supported-lts-security-remediation-v1`: **CLOSED + PUBLISHED**. Published merge `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN** (DEC-067). Solution #2 branch cleaned local + remote.
 - DAT_4.5 covers Solutions #2 through #11 inclusive.
-- **Single recommended next implementation slice:** `local-development-database-isolation-v1`
-  (source `CONFIG-ENV-001`) — **QUEUED NEXT AFTER** successful integration/publication of Solution #2. It is not active yet.
+- **Active implementation slice:** `local-development-database-isolation-v1`
+  (source `CONFIG-ENV-001` / Solution #3) — **ACTIVE**. **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **Final EQR PASS**. **Hook-delta EQR PASS**. **POST-COMMIT CANONICAL VALIDATION PASS**. **SOURCE BRANCH PUBLISHED** (`origin/local-development-database-isolation-v1`; implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`). Base / still-published `main` `0409d92525940be751e6bc07c9da32668a834e53`. **NOT YET INTEGRATED ON MAIN**. **NOT CLOSED ON MAIN**. Do not claim CLOSED ON PUBLISHED MAIN. Do not invent a future merge SHA.
+- After Solution #3 is **CLOSED ON PUBLISHED MAIN**: `migration-deploy-target-safety-gate-v1` (`DB-MIGRATION-001`).
 - `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain distinct.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch.

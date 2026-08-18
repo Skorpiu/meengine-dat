@@ -340,6 +340,35 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - An out-of-scope discovery must **not** silently expand the current branch.
 - Record the discovery as backlog, audit input, or a future branch — do **not** implement adjacent “while we are here” changes.
 
+<!-- per-solution-documentation-continuity-lifecycle-v1 -->
+### Per-solution documentation and continuity lifecycle
+
+Each **normal solution** owns its implementation, documentation, and Super Agent continuity in the **same** solution branch. Do **not** create a separate docs-only branch for ordinary solution-state updates.
+
+**Before merge:**
+
+1. implementation
+2. validation / EQR
+3. canonical docs + Super Agent continuity
+4. implementation commit
+5. source-branch publication
+6. same-branch source-publication continuity update
+7. continuity commit
+8. publish that continuity commit
+
+**Then, with explicit human authorization:**
+
+1. merge GO
+2. `--no-ff` merge into `main`
+3. validate merged `main`
+4. publish `main`
+5. delete the completed source branch
+6. create the next solution branch
+
+Do **not** invent a future merge SHA or completed branch-cleanup evidence before merge. Avoid a post-merge docs-only reconciliation branch: record the previous solution’s exact **CLOSED + PUBLISHED ON MAIN** state, merge SHA, and branch cleanup when establishing the **next** solution branch’s initial canonical continuity state.
+
+Distinguish permanently (these are **not** interchangeable): **implementation anchor**, **continuity branch HEAD**, **main merge SHA**, and **published main** state.
+
 ### Scope drift prevention
 
 **Before editing**, declare and confirm:
@@ -512,10 +541,10 @@ are updated with each solution branch.
 
 - Engineering Excellence Audit: **CLOSED** (2026-08-13; explicit human GO). Findings **51**; remediation coverage **51/51**; unresolved repository-static frontier: **none**. Do not reopen the global audit without contradictory evidence.
 - Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1`: **CLOSED BY CONTAINMENT** and integrated into `main`.
-- Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1`: **IMPLEMENTED + VALIDATED IN-BRANCH**; **Final EQR PASS**; **POST-COMMIT CANONICAL VALIDATION PASS**; **NOT YET INTEGRATED/PUBLISHED** (DEC-067). DAT_4.5 covers Solutions #2 through #11 inclusive.
-- Durable implementation anchor (not eternal branch HEAD): `d0271f864ed8fb88f3876cd0ef27457176036e70`. Accepted implementation tree: `3609187fdf38809a9275baaafd968b4f427980a6`. Starting / still-published `main`: `ccdc8490904b63bddcb8875df86f24c43654796d`.
-- Active product implementation slice at this recovery checkpoint: `next-supported-lts-security-remediation-v1` (in-branch implementation complete and validated; Final EQR PASS; awaiting human integration/publication). A later continuity/docs commit may advance branch HEAD without changing the implementation anchor.
-- Next smallest-safe implementation slice: `local-development-database-isolation-v1` (source `CONFIG-ENV-001`) — **QUEUED NEXT AFTER** successful integration/publication of Solution #2. It is not active yet.
+- Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1`: **CLOSED + PUBLISHED**. Published merge `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN**. Solution #2 branch cleaned local + remote. DAT_4.5 covers Solutions #2 through #11 inclusive.
+- Starting / still-published `main`: `0409d92525940be751e6bc07c9da32668a834e53`.
+- Active product implementation slice: `local-development-database-isolation-v1` (Solution #3 / `CONFIG-ENV-001`) — **ACTIVE**; **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068); **Final EQR PASS**; **Hook-delta EQR PASS**; **POST-COMMIT CANONICAL VALIDATION PASS**; **SOURCE BRANCH PUBLISHED** (`origin/local-development-database-isolation-v1`; durable implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`). Base / still-published `main` `0409d92525940be751e6bc07c9da32668a834e53`. **NOT YET INTEGRATED ON MAIN**. **NOT CLOSED ON MAIN**. Do not claim `CONFIG-ENV-001` CLOSED ON PUBLISHED MAIN. Do not invent a future merge SHA. The implementation anchor is not an eternal branch HEAD; a later continuity commit will advance HEAD.
+- Next smallest-safe implementation slice after Solution #3 is **CLOSED ON PUBLISHED MAIN**: `migration-deploy-target-safety-gate-v1` (source `DB-MIGRATION-001`).
 - Separate follow-ups: `dependency-security-monitoring-v1`; `TOOLCHAIN-002`.
 - Independently applicable P0 safety continues with `migration-deploy-target-safety-gate-v1`. Parallel architecture lane: `platform-separation-architecture-plan-v1`. Then P1/P2 per the post-audit queue.
 
@@ -821,7 +850,7 @@ Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
 - Dead-code/dependency pruning requires exact consumer proof plus full validation; import-graph zero-inbound is strong evidence, not deletion authority.
 - Legacy Prisma model disposal is data-sensitive: inspect target data read-only first; no schema/data removal without separate authorization.
 - Framework-adjacent direct packages should have an intentional version contract with the framework; version divergence is investigated in its own slice, not fixed through opportunistic upgrades.
-- Security-first implementation order at the audit snapshot began with `billing-webhook-authenticity-gate-v1`, `billing-projection-atomic-idempotency-v1`, `jwt-session-revocation-v1` and `next-security-patch-containment-v1`, subject to explicit human authorization and prerequisite validation. **Live supersession:** `billing-webhook-authenticity-gate-v1` is CLOSED BY CONTAINMENT; `DEP-SEC-001` remediation is fully implemented and validated in-branch by `next-supported-lts-security-remediation-v1` (DEC-067; Final EQR PASS; the 14.2.35 containment plan is historical/superseded); published-main closure occurs only after successful integration/publication. `local-development-database-isolation-v1` is **QUEUED NEXT AFTER** that publication.
+- Security-first implementation order at the audit snapshot began with `billing-webhook-authenticity-gate-v1`, `billing-projection-atomic-idempotency-v1`, `jwt-session-revocation-v1` and `next-security-patch-containment-v1`, subject to explicit human authorization and prerequisite validation. **Live supersession:** `billing-webhook-authenticity-gate-v1` is CLOSED BY CONTAINMENT; `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN** by `next-supported-lts-security-remediation-v1` (DEC-067; published merge `0409d92525940be751e6bc07c9da32668a834e53`). `CONFIG-ENV-001` / `local-development-database-isolation-v1` is **ACTIVE**, **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068), **SOURCE BRANCH PUBLISHED**, **NOT YET INTEGRATED ON MAIN**, **NOT CLOSED ON MAIN** (implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`). Next after Solution #3 is **CLOSED ON PUBLISHED MAIN**: `migration-deploy-target-safety-gate-v1`.
 
 <!-- exhaustive-snapshot-audit-5eded00-v2 -->
 ## Exhaustive-audit completion rules
@@ -918,15 +947,18 @@ Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
 ## Environment configuration responsibility rule
 
 - `CONFIG-ENV-001` is confirmed and maps to `local-development-database-isolation-v1`.
-- Current automatic local database resolution selects `nextjs_space/.env` and matches the Production operator target.
-- `.env.local` currently does not override `DATABASE_URL`.
-- `env:check` currently lacks an explicit Production-target isolation guard.
+- **Current remediation:** **ACTIVE**; **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068); **Final EQR PASS**; **Hook-delta EQR PASS**; **POST-COMMIT CANONICAL VALIDATION PASS**; **SOURCE BRANCH PUBLISHED** (`origin/local-development-database-isolation-v1`; implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`); **NOT YET INTEGRATED ON MAIN**; **NOT CLOSED ON MAIN**. Still-published `main`: `0409d92525940be751e6bc07c9da32668a834e53`. Do not invent a future merge SHA. The implementation anchor is not an eternal branch HEAD.
+- Ordinary `env:check` fail-closes unless `DATABASE_URL` (and `DIRECT_URL` if present) resolve to the existing loopback/local allowlist (`localhost`, `127.0.0.1`, `::1`, `*.localhost`), except when `VERCEL=1`.
+- `CI`, `GITLAB_CI`, and `NODE_ENV` are not remote-database authorization. No generic remote-DB escape hatch.
+- Current workstation `.env` may still point at a hosted operator target; that is an **expected block** until ordinary local development uses a loopback database. Do not "fix" this by pointing local `.env` at Production, and do not modify untracked `.env` files in this slice.
+- `.env.local` still does not override `DATABASE_URL` (env precedence was not changed).
 - Treat local-development database isolation as a safety prerequisite before ordinary write-capable local runtime execution.
 - Operator Production workflows must remain explicit and guarded; do not make Production the default development target.
 - Keep operator and smoke profiles separate; their zero-overlap split is intentional.
 - Do not delete an env key from static-zero-reference evidence alone when a framework/library may consume it implicitly.
 - Cleanup sequence: isolate development target → prove env responsibility → consolidate duplicates → prune dead public/legacy variables → validate lifecycle hooks and operator/smoke workflows.
 - Never print env values, credentials, full database URLs, database identities or secrets in audit output.
+- This guard does **not** make every Prisma CLI command safe (`DB-MIGRATION-001` remains).
 
 <!-- environment-configuration-disposition-e5-e7-v1 -->
 ## Environment E5-E7 execution rule
@@ -1043,7 +1075,7 @@ Do not rely on assistant conversational memory as the sole source of any audit d
 - Findings remain 51 with 51/51 remediation coverage.
 - Data Wave B is audit-complete; do not reopen broad legacy-model discovery without contradictory evidence.
 - No isolated migration-authoring database/harness exists in the current repo.
-- Do not run migration-authoring commands through automatic local env resolution while CONFIG-ENV-001 remains open.
+- Do not run migration-authoring commands through automatic local env resolution against a hosted target. `CONFIG-ENV-001` isolation is implemented in-branch for `env:check` (DEC-068) but does not make every Prisma CLI command safe.
 - Safe authoring belongs to local-development-database-isolation-v1 plus database-integration-test-harness-v1.
 - Remote migration writes belong to migration-deploy-target-safety-gate-v1 and explicit human GO.
 - Preserve staged legacy retirement: runtime decoupling deployed/verified before schema retirement.
@@ -1195,11 +1227,11 @@ recombine them into one generic Payment model or implementation slice.
 - DAT_4.4: CLOSED.
 - Engineering Excellence Audit: **CLOSED** (explicit human GO). Findings 51; coverage 51/51; repository-static frontier: none.
 - Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1`: **CLOSED BY CONTAINMENT**, integrated into `main`.
-- Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1`: **IMPLEMENTED + VALIDATED IN-BRANCH**; **Final EQR PASS**; **POST-COMMIT CANONICAL VALIDATION PASS**; **NOT YET INTEGRATED/PUBLISHED** (DEC-067). DAT_4.5 covers Solutions #2 through #11 inclusive.
-- Durable implementation anchor (not eternal branch HEAD): `d0271f864ed8fb88f3876cd0ef27457176036e70`. Accepted implementation tree: `3609187fdf38809a9275baaafd968b4f427980a6`.
-- Starting / still-published `main`: `ccdc8490904b63bddcb8875df86f24c43654796d`.
-- Active solution branch: `next-supported-lts-security-remediation-v1` until integration/publication. A later continuity/docs commit may advance HEAD.
-- Canonical documentation and Super Agent continuity are updated with each solution branch. Do not create separate documentation-only branches merely to record normal solution state. Do not require documenting the SHA of a later continuity/docs commit.
-- Next smallest-safe implementation slice: `local-development-database-isolation-v1` (source `CONFIG-ENV-001`) — **QUEUED NEXT AFTER** successful integration/publication of Solution #2. It is not active yet.
+- Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1`: **CLOSED + PUBLISHED**. Published merge `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN**. Solution #2 branch cleaned local + remote. DAT_4.5 covers Solutions #2 through #11 inclusive.
+- Starting / still-published `main`: `0409d92525940be751e6bc07c9da32668a834e53`.
+- Active solution branch: `local-development-database-isolation-v1` (`origin/local-development-database-isolation-v1` **SOURCE BRANCH PUBLISHED**).
+- Canonical documentation and Super Agent continuity are updated with each solution branch. Do not create separate documentation-only branches merely to record normal solution state. Do not invent future commit SHAs.
+- Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1`: **ACTIVE**. **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **Final EQR PASS**. **Hook-delta EQR PASS**. **POST-COMMIT CANONICAL VALIDATION PASS**. **SOURCE BRANCH PUBLISHED**. Durable implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; still-published `main` `0409d92525940be751e6bc07c9da32668a834e53`. **NOT YET INTEGRATED ON MAIN**. **NOT CLOSED ON MAIN**. Do not claim `CONFIG-ENV-001` CLOSED ON PUBLISHED MAIN. The implementation anchor is not an eternal branch HEAD; a later continuity commit will advance HEAD.
+- Next smallest-safe implementation slice after Solution #3 is **CLOSED ON PUBLISHED MAIN**: `migration-deploy-target-safety-gate-v1` (source `DB-MIGRATION-001`).
 - `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain separate.
-- Authoritative published-`main` handoff baseline before this solution: `ccdc8490904b63bddcb8875df86f24c43654796d`. Resolve live HEAD through Git. The implementation anchor remains `d0271f…` even if branch HEAD advances.
+- Authoritative published-`main` handoff baseline: `0409d92525940be751e6bc07c9da32668a834e53`. Resolve live HEAD through Git.
