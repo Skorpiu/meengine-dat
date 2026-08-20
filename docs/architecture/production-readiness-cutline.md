@@ -25,7 +25,7 @@ Controlled production deployment for a **first B2B driving-school client** using
 | Onboarding model | **Invite-only** (copy-link); admin-provisioned students/instructors |
 | Public signup | **`PUBLIC_SIGNUP_ENABLED=false`** (unset or explicit `false`) on client production |
 | Billing / checkout | **Out of current deployed baseline** — no live PSP, checkout, or billing portal for controlled B2B today. **Target DAT v1.0:** Platform subscription billing (DEC-046) |
-| Target environment | Each env: **`prisma migrate status`** (read-only inspect), **`pnpm check`**, and **post-deploy smoke**. **`prisma migrate deploy`** only when migrations are required — **explicit human authorization**, isolated operator block; never automatic / never agent-executed |
+| Target environment | Each env: **`pnpm ops:migrate-deploy-remote`** preflight (DEC-069), **`pnpm check`**, and **post-deploy smoke**. Apply with **`--execute`** only when migrations are required — **explicit human authorization**, interactive TTY, isolated operator block; never automatic / never agent-executed / never CI or Vercel |
 | Credentials | **No** `PLATFORM_ADMIN` / `SUPER_ADMIN` secrets in docs, git, tickets, or client handoff |
 | Audit logs | **Not P0** before controlled production; **foundation implemented** (tenant schema + write paths + read API + URL-only viewer + **tenant-aware CSV export**). Platform cross-tenant viewer remains deferred. |
 | Mobile / discovery | **Done** — mobile/tablet readiness and competitive product discovery are closed; not future cutline blockers |

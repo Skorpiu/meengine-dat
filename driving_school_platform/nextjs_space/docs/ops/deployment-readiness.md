@@ -32,7 +32,7 @@ When production uses **separate hostnames** for tenant traffic versus platform o
 
 Full **Supabase + Prisma** migration workflow (pooled vs direct URLs, safe local commands, production rules, deploy checklist) is in **[supabase-prisma-migrations.md](./supabase-prisma-migrations.md)**.
 
-In short: apply migrations **intentionally** before or with deploy (for example `pnpm exec prisma migrate deploy` from `driving_school_platform/nextjs_space` with the correct env); `prisma generate` runs via existing `pnpm` hooks (`prebuild` / `pretypecheck`).
+In short: apply migrations **intentionally** before or with deploy using `pnpm ops:migrate-deploy-remote` (DEC-069); `prisma generate` runs via existing `pnpm` hooks (`prebuild` / `pretypecheck`). Do not run migrations from Vercel or GitLab CI.
 
 **Supabase Data API:** baseline app data uses **Prisma + Postgres URLs**, not PostgREST. If Supabase changes default grants for `public` and Data API access, see **[supabase-data-api-grants.md](./supabase-data-api-grants.md)** for project policy (explicit grants, RLS, `service_role` handling).
 

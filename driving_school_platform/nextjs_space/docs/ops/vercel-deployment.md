@@ -52,9 +52,9 @@ Set per **Production** / **Preview** / **Development** as appropriate. Values co
 
 ### Migrations / direct connection (when applicable)
 
-| Variable     | Notes                                                                                                                                                                                                                                                |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DIRECT_URL` | Optional **direct** Postgres URL when it differs from `DATABASE_URL` (common with Supabase pooling). Use for `prisma migrate deploy` or admin tooling from your machine or CI—not as a substitute for thinking through when each URL is appropriate. |
+| Variable     | Notes                                                                                                                                                                                                                                          |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DIRECT_URL` | Direct Postgres URL when it differs from `DATABASE_URL` (common with Supabase pooling). **Required** for the canonical operator migration wrapper (`pnpm ops:migrate-deploy-remote`, DEC-069). Not used by the Vercel build to run migrations. |
 
 Additional keys validated in `lib/env.ts` (for example server-side `SUPABASE_URL`) are documented in **[environment-variables.md](./environment-variables.md)**.
 
@@ -72,7 +72,7 @@ Cron schedule is defined in **`vercel.json`** (`0 3 * * *`, 03:00 UTC). On Hobby
 ## Prisma and deploy cautions
 
 - **`prisma generate`** runs during normal installs and builds via `postinstall`, **`prebuild`**, and **`pretypecheck`** in `package.json` (together with `env:check`). Vercel builds therefore expect valid `DATABASE_URL` / `NEXTAUTH_SECRET` (and any other required env) to be present for that environment.
-- **Migrations** (`prisma migrate deploy`, etc.) should be applied **intentionally** against the target database before or as part of your release process—typically from a trusted environment with the right `DATABASE_URL` / `DIRECT_URL`, not ad hoc from the Vercel build log.
+- **Migrations** must **not** run from the Vercel build. Canonical operator path: `pnpm ops:migrate-deploy-remote` against `.env.operator.production.local` (DEC-069). Unattended CI/Vercel migration is prohibited.
 - Do **not** run **destructive** migration or reset commands from the Vercel build step; keep builds non-destructive and repeatable.
 - **Prisma 7** upgrades are **not** part of this baseline; the app pins Prisma 6.x per `package.json`.
 

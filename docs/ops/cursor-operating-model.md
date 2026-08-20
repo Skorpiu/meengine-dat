@@ -151,12 +151,12 @@ Keep **roadmap**, **current-state**, and **architect-mode** hints consistent aft
 
 This operating model owns **protocol**, not Git-tip status. Live solution status lives in [current-state.md](../architecture/current-state.md), [roadmap-todo.md](../architecture/roadmap-todo.md), [architect-mode.mdc](../../.cursor/rules/architect-mode.mdc), and [super-agent-continuity-state.md](./super-agent-continuity-state.md).
 
-**Recovery checkpoint 2026-08-20:** part of the external ChatGPT conversation became unavailable after Solution #3 work. Live Git evidence is authoritative. Canonical docs were reconciled to published Git state. No product behavior was changed by the recovery itself. This protocol document does **not** authorize Solution #4 implementation.
+**Recovery checkpoint 2026-08-20:** part of the external ChatGPT conversation became unavailable after Solution #3 work. Live Git evidence is authoritative. Canonical docs were reconciled to published Git state. No product behavior was changed by the recovery itself.
 
 - Solution #1 / `BILLING-SEC-001`: **CLOSED BY CONTAINMENT**.
 - Solution #2 / `DEP-SEC-001`: **CLOSED ON PUBLISHED MAIN** at `0409d92525940be751e6bc07c9da32668a834e53`.
 - Solution #3 / `CONFIG-ENV-001`: **CLOSED ON PUBLISHED MAIN** at `14c3865372502f074941a1fc81a55b5ec7f1b589`.
-- Solution #4 / `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1`: **ACTIVE — RECOVERY/KICKOFF + READ-ONLY PREFLIGHT**. Implementation **NOT STARTED**. Next implementation requires `APPROVED TO IMPLEMENT: migration-deploy-target-safety-gate-v1`.
+- Solution #4 / `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1`: **IMPLEMENTED IN WORKTREE / B1 CORRECTED / TARGETED UNIT VALIDATION PASSED / FULL CHECK EXPECTED_ENVIRONMENT_BLOCK** (DEC-069). Recovery **COMMITTED + SOURCE BRANCH PUBLISHED** at `47a101b261a2fab144d73469e699389fc94ceb1c`. Implementation uncommitted. Next human gate: architect re-review of B1, then staging/commit. Implementation authorization is not migration-execution authorization. Recovery publication history: Super Agent continuity 2026-08-20 (one-shot exception; not standing hook-bypass authorization).
 
 ### Manual local QA command battery (People / admin UI batches)
 
@@ -1024,7 +1024,7 @@ Progression must be deliberate:
 3. **Never automatic:**
    - merge;
    - production deploy;
-   - migrations (`prisma migrate deploy`, `migrate dev`, `migrate reset`);
+   - migrations (`prisma migrate deploy`, `migrate dev`, `migrate reset`); canonical operator path is `pnpm ops:migrate-deploy-remote` (DEC-069) and remains human-gated;
    - auth, billing, RLS/grants, demo policy, import/apply, or data-deletion behavior changes;
    - writes to `roadmap-todo.md` or `current-state.md` without [Memory Update Protocol](#memory-update-protocol) and explicit approval.
 

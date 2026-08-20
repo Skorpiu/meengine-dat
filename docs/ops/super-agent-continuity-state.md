@@ -4,9 +4,14 @@
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
 **Live recovery snapshot:** 2026-08-20 — DAT_4.5 Solution #4
-`migration-deploy-target-safety-gate-v1` (recovery/kickoff + read-only
-preflight; implementation **not started**). Historical section dates below
-remain the dates of those checkpoints.
+`migration-deploy-target-safety-gate-v1` (**IMPLEMENTED IN WORKTREE /
+B1 CORRECTED / TARGETED UNIT VALIDATION PASSED / FULL CHECK
+EXPECTED_ENVIRONMENT_BLOCK**; DEC-069). Recovery commit **COMMITTED +
+SOURCE BRANCH PUBLISHED** at
+`47a101b261a2fab144d73469e699389fc94ceb1c`. Implementation uncommitted.
+Implementation commit **none**. Implementation publication **none**.
+No migration has been run. Architect EQR B1 (independent DIRECT_URL host)
+is corrected in the worktree and pending architect re-review.
 
 **Conversation-recovery note (2026-08-20):** part of the external ChatGPT
 conversation became unavailable after Solution #3 work. Live Git evidence is
@@ -54,12 +59,15 @@ handoff) are historical evidence and are not live execution state.
   `0409d92525940be751e6bc07c9da32668a834e53` remains the Solution #2
   closure anchor, not the current `main` tip.
 - Active solution branch: `migration-deploy-target-safety-gate-v1`
-  (operator-prepared from published `main`
-  `14c3865372502f074941a1fc81a55b5ec7f1b589` with zero pre-recovery own
-  commits. This recovery checkpoint is documentation-only and may advance
-  branch HEAD. Resolve current HEAD through Git.
-  `refs/heads/migration-deploy-target-safety-gate-v1` **ABSENT** remotely /
-  **NOT YET PUBLISHED** until an actual push occurs).
+  (base published `main` `14c3865372502f074941a1fc81a55b5ec7f1b589`;
+  recovery commit **COMMITTED + SOURCE BRANCH PUBLISHED**
+  `47a101b261a2fab144d73469e699389fc94ceb1c`; tree
+  `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`.
+  Recovery remote anchor:
+  `origin/migration-deploy-target-safety-gate-v1` =
+  `47a101b261a2fab144d73469e699389fc94ceb1c`. Implementation is
+  uncommitted worktree; implementation commit **none**;
+  implementation publication **none**).
 - DAT_4.4: CLOSED.
 - Engineering Excellence Audit: **CLOSED** (explicit human GO).
 - Findings: 51. Remediation coverage: 51/51. Unresolved repository-static
@@ -84,22 +92,22 @@ handoff) are historical evidence and are not live execution state.
   **COMPLETE** — `local-development-database-isolation-v1` absent locally
   and on `origin`. Do not invent a future implementation SHA.
 - Solution #4 / `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1`:
-  **ACTIVE — RECOVERY/KICKOFF + READ-ONLY PREFLIGHT**. Branch created from
-  published `main` `14c3865372502f074941a1fc81a55b5ec7f1b589` with
-  **pre-recovery own commits: 0**. This recovery checkpoint is
-  documentation-only and may advance branch HEAD. Implementation commits:
-  **0**. Implementation **NOT STARTED**. Functional changes **NONE**. Remote
-  Solution #4 branch **ABSENT / NOT YET PUBLISHED** until an actual push
-  occurs. Do not invent a recovery or implementation SHA. Resolve current
-  HEAD through Git. Do not claim Solution #4 validated or implemented. Do
-  not claim a migration has been run.
+  **IMPLEMENTED IN WORKTREE / B1 CORRECTED / TARGETED UNIT VALIDATION PASSED / FULL CHECK EXPECTED_ENVIRONMENT_BLOCK** (DEC-069). Base /
+  published `main` `14c3865372502f074941a1fc81a55b5ec7f1b589`. Recovery
+  commit **COMMITTED + SOURCE BRANCH PUBLISHED**
+  `47a101b261a2fab144d73469e699389fc94ceb1c` (tree
+  `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`). Recovery remote anchor:
+  `origin/migration-deploy-target-safety-gate-v1` =
+  `47a101b261a2fab144d73469e699389fc94ceb1c`. Implementation uncommitted;
+  implementation commit **none**; implementation publication **none**;
+  merge SHA **none**. Do not invent those SHAs. Do not claim the
+  implementation is committed, pushed, merged, or published. Do not claim
+  a migration has been run. Next human gate: architect re-review of B1,
+  then staging/commit. Publication history and B1 disposition are recorded
+  below.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch. Do not create a separate documentation-only branch for
   normal solution state.
-- Next smallest-safe implementation after this recovery/preflight (not
-  authorized by the recovery itself): implement
-  `migration-deploy-target-safety-gate-v1` only after explicit
-  `APPROVED TO IMPLEMENT: migration-deploy-target-safety-gate-v1`.
 - `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain separate.
 - Ordinary `pnpm dev` remains blocked on this workstation until local
   `.env` / `.env.local` use loopback `DATABASE_URL` / `DIRECT_URL`. Do not
@@ -131,21 +139,124 @@ anchor, continuity branch HEAD, main merge SHA, and published main state.
 
 ### Solution #4 recovery/preflight facts (2026-08-20)
 
+Historical recovery checkpoint. Live status is the implementation facts
+section below.
+
 - Finding: `DB-MIGRATION-001`.
 - Branch: `migration-deploy-target-safety-gate-v1`.
-- Status: **ACTIVE — RECOVERY/KICKOFF + READ-ONLY PREFLIGHT**.
+- Status at recovery: **ACTIVE — RECOVERY/KICKOFF + READ-ONLY PREFLIGHT**.
 - Base / published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589`.
-- Pre-recovery own commits: **0** (before this documentation checkpoint,
-  branch HEAD equalled published `main`; that equality is historical, not
-  eternal live-state).
-- This recovery checkpoint is documentation-only and may advance branch
-  HEAD. Resolve current HEAD through Git. Do not invent the recovery
-  commit SHA before it exists.
-- Implementation commits: **0**. Implementation **NOT STARTED**.
-- Functional changes: **NONE**. No wrapper, package script, Prisma
-  migration, or schema write was added by this recovery.
-- Remote branch: **ABSENT / NOT YET PUBLISHED** until an actual push occurs.
-- This recovery checkpoint does not authorize implementation.
+- Recovery commit (verified later): `47a101b261a2fab144d73469e699389fc94ceb1c`.
+- This recovery checkpoint was documentation-only.
+
+### Solution #4 implementation facts (2026-08-20)
+
+- Policy: DEC-069.
+- Finding: `DB-MIGRATION-001`.
+- Branch: `migration-deploy-target-safety-gate-v1`.
+- Status: **IMPLEMENTED IN WORKTREE / B1 CORRECTED / TARGETED UNIT VALIDATION PASSED / FULL CHECK EXPECTED_ENVIRONMENT_BLOCK**.
+- Human authorization received: `APPROVED TO IMPLEMENT: migration-deploy-target-safety-gate-v1`.
+- Distinct anchors:
+  - Solution #4 base / published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589`
+  - Recovery commit: **COMMITTED + SOURCE BRANCH PUBLISHED**
+    `47a101b261a2fab144d73469e699389fc94ceb1c`
+  - Recovery tree: `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`
+  - Recovery remote anchor:
+    `origin/migration-deploy-target-safety-gate-v1` =
+    `47a101b261a2fab144d73469e699389fc94ceb1c`
+  - Implementation: **IMPLEMENTED IN WORKTREE** (unstaged / uncommitted)
+  - Implementation commit: **none** (do not invent)
+  - Implementation publication: **none** (do not invent)
+  - Future continuity/source-publication commit: **none** (do not invent)
+  - Future merge SHA: **none** (do not invent)
+- Canonical operator path: `pnpm ops:migrate-deploy-remote` with
+  `.env.operator.production.local`.
+- Guard: `lib/ops/migration-deploy-target-guard.ts`.
+- Orchestration: `lib/ops/migration-deploy-remote.ts`.
+- CLI: `scripts/migrate-deploy-remote.ts`.
+- Expected identity: `DAT_OPS_EXPECTED_DB_HOST` (pooled),
+  `DAT_OPS_EXPECTED_DIRECT_DB_HOST` (direct/migration),
+  `DAT_OPS_EXPECTED_DB_NAME`, `DAT_OPS_EXPECTED_SUPABASE_PROJECT_REF`.
+  The expected direct host is never inferred from `DATABASE_URL`.
+- Existing inspect-only `remote-operator-target-guard.ts` was not
+  reinterpreted as write authorization.
+- DEC-068 and DEC-062 remain unchanged.
+- Targeted validation (no DB connection, no wrapper execution against operator env):
+  Vitest 102/102 (new guard/runner/CLI plus inspect-guard, local-dev isolation,
+  and destructive-seed regression);
+  ESLint on changed TS files exit 0; `tsc --noEmit` without `pretypecheck` /
+  `env:check` exit 0; `git diff --check` clean. Full `pnpm check` was **not**
+  run because it would invoke `env:check` against the workstation hosted
+  `.env` (**EXPECTED_ENVIRONMENT_BLOCK**).
+- No Prisma migration was executed. No database connection was opened by
+  this implementation. Implementation staging/commit/push/merge are not
+  authorized by this worktree state.
+- Next human gate: architect re-review of B1, then staging/commit only. Do not
+  request migration-execution authorization.
+
+### Solution #4 recovery publication history (2026-08-20)
+
+Durable publication event for the docs-only recovery commit. This is not
+implementation publication and is not standing hook-bypass authorization.
+
+- The first ordinary push of recovery commit
+  `47a101b261a2fab144d73469e699389fc94ceb1c` passed repository, branch,
+  tree, and scope guards, but the pre-push hook was blocked by DEC-068
+  because the workstation local environment had a non-local
+  `DATABASE_URL`.
+- Lint completed with 0 errors / 51 known warnings before the
+  environment refusal.
+- Classify this as `EXPECTED_ENVIRONMENT_BLOCK`, not as a
+  recovery-commit correctness failure.
+- No `.env` value, hook, safety guard, source code, database, or hosted
+  system was changed to bypass the refusal.
+- After explicit human authorization, the docs-only recovery commit was
+  published using a one-shot `git push --no-verify`.
+- Before that exceptional push, Git proved:
+  - exact HEAD `47a101b261a2fab144d73469e699389fc94ceb1c`;
+  - tree `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`;
+  - parent / `main` `14c3865372502f074941a1fc81a55b5ec7f1b589`;
+  - exact six-file docs-only scope;
+  - committed `git diff --check` PASS;
+  - worktree clean;
+  - `origin/main` unchanged.
+- Post-push proof:
+  - `origin/migration-deploy-target-safety-gate-v1`
+    = `47a101b261a2fab144d73469e699389fc94ceb1c`;
+  - `origin/main`
+    = `14c3865372502f074941a1fc81a55b5ec7f1b589`.
+- This was a **ONE-SHOT RECOVERY PUBLICATION EXCEPTION**. It is **not**
+  standing authorization to bypass Git hooks for implementation,
+  validation, future commits, merges, or `main` publication.
+
+### Solution #4 architect EQR blocker B1 (2026-08-20)
+
+- Initial implementation review was **NO-GO FOR STAGING/COMMIT**.
+- P0 blocker B1: DIRECT_URL was validated for PostgreSQL protocol, database,
+  and Supabase project ref, but was not independently bound to an expected
+  direct hostname. A username-derived project ref could therefore match
+  while the actual migration connection host did not.
+- Staging/commit was refused.
+- Correction introduced mandatory `DAT_OPS_EXPECTED_DIRECT_DB_HOST` /
+  `expectedDirectHost`. DIRECT_URL host is compared to that expected host
+  before database and project-ref checks. It is never compared to
+  `DAT_OPS_EXPECTED_DB_HOST` and is never inferred from `DATABASE_URL`.
+- Hostile regression:
+  `postgresql://postgres.<EXPECTED_REF>:***@wrong.example.com/<EXPECTED_DB>`
+  now refuses `direct_url_host_mismatch`; the Prisma runner is never
+  called; no secret / complete URL / full project ref is leaked.
+- Prisma CLI resolver proof: `require.resolve("prisma")` is
+  `MODULE_NOT_FOUND` from this module, and Prisma 6.19.0 `exports["."]`
+  maps to `build/types.js`, not the CLI. The chosen entry remains
+  `prisma/build/index.js`. A unit test proves a non-empty existing file is
+  resolved and no Prisma command is executed.
+- NO-DB revalidation after correction: Vitest 102/102; ESLint on changed
+  TS files exit 0; `tsc --noEmit` without `env:check` exit 0. Full
+  `pnpm check` remains **EXPECTED_ENVIRONMENT_BLOCK**.
+- No database connection and no Prisma migration were used to validate B1.
+- The recovery publication history above is unchanged.
+- Next human gate: architect re-review of the B1 correction, then
+  staging/commit. Implementation remains uncommitted.
 
 ### Solution #3 implementation recovery facts
 
