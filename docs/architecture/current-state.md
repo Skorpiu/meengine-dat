@@ -25,8 +25,8 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 | **DAT_4.5 handoff** | Authoritative published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589` (`merge: integrate Solution #3 local database isolation`; tree `cb7b0a7409b91a70a8c601f36d4e80fd014404cf`). Solution #2 published merge `0409d92525940be751e6bc07c9da32668a834e53` remains the Solution #2 closure anchor. Resolve live HEAD through Git; this is not an eternal served-in-Production SHA. |
 | **Solution #2** | `next-supported-lts-security-remediation-v1` / `DEP-SEC-001` — **CLOSED + PUBLISHED**. Published merge `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #2 branch cleaned local + remote. |
 | **Solution #3** | `local-development-database-isolation-v1` / `CONFIG-ENV-001` — **CLOSED ON PUBLISHED MAIN** (DEC-068). Implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; continuity/source-publication anchor `810cc9446c5f89805e282672bc03f743f8480d75`; published merge `14c3865372502f074941a1fc81a55b5ec7f1b589`. Source branch cleanup **COMPLETE** (absent locally and on `origin`). Historical in-branch wording “ACTIVE / NOT YET INTEGRATED ON MAIN” is superseded by this published merge. |
-| **Solution #4** | `migration-deploy-target-safety-gate-v1` / `DB-MIGRATION-001` — **IMPLEMENTED IN WORKTREE / B1 CORRECTED / TARGETED UNIT VALIDATION PASSED / FULL CHECK EXPECTED_ENVIRONMENT_BLOCK** (DEC-069). Base / published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589`. Recovery: **COMMITTED + SOURCE BRANCH PUBLISHED** at `47a101b261a2fab144d73469e699389fc94ceb1c` (tree `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`; `origin/migration-deploy-target-safety-gate-v1` = that SHA). Implementation remains uncommitted worktree; implementation commit **none**; implementation publication **none**; merge SHA **none**. Do not invent those SHAs. Do not claim a migration has been run. Architect EQR B1 (independent DIRECT_URL host) is corrected in the worktree. Recovery publication history: Super Agent continuity 2026-08-20 (one-shot exception; not standing hook-bypass authorization). |
-| **Ordered next** | Architect re-review of Solution #4 B1 correction, then human staging/commit gate. Do not request migration-execution authorization in this slice. Then `platform-separation-architecture-plan-v1` as a parallel architecture lane → `dependency-security-monitoring-v1` remains separate; then P1/P2 according to the post-audit queue. Do not run ordinary local `pnpm dev` until the local `.env` / `.env.local` database URLs are loopback (current hosted `.env` is expected to fail `env:check`). |
+| **Solution #4** | `migration-deploy-target-safety-gate-v1` / `DB-MIGRATION-001` — **IMPLEMENTATION COMMITTED / NOT YET SOURCE-PUBLISHED** (DEC-069; architect EQR B1 **CLOSED**; architect v2 EQR **PASS**; targeted unit validation 102/102; full check **EXPECTED_ENVIRONMENT_BLOCK**). Base / published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589`. Recovery: **COMMITTED + SOURCE BRANCH PUBLISHED** at `47a101b261a2fab144d73469e699389fc94ceb1c` (tree `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`). At this pre-publication checkpoint, `origin/migration-deploy-target-safety-gate-v1` still equals recovery `47a101b261a2fab144d73469e699389fc94ceb1c`. Resolve live remote state through Git after publication. Implementation commit `10093da1068f6d08caf0bb5f83c6810429dd61d7` (tree `62dc7214834122df7f441e0e669c375d4903628d`; parent `47a101b261a2fab144d73469e699389fc94ceb1c`; subject `fix(safety): gate remote migration deploy`). Implementation source publication **NOT YET**; merge SHA **none**. Hook delta **ACCEPTED** (format/style only; no amend/reset). Do not invent a future continuity or merge SHA. Do not claim a migration has been run. Recovery publication history: Super Agent continuity 2026-08-20 (one-shot exception; not standing hook-bypass authorization). |
+| **Ordered next** | Next operation after this continuity checkpoint: publish the current `migration-deploy-target-safety-gate-v1` branch tip. Implementation commit `10093da1068f6d08caf0bb5f83c6810429dd61d7` must remain its implementation ancestor. Resolve the publication tip through live Git; do not invent the future continuity SHA. Do not request migration-execution authorization in this slice. Then `platform-separation-architecture-plan-v1` as a parallel architecture lane → `dependency-security-monitoring-v1` remains separate; then P1/P2 according to the post-audit queue. Do not run ordinary local `pnpm dev` until the local `.env` / `.env.local` database URLs are loopback (current hosted `.env` is expected to fail `env:check`). |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
 | **Archive tag** | `archive-schedule-and-vehicles-b101112` — historical archive only; **not** a release or recovery baseline. |
@@ -660,7 +660,7 @@ priority was `billing-webhook-authenticity-gate-v1`, followed by
 the Platform separation architecture lane proceed according to their documented
 prerequisites and independence boundaries.
 
-**Live supersession (2026-08-20 Git-verified):** Solution #1 is CLOSED BY CONTAINMENT. Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1` is **CLOSED + PUBLISHED** on `main` at `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1` is **CLOSED ON PUBLISHED MAIN** at merge `14c3865372502f074941a1fc81a55b5ec7f1b589`. Solution #4 / `DB-MIGRATION-001` is **IMPLEMENTED IN WORKTREE / B1 CORRECTED / TARGETED UNIT VALIDATION PASSED / FULL CHECK EXPECTED_ENVIRONMENT_BLOCK** (DEC-069; recovery **COMMITTED + SOURCE BRANCH PUBLISHED** at `47a101b261a2fab144d73469e699389fc94ceb1c`; implementation uncommitted).
+**Live supersession (2026-08-20 Git-verified):** Solution #1 is CLOSED BY CONTAINMENT. Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1` is **CLOSED + PUBLISHED** on `main` at `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1` is **CLOSED ON PUBLISHED MAIN** at merge `14c3865372502f074941a1fc81a55b5ec7f1b589`. Solution #4 / `DB-MIGRATION-001` is **IMPLEMENTATION COMMITTED / NOT YET SOURCE-PUBLISHED** (DEC-069; architect EQR B1 **CLOSED**; architect v2 EQR **PASS**; implementation commit `10093da1068f6d08caf0bb5f83c6810429dd61d7`; recovery **COMMITTED + SOURCE BRANCH PUBLISHED** at `47a101b261a2fab144d73469e699389fc94ceb1c`; at this pre-publication checkpoint `origin/migration-deploy-target-safety-gate-v1` still equals recovery `47a101b261a2fab144d73469e699389fc94ceb1c`; resolve live remote state through Git after publication; merge SHA **none**).
 
 **Historical (2026-08-18 in-branch Solution #3 checkpoint):** Solution #3 was **ACTIVE** and **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068), **SOURCE BRANCH PUBLISHED**, **NOT YET INTEGRATED ON MAIN**, **NOT CLOSED ON MAIN**. That wording is preserved as pre-publication evidence and is superseded by the published merge above.
 
@@ -757,19 +757,30 @@ itself.
   `cb7b0a7409b91a70a8c601f36d4e80fd014404cf`). Source branch cleanup
   **COMPLETE**. Historical in-branch wording “ACTIVE / SOURCE BRANCH
   PUBLISHED / NOT YET INTEGRATED ON MAIN” is superseded by this merge.
-- Solution #4 / `migration-deploy-target-safety-gate-v1`: **IMPLEMENTED IN
-  WORKTREE / B1 CORRECTED / TARGETED UNIT VALIDATION PASSED / FULL CHECK
-  EXPECTED_ENVIRONMENT_BLOCK** (DEC-069). Base / published `main`
+- Solution #4 / `migration-deploy-target-safety-gate-v1`: **IMPLEMENTATION
+  COMMITTED / NOT YET SOURCE-PUBLISHED** (DEC-069; architect EQR B1
+  **CLOSED**; architect v2 EQR **PASS**; targeted unit validation 102/102;
+  full check **EXPECTED_ENVIRONMENT_BLOCK**). Base / published `main`
   `14c3865372502f074941a1fc81a55b5ec7f1b589`. Recovery: **COMMITTED +
   SOURCE BRANCH PUBLISHED** at `47a101b261a2fab144d73469e699389fc94ceb1c`
-  (tree `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`). Implementation
-  remains uncommitted worktree; implementation commit **none**;
-  implementation publication **none**; merge SHA **none**. Do not invent
-  those SHAs. Do not claim a migration has been run. Architect EQR B1
-  (independent DIRECT_URL host) is corrected in the worktree. Recovery
-  publication history: Super Agent continuity 2026-08-20 (one-shot
-  exception; not standing hook-bypass authorization). Next human gate:
-  architect re-review of B1, then staging/commit — not migration
+  (tree `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`). Implementation commit
+  `10093da1068f6d08caf0bb5f83c6810429dd61d7` (tree
+  `62dc7214834122df7f441e0e669c375d4903628d`; parent
+  `47a101b261a2fab144d73469e699389fc94ceb1c`; subject
+  `fix(safety): gate remote migration deploy`). Implementation source
+  publication **NOT YET**. At this pre-publication checkpoint,
+  `origin/migration-deploy-target-safety-gate-v1` still equals recovery
+  `47a101b261a2fab144d73469e699389fc94ceb1c`. Resolve live remote state
+  through Git after publication. Merge SHA **none**. Hook delta
+  **ACCEPTED** (format/style only; no amend/reset). Do not invent a future
+  continuity or merge SHA. Do not claim a migration has been run.
+  Recovery publication history: Super Agent continuity 2026-08-20
+  (one-shot exception; not standing hook-bypass authorization). Next
+  operation after this continuity checkpoint: publish the current
+  `migration-deploy-target-safety-gate-v1` branch tip. Implementation
+  commit `10093da1068f6d08caf0bb5f83c6810429dd61d7` must remain its
+  implementation ancestor. Resolve the publication tip through live Git;
+  do not invent the future continuity SHA. Not merge, not migration
   execution.
 - Authoritative published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589`.
 - Canonical documentation and Super Agent continuity are updated in each
