@@ -3,9 +3,16 @@
 
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
-**Live recovery snapshot:** 2026-08-18 — DAT_4.5 Solution #3
-`local-development-database-isolation-v1`. Historical section dates below
+**Live recovery snapshot:** 2026-08-20 — DAT_4.5 Solution #4
+`migration-deploy-target-safety-gate-v1` (recovery/kickoff + read-only
+preflight; implementation **not started**). Historical section dates below
 remain the dates of those checkpoints.
+
+**Conversation-recovery note (2026-08-20):** part of the external ChatGPT
+conversation became unavailable after Solution #3 work. Live Git evidence is
+authoritative. This checkpoint reconciles canonical continuity documents to
+the published Solution #3 merge and the operator-prepared Solution #4
+branch. No product behavior was changed by the recovery itself.
 
 **Validity rule:** this snapshot is valid at the Git commit containing it. Resolve live branch and HEAD through Git; do not treat historical SHA values as eternal current state.
 
@@ -40,11 +47,19 @@ This section is the current operational recovery state. Older checkpoints below
 checkpoints, and the docs-only `canonical-live-state-reconciliation-v1`
 handoff) are historical evidence and are not live execution state.
 
-- Starting / still-published `main`:
-  `0409d92525940be751e6bc07c9da32668a834e53`.
-- Active solution branch: `local-development-database-isolation-v1`
-  (`origin/local-development-database-isolation-v1` **SOURCE BRANCH
-  PUBLISHED**).
+- Authoritative published `main` / live `origin/main`:
+  `14c3865372502f074941a1fc81a55b5ec7f1b589`
+  (`merge: integrate Solution #3 local database isolation`; tree
+  `cb7b0a7409b91a70a8c601f36d4e80fd014404cf`). Solution #2 published merge
+  `0409d92525940be751e6bc07c9da32668a834e53` remains the Solution #2
+  closure anchor, not the current `main` tip.
+- Active solution branch: `migration-deploy-target-safety-gate-v1`
+  (operator-prepared from published `main`
+  `14c3865372502f074941a1fc81a55b5ec7f1b589` with zero pre-recovery own
+  commits. This recovery checkpoint is documentation-only and may advance
+  branch HEAD. Resolve current HEAD through Git.
+  `refs/heads/migration-deploy-target-safety-gate-v1` **ABSENT** remotely /
+  **NOT YET PUBLISHED** until an actual push occurs).
 - DAT_4.4: CLOSED.
 - Engineering Excellence Audit: **CLOSED** (explicit human GO).
 - Findings: 51. Remediation coverage: 51/51. Unresolved repository-static
@@ -58,21 +73,33 @@ handoff) are historical evidence and are not live execution state.
   PUBLISHED MAIN**. Solution #2 branch cleaned local + remote.
   DAT_4.5 covers Solutions #2 through #11 inclusive.
 - Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1`:
-  **ACTIVE**. **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **Final EQR
-  PASS**. **Hook-delta EQR PASS**. **POST-COMMIT CANONICAL VALIDATION PASS**.
-  **SOURCE BRANCH PUBLISHED**. Durable implementation anchor
+  **CLOSED ON PUBLISHED MAIN**. Implementation anchor
   `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree
-  `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; still-published `main`
-  `0409d92525940be751e6bc07c9da32668a834e53`. **NOT YET INTEGRATED ON MAIN**.
-  **NOT CLOSED ON MAIN**. Do not claim `CONFIG-ENV-001` CLOSED ON PUBLISHED
-  MAIN. Do not invent a future merge SHA. The implementation anchor is not
-  an eternal branch HEAD; a later continuity commit will advance HEAD.
+  `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; continuity / source-publication
+  anchor `810cc9446c5f89805e282672bc03f743f8480d75`; published merge
+  `14c3865372502f074941a1fc81a55b5ec7f1b589` (parents
+  `0409d92525940be751e6bc07c9da32668a834e53` +
+  `810cc9446c5f89805e282672bc03f743f8480d75`; tree
+  `cb7b0a7409b91a70a8c601f36d4e80fd014404cf`). Source branch cleanup
+  **COMPLETE** — `local-development-database-isolation-v1` absent locally
+  and on `origin`. Do not invent a future implementation SHA.
+- Solution #4 / `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1`:
+  **ACTIVE — RECOVERY/KICKOFF + READ-ONLY PREFLIGHT**. Branch created from
+  published `main` `14c3865372502f074941a1fc81a55b5ec7f1b589` with
+  **pre-recovery own commits: 0**. This recovery checkpoint is
+  documentation-only and may advance branch HEAD. Implementation commits:
+  **0**. Implementation **NOT STARTED**. Functional changes **NONE**. Remote
+  Solution #4 branch **ABSENT / NOT YET PUBLISHED** until an actual push
+  occurs. Do not invent a recovery or implementation SHA. Resolve current
+  HEAD through Git. Do not claim Solution #4 validated or implemented. Do
+  not claim a migration has been run.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch. Do not create a separate documentation-only branch for
   normal solution state.
-- Next smallest-safe implementation slice after Solution #3 is **CLOSED ON
-  PUBLISHED MAIN**:
-  `migration-deploy-target-safety-gate-v1` (source `DB-MIGRATION-001`).
+- Next smallest-safe implementation after this recovery/preflight (not
+  authorized by the recovery itself): implement
+  `migration-deploy-target-safety-gate-v1` only after explicit
+  `APPROVED TO IMPLEMENT: migration-deploy-target-safety-gate-v1`.
 - `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain separate.
 - Ordinary `pnpm dev` remains blocked on this workstation until local
   `.env` / `.env.local` use loopback `DATABASE_URL` / `DIRECT_URL`. Do not
@@ -102,17 +129,43 @@ canonical continuity state.
 Distinguish permanently (these are **not** interchangeable): implementation
 anchor, continuity branch HEAD, main merge SHA, and published main state.
 
+### Solution #4 recovery/preflight facts (2026-08-20)
+
+- Finding: `DB-MIGRATION-001`.
+- Branch: `migration-deploy-target-safety-gate-v1`.
+- Status: **ACTIVE — RECOVERY/KICKOFF + READ-ONLY PREFLIGHT**.
+- Base / published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589`.
+- Pre-recovery own commits: **0** (before this documentation checkpoint,
+  branch HEAD equalled published `main`; that equality is historical, not
+  eternal live-state).
+- This recovery checkpoint is documentation-only and may advance branch
+  HEAD. Resolve current HEAD through Git. Do not invent the recovery
+  commit SHA before it exists.
+- Implementation commits: **0**. Implementation **NOT STARTED**.
+- Functional changes: **NONE**. No wrapper, package script, Prisma
+  migration, or schema write was added by this recovery.
+- Remote branch: **ABSENT / NOT YET PUBLISHED** until an actual push occurs.
+- This recovery checkpoint does not authorize implementation.
+
 ### Solution #3 implementation recovery facts
 
 - Policy: DEC-068.
-- Publication: **SOURCE BRANCH PUBLISHED** at
-  `origin/local-development-database-isolation-v1`.
-- Durable implementation anchor (not eternal branch HEAD):
+- **Live status (2026-08-20):** **CLOSED ON PUBLISHED MAIN**.
+- Durable implementation anchor:
   `a717534ed351440fdfbf6800b218d56d6eb85282`.
 - Accepted implementation tree:
   `5b9aa29649bdf929bf7df5f9f641eb950ce16275`.
-- Still-published `main`: `0409d92525940be751e6bc07c9da32668a834e53`.
-- **NOT YET INTEGRATED ON MAIN**. **NOT CLOSED ON MAIN**.
+- Continuity / source-publication anchor:
+  `810cc9446c5f89805e282672bc03f743f8480d75`.
+- Published merge: `14c3865372502f074941a1fc81a55b5ec7f1b589`.
+- Published merge tree: `cb7b0a7409b91a70a8c601f36d4e80fd014404cf`.
+- Branch cleanup: **COMPLETE** (absent locally and on `origin`).
+- **Historical (pre-publication in-branch state):** publication was
+  **SOURCE BRANCH PUBLISHED** at
+  `origin/local-development-database-isolation-v1`; still-published `main`
+  was `0409d92525940be751e6bc07c9da32668a834e53`; wording **NOT YET
+  INTEGRATED ON MAIN** / **NOT CLOSED ON MAIN** was accurate at that
+  checkpoint and is superseded by the published merge above.
 - Guard: `lib/ops/local-development-database-guard.ts`.
 - Tests: `lib/ops/local-development-database-guard.unit.test.ts`.
 - Wiring: `scripts/env-check.ts` after existing `loadEnvConfig` + `lib/env`

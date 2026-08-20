@@ -147,6 +147,17 @@ In analysis and final reports, label content explicitly where helpful:
 
 Keep **roadmap**, **current-state**, and **architect-mode** hints consistent after a docs batch (Memory Consistency Gate). When backlog or **Done** slices change, update those three (and [decision-log.md](../architecture/decision-log.md) when the decision is durable) in the **same batch** as the implementation or an explicit docs sync batch — do not leave Super-Agent memory stale.
 
+### Canonical live-state pointer (DAT_4.5)
+
+This operating model owns **protocol**, not Git-tip status. Live solution status lives in [current-state.md](../architecture/current-state.md), [roadmap-todo.md](../architecture/roadmap-todo.md), [architect-mode.mdc](../../.cursor/rules/architect-mode.mdc), and [super-agent-continuity-state.md](./super-agent-continuity-state.md).
+
+**Recovery checkpoint 2026-08-20:** part of the external ChatGPT conversation became unavailable after Solution #3 work. Live Git evidence is authoritative. Canonical docs were reconciled to published Git state. No product behavior was changed by the recovery itself. This protocol document does **not** authorize Solution #4 implementation.
+
+- Solution #1 / `BILLING-SEC-001`: **CLOSED BY CONTAINMENT**.
+- Solution #2 / `DEP-SEC-001`: **CLOSED ON PUBLISHED MAIN** at `0409d92525940be751e6bc07c9da32668a834e53`.
+- Solution #3 / `CONFIG-ENV-001`: **CLOSED ON PUBLISHED MAIN** at `14c3865372502f074941a1fc81a55b5ec7f1b589`.
+- Solution #4 / `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1`: **ACTIVE — RECOVERY/KICKOFF + READ-ONLY PREFLIGHT**. Implementation **NOT STARTED**. Next implementation requires `APPROVED TO IMPLEMENT: migration-deploy-target-safety-gate-v1`.
+
 ### Manual local QA command battery (People / admin UI batches)
 
 When a batch final report includes a **manual QA checklist**, Cursor must include these **exact** commands (Git Bash paths as written; Rui may run from any shell that reaches the directory):

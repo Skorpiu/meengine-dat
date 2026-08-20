@@ -22,10 +22,11 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 | **Node.js runtime** | **Node 24 migration closed.** Local compatibility passed on Node 24.18.0; repository pins, package engines, `.nvmrc`, GitLab CI and runner documentation are aligned; branch and `main` pipelines passed using `node:24`; Vercel Preview and Production deployed successfully with Project Settings and effective runtime on Node 24.x; post-deploy non-destructive hosted gates passed at `909b69a`. |
 | **Engineering audit** | `engineering-excellence-audit-v1` — **CLOSED 2026-08-13 by explicit human authorization**. Final Engineering Quality Review PASS; 0 closure-blocking dimensions; 51 findings with 51/51 remediation coverage; no repository-static audit frontier remains. The findings remain active remediation debt in the post-audit execution queue. Do not reopen the global audit without contradictory evidence. |
 | **Solution #1** | `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` — **CLOSED BY CONTAINMENT** and integrated into `main`. No active Billing implementation branch at this recovery checkpoint. |
-| **DAT_4.5 handoff** | Authoritative published `main`: `0409d92525940be751e6bc07c9da32668a834e53` (`merge: integrate Solution #2 Next 16 Active LTS`). Resolve live HEAD through Git; this is not an eternal served-in-Production SHA. |
+| **DAT_4.5 handoff** | Authoritative published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589` (`merge: integrate Solution #3 local database isolation`; tree `cb7b0a7409b91a70a8c601f36d4e80fd014404cf`). Solution #2 published merge `0409d92525940be751e6bc07c9da32668a834e53` remains the Solution #2 closure anchor. Resolve live HEAD through Git; this is not an eternal served-in-Production SHA. |
 | **Solution #2** | `next-supported-lts-security-remediation-v1` / `DEP-SEC-001` — **CLOSED + PUBLISHED**. Published merge `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #2 branch cleaned local + remote. |
-| **Solution #3** | `local-development-database-isolation-v1` / `CONFIG-ENV-001` — **ACTIVE**. **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **Final EQR PASS**. **Hook-delta EQR PASS**. **POST-COMMIT CANONICAL VALIDATION PASS**. **SOURCE BRANCH PUBLISHED** (`origin/local-development-database-isolation-v1`; durable implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`). Base / still-published `main` `0409d92525940be751e6bc07c9da32668a834e53`. **NOT YET INTEGRATED ON MAIN**. **NOT CLOSED ON MAIN**. Do not claim `CONFIG-ENV-001` CLOSED ON PUBLISHED MAIN. Do not invent a future merge SHA. The implementation anchor is not an eternal branch HEAD. |
-| **Ordered next** | After Solution #3 is **CLOSED ON PUBLISHED MAIN**: `migration-deploy-target-safety-gate-v1` (source `DB-MIGRATION-001`). Then `platform-separation-architecture-plan-v1` as a parallel architecture lane → `dependency-security-monitoring-v1` remains separate; then P1/P2 according to the post-audit queue. Do not run ordinary local `pnpm dev` until the local `.env` / `.env.local` database URLs are loopback (current hosted `.env` is expected to fail `env:check`). |
+| **Solution #3** | `local-development-database-isolation-v1` / `CONFIG-ENV-001` — **CLOSED ON PUBLISHED MAIN** (DEC-068). Implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; continuity/source-publication anchor `810cc9446c5f89805e282672bc03f743f8480d75`; published merge `14c3865372502f074941a1fc81a55b5ec7f1b589`. Source branch cleanup **COMPLETE** (absent locally and on `origin`). Historical in-branch wording “ACTIVE / NOT YET INTEGRATED ON MAIN” is superseded by this published merge. |
+| **Solution #4** | `migration-deploy-target-safety-gate-v1` / `DB-MIGRATION-001` — **ACTIVE — RECOVERY/KICKOFF + READ-ONLY PREFLIGHT**. Base `14c3865372502f074941a1fc81a55b5ec7f1b589`; pre-recovery own commits `0`; recovery checkpoint docs-only; implementation commits `0`. Remote branch **ABSENT / NOT YET PUBLISHED**. Implementation **NOT STARTED**. Functional changes **NONE**. Resolve current HEAD through Git. Do not invent a future implementation SHA. Do not claim a migration has been run. |
+| **Ordered next** | After this recovery/preflight: implement `migration-deploy-target-safety-gate-v1` only with `APPROVED TO IMPLEMENT: migration-deploy-target-safety-gate-v1`. Then `platform-separation-architecture-plan-v1` as a parallel architecture lane → `dependency-security-monitoring-v1` remains separate; then P1/P2 according to the post-audit queue. Do not run ordinary local `pnpm dev` until the local `.env` / `.env.local` database URLs are loopback (current hosted `.env` is expected to fail `env:check`). |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
 | **Archive tag** | `archive-schedule-and-vehicles-b101112` — historical archive only; **not** a release or recovery baseline. |
@@ -659,13 +660,9 @@ priority was `billing-webhook-authenticity-gate-v1`, followed by
 the Platform separation architecture lane proceed according to their documented
 prerequisites and independence boundaries.
 
-**Live supersession:** Solution #1 is CLOSED BY CONTAINMENT. Solution #2 /
-`DEP-SEC-001` / `next-supported-lts-security-remediation-v1` is **CLOSED +
-PUBLISHED** on `main` at `0409d92525940be751e6bc07c9da32668a834e53`.
-`DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #3 /
-`CONFIG-ENV-001` / `local-development-database-isolation-v1` is **ACTIVE** and
-**IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068), **SOURCE BRANCH PUBLISHED**,
-**NOT YET INTEGRATED ON MAIN**, **NOT CLOSED ON MAIN**.
+**Live supersession (2026-08-20 Git-verified):** Solution #1 is CLOSED BY CONTAINMENT. Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1` is **CLOSED + PUBLISHED** on `main` at `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1` is **CLOSED ON PUBLISHED MAIN** at merge `14c3865372502f074941a1fc81a55b5ec7f1b589`. Solution #4 / `DB-MIGRATION-001` is **ACTIVE — RECOVERY/KICKOFF + READ-ONLY PREFLIGHT** (implementation not started).
+
+**Historical (2026-08-18 in-branch Solution #3 checkpoint):** Solution #3 was **ACTIVE** and **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068), **SOURCE BRANCH PUBLISHED**, **NOT YET INTEGRATED ON MAIN**, **NOT CLOSED ON MAIN**. That wording is preserved as pre-publication evidence and is superseded by the published merge above.
 
 <!-- engineering-excellence-audit-main-integration-v1 -->
 ## Engineering audit integration baseline
@@ -736,6 +733,12 @@ Local-main integration recovery anchor: `38812394107e96649cb2b61bbeae73ae6ae3be0
 <!-- dat-45-live-navigator-v1 -->
 ## DAT_4.5 live navigator
 
+**Conversation-recovery note (2026-08-20):** part of the external ChatGPT
+conversation became unavailable after Solution #3 work. Live Git evidence is
+authoritative. This recovery checkpoint reconciles canonical docs to the
+published Solution #3 merge. No product behavior was changed by the recovery
+itself.
+
 - DAT_4.4: CLOSED.
 - Engineering Excellence Audit: **CLOSED** (explicit human GO). Findings 51;
   coverage 51/51; repository-static frontier: none. Do not reopen the global
@@ -745,25 +748,32 @@ Local-main integration recovery anchor: `38812394107e96649cb2b61bbeae73ae6ae3be0
   PUBLISHED**. Published merge `0409d92525940be751e6bc07c9da32668a834e53`.
   `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #2 branch cleaned
   local + remote.
-- Solution #3 / `local-development-database-isolation-v1`: **ACTIVE**.
-  **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **Final EQR PASS**.
-  **Hook-delta EQR PASS**. **POST-COMMIT CANONICAL VALIDATION PASS**.
-  **SOURCE BRANCH PUBLISHED** (`origin/local-development-database-isolation-v1`).
-  Durable implementation anchor
+- Solution #3 / `local-development-database-isolation-v1`: **CLOSED ON
+  PUBLISHED MAIN**. Implementation anchor
   `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree
-  `5b9aa29649bdf929bf7df5f9f641eb950ce16275`. Base / still-published `main`
-  `0409d92525940be751e6bc07c9da32668a834e53`. `CONFIG-ENV-001` is **NOT YET
-  INTEGRATED ON MAIN** and **NOT CLOSED ON MAIN**. Do not claim CLOSED ON
-  PUBLISHED MAIN. Do not invent a future merge SHA. The implementation
-  anchor is not an eternal branch HEAD; a later continuity commit will
-  advance HEAD.
-- Starting / still-published `main`: `0409d92525940be751e6bc07c9da32668a834e53`.
+  `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; continuity/source-publication
+  anchor `810cc9446c5f89805e282672bc03f743f8480d75`; published merge
+  `14c3865372502f074941a1fc81a55b5ec7f1b589` (tree
+  `cb7b0a7409b91a70a8c601f36d4e80fd014404cf`). Source branch cleanup
+  **COMPLETE**. Historical in-branch wording “ACTIVE / SOURCE BRANCH
+  PUBLISHED / NOT YET INTEGRATED ON MAIN” is superseded by this merge.
+- Solution #4 / `migration-deploy-target-safety-gate-v1`: **ACTIVE —
+  RECOVERY/KICKOFF + READ-ONLY PREFLIGHT**. Branch created from published
+  `main` `14c3865372502f074941a1fc81a55b5ec7f1b589` with zero pre-recovery
+  own commits. This recovery checkpoint is documentation-only and may
+  advance branch HEAD. Implementation commits **0**. Implementation
+  **NOT STARTED**. Functional changes **NONE**. Remote branch **ABSENT /
+  NOT YET PUBLISHED** until an actual push occurs. Resolve current HEAD
+  through Git. Do not invent a recovery or implementation SHA. Do not
+  claim Solution #4 validated or implemented. Do not claim a migration
+  has been run.
+- Authoritative published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589`.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch. Do not create a separate documentation-only branch for
   normal solution state. Do not invent future commit SHAs.
-- Current durable next implementation slice after Solution #3 is **CLOSED ON
-  PUBLISHED MAIN**:
-  `migration-deploy-target-safety-gate-v1` (source `DB-MIGRATION-001`).
+- Next implementation after this recovery (gated):
+  `migration-deploy-target-safety-gate-v1` requires
+  `APPROVED TO IMPLEMENT: migration-deploy-target-safety-gate-v1`.
 - `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain separate.
 - Residual Solution #3 risks (document, do not fix here): `prisma migrate
   dev` / `migrate deploy` / `db push` raw CLI; `next start`; scripts that
@@ -771,7 +781,8 @@ Local-main integration recovery anchor: `38812394107e96649cb2b61bbeae73ae6ae3be0
   identity guard; `create-platform-admin`; `seed-commercial-catalog --apply`;
   environment contract consolidation; Vercel Preview-vs-Production DB
   separation; Docker/local DB provisioning; changing any local `.env` file.
-  `CONFIG-ENV-001` does not make every Prisma command safe.
+  `CONFIG-ENV-001` does not make every Prisma command safe. Remote migrate
+  deploy remains owned by `DB-MIGRATION-001`.
 - Residual Solution #2 debt (keep, do not fix here): React Hooks v7
   `set-state-in-effect` 29, `immutability` 2, `purity` 1; existing
   `no-explicit-any` / `no-unused-vars` / `no-empty-object-type` warnings;

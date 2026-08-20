@@ -10,9 +10,9 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| `local-development-database-isolation-v1` | **P0** operational safety | **ACTIVE** — Solution #3 / `CONFIG-ENV-001`. **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **Final EQR PASS**. **Hook-delta EQR PASS**. **POST-COMMIT CANONICAL VALIDATION PASS**. **SOURCE BRANCH PUBLISHED** (`origin/local-development-database-isolation-v1`; implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`). Base/published `main` `0409d92525940be751e6bc07c9da32668a834e53`. **NOT YET INTEGRATED ON MAIN**. **NOT CLOSED ON MAIN**. Do not claim CLOSED ON PUBLISHED MAIN. Ordinary local `pnpm dev` remains blocked until local `.env` / `.env.local` use loopback URLs. After Solution #3 is **CLOSED ON PUBLISHED MAIN**: `migration-deploy-target-safety-gate-v1`. `dependency-security-monitoring-v1` remains separate. |
+| `migration-deploy-target-safety-gate-v1` | **P0** operational safety | **ACTIVE — RECOVERY/KICKOFF + READ-ONLY PREFLIGHT** — Solution #4 / `DB-MIGRATION-001`. Base `14c3865372502f074941a1fc81a55b5ec7f1b589`; pre-recovery own commits `0`; recovery checkpoint docs-only; implementation commits `0`. Remote branch **ABSENT / NOT YET PUBLISHED**. Implementation **NOT STARTED**. Functional changes **NONE**. Resolve current HEAD through Git. Do not invent a future implementation SHA. Do not claim a migration has been run. Next implementation requires `APPROVED TO IMPLEMENT: migration-deploy-target-safety-gate-v1`. |
 
-**Closed context:** `engineering-excellence-audit-v1` closed 2026-08-13 by explicit human GO (51 findings / 51/51 coverage; no repository-static frontier). Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` is **CLOSED BY CONTAINMENT** and integrated into `main`. `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
+**Closed context:** `engineering-excellence-audit-v1` closed 2026-08-13 by explicit human GO (51 findings / 51/51 coverage; no repository-static frontier). Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` is **CLOSED BY CONTAINMENT** and integrated into `main`. Solution #2 / `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN** at `0409d92525940be751e6bc07c9da32668a834e53`. Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1` is **CLOSED ON PUBLISHED MAIN** at `14c3865372502f074941a1fc81a55b5ec7f1b589` (DEC-068). `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
 ---
 
@@ -712,11 +712,11 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 | `SEC-HEADERS-001` | `security-response-headers-hardening-v1` |
 | `DEP-SEC-002` | `dependency-security-monitoring-v1` |
 
-| `CONFIG-ENV-001` | `local-development-database-isolation-v1` (**IMPLEMENTED + VALIDATED IN-BRANCH**; **SOURCE BRANCH PUBLISHED**; **NOT YET INTEGRATED ON MAIN**; **NOT CLOSED ON MAIN**, DEC-068) |
+| `CONFIG-ENV-001` | `local-development-database-isolation-v1` (**CLOSED ON PUBLISHED MAIN** at `14c3865372502f074941a1fc81a55b5ec7f1b589`, DEC-068; implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; continuity anchor `810cc9446c5f89805e282672bc03f743f8480d75`. Historical in-branch: IMPLEMENTED + VALIDATED; SOURCE BRANCH PUBLISHED; NOT YET INTEGRATED ON MAIN) |
 
 | `UI-DATA-001` | `dashboard-statistics-contract-alignment-v1` |
 
-| `DB-MIGRATION-001` | `migration-deploy-target-safety-gate-v1` |
+| `DB-MIGRATION-001` | `migration-deploy-target-safety-gate-v1` (**ACTIVE — RECOVERY/KICKOFF + READ-ONLY PREFLIGHT**; implementation **NOT STARTED**; remote branch **ABSENT / NOT YET PUBLISHED**) |
 
 ### Additional evidence / cleanup slices from the exhaustive audit
 
@@ -894,8 +894,8 @@ early risk-reduction progress without weakening validation standards.
 
 ### P0 / operational safety foundation
 
-1. `local-development-database-isolation-v1` — **ACTIVE**; **IMPLEMENTED + VALIDATED IN-BRANCH**; **SOURCE BRANCH PUBLISHED**; **NOT YET INTEGRATED ON MAIN**; **NOT CLOSED ON MAIN** (DEC-068 / Solution #3)
-2. `migration-deploy-target-safety-gate-v1`
+1. `local-development-database-isolation-v1` — **CLOSED ON PUBLISHED MAIN** at `14c3865372502f074941a1fc81a55b5ec7f1b589` (DEC-068 / Solution #3). Historical in-branch: ACTIVE; IMPLEMENTED + VALIDATED; SOURCE BRANCH PUBLISHED; NOT YET INTEGRATED ON MAIN.
+2. `migration-deploy-target-safety-gate-v1` — **ACTIVE — RECOVERY/KICKOFF + READ-ONLY PREFLIGHT** (Solution #4 / `DB-MIGRATION-001`). Implementation **NOT STARTED**.
 
 These gates must precede unsafe local database work or remote migration-authority
 changes. They may progress alongside immediate security containment where scopes
@@ -1099,9 +1099,9 @@ silently considered fixed by product deferment.
 - Solution #1 / `billing-webhook-authenticity-gate-v1`: **CLOSED BY CONTAINMENT**.
 - Solution #2 / `next-supported-lts-security-remediation-v1`: **CLOSED + PUBLISHED**. Published merge `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN** (DEC-067). Solution #2 branch cleaned local + remote.
 - DAT_4.5 covers Solutions #2 through #11 inclusive.
-- **Active implementation slice:** `local-development-database-isolation-v1`
-  (source `CONFIG-ENV-001` / Solution #3) — **ACTIVE**. **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **Final EQR PASS**. **Hook-delta EQR PASS**. **POST-COMMIT CANONICAL VALIDATION PASS**. **SOURCE BRANCH PUBLISHED** (`origin/local-development-database-isolation-v1`; implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`). Base / still-published `main` `0409d92525940be751e6bc07c9da32668a834e53`. **NOT YET INTEGRATED ON MAIN**. **NOT CLOSED ON MAIN**. Do not claim CLOSED ON PUBLISHED MAIN. Do not invent a future merge SHA.
-- After Solution #3 is **CLOSED ON PUBLISHED MAIN**: `migration-deploy-target-safety-gate-v1` (`DB-MIGRATION-001`).
+- **Conversation-recovery note (2026-08-20):** part of the external ChatGPT conversation became unavailable after Solution #3 work. Live Git evidence is authoritative. This recovery reconciles canonical docs to published Git state. No product behavior was changed by the recovery itself.
+- Solution #3 / `local-development-database-isolation-v1` (source `CONFIG-ENV-001`): **CLOSED ON PUBLISHED MAIN** at `14c3865372502f074941a1fc81a55b5ec7f1b589` (DEC-068). Implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; continuity anchor `810cc9446c5f89805e282672bc03f743f8480d75`. Source branch cleanup **COMPLETE**. Historical in-branch wording “ACTIVE / NOT YET INTEGRATED ON MAIN” is superseded.
+- **Active implementation slice:** `migration-deploy-target-safety-gate-v1` (source `DB-MIGRATION-001` / Solution #4) — **ACTIVE — RECOVERY/KICKOFF + READ-ONLY PREFLIGHT**. Base `14c3865372502f074941a1fc81a55b5ec7f1b589`; pre-recovery own commits `0`; recovery checkpoint docs-only; implementation commits `0`. Remote branch **ABSENT / NOT YET PUBLISHED**. Implementation **NOT STARTED**. Functional changes **NONE**. Resolve current HEAD through Git. Next implementation requires `APPROVED TO IMPLEMENT: migration-deploy-target-safety-gate-v1`.
 - `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain distinct.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch.

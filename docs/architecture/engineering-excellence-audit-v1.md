@@ -13,6 +13,8 @@
 
 This report is the detailed evidence record for the audit. The concise live state must remain synchronized with `.cursor/rules/architect-mode.mdc`, `current-state.md`, and `roadmap-todo.md` after every material audit phase.
 
+**Live remediation overlay (2026-08-20, Git-verified; does not reopen the audit):** Solution #1 `BILLING-SEC-001` **CLOSED BY CONTAINMENT**; Solution #2 `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN** at `0409d92525940be751e6bc07c9da32668a834e53`; Solution #3 `CONFIG-ENV-001` **CLOSED ON PUBLISHED MAIN** at `14c3865372502f074941a1fc81a55b5ec7f1b589`; Solution #4 `DB-MIGRATION-001` **ACTIVE — RECOVERY/KICKOFF + READ-ONLY PREFLIGHT** (implementation **NOT STARTED**). Conversation-recovery note: part of the external ChatGPT conversation became unavailable after Solution #3 work; live Git is authoritative; this overlay reconciles status only and does not change product behavior.
+
 ## Repository and Super Agent baseline
 
 ### Super Agent operating role
@@ -1420,7 +1422,7 @@ No INSERT, UPDATE, DELETE, schema change, hosted configuration change or product
 - no generic escape hatch may make Production the normal development default;
 - add regression tests for target classification and startup refusal.
 
-**Current remediation status (Solution #3 / DAT_4.5):** **ACTIVE**. **IMPLEMENTED + VALIDATED IN-BRANCH** by `local-development-database-isolation-v1` (DEC-068). **Final EQR PASS**. **Hook-delta EQR PASS**. **POST-COMMIT CANONICAL VALIDATION PASS**. **SOURCE BRANCH PUBLISHED** (`origin/local-development-database-isolation-v1`; durable implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`). **NOT YET INTEGRATED ON MAIN**. **NOT CLOSED ON MAIN**. Still-published `main`: `0409d92525940be751e6bc07c9da32668a834e53`. Do not invent a future merge SHA. The E4 discovery bullets above remain historically accurate. `scripts/env-check.ts` now fail-closes unless `DATABASE_URL` (and `DIRECT_URL` when present) resolve to the existing loopback/local allowlist, except when `VERCEL=1`. `CI` / `GITLAB_CI` / `NODE_ENV` are not remote-DB authorization. This does **not** make every Prisma CLI command safe; `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1` remains the next implementation slice after Solution #3 is **CLOSED ON PUBLISHED MAIN**.
+**Current remediation status (Solution #3 / DAT_4.5):** **CLOSED ON PUBLISHED MAIN** by `local-development-database-isolation-v1` (DEC-068; published merge `14c3865372502f074941a1fc81a55b5ec7f1b589`; durable implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; continuity/source-publication anchor `810cc9446c5f89805e282672bc03f743f8480d75`; source branch cleanup COMPLETE). **Historical (in-branch pre-publication):** ACTIVE; IMPLEMENTED + VALIDATED IN-BRANCH; SOURCE BRANCH PUBLISHED; NOT YET INTEGRATED ON MAIN; still-published `main` `0409d92525940be751e6bc07c9da32668a834e53`. The E4 discovery bullets above remain historically accurate. `scripts/env-check.ts` now fail-closes unless `DATABASE_URL` (and `DIRECT_URL` when present) resolve to the existing loopback/local allowlist, except when `VERCEL=1`. `CI` / `GITLAB_CI` / `NODE_ENV` are not remote-DB authorization. This does **not** make every Prisma CLI command safe; `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1` is the live Solution #4 slice (**ACTIVE — RECOVERY/KICKOFF + READ-ONLY PREFLIGHT**; implementation **NOT STARTED**).
 
 ### Cleanup / consolidation evidence retained
 
@@ -1850,7 +1852,7 @@ The audit is now at **51 confirmed findings with 51/51 remediation coverage**.
 
 - the canonical remote schema-write path ultimately invokes raw `prisma migrate deploy` after operator/environment verification;
 - there is no dedicated executable fail-closed migration wrapper that proves the target identity before the remote schema write;
-- this matters especially while `CONFIG-ENV-001` remains open;
+- this matters especially while `CONFIG-ENV-001` remains open (historical B5.1 wording; live supersession 2026-08-20: `CONFIG-ENV-001` is **CLOSED ON PUBLISHED MAIN**; the missing write-purpose migrate-deploy gate remains `DB-MIGRATION-001`);
 - the existing `remote-operator-target-guard.ts` already proves host/database/Supabase-project identity and validates DIRECT_URL project/database consistency;
 - however, its documented authorization contract is specifically inspect-only and must not silently become generic write authorization;
 - remediation slice: `migration-deploy-target-safety-gate-v1`.
@@ -2160,7 +2162,7 @@ Finding-accounting rule:
 - the global Engineering Excellence Audit remains CLOSED and is not reopened;
 - `DEP-SEC-002` / `dependency-security-monitoring-v1` remains open;
 - `TOOLCHAIN-002` remains open;
-- `CONFIG-ENV-001` is **ACTIVE**, **IMPLEMENTED + VALIDATED IN-BRANCH** by `local-development-database-isolation-v1` (DEC-068), **SOURCE BRANCH PUBLISHED**, **NOT YET INTEGRATED ON MAIN**, and **NOT CLOSED ON MAIN** (implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`);
+- `CONFIG-ENV-001` is **CLOSED ON PUBLISHED MAIN** by `local-development-database-isolation-v1` (DEC-068; published merge `14c3865372502f074941a1fc81a55b5ec7f1b589`; implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; continuity anchor `810cc9446c5f89805e282672bc03f743f8480d75`). Historical in-branch wording “ACTIVE / NOT YET INTEGRATED ON MAIN” is superseded. Solution #4 / `DB-MIGRATION-001` is **ACTIVE — RECOVERY/KICKOFF + READ-ONLY PREFLIGHT** (implementation **NOT STARTED**);
 - `@next/swc-wasm-nodejs@13.5.1` pruning remains separate;
 - React 19 ecosystem peer review remains separate;
 - browserslist/IE11 cleanup remains separate;
