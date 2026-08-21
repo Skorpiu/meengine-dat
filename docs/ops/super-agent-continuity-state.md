@@ -4,18 +4,29 @@
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
 **Live recovery snapshot:** 2026-08-21 — DAT_4.5
-`gitlab-ci-database-isolation-v1` (**IMPLEMENTED + VALIDATED +
-SOURCE-PUBLISHED + HOSTED-PIPELINE-PASS**; **NOT YET INTEGRATED ON MAIN**;
-**NOT CLOSED ON MAIN**). Implementation commit / published source
-`origin/gitlab-ci-database-isolation-v1` @
-`9c88e3942876d65ae1290819151022cf600aefa5`. Base / published `main`
-`14c3865372502f074941a1fc81a55b5ec7f1b589`. Hosted GitLab pipeline
-**#2779758386** SUCCESS; canonical job `check` **#16032754442** SUCCESS;
-`allow_failure: false`. Hosted CI isolation criterion **SATISFIED**.
-Solution #4 remains published at
-`ec39e05d2ffda40f439f3bdadc7889853e5ca9ef` and must not be modified.
-Hosted-pipeline prerequisite is **SATISFIED**; Solution #4 remains blocked
-only because this CI slice is not yet integrated into `main`.
+`gitlab-ci-database-isolation-v1` (**CLOSED ON PUBLISHED MAIN**).
+CI-isolation published integration anchor
+`594484998da5893b349bea4d2de1ac7447d37de6`. Implementation anchor
+`9c88e3942876d65ae1290819151022cf600aefa5`. Final source continuity
+anchor `ac52061a1b1e972775ecc3212e43d8f0f0688fc9`. Published-main hosted
+validation: pipeline **#2779972676** SUCCESS; canonical job `check`
+**#16034544967** SUCCESS; `allow_failure: false`. Hosted CI isolation
+criterion **SATISFIED**. DEC-068 unchanged. Current published `main`:
+resolve `origin/main` through live Git. At closure-reconciliation
+preparation, `origin/main` =
+`594484998da5893b349bea4d2de1ac7447d37de6`. Solution #4 remains published
+at `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. **NOT merged**. **NOT
+revalidated**. Now **ELIGIBLE TO RESUME REVALIDATION**. Solution #4 has
+not been revalidated against the post-CI-isolation published-main
+lineage. After this closure reconciliation is published and hosted
+validation passes, revalidate Solution #4 against the then-current
+`origin/main` tip. The CI-isolation integration anchor is
+`594484998da5893b349bea4d2de1ac7447d37de6`. Merge **NOT AUTHORIZED**.
+At closure-reconciliation preparation, the source branch
+`gitlab-ci-database-isolation-v1` existed local/remote at
+`ac52061a1b1e972775ecc3212e43d8f0f0688fc9` and GitLab reported
+merged=true. Cleanup is a separate human-controlled operation.
+Resolve current branch existence through live Git.
 
 **Validity rule:** this snapshot is valid at the Git commit containing it. Resolve live branch and HEAD through Git; do not treat historical SHA values as eternal current state.
 
@@ -50,15 +61,20 @@ This section is the current operational recovery state. Older checkpoints below
 checkpoints, and the docs-only `canonical-live-state-reconciliation-v1`
 handoff) are historical evidence and are not live execution state.
 
-- Authoritative published `main` / this branch base:
-  `14c3865372502f074941a1fc81a55b5ec7f1b589`
-  (`merge: integrate Solution #3 local database isolation`).
-- Active solution branch: `gitlab-ci-database-isolation-v1`
-  (**IMPLEMENTED + VALIDATED + SOURCE-PUBLISHED + HOSTED-PIPELINE-PASS**;
-  **NOT YET INTEGRATED ON MAIN**; **NOT CLOSED ON MAIN**).
-  Hosted GitLab pipeline **#2779758386** SUCCESS; canonical job `check`
-  **#16032754442** SUCCESS; `allow_failure: false`. Hosted CI isolation
-  criterion **SATISFIED**.
+- Current published `main`: resolve `origin/main` through live Git.
+  CI-isolation published integration anchor:
+  `594484998da5893b349bea4d2de1ac7447d37de6`
+  (`merge: integrate GitLab CI database isolation`).
+  At closure-reconciliation preparation, `origin/main` =
+  `594484998da5893b349bea4d2de1ac7447d37de6`.
+- `gitlab-ci-database-isolation-v1` is **CLOSED ON PUBLISHED MAIN**.
+  Published-main hosted validation: pipeline **#2779972676** SUCCESS;
+  canonical job `check` **#16034544967** SUCCESS; `allow_failure: false`.
+  Hosted CI isolation criterion **SATISFIED**. At closure-reconciliation
+  preparation, the source branch existed local and remote @
+  `ac52061a1b1e972775ecc3212e43d8f0f0688fc9` and GitLab reported
+  merged=true. Cleanup is a separate human-controlled operation.
+  Resolve current branch existence through live Git.
 - DAT_4.4: CLOSED.
 - Engineering Excellence Audit: **CLOSED** (explicit human GO).
 - Findings: 51. Remediation coverage: 51/51. Unresolved repository-static
@@ -89,11 +105,15 @@ handoff) are historical evidence and are not live execution state.
 - Solution #4 / `migration-deploy-target-safety-gate-v1` remains published at
   `origin/migration-deploy-target-safety-gate-v1` @
   `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. Do not modify that branch.
-  Hosted-pipeline prerequisite is **SATISFIED**. Solution #4 remains blocked
-  only because this CI slice is not yet integrated into `main`. After this
-  CI slice is integrated and published on `main`, Solution #4 may resume its
-  merge lifecycle after revalidation. Do not treat Solution #4 as
-  revalidated yet.
+  **NOT merged**. **NOT revalidated**. Now **ELIGIBLE TO RESUME
+  REVALIDATION**. Solution #4 has not been revalidated against the
+  post-CI-isolation published-main lineage. After this closure
+  reconciliation is published and hosted validation passes, revalidate
+  Solution #4 against the then-current `origin/main` tip. The
+  CI-isolation integration anchor is
+  `594484998da5893b349bea4d2de1ac7447d37de6`. Merge remains separately
+  human-controlled and **NOT AUTHORIZED**. Do not treat Solution #4 as
+  ready to merge. Do not advance to Solution #5.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch. Do not create a separate documentation-only branch for
   normal solution state.
@@ -104,8 +124,18 @@ handoff) are historical evidence and are not live execution state.
 
 ### `gitlab-ci-database-isolation-v1` implementation recovery facts
 
-- Slice: `gitlab-ci-database-isolation-v1`.
-- Base / published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589`.
+- Slice: `gitlab-ci-database-isolation-v1` — **CLOSED ON PUBLISHED MAIN**.
+- Historical entry / Solution #3 published `main` baseline:
+  `14c3865372502f074941a1fc81a55b5ec7f1b589`.
+- Published integration anchor:
+  `594484998da5893b349bea4d2de1ac7447d37de6`
+  (`merge: integrate GitLab CI database isolation`; tree
+  `8e06964dacb5dad1397016c8f5086f8ee67090e8`; parents
+  `14c3865372502f074941a1fc81a55b5ec7f1b589` +
+  `ac52061a1b1e972775ecc3212e43d8f0f0688fc9`).
+- Implementation anchor: `9c88e3942876d65ae1290819151022cf600aefa5`.
+- Final source continuity anchor:
+  `ac52061a1b1e972775ecc3212e43d8f0f0688fc9`.
 - Runtime change: `.gitlab-ci.yml` `before_script` exports deterministic
   loopback `DATABASE_URL` / `DIRECT_URL` after PATH setup and before
   `pnpm config` / `pnpm install`. Top-level dummy YAML variables retained.
@@ -121,22 +151,31 @@ handoff) are historical evidence and are not live execution state.
   errors / 51 warnings; env:check; Prisma Client generation; Vitest 208/208
   files, 1765/1765 tests; Next production build).
 - Solution #4 files were not introduced. Solution #4 remote tip remains
-  `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. Hosted-pipeline prerequisite
-  is **SATISFIED**. Solution #4 remains blocked only because this CI slice
-  is not yet integrated into `main`. After integration and publication on
-  `main`, Solution #4 may resume its merge lifecycle after revalidation.
-  Do not treat Solution #4 as revalidated yet.
-- Hosted GitLab pipeline **#2779758386** (ref
-  `gitlab-ci-database-isolation-v1`, SHA
-  `9c88e3942876d65ae1290819151022cf600aefa5`, source `push`) **SUCCESS**.
-  Canonical job `check` **#16032754442** **SUCCESS**; `allow_failure: false`.
+  `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. **NOT merged**. **NOT
+  revalidated**. Now **ELIGIBLE TO RESUME REVALIDATION**. Solution #4 has
+  not been revalidated against the post-CI-isolation published-main
+  lineage. After this closure reconciliation is published and hosted
+  validation passes, revalidate Solution #4 against the then-current
+  `origin/main` tip. The CI-isolation integration anchor is
+  `594484998da5893b349bea4d2de1ac7447d37de6`. Merge remains separately
+  human-controlled and **NOT AUTHORIZED**. Do not treat Solution #4 as
+  ready to merge.
+- Historical source-branch hosted evidence (pre-merge): pipeline
+  **#2779758386** SUCCESS on SHA `9c88e3942876d65ae1290819151022cf600aefa5`;
+  final source-tip pipeline **#2779877308** SUCCESS on SHA
+  `ac52061a1b1e972775ecc3212e43d8f0f0688fc9`; source-tip job `check`
+  **#16033761928** SUCCESS; `allow_failure: false`.
+- Published-main hosted validation: pipeline **#2779972676** (ref `main`,
+  SHA `594484998da5893b349bea4d2de1ac7447d37de6`, source `push`) **SUCCESS**.
+  Canonical job `check` **#16034544967** **SUCCESS**; `allow_failure: false`.
   Hosted CI isolation criterion **SATISFIED**.
-- Lifecycle: **IMPLEMENTED + VALIDATED + SOURCE-PUBLISHED +
-  HOSTED-PIPELINE-PASS**; **NOT YET INTEGRATED ON MAIN**; **NOT CLOSED ON
-  MAIN**. Implementation commit:
-  `9c88e3942876d65ae1290819151022cf600aefa5`. Source branch published at
-  `origin/gitlab-ci-database-isolation-v1`. No GitLab hosted settings
-  mutation. DEC-068 unchanged. No new DEC.
+- At closure-reconciliation preparation, source branch
+  `gitlab-ci-database-isolation-v1` existed local and remote @
+  `ac52061a1b1e972775ecc3212e43d8f0f0688fc9` and GitLab reported
+  merged=true. Cleanup is a separate human-controlled operation.
+  Resolve current branch existence through live Git.
+- Zero DB / zero migration. No GitLab hosted settings mutation. No `.env`
+  mutation. No Production mutation. DEC-068 unchanged. No new DEC.
 
 ### Per-solution documentation and continuity lifecycle
 

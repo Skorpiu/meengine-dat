@@ -22,12 +22,12 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 | **Node.js runtime** | **Node 24 migration closed.** Local compatibility passed on Node 24.18.0; repository pins, package engines, `.nvmrc`, GitLab CI and runner documentation are aligned; branch and `main` pipelines passed using `node:24`; Vercel Preview and Production deployed successfully with Project Settings and effective runtime on Node 24.x; post-deploy non-destructive hosted gates passed at `909b69a`. |
 | **Engineering audit** | `engineering-excellence-audit-v1` — **CLOSED 2026-08-13 by explicit human authorization**. Final Engineering Quality Review PASS; 0 closure-blocking dimensions; 51 findings with 51/51 remediation coverage; no repository-static audit frontier remains. The findings remain active remediation debt in the post-audit execution queue. Do not reopen the global audit without contradictory evidence. |
 | **Solution #1** | `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` — **CLOSED BY CONTAINMENT** and integrated into `main`. No active Billing implementation branch at this recovery checkpoint. |
-| **DAT_4.5 handoff** | Authoritative published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589` (`merge: integrate Solution #3 local database isolation`). Resolve live HEAD through Git; this is not an eternal served-in-Production SHA. |
+| **DAT_4.5 handoff** | Current published `main`: resolve `origin/main` through live Git. CI-isolation published integration anchor: `594484998da5893b349bea4d2de1ac7447d37de6` (`merge: integrate GitLab CI database isolation`). At closure-reconciliation preparation, `origin/main` = `594484998da5893b349bea4d2de1ac7447d37de6`. This is not an eternal served-in-Production SHA. |
 | **Solution #2** | `next-supported-lts-security-remediation-v1` / `DEP-SEC-001` — **CLOSED + PUBLISHED**. Published merge `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #2 branch cleaned local + remote. |
 | **Solution #3** | `local-development-database-isolation-v1` / `CONFIG-ENV-001` — **CLOSED ON PUBLISHED MAIN** (DEC-068). Implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; published merge `14c3865372502f074941a1fc81a55b5ec7f1b589`. |
-| **GitLab CI isolation** | `gitlab-ci-database-isolation-v1` — **IMPLEMENTED + VALIDATED + SOURCE-PUBLISHED + HOSTED-PIPELINE-PASS**; **NOT YET INTEGRATED ON MAIN**; **NOT CLOSED ON MAIN**. Implementation commit / published source `origin/gitlab-ci-database-isolation-v1` @ `9c88e3942876d65ae1290819151022cf600aefa5`. Base / published `main` `14c3865372502f074941a1fc81a55b5ec7f1b589`. Hosted GitLab pipeline **#2779758386** (ref `gitlab-ci-database-isolation-v1`, SHA `9c88e3942876d65ae1290819151022cf600aefa5`, source `push`) **SUCCESS**. Canonical job `check` **#16032754442** **SUCCESS**; `allow_failure: false`. Hosted CI isolation criterion **SATISFIED**. Remediation: GitLab `before_script` reasserts process-local loopback `DATABASE_URL` / `DIRECT_URL` before `pnpm install` / `pnpm check`. Higher-precedence GitLab CI/CD variables can override YAML defaults; runner-provided environment may also supply values to the job shell. The `before_script` shell export deterministically reasserts the loopback URLs after environment injection. DEC-068 unchanged (no CI remote-DB escape). Zero DB / zero migration. No GitLab hosted settings mutation. Cause classification: repository evidence supports external job-environment injection as the cause class. Higher-precedence GitLab CI/CD variables (for example policy/pipeline/project/group/instance variables) are the most likely source. Runner-provided environment remains another externally confirmable possibility. No specific Project/Group/Runner variable has been definitively proven. |
-| **Solution #4** | `migration-deploy-target-safety-gate-v1` / `DB-MIGRATION-001` remains published at `origin/migration-deploy-target-safety-gate-v1` @ `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. **Not on this branch. Do not modify it.** Hosted-pipeline prerequisite is **SATISFIED**. Solution #4 remains blocked only because `gitlab-ci-database-isolation-v1` is **not yet integrated into `main`**. After this CI slice is integrated and published on `main`, Solution #4 may resume its merge lifecycle after revalidation. Do not treat Solution #4 as revalidated yet. |
-| **Ordered next** | Finish `gitlab-ci-database-isolation-v1` main integration (hosted pipeline **SATISFIED**; **NOT YET INTEGRATED ON MAIN**; **NOT CLOSED ON MAIN**). Solution #4 remains blocked only until this CI slice is on `main`, then may resume merge after revalidation. Then `platform-separation-architecture-plan-v1` as a parallel architecture lane → `dependency-security-monitoring-v1` remains separate; then P1/P2 according to the post-audit queue. Do not run ordinary local `pnpm dev` until the local `.env` / `.env.local` database URLs are loopback (current hosted `.env` is expected to fail `env:check`). |
+| **GitLab CI isolation** | `gitlab-ci-database-isolation-v1` — **CLOSED ON PUBLISHED MAIN**. Published integration anchor `594484998da5893b349bea4d2de1ac7447d37de6` (`merge: integrate GitLab CI database isolation`; tree `8e06964dacb5dad1397016c8f5086f8ee67090e8`; parents `14c3865372502f074941a1fc81a55b5ec7f1b589` + `ac52061a1b1e972775ecc3212e43d8f0f0688fc9`). Implementation anchor `9c88e3942876d65ae1290819151022cf600aefa5`. Final source continuity anchor `ac52061a1b1e972775ecc3212e43d8f0f0688fc9`. Published-main hosted validation: pipeline **#2779972676** SUCCESS; canonical job `check` **#16034544967** SUCCESS; `allow_failure: false`. Hosted CI isolation criterion **SATISFIED**. Remediation: GitLab `before_script` reasserts process-local loopback `DATABASE_URL` / `DIRECT_URL` after environment injection. DEC-068 unchanged (no `CI` / `GITLAB_CI` remote-DB escape). Zero DB / zero migration. No GitLab hosted settings mutation. No `.env` mutation. No Production mutation. Cause classification: repository evidence supports external job-environment injection as the cause class. Higher-precedence GitLab CI/CD variables (for example policy/pipeline/project/group/instance variables) are the most likely source. Runner-provided environment remains another externally confirmable possibility. No specific Project/Group/Runner variable has been definitively proven. At closure-reconciliation preparation, the source branch existed local/remote at `ac52061a1b1e972775ecc3212e43d8f0f0688fc9` and GitLab reported merged=true. Cleanup is a separate human-controlled operation. Resolve current branch existence through live Git. |
+| **Solution #4** | `migration-deploy-target-safety-gate-v1` / `DB-MIGRATION-001` remains source-published at `origin/migration-deploy-target-safety-gate-v1` @ `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. **Do not modify that branch.** **NOT merged**. **NOT revalidated**. Now **ELIGIBLE TO RESUME REVALIDATION**. Solution #4 has not been revalidated against the post-CI-isolation published-main lineage. After this closure reconciliation is published and hosted validation passes, revalidate Solution #4 against the then-current `origin/main` tip. The CI-isolation integration anchor is `594484998da5893b349bea4d2de1ac7447d37de6`. Merge remains separately human-controlled and **NOT AUTHORIZED**. Do not treat Solution #4 as ready to merge. |
+| **Ordered next** | Publish this closure reconciliation on `main`, then source-branch cleanup of `gitlab-ci-database-isolation-v1` only with separate human authorization. At closure-reconciliation preparation, the source branch existed local/remote at `ac52061a1b1e972775ecc3212e43d8f0f0688fc9` and GitLab reported merged=true. Cleanup is a separate human-controlled operation. Resolve current branch existence through live Git. Then revalidate Solution #4 / `migration-deploy-target-safety-gate-v1` against the then-current `origin/main` tip after this closure reconciliation is published and hosted validation passes. The CI-isolation integration anchor is `594484998da5893b349bea4d2de1ac7447d37de6`. Only after successful revalidation may Solution #4 return to its separate merge authorization gate. Do **not** treat Solution #4 as ready to merge. Do **not** advance to Solution #5. Then `platform-separation-architecture-plan-v1` as a parallel architecture lane → `dependency-security-monitoring-v1` remains separate; then P1/P2 according to the post-audit queue. Do not run ordinary local `pnpm dev` until the local `.env` / `.env.local` database URLs are loopback (current hosted `.env` is expected to fail `env:check`). |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
 | **Archive tag** | `archive-schedule-and-vehicles-b101112` — historical archive only; **not** a release or recovery baseline. |
@@ -665,9 +665,10 @@ prerequisites and independence boundaries.
 `DEP-SEC-001` / `next-supported-lts-security-remediation-v1` is **CLOSED +
 PUBLISHED** on `main` at `0409d92525940be751e6bc07c9da32668a834e53`.
 `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #3 /
-`CONFIG-ENV-001` / `local-development-database-isolation-v1` is **ACTIVE** and
-**IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068), **SOURCE BRANCH PUBLISHED**,
-**NOT YET INTEGRATED ON MAIN**, **NOT CLOSED ON MAIN**.
+`CONFIG-ENV-001` / `local-development-database-isolation-v1` is **CLOSED ON
+PUBLISHED MAIN** (DEC-068) at `14c3865372502f074941a1fc81a55b5ec7f1b589`.
+`gitlab-ci-database-isolation-v1` is **CLOSED ON PUBLISHED MAIN** at
+`594484998da5893b349bea4d2de1ac7447d37de6`.
 
 <!-- engineering-excellence-audit-main-integration-v1 -->
 ## Engineering audit integration baseline
@@ -748,26 +749,40 @@ Local-main integration recovery anchor: `38812394107e96649cb2b61bbeae73ae6ae3be0
   `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #2 branch cleaned
   local + remote.
 - Solution #3 / `local-development-database-isolation-v1`: **CLOSED ON PUBLISHED MAIN** (DEC-068; published merge `14c3865372502f074941a1fc81a55b5ec7f1b589`; durable implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`).
-- Starting / published `main` for this slice: `14c3865372502f074941a1fc81a55b5ec7f1b589`.
+- Starting / published `main` for this slice (historical entry baseline): `14c3865372502f074941a1fc81a55b5ec7f1b589`.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch. Do not create a separate documentation-only branch for
   normal solution state. Do not invent future commit SHAs.
-- Active integration-blocker slice: `gitlab-ci-database-isolation-v1` —
-  **IMPLEMENTED + VALIDATED + SOURCE-PUBLISHED + HOSTED-PIPELINE-PASS**;
-  **NOT YET INTEGRATED ON MAIN**; **NOT CLOSED ON MAIN**. Implementation
-  commit / published source `origin/gitlab-ci-database-isolation-v1` @
-  `9c88e3942876d65ae1290819151022cf600aefa5`. Hosted GitLab pipeline
-  **#2779758386** SUCCESS; canonical job `check` **#16032754442** SUCCESS;
-  `allow_failure: false`. Hosted CI isolation criterion **SATISFIED**.
-  GitLab `before_script` reasserts process-local loopback DB URLs before
-  install/check. DEC-068 unchanged. Zero DB / zero migration. No GitLab
-  hosted settings mutation.
+- Current published `main`: resolve `origin/main` through live Git.
+  CI-isolation published integration anchor:
+  `594484998da5893b349bea4d2de1ac7447d37de6`.
+  At closure-reconciliation preparation, `origin/main` =
+  `594484998da5893b349bea4d2de1ac7447d37de6`.
+- `gitlab-ci-database-isolation-v1` — **CLOSED ON PUBLISHED MAIN**.
+  Published integration anchor `594484998da5893b349bea4d2de1ac7447d37de6`.
+  Implementation anchor `9c88e3942876d65ae1290819151022cf600aefa5`.
+  Final source continuity anchor `ac52061a1b1e972775ecc3212e43d8f0f0688fc9`.
+  Published-main hosted validation: pipeline **#2779972676** SUCCESS;
+  canonical job `check` **#16034544967** SUCCESS; `allow_failure: false`.
+  Hosted CI isolation criterion **SATISFIED**. GitLab `before_script`
+  reasserts process-local loopback DB URLs after environment injection.
+  DEC-068 unchanged. Zero DB / zero migration. No GitLab hosted settings
+  mutation. At closure-reconciliation preparation, the source branch
+  existed local/remote at `ac52061a1b1e972775ecc3212e43d8f0f0688fc9`
+  and GitLab reported merged=true. Cleanup is a separate
+  human-controlled operation. Resolve current branch existence through
+  live Git.
 - Solution #4 / `migration-deploy-target-safety-gate-v1` remains published at
   `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. Do not modify that branch.
-  Hosted-pipeline prerequisite is **SATISFIED**. Solution #4 remains blocked
-  only because this CI slice is not yet integrated into `main`. After
-  integration and publication on `main`, Solution #4 may resume its merge
-  lifecycle after revalidation. Do not treat Solution #4 as revalidated yet.
+  **NOT merged**. **NOT revalidated**. Now **ELIGIBLE TO RESUME
+  REVALIDATION**. Solution #4 has not been revalidated against the
+  post-CI-isolation published-main lineage. After this closure
+  reconciliation is published and hosted validation passes, revalidate
+  Solution #4 against the then-current `origin/main` tip. The
+  CI-isolation integration anchor is
+  `594484998da5893b349bea4d2de1ac7447d37de6`. Merge remains separately
+  human-controlled and **NOT AUTHORIZED**. Do not treat Solution #4 as
+  ready to merge.
 - `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain separate.
 - Residual Solution #3 risks (document, do not fix here): `prisma migrate
   dev` / `migrate deploy` / `db push` raw CLI; `next start`; scripts that
