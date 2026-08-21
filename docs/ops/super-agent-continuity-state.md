@@ -4,12 +4,18 @@
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
 **Live recovery snapshot:** 2026-08-21 — DAT_4.5
-`gitlab-ci-database-isolation-v1` (**IMPLEMENTED + VALIDATED IN-BRANCH**;
-**NOT YET INTEGRATED ON MAIN**). Base / published `main`
-`14c3865372502f074941a1fc81a55b5ec7f1b589`. GitLab hosted pipeline
-**PENDING** external proof. Do not claim pipeline green from local evidence.
+`gitlab-ci-database-isolation-v1` (**IMPLEMENTED + VALIDATED +
+SOURCE-PUBLISHED + HOSTED-PIPELINE-PASS**; **NOT YET INTEGRATED ON MAIN**;
+**NOT CLOSED ON MAIN**). Implementation commit / published source
+`origin/gitlab-ci-database-isolation-v1` @
+`9c88e3942876d65ae1290819151022cf600aefa5`. Base / published `main`
+`14c3865372502f074941a1fc81a55b5ec7f1b589`. Hosted GitLab pipeline
+**#2779758386** SUCCESS; canonical job `check` **#16032754442** SUCCESS;
+`allow_failure: false`. Hosted CI isolation criterion **SATISFIED**.
 Solution #4 remains published at
 `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef` and must not be modified.
+Hosted-pipeline prerequisite is **SATISFIED**; Solution #4 remains blocked
+only because this CI slice is not yet integrated into `main`.
 
 **Validity rule:** this snapshot is valid at the Git commit containing it. Resolve live branch and HEAD through Git; do not treat historical SHA values as eternal current state.
 
@@ -48,8 +54,11 @@ handoff) are historical evidence and are not live execution state.
   `14c3865372502f074941a1fc81a55b5ec7f1b589`
   (`merge: integrate Solution #3 local database isolation`).
 - Active solution branch: `gitlab-ci-database-isolation-v1`
-  (**IMPLEMENTED + VALIDATED IN-BRANCH**; **NOT YET INTEGRATED ON MAIN**).
-  GitLab hosted pipeline **PENDING** external proof.
+  (**IMPLEMENTED + VALIDATED + SOURCE-PUBLISHED + HOSTED-PIPELINE-PASS**;
+  **NOT YET INTEGRATED ON MAIN**; **NOT CLOSED ON MAIN**).
+  Hosted GitLab pipeline **#2779758386** SUCCESS; canonical job `check`
+  **#16032754442** SUCCESS; `allow_failure: false`. Hosted CI isolation
+  criterion **SATISFIED**.
 - DAT_4.4: CLOSED.
 - Engineering Excellence Audit: **CLOSED** (explicit human GO).
 - Findings: 51. Remediation coverage: 51/51. Unresolved repository-static
@@ -74,12 +83,17 @@ handoff) are historical evidence and are not live execution state.
   Higher-precedence GitLab CI/CD variables (for example
   policy/pipeline/project/group/instance variables) are the most likely
   source. Runner-provided environment remains another externally
-  confirmable possibility. DEC-068 unchanged: no `CI` / `GITLAB_CI`
+  confirmable possibility. No specific Project/Group/Runner variable has
+  been definitively proven. DEC-068 unchanged: no `CI` / `GITLAB_CI`
   remote-DB escape. Zero DB / zero migration. No new DEC.
 - Solution #4 / `migration-deploy-target-safety-gate-v1` remains published at
   `origin/migration-deploy-target-safety-gate-v1` @
   `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. Do not modify that branch.
-  Merge remains blocked until this CI slice is GitLab-green and on `main`.
+  Hosted-pipeline prerequisite is **SATISFIED**. Solution #4 remains blocked
+  only because this CI slice is not yet integrated into `main`. After this
+  CI slice is integrated and published on `main`, Solution #4 may resume its
+  merge lifecycle after revalidation. Do not treat Solution #4 as
+  revalidated yet.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch. Do not create a separate documentation-only branch for
   normal solution state.
@@ -107,8 +121,22 @@ handoff) are historical evidence and are not live execution state.
   errors / 51 warnings; env:check; Prisma Client generation; Vitest 208/208
   files, 1765/1765 tests; Next production build).
 - Solution #4 files were not introduced. Solution #4 remote tip remains
-  `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`.
-- GitLab hosted pipeline is still **PENDING** external proof.
+  `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. Hosted-pipeline prerequisite
+  is **SATISFIED**. Solution #4 remains blocked only because this CI slice
+  is not yet integrated into `main`. After integration and publication on
+  `main`, Solution #4 may resume its merge lifecycle after revalidation.
+  Do not treat Solution #4 as revalidated yet.
+- Hosted GitLab pipeline **#2779758386** (ref
+  `gitlab-ci-database-isolation-v1`, SHA
+  `9c88e3942876d65ae1290819151022cf600aefa5`, source `push`) **SUCCESS**.
+  Canonical job `check` **#16032754442** **SUCCESS**; `allow_failure: false`.
+  Hosted CI isolation criterion **SATISFIED**.
+- Lifecycle: **IMPLEMENTED + VALIDATED + SOURCE-PUBLISHED +
+  HOSTED-PIPELINE-PASS**; **NOT YET INTEGRATED ON MAIN**; **NOT CLOSED ON
+  MAIN**. Implementation commit:
+  `9c88e3942876d65ae1290819151022cf600aefa5`. Source branch published at
+  `origin/gitlab-ci-database-isolation-v1`. No GitLab hosted settings
+  mutation. DEC-068 unchanged. No new DEC.
 
 ### Per-solution documentation and continuity lifecycle
 
