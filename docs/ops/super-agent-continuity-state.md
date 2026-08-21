@@ -3,9 +3,19 @@
 
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
-**Live recovery snapshot:** 2026-08-18 — DAT_4.5 Solution #3
-`local-development-database-isolation-v1`. Historical section dates below
-remain the dates of those checkpoints.
+**Live recovery snapshot:** 2026-08-21 — DAT_4.5
+`gitlab-ci-database-isolation-v1` (**IMPLEMENTED + VALIDATED +
+SOURCE-PUBLISHED + HOSTED-PIPELINE-PASS**; **NOT YET INTEGRATED ON MAIN**;
+**NOT CLOSED ON MAIN**). Implementation commit / published source
+`origin/gitlab-ci-database-isolation-v1` @
+`9c88e3942876d65ae1290819151022cf600aefa5`. Base / published `main`
+`14c3865372502f074941a1fc81a55b5ec7f1b589`. Hosted GitLab pipeline
+**#2779758386** SUCCESS; canonical job `check` **#16032754442** SUCCESS;
+`allow_failure: false`. Hosted CI isolation criterion **SATISFIED**.
+Solution #4 remains published at
+`ec39e05d2ffda40f439f3bdadc7889853e5ca9ef` and must not be modified.
+Hosted-pipeline prerequisite is **SATISFIED**; Solution #4 remains blocked
+only because this CI slice is not yet integrated into `main`.
 
 **Validity rule:** this snapshot is valid at the Git commit containing it. Resolve live branch and HEAD through Git; do not treat historical SHA values as eternal current state.
 
@@ -40,11 +50,15 @@ This section is the current operational recovery state. Older checkpoints below
 checkpoints, and the docs-only `canonical-live-state-reconciliation-v1`
 handoff) are historical evidence and are not live execution state.
 
-- Starting / still-published `main`:
-  `0409d92525940be751e6bc07c9da32668a834e53`.
-- Active solution branch: `local-development-database-isolation-v1`
-  (`origin/local-development-database-isolation-v1` **SOURCE BRANCH
-  PUBLISHED**).
+- Authoritative published `main` / this branch base:
+  `14c3865372502f074941a1fc81a55b5ec7f1b589`
+  (`merge: integrate Solution #3 local database isolation`).
+- Active solution branch: `gitlab-ci-database-isolation-v1`
+  (**IMPLEMENTED + VALIDATED + SOURCE-PUBLISHED + HOSTED-PIPELINE-PASS**;
+  **NOT YET INTEGRATED ON MAIN**; **NOT CLOSED ON MAIN**).
+  Hosted GitLab pipeline **#2779758386** SUCCESS; canonical job `check`
+  **#16032754442** SUCCESS; `allow_failure: false`. Hosted CI isolation
+  criterion **SATISFIED**.
 - DAT_4.4: CLOSED.
 - Engineering Excellence Audit: **CLOSED** (explicit human GO).
 - Findings: 51. Remediation coverage: 51/51. Unresolved repository-static
@@ -58,25 +72,71 @@ handoff) are historical evidence and are not live execution state.
   PUBLISHED MAIN**. Solution #2 branch cleaned local + remote.
   DAT_4.5 covers Solutions #2 through #11 inclusive.
 - Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1`:
-  **ACTIVE**. **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068). **Final EQR
-  PASS**. **Hook-delta EQR PASS**. **POST-COMMIT CANONICAL VALIDATION PASS**.
-  **SOURCE BRANCH PUBLISHED**. Durable implementation anchor
+  **CLOSED ON PUBLISHED MAIN** (DEC-068; published merge
+  `14c3865372502f074941a1fc81a55b5ec7f1b589`; durable implementation anchor
   `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree
-  `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; still-published `main`
-  `0409d92525940be751e6bc07c9da32668a834e53`. **NOT YET INTEGRATED ON MAIN**.
-  **NOT CLOSED ON MAIN**. Do not claim `CONFIG-ENV-001` CLOSED ON PUBLISHED
-  MAIN. Do not invent a future merge SHA. The implementation anchor is not
-  an eternal branch HEAD; a later continuity commit will advance HEAD.
+  `5b9aa29649bdf929bf7df5f9f641eb950ce16275`).
+- `gitlab-ci-database-isolation-v1` remediation: GitLab `before_script`
+  reasserts process-local loopback `DATABASE_URL` / `DIRECT_URL` before
+  `pnpm install` / `pnpm check`. Cause classification: repository evidence
+  supports external job-environment injection as the cause class.
+  Higher-precedence GitLab CI/CD variables (for example
+  policy/pipeline/project/group/instance variables) are the most likely
+  source. Runner-provided environment remains another externally
+  confirmable possibility. No specific Project/Group/Runner variable has
+  been definitively proven. DEC-068 unchanged: no `CI` / `GITLAB_CI`
+  remote-DB escape. Zero DB / zero migration. No new DEC.
+- Solution #4 / `migration-deploy-target-safety-gate-v1` remains published at
+  `origin/migration-deploy-target-safety-gate-v1` @
+  `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. Do not modify that branch.
+  Hosted-pipeline prerequisite is **SATISFIED**. Solution #4 remains blocked
+  only because this CI slice is not yet integrated into `main`. After this
+  CI slice is integrated and published on `main`, Solution #4 may resume its
+  merge lifecycle after revalidation. Do not treat Solution #4 as
+  revalidated yet.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch. Do not create a separate documentation-only branch for
   normal solution state.
-- Next smallest-safe implementation slice after Solution #3 is **CLOSED ON
-  PUBLISHED MAIN**:
-  `migration-deploy-target-safety-gate-v1` (source `DB-MIGRATION-001`).
 - `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain separate.
 - Ordinary `pnpm dev` remains blocked on this workstation until local
   `.env` / `.env.local` use loopback `DATABASE_URL` / `DIRECT_URL`. Do not
   modify untracked `.env` files in this slice.
+
+### `gitlab-ci-database-isolation-v1` implementation recovery facts
+
+- Slice: `gitlab-ci-database-isolation-v1`.
+- Base / published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589`.
+- Runtime change: `.gitlab-ci.yml` `before_script` exports deterministic
+  loopback `DATABASE_URL` / `DIRECT_URL` after PATH setup and before
+  `pnpm config` / `pnpm install`. Top-level dummy YAML variables retained.
+- Guard `lib/ops/local-development-database-guard.ts` unchanged. DEC-068
+  unchanged. No new DEC.
+- No include/extends. No migrate / db push / migrate deploy. Check job
+  still runs only `pnpm -C driving_school_platform/nextjs_space check`.
+- Local hostile-env proof: incoming fake remote URLs classified REMOTE and
+  fail `env:check`; after the same shell export, classification LOOPBACK and
+  `env:check` PASS; hostile markers do not survive. Zero DB connection.
+- Targeted guard tests: 28/28 PASS, including `GITLAB_CI` + remote refused.
+- Canonical `pnpm check` with process-local fake loopback: PASS (lint 0
+  errors / 51 warnings; env:check; Prisma Client generation; Vitest 208/208
+  files, 1765/1765 tests; Next production build).
+- Solution #4 files were not introduced. Solution #4 remote tip remains
+  `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. Hosted-pipeline prerequisite
+  is **SATISFIED**. Solution #4 remains blocked only because this CI slice
+  is not yet integrated into `main`. After integration and publication on
+  `main`, Solution #4 may resume its merge lifecycle after revalidation.
+  Do not treat Solution #4 as revalidated yet.
+- Hosted GitLab pipeline **#2779758386** (ref
+  `gitlab-ci-database-isolation-v1`, SHA
+  `9c88e3942876d65ae1290819151022cf600aefa5`, source `push`) **SUCCESS**.
+  Canonical job `check` **#16032754442** **SUCCESS**; `allow_failure: false`.
+  Hosted CI isolation criterion **SATISFIED**.
+- Lifecycle: **IMPLEMENTED + VALIDATED + SOURCE-PUBLISHED +
+  HOSTED-PIPELINE-PASS**; **NOT YET INTEGRATED ON MAIN**; **NOT CLOSED ON
+  MAIN**. Implementation commit:
+  `9c88e3942876d65ae1290819151022cf600aefa5`. Source branch published at
+  `origin/gitlab-ci-database-isolation-v1`. No GitLab hosted settings
+  mutation. DEC-068 unchanged. No new DEC.
 
 ### Per-solution documentation and continuity lifecycle
 
@@ -105,14 +165,15 @@ anchor, continuity branch HEAD, main merge SHA, and published main state.
 ### Solution #3 implementation recovery facts
 
 - Policy: DEC-068.
-- Publication: **SOURCE BRANCH PUBLISHED** at
-  `origin/local-development-database-isolation-v1`.
+- Publication: **CLOSED ON PUBLISHED MAIN** at merge
+  `14c3865372502f074941a1fc81a55b5ec7f1b589`. Historical in-branch wording
+  “SOURCE BRANCH PUBLISHED / NOT YET INTEGRATED ON MAIN” below is superseded
+  for live navigation.
 - Durable implementation anchor (not eternal branch HEAD):
   `a717534ed351440fdfbf6800b218d56d6eb85282`.
 - Accepted implementation tree:
   `5b9aa29649bdf929bf7df5f9f641eb950ce16275`.
-- Still-published `main`: `0409d92525940be751e6bc07c9da32668a834e53`.
-- **NOT YET INTEGRATED ON MAIN**. **NOT CLOSED ON MAIN**.
+- Published `main` at this CI-isolation slice: `14c3865372502f074941a1fc81a55b5ec7f1b589`.
 - Guard: `lib/ops/local-development-database-guard.ts`.
 - Tests: `lib/ops/local-development-database-guard.unit.test.ts`.
 - Wiring: `scripts/env-check.ts` after existing `loadEnvConfig` + `lib/env`
