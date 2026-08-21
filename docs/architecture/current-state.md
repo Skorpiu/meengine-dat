@@ -25,8 +25,8 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 | **DAT_4.5 handoff** | Authoritative published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589` (`merge: integrate Solution #3 local database isolation`; tree `cb7b0a7409b91a70a8c601f36d4e80fd014404cf`). Solution #2 published merge `0409d92525940be751e6bc07c9da32668a834e53` remains the Solution #2 closure anchor. Resolve live HEAD through Git; this is not an eternal served-in-Production SHA. |
 | **Solution #2** | `next-supported-lts-security-remediation-v1` / `DEP-SEC-001` — **CLOSED + PUBLISHED**. Published merge `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #2 branch cleaned local + remote. |
 | **Solution #3** | `local-development-database-isolation-v1` / `CONFIG-ENV-001` — **CLOSED ON PUBLISHED MAIN** (DEC-068). Implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; continuity/source-publication anchor `810cc9446c5f89805e282672bc03f743f8480d75`; published merge `14c3865372502f074941a1fc81a55b5ec7f1b589`. Source branch cleanup **COMPLETE** (absent locally and on `origin`). Historical in-branch wording “ACTIVE / NOT YET INTEGRATED ON MAIN” is superseded by this published merge. |
-| **Solution #4** | `migration-deploy-target-safety-gate-v1` / `DB-MIGRATION-001` — **IMPLEMENTATION COMMITTED / NOT YET SOURCE-PUBLISHED** (DEC-069; architect EQR B1 **CLOSED**; architect v2 EQR **PASS**; targeted unit validation 102/102; full check **EXPECTED_ENVIRONMENT_BLOCK**). Base / published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589`. Recovery: **COMMITTED + SOURCE BRANCH PUBLISHED** at `47a101b261a2fab144d73469e699389fc94ceb1c` (tree `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`). At this pre-publication checkpoint, `origin/migration-deploy-target-safety-gate-v1` still equals recovery `47a101b261a2fab144d73469e699389fc94ceb1c`. Resolve live remote state through Git after publication. Implementation commit `10093da1068f6d08caf0bb5f83c6810429dd61d7` (tree `62dc7214834122df7f441e0e669c375d4903628d`; parent `47a101b261a2fab144d73469e699389fc94ceb1c`; subject `fix(safety): gate remote migration deploy`). Implementation source publication **NOT YET**; merge SHA **none**. Hook delta **ACCEPTED** (format/style only; no amend/reset). Do not invent a future continuity or merge SHA. Do not claim a migration has been run. Recovery publication history: Super Agent continuity 2026-08-20 (one-shot exception; not standing hook-bypass authorization). |
-| **Ordered next** | Next operation after this continuity checkpoint: publish the current `migration-deploy-target-safety-gate-v1` branch tip. Implementation commit `10093da1068f6d08caf0bb5f83c6810429dd61d7` must remain its implementation ancestor. Resolve the publication tip through live Git; do not invent the future continuity SHA. Do not request migration-execution authorization in this slice. Then `platform-separation-architecture-plan-v1` as a parallel architecture lane → `dependency-security-monitoring-v1` remains separate; then P1/P2 according to the post-audit queue. Do not run ordinary local `pnpm dev` until the local `.env` / `.env.local` database URLs are loopback (current hosted `.env` is expected to fail `env:check`). |
+| **Solution #4** | `migration-deploy-target-safety-gate-v1` / `DB-MIGRATION-001` — **IMPLEMENTATION + CONTINUITY SOURCE-PUBLISHED / NOT YET INTEGRATED ON MAIN** (DEC-069; architect EQR B1 **CLOSED**; architect v2 EQR **PASS**; B1 targeted correction validation 102/102 PASS; ordinary workstation `pnpm check` remains **EXPECTED_ENVIRONMENT_BLOCK** under DEC-068; source-publication pre-push canonical validation with process-local fake loopback `DATABASE_URL` / `DIRECT_URL` PASS (ESLint 0 errors / 51 warnings; env:check; Prisma Client generation; Vitest 211/211 files, 1805/1805 tests; Next.js 16.3.1 production build). Loopback override was process-local only; no `.env` file changed; no remote DB authority; no DB action or migration). Distinct durable anchors: published `main`/base `14c3865372502f074941a1fc81a55b5ec7f1b589`; recovery `47a101b261a2fab144d73469e699389fc94ceb1c` (tree `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`); implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7` (tree `62dc7214834122df7f441e0e669c375d4903628d`; parent `47a101b261a2fab144d73469e699389fc94ceb1c`; subject `fix(safety): gate remote migration deploy`); post-implementation continuity/source-publication anchor `6d178bc3479668448809ee861c54fa3a0074cb46` (tree `68df5c427bb28aa26bef0f22ae165c4b4a86d038`). Source-publication event: the Solution #4 branch was successfully published through anchor `6d178bc3479668448809ee861c54fa3a0074cb46`, containing implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7`. A later same-branch continuity commit may advance the branch tip; resolve the live remote tip through Git. Merge SHA **none**. Hook delta **ACCEPTED** (format/style only; no amend/reset). Do not claim Solution #4 is closed on `main`. Do not invent a merge SHA. Do not claim a migration has been run. Source push used the normal Git path (no `--no-verify`). Recovery publication history: Super Agent continuity 2026-08-20 (one-shot exception; not standing hook-bypass authorization). |
+| **Ordered next** | After this source-publication reconciliation is committed and published on the Solution #4 source branch, the next human-controlled lifecycle gate may be Solution #4 integration into `main`. Merge is not authorized yet (merge SHA **none**). Do not claim merge authorization. Do not claim Solution #4 CLOSED ON MAIN. This is not migration-execution authorization. Then `platform-separation-architecture-plan-v1` as a parallel architecture lane → `dependency-security-monitoring-v1` remains separate; then P1/P2 according to the post-audit queue. Do not run ordinary local `pnpm dev` until the local `.env` / `.env.local` database URLs are loopback (current hosted `.env` is expected to fail `env:check`). |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
 | **Archive tag** | `archive-schedule-and-vehicles-b101112` — historical archive only; **not** a release or recovery baseline. |
@@ -660,7 +660,7 @@ priority was `billing-webhook-authenticity-gate-v1`, followed by
 the Platform separation architecture lane proceed according to their documented
 prerequisites and independence boundaries.
 
-**Live supersession (2026-08-20 Git-verified):** Solution #1 is CLOSED BY CONTAINMENT. Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1` is **CLOSED + PUBLISHED** on `main` at `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1` is **CLOSED ON PUBLISHED MAIN** at merge `14c3865372502f074941a1fc81a55b5ec7f1b589`. Solution #4 / `DB-MIGRATION-001` is **IMPLEMENTATION COMMITTED / NOT YET SOURCE-PUBLISHED** (DEC-069; architect EQR B1 **CLOSED**; architect v2 EQR **PASS**; implementation commit `10093da1068f6d08caf0bb5f83c6810429dd61d7`; recovery **COMMITTED + SOURCE BRANCH PUBLISHED** at `47a101b261a2fab144d73469e699389fc94ceb1c`; at this pre-publication checkpoint `origin/migration-deploy-target-safety-gate-v1` still equals recovery `47a101b261a2fab144d73469e699389fc94ceb1c`; resolve live remote state through Git after publication; merge SHA **none**).
+**Live supersession (2026-08-20 Git-verified):** Solution #1 is CLOSED BY CONTAINMENT. Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1` is **CLOSED + PUBLISHED** on `main` at `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1` is **CLOSED ON PUBLISHED MAIN** at merge `14c3865372502f074941a1fc81a55b5ec7f1b589`. Solution #4 / `DB-MIGRATION-001` is **IMPLEMENTATION + CONTINUITY SOURCE-PUBLISHED / NOT YET INTEGRATED ON MAIN** (DEC-069; architect EQR B1 **CLOSED**; architect v2 EQR **PASS**; implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7`; recovery `47a101b261a2fab144d73469e699389fc94ceb1c`; post-implementation continuity/source-publication anchor `6d178bc3479668448809ee861c54fa3a0074cb46`; merge SHA **none**). Source-publication event: the Solution #4 branch was successfully published through anchor `6d178bc3479668448809ee861c54fa3a0074cb46`, containing implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7`. A later same-branch continuity commit may advance the branch tip; resolve the live remote tip through Git.
 
 **Historical (2026-08-18 in-branch Solution #3 checkpoint):** Solution #3 was **ACTIVE** and **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068), **SOURCE BRANCH PUBLISHED**, **NOT YET INTEGRATED ON MAIN**, **NOT CLOSED ON MAIN**. That wording is preserved as pre-publication evidence and is superseded by the published merge above.
 
@@ -758,30 +758,41 @@ itself.
   **COMPLETE**. Historical in-branch wording “ACTIVE / SOURCE BRANCH
   PUBLISHED / NOT YET INTEGRATED ON MAIN” is superseded by this merge.
 - Solution #4 / `migration-deploy-target-safety-gate-v1`: **IMPLEMENTATION
-  COMMITTED / NOT YET SOURCE-PUBLISHED** (DEC-069; architect EQR B1
-  **CLOSED**; architect v2 EQR **PASS**; targeted unit validation 102/102;
-  full check **EXPECTED_ENVIRONMENT_BLOCK**). Base / published `main`
-  `14c3865372502f074941a1fc81a55b5ec7f1b589`. Recovery: **COMMITTED +
-  SOURCE BRANCH PUBLISHED** at `47a101b261a2fab144d73469e699389fc94ceb1c`
-  (tree `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`). Implementation commit
+  + CONTINUITY SOURCE-PUBLISHED / NOT YET INTEGRATED ON MAIN** (DEC-069;
+  architect EQR B1 **CLOSED**; architect v2 EQR **PASS**; B1 targeted
+  correction validation 102/102 PASS; ordinary workstation `pnpm check`
+  remains **EXPECTED_ENVIRONMENT_BLOCK** under DEC-068;
+  source-publication pre-push canonical validation with process-local
+  fake loopback `DATABASE_URL` / `DIRECT_URL` PASS (ESLint 0 errors /
+  51 warnings; env:check; Prisma Client generation; Vitest 211/211
+  files, 1805/1805 tests; Next.js 16.3.1 production build). Loopback
+  override was process-local only; no `.env` file changed; no remote
+  DB authority; no DB action or migration). Distinct
+  durable anchors: published `main`/base
+  `14c3865372502f074941a1fc81a55b5ec7f1b589`; recovery
+  `47a101b261a2fab144d73469e699389fc94ceb1c` (tree
+  `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`); implementation
   `10093da1068f6d08caf0bb5f83c6810429dd61d7` (tree
   `62dc7214834122df7f441e0e669c375d4903628d`; parent
   `47a101b261a2fab144d73469e699389fc94ceb1c`; subject
-  `fix(safety): gate remote migration deploy`). Implementation source
-  publication **NOT YET**. At this pre-publication checkpoint,
-  `origin/migration-deploy-target-safety-gate-v1` still equals recovery
-  `47a101b261a2fab144d73469e699389fc94ceb1c`. Resolve live remote state
-  through Git after publication. Merge SHA **none**. Hook delta
-  **ACCEPTED** (format/style only; no amend/reset). Do not invent a future
-  continuity or merge SHA. Do not claim a migration has been run.
-  Recovery publication history: Super Agent continuity 2026-08-20
-  (one-shot exception; not standing hook-bypass authorization). Next
-  operation after this continuity checkpoint: publish the current
-  `migration-deploy-target-safety-gate-v1` branch tip. Implementation
-  commit `10093da1068f6d08caf0bb5f83c6810429dd61d7` must remain its
-  implementation ancestor. Resolve the publication tip through live Git;
-  do not invent the future continuity SHA. Not merge, not migration
-  execution.
+  `fix(safety): gate remote migration deploy`); post-implementation
+  continuity/source-publication anchor
+  `6d178bc3479668448809ee861c54fa3a0074cb46` (tree
+  `68df5c427bb28aa26bef0f22ae165c4b4a86d038`). Source-publication event:
+  the Solution #4 branch was successfully published through anchor
+  `6d178bc3479668448809ee861c54fa3a0074cb46`, containing implementation
+  `10093da1068f6d08caf0bb5f83c6810429dd61d7`. A later same-branch
+  continuity commit may advance the branch tip; resolve the live remote
+  tip through Git. Merge SHA **none**. Hook delta **ACCEPTED**
+  (format/style only; no amend/reset). Do not invent a merge SHA. Do not
+  claim Solution #4 is closed on `main`. Do not claim a migration has been
+  run. Source push used the normal Git path (no `--no-verify`). Recovery
+  publication history: Super Agent continuity 2026-08-20 (one-shot
+  exception; not standing hook-bypass authorization). After this
+  source-publication reconciliation is committed and published on the
+  Solution #4 source branch, the next human-controlled lifecycle gate
+  may be Solution #4 integration into `main`. Merge is not authorized
+  yet. This is not migration-execution authorization.
 - Authoritative published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589`.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch. Do not create a separate documentation-only branch for

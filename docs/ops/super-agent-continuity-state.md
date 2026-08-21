@@ -4,26 +4,33 @@
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
 **Live recovery snapshot:** 2026-08-20 — DAT_4.5 Solution #4
-`migration-deploy-target-safety-gate-v1` (**IMPLEMENTATION COMMITTED /
-NOT YET SOURCE-PUBLISHED**; DEC-069). Architect EQR B1 **CLOSED**;
-architect v2 EQR **PASS**. Recovery commit **COMMITTED + SOURCE BRANCH
-PUBLISHED** at `47a101b261a2fab144d73469e699389fc94ceb1c` (tree
-`ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`). Implementation commit
+`migration-deploy-target-safety-gate-v1` (**IMPLEMENTATION + CONTINUITY
+SOURCE-PUBLISHED / NOT YET INTEGRATED ON MAIN**; DEC-069). Architect EQR
+B1 **CLOSED**; architect v2 EQR **PASS**. Distinct durable anchors:
+published `main`/base `14c3865372502f074941a1fc81a55b5ec7f1b589`;
+recovery `47a101b261a2fab144d73469e699389fc94ceb1c` (tree
+`ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`); implementation
 `10093da1068f6d08caf0bb5f83c6810429dd61d7` (tree
 `62dc7214834122df7f441e0e669c375d4903628d`; parent
 `47a101b261a2fab144d73469e699389fc94ceb1c`; subject
-`fix(safety): gate remote migration deploy`). Implementation source
-publication **NOT YET**. At this pre-publication checkpoint,
-`origin/migration-deploy-target-safety-gate-v1` still equals recovery
-`47a101b261a2fab144d73469e699389fc94ceb1c`. Resolve live remote state
-through Git after publication. Merge SHA **none**. Hook delta **ACCEPTED**
-(format/style only; no amend/reset). No migration has been run. A future
-continuity commit may advance HEAD; resolve live HEAD through Git. Next
-operation after this continuity checkpoint: publish the current
-`migration-deploy-target-safety-gate-v1` branch tip. Implementation commit
-`10093da1068f6d08caf0bb5f83c6810429dd61d7` must remain its implementation
-ancestor. Resolve the publication tip through live Git; do not invent the
-future continuity SHA.
+`fix(safety): gate remote migration deploy`); post-implementation
+continuity/source-publication anchor
+`6d178bc3479668448809ee861c54fa3a0074cb46` (tree
+`68df5c427bb28aa26bef0f22ae165c4b4a86d038`). Source-publication event:
+the Solution #4 branch was successfully published through anchor
+`6d178bc3479668448809ee861c54fa3a0074cb46`, containing implementation
+`10093da1068f6d08caf0bb5f83c6810429dd61d7`. A later same-branch
+continuity commit may advance the branch tip; resolve the live remote
+tip through Git. Merge SHA **none**. Hook delta **ACCEPTED**
+(format/style only; no amend/reset). No migration has been run. Do not
+claim Solution #4 is closed on `main`. B1 targeted correction
+validation 102/102 PASS; ordinary workstation `pnpm check` remains
+**EXPECTED_ENVIRONMENT_BLOCK** under DEC-068; source-publication
+pre-push canonical validation with process-local fake loopback URLs
+PASS. After this source-publication reconciliation is committed and
+published on the Solution #4 source branch, the next human-controlled
+lifecycle gate may be Solution #4 integration into `main`. Merge is not
+authorized yet. This is not migration-execution authorization.
 
 **Conversation-recovery note (2026-08-20):** part of the external ChatGPT
 conversation became unavailable after Solution #3 work. Live Git evidence is
@@ -72,17 +79,18 @@ handoff) are historical evidence and are not live execution state.
   closure anchor, not the current `main` tip.
 - Active solution branch: `migration-deploy-target-safety-gate-v1`
   (base published `main` `14c3865372502f074941a1fc81a55b5ec7f1b589`;
-  recovery commit **COMMITTED + SOURCE BRANCH PUBLISHED**
-  `47a101b261a2fab144d73469e699389fc94ceb1c`; tree
-  `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`.
-  At this pre-publication checkpoint,
-  `origin/migration-deploy-target-safety-gate-v1` still equals recovery
-  `47a101b261a2fab144d73469e699389fc94ceb1c`. Resolve live remote state
-  through Git after publication. Implementation commit
+  recovery `47a101b261a2fab144d73469e699389fc94ceb1c`; tree
+  `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`; implementation
   `10093da1068f6d08caf0bb5f83c6810429dd61d7` (tree
-  `62dc7214834122df7f441e0e669c375d4903628d`); implementation source
-  publication **NOT YET**; merge SHA **none**. Resolve live HEAD through
-  Git).
+  `62dc7214834122df7f441e0e669c375d4903628d`);
+  post-implementation continuity/source-publication anchor
+  `6d178bc3479668448809ee861c54fa3a0074cb46` (tree
+  `68df5c427bb28aa26bef0f22ae165c4b4a86d038`); merge SHA **none**.
+  Source-publication event: the Solution #4 branch was successfully
+  published through anchor `6d178bc3479668448809ee861c54fa3a0074cb46`,
+  containing implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7`.
+  A later same-branch continuity commit may advance the branch tip;
+  resolve the live remote tip through Git).
 - DAT_4.4: CLOSED.
 - Engineering Excellence Audit: **CLOSED** (explicit human GO).
 - Findings: 51. Remediation coverage: 51/51. Unresolved repository-static
@@ -107,29 +115,36 @@ handoff) are historical evidence and are not live execution state.
   **COMPLETE** — `local-development-database-isolation-v1` absent locally
   and on `origin`. Do not invent a future implementation SHA.
 - Solution #4 / `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1`:
-  **IMPLEMENTATION COMMITTED / NOT YET SOURCE-PUBLISHED** (DEC-069;
-  architect EQR B1 **CLOSED**; architect v2 EQR **PASS**; targeted unit
-  validation 102/102; full check **EXPECTED_ENVIRONMENT_BLOCK**). Base /
-  published `main` `14c3865372502f074941a1fc81a55b5ec7f1b589`. Recovery
-  commit **COMMITTED + SOURCE BRANCH PUBLISHED**
+  **IMPLEMENTATION + CONTINUITY SOURCE-PUBLISHED / NOT YET INTEGRATED ON
+  MAIN** (DEC-069; architect EQR B1 **CLOSED**; architect v2 EQR **PASS**;
+  B1 targeted correction validation 102/102 PASS; ordinary workstation
+  `pnpm check` remains **EXPECTED_ENVIRONMENT_BLOCK** under DEC-068;
+  source-publication pre-push canonical validation with process-local
+  fake loopback `DATABASE_URL` / `DIRECT_URL` PASS). Distinct durable
+  anchors: published
+  `main`/base `14c3865372502f074941a1fc81a55b5ec7f1b589`; recovery
   `47a101b261a2fab144d73469e699389fc94ceb1c` (tree
-  `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`). At this pre-publication
-  checkpoint, `origin/migration-deploy-target-safety-gate-v1` still equals
-  recovery `47a101b261a2fab144d73469e699389fc94ceb1c`. Resolve live remote
-  state through Git after publication. Implementation commit
+  `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`); implementation
   `10093da1068f6d08caf0bb5f83c6810429dd61d7` (tree
   `62dc7214834122df7f441e0e669c375d4903628d`; parent
   `47a101b261a2fab144d73469e699389fc94ceb1c`; subject
-  `fix(safety): gate remote migration deploy`). Implementation source
-  publication **NOT YET**; merge SHA **none**. Do not invent a future
-  continuity or merge SHA. Do not claim the implementation is pushed,
-  merged, or published. Do not claim a migration has been run. Next
-  operation after this continuity checkpoint: publish the current
-  `migration-deploy-target-safety-gate-v1` branch tip. Implementation
-  commit `10093da1068f6d08caf0bb5f83c6810429dd61d7` must remain its
-  implementation ancestor. Resolve the publication tip through live Git;
-  do not invent the future continuity SHA. Publication history, B1
-  closure, and hook-delta disposition are recorded below.
+  `fix(safety): gate remote migration deploy`); post-implementation
+  continuity/source-publication anchor
+  `6d178bc3479668448809ee861c54fa3a0074cb46` (tree
+  `68df5c427bb28aa26bef0f22ae165c4b4a86d038`). Source-publication event:
+  the Solution #4 branch was successfully published through anchor
+  `6d178bc3479668448809ee861c54fa3a0074cb46`, containing implementation
+  `10093da1068f6d08caf0bb5f83c6810429dd61d7`. A later same-branch
+  continuity commit may advance the branch tip; resolve the live remote
+  tip through Git. Merge SHA **none**. Do not invent a merge SHA. Do not
+  claim Solution #4 is closed on `main`. Do not claim a migration has
+  been run. After this source-publication reconciliation is committed
+  and published on the Solution #4 source branch, the next
+  human-controlled lifecycle gate may be Solution #4 integration into
+  `main`. Merge is not authorized yet. This is not migration-execution
+  authorization. Publication history, B1 closure, hook-delta
+  disposition, the three validation states, and the source-publication
+  event are recorded below.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch. Do not create a separate documentation-only branch for
   normal solution state.
@@ -164,7 +179,7 @@ anchor, continuity branch HEAD, main merge SHA, and published main state.
 
 ### Solution #4 recovery/preflight facts (2026-08-20)
 
-Historical recovery checkpoint. Live status is the implementation facts
+Historical recovery checkpoint. Live status is the source-publication
 section below.
 
 - Finding: `DB-MIGRATION-001`.
@@ -176,12 +191,19 @@ section below.
 
 ### Solution #4 implementation facts (2026-08-20)
 
+Historical implementation-commit checkpoint. Live status is the
+source-publication section below.
+
 - Policy: DEC-069.
 - Finding: `DB-MIGRATION-001`.
 - Branch: `migration-deploy-target-safety-gate-v1`.
-- Status: **IMPLEMENTATION COMMITTED / NOT YET SOURCE-PUBLISHED**.
+- Status at this checkpoint: **IMPLEMENTATION COMMITTED / NOT YET SOURCE-PUBLISHED**.
   Architect EQR B1 **CLOSED**; architect v2 EQR **PASS**; targeted unit
   validation 102/102; full check **EXPECTED_ENVIRONMENT_BLOCK**.
+  These two facts remain true. Later source-publication added a third
+  distinct state: process-local fake-loopback canonical `pnpm check`
+  PASS. Do not collapse the three validation states; live wording is
+  in the source-publication section below.
 - Human authorization received: `APPROVED TO IMPLEMENT: migration-deploy-target-safety-gate-v1`.
 - Distinct anchors:
   - Solution #4 base / published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589`
@@ -189,17 +211,16 @@ section below.
     `47a101b261a2fab144d73469e699389fc94ceb1c`
   - Recovery tree: `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`
   - Recovery remote anchor at this pre-publication checkpoint:
-    `origin/migration-deploy-target-safety-gate-v1` still equals recovery
-    `47a101b261a2fab144d73469e699389fc94ceb1c`. Resolve live remote state
-    through Git after publication.
+    `origin/migration-deploy-target-safety-gate-v1` still equalled recovery
+    `47a101b261a2fab144d73469e699389fc94ceb1c` (historical; superseded by
+    the source-publication event below)
   - Implementation commit: `10093da1068f6d08caf0bb5f83c6810429dd61d7`
   - Implementation tree: `62dc7214834122df7f441e0e669c375d4903628d`
   - Implementation parent: `47a101b261a2fab144d73469e699389fc94ceb1c`
   - Implementation subject: `fix(safety): gate remote migration deploy`
-  - Implementation source publication: **NOT YET** (pre-publication
-    checkpoint; resolve live remote state through Git after publication)
-  - Future continuity/source-publication commit: **none** (do not invent;
-    a future continuity commit may advance HEAD; resolve live HEAD through Git)
+  - Implementation source publication at this checkpoint: **NOT YET**
+  - Continuity/source-publication commit at this checkpoint: **none**
+    (do not invent; a later continuity commit may advance HEAD)
   - Future merge SHA: **none** (do not invent)
 - Historical (pre-commit worktree checkpoint): **IMPLEMENTED IN WORKTREE**
   (unstaged / uncommitted); implementation commit **none**. That wording is
@@ -225,13 +246,10 @@ section below.
   `.env` (**EXPECTED_ENVIRONMENT_BLOCK**).
 - No Prisma migration was executed. No database connection was opened by
   this implementation. Implementation source publication, merge, and
-  migration execution are not authorized by the implementation commit.
-- Next operation after this continuity checkpoint: publish the current
-  `migration-deploy-target-safety-gate-v1` branch tip. Implementation
-  commit `10093da1068f6d08caf0bb5f83c6810429dd61d7` must remain its
-  implementation ancestor. Resolve the publication tip through live Git;
-  do not invent the future continuity SHA. Do not request
-  migration-execution authorization.
+  migration execution were not authorized by the implementation commit.
+- Historical next operation at this checkpoint: publish the current
+  `migration-deploy-target-safety-gate-v1` branch tip. That next-gate
+  wording is superseded by the source-publication event below.
 
 ### Solution #4 recovery publication history (2026-08-20)
 
@@ -307,8 +325,9 @@ Historical P0 blocker. Live status: **CLOSED**.
 
 ### Solution #4 implementation commit (2026-08-20)
 
-Durable local implementation-commit event. This is **not** source-branch
-publication and is **not** a merge.
+Durable local implementation-commit event. This was **not** source-branch
+publication and is **not** a merge. Live source-publication status is the
+section below.
 
 - Branch: `migration-deploy-target-safety-gate-v1`.
 - Implementation commit: `10093da1068f6d08caf0bb5f83c6810429dd61d7`.
@@ -317,13 +336,14 @@ publication and is **not** a merge.
   `47a101b261a2fab144d73469e699389fc94ceb1c`.
 - Subject: `fix(safety): gate remote migration deploy`.
 - Base / published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589`.
-- Implementation source publication: **NOT YET**. At this pre-publication
-  checkpoint, `origin/migration-deploy-target-safety-gate-v1` still equals
-  recovery `47a101b261a2fab144d73469e699389fc94ceb1c`. Resolve live remote
-  state through Git after publication.
-- Merge SHA: **none**. Do not invent a future publication or merge SHA.
-- A future continuity commit may advance HEAD; resolve live HEAD through
-  Git.
+- Implementation source publication at this checkpoint: **NOT YET**. At
+  that pre-publication checkpoint,
+  `origin/migration-deploy-target-safety-gate-v1` still equalled recovery
+  `47a101b261a2fab144d73469e699389fc94ceb1c`. That remote equality is
+  historical and is superseded by the source-publication event below.
+- Merge SHA: **none**. Do not invent a future merge SHA.
+- A later same-branch continuity commit may advance HEAD; resolve live
+  HEAD through Git.
 - No migration has been run.
 
 ### Solution #4 commit-hook delta review (2026-08-20)
@@ -354,6 +374,82 @@ recovery `--no-verify` publication event.
 - Disposition: **HOOK DELTA ACCEPTED**; **NO AMEND**; **NO RESET**;
   implementation commit `10093da1068f6d08caf0bb5f83c6810429dd61d7`
   **ACCEPTED**.
+
+### Solution #4 source-publication event (2026-08-20)
+
+Live source-publication status for Solution #4. This is **not** a merge
+and is **not** CLOSED ON MAIN. `6d178bc3479668448809ee861c54fa3a0074cb46`
+is the post-implementation continuity/source-publication anchor, not a
+merge SHA.
+
+- Policy: DEC-069.
+- Finding: `DB-MIGRATION-001`.
+- Branch: `migration-deploy-target-safety-gate-v1`.
+- Status: **IMPLEMENTATION + CONTINUITY SOURCE-PUBLISHED / NOT YET
+  INTEGRATED ON MAIN**.
+- Distinct durable anchors:
+  - Published `main`/base: `14c3865372502f074941a1fc81a55b5ec7f1b589`
+  - Recovery: `47a101b261a2fab144d73469e699389fc94ceb1c`
+  - Recovery tree: `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`
+  - Implementation: `10093da1068f6d08caf0bb5f83c6810429dd61d7`
+  - Implementation tree: `62dc7214834122df7f441e0e669c375d4903628d`
+  - Implementation parent: `47a101b261a2fab144d73469e699389fc94ceb1c`
+  - Implementation subject: `fix(safety): gate remote migration deploy`
+  - Post-implementation continuity/source-publication anchor:
+    `6d178bc3479668448809ee861c54fa3a0074cb46`
+  - Continuity tree: `68df5c427bb28aa26bef0f22ae165c4b4a86d038`
+  - Merge SHA: **none** (do not invent; do not call `6d178bc` a merge SHA)
+- Source-publication event: the Solution #4 branch was successfully
+  published through anchor `6d178bc3479668448809ee861c54fa3a0074cb46`,
+  containing implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7`.
+  A later same-branch continuity commit may advance the branch tip;
+  resolve the live remote tip through Git.
+- Pre-push remote source: recovery
+  `47a101b261a2fab144d73469e699389fc94ceb1c`.
+- Pre-push `origin/main`: `14c3865372502f074941a1fc81a55b5ec7f1b589`.
+- Source push used the normal Git path. No `--no-verify` was used.
+- `DATABASE_URL` and `DIRECT_URL` were overridden only for the push
+  process with fake loopback PostgreSQL URLs so DEC-068 could validate
+  the repository without changing any `.env` file and without granting
+  remote DB authority.
+- Env file modified: **no**.
+- DB connection/action: **none**.
+- Migration: **none**.
+- Hosted mutation: **none**.
+- Validation states (all three remain true; do not collapse):
+  1. B1 targeted correction validation: Vitest 102/102 PASS.
+  2. Ordinary workstation environment: ordinary `pnpm check` remains
+     **EXPECTED_ENVIRONMENT_BLOCK** under DEC-068 because the
+     workstation `.env` contains hosted DB URLs.
+  3. Source-publication pre-push canonical validation with
+     process-local fake loopback `DATABASE_URL` / `DIRECT_URL`:
+     - ESLint: 0 errors / 51 warnings
+     - `env:check` PASS
+     - Prisma Client generation PASS
+     - Vitest: 211/211 files, 1805/1805 tests PASS
+     - Next.js 16.3.1 production build PASS
+     - Known/non-blocking warnings: stale caniuse-lite / Browserslist;
+       Turbopack CSS parse warning for `.print\\:hidden`
+     The loopback override was process-local only. No `.env` file
+     changed. No remote DB authority was granted. No DB action or
+     migration occurred.
+- Push result: `git push` exit code = 0
+- Remote source after:
+  `6d178bc3479668448809ee861c54fa3a0074cb46`
+- `origin/main` after:
+  `14c3865372502f074941a1fc81a55b5ec7f1b589`
+- Proofs:
+  - remote branch matches published continuity anchor = PASS
+  - remote contains implementation commit = PASS
+  - `origin/main` unchanged = PASS
+  - local HEAD unchanged after push = PASS
+  - worktree clean = PASS
+- After this source-publication reconciliation is committed and
+  published on the Solution #4 source branch, the next human-controlled
+  lifecycle gate may be Solution #4 integration into `main`. Merge is
+  not authorized yet. Do not claim merge authorization. Do not claim
+  Solution #4 CLOSED ON MAIN. This is not migration-execution
+  authorization. Do not invent the future reconciliation commit SHA.
 
 ### Solution #3 implementation recovery facts
 
