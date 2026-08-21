@@ -28,6 +28,11 @@ before_script:
   - pnpm -v
   - export PNPM_HOME="$CI_PROJECT_DIR/.pnpm"
   - export PATH="$PNPM_HOME:$PATH"
+  # CI validation must never inherit a hosted DB target from higher-precedence
+  # GitLab CI/CD variables or runner-provided environment. Reassert loopback
+  # dummies in this job shell after environment injection (DEC-068).
+  - export DATABASE_URL="postgresql://dat_ci:dat_ci@127.0.0.1:5432/dat_ci?schema=public"
+  - export DIRECT_URL="$DATABASE_URL"
   - pnpm config set store-dir "$CI_PROJECT_DIR/driving_school_platform/nextjs_space/.pnpm-store"
   - pnpm -C driving_school_platform/nextjs_space install --frozen-lockfile
 
