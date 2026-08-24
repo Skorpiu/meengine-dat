@@ -4,20 +4,28 @@
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
 **Live recovery snapshot:** 2026-08-24 — DAT_4.5 Solution #4
-`migration-deploy-target-safety-gate-v1` (**REVALIDATION IN PROGRESS**
-against current-main baseline
-`14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`; DEC-069). Current published
-`main`: resolve `origin/main` through live Git. Revalidation baseline:
-`14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`. CI-isolation published
-integration anchor `594484998da5893b349bea4d2de1ac7447d37de6`.
-CI-isolation closure-doc publication anchor
-`14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`. `gitlab-ci-database-isolation-v1`
-is **CLOSED ON PUBLISHED MAIN**. Final closure hosted main pipeline
-**#2780314232** SUCCESS; canonical job `check` **#16037631071** SUCCESS;
-`allow_failure: false`. Source branch cleanup **COMPLETE**, local and
-remote. DEC-068 unchanged (no `CI` / `GITLAB_CI` remote-DB escape).
-No DB or migration was performed as part of CI isolation. Distinct
-durable Solution #4 anchors: recovery
+`migration-deploy-target-safety-gate-v1` (**REVALIDATED LOCALLY AGAINST
+CURRENT MAIN / LOCAL RECONCILIATION COMMITTED / SOURCE PUBLICATION
+PENDING**; DEC-069). Local reconciliation commit (LOCAL ONLY, not
+published): `590e0aed27d30bc331b54a5af8b18c230215ca6f` (validated tree
+`a75bc55318c3571403dd35d6da445150ff18b52d`; subject
+`merge: incorporate current main into Solution #4`; parent 1
+`ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`; parent 2 / current-main
+revalidation baseline `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`).
+Current published `main` remains
+`14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`. Published Solution #4 source
+branch remains `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. **NOT YET
+INTEGRATED ON MAIN**. Merge SHA **none**. Do not describe `590e0aed` as
+published. Do not claim the remote source branch has advanced.
+CI-isolation published integration anchor
+`594484998da5893b349bea4d2de1ac7447d37de6`. CI-isolation closure-doc
+publication anchor `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`.
+`gitlab-ci-database-isolation-v1` is **CLOSED ON PUBLISHED MAIN**. Final
+closure hosted main pipeline **#2780314232** SUCCESS; canonical job
+`check` **#16037631071** SUCCESS; `allow_failure: false`. Source branch
+cleanup **COMPLETE**, local and remote. DEC-068 unchanged (no `CI` /
+`GITLAB_CI` remote-DB escape). No DB or migration was performed as part
+of CI isolation. Distinct durable Solution #4 anchors: recovery
 `47a101b261a2fab144d73469e699389fc94ceb1c` (tree
 `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`); implementation
 `10093da1068f6d08caf0bb5f83c6810429dd61d7` (accepted implementation tree
@@ -26,21 +34,26 @@ durable Solution #4 anchors: recovery
 `fix(safety): gate remote migration deploy`); post-implementation
 continuity/source-publication anchor
 `6d178bc3479668448809ee861c54fa3a0074cb46` (tree
-`68df5c427bb28aa26bef0f22ae165c4b4a86d038`). Published Solution #4
-source tip before this reconciliation:
-`ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. Merge SHA **none**. Do not
-claim the remote branch has advanced past `ec39e05d`. Historical
-targeted validation: 6 files / 102 tests PASS. Historical
-source-publication canonical validation: Vitest 211/211 files,
-1805/1805 tests, Next.js production build PASS (process-local fake
-loopback URLs). Those historical validations are **not** the
-current-main revalidation result. Ordinary workstation `pnpm check`
-remains **EXPECTED_ENVIRONMENT_BLOCK** under DEC-068. No migration has
-been run. Do not claim revalidation PASS, merge-ready, or Solution #4
-CLOSED ON MAIN. Lifecycle after this prospective reconciliation:
-semantic-resolution EQR → validation → human-controlled
-publication/integration gates. Merge is not authorized. This is not
-migration-execution authorization. Do not advance to Solution #5.
+`68df5c427bb28aa26bef0f22ae165c4b4a86d038`); pre-reconciliation published
+source tip `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. Current-main
+revalidation PASS / 0 blockers. Semantic-resolution EQR PASS / 0
+blockers. Targeted regression: 6/6 files, 102/102 tests PASS. Canonical
+`pnpm check` (process-local loopback `DATABASE_URL` + `DIRECT_URL`): lint
+0 errors / 51 warnings; env:check PASS; Prisma Client 6.19.0; Vitest
+211/211 files, 1805/1805 tests PASS; Next.js 16.3.1 production build
+PASS; known non-fatal Turbopack `.print\\:hidden` warning unchanged.
+Prospective tree integrity: `a75bc55318c3571403dd35d6da445150ff18b52d`
+before targeted, after targeted, and final; the local merge commit
+preserved that tree. Historical pre-reconciliation targeted 6/102 and
+source-publication canonical 211/1805 remain historical evidence only
+and are distinct from this current-main revalidation. Ordinary
+workstation `pnpm check` remains **EXPECTED_ENVIRONMENT_BLOCK** under
+DEC-068. No migration has been run. Next lifecycle: continuity EQR →
+continuity commit → explicit source publication authorization → hosted
+source-tip pipeline validation → only then return to the
+human-controlled Solution #4 → main integration gate. Merge is not
+authorized. This is not migration-execution authorization. Do not
+advance to Solution #5.
 
 **Conversation-recovery note (2026-08-20, historical):** part of the
 external ChatGPT conversation became unavailable after Solution #3 work.
@@ -101,18 +114,23 @@ handoff) are historical evidence and are not live execution state.
   Hosted CI isolation criterion **SATISFIED**. Source branch cleanup
   **COMPLETE**, local and remote. DEC-068 unchanged.
 - Active solution branch: `migration-deploy-target-safety-gate-v1`
-  (**REVALIDATION IN PROGRESS** against current-main baseline
-  `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`). Recovery
+  (**REVALIDATED LOCALLY AGAINST CURRENT MAIN / LOCAL RECONCILIATION
+  COMMITTED / SOURCE PUBLICATION PENDING**). Local reconciliation
+  commit (LOCAL ONLY): `590e0aed27d30bc331b54a5af8b18c230215ca6f`
+  (validated tree `a75bc55318c3571403dd35d6da445150ff18b52d`).
+  Revalidation baseline `main` @
+  `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`. Published source remains
+  `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. Recovery
   `47a101b261a2fab144d73469e699389fc94ceb1c` (tree
   `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`); implementation
   `10093da1068f6d08caf0bb5f83c6810429dd61d7` (accepted implementation
   tree `62dc7214834122df7f441e0e669c375d4903628d`); post-implementation
   continuity/source-publication anchor
   `6d178bc3479668448809ee861c54fa3a0074cb46` (tree
-  `68df5c427bb28aa26bef0f22ae165c4b4a86d038`); published source tip
-  before this reconciliation
-  `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`; merge SHA **none**.
-  Do not claim the remote branch has advanced past `ec39e05d`.
+  `68df5c427bb28aa26bef0f22ae165c4b4a86d038`); pre-reconciliation
+  published source tip `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`;
+  merge SHA **none**. Do not describe `590e0aed` as published. Do not
+  claim the remote source branch has advanced past `ec39e05d`.
 - DAT_4.4: CLOSED.
 - Engineering Excellence Audit: **CLOSED** (explicit human GO).
 - Findings: 51. Remediation coverage: 51/51. Unresolved repository-static
@@ -149,14 +167,28 @@ handoff) are historical evidence and are not live execution state.
   remote-DB escape. Zero DB / zero migration. No new DEC. Source branch
   cleanup **COMPLETE**, local and remote.
 - Solution #4 / `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1`:
-  **REVALIDATION IN PROGRESS** against current-main baseline
-  `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe` (DEC-069; architect EQR B1
-  **CLOSED**; architect v2 EQR **PASS** historically in-branch). Published
-  source tip before this reconciliation:
-  `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. **NOT merged**. Merge SHA
-  **none**. Do not claim revalidation PASS, merge-ready, or Solution #4
-  CLOSED ON MAIN. Do not claim the remote branch has advanced past
-  `ec39e05d`. Distinct durable anchors: recovery
+  **REVALIDATED LOCALLY AGAINST CURRENT MAIN / LOCAL RECONCILIATION
+  COMMITTED / SOURCE PUBLICATION PENDING** (DEC-069; architect EQR B1
+  **CLOSED**; architect v2 EQR **PASS** historically in-branch). Local
+  reconciliation commit (LOCAL ONLY, not published):
+  `590e0aed27d30bc331b54a5af8b18c230215ca6f` (validated tree
+  `a75bc55318c3571403dd35d6da445150ff18b52d`; subject
+  `merge: incorporate current main into Solution #4`; parent 1
+  `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`; parent 2 / current-main
+  revalidation baseline `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`).
+  Published `main` remains `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`.
+  Published source remains `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`.
+  **NOT YET INTEGRATED ON MAIN**. Merge SHA **none**. Do not describe
+  `590e0aed` as published. Do not claim the remote source branch has
+  advanced past `ec39e05d`. Current-main revalidation PASS / 0 blockers.
+  Semantic-resolution EQR PASS / 0 blockers. Targeted regression: 6/6
+  files, 102/102 tests PASS. Canonical `pnpm check` (process-local
+  loopback `DATABASE_URL` / `DIRECT_URL`): lint 0 errors / 51 warnings;
+  env:check PASS; Prisma Client 6.19.0; Vitest 211/211 files, 1805/1805
+  tests PASS; Next.js 16.3.1 production build PASS; known non-fatal
+  Turbopack `.print\\:hidden` warning unchanged. Prospective tree
+  integrity: `a75bc55318c3571403dd35d6da445150ff18b52d` before targeted,
+  after targeted, and final. Distinct durable anchors: recovery
   `47a101b261a2fab144d73469e699389fc94ceb1c` (tree
   `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`); implementation
   `10093da1068f6d08caf0bb5f83c6810429dd61d7` (accepted implementation
@@ -165,20 +197,20 @@ handoff) are historical evidence and are not live execution state.
   `fix(safety): gate remote migration deploy`); post-implementation
   continuity/source-publication anchor
   `6d178bc3479668448809ee861c54fa3a0074cb46` (tree
-  `68df5c427bb28aa26bef0f22ae165c4b4a86d038`). Historical targeted
-  validation: 6 files / 102 tests PASS. Historical source-publication
-  canonical validation with process-local fake loopback
-  `DATABASE_URL` / `DIRECT_URL` PASS (Vitest 211/211 files, 1805/1805
-  tests). Those historical validations are **not** the current-main
-  revalidation result. Ordinary workstation `pnpm check` remains
-  **EXPECTED_ENVIRONMENT_BLOCK** under DEC-068. No migration has been
-  run. Lifecycle after this prospective reconciliation:
-  semantic-resolution EQR → validation → human-controlled
-  publication/integration gates. Merge is not authorized. This is not
+  `68df5c427bb28aa26bef0f22ae165c4b4a86d038`); pre-reconciliation
+  published source tip `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`.
+  Historical pre-reconciliation targeted 6/102 and source-publication
+  canonical 211/1805 remain historical evidence only and are distinct
+  from this current-main revalidation. Ordinary workstation `pnpm check`
+  remains **EXPECTED_ENVIRONMENT_BLOCK** under DEC-068. No migration has
+  been run. Next lifecycle: continuity EQR → continuity commit →
+  explicit source publication authorization → hosted source-tip pipeline
+  validation → only then return to the human-controlled Solution #4 →
+  main integration gate. Merge is not authorized. This is not
   migration-execution authorization. Do not advance to Solution #5.
   Publication history, B1 closure, hook-delta disposition, the three
-  historical validation states, and the source-publication event are
-  recorded below.
+  historical validation states, the source-publication event, and the
+  2026-08-24 current-main local reconciliation facts are recorded below.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch. Do not create a separate documentation-only branch for
   normal solution state.
@@ -216,14 +248,16 @@ handoff) are historical evidence and are not live execution state.
   errors / 51 warnings; env:check; Prisma Client generation; Vitest 208/208
   files, 1765/1765 tests; Next production build).
 - Solution #4 files were not introduced by CI isolation. Solution #4
-  published source tip before this reconciliation remains
-  `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. **NOT merged**. Merge SHA
-  **none**. Live Solution #4 status is **REVALIDATION IN PROGRESS**
-  against current-main baseline
-  `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`. Do not claim revalidation
-  PASS, merge-ready, or Solution #4 CLOSED ON MAIN. Do not claim the
-  remote branch has advanced past `ec39e05d`. Do not advance to
-  Solution #5.
+  published source tip remains
+  `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. **NOT YET INTEGRATED ON
+  MAIN**. Merge SHA **none**. Live Solution #4 status is **REVALIDATED
+  LOCALLY AGAINST CURRENT MAIN / LOCAL RECONCILIATION COMMITTED /
+  SOURCE PUBLICATION PENDING**. Local reconciliation commit (LOCAL
+  ONLY) `590e0aed27d30bc331b54a5af8b18c230215ca6f` (validated tree
+  `a75bc55318c3571403dd35d6da445150ff18b52d`). Current-main revalidation
+  PASS / 0 blockers. Do not describe `590e0aed` as published. Do not
+  claim the remote source branch has advanced past `ec39e05d`. Do not
+  advance to Solution #5.
 - Historical source-branch hosted evidence (pre-merge): pipeline
   **#2779758386** SUCCESS on SHA `9c88e3942876d65ae1290819151022cf600aefa5`;
   final source-tip pipeline **#2779877308** SUCCESS on SHA
@@ -270,8 +304,9 @@ anchor, continuity branch HEAD, main merge SHA, and published main state.
 
 ### Solution #4 recovery/preflight facts (2026-08-20)
 
-Historical recovery checkpoint. Live status is the source-publication
-section below.
+Historical recovery checkpoint. Live status is the LIVE recovery
+navigator above and the 2026-08-24 current-main local reconciliation
+facts below.
 
 - Finding: `DB-MIGRATION-001`.
 - Branch: `migration-deploy-target-safety-gate-v1`.
@@ -282,8 +317,9 @@ section below.
 
 ### Solution #4 implementation facts (2026-08-20)
 
-Historical implementation-commit checkpoint. Live status is the
-source-publication section below.
+Historical implementation-commit checkpoint. Live status is the LIVE
+recovery navigator above and the 2026-08-24 current-main local
+reconciliation facts below.
 
 - Policy: DEC-069.
 - Finding: `DB-MIGRATION-001`.
@@ -293,8 +329,9 @@ source-publication section below.
   validation 102/102; full check **EXPECTED_ENVIRONMENT_BLOCK**.
   These two facts remain true. Later source-publication added a third
   distinct state: process-local fake-loopback canonical `pnpm check`
-  PASS. Do not collapse the three validation states; live wording is
-  in the source-publication section below.
+  PASS. The 2026-08-24 current-main revalidation added a fourth distinct
+  state against `14b07df`. Do not collapse the validation states; live
+  wording is in the LIVE recovery navigator above.
 - Human authorization received: `APPROVED TO IMPLEMENT: migration-deploy-target-safety-gate-v1`.
 - Distinct anchors:
   - Solution #4 base / published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589`
@@ -468,10 +505,11 @@ recovery `--no-verify` publication event.
 
 ### Solution #4 source-publication event (2026-08-20)
 
-Historical source-publication event. Live status is **REVALIDATION IN
-PROGRESS** against current-main baseline
-`14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe` (see LIVE recovery navigator
-above). This event is **not** a merge and is **not** CLOSED ON MAIN.
+Historical source-publication event. Live status is **REVALIDATED
+LOCALLY AGAINST CURRENT MAIN / LOCAL RECONCILIATION COMMITTED /
+SOURCE PUBLICATION PENDING** (see LIVE recovery navigator above and the
+2026-08-24 current-main local reconciliation facts below). This event is
+**not** a merge and is **not** CLOSED ON MAIN.
 `6d178bc3479668448809ee861c54fa3a0074cb46` is the post-implementation
 continuity/source-publication anchor, not a merge SHA. Published source
 tip before this current-main reconciliation:
@@ -482,7 +520,8 @@ tip before this current-main reconciliation:
 - Branch: `migration-deploy-target-safety-gate-v1`.
 - Status at this event: **IMPLEMENTATION + CONTINUITY SOURCE-PUBLISHED /
   NOT YET INTEGRATED ON MAIN** (historical; superseded for live
-  navigation by **REVALIDATION IN PROGRESS**).
+  navigation by **REVALIDATED LOCALLY AGAINST CURRENT MAIN / LOCAL
+  RECONCILIATION COMMITTED / SOURCE PUBLICATION PENDING**).
 - Distinct durable anchors:
   - Published `main`/base: `14c3865372502f074941a1fc81a55b5ec7f1b589`
   - Recovery: `47a101b261a2fab144d73469e699389fc94ceb1c`
@@ -512,7 +551,8 @@ tip before this current-main reconciliation:
 - DB connection/action: **none**.
 - Migration: **none**.
 - Hosted mutation: **none**.
-- Validation states (all three remain true; do not collapse):
+- Validation states (historical source-publication evidence; remain true
+  and must not be collapsed with the later current-main revalidation):
   1. B1 targeted correction validation: Vitest 102/102 PASS.
   2. Ordinary workstation environment: ordinary `pnpm check` remains
      **EXPECTED_ENVIRONMENT_BLOCK** under DEC-068 because the
@@ -529,6 +569,9 @@ tip before this current-main reconciliation:
      The loopback override was process-local only. No `.env` file
      changed. No remote DB authority was granted. No DB action or
      migration occurred.
+  4. Current-main revalidation (2026-08-24 against `14b07df`) is a
+     distinct later state recorded in the local reconciliation facts
+     below; do not treat items 1–3 as that revalidation.
 - Push result: `git push` exit code = 0
 - Remote source after:
   `6d178bc3479668448809ee861c54fa3a0074cb46`
@@ -546,6 +589,78 @@ tip before this current-main reconciliation:
   not authorized yet. Do not claim merge authorization. Do not claim
   Solution #4 CLOSED ON MAIN. This is not migration-execution
   authorization. Do not invent the future reconciliation commit SHA.
+  **Historical next-gate wording:** superseded by the 2026-08-24
+  current-main local reconciliation facts below. Live next lifecycle is
+  continuity EQR → continuity commit → explicit source publication
+  authorization → hosted source-tip pipeline validation → only then
+  return to the human-controlled Solution #4 → main integration gate.
+
+### Solution #4 current-main local reconciliation facts (2026-08-24)
+
+Live local reconciliation checkpoint. This commit is **LOCAL ONLY** at
+this point. It is **not** source-published. It is **not** a merge into
+`main`. Hosted source-tip pipeline evidence for this SHA does not exist
+yet.
+
+- Policy: DEC-069.
+- Finding: `DB-MIGRATION-001`.
+- Branch: `migration-deploy-target-safety-gate-v1`.
+- Live status: **REVALIDATED LOCALLY AGAINST CURRENT MAIN / LOCAL
+  RECONCILIATION COMMITTED / SOURCE PUBLICATION PENDING**.
+- Local reconciliation commit (LOCAL ONLY, not published):
+  `590e0aed27d30bc331b54a5af8b18c230215ca6f`.
+- Validated tree: `a75bc55318c3571403dd35d6da445150ff18b52d`.
+- Merge structure:
+  - parent 1: `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`
+  - parent 2 / current-main revalidation baseline:
+    `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`
+  - subject: `merge: incorporate current main into Solution #4`
+- Published `main` remains `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`.
+- Published Solution #4 source branch remains
+  `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`.
+- **NOT YET INTEGRATED ON MAIN**. Merge SHA **none**.
+- Do not describe `590e0aed` as published.
+- Do not claim the remote source branch has advanced.
+- Do not claim a hosted source pipeline for `590e0aed` has passed.
+- Do not claim Solution #4 CLOSED ON PUBLISHED MAIN.
+- Do not invent a future main integration SHA.
+- Do not claim Solution #4 source-branch cleanup.
+- Solution #5 has **not** started.
+- Durable history unchanged:
+  - recovery `47a101b261a2fab144d73469e699389fc94ceb1c`
+  - implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7`
+  - implementation tree `62dc7214834122df7f441e0e669c375d4903628d`
+  - continuity `6d178bc3479668448809ee861c54fa3a0074cb46`
+  - pre-reconciliation published source tip
+    `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`
+- Current-main revalidation evidence (distinct from historical
+  pre-reconciliation 6/102 and 211/1805):
+  - Semantic-resolution EQR: PASS / 0 blockers
+  - Targeted Solution #4 regression: 6/6 test files PASS; 102/102 tests
+    PASS
+  - Canonical `pnpm check` using process-local loopback `DATABASE_URL` +
+    `DIRECT_URL`: lint 0 errors / 51 warnings; env:check PASS; Prisma
+    Client 6.19.0; Vitest 211/211 files PASS; Vitest 1805/1805 tests
+    PASS; Next.js 16.3.1 production build PASS; known non-fatal
+    Turbopack `.print\\:hidden` warning unchanged
+  - Prospective tree integrity: `a75bc55318c3571403dd35d6da445150ff18b52d`
+    before targeted, after targeted, and final
+  - Local merge commit preserved exactly that validated tree
+- Boundaries: zero migration executed; zero DB action; zero Production
+  DB contact authorized; zero Playwright; zero env-file mutation; zero
+  GitLab-settings mutation; no rebase; no `--no-verify`.
+- `gitlab-ci-database-isolation-v1` remains **CLOSED ON PUBLISHED MAIN**
+  (integration `594484998da5893b349bea4d2de1ac7447d37de6`; closure docs
+  `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`; final closure pipeline
+  **#2780314232** SUCCESS; final job `#16037631071` check SUCCESS,
+  `allow_failure=false`; cleanup COMPLETE locally and remotely).
+  DEC-068 unchanged; no `CI` / `GITLAB_CI` remote-DB escape.
+- Next lifecycle: continuity EQR → continuity commit → explicit source
+  publication authorization → hosted source-tip pipeline validation →
+  only then return to the human-controlled Solution #4 → main
+  integration gate.
+- `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain
+  distinct follow-ups.
 
 ### Solution #3 implementation recovery facts
 
