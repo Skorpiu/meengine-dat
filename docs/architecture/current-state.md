@@ -22,11 +22,12 @@ This file summarizes **where DAT is today** for agents, reviewers, and operators
 | **Node.js runtime** | **Node 24 migration closed.** Local compatibility passed on Node 24.18.0; repository pins, package engines, `.nvmrc`, GitLab CI and runner documentation are aligned; branch and `main` pipelines passed using `node:24`; Vercel Preview and Production deployed successfully with Project Settings and effective runtime on Node 24.x; post-deploy non-destructive hosted gates passed at `909b69a`. |
 | **Engineering audit** | `engineering-excellence-audit-v1` — **CLOSED 2026-08-13 by explicit human authorization**. Final Engineering Quality Review PASS; 0 closure-blocking dimensions; 51 findings with 51/51 remediation coverage; no repository-static audit frontier remains. The findings remain active remediation debt in the post-audit execution queue. Do not reopen the global audit without contradictory evidence. |
 | **Solution #1** | `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` — **CLOSED BY CONTAINMENT** and integrated into `main`. No active Billing implementation branch at this recovery checkpoint. |
-| **DAT_4.5 handoff** | Authoritative published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589` (`merge: integrate Solution #3 local database isolation`; tree `cb7b0a7409b91a70a8c601f36d4e80fd014404cf`). Solution #2 published merge `0409d92525940be751e6bc07c9da32668a834e53` remains the Solution #2 closure anchor. Resolve live HEAD through Git; this is not an eternal served-in-Production SHA. |
+| **DAT_4.5 handoff** | Current published `main`: resolve `origin/main` through live Git. Revalidation baseline for this Solution #4 reconciliation: `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`. CI-isolation published integration anchor: `594484998da5893b349bea4d2de1ac7447d37de6` (`merge: integrate GitLab CI database isolation`). CI-isolation closure-doc publication anchor: `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`. Historical Solution #3 published merge `14c3865372502f074941a1fc81a55b5ec7f1b589` is **not** current live `main`. Solution #2 published merge `0409d92525940be751e6bc07c9da32668a834e53` remains the Solution #2 closure anchor. This is not an eternal served-in-Production SHA. |
 | **Solution #2** | `next-supported-lts-security-remediation-v1` / `DEP-SEC-001` — **CLOSED + PUBLISHED**. Published merge `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #2 branch cleaned local + remote. |
-| **Solution #3** | `local-development-database-isolation-v1` / `CONFIG-ENV-001` — **CLOSED ON PUBLISHED MAIN** (DEC-068). Implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; continuity/source-publication anchor `810cc9446c5f89805e282672bc03f743f8480d75`; published merge `14c3865372502f074941a1fc81a55b5ec7f1b589`. Source branch cleanup **COMPLETE** (absent locally and on `origin`). Historical in-branch wording “ACTIVE / NOT YET INTEGRATED ON MAIN” is superseded by this published merge. |
-| **Solution #4** | `migration-deploy-target-safety-gate-v1` / `DB-MIGRATION-001` — **IMPLEMENTATION + CONTINUITY SOURCE-PUBLISHED / NOT YET INTEGRATED ON MAIN** (DEC-069; architect EQR B1 **CLOSED**; architect v2 EQR **PASS**; B1 targeted correction validation 102/102 PASS; ordinary workstation `pnpm check` remains **EXPECTED_ENVIRONMENT_BLOCK** under DEC-068; source-publication pre-push canonical validation with process-local fake loopback `DATABASE_URL` / `DIRECT_URL` PASS (ESLint 0 errors / 51 warnings; env:check; Prisma Client generation; Vitest 211/211 files, 1805/1805 tests; Next.js 16.3.1 production build). Loopback override was process-local only; no `.env` file changed; no remote DB authority; no DB action or migration). Distinct durable anchors: published `main`/base `14c3865372502f074941a1fc81a55b5ec7f1b589`; recovery `47a101b261a2fab144d73469e699389fc94ceb1c` (tree `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`); implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7` (tree `62dc7214834122df7f441e0e669c375d4903628d`; parent `47a101b261a2fab144d73469e699389fc94ceb1c`; subject `fix(safety): gate remote migration deploy`); post-implementation continuity/source-publication anchor `6d178bc3479668448809ee861c54fa3a0074cb46` (tree `68df5c427bb28aa26bef0f22ae165c4b4a86d038`). Source-publication event: the Solution #4 branch was successfully published through anchor `6d178bc3479668448809ee861c54fa3a0074cb46`, containing implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7`. A later same-branch continuity commit may advance the branch tip; resolve the live remote tip through Git. Merge SHA **none**. Hook delta **ACCEPTED** (format/style only; no amend/reset). Do not claim Solution #4 is closed on `main`. Do not invent a merge SHA. Do not claim a migration has been run. Source push used the normal Git path (no `--no-verify`). Recovery publication history: Super Agent continuity 2026-08-20 (one-shot exception; not standing hook-bypass authorization). |
-| **Ordered next** | After this source-publication reconciliation is committed and published on the Solution #4 source branch, the next human-controlled lifecycle gate may be Solution #4 integration into `main`. Merge is not authorized yet (merge SHA **none**). Do not claim merge authorization. Do not claim Solution #4 CLOSED ON MAIN. This is not migration-execution authorization. Then `platform-separation-architecture-plan-v1` as a parallel architecture lane → `dependency-security-monitoring-v1` remains separate; then P1/P2 according to the post-audit queue. Do not run ordinary local `pnpm dev` until the local `.env` / `.env.local` database URLs are loopback (current hosted `.env` is expected to fail `env:check`). |
+| **Solution #3** | `local-development-database-isolation-v1` / `CONFIG-ENV-001` — **CLOSED ON PUBLISHED MAIN** (DEC-068). Implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; continuity/source-publication anchor `810cc9446c5f89805e282672bc03f743f8480d75`; published merge `14c3865372502f074941a1fc81a55b5ec7f1b589` (historical Solution #3 merge; not current live `main`). Source branch cleanup **COMPLETE** (absent locally and on `origin`). Historical in-branch wording “ACTIVE / NOT YET INTEGRATED ON MAIN” is superseded by this published merge. |
+| **GitLab CI isolation** | `gitlab-ci-database-isolation-v1` — **CLOSED ON PUBLISHED MAIN**. Published integration anchor `594484998da5893b349bea4d2de1ac7447d37de6` (`merge: integrate GitLab CI database isolation`; tree `8e06964dacb5dad1397016c8f5086f8ee67090e8`; parents `14c3865372502f074941a1fc81a55b5ec7f1b589` + `ac52061a1b1e972775ecc3212e43d8f0f0688fc9`). Implementation anchor `9c88e3942876d65ae1290819151022cf600aefa5`. Final source continuity anchor `ac52061a1b1e972775ecc3212e43d8f0f0688fc9`. CI-isolation closure-doc publication anchor: `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`. Final closure hosted main pipeline **#2780314232** SUCCESS; final closure canonical job `check` **#16037631071** SUCCESS; `allow_failure: false`. Hosted CI isolation criterion **SATISFIED**. Historical published-main hosted validation (pre-closure-docs): pipeline **#2779972676** SUCCESS; job `check` **#16034544967** SUCCESS. Remediation: GitLab `before_script` reasserts process-local loopback `DATABASE_URL` / `DIRECT_URL` after environment injection. DEC-068 unchanged (no `CI` / `GITLAB_CI` remote-DB escape). Zero DB / zero migration. No GitLab hosted settings mutation. No `.env` mutation. No Production mutation. Cause classification: repository evidence supports external job-environment injection as the cause class. Higher-precedence GitLab CI/CD variables (for example policy/pipeline/project/group/instance variables) are the most likely source. Runner-provided environment remains another externally confirmable possibility. No specific Project/Group/Runner variable has been definitively proven. Source branch cleanup **COMPLETE**, local and remote. |
+| **Solution #4** | `migration-deploy-target-safety-gate-v1` / `DB-MIGRATION-001` / DEC-069 — **REVALIDATION IN PROGRESS** against current-main baseline `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`. Branch `migration-deploy-target-safety-gate-v1`. Published Solution #4 source tip before this reconciliation: `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. **NOT merged**. Merge SHA **none**. Do not claim Solution #4 CLOSED ON MAIN. Do not claim the remote branch has advanced past `ec39e05d`. Do not claim targeted or canonical revalidation against `14b07df` has passed. Distinct durable anchors: recovery `47a101b261a2fab144d73469e699389fc94ceb1c` (tree `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`); implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7` (accepted implementation tree `62dc7214834122df7f441e0e669c375d4903628d`; parent `47a101b261a2fab144d73469e699389fc94ceb1c`; subject `fix(safety): gate remote migration deploy`); post-implementation continuity/source-publication anchor `6d178bc3479668448809ee861c54fa3a0074cb46` (tree `68df5c427bb28aa26bef0f22ae165c4b4a86d038`). Historical targeted validation: 6 files / 102 tests PASS. Historical source-publication canonical validation: Vitest 211/211 files, 1805/1805 tests, Next.js 16.3.1 production build PASS (process-local fake loopback `DATABASE_URL` / `DIRECT_URL`; ESLint 0 errors / 51 warnings; env:check; Prisma Client generation). Those historical validations are **not** the current-main revalidation result. Architect EQR B1 **CLOSED**; architect v2 EQR **PASS** (historical in-branch). Ordinary workstation `pnpm check` remains **EXPECTED_ENVIRONMENT_BLOCK** under DEC-068. Loopback override was process-local only; no `.env` file changed; no remote DB authority. No migration has been run. Do not advance to Solution #5. |
+| **Ordered next** | After this prospective current-main reconciliation, the lifecycle remains: semantic-resolution EQR → validation → human-controlled publication/integration gates. Merge is not authorized. This is not migration-execution authorization. Do **not** treat Solution #4 as merge-ready. Do **not** advance to Solution #5. Then `platform-separation-architecture-plan-v1` as a parallel architecture lane → `dependency-security-monitoring-v1` remains separate; `TOOLCHAIN-002` remains separate; then P1/P2 according to the post-audit queue. Do not run ordinary local `pnpm dev` until the local `.env` / `.env.local` database URLs are loopback (current hosted `.env` is expected to fail `env:check`). |
 | **P1 parallel** | `people-instructor-invite-accept-list-refresh-v1`; `school-person-identifiers-settings-product-plan-v1` (DEC-065). |
 | **Safety baseline tag** | `dat-v1-core-baseline-95b833e` @ `95b833e` (DEC-056) — code/recovery comparison only. |
 | **Archive tag** | `archive-schedule-and-vehicles-b101112` — historical archive only; **not** a release or recovery baseline. |
@@ -660,7 +661,7 @@ priority was `billing-webhook-authenticity-gate-v1`, followed by
 the Platform separation architecture lane proceed according to their documented
 prerequisites and independence boundaries.
 
-**Live supersession (2026-08-20 Git-verified):** Solution #1 is CLOSED BY CONTAINMENT. Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1` is **CLOSED + PUBLISHED** on `main` at `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1` is **CLOSED ON PUBLISHED MAIN** at merge `14c3865372502f074941a1fc81a55b5ec7f1b589`. Solution #4 / `DB-MIGRATION-001` is **IMPLEMENTATION + CONTINUITY SOURCE-PUBLISHED / NOT YET INTEGRATED ON MAIN** (DEC-069; architect EQR B1 **CLOSED**; architect v2 EQR **PASS**; implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7`; recovery `47a101b261a2fab144d73469e699389fc94ceb1c`; post-implementation continuity/source-publication anchor `6d178bc3479668448809ee861c54fa3a0074cb46`; merge SHA **none**). Source-publication event: the Solution #4 branch was successfully published through anchor `6d178bc3479668448809ee861c54fa3a0074cb46`, containing implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7`. A later same-branch continuity commit may advance the branch tip; resolve the live remote tip through Git.
+**Live supersession (2026-08-24 Git-verified):** Solution #1 is CLOSED BY CONTAINMENT. Solution #2 / `DEP-SEC-001` / `next-supported-lts-security-remediation-v1` is **CLOSED + PUBLISHED** on `main` at `0409d92525940be751e6bc07c9da32668a834e53`. `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1` is **CLOSED ON PUBLISHED MAIN** at merge `14c3865372502f074941a1fc81a55b5ec7f1b589` (historical Solution #3 merge; not current live `main`). `gitlab-ci-database-isolation-v1` is **CLOSED ON PUBLISHED MAIN** at integration `594484998da5893b349bea4d2de1ac7447d37de6`; closure-doc publication `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`; final hosted main pipeline **#2780314232** SUCCESS; canonical job `check` **#16037631071** SUCCESS; `allow_failure: false`; source branch cleanup **COMPLETE**, local and remote. DEC-068 unchanged (no `CI` / `GITLAB_CI` remote-DB escape). No DB or migration was performed as part of CI isolation. Solution #4 / `DB-MIGRATION-001` is **REVALIDATION IN PROGRESS** against current-main baseline `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe` (DEC-069; published source tip before this reconciliation `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`; implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7`; recovery `47a101b261a2fab144d73469e699389fc94ceb1c`; post-implementation continuity/source-publication anchor `6d178bc3479668448809ee861c54fa3a0074cb46`; merge SHA **none**). Do not claim current-main revalidation PASS. Do not claim Solution #4 CLOSED ON MAIN.
 
 **Historical (2026-08-18 in-branch Solution #3 checkpoint):** Solution #3 was **ACTIVE** and **IMPLEMENTED + VALIDATED IN-BRANCH** (DEC-068), **SOURCE BRANCH PUBLISHED**, **NOT YET INTEGRATED ON MAIN**, **NOT CLOSED ON MAIN**. That wording is preserved as pre-publication evidence and is superseded by the published merge above.
 
@@ -749,51 +750,61 @@ itself.
   `DEP-SEC-001` is **CLOSED ON PUBLISHED MAIN**. Solution #2 branch cleaned
   local + remote.
 - Solution #3 / `local-development-database-isolation-v1`: **CLOSED ON
-  PUBLISHED MAIN**. Implementation anchor
+  PUBLISHED MAIN** (DEC-068). Implementation anchor
   `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree
   `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; continuity/source-publication
   anchor `810cc9446c5f89805e282672bc03f743f8480d75`; published merge
   `14c3865372502f074941a1fc81a55b5ec7f1b589` (tree
-  `cb7b0a7409b91a70a8c601f36d4e80fd014404cf`). Source branch cleanup
-  **COMPLETE**. Historical in-branch wording “ACTIVE / SOURCE BRANCH
-  PUBLISHED / NOT YET INTEGRATED ON MAIN” is superseded by this merge.
-- Solution #4 / `migration-deploy-target-safety-gate-v1`: **IMPLEMENTATION
-  + CONTINUITY SOURCE-PUBLISHED / NOT YET INTEGRATED ON MAIN** (DEC-069;
-  architect EQR B1 **CLOSED**; architect v2 EQR **PASS**; B1 targeted
-  correction validation 102/102 PASS; ordinary workstation `pnpm check`
-  remains **EXPECTED_ENVIRONMENT_BLOCK** under DEC-068;
-  source-publication pre-push canonical validation with process-local
-  fake loopback `DATABASE_URL` / `DIRECT_URL` PASS (ESLint 0 errors /
-  51 warnings; env:check; Prisma Client generation; Vitest 211/211
-  files, 1805/1805 tests; Next.js 16.3.1 production build). Loopback
-  override was process-local only; no `.env` file changed; no remote
-  DB authority; no DB action or migration). Distinct
-  durable anchors: published `main`/base
-  `14c3865372502f074941a1fc81a55b5ec7f1b589`; recovery
-  `47a101b261a2fab144d73469e699389fc94ceb1c` (tree
+  `cb7b0a7409b91a70a8c601f36d4e80fd014404cf`; historical Solution #3
+  merge, not current live `main`). Source branch cleanup **COMPLETE**.
+  Historical in-branch wording “ACTIVE / SOURCE BRANCH PUBLISHED / NOT
+  YET INTEGRATED ON MAIN” is superseded by this merge.
+- Current published `main`: resolve `origin/main` through live Git.
+  Revalidation baseline for this Solution #4 reconciliation:
+  `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`.
+  CI-isolation published integration anchor:
+  `594484998da5893b349bea4d2de1ac7447d37de6`.
+  CI-isolation closure-doc publication anchor:
+  `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`.
+- `gitlab-ci-database-isolation-v1` — **CLOSED ON PUBLISHED MAIN**.
+  Published integration anchor `594484998da5893b349bea4d2de1ac7447d37de6`.
+  Implementation anchor `9c88e3942876d65ae1290819151022cf600aefa5`.
+  Final source continuity anchor `ac52061a1b1e972775ecc3212e43d8f0f0688fc9`.
+  Final closure hosted main pipeline **#2780314232** SUCCESS;
+  final closure canonical job `check` **#16037631071** SUCCESS;
+  `allow_failure: false`. Hosted CI isolation criterion **SATISFIED**.
+  GitLab `before_script` reasserts process-local loopback DB URLs after
+  environment injection. DEC-068 unchanged (no `CI` / `GITLAB_CI`
+  remote-DB escape). Zero DB / zero migration. No GitLab hosted settings
+  mutation. Source branch cleanup **COMPLETE**, local and remote.
+- Solution #4 / `migration-deploy-target-safety-gate-v1`: **REVALIDATION
+  IN PROGRESS** against current-main baseline
+  `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe` (DEC-069). Branch
+  `migration-deploy-target-safety-gate-v1`. Published source tip before
+  this reconciliation: `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`.
+  **NOT merged**. Merge SHA **none**. Do not claim revalidation PASS,
+  merge-ready, or Solution #4 CLOSED ON MAIN. Do not claim the remote
+  branch has advanced past `ec39e05d`. Distinct durable anchors:
+  recovery `47a101b261a2fab144d73469e699389fc94ceb1c` (tree
   `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`); implementation
-  `10093da1068f6d08caf0bb5f83c6810429dd61d7` (tree
-  `62dc7214834122df7f441e0e669c375d4903628d`; parent
+  `10093da1068f6d08caf0bb5f83c6810429dd61d7` (accepted implementation
+  tree `62dc7214834122df7f441e0e669c375d4903628d`; parent
   `47a101b261a2fab144d73469e699389fc94ceb1c`; subject
   `fix(safety): gate remote migration deploy`); post-implementation
   continuity/source-publication anchor
   `6d178bc3479668448809ee861c54fa3a0074cb46` (tree
-  `68df5c427bb28aa26bef0f22ae165c4b4a86d038`). Source-publication event:
-  the Solution #4 branch was successfully published through anchor
-  `6d178bc3479668448809ee861c54fa3a0074cb46`, containing implementation
-  `10093da1068f6d08caf0bb5f83c6810429dd61d7`. A later same-branch
-  continuity commit may advance the branch tip; resolve the live remote
-  tip through Git. Merge SHA **none**. Hook delta **ACCEPTED**
-  (format/style only; no amend/reset). Do not invent a merge SHA. Do not
-  claim Solution #4 is closed on `main`. Do not claim a migration has been
-  run. Source push used the normal Git path (no `--no-verify`). Recovery
-  publication history: Super Agent continuity 2026-08-20 (one-shot
-  exception; not standing hook-bypass authorization). After this
-  source-publication reconciliation is committed and published on the
-  Solution #4 source branch, the next human-controlled lifecycle gate
-  may be Solution #4 integration into `main`. Merge is not authorized
-  yet. This is not migration-execution authorization.
-- Authoritative published `main`: `14c3865372502f074941a1fc81a55b5ec7f1b589`.
+  `68df5c427bb28aa26bef0f22ae165c4b4a86d038`). Historical targeted
+  validation: 6 files / 102 tests PASS. Historical source-publication
+  canonical validation: Vitest 211/211 files, 1805/1805 tests, Next.js
+  16.3.1 production build PASS (process-local fake loopback URLs).
+  Those historical validations are **not** the current-main
+  revalidation result. Architect EQR B1 **CLOSED**; architect v2 EQR
+  **PASS** (historical in-branch). Ordinary workstation `pnpm check`
+  remains **EXPECTED_ENVIRONMENT_BLOCK** under DEC-068. No migration
+  has been run. Lifecycle after this prospective reconciliation:
+  semantic-resolution EQR → validation → human-controlled
+  publication/integration gates. Merge is not authorized. Do not
+  advance to Solution #5.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch. Do not create a separate documentation-only branch for
   normal solution state. Do not invent future commit SHAs.
