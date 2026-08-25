@@ -3,76 +3,61 @@
 
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
-**Live recovery snapshot:** 2026-08-24 — DAT_4.5 Solution #4
-`migration-deploy-target-safety-gate-v1` (**SOURCE CHECKPOINT PUBLISHED +
-HOSTED-VALIDATED / TERMINAL SOURCE-CONTINUITY CHECKPOINT /
-MAIN INTEGRATION PENDING**; DEC-069). Hosted-validated source checkpoint
-immediately before this terminal source-continuity checkpoint:
-`ef705010e46e3eb8c3c1232a9b9f09c3103d7f74` (tree
-`819e49f16c6218b9fcaac242d4ad08595dd3a515`; subject
-`docs(state): record Solution #4 current-main revalidation`; parent
-`590e0aed27d30bc331b54a5af8b18c230215ca6f`). This documentation commit is
-the TERMINAL SOURCE-CONTINUITY CHECKPOINT. Resolve the terminal
-source-continuity checkpoint from live
-`migration-deploy-target-safety-gate-v1` HEAD; its SHA is intentionally
-not self-recorded inside the commit that defines the checkpoint.
-Current-main reconciliation merge (parent of the hosted-validated source
-checkpoint): `590e0aed27d30bc331b54a5af8b18c230215ca6f` (validated tree
-`a75bc55318c3571403dd35d6da445150ff18b52d`; subject
-`merge: incorporate current main into Solution #4`; parent 1
-`ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`; parent 2 / current-main
-revalidation baseline `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`).
-Current published `main` remains
-`14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`. Pre-reconciliation published
-source tip `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. **NOT YET
-INTEGRATED ON MAIN**. Merge SHA **none**. Hosted GitLab pipeline
-**#2785979885** (IID **373**, source `push`, ref
+**Live recovery snapshot:** 2026-08-25 — DAT_4.5 Solution #4
+`migration-deploy-target-safety-gate-v1` (**LOCAL MAIN INTEGRATION
+CHECKPOINT / PUBLICATION + HOSTED VALIDATION REQUIRED BEFORE CLOSURE**;
+DEC-069). Implemented and terminal-source validated; integrated into
+LOCAL `main`. Terminal source checkpoint:
+`88eb0ab3637bf0b18f23271cb88976bc3e1f1fae` (tree
+`36a36f25d81d94792ab1e70d4d26689c1c545a7e`; subject
+`docs(state): record Solution #4 terminal source continuity`; parent
+`ef705010e46e3eb8c3c1232a9b9f09c3103d7f74`). Terminal hosted GitLab
+pipeline **#2786482679** (IID **374**, source `push`, ref
 `migration-deploy-target-safety-gate-v1`, SHA
-`ef705010e46e3eb8c3c1232a9b9f09c3103d7f74`, before_sha
-`ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`) **SUCCESS**. Canonical job
-`check` **#16071957162** **SUCCESS**; `allow_failure: false`.
-CI-isolation published integration anchor
-`594484998da5893b349bea4d2de1ac7447d37de6`. CI-isolation closure-doc
-publication anchor `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`.
-`gitlab-ci-database-isolation-v1` is **CLOSED ON PUBLISHED MAIN**. Final
-closure hosted main pipeline **#2780314232** SUCCESS; canonical job
-`check` **#16037631071** SUCCESS; `allow_failure: false`. Source branch
-cleanup **COMPLETE**, local and remote. DEC-068 unchanged (no `CI` /
-`GITLAB_CI` remote-DB escape). No DB or migration was performed as part
-of CI isolation. Distinct durable Solution #4 anchors: recovery
-`47a101b261a2fab144d73469e699389fc94ceb1c` (tree
-`ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`); implementation
-`10093da1068f6d08caf0bb5f83c6810429dd61d7` (accepted implementation tree
-`62dc7214834122df7f441e0e669c375d4903628d`; parent
-`47a101b261a2fab144d73469e699389fc94ceb1c`; subject
-`fix(safety): gate remote migration deploy`); post-implementation
-continuity/source-publication anchor
-`6d178bc3479668448809ee861c54fa3a0074cb46` (tree
-`68df5c427bb28aa26bef0f22ae165c4b4a86d038`); pre-reconciliation published
-source tip `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. Current-main
-revalidation PASS / 0 blockers. Semantic-resolution EQR PASS / 0
-blockers. Targeted regression: 6/6 files, 102/102 tests PASS. Canonical
-`pnpm check` (process-local loopback `DATABASE_URL` + `DIRECT_URL`): lint
-0 errors / 51 warnings; env:check PASS; Prisma Client 6.19.0; Vitest
-211/211 files, 1805/1805 tests PASS; Next.js 16.3.1 production build
-PASS; known non-fatal Turbopack `.print\\:hidden` warning unchanged.
-Prospective tree integrity: `a75bc55318c3571403dd35d6da445150ff18b52d`
-before targeted, after targeted, and final; the local merge commit
-preserved that tree. Historical pre-reconciliation targeted 6/102 and
-source-publication canonical 211/1805 remain historical evidence only
-and are distinct from this current-main revalidation. Ordinary
-workstation `pnpm check` remains **EXPECTED_ENVIRONMENT_BLOCK** under
-DEC-068. No migration has been run. The terminal source-continuity
-checkpoint must be source-published and hosted-validated for its exact
-live branch HEAD before the human-controlled Solution #4 → main
-integration gate may open. After that terminal commit is published and
-its exact pipeline passes, no further pre-main continuity commit is
-required merely to record its own SHA/pipeline. The later post-main
-closure reconciliation records: exact terminal source SHA; its final
-hosted pipeline/job; exact main integration SHA; published-main
-validation; eventual source-branch cleanup when authorized. Merge is not
-authorized. This is not
-migration-execution authorization. Do not advance to Solution #5.
+`88eb0ab3637bf0b18f23271cb88976bc3e1f1fae`) **SUCCESS**. Canonical job
+`check` **#16075003942** **SUCCESS**; `allow_failure: false`. Hosted
+canonical evidence: loopback CI `DATABASE_URL` / `DIRECT_URL`; lint 0
+errors / 51 warnings; env:check PASS; Prisma 6.19.0; Vitest 211/211
+files PASS; 1805/1805 tests PASS; Next.js 16.3.1 production build PASS;
+known non-fatal Turbopack `.print\\:hidden` warning unchanged. Local
+`main` integration commit:
+`8653c56824319017ba5ec3967706e5e254d280a7` (subject `merge: integrate
+Solution #4 migration deploy target safety gate`; parent 1
+`14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`; parent 2
+`88eb0ab3637bf0b18f23271cb88976bc3e1f1fae`; tree
+`36a36f25d81d94792ab1e70d4d26689c1c545a7e`). The integration tree
+equals the already hosted-validated terminal source tree. Local
+integration canonical validation PASS: 211/211 files; 1805/1805 tests;
+env:check PASS; Prisma 6.19.0; Next.js 16.3.1 build PASS; known CSS
+warning unchanged. Pre-publication remote-main baseline observed at
+this checkpoint: `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe` — not an
+eternal published-main SHA; resolve live `origin/main` through Git.
+Publication and hosted validation of the eventual exact `main` tip
+remain mandatory prerequisites for Solution #4 closure. Do not claim
+published-main closure. Do not claim source-branch cleanup complete.
+Do not authorize branch deletion. Historical (superseded for live
+navigation): hosted-validated source checkpoint
+`ef705010e46e3eb8c3c1232a9b9f09c3103d7f74` (pipeline **#2785979885** /
+IID **373** / job **#16071957162**); current-main reconciliation merge
+`590e0aed27d30bc331b54a5af8b18c230215ca6f`; earlier wording **SOURCE
+CHECKPOINT PUBLISHED + HOSTED-VALIDATED / TERMINAL SOURCE-CONTINUITY
+CHECKPOINT / MAIN INTEGRATION PENDING**. Distinct durable Solution #4
+anchors: recovery `47a101b261a2fab144d73469e699389fc94ceb1c`;
+implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7`;
+post-implementation continuity/source-publication anchor
+`6d178bc3479668448809ee861c54fa3a0074cb46`. CI-isolation published
+integration anchor `594484998da5893b349bea4d2de1ac7447d37de6`.
+`gitlab-ci-database-isolation-v1` is **CLOSED ON PUBLISHED MAIN**.
+DEC-068 unchanged (no `CI` / `GITLAB_CI` remote-DB escape). No
+migration has been run. No database write/action was performed.
+DEC-069 remains a safety-gate implementation, not
+migration-execution authorization. This checkpoint does not require
+another commit merely to self-record a later documentation SHA. The
+later POST-PUBLISHED-MAIN CLOSURE reconciliation will record: the
+exact main tip actually published; its hosted pipeline/job;
+published-main validation; published-main closure; eventual
+source-branch cleanup once separately authorized. Do not advance to
+Solution #5.
 
 **Conversation-recovery note (2026-08-20, historical):** part of the
 external ChatGPT conversation became unavailable after Solution #3 work.
@@ -115,8 +100,10 @@ checkpoints, and the docs-only `canonical-live-state-reconciliation-v1`
 handoff) are historical evidence and are not live execution state.
 
 - Current published `main`: resolve `origin/main` through live Git.
-  Revalidation baseline for this Solution #4 reconciliation:
-  `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`.
+  Pre-publication remote-main baseline observed at this
+  local-integration checkpoint:
+  `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe` — not an eternal
+  published-main SHA; a later authorized push may advance `main`.
   CI-isolation published integration anchor:
   `594484998da5893b349bea4d2de1ac7447d37de6`
   (`merge: integrate GitLab CI database isolation`).
@@ -132,20 +119,19 @@ handoff) are historical evidence and are not live execution state.
   canonical job `check` **#16037631071** SUCCESS; `allow_failure: false`.
   Hosted CI isolation criterion **SATISFIED**. Source branch cleanup
   **COMPLETE**, local and remote. DEC-068 unchanged.
-- Active solution branch: `migration-deploy-target-safety-gate-v1`
-  (**SOURCE CHECKPOINT PUBLISHED + HOSTED-VALIDATED / TERMINAL SOURCE-CONTINUITY CHECKPOINT / MAIN INTEGRATION PENDING**). Current-main reconciliation merge (parent of the hosted-validated source checkpoint): `590e0aed27d30bc331b54a5af8b18c230215ca6f`
-  (validated tree `a75bc55318c3571403dd35d6da445150ff18b52d`).
-  Revalidation baseline `main` @
-  `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`. Hosted-validated source checkpoint `ef705010e46e3eb8c3c1232a9b9f09c3103d7f74` (tree `819e49f16c6218b9fcaac242d4ad08595dd3a515`; parent `590e0aed27d30bc331b54a5af8b18c230215ca6f`; pre-reconciliation published source tip `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`). Recovery
-  `47a101b261a2fab144d73469e699389fc94ceb1c` (tree
-  `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`); implementation
-  `10093da1068f6d08caf0bb5f83c6810429dd61d7` (accepted implementation
-  tree `62dc7214834122df7f441e0e669c375d4903628d`); post-implementation
-  continuity/source-publication anchor
-  `6d178bc3479668448809ee861c54fa3a0074cb46` (tree
-  `68df5c427bb28aa26bef0f22ae165c4b4a86d038`); pre-reconciliation
-  published source tip `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`;
-  merge SHA **none**. This documentation commit is the TERMINAL SOURCE-CONTINUITY CHECKPOINT. Resolve the terminal source-continuity checkpoint from live `migration-deploy-target-safety-gate-v1` HEAD; its SHA is intentionally not self-recorded inside the commit that defines the checkpoint. `ef705010` is the hosted-validated source checkpoint preceding terminal continuity, not an eternal branch HEAD.
+- Active product implementation slice: `migration-deploy-target-safety-gate-v1`
+  (**LOCAL MAIN INTEGRATION CHECKPOINT / PUBLICATION + HOSTED VALIDATION REQUIRED BEFORE CLOSURE**).
+  Terminal source `88eb0ab3637bf0b18f23271cb88976bc3e1f1fae` (tree
+  `36a36f25d81d94792ab1e70d4d26689c1c545a7e`). Terminal hosted pipeline
+  **#2786482679** (IID **374**) **SUCCESS**; job `check`
+  **#16075003942** **SUCCESS**. Local `main` integration
+  `8653c56824319017ba5ec3967706e5e254d280a7`. Pre-publication remote-main
+  baseline `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`. Historical
+  (superseded): `ef705010e46e3eb8c3c1232a9b9f09c3103d7f74`;
+  `590e0aed27d30bc331b54a5af8b18c230215ca6f`. Recovery
+  `47a101b261a2fab144d73469e699389fc94ceb1c`; implementation
+  `10093da1068f6d08caf0bb5f83c6810429dd61d7`; post-implementation
+  continuity `6d178bc3479668448809ee861c54fa3a0074cb46`.
 - DAT_4.4: CLOSED.
 - Engineering Excellence Audit: **CLOSED** (explicit human GO).
 - Findings: 51. Remediation coverage: 51/51. Unresolved repository-static
@@ -182,53 +168,38 @@ handoff) are historical evidence and are not live execution state.
   remote-DB escape. Zero DB / zero migration. No new DEC. Source branch
   cleanup **COMPLETE**, local and remote.
 - Solution #4 / `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1`:
-  **SOURCE CHECKPOINT PUBLISHED + HOSTED-VALIDATED / TERMINAL SOURCE-CONTINUITY CHECKPOINT / MAIN INTEGRATION PENDING** (DEC-069; architect EQR B1
+  **LOCAL MAIN INTEGRATION CHECKPOINT / PUBLICATION + HOSTED VALIDATION REQUIRED BEFORE CLOSURE** (DEC-069; architect EQR B1
   **CLOSED**; architect v2 EQR **PASS** historically in-branch).
-  Current-main reconciliation merge (parent of the hosted-validated
-  source checkpoint): `590e0aed27d30bc331b54a5af8b18c230215ca6f` (validated tree
-  `a75bc55318c3571403dd35d6da445150ff18b52d`; subject
-  `merge: incorporate current main into Solution #4`; parent 1
-  `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`; parent 2 / current-main
-  revalidation baseline `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`).
-  Published `main` remains `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`.
-  Hosted-validated source checkpoint `ef705010e46e3eb8c3c1232a9b9f09c3103d7f74` (tree `819e49f16c6218b9fcaac242d4ad08595dd3a515`; parent `590e0aed27d30bc331b54a5af8b18c230215ca6f`; pre-reconciliation published source tip `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`).
-  **NOT YET INTEGRATED ON MAIN**. Merge SHA **none**. Hosted GitLab pipeline **#2785979885** (IID **373**, source `push`, ref `migration-deploy-target-safety-gate-v1`, SHA `ef705010e46e3eb8c3c1232a9b9f09c3103d7f74`, before_sha `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`) **SUCCESS**. Canonical job `check` **#16071957162** **SUCCESS**; `allow_failure: false`. Hosted runner checked out `ef705010` and forced `DATABASE_URL=postgresql://dat_ci:dat_ci@127.0.0.1:5432/dat_ci?schema=public` with `DIRECT_URL=$DATABASE_URL`, then executed `pnpm -C driving_school_platform/nextjs_space check`. Hosted canonical result: lint 0 errors / 51 warnings; env:check PASS; Prisma 6.19.0; Vitest 211/211 files, 1805/1805 tests PASS; Next.js 16.3.1 production build PASS; known non-fatal Turbopack `.print\\:hidden` warning unchanged; job SUCCESS. Those warnings remain warnings only and are not new Solution #4 blockers. This documentation commit is the TERMINAL SOURCE-CONTINUITY CHECKPOINT. Resolve the terminal source-continuity checkpoint from live `migration-deploy-target-safety-gate-v1` HEAD; its SHA is intentionally not self-recorded inside the commit that defines the checkpoint. Current-main revalidation PASS / 0 blockers.
-  Semantic-resolution EQR PASS / 0 blockers. Targeted regression: 6/6
-  files, 102/102 tests PASS. Canonical `pnpm check` (process-local
-  loopback `DATABASE_URL` / `DIRECT_URL`): lint 0 errors / 51 warnings;
-  env:check PASS; Prisma Client 6.19.0; Vitest 211/211 files, 1805/1805
-  tests PASS; Next.js 16.3.1 production build PASS; known non-fatal
-  Turbopack `.print\\:hidden` warning unchanged. Prospective tree
-  integrity: `a75bc55318c3571403dd35d6da445150ff18b52d` before targeted,
-  after targeted, and final. Distinct durable anchors: recovery
-  `47a101b261a2fab144d73469e699389fc94ceb1c` (tree
-  `ec8b4d18e10c1a42c1cca8e88292e9bce6f8a700`); implementation
-  `10093da1068f6d08caf0bb5f83c6810429dd61d7` (accepted implementation
-  tree `62dc7214834122df7f441e0e669c375d4903628d`; parent
-  `47a101b261a2fab144d73469e699389fc94ceb1c`; subject
-  `fix(safety): gate remote migration deploy`); post-implementation
-  continuity/source-publication anchor
-  `6d178bc3479668448809ee861c54fa3a0074cb46` (tree
-  `68df5c427bb28aa26bef0f22ae165c4b4a86d038`); pre-reconciliation
-  published source tip `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`.
-  Historical pre-reconciliation targeted 6/102 and source-publication
-  canonical 211/1805 remain historical evidence only and are distinct
-  from this current-main revalidation. Ordinary workstation `pnpm check`
-  remains **EXPECTED_ENVIRONMENT_BLOCK** under DEC-068. No migration has
-  been run. The terminal source-continuity checkpoint must be
-  source-published and hosted-validated for its exact live branch HEAD
-  before the human-controlled Solution #4 → main integration gate may
-  open. After that terminal commit is published and its exact pipeline
-  passes, no further pre-main continuity commit is required merely to
-  record its own SHA/pipeline. The later post-main closure
-  reconciliation records: exact terminal source SHA; its final hosted
-  pipeline/job; exact main integration SHA; published-main validation;
-  eventual source-branch cleanup when authorized. Merge is not
-  authorized. This is not migration-execution authorization. Do not
+  Terminal source checkpoint `88eb0ab3637bf0b18f23271cb88976bc3e1f1fae`
+  (tree `36a36f25d81d94792ab1e70d4d26689c1c545a7e`; parent
+  `ef705010e46e3eb8c3c1232a9b9f09c3103d7f74`). Terminal hosted pipeline
+  **#2786482679** (IID **374**) **SUCCESS**; canonical job `check`
+  **#16075003942** **SUCCESS**; `allow_failure: false`. Local `main`
+  integration `8653c56824319017ba5ec3967706e5e254d280a7` (parents
+  `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe` +
+  `88eb0ab3637bf0b18f23271cb88976bc3e1f1fae`; tree
+  `36a36f25d81d94792ab1e70d4d26689c1c545a7e`). Local integration
+  validation PASS: 211/211 files; 1805/1805 tests. Pre-publication
+  remote-main baseline `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`.
+  Publication and hosted validation of the eventual exact `main` tip
+  remain mandatory before closure. Do not claim published-main
+  closure, source-branch cleanup, or branch deletion. Historical
+  (superseded): hosted-validated source checkpoint
+  `ef705010e46e3eb8c3c1232a9b9f09c3103d7f74`; current-main
+  reconciliation merge `590e0aed27d30bc331b54a5af8b18c230215ca6f`;
+  earlier wording **SOURCE CHECKPOINT PUBLISHED + HOSTED-VALIDATED /
+  TERMINAL SOURCE-CONTINUITY CHECKPOINT / MAIN INTEGRATION PENDING**.
+  Distinct durable anchors: recovery
+  `47a101b261a2fab144d73469e699389fc94ceb1c`; implementation
+  `10093da1068f6d08caf0bb5f83c6810429dd61d7`; post-implementation
+  continuity `6d178bc3479668448809ee861c54fa3a0074cb46`. No migration
+  has been run. DEC-069 remains a safety-gate implementation, not
+  migration-execution authorization. DEC-068 unchanged. Do not
   advance to Solution #5.
   Publication history, B1 closure, hook-delta disposition, the three
-  historical validation states, the source-publication event, and the
-  2026-08-24 current-main local reconciliation facts are recorded below.
+  historical validation states, the source-publication event, the
+  2026-08-24 current-main local reconciliation facts, and the 2026-08-25
+  local main integration facts are recorded below.
 - Canonical documentation and Super Agent continuity are updated in each
   solution branch. Do not create a separate documentation-only branch for
   normal solution state.
@@ -265,11 +236,12 @@ handoff) are historical evidence and are not live execution state.
 - Canonical `pnpm check` with process-local fake loopback: PASS (lint 0
   errors / 51 warnings; env:check; Prisma Client generation; Vitest 208/208
   files, 1765/1765 tests; Next production build).
-- Solution #4 files were not introduced by CI isolation. Solution #4
-  hosted-validated source checkpoint `ef705010e46e3eb8c3c1232a9b9f09c3103d7f74` (tree `819e49f16c6218b9fcaac242d4ad08595dd3a515`; parent `590e0aed27d30bc331b54a5af8b18c230215ca6f`; pre-reconciliation published source tip `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`). **NOT YET INTEGRATED ON MAIN**. Merge SHA **none**. Hosted GitLab pipeline **#2785979885** (IID **373**, source `push`, ref `migration-deploy-target-safety-gate-v1`, SHA `ef705010e46e3eb8c3c1232a9b9f09c3103d7f74`, before_sha `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`) **SUCCESS**. Canonical job `check` **#16071957162** **SUCCESS**; `allow_failure: false`. Hosted runner checked out `ef705010` and forced `DATABASE_URL=postgresql://dat_ci:dat_ci@127.0.0.1:5432/dat_ci?schema=public` with `DIRECT_URL=$DATABASE_URL`, then executed `pnpm -C driving_school_platform/nextjs_space check`. Hosted canonical result: lint 0 errors / 51 warnings; env:check PASS; Prisma 6.19.0; Vitest 211/211 files, 1805/1805 tests PASS; Next.js 16.3.1 production build PASS; known non-fatal Turbopack `.print\\:hidden` warning unchanged; job SUCCESS. Those warnings remain warnings only and are not new Solution #4 blockers. Live Solution #4 status is **SOURCE CHECKPOINT PUBLISHED + HOSTED-VALIDATED / TERMINAL SOURCE-CONTINUITY CHECKPOINT / MAIN INTEGRATION PENDING**. Current-main reconciliation merge `590e0aed27d30bc331b54a5af8b18c230215ca6f` (validated tree
-  `a75bc55318c3571403dd35d6da445150ff18b52d`). Current-main revalidation
-  PASS / 0 blockers. This documentation commit is the TERMINAL SOURCE-CONTINUITY CHECKPOINT. Resolve the terminal source-continuity checkpoint from live `migration-deploy-target-safety-gate-v1` HEAD; its SHA is intentionally not self-recorded inside the commit that defines the checkpoint. Do not
-  advance to Solution #5.
+- Solution #4 files were not introduced by CI isolation. Live Solution #4
+  status is **LOCAL MAIN INTEGRATION CHECKPOINT / PUBLICATION + HOSTED
+  VALIDATION REQUIRED BEFORE CLOSURE** (see LIVE recovery navigator).
+  Historical pre-integration hosted-validated source checkpoint
+  `ef705010e46e3eb8c3c1232a9b9f09c3103d7f74` is superseded for live
+  navigation. Do not advance to Solution #5.
 - Historical source-branch hosted evidence (pre-merge): pipeline
   **#2779758386** SUCCESS on SHA `9c88e3942876d65ae1290819151022cf600aefa5`;
   final source-tip pipeline **#2779877308** SUCCESS on SHA
@@ -317,8 +289,7 @@ anchor, continuity branch HEAD, main merge SHA, and published main state.
 ### Solution #4 recovery/preflight facts (2026-08-20)
 
 Historical recovery checkpoint. Live status is the LIVE recovery
-navigator above and the 2026-08-24 current-main local reconciliation
-facts below.
+navigator above.
 
 - Finding: `DB-MIGRATION-001`.
 - Branch: `migration-deploy-target-safety-gate-v1`.
@@ -517,10 +488,9 @@ recovery `--no-verify` publication event.
 
 ### Solution #4 source-publication event (2026-08-20)
 
-Historical source-publication event. Live status is **SOURCE CHECKPOINT
-PUBLISHED + HOSTED-VALIDATED / TERMINAL SOURCE-CONTINUITY CHECKPOINT /
-MAIN INTEGRATION PENDING** (see LIVE recovery navigator above and the
-2026-08-24 source-publication / hosted-pipeline facts below). This event is
+Historical source-publication event. Live status is **LOCAL MAIN
+INTEGRATION CHECKPOINT / PUBLICATION + HOSTED VALIDATION REQUIRED
+BEFORE CLOSURE** (see LIVE recovery navigator above). This event is
 **not** a merge and is **not** CLOSED ON MAIN.
 `6d178bc3479668448809ee861c54fa3a0074cb46` is the post-implementation
 continuity/source-publication anchor, not a merge SHA. Published source
@@ -532,7 +502,7 @@ tip before this current-main reconciliation:
 - Branch: `migration-deploy-target-safety-gate-v1`.
 - Status at this event: **IMPLEMENTATION + CONTINUITY SOURCE-PUBLISHED /
   NOT YET INTEGRATED ON MAIN** (historical; superseded for live
-  navigation by **SOURCE CHECKPOINT PUBLISHED + HOSTED-VALIDATED / TERMINAL SOURCE-CONTINUITY CHECKPOINT / MAIN INTEGRATION PENDING**).
+  navigation by **LOCAL MAIN INTEGRATION CHECKPOINT / PUBLICATION + HOSTED VALIDATION REQUIRED BEFORE CLOSURE**).
 - Distinct durable anchors:
   - Published `main`/base: `14c3865372502f074941a1fc81a55b5ec7f1b589`
   - Recovery: `47a101b261a2fab144d73469e699389fc94ceb1c`
@@ -601,13 +571,9 @@ tip before this current-main reconciliation:
   Solution #4 CLOSED ON MAIN. This is not migration-execution
   authorization. Do not invent the future reconciliation commit SHA.
   **Historical next-gate wording:** superseded by the later current-main
-  revalidation, source publication of `ef705010`, and hosted pipeline
-  **#2785979885**. The terminal source-continuity checkpoint must be
-  source-published and hosted-validated for its exact live branch HEAD
-  before the human-controlled Solution #4 → main integration gate may
-  open. After that terminal commit is published and its exact pipeline
-  passes, no further pre-main continuity commit is required merely to
-  record its own SHA/pipeline.
+  revalidation, source publication of `ef705010`, hosted pipeline
+  **#2785979885**, terminal source `88eb0ab3637bf0b18f23271cb88976bc3e1f1fae`,
+  and the 2026-08-25 local `main` integration.
 
 ### Solution #4 current-main local reconciliation facts (2026-08-24)
 
@@ -615,9 +581,11 @@ Historical current-main local reconciliation checkpoint (2026-08-24).
 At that moment the merge commit was local-only and not yet source-published.
 That local-only / source-publication-pending wording is now historical.
 It is superseded by later publication of source tip
-`ef705010e46e3eb8c3c1232a9b9f09c3103d7f74` and hosted pipeline **#2785979885**.
-This checkpoint remains durable history for the current-main revalidation.
-It is **not** a merge into `main`.
+`ef705010e46e3eb8c3c1232a9b9f09c3103d7f74`, hosted pipeline **#2785979885**,
+terminal source `88eb0ab3637bf0b18f23271cb88976bc3e1f1fae`, and the
+2026-08-25 local `main` integration. This checkpoint remains durable
+history for the current-main revalidation. It is **not** a merge into
+`main`.
 
 - Policy: DEC-069.
 - Finding: `DB-MIGRATION-001`.
@@ -636,13 +604,13 @@ It is **not** a merge into `main`.
 - Historical published source at this checkpoint remained
   `ec39e05d2ffda40f439f3bdadc7889853e5ca9ef`. That remote tip was later
   advanced by publication of `ef705010e46e3eb8c3c1232a9b9f09c3103d7f74`.
-- **NOT YET INTEGRATED ON MAIN**. Merge SHA **none**.
-- This documentation commit is the TERMINAL SOURCE-CONTINUITY
-  CHECKPOINT. Resolve the terminal source-continuity checkpoint from
-  live `migration-deploy-target-safety-gate-v1` HEAD; its SHA is
-  intentionally not self-recorded inside the commit that defines the
-  checkpoint. `ef705010` is the hosted-validated source checkpoint
-  preceding terminal continuity, not an eternal branch HEAD.
+- Historical status at this checkpoint: **NOT YET INTEGRATED ON MAIN**.
+  Merge SHA **none** (accurate then; superseded by local integration
+  `8653c56824319017ba5ec3967706e5e254d280a7`).
+- Historical continuity wording at this checkpoint treated the then-current
+  documentation commit as the TERMINAL SOURCE-CONTINUITY CHECKPOINT
+  without self-recording its SHA. That wording is superseded by terminal
+  source `88eb0ab3637bf0b18f23271cb88976bc3e1f1fae`.
 - Hosted source pipeline for published checkpoint `ef705010` has passed; this is not main integration.
 - Do not claim Solution #4 CLOSED ON PUBLISHED MAIN.
 - Do not invent a future main integration SHA.
@@ -686,19 +654,20 @@ It is **not** a merge into `main`.
 
 ### Solution #4 source-publication and hosted-pipeline facts (2026-08-24)
 
-Live hosted-validated source checkpoint, immediately before this terminal
-source-continuity checkpoint. `ef705010e46e3eb8c3c1232a9b9f09c3103d7f74`
-is that hosted-validated source checkpoint, not an eternal branch HEAD.
-This documentation commit is the TERMINAL SOURCE-CONTINUITY CHECKPOINT.
-Resolve the terminal source-continuity checkpoint from live
-`migration-deploy-target-safety-gate-v1` HEAD; its SHA is intentionally
-not self-recorded inside the commit that defines the checkpoint.
+Historical hosted-validated source checkpoint (2026-08-24), immediately
+before the later terminal source checkpoint
+`88eb0ab3637bf0b18f23271cb88976bc3e1f1fae`. Superseded for live
+navigation by **LOCAL MAIN INTEGRATION CHECKPOINT / PUBLICATION + HOSTED
+VALIDATION REQUIRED BEFORE CLOSURE**. `ef705010e46e3eb8c3c1232a9b9f09c3103d7f74`
+is that historical hosted-validated source checkpoint, not an eternal
+branch HEAD.
 
 - Policy: DEC-069.
 - Finding: `DB-MIGRATION-001`.
 - Branch: `migration-deploy-target-safety-gate-v1`.
-- Live status: **SOURCE CHECKPOINT PUBLISHED + HOSTED-VALIDATED /
-  TERMINAL SOURCE-CONTINUITY CHECKPOINT / MAIN INTEGRATION PENDING**.
+- Status at this historical checkpoint: **SOURCE CHECKPOINT PUBLISHED + HOSTED-VALIDATED /
+  TERMINAL SOURCE-CONTINUITY CHECKPOINT / MAIN INTEGRATION PENDING**
+  (superseded for live navigation).
 - Hosted-validated source checkpoint:
   `ef705010e46e3eb8c3c1232a9b9f09c3103d7f74`
 - Published-source tree: `819e49f16c6218b9fcaac242d4ad08595dd3a515`
@@ -726,18 +695,72 @@ not self-recorded inside the commit that defines the checkpoint.
   `GITLAB_CI` remote-DB escape.
 - No migration has been run during implementation, revalidation,
   publication, or hosted validation.
-- The terminal source-continuity checkpoint must be source-published and
-  hosted-validated for its exact live branch HEAD before the
-  human-controlled Solution #4 → main integration gate may open. After
-  that terminal commit is published and its exact pipeline passes, no
-  further pre-main continuity commit is required merely to record its
-  own SHA/pipeline. The later post-main closure reconciliation records:
-  exact terminal source SHA; its final hosted pipeline/job; exact main
-  integration SHA; published-main validation; eventual source-branch
-  cleanup when authorized.
+- Historical next-gate wording at this checkpoint (superseded by the
+  2026-08-25 local main integration): the then-terminal source-continuity
+  checkpoint still needed source publication and hosted validation before
+  local `main` integration. That gate later opened; local integration is
+  now recorded in the 2026-08-25 facts below.
 - Do not advance to Solution #5.
 - `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain
   distinct follow-ups.
+
+### Solution #4 local main integration facts (2026-08-25)
+
+Live local-main integration checkpoint. Status:
+**LOCAL MAIN INTEGRATION CHECKPOINT / PUBLICATION + HOSTED VALIDATION
+REQUIRED BEFORE CLOSURE**. This checkpoint owns exact terminal source
+identity, exact terminal hosted validation identity, exact local
+integration identity, integration validation, and closure
+prerequisites. It does not require another commit merely to
+self-record a later documentation SHA.
+
+- Policy: DEC-069.
+- Finding: `DB-MIGRATION-001`.
+- Integration branch: `main`.
+- Local integration commit:
+  `8653c56824319017ba5ec3967706e5e254d280a7`
+  (subject `merge: integrate Solution #4 migration deploy target safety
+  gate`; parent 1 `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`; parent 2
+  `88eb0ab3637bf0b18f23271cb88976bc3e1f1fae`; tree
+  `36a36f25d81d94792ab1e70d4d26689c1c545a7e`).
+- Terminal source checkpoint:
+  `88eb0ab3637bf0b18f23271cb88976bc3e1f1fae` (tree
+  `36a36f25d81d94792ab1e70d4d26689c1c545a7e`; parent
+  `ef705010e46e3eb8c3c1232a9b9f09c3103d7f74`; subject
+  `docs(state): record Solution #4 terminal source continuity`).
+- The local integration tree equals the already hosted-validated
+  terminal source tree.
+- Terminal hosted GitLab pipeline **#2786482679** (IID **374**, source
+  `push`, SHA `88eb0ab3637bf0b18f23271cb88976bc3e1f1fae`) **SUCCESS**.
+- Terminal canonical job `check` **#16075003942** **SUCCESS**;
+  `allow_failure: false`.
+- Hosted canonical evidence: loopback CI `DATABASE_URL` / `DIRECT_URL`;
+  lint 0 errors / 51 warnings; env:check PASS; Prisma 6.19.0; Vitest
+  211/211 files PASS; 1805/1805 tests PASS; Next.js 16.3.1 production
+  build PASS; known non-fatal Turbopack `.print\\:hidden` warning
+  unchanged.
+- Local integration canonical validation PASS: 211/211 files; 1805/1805
+  tests; env:check PASS; Prisma 6.19.0; Next.js 16.3.1 build PASS;
+  known CSS warning unchanged.
+- Pre-publication remote-main baseline observed at this checkpoint:
+  `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`. Treat this only as the
+  pre-publication remote-main baseline; a later authorized push may
+  advance `main`.
+- Publication and hosted validation of the eventual exact `main` tip
+  remain mandatory prerequisites for Solution #4 closure.
+- Do not claim published-main closure.
+- Do not claim source-branch cleanup complete.
+- Do not authorize branch deletion.
+- Do not advance to Solution #5.
+- No migration was executed. No database write/action was performed.
+  DEC-069 remains a safety-gate implementation, not
+  migration-execution authorization. DEC-068 unchanged.
+- `dependency-security-monitoring-v1` remains separate.
+- `TOOLCHAIN-002` remains separate.
+- The later POST-PUBLISHED-MAIN CLOSURE reconciliation will record: the
+  exact main tip actually published; its hosted pipeline/job;
+  published-main validation; published-main closure; eventual
+  source-branch cleanup once separately authorized.
 
 ### Solution #3 implementation recovery facts
 
