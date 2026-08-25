@@ -342,48 +342,47 @@ git branch -d <branch-name>
 
 ---
 
-## Migration battery
+## Migration battery (DEC-069)
+
+Canonical Production/operator migration path: dedicated operator profile
+`.env.operator.production.local` plus the gated wrapper. Default invocation is
+**preflight only** (zero database connection, no Prisma spawn).
+
+Do **not** use `source .env` or raw `prisma migrate deploy` as the Production
+path. Historical `source .env` + `pnpm exec prisma migrate deploy` instructions
+are superseded.
 
 Assumed shell: Git Bash
 
 ```bash
 cd ~/Downloads/Projects/driving-academy-tool
 
-git switch main
-git pull --ff-only
-git status --short
-
-unset DATABASE_URL
-unset DIRECT_URL
-
-set -a
-source driving_school_platform/nextjs_space/.env
-set +a
-
-test -n "$DATABASE_URL" && echo "DATABASE_URL ok" || echo "DATABASE_URL missing"
-test -n "$DIRECT_URL" && echo "DIRECT_URL ok" || echo "DIRECT_URL missing"
+pnpm -C driving_school_platform/nextjs_space ops:migrate-deploy-remote
 ```
 
-Then:
+Inspect the redacted target summary. If identity is refused, stop.
+Preflight requires `DAT_OPS_EXPECTED_DB_HOST` (pooled) and
+`DAT_OPS_EXPECTED_DIRECT_DB_HOST` (direct/migration). They may differ.
+Do not infer the direct host from `DATABASE_URL`.
+
+`--execute` is a separate human-authorization step. It requires an interactive
+TTY, refuses `CI` / `GITLAB_CI` / `VERCEL`, and prompts for a typed confirmation
+phrase derived from safe target identity. Do not persist the phrase.
 
 Assumed shell: Git Bash
 
 ```bash
-pnpm -C driving_school_platform/nextjs_space exec prisma migrate status
-pnpm -C driving_school_platform/nextjs_space exec prisma migrate deploy
-pnpm -C driving_school_platform/nextjs_space exec prisma migrate status
+pnpm -C driving_school_platform/nextjs_space ops:migrate-deploy-remote -- --execute
 ```
 
 **Rules:**
 
-- If `DATABASE_URL` or `DIRECT_URL` is missing, stop.
-- If `migrate deploy` fails, do not push.
-- Do not run migrations during docs-only/UI-only batches unless explicitly required.
-- Confirm the env file points at the **intended** database before deploy (preview vs production are not assumed separate).
-
-Local dev often uses `.env.local`; for this battery, ensure `DATABASE_URL` / `DIRECT_URL` are loaded from the file you intend (`.env` as above, or `source` the correct file). See [supabase-prisma-migrations.md](../../driving_school_platform/nextjs_space/docs/ops/supabase-prisma-migrations.md).
-
-**Never** run `prisma migrate dev` or `migrate reset` against production.
+- Implementation of the wrapper is not authorization to run `--execute`.
+- If preflight is refused, do not execute.
+- If `--execute` fails, do not push.
+- Never run this wrapper from GitLab CI, Vercel, or any unattended host.
+- Never run `prisma migrate dev` or `migrate reset` against production.
+- See [supabase-prisma-migrations.md](../../driving_school_platform/nextjs_space/docs/ops/supabase-prisma-migrations.md).
 
 ---
 

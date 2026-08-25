@@ -147,6 +147,17 @@ In analysis and final reports, label content explicitly where helpful:
 
 Keep **roadmap**, **current-state**, and **architect-mode** hints consistent after a docs batch (Memory Consistency Gate). When backlog or **Done** slices change, update those three (and [decision-log.md](../architecture/decision-log.md) when the decision is durable) in the **same batch** as the implementation or an explicit docs sync batch — do not leave Super-Agent memory stale.
 
+### Canonical live-state pointer (DAT_4.5)
+
+This operating model owns **protocol**, not Git-tip status. Live solution status lives in [current-state.md](../architecture/current-state.md), [roadmap-todo.md](../architecture/roadmap-todo.md), [architect-mode.mdc](../../.cursor/rules/architect-mode.mdc), and [super-agent-continuity-state.md](./super-agent-continuity-state.md).
+
+**Recovery checkpoint 2026-08-20:** part of the external ChatGPT conversation became unavailable after Solution #3 work. Live Git evidence is authoritative. Canonical docs were reconciled to published Git state. No product behavior was changed by the recovery itself.
+
+- Solution #1 / `BILLING-SEC-001`: **CLOSED BY CONTAINMENT**.
+- Solution #2 / `DEP-SEC-001`: **CLOSED ON PUBLISHED MAIN** at `0409d92525940be751e6bc07c9da32668a834e53`.
+- Solution #3 / `CONFIG-ENV-001`: **CLOSED ON PUBLISHED MAIN** at `14c3865372502f074941a1fc81a55b5ec7f1b589`.
+- Solution #4 / `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1`: **IMPLEMENTATION + CONTINUITY SOURCE-PUBLISHED / NOT YET INTEGRATED ON MAIN** (DEC-069; architect EQR B1 **CLOSED**; architect v2 EQR **PASS**; B1 targeted correction validation 102/102 PASS; ordinary workstation `pnpm check` remains **EXPECTED_ENVIRONMENT_BLOCK** under DEC-068; source-publication pre-push canonical validation with process-local fake loopback URLs PASS). Distinct durable anchors: recovery `47a101b261a2fab144d73469e699389fc94ceb1c`; implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7`; post-implementation continuity/source-publication anchor `6d178bc3479668448809ee861c54fa3a0074cb46`. Source-publication event: the Solution #4 branch was successfully published through anchor `6d178bc3479668448809ee861c54fa3a0074cb46`, containing implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7`. A later same-branch continuity commit may advance the branch tip; resolve the live remote tip through Git. Merge SHA **none**. After this source-publication reconciliation is committed and published on the Solution #4 source branch, the next human-controlled lifecycle gate may be Solution #4 integration into `main`. Merge is not authorized yet. This is not migration-execution authorization. Source push used the normal Git path (no `--no-verify`). Recovery publication history: Super Agent continuity 2026-08-20 (one-shot exception; not standing hook-bypass authorization). Full validation evidence lives in [super-agent-continuity-state.md](./super-agent-continuity-state.md).
+
 ### Manual local QA command battery (People / admin UI batches)
 
 When a batch final report includes a **manual QA checklist**, Cursor must include these **exact** commands (Git Bash paths as written; Rui may run from any shell that reaches the directory):
@@ -1013,7 +1024,7 @@ Progression must be deliberate:
 3. **Never automatic:**
    - merge;
    - production deploy;
-   - migrations (`prisma migrate deploy`, `migrate dev`, `migrate reset`);
+   - migrations (`prisma migrate deploy`, `migrate dev`, `migrate reset`); canonical operator path is `pnpm ops:migrate-deploy-remote` (DEC-069) and remains human-gated;
    - auth, billing, RLS/grants, demo policy, import/apply, or data-deletion behavior changes;
    - writes to `roadmap-todo.md` or `current-state.md` without [Memory Update Protocol](#memory-update-protocol) and explicit approval.
 

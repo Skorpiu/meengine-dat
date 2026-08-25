@@ -76,7 +76,7 @@ pnpm -C driving_school_platform/nextjs_space check
 
 ## Deploy
 
-1. **Apply committed migrations intentionally** when the release includes schema changes—typically `pnpm exec prisma migrate deploy` from `driving_school_platform/nextjs_space` against the **target** database, or an equivalent protected step. Do not run destructive Prisma commands against production.
+1. **Apply committed migrations intentionally** when the release includes schema changes — canonical path: `pnpm ops:migrate-deploy-remote` (preflight) then, with explicit human authorization, `pnpm ops:migrate-deploy-remote -- --execute` (DEC-069). Do not use `source .env` or raw `prisma migrate deploy` as the Production path. Do not run destructive Prisma commands against production. Do not run the wrapper from CI or Vercel.
 2. **Deploy the app** through **Vercel** (merge to tracked branch, promote, or your team’s flow—see [vercel-deployment.md](./vercel-deployment.md)).
 3. **Do not** rely on the Vercel build to perform destructive or ad hoc database changes.
 

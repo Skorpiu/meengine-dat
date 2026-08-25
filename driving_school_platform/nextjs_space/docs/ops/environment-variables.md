@@ -18,7 +18,7 @@ Prisma reads `DATABASE_URL` / `DIRECT_URL` from the process environment. Ordinar
 
 There is **no** generic bypass such as `ALLOW_PROD_DB`, `ALLOW_REMOTE_DB`, `SKIP_DB_GUARD`, or `DISABLE_DB_GUARD`.
 
-This guard does **not** make every Prisma command safe. Raw `prisma migrate deploy`, `prisma migrate dev`, `prisma db push`, `next start`, and scripts that construct `PrismaClient` without `env:check` remain residual risk. Migration deploy safety is `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1`.
+This guard does **not** make every Prisma command safe. Ordinary local `env:check` isolation (DEC-068) does not authorize remote migration. The canonical Production migration path is `pnpm ops:migrate-deploy-remote` (DEC-069 / `DB-MIGRATION-001`). Raw `prisma migrate deploy`, `prisma migrate dev`, `prisma db push`, `next start`, and scripts that construct `PrismaClient` without `env:check` remain residual bypass risks if an operator ignores the wrapper.
 
 Never put a hosted/Production `DATABASE_URL` in ordinary `.env` or `.env.local`.
 
@@ -98,9 +98,9 @@ Set hosted `DATABASE_URL` / `DIRECT_URL` in the Vercel project (Vercel sets `VER
 
 **Production operator**
 
-| Kind                 | Where                                                                                                                                                                                           |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hosted DB + identity | `.env.operator.production.local` (gitignored) loaded only by approved operator scripts, plus `DAT_OPS_EXPECTED_DB_HOST` / `DAT_OPS_EXPECTED_DB_NAME` / `DAT_OPS_EXPECTED_SUPABASE_PROJECT_REF`. |
+| Kind                 | Where                                                                                                                                                                                                                                                                                                                                                                                                          |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hosted DB + identity | `.env.operator.production.local` (gitignored) loaded only by approved operator scripts, plus `DAT_OPS_EXPECTED_DB_HOST` / `DAT_OPS_EXPECTED_DIRECT_DB_HOST` / `DAT_OPS_EXPECTED_DB_NAME` / `DAT_OPS_EXPECTED_SUPABASE_PROJECT_REF`. Canonical remote migration path: `pnpm ops:migrate-deploy-remote` (DEC-069). The expected direct host is mandatory on that path and is never inferred from `DATABASE_URL`. |
 
 Operator access is **not** ordinary local development. Do not copy operator URLs into `.env` / `.env.local`.
 
