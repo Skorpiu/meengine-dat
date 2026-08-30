@@ -6,6 +6,7 @@ default:
 
 stages:
   - check
+  - integration
 
 variables:
   # Prisma needs these env vars to exist for `prisma generate` during install.
@@ -40,3 +41,21 @@ check:
   stage: check
   script:
     - pnpm -C driving_school_platform/nextjs_space check
+
+database-integration:
+  stage: integration
+  services:
+    - name: postgres:16.15@sha256:f1c3376c26f2609ab9f29f71f824103fe2fcd8ee0346485cb6122a4f93df6f94
+      alias: dat-integration-postgres
+      variables:
+        POSTGRES_USER: dat_it
+        POSTGRES_PASSWORD: dat_it
+        POSTGRES_DB: dat_it
+  variables:
+    POSTGRES_USER: dat_it
+    POSTGRES_PASSWORD: dat_it
+    POSTGRES_DB: dat_it
+    DAT_INTEGRATION_PROVISION_MODE: ci-external
+    INTEGRATION_DATABASE_URL: "postgresql://dat_it:dat_it@dat-integration-postgres:5432/dat_it?schema=public"
+  script:
+    - pnpm -C driving_school_platform/nextjs_space test:integration:ci

@@ -53,6 +53,21 @@ Use a **non-production** database URL when experimenting. Ensure `DATABASE_URL` 
 
 ---
 
+## Disposable integration-test migrations (DEC-070)
+
+Exact committed migration history is proven by `pnpm test:integration` against a **disposable** PostgreSQL 16.15 instance (`compose.integration.yml` locally; GitLab `services:` in the separate `database-integration` job). That path:
+
+- validates a purpose-scoped identity **before** mutation;
+- does not load `.env` / operator env files as authority;
+- overwrites child-process `DATABASE_URL` and `DIRECT_URL`;
+- bootstraps only `anon` / `authenticated` NOLOGIN roles required by committed `REVOKE` statements;
+- runs unmodified `prisma migrate deploy`;
+- destroys the ephemeral database after use.
+
+It does **not** replace DEC-068 ordinary local isolation or DEC-069 remote migration deploy. Do not point this harness at hosted/Supabase/Production. Details: [database-integration-tests.md](./database-integration-tests.md).
+
+---
+
 ## Production and deploy migration guidance (DEC-069)
 
 - Apply schema changes **on purpose** as part of release planning—never as a side effect of a casual command against production.
@@ -82,4 +97,5 @@ Use a **non-production** database URL when experimenting. Ensure `DATABASE_URL` 
 - [deployment-readiness.md](./deployment-readiness.md) — `pnpm check`, health endpoint, high-level migration note.
 - [vercel-deployment.md](./vercel-deployment.md) — Vercel build env and Prisma cautions.
 - [environment-variables.md](./environment-variables.md) — `DATABASE_URL` / `DIRECT_URL` and secret handling.
+- [database-integration-tests.md](./database-integration-tests.md) — disposable real-PostgreSQL integration harness (DEC-070).
 - [supabase-data-api-grants.md](./supabase-data-api-grants.md) — Data API grants / RLS policy; audit that migrations do not assume PostgREST access.

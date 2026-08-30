@@ -3,7 +3,29 @@
 
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
-**Live recovery snapshot:** 2026-08-25 — DAT_4.5 Solution #4
+**Live recovery snapshot:** 2026-08-30 — DAT_4.6 Solution #5
+`database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070
+(**LOCAL IMPLEMENTATION + INDEPENDENT EQR COMPLETE**; not CLOSED ON
+PUBLISHED MAIN). Branch `database-integration-test-harness-v1` exists
+**LOCAL ONLY**; source branch **not yet published**; implementation
+**uncommitted**. Baseline HEAD `271a9837c48e3cee2f8d6c3a9c27e2c233f4eb3b`;
+baseline tree `aa4b89544cffba49fbf14db4503616b8c648a68a`. Reviewed EQR
+snapshot SHA256
+`b5c6187f2db5f5abdd578eed8894bbd2c5217849505c45e3a17435fbd5d554aa`.
+Local EQR **PASS**; repeatability **PASS** (two consecutive fresh
+disposable runs; 29/29 exact committed migrations from zero; 4/4 real
+PostgreSQL proofs; teardown each run). Canonical local `pnpm check`
+**PASS**: 216/216 files; 1843/1843 tests; 0 lint errors / 51 known
+warnings; typecheck PASS; Next.js 16.3.1 build PASS. GitLab
+`database-integration` job implemented in working copy; **HOSTED
+VALIDATION PENDING** source publication. Next gate: **LOCAL PRE-COMMIT
+REVIEW / COMMIT AUTHORIZATION** — not source publication. Solution #6
+`e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` remains **NOT
+STARTED** until Solution #5 publication lifecycle completes. DAT_4.6
+conversation/context remains healthy; no handoff to DAT_4.7 currently
+required.
+
+**Historical snapshot (2026-08-25 — DAT_4.5 Solution #4):**
 `migration-deploy-target-safety-gate-v1` (**CLOSED ON PUBLISHED MAIN**;
 DEC-069). Implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7`
 (accepted tree `62dc7214834122df7f441e0e669c375d4903628d`). Terminal
@@ -77,8 +99,9 @@ commit merely to self-record a later documentation SHA. Closure
 housekeeping remains governed by separate human gates. Resolve the
 currently outstanding housekeeping step from live Git/GitLab evidence
 rather than from this snapshot. Source-branch cleanup remains
-separately human-gated. Do not start Solution #5 until the applicable
-Solution #4 closure housekeeping has been completed.
+separately human-gated. Historical (2026-08-25): do not start Solution #5
+until Solution #4 closure housekeeping completed — **superseded** by
+Solution #5 local EQR completion (2026-08-30).
 
 **Conversation-recovery note (2026-08-20, historical):** part of the
 external ChatGPT conversation became unavailable after Solution #3 work.
@@ -112,8 +135,46 @@ Then read, in this order:
 
 Stop before consequential work if Git state or canonical documents disagree.
 
+<!-- dat-46-live-recovery-navigator-v1 -->
+## LIVE recovery navigator (DAT_4.6)
+
+This section is the current operational recovery state. The DAT_4.5
+navigator below and older checkpoints are historical evidence unless
+explicitly marked live here.
+
+- **Solution #5** / `database-integration-test-harness-v1` /
+  `TEST-ARCH-001` / DEC-070 — **LOCAL IMPLEMENTATION + INDEPENDENT EQR
+  COMPLETE**. Branch `database-integration-test-harness-v1` **LOCAL
+  ONLY**; source branch **not yet published**; implementation
+  **uncommitted**. Baseline HEAD `271a9837c48e3cee2f8d6c3a9c27e2c233f4eb3b`;
+  baseline tree `aa4b89544cffba49fbf14db4503616b8c648a68a`. Reviewed EQR
+  snapshot SHA256
+  `b5c6187f2db5f5abdd578eed8894bbd2c5217849505c45e3a17435fbd5d554aa`.
+  Local EQR **PASS**; repeatability **PASS**. GitLab
+  `database-integration` job implemented; **HOSTED VALIDATION PENDING**
+  source publication. **Not** CLOSED ON PUBLISHED MAIN. Next gate:
+  **LOCAL PRE-COMMIT REVIEW / COMMIT AUTHORIZATION**.
+- Solution #4 / `migration-deploy-target-safety-gate-v1` — **CLOSED ON
+  PUBLISHED MAIN**; source-branch cleanup **COMPLETE**.
+- Solutions #1–#3 — closed per DAT_4.6 ledger (see
+  `docs/architecture/roadmap-todo.md`).
+- Solution #6 / `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` —
+  **NOT STARTED**; blocked until Solution #5 publication lifecycle
+  completes.
+- **Solution #5 queued engineering hardening (2026-08-30 continuity
+  refinement):** three non-blocking excellence items are explicitly
+  queued in `docs/architecture/roadmap-todo.md` — no Solution numbers
+  assigned; none blocks Solution #5 closure; none authorized for
+  implementation now. Current Solution #5 implementation remains
+  EQR-approved for `TEST-ARCH-001`. See roadmap section
+  **Solution #5 — queued engineering hardening (non-blocking)** for:
+  `integration-child-env-minimization-v1` (engineering hardening);
+  `neutral-prisma-cli-execution-helper-v1` (architectural refactor);
+  `integration-application-role-profile-v1` (test-capability hardening).
+- DAT_4.6 conversation/context healthy; no DAT_4.7 handoff required.
+
 <!-- dat-45-live-recovery-navigator-v1 -->
-## LIVE recovery navigator (DAT_4.5)
+## LIVE recovery navigator (DAT_4.5 — historical)
 
 This section is the current operational recovery state. Older checkpoints below
 (including the 2026-08-06 audit-branch snapshot, later Billing working-branch
@@ -227,7 +288,9 @@ handoff) are historical evidence and are not live execution state.
   migration-execution authorization. DEC-068 unchanged. Source-branch
   cleanup is separate human-gated housekeeping; at this checkpoint the
   source branch remained present at
-  `88eb0ab3637bf0b18f23271cb88976bc3e1f1fae`. Do not start Solution #5.
+  `88eb0ab3637bf0b18f23271cb88976bc3e1f1fae`. Historical (2026-08-25):
+  do not start Solution #5 — superseded by Solution #5 local EQR
+  completion (2026-08-30).
   Publication history, B1 closure, hook-delta disposition, the three
   historical validation states, the source-publication event, the
   2026-08-24 current-main local reconciliation facts, the 2026-08-25
@@ -273,7 +336,8 @@ handoff) are historical evidence and are not live execution state.
   status is **CLOSED ON PUBLISHED MAIN** (see LIVE recovery navigator).
   Historical pre-integration hosted-validated source checkpoint
   `ef705010e46e3eb8c3c1232a9b9f09c3103d7f74` is superseded for live
-  navigation. Do not start Solution #5.
+  navigation. Historical (2026-08-25): do not start Solution #5 —
+  superseded by Solution #5 local EQR completion (2026-08-30).
 - Historical source-branch hosted evidence (pre-merge): pipeline
   **#2779758386** SUCCESS on SHA `9c88e3942876d65ae1290819151022cf600aefa5`;
   final source-tip pipeline **#2779877308** SUCCESS on SHA
@@ -847,15 +911,10 @@ criterion; it is not an eternal current HEAD. Resolve live `main` /
   migration-execution authorization. DEC-068 unchanged.
 - `dependency-security-monitoring-v1` remains separate.
 - `TOOLCHAIN-002` remains separate.
-- Solution #5 has not started.
-- Closure housekeeping remains governed by separate human gates.
-  Resolve the currently outstanding housekeeping step from live
-  Git/GitLab evidence rather than from this snapshot. Source-branch
-  cleanup remains separately human-gated. Do not start Solution #5
-  until the applicable Solution #4 closure housekeeping has been
-  completed. Only after applicable Solution #4 closure housekeeping
-  is complete may the next Solution transition occur according to the
-  DAT_4.5 queue.
+- Historical next-step at this checkpoint (2026-08-25): Solution #5 had
+  not started; closure housekeeping and source-branch cleanup were still
+  separately human-gated. **Superseded 2026-08-30:** Solution #4 cleanup
+  complete; Solution #5 local EQR complete — see DAT_4.6 live navigator.
 
 ### Solution #3 implementation recovery facts
 

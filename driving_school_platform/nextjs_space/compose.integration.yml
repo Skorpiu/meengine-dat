@@ -1,0 +1,20 @@
+name: dat-it
+
+services:
+  postgres:
+    image: postgres:16.15@sha256:f1c3376c26f2609ab9f29f71f824103fe2fcd8ee0346485cb6122a4f93df6f94
+    restart: "no"
+    ports:
+      - "127.0.0.1:55432:5432"
+    environment:
+      POSTGRES_USER: dat_it
+      POSTGRES_PASSWORD: dat_it
+      POSTGRES_DB: dat_it
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dat_it -d dat_it"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 5s

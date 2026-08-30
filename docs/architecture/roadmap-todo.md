@@ -10,9 +10,23 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| Solution #4 closure-doc housekeeping (docs-only; not Solution #5) | **P0** housekeeping | Solution #4 / `migration-deploy-target-safety-gate-v1` / `DB-MIGRATION-001` / DEC-069 is **CLOSED ON PUBLISHED MAIN**. Implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7`. Terminal source `88eb0ab3637bf0b18f23271cb88976bc3e1f1fae` (tree `36a36f25d81d94792ab1e70d4d26689c1c545a7e`). Terminal hosted pipeline **#2786482679** (IID **374**) **SUCCESS**; job `check` **#16075003942** **SUCCESS**. Local `main` integration `8653c56824319017ba5ec3967706e5e254d280a7` (tree `36a36f25d81d94792ab1e70d4d26689c1c545a7e`). Published-main validation anchor `4c74d6a714e68492dbcf535ca0527f01131eba66`. Hosted main pipeline **#2789017209** (IID **375**) **SUCCESS**; canonical job `check` **#16092802312** **SUCCESS**; `allow_failure: false`. Validation: 211/211 files; 1805/1805 tests; env:check PASS; Prisma 6.19.0; Next.js 16.3.1 build PASS. No migration executed. DEC-068 unchanged. DEC-069 remains a safety gate, not migration-execution authorization. Closure housekeeping remains governed by separate human gates. Resolve the currently outstanding housekeeping step from live Git/GitLab evidence rather than from this snapshot. Source-branch cleanup remains separately human-gated; at this checkpoint the source branch remained present at `88eb0ab3637bf0b18f23271cb88976bc3e1f1fae`. Do not start Solution #5 until the applicable Solution #4 closure housekeeping has been completed. |
+| Solution #5 pre-commit review / commit authorization | **P1** operational | `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070 — **LOCAL IMPLEMENTATION + INDEPENDENT EQR COMPLETE**. Branch `database-integration-test-harness-v1` is **LOCAL ONLY**; source branch **not yet published**; implementation **uncommitted**. Baseline HEAD `271a9837c48e3cee2f8d6c3a9c27e2c233f4eb3b`; reviewed EQR snapshot SHA256 `b5c6187f2db5f5abdd578eed8894bbd2c5217849505c45e3a17435fbd5d554aa`. Local EQR **PASS**; repeatability **PASS** (two consecutive fresh disposable runs; 29/29 migrations; 4/4 integration proofs; teardown each run). Canonical local `pnpm check` **PASS**: 216/216 files; 1843/1843 tests. GitLab `database-integration` job implemented; **HOSTED VALIDATION PENDING** source publication. **Not** CLOSED ON PUBLISHED MAIN. Next gate: **LOCAL PRE-COMMIT REVIEW / COMMIT AUTHORIZATION** — not source publication. Solution #6 remains blocked until Solution #5 publication lifecycle completes. |
 
-**Closed context:** `engineering-excellence-audit-v1` closed 2026-08-13 by explicit human GO (51 findings / 51/51 coverage; no repository-static frontier). Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` is **CLOSED BY CONTAINMENT** and integrated into `main`. Solution #2 / `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN** at `0409d92525940be751e6bc07c9da32668a834e53`. Solution #3 / `CONFIG-ENV-001` **CLOSED ON PUBLISHED MAIN** at `14c3865372502f074941a1fc81a55b5ec7f1b589` (DEC-068; historical Solution #3 merge, not current live `main`). `gitlab-ci-database-isolation-v1` **CLOSED ON PUBLISHED MAIN** at integration `594484998da5893b349bea4d2de1ac7447d37de6` (implementation `9c88e3942876d65ae1290819151022cf600aefa5`; closure-doc publication `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`; final hosted main pipeline **#2780314232** SUCCESS; canonical job `check` **#16037631071** SUCCESS; `allow_failure: false`; source branch cleanup **COMPLETE**, local and remote). Solution #4 / `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1` is **CLOSED ON PUBLISHED MAIN** (DEC-069; published-main validation anchor `4c74d6a714e68492dbcf535ca0527f01131eba66`; hosted main pipeline **#2789017209** / IID **375** / job **#16092802312** SUCCESS; terminal source `88eb0ab3637bf0b18f23271cb88976bc3e1f1fae`; terminal pipeline **#2786482679** / IID **374** / job **#16075003942** SUCCESS; local `main` integration `8653c56824319017ba5ec3967706e5e254d280a7`). Source-branch cleanup is separate and has not been performed. DEC-068 unchanged (no `CI` / `GITLAB_CI` remote-DB escape). No DB or migration was performed as part of CI isolation. `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
+<!-- dat-46-solution-ledger-v1 -->
+## DAT_4.6 Solution ledger
+
+| Solution | Slice | Status |
+| --- | --- | --- |
+| #1 | `billing-webhook-authenticity-gate-v1` / `BILLING-SEC-001` | **CLOSED BY CONTAINMENT** |
+| #2 | `next-supported-lts-security-remediation-v1` / `DEP-SEC-001` | **CLOSED ON PUBLISHED MAIN** |
+| #3 | `local-development-database-isolation-v1` / `CONFIG-ENV-001` | **CLOSED ON PUBLISHED MAIN** / cleanup complete |
+| #4 | `migration-deploy-target-safety-gate-v1` / `DB-MIGRATION-001` | **CLOSED ON PUBLISHED MAIN** / cleanup complete |
+| #5 | `database-integration-test-harness-v1` / `TEST-ARCH-001` | **LOCAL IMPLEMENTATION + EQR PASS** / uncommitted / unpublished |
+| #6 | `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` | **NOT STARTED** |
+
+DAT_4.6 conversation/context remains healthy after Solution #5 local EQR. No handoff to DAT_4.7 is currently required.
+
+**Closed context:** `engineering-excellence-audit-v1` closed 2026-08-13 by explicit human GO (51 findings / 51/51 coverage; no repository-static frontier). Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` is **CLOSED BY CONTAINMENT** and integrated into `main`. Solution #2 / `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN** at `0409d92525940be751e6bc07c9da32668a834e53`. Solution #3 / `CONFIG-ENV-001` **CLOSED ON PUBLISHED MAIN** at `14c3865372502f074941a1fc81a55b5ec7f1b589` (DEC-068; historical Solution #3 merge, not current live `main`). `gitlab-ci-database-isolation-v1` **CLOSED ON PUBLISHED MAIN** at integration `594484998da5893b349bea4d2de1ac7447d37de6` (implementation `9c88e3942876d65ae1290819151022cf600aefa5`; closure-doc publication `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`; final hosted main pipeline **#2780314232** SUCCESS; canonical job `check` **#16037631071** SUCCESS; `allow_failure: false`; source branch cleanup **COMPLETE**, local and remote). Solution #4 / `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1` is **CLOSED ON PUBLISHED MAIN** (DEC-069; published-main validation anchor `4c74d6a714e68492dbcf535ca0527f01131eba66`; source-branch cleanup **COMPLETE**). DEC-068 unchanged (no `CI` / `GITLAB_CI` remote-DB escape). No DB or migration was performed as part of CI isolation. `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
 ---
 
@@ -582,11 +596,46 @@ Security comes first. Within the same priority tier, dependency order and prereq
 
 ### `database-integration-test-harness-v1`
 
-- **Priority:** P1/P2.
-- **Source:** `TEST-ARCH-001`.
-- Add disposable Postgres integration infrastructure for contracts mocks cannot prove.
-- Initial suite: billing retry, license concurrency, platform onboarding, aggregate user creation and row locks.
+- **Priority:** P1.
+- **Source:** `TEST-ARCH-001` / DEC-070.
+- **Status:** **LOCAL IMPLEMENTATION + INDEPENDENT EQR COMPLETE** — not CLOSED ON PUBLISHED MAIN.
+- Branch `database-integration-test-harness-v1` exists **LOCAL ONLY**; source branch **not yet published**; implementation **uncommitted**.
+- Reviewed EQR snapshot SHA256 `b5c6187f2db5f5abdd578eed8894bbd2c5217849505c45e3a17435fbd5d554aa`.
+- Local disposable harness: Compose project `dat-it`; proofs A–D (migration history, FK, rollback, row lock); 29/29 committed migrations from zero; two consecutive repeatability runs **PASS**.
+- GitLab `database-integration` job implemented in working copy; **HOSTED VALIDATION PENDING** source publication.
+- Next gate: **LOCAL PRE-COMMIT REVIEW / COMMIT AUTHORIZATION** → source publication → hosted source validation → main integration → main publication → hosted main validation → closure/cleanup.
+- Runbook: [database-integration-tests.md](../../driving_school_platform/nextjs_space/docs/ops/database-integration-tests.md).
+- Capability boundary: disposable `dat_it` uses PostgreSQL superuser bootstrap — valid for structural/transactional proofs; **not** application-role / RLS / least-privilege evidence.
 - Keep unit tests fast; do not convert the full suite to DB integration tests.
+
+<!-- solution-5-queued-engineering-hardening-v1 -->
+### Solution #5 — queued engineering hardening (non-blocking)
+
+These items are **deliberately queued** for future engineering excellence. They do **not** change the canonical Solution ordering, are **not** assigned Solution numbers, and are **not** required to close `TEST-ARCH-001` / Solution #5. Promote earlier only when a concrete dependency or trigger makes that technically justified (see queue rule below).
+
+**Queue rule:** canonical sequence remains Solution #5 lifecycle completion → Solution #6 `e2e-suite-contract-repair-v1` → existing ordered security/core-integrity Solutions. These hardening slices may move up only when justified — for example: RLS/grant proof need → `integration-application-role-profile-v1`; more child-process config dependencies → `integration-child-env-minimization-v1`; a third Prisma CLI consumer → `neutral-prisma-cli-execution-helper-v1`.
+
+#### `integration-child-env-minimization-v1`
+
+- **Classification:** **QUEUED ENGINEERING HARDENING — MEDIUM PRIORITY / NON-BLOCKING**
+- **Current safe state:** the integration child process receives the parent environment but explicitly overwrites the already validated `DATABASE_URL` and `DIRECT_URL`. Target-authority contract is secure; EQR-approved for `TEST-ARCH-001`.
+- **Future excellence target:** replace broad parent-environment inheritance with a deliberate/minimal child-process environment containing only variables actually required by Node/pnpm/Prisma/tooling plus the validated database target.
+- **Goals:** reduce ambient configuration coupling; improve reproducibility across machines/CI; reduce accidental influence from unrelated environment variables; make process authority more explicit.
+- **Implementation authority:** not authorized in Solution #5; human GO required when triggered.
+
+#### `neutral-prisma-cli-execution-helper-v1`
+
+- **Classification:** **QUEUED ARCHITECTURAL REFACTOR — LOW/MEDIUM PRIORITY / NON-BLOCKING**
+- **Current safe state:** the integration harness reuses only neutral Prisma CLI mechanics from the remote-migration operations module. It does **not** reuse DEC-069 target authority, TTY authorization, confirmation phrase, Production identity validation, or any remote migration permission. Current behavior is architecturally safe and is not a DEC-069 bypass.
+- **Future excellence target:** extract genuinely neutral Prisma CLI mechanics to a purpose-neutral module consumed independently by remote migration operations, disposable integration testing, and any future legitimate consumer. Authority/gating must remain entirely within the purpose-specific caller.
+- **Implementation authority:** not authorized in Solution #5; human GO required when triggered.
+
+#### `integration-application-role-profile-v1`
+
+- **Classification:** **QUEUED TEST-CAPABILITY HARDENING — MEDIUM PRIORITY / NON-BLOCKING**
+- **Current verified limitation:** the official PostgreSQL test image initializes `POSTGRES_USER=dat_it` and that bootstrap account has PostgreSQL superuser authority. Current harness is valid evidence for migration-history application, foreign-key enforcement, transaction rollback, and locking/concurrency semantics. It is **not** evidence for RLS, application-role grants, least-privilege database behavior, or permission-denial semantics. Current use is not a bypass because Solution #5 makes no claim to prove those permission contracts.
+- **Future excellence target:** introduce a separate constrained/non-superuser integration execution profile for authorization-sensitive PostgreSQL tests. Bootstrap/migration authority and application-test authority should be distinct when this capability is implemented.
+- **Implementation authority:** not authorized in Solution #5; human GO required when triggered.
 
 ### `direct-dependency-responsibility-pruning-v1`
 
@@ -895,7 +944,7 @@ early risk-reduction progress without weakening validation standards.
 ### P0 / operational safety foundation
 
 1. `local-development-database-isolation-v1` — **CLOSED ON PUBLISHED MAIN** at `14c3865372502f074941a1fc81a55b5ec7f1b589` (DEC-068 / Solution #3). Historical in-branch: ACTIVE; IMPLEMENTED + VALIDATED; SOURCE BRANCH PUBLISHED; NOT YET INTEGRATED ON MAIN.
-2. `migration-deploy-target-safety-gate-v1` — **CLOSED ON PUBLISHED MAIN** (Solution #4 / `DB-MIGRATION-001` / DEC-069; architect EQR B1 **CLOSED**; architect v2 EQR **PASS** historically in-branch). Terminal source `88eb0ab3637bf0b18f23271cb88976bc3e1f1fae`. Terminal hosted pipeline **#2786482679** (IID **374**) **SUCCESS**; job `check` **#16075003942** **SUCCESS**. Local `main` integration `8653c56824319017ba5ec3967706e5e254d280a7` (tree `36a36f25d81d94792ab1e70d4d26689c1c545a7e`). Published-main validation anchor `4c74d6a714e68492dbcf535ca0527f01131eba66`. Hosted main pipeline **#2789017209** (IID **375**) **SUCCESS**; job `check` **#16092802312** **SUCCESS**. Local integration validation PASS: 211/211 files, 1805/1805 tests. Pre-publication remote-main baseline `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`. Historical (superseded): `ef705010e46e3eb8c3c1232a9b9f09c3103d7f74`; `590e0aed27d30bc331b54a5af8b18c230215ca6f`; earlier live wording **LOCAL MAIN INTEGRATION CHECKPOINT / PUBLICATION + HOSTED VALIDATION REQUIRED BEFORE CLOSURE**. Recovery `47a101b261a2fab144d73469e699389fc94ceb1c`. Implementation `10093da1068f6d08caf0bb5f83c6810429dd61d7`. Post-implementation continuity `6d178bc3479668448809ee861c54fa3a0074cb46`. No migration has been run. Source-branch cleanup is separate human-gated housekeeping. Do not start Solution #5.
+2. `migration-deploy-target-safety-gate-v1` — **CLOSED ON PUBLISHED MAIN** (Solution #4 / `DB-MIGRATION-001` / DEC-069). Terminal source `88eb0ab3637bf0b18f23271cb88976bc3e1f1fae`. Published-main validation anchor `4c74d6a714e68492dbcf535ca0527f01131eba66`. Source-branch cleanup **COMPLETE**. Historical anchors preserved in continuity docs.
 
 These gates must precede unsafe local database work or remote migration-authority
 changes. They may progress alongside immediate security containment where scopes
@@ -903,8 +952,8 @@ remain independent.
 
 ### P1-A — Proof before risky change
 
-1. `database-integration-test-harness-v1`
-2. `e2e-suite-contract-repair-v1`
+1. `database-integration-test-harness-v1` — **LOCAL IMPLEMENTATION + EQR PASS**; pre-commit review / commit authorization next; not CLOSED ON PUBLISHED MAIN
+2. `e2e-suite-contract-repair-v1` — **NOT STARTED**; blocked until Solution #5 publication lifecycle completes
 
 These are confidence multipliers for subsequent security, billing, integrity and
 migration work.

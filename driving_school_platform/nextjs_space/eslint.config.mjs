@@ -46,6 +46,7 @@ const eslintConfig = defineConfig([
     "build/**",
     ".build/**",
     "next-env.d.ts",
+    "compose.integration.yml",
   ]),
 ]);
 

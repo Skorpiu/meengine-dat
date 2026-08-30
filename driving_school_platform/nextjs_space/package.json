@@ -21,6 +21,8 @@
     "pretest:run": "pnpm -s env:check",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:integration": "tsx scripts/run-database-integration-tests.ts --provision=local-compose",
+    "test:integration:ci": "tsx scripts/run-database-integration-tests.ts --provision=ci-external",
     "env:check": "tsx scripts/env-check.ts",
     "smoke:health": "tsx scripts/smoke-health.ts",
     "demo:readiness": "tsx scripts/check-demo-readiness.ts",
