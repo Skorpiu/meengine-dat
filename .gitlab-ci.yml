@@ -52,6 +52,7 @@ database-integration:
         POSTGRES_PASSWORD: dat_it
         POSTGRES_DB: dat_it
   variables:
+    FF_NETWORK_PER_BUILD: "true"
     POSTGRES_USER: dat_it
     POSTGRES_PASSWORD: dat_it
     POSTGRES_DB: dat_it
