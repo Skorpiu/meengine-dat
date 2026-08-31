@@ -3,44 +3,48 @@
 
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
-**Continuity sync:** `CONTINUITY_SYNC_STATUS=CURRENT` (2026-08-31 — Solution #5 local-main integration + canonical local validation reflected; canonical state reconciled to the pre-publication checkpoint; remote main publication pending).
+**Continuity sync:** `CONTINUITY_SYNC_STATUS=CURRENT` (2026-08-31 — Solution #5 **CLOSED ON PUBLISHED MAIN**; hosted main validation **PASS**; canonical closure record **IN PROGRESS**; source cleanup **PENDING**).
 
 **Live recovery snapshot:** 2026-08-31 — DAT_4.6 Solution #5
 `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070
-(**LOCAL MAIN INTEGRATED AT EXACT HOSTED-VALIDATED SOURCE SHA +
-CANONICAL LOCAL VALIDATION PASS / REMOTE MAIN PUBLICATION PENDING**;
-not CLOSED ON PUBLISHED MAIN). Local branch `main`; local SHA/tree
-`768bac7dce35d7516606a7ac97eded224e49f3c1` /
-`4cf08ef77358c738874e9f6ea7ac117057802e6a`. Implementation
+(**TECHNICAL CLOSURE SATISFIED / CLOSED ON PUBLISHED MAIN / CANONICAL
+CLOSURE RECORD IN PROGRESS / SOURCE CLEANUP PENDING**). Local branch
+`main`; published main SHA/tree
+`da6cabf14377afcfa1fb1cb910f1db0c890eac57` /
+`7118b54350256617b0992cadc5f58d46f79891b8`; local and `origin/main`
+aligned. Implementation
 `9e59712e738b841dd31028ff2c93119771ce49ee`; pre-correction source
-continuity `9135c0ea5527e62a9c434bfdb97c65bdaa1b81f7`; corrective /
-hosted-validated source / local-main integration `768bac7…` (tree
-`4cf08ef7…`). Source published; hosted corrective validation **PASS**
-(pipeline `2806406774` / IID `378`; check + database-integration
-SUCCESS; 29/29 migrations; 4/4 real DB tests; SQLSTATE `55P03`;
-correction `FF_NETWORK_PER_BUILD: "true"`; historical failed pipeline
-`2805285032` / IID `377` —
-`LEGACY_BRIDGE_SERVICE_CONNECTIVITY_FAILURE`). Local `main` integrated
-by architect-authorized identity-preserving `FAST_FORWARD_ONLY` (no new
-integration commit). Local main canonical validation **PASS** (216/216
-files; 1843/1843 tests; 0 lint errors / 51 warnings; Next.js 16.3.1
-build PASS). Remote source `768bac7…`; remote `main`
-`271a9837c48e3cee2f8d6c3a9c27e2c233f4eb3b`; local main is 0 behind / 3
-ahead of origin/main. Remote main publication **NOT PERFORMED**. Hosted
-main validation **NOT PERFORMED**. After the docs reconciliation
-checkpoint is committed: POST-COMMIT CONTINUITY SYNC → CANONICAL LOCAL
-VALIDATION → MAIN PUBLICATION REVIEW. Solution #6
-`e2e-suite-contract-repair-v1`
-/ `TEST-HYGIENE-001` remains **NOT STARTED** until Solution #5 closes.
+continuity `9135c0ea5527e62a9c434bfdb97c65bdaa1b81f7`; hosted-validated
+source / corrective anchor `768bac7dce35d7516606a7ac97eded224e49f3c1`.
+Source published; hosted corrective validation **PASS** (pipeline
+`2806406774` / IID `378`; correction `FF_NETWORK_PER_BUILD: "true"`;
+historical failed pipeline `2805285032` / IID `377` —
+`LEGACY_BRIDGE_SERVICE_CONNECTIVITY_FAILURE`). Main publication **PASS**.
+Hosted main pipeline `2806952669` / IID `379` (source `push`)
+**SUCCESS**; mandatory jobs `check` **16215678923** +
+`database-integration` **16215678924** **SUCCESS**
+(`allow_failure: false`); 216/216 files; 1843/1843 tests; 29/29
+migrations; 4/4 real DB tests; SQLSTATE `55P03`; pinned PostgreSQL
+`postgres:16.15@sha256:f1c3376c26f2609ab9f29f71f824103fe2fcd8ee0346485cb6122a4f93df6f94`;
+`provisionMode=ci-external`; disposable target
+`dat-integration-postgres:5432/dat_it`; application `DATABASE_URL` not
+authority; no Production/Supabase DB mutation. Source branch
+`database-integration-test-harness-v1` @ `768bac7…` still **PRESENT**
+(GitLab `merged=true`); cleanup **NOT PERFORMED**. Solution #6
+`e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` remains **NOT
+STARTED** until closure housekeeping completes. Next gate:
+**ARCHITECT SOLUTION #5 CANONICAL CLOSURE DIFF REVIEW**. Do not invent
+future closure-docs commit SHA/tree/pipeline or cleanup success.
 DAT_4.6 conversation/context healthy; no DAT_4.7 handoff required.
 Four deliberately queued non-blocking excellence follow-ups in
 `docs/architecture/roadmap-todo.md` (none authorized now; none blocks
-Solution #5; no Solution numbers assigned).
+Solution #6 kickoff after closure housekeeping; no Solution numbers
+assigned).
 `UNAUTHORIZED_DIAGNOSTIC_MUTATION=ACKNOWLEDGED` — process/governance
 deviation only; one ephemeral `docker run --rm alpine …` diagnostic
 during read-only runner investigation; no repository/product/DB
 mutation; residual cached `alpine:latest` only; no cleanup authorized;
-does not block Solution #5 lifecycle.
+does not block Solution #5 closure housekeeping.
 
 <!-- super-agent-real-time-continuity-invariant-v1 -->
 ## Real-Time Continuity Invariant (mandatory)
@@ -241,20 +245,21 @@ navigator below and older checkpoints are historical evidence unless
 explicitly marked live here.
 
 - **Solution #5** / `database-integration-test-harness-v1` /
-  `TEST-ARCH-001` / DEC-070 — **LOCAL MAIN INTEGRATED AT EXACT
-  HOSTED-VALIDATED SOURCE SHA + CANONICAL LOCAL VALIDATION PASS /
-  REMOTE MAIN PUBLICATION PENDING**. Local `main` `768bac7…` (tree
-  `4cf08ef7…`). Implementation `9e59712…`; pre-correction `9135c0e…`.
-  Source published; hosted corrective validation **PASS** (`2806406774`
-  / IID `378`; `FF_NETWORK_PER_BUILD: "true"`). Identity-preserving
-  `FAST_FORWARD_ONLY` integration (no new commit). Local main canonical
-  validation **PASS**. Remote source `768bac7…`; remote `main`
-  `271a9837…`; local main is 0 behind / 3 ahead of origin/main. Remote
-  main publication **NOT PERFORMED**; hosted main validation **NOT
-  PERFORMED**. **Not** CLOSED ON PUBLISHED MAIN. After the docs
-  reconciliation checkpoint is committed: POST-COMMIT CONTINUITY SYNC →
-  CANONICAL LOCAL VALIDATION → MAIN PUBLICATION REVIEW.
-  `CONTINUITY_SYNC_STATUS=CURRENT`.
+  `TEST-ARCH-001` / DEC-070 — **TECHNICAL CLOSURE SATISFIED / CLOSED ON
+  PUBLISHED MAIN / CANONICAL CLOSURE RECORD IN PROGRESS / SOURCE CLEANUP
+  PENDING**. Published main `da6cabf14377afcfa1fb1cb910f1db0c890eac57`
+  (tree `7118b54350256617b0992cadc5f58d46f79891b8`); local and
+  `origin/main` aligned. Implementation `9e59712…`; pre-correction
+  `9135c0e…`; hosted-validated source `768bac7…`. Source published;
+  hosted corrective validation **PASS** (`2806406774` / IID `378`;
+  `FF_NETWORK_PER_BUILD: "true"`). Main publication **PASS**. Hosted main
+  pipeline `2806952669` / IID `379` **SUCCESS**; jobs `check`
+  **16215678923** + `database-integration` **16215678924** **SUCCESS**;
+  216/216; 1843/1843; 29/29; 4/4; SQLSTATE `55P03`; no
+  Production/Supabase DB mutation. Source branch @ `768bac7…` still
+  **PRESENT** (`merged=true`); cleanup **NOT PERFORMED**. Next gate:
+  **ARCHITECT SOLUTION #5 CANONICAL CLOSURE DIFF REVIEW**. Do not invent
+  future closure-docs SHA/tree/pipeline. `CONTINUITY_SYNC_STATUS=CURRENT`.
 - `UNAUTHORIZED_DIAGNOSTIC_MUTATION=ACKNOWLEDGED` — process/governance
   deviation only; ephemeral `docker run --rm alpine …` diagnostic during
   read-only runner investigation; no repository/product/DB mutation;
@@ -264,8 +269,8 @@ explicitly marked live here.
 - Solutions #1–#3 — closed per DAT_4.6 ledger (see
   `docs/architecture/roadmap-todo.md`).
 - Solution #6 / `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` —
-  **NOT STARTED**; blocked until Solution #5 publication lifecycle
-  completes.
+  **NOT STARTED**; blocked until Solution #5 closure-record lifecycle
+  and source cleanup complete.
 - **Solution #5 queued engineering excellence (deliberate backlog):**
   four non-blocking items in `docs/architecture/roadmap-todo.md` —
   no Solution numbers; none authorized now; none blocks Solution #5.

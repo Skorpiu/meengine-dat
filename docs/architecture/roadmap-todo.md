@@ -10,7 +10,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| Solution #5 post-docs validation / main-publication preparation | **P1** operational | `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070 — **LOCAL MAIN INTEGRATED AT EXACT HOSTED-VALIDATED SOURCE SHA + CANONICAL LOCAL VALIDATION PASS / REMOTE MAIN PUBLICATION PENDING**. Canonical lifecycle state reconciled to local-main validation checkpoint. Local `main` / remote source `768bac7dce35d7516606a7ac97eded224e49f3c1` (tree `4cf08ef77358c738874e9f6ea7ac117057802e6a`); remote `main` `271a9837c48e3cee2f8d6c3a9c27e2c233f4eb3b`; local main is 0 behind / 3 ahead of origin/main. Implementation `9e59712…`; pre-correction `9135c0e…`. Source published; hosted corrective validation **PASS** (`2806406774` / IID `378`). Identity-preserving `FAST_FORWARD_ONLY` integration; local main canonical validation **PASS** (216/216 + 1843/1843; 0 lint errors / 51 warnings). Post-docs-commit continuity sync + canonical validation required before main publication review; remote main publication pending; **not** CLOSED. Solution #6 remains **NOT STARTED** until Solution #5 closes. |
+| Complete Solution #5 canonical closure-record lifecycle and source-branch cleanup | **P1** operational | `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070 — **TECHNICALLY CLOSED ON PUBLISHED MAIN** at durable technical closure anchor `da6cabf14377afcfa1fb1cb910f1db0c890eac57` (tree `7118b54350256617b0992cadc5f58d46f79891b8`); hosted main pipeline `2806952669` / IID `379` **SUCCESS**; mandatory jobs `check` **16215678923** + `database-integration` **16215678924** **SUCCESS**; 216/216 files; 1843/1843 tests; 29/29 migrations; 4/4 real DB tests; SQLSTATE `55P03`; no Production/Supabase DB mutation. **Canonical closure record IN PROGRESS**; source branch `database-integration-test-harness-v1` @ `768bac7…` still **PRESENT** — cleanup **PENDING**. Solution #6 `e2e-suite-contract-repair-v1` remains **NOT STARTED** until closure housekeeping completes. |
 
 <!-- dat-46-solution-ledger-v1 -->
 ## DAT_4.6 Solution ledger
@@ -21,10 +21,10 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | #2 | `next-supported-lts-security-remediation-v1` / `DEP-SEC-001` | **CLOSED ON PUBLISHED MAIN** |
 | #3 | `local-development-database-isolation-v1` / `CONFIG-ENV-001` | **CLOSED ON PUBLISHED MAIN** / cleanup complete |
 | #4 | `migration-deploy-target-safety-gate-v1` / `DB-MIGRATION-001` | **CLOSED ON PUBLISHED MAIN** / cleanup complete |
-| #5 | `database-integration-test-harness-v1` / `TEST-ARCH-001` | **LOCAL MAIN INTEGRATED + LOCALLY VALIDATED / REMOTE MAIN PUBLICATION PENDING** (`768bac7…` / tree `4cf08ef7…`) |
+| #5 | `database-integration-test-harness-v1` / `TEST-ARCH-001` | **CLOSED ON PUBLISHED MAIN** (`da6cabf…` / tree `7118b543…`); canonical closure record **IN PROGRESS**; source cleanup **PENDING** |
 | #6 | `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` | **NOT STARTED** |
 
-DAT_4.6 conversation/context remains healthy after Solution #5 local main integration and canonical validation. No handoff to DAT_4.7 is currently required.
+DAT_4.6 conversation/context remains healthy after Solution #5 published-main technical closure. No handoff to DAT_4.7 is currently required.
 
 **Closed context:** `engineering-excellence-audit-v1` closed 2026-08-13 by explicit human GO (51 findings / 51/51 coverage; no repository-static frontier). Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` is **CLOSED BY CONTAINMENT** and integrated into `main`. Solution #2 / `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN** at `0409d92525940be751e6bc07c9da32668a834e53`. Solution #3 / `CONFIG-ENV-001` **CLOSED ON PUBLISHED MAIN** at `14c3865372502f074941a1fc81a55b5ec7f1b589` (DEC-068; historical Solution #3 merge, not current live `main`). `gitlab-ci-database-isolation-v1` **CLOSED ON PUBLISHED MAIN** at integration `594484998da5893b349bea4d2de1ac7447d37de6` (implementation `9c88e3942876d65ae1290819151022cf600aefa5`; closure-doc publication `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`; final hosted main pipeline **#2780314232** SUCCESS; canonical job `check` **#16037631071** SUCCESS; `allow_failure: false`; source branch cleanup **COMPLETE**, local and remote). Solution #4 / `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1` is **CLOSED ON PUBLISHED MAIN** (DEC-069; published-main validation anchor `4c74d6a714e68492dbcf535ca0527f01131eba66`; source-branch cleanup **COMPLETE**). DEC-068 unchanged (no `CI` / `GITLAB_CI` remote-DB escape). No DB or migration was performed as part of CI isolation. `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
@@ -598,12 +598,12 @@ Security comes first. Within the same priority tier, dependency order and prereq
 
 - **Priority:** P1.
 - **Source:** `TEST-ARCH-001` / DEC-070.
-- **Status:** **LOCAL MAIN INTEGRATED AT EXACT HOSTED-VALIDATED SOURCE SHA + CANONICAL LOCAL VALIDATION PASS / REMOTE MAIN PUBLICATION PENDING** — not CLOSED ON PUBLISHED MAIN.
-- Implementation `9e59712e738b841dd31028ff2c93119771ce49ee`; pre-correction source continuity `9135c0ea5527e62a9c434bfdb97c65bdaa1b81f7`; corrective / hosted-validated source / local-main integration `768bac7dce35d7516606a7ac97eded224e49f3c1`; tree `4cf08ef77358c738874e9f6ea7ac117057802e6a`.
+- **Status:** **CLOSED ON PUBLISHED MAIN** — durable technical closure anchor `da6cabf14377afcfa1fb1cb910f1db0c890eac57` (tree `7118b54350256617b0992cadc5f58d46f79891b8`). **Canonical closure record IN PROGRESS**; source cleanup **PENDING**.
+- Implementation `9e59712e738b841dd31028ff2c93119771ce49ee`; pre-correction source continuity `9135c0ea5527e62a9c434bfdb97c65bdaa1b81f7`; hosted-validated source / corrective anchor `768bac7dce35d7516606a7ac97eded224e49f3c1`.
 - Source published; corrective change `FF_NETWORK_PER_BUILD: "true"`; hosted corrective source validation **PASS** (pipeline `2806406774` / IID `378`; check + database-integration SUCCESS; 29/29 migrations; 4/4 real DB tests; SQLSTATE `55P03`; historical failed pipeline `2805285032` / IID `377` — `LEGACY_BRIDGE_SERVICE_CONNECTIVITY_FAILURE`).
-- Local `main` integrated by architect-authorized identity-preserving `FAST_FORWARD_ONLY` (no new integration commit). Local main canonical validation **PASS** (216/216 + 1843/1843; 0 lint errors / 51 warnings; Next.js 16.3.1 build PASS).
-- Remote source `768bac7dce35d7516606a7ac97eded224e49f3c1`; remote `main` `271a9837c48e3cee2f8d6c3a9c27e2c233f4eb3b`; local main is 0 behind / 3 ahead of origin/main. Remote main publication **NOT PERFORMED**. Hosted main validation **NOT PERFORMED**.
-- After docs commit: post-commit continuity sync → canonical local validation → main publication review → remote main publication → hosted main validation → closure/cleanup.
+- Main publication **PASS**; hosted main pipeline `2806952669` / IID `379` (source `push`) **SUCCESS**; mandatory jobs `check` **16215678923** + `database-integration` **16215678924** **SUCCESS** (`allow_failure: false`); hosted check 216/216 files; 1843/1843 tests; 29/29 migrations; 4/4 real DB tests; SQLSTATE `55P03`; no Production/Supabase DB mutation.
+- Source branch `database-integration-test-harness-v1` @ `768bac7…` still **PRESENT** (GitLab `merged=true`); cleanup **PENDING**.
+- Remaining lifecycle: canonical closure reconciliation → closure-record review/commit → continuity → canonical validation → closure-record publication → hosted closure validation → source cleanup → continuity → Solution #6 readiness.
 - Runbook: [database-integration-tests.md](../../driving_school_platform/nextjs_space/docs/ops/database-integration-tests.md).
 - Capability boundary: disposable `dat_it` uses PostgreSQL superuser bootstrap — valid for structural/transactional proofs; **not** application-role / RLS / least-privilege evidence.
 - Keep unit tests fast; do not convert the full suite to DB integration tests.
@@ -964,8 +964,8 @@ remain independent.
 
 ### P1-A — Proof before risky change
 
-1. `database-integration-test-harness-v1` — **LOCAL MAIN INTEGRATED + LOCALLY VALIDATED / REMOTE MAIN PUBLICATION PENDING** (`768bac7…` / tree `4cf08ef7…`); remote main publication pending; post-docs continuity + canonical validation required before main publication review; not CLOSED ON PUBLISHED MAIN
-2. `e2e-suite-contract-repair-v1` — **NOT STARTED**; blocked until Solution #5 publication lifecycle completes
+1. `database-integration-test-harness-v1` — **CLOSED ON PUBLISHED MAIN** (`da6cabf…` / tree `7118b543…`); hosted main pipeline `2806952669` / IID `379` **SUCCESS**; canonical closure record **IN PROGRESS**; source cleanup **PENDING**
+2. `e2e-suite-contract-repair-v1` — **NOT STARTED**; blocked until Solution #5 closure-record lifecycle and source cleanup complete
 
 These are confidence multipliers for subsequent security, billing, integrity and
 migration work.
