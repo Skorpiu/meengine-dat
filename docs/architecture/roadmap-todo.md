@@ -10,7 +10,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| Solution #5 pre-commit review / commit authorization | **P1** operational | `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070 — **LOCAL IMPLEMENTATION + INDEPENDENT EQR COMPLETE**. Branch `database-integration-test-harness-v1` is **LOCAL ONLY**; source branch **not yet published**; implementation **uncommitted**. Baseline HEAD `271a9837c48e3cee2f8d6c3a9c27e2c233f4eb3b`; reviewed EQR snapshot SHA256 `b5c6187f2db5f5abdd578eed8894bbd2c5217849505c45e3a17435fbd5d554aa`. Local EQR **PASS**; repeatability **PASS** (two consecutive fresh disposable runs; 29/29 migrations; 4/4 integration proofs; teardown each run). Canonical local `pnpm check` **PASS**: 216/216 files; 1843/1843 tests. GitLab `database-integration` job implemented; **HOSTED VALIDATION PENDING** source publication. **Not** CLOSED ON PUBLISHED MAIN. Next gate: **LOCAL PRE-COMMIT REVIEW / COMMIT AUTHORIZATION** — not source publication. Solution #6 remains blocked until Solution #5 publication lifecycle completes. |
+| Solution #5 source publication review / human push authorization | **P1** operational | `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070 — **LOCAL IMPLEMENTATION COMMITTED + EXACT COMMIT LOCALLY VALIDATED / UNPUBLISHED**. Validated local implementation commit `9e59712e738b841dd31028ff2c93119771ce49ee`; validated tree `607d720558e15f3e887af6c2710d988b55c6ea61`. Exact committed-source validation **PASS**: canonical `pnpm check` 216/216 + 1843/1843; 0 lint errors / 51 known warnings; two fresh disposable PostgreSQL runs PASS (29/29 migrations; 4/4 real proofs; SQLSTATE `55P03` on lock proof). Source publication **NOT PERFORMED**. Hosted source validation **PENDING**. Main integration **NOT PERFORMED**. Main publication **NOT PERFORMED**. **Not** CLOSED. Next gate: **SOURCE PUBLICATION REVIEW / HUMAN PUSH AUTHORIZATION**. Solution #6 remains **NOT STARTED** until Solution #5 publication lifecycle completes. |
 
 <!-- dat-46-solution-ledger-v1 -->
 ## DAT_4.6 Solution ledger
@@ -21,10 +21,10 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | #2 | `next-supported-lts-security-remediation-v1` / `DEP-SEC-001` | **CLOSED ON PUBLISHED MAIN** |
 | #3 | `local-development-database-isolation-v1` / `CONFIG-ENV-001` | **CLOSED ON PUBLISHED MAIN** / cleanup complete |
 | #4 | `migration-deploy-target-safety-gate-v1` / `DB-MIGRATION-001` | **CLOSED ON PUBLISHED MAIN** / cleanup complete |
-| #5 | `database-integration-test-harness-v1` / `TEST-ARCH-001` | **LOCAL IMPLEMENTATION + EQR PASS** / uncommitted / unpublished |
+| #5 | `database-integration-test-harness-v1` / `TEST-ARCH-001` | **LOCAL IMPLEMENTATION COMMITTED + EXACT COMMIT LOCALLY VALIDATED / UNPUBLISHED** (`9e59712…` / tree `607d720…`) |
 | #6 | `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` | **NOT STARTED** |
 
-DAT_4.6 conversation/context remains healthy after Solution #5 local EQR. No handoff to DAT_4.7 is currently required.
+DAT_4.6 conversation/context remains healthy after Solution #5 exact committed-source validation. No handoff to DAT_4.7 is currently required.
 
 **Closed context:** `engineering-excellence-audit-v1` closed 2026-08-13 by explicit human GO (51 findings / 51/51 coverage; no repository-static frontier). Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` is **CLOSED BY CONTAINMENT** and integrated into `main`. Solution #2 / `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN** at `0409d92525940be751e6bc07c9da32668a834e53`. Solution #3 / `CONFIG-ENV-001` **CLOSED ON PUBLISHED MAIN** at `14c3865372502f074941a1fc81a55b5ec7f1b589` (DEC-068; historical Solution #3 merge, not current live `main`). `gitlab-ci-database-isolation-v1` **CLOSED ON PUBLISHED MAIN** at integration `594484998da5893b349bea4d2de1ac7447d37de6` (implementation `9c88e3942876d65ae1290819151022cf600aefa5`; closure-doc publication `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`; final hosted main pipeline **#2780314232** SUCCESS; canonical job `check` **#16037631071** SUCCESS; `allow_failure: false`; source branch cleanup **COMPLETE**, local and remote). Solution #4 / `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1` is **CLOSED ON PUBLISHED MAIN** (DEC-069; published-main validation anchor `4c74d6a714e68492dbcf535ca0527f01131eba66`; source-branch cleanup **COMPLETE**). DEC-068 unchanged (no `CI` / `GITLAB_CI` remote-DB escape). No DB or migration was performed as part of CI isolation. `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
@@ -598,12 +598,12 @@ Security comes first. Within the same priority tier, dependency order and prereq
 
 - **Priority:** P1.
 - **Source:** `TEST-ARCH-001` / DEC-070.
-- **Status:** **LOCAL IMPLEMENTATION + INDEPENDENT EQR COMPLETE** — not CLOSED ON PUBLISHED MAIN.
-- Branch `database-integration-test-harness-v1` exists **LOCAL ONLY**; source branch **not yet published**; implementation **uncommitted**.
-- Reviewed EQR snapshot SHA256 `b5c6187f2db5f5abdd578eed8894bbd2c5217849505c45e3a17435fbd5d554aa`.
-- Local disposable harness: Compose project `dat-it`; proofs A–D (migration history, FK, rollback, row lock); 29/29 committed migrations from zero; two consecutive repeatability runs **PASS**.
-- GitLab `database-integration` job implemented in working copy; **HOSTED VALIDATION PENDING** source publication.
-- Next gate: **LOCAL PRE-COMMIT REVIEW / COMMIT AUTHORIZATION** → source publication → hosted source validation → main integration → main publication → hosted main validation → closure/cleanup.
+- **Status:** **LOCAL IMPLEMENTATION COMMITTED + EXACT COMMIT LOCALLY VALIDATED / UNPUBLISHED** — not CLOSED ON PUBLISHED MAIN.
+- Branch `database-integration-test-harness-v1` exists **LOCAL ONLY**.
+- Validated local implementation commit `9e59712e738b841dd31028ff2c93119771ce49ee`; validated tree `607d720558e15f3e887af6c2710d988b55c6ea61`.
+- Exact committed-source validation **PASS**: canonical `pnpm check` 216/216 + 1843/1843; 0 lint errors / 51 known warnings; two consecutive fresh disposable PostgreSQL runs PASS (29/29 migrations each; 4/4 real proofs each; FK / rollback / lock with SQLSTATE `55P03` / teardown PASS).
+- Source publication **NOT PERFORMED**. Hosted source validation **PENDING**. Main integration **NOT PERFORMED**. Main publication **NOT PERFORMED**.
+- Next gate: **SOURCE PUBLICATION REVIEW / HUMAN PUSH AUTHORIZATION** → hosted source validation → main integration → main publication → hosted main validation → closure/cleanup.
 - Runbook: [database-integration-tests.md](../../driving_school_platform/nextjs_space/docs/ops/database-integration-tests.md).
 - Capability boundary: disposable `dat_it` uses PostgreSQL superuser bootstrap — valid for structural/transactional proofs; **not** application-role / RLS / least-privilege evidence.
 - Keep unit tests fast; do not convert the full suite to DB integration tests.
@@ -613,7 +613,7 @@ Security comes first. Within the same priority tier, dependency order and prereq
 
 These items are **deliberately queued** for future engineering excellence. They do **not** change the canonical Solution ordering, are **not** assigned Solution numbers, and are **not** required to close `TEST-ARCH-001` / Solution #5. Promote earlier only when a concrete dependency or trigger makes that technically justified (see queue rule below).
 
-**Queue rule:** canonical sequence remains Solution #5 lifecycle completion → Solution #6 `e2e-suite-contract-repair-v1` → existing ordered security/core-integrity Solutions. These hardening slices may move up only when justified — for example: RLS/grant proof need → `integration-application-role-profile-v1`; more child-process config dependencies → `integration-child-env-minimization-v1`; a third Prisma CLI consumer → `neutral-prisma-cli-execution-helper-v1`.
+**Queue rule:** canonical sequence remains Solution #5 lifecycle completion → Solution #6 `e2e-suite-contract-repair-v1` → existing ordered security/core-integrity Solutions. These hardening slices may move up only when justified — for example: RLS/grant proof need → `integration-application-role-profile-v1`; more child-process config dependencies → `integration-child-env-minimization-v1`; a third Prisma CLI consumer → `neutral-prisma-cli-execution-helper-v1`. Do **not** reorder Solutions #6+ because of these excellence items.
 
 #### `integration-child-env-minimization-v1`
 
@@ -636,6 +636,16 @@ These items are **deliberately queued** for future engineering excellence. They 
 - **Current verified limitation:** the official PostgreSQL test image initializes `POSTGRES_USER=dat_it` and that bootstrap account has PostgreSQL superuser authority. Current harness is valid evidence for migration-history application, foreign-key enforcement, transaction rollback, and locking/concurrency semantics. It is **not** evidence for RLS, application-role grants, least-privilege database behavior, or permission-denial semantics. Current use is not a bypass because Solution #5 makes no claim to prove those permission contracts.
 - **Future excellence target:** introduce a separate constrained/non-superuser integration execution profile for authorization-sensitive PostgreSQL tests. Bootstrap/migration authority and application-test authority should be distinct when this capability is implemented.
 - **Implementation authority:** not authorized in Solution #5; human GO required when triggered.
+
+#### `pre-eqr-format-normalization`
+
+- **Classification:** **QUEUED ENGINEERING PROCESS HARDENING — NON-BLOCKING**
+- **Problem observed (Solution #5):** the pre-commit hook ran lint-staged/formatter after the independent EQR snapshot had already been produced, causing formatter-only changes to EQR-reviewed source and requiring a second integrity and exact-commit validation cycle.
+- **Current Solution #5 result:** the hook delta was independently reviewed as formatting-only, and the exact committed source was subsequently fully revalidated (`9e59712…` / tree `607d720…`).
+- **Future excellence rule:** for future DAT Solutions, run the repository's canonical formatter / lint-staged-equivalent normalization **before** the final EQR snapshot/hash anchor.
+- **Desired invariant:** `formatted source = EQR-reviewed source = validated source = committed source`.
+- **Goals:** prevent post-EQR formatter drift; make EQR hashes directly represent committed source; remove unnecessary second validation cycles; improve auditability and determinism.
+- **Implementation authority:** not authorized now; no Solution number assigned; does not block Solution #5; does not reorder Solutions #6+.
 
 ### `direct-dependency-responsibility-pruning-v1`
 
@@ -952,7 +962,7 @@ remain independent.
 
 ### P1-A — Proof before risky change
 
-1. `database-integration-test-harness-v1` — **LOCAL IMPLEMENTATION + EQR PASS**; pre-commit review / commit authorization next; not CLOSED ON PUBLISHED MAIN
+1. `database-integration-test-harness-v1` — **LOCAL IMPLEMENTATION COMMITTED + EXACT COMMIT LOCALLY VALIDATED / UNPUBLISHED** (`9e59712…` / tree `607d720…`); next gate **SOURCE PUBLICATION REVIEW / HUMAN PUSH AUTHORIZATION**; not CLOSED ON PUBLISHED MAIN
 2. `e2e-suite-contract-repair-v1` — **NOT STARTED**; blocked until Solution #5 publication lifecycle completes
 
 These are confidence multipliers for subsequent security, billing, integrity and

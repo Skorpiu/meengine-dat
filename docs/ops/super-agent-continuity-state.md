@@ -3,27 +3,112 @@
 
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
-**Live recovery snapshot:** 2026-08-30 — DAT_4.6 Solution #5
+**Continuity sync:** `CONTINUITY_SYNC_STATUS=CURRENT` (2026-08-31 — real-time continuity invariant recorded; Solution #5 post-commit state reflected).
+
+**Live recovery snapshot:** 2026-08-31 — DAT_4.6 Solution #5
 `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070
-(**LOCAL IMPLEMENTATION + INDEPENDENT EQR COMPLETE**; not CLOSED ON
-PUBLISHED MAIN). Branch `database-integration-test-harness-v1` exists
-**LOCAL ONLY**; source branch **not yet published**; implementation
-**uncommitted**. Baseline HEAD `271a9837c48e3cee2f8d6c3a9c27e2c233f4eb3b`;
-baseline tree `aa4b89544cffba49fbf14db4503616b8c648a68a`. Reviewed EQR
-snapshot SHA256
-`b5c6187f2db5f5abdd578eed8894bbd2c5217849505c45e3a17435fbd5d554aa`.
-Local EQR **PASS**; repeatability **PASS** (two consecutive fresh
-disposable runs; 29/29 exact committed migrations from zero; 4/4 real
-PostgreSQL proofs; teardown each run). Canonical local `pnpm check`
-**PASS**: 216/216 files; 1843/1843 tests; 0 lint errors / 51 known
-warnings; typecheck PASS; Next.js 16.3.1 build PASS. GitLab
-`database-integration` job implemented in working copy; **HOSTED
-VALIDATION PENDING** source publication. Next gate: **LOCAL PRE-COMMIT
-REVIEW / COMMIT AUTHORIZATION** — not source publication. Solution #6
-`e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` remains **NOT
-STARTED** until Solution #5 publication lifecycle completes. DAT_4.6
-conversation/context remains healthy; no handoff to DAT_4.7 currently
-required.
+(**LOCAL IMPLEMENTATION COMMITTED + EXACT COMMIT LOCALLY VALIDATED /
+UNPUBLISHED**; not CLOSED ON PUBLISHED MAIN). Branch
+`database-integration-test-harness-v1` exists **LOCAL ONLY**. Validated
+local implementation commit
+`9e59712e738b841dd31028ff2c93119771ce49ee`; validated tree
+`607d720558e15f3e887af6c2710d988b55c6ea61`. Exact committed-source
+validation **PASS**: canonical `pnpm check` 216/216 files; 1843/1843
+tests; 0 lint errors / 51 known warnings; env:check PASS; typecheck
+PASS; Next.js 16.3.1 build PASS; two consecutive fresh disposable
+PostgreSQL runs PASS (29/29 migrations each; 4/4 real proofs each; FK /
+rollback / lock with SQLSTATE `55P03` / teardown PASS). Source
+publication **NOT PERFORMED**. Hosted source validation **PENDING**.
+Main integration **NOT PERFORMED**. Main publication **NOT PERFORMED**.
+Next gate: **DOCS-ONLY COMMIT REVIEW** (pending continuity docs commit;
+then **SOURCE PUBLICATION REVIEW / HUMAN PUSH AUTHORIZATION**).
+Solution #6 `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` remains
+**NOT STARTED** until Solution #5 publication lifecycle completes.
+DAT_4.6 conversation/context remains healthy; no handoff to DAT_4.7
+currently required. Four deliberately queued non-blocking excellence
+follow-ups are recorded in `docs/architecture/roadmap-todo.md` (none
+authorized now; none blocks Solution #5; no Solution numbers assigned).
+
+<!-- super-agent-real-time-continuity-invariant-v1 -->
+## Real-Time Continuity Invariant (mandatory)
+
+The Super Agent must remain continuously synchronized with the
+architect/human workflow so it can serve as a reliable recovery point if
+chat history, memory, or conversation context is lost. This is a
+**mandatory DAT governance invariant**, not an optional preference.
+
+**Core rule:** before advancing from one meaningful lifecycle state/gate
+to the next, continuity state must reflect the latest known project
+state.
+
+**Practical sequence:** `state-changing event → continuity sync → next gate`
+
+The SA must **never** knowingly proceed based on stale lifecycle state.
+
+### Events that require immediate SA sync
+
+Synchronize after any event that changes or materially decides:
+
+- GO / NO-GO authorization
+- implementation start or completion
+- design decision or architectural amendment
+- EQR outcome
+- validation outcome
+- newly discovered blocker or risk
+- blocker resolution
+- To-Do / queued engineering item
+- commit creation
+- commit validation
+- source publication
+- hosted pipeline or job result
+- merge / main integration
+- main publication
+- closure record
+- branch cleanup
+- next-Solution selection
+- context-health or handoff decision
+- any materially important correction to previously recorded state
+
+### Read-only checks
+
+Do not create meaningless documentation churn for every individual
+read-only command. Multiple read-only checks inside one unchanged
+lifecycle gate may be summarized together. However, if a read-only check
+discovers new information that changes risk, authorization, blocker
+state, lifecycle state, or evidence interpretation, continuity must be
+updated **before** the next lifecycle action.
+
+### Recovery role and evidence precedence
+
+SA continuity is intended to be a recovery source when conversational
+context is lost. Evidence precedence (highest first):
+
+1. live Git / GitLab
+2. repository / worktree evidence
+3. validation artifacts / diffs
+4. canonical architecture / ops documents
+5. continuity summaries / conversation memory
+
+SA continuity must **never** override contradictory live Git evidence.
+Reconcile continuity when drift is detected.
+
+### Freshness requirement
+
+- Normal desired state: `CONTINUITY_SYNC_STATUS=CURRENT`
+- When a meaningful state transition occurred but is not yet reflected:
+  `CONTINUITY_SYNC_REQUIRED_BEFORE_NEXT_GATE=yes`
+
+Use concise human-readable lifecycle state and durable anchors. Do not
+create automated timestamps or commits after every command.
+
+### No self-referential commit loop
+
+This rule must not create recursive documentation commits. Do not require
+the continuity file to record the SHA of the commit that contains its own
+update. A continuity update may describe the already-existing
+implementation commit, validation evidence, and remote/pipeline/main
+state. The docs commit itself need not cause another docs commit merely
+to record its own SHA.
 
 **Historical snapshot (2026-08-25 — DAT_4.5 Solution #4):**
 `migration-deploy-target-safety-gate-v1` (**CLOSED ON PUBLISHED MAIN**;
@@ -143,17 +228,16 @@ navigator below and older checkpoints are historical evidence unless
 explicitly marked live here.
 
 - **Solution #5** / `database-integration-test-harness-v1` /
-  `TEST-ARCH-001` / DEC-070 — **LOCAL IMPLEMENTATION + INDEPENDENT EQR
-  COMPLETE**. Branch `database-integration-test-harness-v1` **LOCAL
-  ONLY**; source branch **not yet published**; implementation
-  **uncommitted**. Baseline HEAD `271a9837c48e3cee2f8d6c3a9c27e2c233f4eb3b`;
-  baseline tree `aa4b89544cffba49fbf14db4503616b8c648a68a`. Reviewed EQR
-  snapshot SHA256
-  `b5c6187f2db5f5abdd578eed8894bbd2c5217849505c45e3a17435fbd5d554aa`.
-  Local EQR **PASS**; repeatability **PASS**. GitLab
-  `database-integration` job implemented; **HOSTED VALIDATION PENDING**
-  source publication. **Not** CLOSED ON PUBLISHED MAIN. Next gate:
-  **LOCAL PRE-COMMIT REVIEW / COMMIT AUTHORIZATION**.
+  `TEST-ARCH-001` / DEC-070 — **LOCAL IMPLEMENTATION COMMITTED + EXACT
+  COMMIT LOCALLY VALIDATED / UNPUBLISHED**. Validated local
+  implementation commit `9e59712e738b841dd31028ff2c93119771ce49ee`;
+  validated tree `607d720558e15f3e887af6c2710d988b55c6ea61`. Exact
+  committed-source validation **PASS**. Source publication **NOT
+  PERFORMED**. Hosted source validation **PENDING**. Main integration
+  **NOT PERFORMED**. Main publication **NOT PERFORMED**. **Not** CLOSED
+  ON PUBLISHED MAIN. Next gate: **DOCS-ONLY COMMIT REVIEW** (then
+  **SOURCE PUBLICATION REVIEW / HUMAN PUSH AUTHORIZATION**).
+  `CONTINUITY_SYNC_STATUS=CURRENT`.
 - Solution #4 / `migration-deploy-target-safety-gate-v1` — **CLOSED ON
   PUBLISHED MAIN**; source-branch cleanup **COMPLETE**.
 - Solutions #1–#3 — closed per DAT_4.6 ledger (see
@@ -161,16 +245,15 @@ explicitly marked live here.
 - Solution #6 / `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` —
   **NOT STARTED**; blocked until Solution #5 publication lifecycle
   completes.
-- **Solution #5 queued engineering hardening (2026-08-30 continuity
-  refinement):** three non-blocking excellence items are explicitly
-  queued in `docs/architecture/roadmap-todo.md` — no Solution numbers
-  assigned; none blocks Solution #5 closure; none authorized for
-  implementation now. Current Solution #5 implementation remains
-  EQR-approved for `TEST-ARCH-001`. See roadmap section
-  **Solution #5 — queued engineering hardening (non-blocking)** for:
-  `integration-child-env-minimization-v1` (engineering hardening);
-  `neutral-prisma-cli-execution-helper-v1` (architectural refactor);
-  `integration-application-role-profile-v1` (test-capability hardening).
+- **Solution #5 queued engineering excellence (deliberate backlog):**
+  four non-blocking items in `docs/architecture/roadmap-todo.md` —
+  no Solution numbers; none authorized now; none blocks Solution #5.
+  See roadmap section **Solution #5 — queued engineering hardening
+  (non-blocking)** for:
+  `integration-child-env-minimization-v1`;
+  `neutral-prisma-cli-execution-helper-v1`;
+  `integration-application-role-profile-v1`;
+  `pre-eqr-format-normalization`.
 - DAT_4.6 conversation/context healthy; no DAT_4.7 handoff required.
 
 <!-- dat-45-live-recovery-navigator-v1 -->

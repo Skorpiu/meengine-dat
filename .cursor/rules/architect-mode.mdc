@@ -546,7 +546,7 @@ are updated with each solution branch.
 - `gitlab-ci-database-isolation-v1` — **CLOSED ON PUBLISHED MAIN**. Published integration anchor `594484998da5893b349bea4d2de1ac7447d37de6`. Implementation anchor `9c88e3942876d65ae1290819151022cf600aefa5`. Final source continuity anchor `ac52061a1b1e972775ecc3212e43d8f0f0688fc9`. Final closure hosted main pipeline **#2780314232** SUCCESS; canonical job `check` **#16037631071** SUCCESS; `allow_failure: false`. Hosted CI isolation criterion **SATISFIED**. DEC-068 unchanged: no `CI` / `GITLAB_CI` remote-DB escape. Cause classification: repository evidence supports external job-environment injection as the cause class. Higher-precedence GitLab CI/CD variables (for example policy/pipeline/project/group/instance variables) are the most likely source. Runner-provided environment remains another externally confirmable possibility. No specific Project/Group/Runner variable has been definitively proven. Source branch cleanup **COMPLETE**, local and remote. No DB or migration was performed as part of CI isolation.
 - Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1`: **CLOSED ON PUBLISHED MAIN** (DEC-068; published merge `14c3865372502f074941a1fc81a55b5ec7f1b589`; implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; continuity/source-publication anchor `810cc9446c5f89805e282672bc03f743f8480d75`). Source branch cleanup **COMPLETE**. Historical in-branch wording “ACTIVE / NOT YET INTEGRATED ON MAIN” is superseded.
 - Solution #4 / `migration-deploy-target-safety-gate-v1` (Solution #4 / `DB-MIGRATION-001`) — **CLOSED ON PUBLISHED MAIN** (DEC-069); source-branch cleanup **COMPLETE**. Historical anchors preserved in continuity docs.
-- Solution #5 / `database-integration-test-harness-v1` (Solution #5 / `TEST-ARCH-001` / DEC-070) — **LOCAL IMPLEMENTATION + INDEPENDENT EQR COMPLETE**. Branch **LOCAL ONLY**; **uncommitted**; **unpublished**. Reviewed EQR snapshot SHA256 `b5c6187f2db5f5abdd578eed8894bbd2c5217849505c45e3a17435fbd5d554aa`. Repeatability **PASS**. GitLab `database-integration` job implemented; **HOSTED VALIDATION PENDING** source publication. Next gate: **LOCAL PRE-COMMIT REVIEW / COMMIT AUTHORIZATION**. **Not** CLOSED ON PUBLISHED MAIN.
+- Solution #5 / `database-integration-test-harness-v1` (Solution #5 / `TEST-ARCH-001` / DEC-070) — **LOCAL IMPLEMENTATION COMMITTED + EXACT COMMIT LOCALLY VALIDATED / UNPUBLISHED**. Validated local implementation commit `9e59712e738b841dd31028ff2c93119771ce49ee`; validated tree `607d720558e15f3e887af6c2710d988b55c6ea61`. Exact committed-source validation **PASS** (216/216 + 1843/1843; two fresh DB runs; 29/29 migrations; 4/4 proofs; SQLSTATE `55P03`). Source publication **NOT PERFORMED**. Hosted source validation **PENDING**. Main integration **NOT PERFORMED**. Main publication **NOT PERFORMED**. Next gate: **SOURCE PUBLICATION REVIEW / HUMAN PUSH AUTHORIZATION**. **Not** CLOSED ON PUBLISHED MAIN.
 - Solution #6 / `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` — **NOT STARTED** until Solution #5 publication lifecycle completes.
 - Separate follow-ups: `dependency-security-monitoring-v1`; `TOOLCHAIN-002`.
 - Parallel architecture lane: `platform-separation-architecture-plan-v1`. Then P1/P2 per the post-audit queue.
@@ -796,6 +796,60 @@ Rules:
 9. The Super Agent is a knowledge-continuity and operational-recovery mechanism, not a substitute for Git remotes, database backups, hosted configuration backups, secrets management, or infrastructure disaster recovery.
 
 Canonical recovery state: `docs/ops/super-agent-continuity-state.md`.
+
+<!-- super-agent-real-time-continuity-invariant-v1 -->
+### Real-Time Continuity Invariant (mandatory)
+
+The Super Agent must remain continuously synchronized with the architect/human workflow so it can serve as a reliable recovery point if chat history, memory, or conversation context is lost. This is a **mandatory DAT governance invariant**, not an optional preference.
+
+**Core rule:** before advancing from one meaningful lifecycle state/gate to the next, the Super Agent continuity state must reflect the latest known project state.
+
+**Practical sequence:** `state-changing event → continuity sync → next gate`
+
+The SA must **never** knowingly proceed based on stale lifecycle state.
+
+**Events that require immediate SA sync** (minimum set):
+
+- GO / NO-GO authorization
+- implementation start or completion
+- design decision or architectural amendment
+- EQR outcome
+- validation outcome
+- newly discovered blocker or risk
+- blocker resolution
+- To-Do / queued engineering item
+- commit creation
+- commit validation
+- source publication
+- hosted pipeline or job result
+- merge / main integration
+- main publication
+- closure record
+- branch cleanup
+- next-Solution selection
+- context-health or handoff decision
+- any materially important correction to previously recorded state
+
+**Read-only checks:** do not create meaningless documentation churn for every individual read-only command. Multiple read-only checks inside one unchanged lifecycle gate may be summarized together. However, if a read-only check discovers new information that changes risk, authorization, blocker state, lifecycle state, or evidence interpretation, continuity must be updated **before** the next lifecycle action.
+
+**Recovery role:** SA continuity is intended to be a recovery source when conversational context is lost. **Evidence precedence** (highest first):
+
+1. live Git / GitLab
+2. repository / worktree evidence
+3. validation artifacts / diffs
+4. canonical architecture / ops documents
+5. continuity summaries / conversation memory
+
+SA continuity must **never** override contradictory live Git evidence; reconcile continuity when drift is detected.
+
+**Freshness markers** (live continuity section):
+
+- Normal desired state: `CONTINUITY_SYNC_STATUS=CURRENT`
+- When a meaningful state transition occurred but is not yet reflected: `CONTINUITY_SYNC_REQUIRED_BEFORE_NEXT_GATE=yes`
+
+Use concise human-readable lifecycle state and durable anchors. Do not create automated timestamps or commits after every command.
+
+**No self-referential commit loop:** this rule must not create recursive documentation commits. Do not require the continuity file to record the SHA of the commit that contains its own update. A continuity update may describe the already-existing implementation commit, validation evidence, and remote/pipeline/main state. The docs commit itself need not cause another docs commit merely to record its own SHA.
 
 <!-- dat-toolchain-rationalization-v1 -->
 ## DAT toolchain rationalization policy
@@ -1228,8 +1282,8 @@ recombine them into one generic Payment model or implementation slice.
 ### DAT_4.6 live navigator
 
 - DAT_4.5: historical execution wave; Solutions #1–#4 closed per ledger.
-- DAT_4.6 conversation/context: **healthy** after Solution #5 local EQR; no DAT_4.7 handoff required.
-- Solution #5 / `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070 — **LOCAL IMPLEMENTATION + INDEPENDENT EQR COMPLETE**. Branch **LOCAL ONLY**; **uncommitted**; **unpublished**. Baseline HEAD `271a9837c48e3cee2f8d6c3a9c27e2c233f4eb3b`. Reviewed EQR snapshot SHA256 `b5c6187f2db5f5abdd578eed8894bbd2c5217849505c45e3a17435fbd5d554aa`. Repeatability **PASS**. GitLab `database-integration` implemented; **HOSTED VALIDATION PENDING**. Next gate: **LOCAL PRE-COMMIT REVIEW / COMMIT AUTHORIZATION**.
+- DAT_4.6 conversation/context: **healthy** after Solution #5 exact committed-source validation; no DAT_4.7 handoff required.
+- Solution #5 / `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070 — **LOCAL IMPLEMENTATION COMMITTED + EXACT COMMIT LOCALLY VALIDATED / UNPUBLISHED**. Validated local implementation commit `9e59712e738b841dd31028ff2c93119771ce49ee`; validated tree `607d720558e15f3e887af6c2710d988b55c6ea61`. Exact committed-source validation **PASS**. Source publication **NOT PERFORMED**. Hosted source validation **PENDING**. Main integration **NOT PERFORMED**. Main publication **NOT PERFORMED**. Next gate: **SOURCE PUBLICATION REVIEW / HUMAN PUSH AUTHORIZATION**. **Not** CLOSED.
 - Solution #6 / `e2e-suite-contract-repair-v1` — **NOT STARTED** until Solution #5 publication lifecycle completes.
 
 <!-- dat-45-live-navigator-v1 -->
@@ -1245,6 +1299,6 @@ recombine them into one generic Payment model or implementation slice.
 - Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1`: **CLOSED ON PUBLISHED MAIN** (DEC-068). Durable implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted implementation tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; continuity/source-publication anchor `810cc9446c5f89805e282672bc03f743f8480d75`; published merge `14c3865372502f074941a1fc81a55b5ec7f1b589` (tree `cb7b0a7409b91a70a8c601f36d4e80fd014404cf`; historical Solution #3 merge). Source branch cleanup **COMPLETE**. Historical in-branch wording “ACTIVE / NOT YET INTEGRATED ON MAIN” is superseded.
 - `gitlab-ci-database-isolation-v1` — **CLOSED ON PUBLISHED MAIN**. Final closure hosted main pipeline **#2780314232** SUCCESS; canonical job `check` **#16037631071** SUCCESS; `allow_failure: false`. Hosted CI isolation criterion **SATISFIED**. Source branch cleanup **COMPLETE**, local and remote. DEC-068 unchanged (no `CI` / `GITLAB_CI` remote-DB escape). No DB or migration was performed as part of CI isolation.
 - Solution #4 / `migration-deploy-target-safety-gate-v1` (Solution #4 / `DB-MIGRATION-001`) — **CLOSED ON PUBLISHED MAIN** (DEC-069); source-branch cleanup **COMPLETE**. Historical anchors preserved in continuity docs.
-- Solution #5 / `database-integration-test-harness-v1` (Solution #5 / `TEST-ARCH-001` / DEC-070) — **LOCAL IMPLEMENTATION + INDEPENDENT EQR COMPLETE**. Branch **LOCAL ONLY**; **uncommitted**; **unpublished**. Next gate: **LOCAL PRE-COMMIT REVIEW / COMMIT AUTHORIZATION**. GitLab `database-integration` **HOSTED VALIDATION PENDING** source publication. **Not** CLOSED ON PUBLISHED MAIN.
+- Solution #5 / `database-integration-test-harness-v1` (Solution #5 / `TEST-ARCH-001` / DEC-070) — **LOCAL IMPLEMENTATION COMMITTED + EXACT COMMIT LOCALLY VALIDATED / UNPUBLISHED**. Validated local implementation commit `9e59712e738b841dd31028ff2c93119771ce49ee`; validated tree `607d720558e15f3e887af6c2710d988b55c6ea61`. Next gate: **SOURCE PUBLICATION REVIEW / HUMAN PUSH AUTHORIZATION**. Hosted source validation **PENDING**. **Not** CLOSED ON PUBLISHED MAIN.
 - Solution #6 / `e2e-suite-contract-repair-v1` — **NOT STARTED** until Solution #5 publication lifecycle completes.
 - `dependency-security-monitoring-v1` and `TOOLCHAIN-002` remain separate.
