@@ -322,6 +322,28 @@ See `docs/ops/cursor-operating-model.md` — **Human-Controlled Merge Protocol**
 - **Branch lifecycle and publication remain human control points** — Rui creates, switches, publishes, merges, and deletes branches when the slice is ready.
 - Cursor may create a local commit only when the prepared branch and prompt explicitly authorize it. Branch creation, switching, publication, merge, rebase, cherry-pick, and deletion remain operator-executed even when discussed; provide the guarded Git Bash battery instead of executing them.
 
+### Identity-preserving fast-forward exception (narrow)
+
+The ordinary human-controlled merge workflow above remains the **default**. A local main fast-forward **MAY** replace the ordinary `--no-ff` merge-commit integration only when **all** of the following are proven:
+
+1. target `main` is an exact ancestor of the hosted-validated source;
+2. no source/main divergence exists;
+3. exact source SHA/tree passed the required hosted source gates;
+4. no merge-resolution / integration content delta is required;
+5. architect explicitly authorizes `FAST_FORWARD_ONLY`;
+6. human executes `git merge --ff-only <exact-validated-sha>`;
+7. resulting local `main` equals the exact validated source SHA/tree;
+8. required local-main validation passes;
+9. remote-main publication remains a separate explicitly authorized operation;
+10. hosted main validation remains mandatory after publication;
+11. continuity sync remains mandatory between meaningful lifecycle gates.
+
+When canonical lifecycle documentation was intentionally deferred to preserve the hosted-validated source object, a docs-only canonical reconciliation **may** occur on local `main` after exact identity-preserving integration and local validation, before remote-main publication.
+
+This exception does **not**: make fast-forward the default; authorize automatic branch integration; authorize push/main publication; authorize MR creation; authorize squash/rebase/cherry-pick; weaken human branch ownership; bypass source or main hosted validation; bypass continuity sync.
+
+Where existing **current** policy prose presents `merge --no-ff` as universally mandatory, treat it as the ordinary/default path subject only to this explicit architect-approved exception. Historical records that accurately describe a prior `--no-ff` integration remain valid.
+
 ## Branch and engineering guardrails
 
 <!-- human-owned-branch-lifecycle-v1 -->
@@ -359,7 +381,7 @@ Each **normal solution** owns its implementation, documentation, and Super Agent
 **Then, with explicit human authorization:**
 
 1. merge GO
-2. `--no-ff` merge into `main`
+2. ordinary/default: `--no-ff` merge into `main`; or, only when the **identity-preserving fast-forward exception** above is fully satisfied and architect-authorized: `git merge --ff-only <exact-validated-sha>` with no new integration commit
 3. validate merged `main`
 4. publish `main`
 5. delete the completed source branch
@@ -546,7 +568,7 @@ are updated with each solution branch.
 - `gitlab-ci-database-isolation-v1` — **CLOSED ON PUBLISHED MAIN**. Published integration anchor `594484998da5893b349bea4d2de1ac7447d37de6`. Implementation anchor `9c88e3942876d65ae1290819151022cf600aefa5`. Final source continuity anchor `ac52061a1b1e972775ecc3212e43d8f0f0688fc9`. Final closure hosted main pipeline **#2780314232** SUCCESS; canonical job `check` **#16037631071** SUCCESS; `allow_failure: false`. Hosted CI isolation criterion **SATISFIED**. DEC-068 unchanged: no `CI` / `GITLAB_CI` remote-DB escape. Cause classification: repository evidence supports external job-environment injection as the cause class. Higher-precedence GitLab CI/CD variables (for example policy/pipeline/project/group/instance variables) are the most likely source. Runner-provided environment remains another externally confirmable possibility. No specific Project/Group/Runner variable has been definitively proven. Source branch cleanup **COMPLETE**, local and remote. No DB or migration was performed as part of CI isolation.
 - Solution #3 / `CONFIG-ENV-001` / `local-development-database-isolation-v1`: **CLOSED ON PUBLISHED MAIN** (DEC-068; published merge `14c3865372502f074941a1fc81a55b5ec7f1b589`; implementation anchor `a717534ed351440fdfbf6800b218d56d6eb85282`; accepted tree `5b9aa29649bdf929bf7df5f9f641eb950ce16275`; continuity/source-publication anchor `810cc9446c5f89805e282672bc03f743f8480d75`). Source branch cleanup **COMPLETE**. Historical in-branch wording “ACTIVE / NOT YET INTEGRATED ON MAIN” is superseded.
 - Solution #4 / `migration-deploy-target-safety-gate-v1` (Solution #4 / `DB-MIGRATION-001`) — **CLOSED ON PUBLISHED MAIN** (DEC-069); source-branch cleanup **COMPLETE**. Historical anchors preserved in continuity docs.
-- Solution #5 / `database-integration-test-harness-v1` (Solution #5 / `TEST-ARCH-001` / DEC-070) — **LOCAL IMPLEMENTATION COMMITTED + EXACT COMMIT LOCALLY VALIDATED / UNPUBLISHED**. Validated local implementation commit `9e59712e738b841dd31028ff2c93119771ce49ee`; validated tree `607d720558e15f3e887af6c2710d988b55c6ea61`. Exact committed-source validation **PASS** (216/216 + 1843/1843; two fresh DB runs; 29/29 migrations; 4/4 proofs; SQLSTATE `55P03`). Source publication **NOT PERFORMED**. Hosted source validation **PENDING**. Main integration **NOT PERFORMED**. Main publication **NOT PERFORMED**. Next gate: **SOURCE PUBLICATION REVIEW / HUMAN PUSH AUTHORIZATION**. **Not** CLOSED ON PUBLISHED MAIN.
+- Solution #5 / `database-integration-test-harness-v1` (Solution #5 / `TEST-ARCH-001` / DEC-070) — **LOCAL MAIN INTEGRATED AT EXACT HOSTED-VALIDATED SOURCE SHA + CANONICAL LOCAL VALIDATION PASS / REMOTE MAIN PUBLICATION PENDING**. Implementation `9e59712e738b841dd31028ff2c93119771ce49ee`; pre-correction source continuity `9135c0ea5527e62a9c434bfdb97c65bdaa1b81f7`; corrective / hosted-validated source / local-main integration `768bac7dce35d7516606a7ac97eded224e49f3c1`; tree `4cf08ef77358c738874e9f6ea7ac117057802e6a`. Source published; hosted corrective source validation **PASS** (pipeline `2806406774` / IID `378`; check + database-integration SUCCESS; 29/29 migrations; 4/4 real DB tests; SQLSTATE `55P03`; correction `FF_NETWORK_PER_BUILD: "true"`). Local `main` integrated by architect-authorized identity-preserving `FAST_FORWARD_ONLY` (no new integration commit). Local main canonical validation **PASS** (216/216 + 1843/1843; 0 lint errors / 51 warnings; Next.js 16.3.1 build PASS). Remote `main` `271a9837c48e3cee2f8d6c3a9c27e2c233f4eb3b`; remote main publication **NOT PERFORMED**; hosted main validation **NOT PERFORMED**. Solution #6 **NOT STARTED**. After the canonical docs checkpoint is committed: POST-COMMIT CONTINUITY SYNC → CANONICAL LOCAL VALIDATION → MAIN PUBLICATION REVIEW. **Not** CLOSED ON PUBLISHED MAIN.
 - Solution #6 / `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` — **NOT STARTED** until Solution #5 publication lifecycle completes.
 - Separate follow-ups: `dependency-security-monitoring-v1`; `TOOLCHAIN-002`.
 - Parallel architecture lane: `platform-separation-architecture-plan-v1`. Then P1/P2 per the post-audit queue.
@@ -1283,7 +1305,7 @@ recombine them into one generic Payment model or implementation slice.
 
 - DAT_4.5: historical execution wave; Solutions #1–#4 closed per ledger.
 - DAT_4.6 conversation/context: **healthy** after Solution #5 exact committed-source validation; no DAT_4.7 handoff required.
-- Solution #5 / `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070 — **LOCAL IMPLEMENTATION COMMITTED + EXACT COMMIT LOCALLY VALIDATED / UNPUBLISHED**. Validated local implementation commit `9e59712e738b841dd31028ff2c93119771ce49ee`; validated tree `607d720558e15f3e887af6c2710d988b55c6ea61`. Exact committed-source validation **PASS**. Source publication **NOT PERFORMED**. Hosted source validation **PENDING**. Main integration **NOT PERFORMED**. Main publication **NOT PERFORMED**. Next gate: **SOURCE PUBLICATION REVIEW / HUMAN PUSH AUTHORIZATION**. **Not** CLOSED.
+- Solution #5 / `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070 — **LOCAL MAIN INTEGRATED AT EXACT HOSTED-VALIDATED SOURCE SHA + CANONICAL LOCAL VALIDATION PASS / REMOTE MAIN PUBLICATION PENDING**. Implementation `9e59712…`; pre-correction `9135c0e…`; corrective / local-main `768bac7…` (tree `4cf08ef7…`). Source published; hosted corrective validation **PASS** (`2806406774` / IID `378`; `FF_NETWORK_PER_BUILD: "true"`). Identity-preserving `FAST_FORWARD_ONLY` integration (no new commit). Local main canonical validation **PASS**. Remote `main` `271a9837…`; remote main publication **NOT PERFORMED**; hosted main validation **NOT PERFORMED**. Solution #6 **NOT STARTED**. After the canonical docs checkpoint is committed: POST-COMMIT CONTINUITY SYNC → CANONICAL LOCAL VALIDATION → MAIN PUBLICATION REVIEW. **Not** CLOSED.
 - Solution #6 / `e2e-suite-contract-repair-v1` — **NOT STARTED** until Solution #5 publication lifecycle completes.
 
 <!-- dat-45-live-navigator-v1 -->

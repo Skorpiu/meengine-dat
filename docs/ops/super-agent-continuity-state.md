@@ -3,31 +3,44 @@
 
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
-**Continuity sync:** `CONTINUITY_SYNC_STATUS=CURRENT` (2026-08-31 — real-time continuity invariant recorded; Solution #5 post-commit state reflected).
+**Continuity sync:** `CONTINUITY_SYNC_STATUS=CURRENT` (2026-08-31 — Solution #5 local-main integration + canonical local validation reflected; canonical state reconciled to the pre-publication checkpoint; remote main publication pending).
 
 **Live recovery snapshot:** 2026-08-31 — DAT_4.6 Solution #5
 `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070
-(**LOCAL IMPLEMENTATION COMMITTED + EXACT COMMIT LOCALLY VALIDATED /
-UNPUBLISHED**; not CLOSED ON PUBLISHED MAIN). Branch
-`database-integration-test-harness-v1` exists **LOCAL ONLY**. Validated
-local implementation commit
-`9e59712e738b841dd31028ff2c93119771ce49ee`; validated tree
-`607d720558e15f3e887af6c2710d988b55c6ea61`. Exact committed-source
-validation **PASS**: canonical `pnpm check` 216/216 files; 1843/1843
-tests; 0 lint errors / 51 known warnings; env:check PASS; typecheck
-PASS; Next.js 16.3.1 build PASS; two consecutive fresh disposable
-PostgreSQL runs PASS (29/29 migrations each; 4/4 real proofs each; FK /
-rollback / lock with SQLSTATE `55P03` / teardown PASS). Source
-publication **NOT PERFORMED**. Hosted source validation **PENDING**.
-Main integration **NOT PERFORMED**. Main publication **NOT PERFORMED**.
-Next gate: **DOCS-ONLY COMMIT REVIEW** (pending continuity docs commit;
-then **SOURCE PUBLICATION REVIEW / HUMAN PUSH AUTHORIZATION**).
-Solution #6 `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` remains
-**NOT STARTED** until Solution #5 publication lifecycle completes.
-DAT_4.6 conversation/context remains healthy; no handoff to DAT_4.7
-currently required. Four deliberately queued non-blocking excellence
-follow-ups are recorded in `docs/architecture/roadmap-todo.md` (none
-authorized now; none blocks Solution #5; no Solution numbers assigned).
+(**LOCAL MAIN INTEGRATED AT EXACT HOSTED-VALIDATED SOURCE SHA +
+CANONICAL LOCAL VALIDATION PASS / REMOTE MAIN PUBLICATION PENDING**;
+not CLOSED ON PUBLISHED MAIN). Local branch `main`; local SHA/tree
+`768bac7dce35d7516606a7ac97eded224e49f3c1` /
+`4cf08ef77358c738874e9f6ea7ac117057802e6a`. Implementation
+`9e59712e738b841dd31028ff2c93119771ce49ee`; pre-correction source
+continuity `9135c0ea5527e62a9c434bfdb97c65bdaa1b81f7`; corrective /
+hosted-validated source / local-main integration `768bac7…` (tree
+`4cf08ef7…`). Source published; hosted corrective validation **PASS**
+(pipeline `2806406774` / IID `378`; check + database-integration
+SUCCESS; 29/29 migrations; 4/4 real DB tests; SQLSTATE `55P03`;
+correction `FF_NETWORK_PER_BUILD: "true"`; historical failed pipeline
+`2805285032` / IID `377` —
+`LEGACY_BRIDGE_SERVICE_CONNECTIVITY_FAILURE`). Local `main` integrated
+by architect-authorized identity-preserving `FAST_FORWARD_ONLY` (no new
+integration commit). Local main canonical validation **PASS** (216/216
+files; 1843/1843 tests; 0 lint errors / 51 warnings; Next.js 16.3.1
+build PASS). Remote source `768bac7…`; remote `main`
+`271a9837c48e3cee2f8d6c3a9c27e2c233f4eb3b`; local main is 0 behind / 3
+ahead of origin/main. Remote main publication **NOT PERFORMED**. Hosted
+main validation **NOT PERFORMED**. After the docs reconciliation
+checkpoint is committed: POST-COMMIT CONTINUITY SYNC → CANONICAL LOCAL
+VALIDATION → MAIN PUBLICATION REVIEW. Solution #6
+`e2e-suite-contract-repair-v1`
+/ `TEST-HYGIENE-001` remains **NOT STARTED** until Solution #5 closes.
+DAT_4.6 conversation/context healthy; no DAT_4.7 handoff required.
+Four deliberately queued non-blocking excellence follow-ups in
+`docs/architecture/roadmap-todo.md` (none authorized now; none blocks
+Solution #5; no Solution numbers assigned).
+`UNAUTHORIZED_DIAGNOSTIC_MUTATION=ACKNOWLEDGED` — process/governance
+deviation only; one ephemeral `docker run --rm alpine …` diagnostic
+during read-only runner investigation; no repository/product/DB
+mutation; residual cached `alpine:latest` only; no cleanup authorized;
+does not block Solution #5 lifecycle.
 
 <!-- super-agent-real-time-continuity-invariant-v1 -->
 ## Real-Time Continuity Invariant (mandatory)
@@ -228,16 +241,24 @@ navigator below and older checkpoints are historical evidence unless
 explicitly marked live here.
 
 - **Solution #5** / `database-integration-test-harness-v1` /
-  `TEST-ARCH-001` / DEC-070 — **LOCAL IMPLEMENTATION COMMITTED + EXACT
-  COMMIT LOCALLY VALIDATED / UNPUBLISHED**. Validated local
-  implementation commit `9e59712e738b841dd31028ff2c93119771ce49ee`;
-  validated tree `607d720558e15f3e887af6c2710d988b55c6ea61`. Exact
-  committed-source validation **PASS**. Source publication **NOT
-  PERFORMED**. Hosted source validation **PENDING**. Main integration
-  **NOT PERFORMED**. Main publication **NOT PERFORMED**. **Not** CLOSED
-  ON PUBLISHED MAIN. Next gate: **DOCS-ONLY COMMIT REVIEW** (then
-  **SOURCE PUBLICATION REVIEW / HUMAN PUSH AUTHORIZATION**).
+  `TEST-ARCH-001` / DEC-070 — **LOCAL MAIN INTEGRATED AT EXACT
+  HOSTED-VALIDATED SOURCE SHA + CANONICAL LOCAL VALIDATION PASS /
+  REMOTE MAIN PUBLICATION PENDING**. Local `main` `768bac7…` (tree
+  `4cf08ef7…`). Implementation `9e59712…`; pre-correction `9135c0e…`.
+  Source published; hosted corrective validation **PASS** (`2806406774`
+  / IID `378`; `FF_NETWORK_PER_BUILD: "true"`). Identity-preserving
+  `FAST_FORWARD_ONLY` integration (no new commit). Local main canonical
+  validation **PASS**. Remote source `768bac7…`; remote `main`
+  `271a9837…`; local main is 0 behind / 3 ahead of origin/main. Remote
+  main publication **NOT PERFORMED**; hosted main validation **NOT
+  PERFORMED**. **Not** CLOSED ON PUBLISHED MAIN. After the docs
+  reconciliation checkpoint is committed: POST-COMMIT CONTINUITY SYNC →
+  CANONICAL LOCAL VALIDATION → MAIN PUBLICATION REVIEW.
   `CONTINUITY_SYNC_STATUS=CURRENT`.
+- `UNAUTHORIZED_DIAGNOSTIC_MUTATION=ACKNOWLEDGED` — process/governance
+  deviation only; ephemeral `docker run --rm alpine …` diagnostic during
+  read-only runner investigation; no repository/product/DB mutation;
+  residual cached `alpine:latest` only; no cleanup authorized.
 - Solution #4 / `migration-deploy-target-safety-gate-v1` — **CLOSED ON
   PUBLISHED MAIN**; source-branch cleanup **COMPLETE**.
 - Solutions #1–#3 — closed per DAT_4.6 ledger (see
@@ -452,9 +473,27 @@ implementation commit → source-branch publication → same-branch
 source-publication continuity update → continuity commit → publish that
 continuity commit.
 
-**Then, with explicit human authorization:** merge GO → `--no-ff` merge into
-`main` → validate merged `main` → publish `main` → delete the completed
+**Then, with explicit human authorization:** merge GO → ordinary/default
+`--no-ff` merge into `main`; or, only when the **identity-preserving
+fast-forward exception** is fully satisfied and architect-authorized:
+`git merge --ff-only <exact-validated-sha>` with no new integration
+commit → validate merged `main` → publish `main` → delete the completed
 source branch → create the next solution branch.
+
+The identity-preserving fast-forward exception requires: target `main` is
+an exact ancestor of the hosted-validated source; no divergence; exact
+source SHA/tree passed required hosted source gates; no merge-resolution
+delta; architect authorizes `FAST_FORWARD_ONLY`; human executes
+`git merge --ff-only`; local `main` equals exact validated SHA/tree;
+local-main validation passes; remote publication separately authorized;
+hosted main validation mandatory after publication; continuity sync
+between gates. When lifecycle docs were deferred to preserve the
+hosted-validated object, docs-only reconciliation may occur on local
+`main` after integration and local validation, before remote publication.
+This exception does not make fast-forward the default, authorize
+auto-integration, push, MR, squash/rebase/cherry-pick, or bypass hosted
+validation. Solution #4 used the ordinary `--no-ff` path; do not claim
+it used this exception.
 
 Do **not** invent a future merge SHA or completed branch-cleanup evidence
 before merge. Avoid a post-merge docs-only reconciliation branch: record the
