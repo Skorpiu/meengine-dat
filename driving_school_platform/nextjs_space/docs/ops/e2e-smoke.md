@@ -31,7 +31,7 @@ Optional:
 | --------------------- | ---------------------------------------------------------------------------------------- |
 | `PLAYWRIGHT_BASE_URL` | Legacy alias for base URL (used if `E2E_BASE_URL` is unset).                             |
 | `E2E_SKIP_WEB_SERVER` | Set to `1` to never auto-start `pnpm dev` (use when the app is already running locally). |
-| `.env.playwright`     | Local ignored file (see `.gitignore`); loaded by `playwright.config.ts`.                 |
+| `.env.playwright`     | Local ignored file (see `.gitignore`); loaded by `playwright.smoke.config.ts`.           |
 
 If `E2E_DEMO_SCHOOL_ADMIN_EMAIL` or `E2E_DEMO_SCHOOL_ADMIN_PASSWORD` is missing, the demo smoke **skips** with a clear message—no failure.
 
@@ -63,10 +63,13 @@ pnpm -C driving_school_platform/nextjs_space test:e2e:demo
 
 ## Scripts
 
-| Script               | Command                                     |
-| -------------------- | ------------------------------------------- |
-| `pnpm test:e2e`      | All Playwright specs (`tests/` + `e2e/`).   |
-| `pnpm test:e2e:demo` | Demo smoke only (`e2e/demo-smoke.spec.ts`). |
+| Script               | Command                                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------------------- |
+| `pnpm test:e2e`      | Disposable **local** browser-E2E orchestrator only. See [local-browser-e2e.md](./local-browser-e2e.md). |
+| `pnpm test:e2e:demo` | Demo smoke only (`playwright.smoke.config.ts` + `e2e/demo-smoke.spec.ts`).                              |
+| `pnpm e2e:smoke:*`   | Production smoke via `playwright.smoke.config.ts` and existing smoke guards.                            |
+
+Bare `playwright test` uses `playwright.config.ts` (local disposable E2E) and **fail-closes** unless `DAT_E2E_ORCHESTRATOR_ACTIVE=1`. It cannot enter Production Smoke.
 
 ## Validated run
 
@@ -96,6 +99,7 @@ Re-run after deploys or demo persona changes. Supply credentials only through yo
 
 ## Related
 
+- [local-browser-e2e.md](./local-browser-e2e.md) — disposable local browser-E2E orchestrator (`pnpm test:e2e`).
 - [production-smoke-e2e.md](./production-smoke-e2e.md) — automated production smoke (DEC-036 read-only; DEC-039 fixture preflight; DEC-040 lesson mutations; `DAT_SMOKE_*`).
 - [production-smoke-baseline.md](./production-smoke-baseline.md) — manual hosted smoke checklist.
 - [smoke-test-checklist.md](./smoke-test-checklist.md) — per-deploy re-smoke.

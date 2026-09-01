@@ -10,7 +10,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| Complete Solution #5 canonical closure-record lifecycle and source-branch cleanup | **P1** operational | `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070 — **TECHNICALLY CLOSED ON PUBLISHED MAIN** at durable technical closure anchor `da6cabf14377afcfa1fb1cb910f1db0c890eac57` (tree `7118b54350256617b0992cadc5f58d46f79891b8`); hosted main pipeline `2806952669` / IID `379` **SUCCESS**; mandatory jobs `check` **16215678923** + `database-integration` **16215678924** **SUCCESS**; 216/216 files; 1843/1843 tests; 29/29 migrations; 4/4 real DB tests; SQLSTATE `55P03`; no Production/Supabase DB mutation. **Canonical closure record IN PROGRESS**; source branch `database-integration-test-harness-v1` @ `768bac7…` still **PRESENT** — cleanup **PENDING**. Solution #6 `e2e-suite-contract-repair-v1` remains **NOT STARTED** until closure housekeeping completes. |
+| Solution #6 `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` — source lifecycle (commit → publish → integrate → published-main closure) | **P2** | **TECHNICALLY RESOLVED IN LOCAL SOURCE WORKTREE** — final EQR **PASS**; canonical **PASS**; disposable local browser E2E **2/2 PASS**; disposable infra **PASS**; worktree hygiene runtime **PASS**; **BRANCH UNPUBLISHED** / **MAIN NOT YET UPDATED**; `TEST-HYGIENE-001` **TECHNICALLY RESOLVED — SOURCE LIFECYCLE PENDING** (not **CLOSED ON MAIN**). Next gate: **ARCHITECT_SOLUTION6_POST_COMMIT_VALIDATION_GO_NO_GO**. |
 
 <!-- dat-46-solution-ledger-v1 -->
 ## DAT_4.6 Solution ledger
@@ -21,10 +21,10 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | #2 | `next-supported-lts-security-remediation-v1` / `DEP-SEC-001` | **CLOSED ON PUBLISHED MAIN** |
 | #3 | `local-development-database-isolation-v1` / `CONFIG-ENV-001` | **CLOSED ON PUBLISHED MAIN** / cleanup complete |
 | #4 | `migration-deploy-target-safety-gate-v1` / `DB-MIGRATION-001` | **CLOSED ON PUBLISHED MAIN** / cleanup complete |
-| #5 | `database-integration-test-harness-v1` / `TEST-ARCH-001` | **CLOSED ON PUBLISHED MAIN** (`da6cabf…` / tree `7118b543…`); canonical closure record **IN PROGRESS**; source cleanup **PENDING** |
-| #6 | `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` | **NOT STARTED** |
+| #5 | `database-integration-test-harness-v1` / `TEST-ARCH-001` | **CLOSED ON PUBLISHED MAIN** — final baseline `2f803ca…`; source cleanup **COMPLETE**; do **not** reopen |
+| #6 | `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` | **TECHNICALLY RESOLVED IN LOCAL SOURCE WORKTREE** / final EQR **PASS** / canonical **PASS** / disposable local browser E2E **2/2 PASS** / hygiene runtime **PASS** / **BRANCH UNPUBLISHED** / **MAIN NOT YET UPDATED** — `TEST-HYGIENE-001` **TECHNICALLY RESOLVED — SOURCE LIFECYCLE PENDING** |
 
-DAT_4.6 conversation/context remains healthy after Solution #5 published-main technical closure. No handoff to DAT_4.7 is currently required.
+DAT_4.6 conversation/context remains healthy after Solution #5 closure and Solution #6 branch kickoff. No handoff to DAT_4.7 is currently required.
 
 **Closed context:** `engineering-excellence-audit-v1` closed 2026-08-13 by explicit human GO (51 findings / 51/51 coverage; no repository-static frontier). Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` is **CLOSED BY CONTAINMENT** and integrated into `main`. Solution #2 / `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN** at `0409d92525940be751e6bc07c9da32668a834e53`. Solution #3 / `CONFIG-ENV-001` **CLOSED ON PUBLISHED MAIN** at `14c3865372502f074941a1fc81a55b5ec7f1b589` (DEC-068; historical Solution #3 merge, not current live `main`). `gitlab-ci-database-isolation-v1` **CLOSED ON PUBLISHED MAIN** at integration `594484998da5893b349bea4d2de1ac7447d37de6` (implementation `9c88e3942876d65ae1290819151022cf600aefa5`; closure-doc publication `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`; final hosted main pipeline **#2780314232** SUCCESS; canonical job `check` **#16037631071** SUCCESS; `allow_failure: false`; source branch cleanup **COMPLETE**, local and remote). Solution #4 / `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1` is **CLOSED ON PUBLISHED MAIN** (DEC-069; published-main validation anchor `4c74d6a714e68492dbcf535ca0527f01131eba66`; source-branch cleanup **COMPLETE**). DEC-068 unchanged (no `CI` / `GITLAB_CI` remote-DB escape). No DB or migration was performed as part of CI isolation. `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
@@ -513,8 +513,9 @@ Security comes first. Within the same priority tier, dependency order and prereq
 
 - **Priority:** P2.
 - **Source:** `TEST-HYGIENE-001`.
+- **Status:** **TECHNICALLY RESOLVED IN LOCAL SOURCE WORKTREE** — final EQR **PASS**; canonical **PASS**; disposable local browser E2E **2/2 PASS**; disposable infra **PASS**; worktree hygiene runtime **PASS**; teardown **PASS**; **BRANCH UNPUBLISHED** / **MAIN NOT YET UPDATED**; `TEST-HYGIENE-001` **TECHNICALLY RESOLVED — SOURCE LIFECYCLE PENDING** (not **CLOSED ON MAIN**). Next gate: **ARCHITECT_SOLUTION6_POST_COMMIT_VALIDATION_GO_NO_GO**.
 - Remove external Playwright scaffold and repair THEORY_EXAM operational Student-id semantics.
-- Establish deterministic fixture ownership before the E2E CI gate.
+- Establish deterministic fixture ownership before the E2E CI gate (`TEST-GATE-001` remains separate).
 
 ### `tenant-row-lock-helper-consolidation-v1`
 
@@ -598,12 +599,10 @@ Security comes first. Within the same priority tier, dependency order and prereq
 
 - **Priority:** P1.
 - **Source:** `TEST-ARCH-001` / DEC-070.
-- **Status:** **CLOSED ON PUBLISHED MAIN** — durable technical closure anchor `da6cabf14377afcfa1fb1cb910f1db0c890eac57` (tree `7118b54350256617b0992cadc5f58d46f79891b8`). **Canonical closure record IN PROGRESS**; source cleanup **PENDING**.
+- **Status:** **CLOSED ON PUBLISHED MAIN** — final published-main baseline `2f803cab90e51dcd2df4bff07ca4426362f1c54f`. Durable technical closure anchor `da6cabf14377afcfa1fb1cb910f1db0c890eac57` (tree `7118b54350256617b0992cadc5f58d46f79891b8`; historical). **Administrative closure record COMPLETE.** Source cleanup **COMPLETE** (local and remote). Do **not** reopen.
 - Implementation `9e59712e738b841dd31028ff2c93119771ce49ee`; pre-correction source continuity `9135c0ea5527e62a9c434bfdb97c65bdaa1b81f7`; hosted-validated source / corrective anchor `768bac7dce35d7516606a7ac97eded224e49f3c1`.
-- Source published; corrective change `FF_NETWORK_PER_BUILD: "true"`; hosted corrective source validation **PASS** (pipeline `2806406774` / IID `378`; check + database-integration SUCCESS; 29/29 migrations; 4/4 real DB tests; SQLSTATE `55P03`; historical failed pipeline `2805285032` / IID `377` — `LEGACY_BRIDGE_SERVICE_CONNECTIVITY_FAILURE`).
-- Main publication **PASS**; hosted main pipeline `2806952669` / IID `379` (source `push`) **SUCCESS**; mandatory jobs `check` **16215678923** + `database-integration` **16215678924** **SUCCESS** (`allow_failure: false`); hosted check 216/216 files; 1843/1843 tests; 29/29 migrations; 4/4 real DB tests; SQLSTATE `55P03`; no Production/Supabase DB mutation.
-- Source branch `database-integration-test-harness-v1` @ `768bac7…` still **PRESENT** (GitLab `merged=true`); cleanup **PENDING**.
-- Remaining lifecycle: canonical closure reconciliation → closure-record review/commit → continuity → canonical validation → closure-record publication → hosted closure validation → source cleanup → continuity → Solution #6 readiness.
+- Source published; corrective change `FF_NETWORK_PER_BUILD: "true"`; hosted corrective source validation **PASS** (pipeline `2806406774` / IID `378`; check + database-integration SUCCESS; 29/29 migrations; 4/4 real DB tests; SQLSTATE `55P03`).
+- Main publication **PASS**; hosted main pipeline `2806952669` / IID `379` (source `push`) **SUCCESS**; mandatory jobs `check` **16215678923** + `database-integration` **16215678924` **SUCCESS** (`allow_failure: false`); 216/216 files; 1843/1843 tests; no Production/Supabase DB mutation.
 - Runbook: [database-integration-tests.md](../../driving_school_platform/nextjs_space/docs/ops/database-integration-tests.md).
 - Capability boundary: disposable `dat_it` uses PostgreSQL superuser bootstrap — valid for structural/transactional proofs; **not** application-role / RLS / least-privilege evidence.
 - Keep unit tests fast; do not convert the full suite to DB integration tests.
@@ -613,7 +612,7 @@ Security comes first. Within the same priority tier, dependency order and prereq
 
 These items are **deliberately queued** for future engineering excellence. They do **not** change the canonical Solution ordering, are **not** assigned Solution numbers, and are **not** required to close `TEST-ARCH-001` / Solution #5. Promote earlier only when a concrete dependency or trigger makes that technically justified (see queue rule below).
 
-**Queue rule:** canonical sequence remains Solution #5 lifecycle completion → Solution #6 `e2e-suite-contract-repair-v1` → existing ordered security/core-integrity Solutions. These hardening slices may move up only when justified — for example: RLS/grant proof need → `integration-application-role-profile-v1`; more child-process config dependencies → `integration-child-env-minimization-v1`; a third Prisma CLI consumer → `neutral-prisma-cli-execution-helper-v1`. Do **not** reorder Solutions #6+ because of these excellence items.
+**Queue rule:** canonical sequence remains Solution #5 (**CLOSED** — do not reopen) → Solution #6 `e2e-suite-contract-repair-v1` (**TECHNICALLY RESOLVED — SOURCE LIFECYCLE PENDING**; do **not** advance to Solution #7 until published-main closure) → existing ordered security/core-integrity Solutions. These hardening slices may move up only when justified — for example: RLS/grant proof need → `integration-application-role-profile-v1`; more child-process config dependencies → `integration-child-env-minimization-v1`; a third Prisma CLI consumer → `neutral-prisma-cli-execution-helper-v1`. Do **not** reorder Solutions #6+ because of these excellence items.
 
 #### `integration-child-env-minimization-v1`
 
@@ -964,8 +963,8 @@ remain independent.
 
 ### P1-A — Proof before risky change
 
-1. `database-integration-test-harness-v1` — **CLOSED ON PUBLISHED MAIN** (`da6cabf…` / tree `7118b543…`); hosted main pipeline `2806952669` / IID `379` **SUCCESS**; canonical closure record **IN PROGRESS**; source cleanup **PENDING**
-2. `e2e-suite-contract-repair-v1` — **NOT STARTED**; blocked until Solution #5 closure-record lifecycle and source cleanup complete
+1. `database-integration-test-harness-v1` — **CLOSED ON PUBLISHED MAIN** — final baseline `2f803ca…`; source cleanup **COMPLETE**; do **not** reopen
+2. `e2e-suite-contract-repair-v1` — **TECHNICALLY RESOLVED IN LOCAL SOURCE WORKTREE** / final EQR **PASS** / canonical **PASS** / disposable local browser E2E **2/2 PASS** / **BRANCH UNPUBLISHED** / **MAIN NOT YET UPDATED** — source lifecycle pending
 
 These are confidence multipliers for subsequent security, billing, integrity and
 migration work.
