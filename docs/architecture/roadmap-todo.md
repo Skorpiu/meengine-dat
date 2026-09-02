@@ -10,7 +10,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| Solution #6 `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` — source lifecycle (commit → publish → integrate → published-main closure) | **P2** | **TECHNICALLY RESOLVED IN LOCAL SOURCE WORKTREE** — final EQR **PASS**; canonical **PASS**; disposable local browser E2E **2/2 PASS**; disposable infra **PASS**; worktree hygiene runtime **PASS**; **BRANCH UNPUBLISHED** / **MAIN NOT YET UPDATED**; `TEST-HYGIENE-001` **TECHNICALLY RESOLVED — SOURCE LIFECYCLE PENDING** (not **CLOSED ON MAIN**). Next gate: **ARCHITECT_SOLUTION6_POST_COMMIT_VALIDATION_GO_NO_GO**. |
+| Solution #7 `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` | **P0/P1** | **NOT STARTED** — immediate gate: **ARCHITECT_SOLUTION6_CLOSURE_PIPELINE_VALIDATION_AND_CLEANUP_GO_NO_GO** (closure-commit CI + source branch cleanup). Do **not** start until that gate passes. |
 
 <!-- dat-46-solution-ledger-v1 -->
 ## DAT_4.6 Solution ledger
@@ -22,9 +22,10 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | #3 | `local-development-database-isolation-v1` / `CONFIG-ENV-001` | **CLOSED ON PUBLISHED MAIN** / cleanup complete |
 | #4 | `migration-deploy-target-safety-gate-v1` / `DB-MIGRATION-001` | **CLOSED ON PUBLISHED MAIN** / cleanup complete |
 | #5 | `database-integration-test-harness-v1` / `TEST-ARCH-001` | **CLOSED ON PUBLISHED MAIN** — final baseline `2f803ca…`; source cleanup **COMPLETE**; do **not** reopen |
-| #6 | `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` | **TECHNICALLY RESOLVED IN LOCAL SOURCE WORKTREE** / final EQR **PASS** / canonical **PASS** / disposable local browser E2E **2/2 PASS** / hygiene runtime **PASS** / **BRANCH UNPUBLISHED** / **MAIN NOT YET UPDATED** — `TEST-HYGIENE-001` **TECHNICALLY RESOLVED — SOURCE LIFECYCLE PENDING** |
+| #6 | `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` | **CLOSED ON PUBLISHED MAIN** — implementation `c9bd18e…`; hosted main pipeline `2812557887` / IID **382** **SUCCESS**; `TEST-HYGIENE-001` **CLOSED**; source branch **RETAINED** (cleanup pending closure-commit CI) |
+| #7 | `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` | **NOT STARTED** |
 
-DAT_4.6 conversation/context remains healthy after Solution #5 closure and Solution #6 branch kickoff. No handoff to DAT_4.7 is currently required.
+DAT_4.6 conversation/context remains healthy after Solution #6 closure. No handoff to DAT_4.7 is currently required.
 
 **Closed context:** `engineering-excellence-audit-v1` closed 2026-08-13 by explicit human GO (51 findings / 51/51 coverage; no repository-static frontier). Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` is **CLOSED BY CONTAINMENT** and integrated into `main`. Solution #2 / `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN** at `0409d92525940be751e6bc07c9da32668a834e53`. Solution #3 / `CONFIG-ENV-001` **CLOSED ON PUBLISHED MAIN** at `14c3865372502f074941a1fc81a55b5ec7f1b589` (DEC-068; historical Solution #3 merge, not current live `main`). `gitlab-ci-database-isolation-v1` **CLOSED ON PUBLISHED MAIN** at integration `594484998da5893b349bea4d2de1ac7447d37de6` (implementation `9c88e3942876d65ae1290819151022cf600aefa5`; closure-doc publication `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`; final hosted main pipeline **#2780314232** SUCCESS; canonical job `check` **#16037631071** SUCCESS; `allow_failure: false`; source branch cleanup **COMPLETE**, local and remote). Solution #4 / `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1` is **CLOSED ON PUBLISHED MAIN** (DEC-069; published-main validation anchor `4c74d6a714e68492dbcf535ca0527f01131eba66`; source-branch cleanup **COMPLETE**). DEC-068 unchanged (no `CI` / `GITLAB_CI` remote-DB escape). No DB or migration was performed as part of CI isolation. `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
@@ -513,7 +514,7 @@ Security comes first. Within the same priority tier, dependency order and prereq
 
 - **Priority:** P2.
 - **Source:** `TEST-HYGIENE-001`.
-- **Status:** **TECHNICALLY RESOLVED IN LOCAL SOURCE WORKTREE** — final EQR **PASS**; canonical **PASS**; disposable local browser E2E **2/2 PASS**; disposable infra **PASS**; worktree hygiene runtime **PASS**; teardown **PASS**; **BRANCH UNPUBLISHED** / **MAIN NOT YET UPDATED**; `TEST-HYGIENE-001` **TECHNICALLY RESOLVED — SOURCE LIFECYCLE PENDING** (not **CLOSED ON MAIN**). Next gate: **ARCHITECT_SOLUTION6_POST_COMMIT_VALIDATION_GO_NO_GO**.
+- **Status:** **CLOSED ON PUBLISHED MAIN** — implementation `c9bd18e016fd599567aefd3efe3ec2d472fe7744`; local exact-SHA canonical validation **PASS**; disposable browser E2E **2/2 PASS**; hosted main pipeline `2812557887` / IID **382** **SUCCESS**; jobs `check` **16252583317** + `database-integration` **16252583318** **SUCCESS**; `TEST-HYGIENE-001` **CLOSED**. Playwright local suite owns disposable deterministic browser fixtures; Production Smoke remains separate; `TEST-GATE-001` remains separate. Source branch **RETAINED** — cleanup pending closure-commit CI.
 - Remove external Playwright scaffold and repair THEORY_EXAM operational Student-id semantics.
 - Establish deterministic fixture ownership before the E2E CI gate (`TEST-GATE-001` remains separate).
 
@@ -612,7 +613,7 @@ Security comes first. Within the same priority tier, dependency order and prereq
 
 These items are **deliberately queued** for future engineering excellence. They do **not** change the canonical Solution ordering, are **not** assigned Solution numbers, and are **not** required to close `TEST-ARCH-001` / Solution #5. Promote earlier only when a concrete dependency or trigger makes that technically justified (see queue rule below).
 
-**Queue rule:** canonical sequence remains Solution #5 (**CLOSED** — do not reopen) → Solution #6 `e2e-suite-contract-repair-v1` (**TECHNICALLY RESOLVED — SOURCE LIFECYCLE PENDING**; do **not** advance to Solution #7 until published-main closure) → existing ordered security/core-integrity Solutions. These hardening slices may move up only when justified — for example: RLS/grant proof need → `integration-application-role-profile-v1`; more child-process config dependencies → `integration-child-env-minimization-v1`; a third Prisma CLI consumer → `neutral-prisma-cli-execution-helper-v1`. Do **not** reorder Solutions #6+ because of these excellence items.
+**Queue rule:** canonical sequence remains Solution #5 (**CLOSED** — do not reopen) → Solution #6 `e2e-suite-contract-repair-v1` (**CLOSED ON PUBLISHED MAIN** — do not reopen) → Solution #7 `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` (**NOT STARTED**; do **not** start until closure-commit CI + source branch cleanup gate passes) → existing ordered security/core-integrity Solutions. These hardening slices may move up only when justified — for example: RLS/grant proof need → `integration-application-role-profile-v1`; more child-process config dependencies → `integration-child-env-minimization-v1`; a third Prisma CLI consumer → `neutral-prisma-cli-execution-helper-v1`. Do **not** reorder Solutions #6+ because of these excellence items.
 
 #### `integration-child-env-minimization-v1`
 
@@ -758,7 +759,7 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 | `API-ERROR-001` | `api-500-error-sanitization-v1` |
 | `UI-FEEDBACK-001` | `notification-stack-consolidation-v1` |
 | `TEST-CONTRACT-001` | `smoke-effective-entitlements-alignment-v1` |
-| `TEST-HYGIENE-001` | `e2e-suite-contract-repair-v1` |
+| `TEST-HYGIENE-001` | `e2e-suite-contract-repair-v1` (**CLOSED** — Solution #6 **CLOSED ON PUBLISHED MAIN**; implementation `c9bd18e…`; hosted main pipeline `2812557887` / IID **382** SUCCESS) |
 | `DB-DUP-001` | `tenant-row-lock-helper-consolidation-v1` |
 | `CLIENT-DUP-001` | `client-http-response-helper-v1` |
 | `UI-DUP-002` | `import-workflow-consolidation-v1` |
@@ -964,7 +965,7 @@ remain independent.
 ### P1-A — Proof before risky change
 
 1. `database-integration-test-harness-v1` — **CLOSED ON PUBLISHED MAIN** — final baseline `2f803ca…`; source cleanup **COMPLETE**; do **not** reopen
-2. `e2e-suite-contract-repair-v1` — **TECHNICALLY RESOLVED IN LOCAL SOURCE WORKTREE** / final EQR **PASS** / canonical **PASS** / disposable local browser E2E **2/2 PASS** / **BRANCH UNPUBLISHED** / **MAIN NOT YET UPDATED** — source lifecycle pending
+2. `e2e-suite-contract-repair-v1` — **CLOSED ON PUBLISHED MAIN** — implementation `c9bd18e…`; hosted main pipeline `2812557887` / IID **382** **SUCCESS**; `TEST-HYGIENE-001` **CLOSED**
 
 These are confidence multipliers for subsequent security, billing, integrity and
 migration work.

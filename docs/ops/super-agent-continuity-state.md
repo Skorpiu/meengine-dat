@@ -3,11 +3,11 @@
 
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
-**Continuity sync:** `CONTINUITY_SYNC_STATUS=CURRENT` (Solution #6 final EQR **PASS**; technical closure **PASS**; local Playwright **2/2 PASS**; disposable infra **PASS**; canonical check **PASS**; teardown **PASS**; worktree hygiene runtime **PASS**; **BRANCH UNPUBLISHED** / **MAIN NOT YET UPDATED**).
+**Continuity sync:** `CONTINUITY_SYNC_STATUS=CURRENT` (Solution #6 **CLOSED ON PUBLISHED MAIN**; `TEST-HYGIENE-001` **CLOSED**; hosted main pipeline `2812557887` / IID **382** **SUCCESS**; source branch **RETAINED** — cleanup pending closure-commit CI).
 
-**Live recovery snapshot:** Solution #5 `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070 — **CLOSED ON PUBLISHED MAIN**. Final published-main baseline `2f803cab90e51dcd2df4bff07ca4426362f1c54f`; local and `origin/main` aligned. Durable technical closure anchor `da6cabf14377afcfa1fb1cb910f1db0c890eac57` (tree `7118b54350256617b0992cadc5f58d46f79891b8`; historical). Implementation `9e59712e738b841dd31028ff2c93119771ce49ee`; hosted-validated source `768bac7dce35d7516606a7ac97eded224e49f3c1`. Hosted main pipeline `2806952669` / IID `379` **SUCCESS**; jobs `check` **16215678923** + `database-integration` **16215678924** **SUCCESS**; 216/216 files; 1843/1843 tests; 29/29 migrations; 4/4 real DB tests; SQLSTATE `55P03`; no Production/Supabase DB mutation. **Administrative closure record COMPLETE.** Source branch cleanup **COMPLETE** (local and remote). Do **not** reopen Solution #5.
+**Live recovery snapshot:** Solution #5 `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070 — **CLOSED ON PUBLISHED MAIN**. Final published-main baseline `2f803cab90e51dcd2df4bff07ca4426362f1c54f` (historical — superseded by Solution #6 implementation on `main`). Durable technical closure anchor `da6cabf14377afcfa1fb1cb910f1db0c890eac57` (historical). Source branch cleanup **COMPLETE** (local and remote). Do **not** reopen Solution #5.
 
-Solution #6 `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` — **TECHNICALLY RESOLVED IN LOCAL SOURCE WORKTREE** / FINAL EQR **PASS** / CANONICAL VALIDATION **PASS** / DISPOSABLE RUNTIME INFRA **PASS** / LOCAL BROWSER E2E **2/2 PASS** / WORKTREE HYGIENE RUNTIME **PASS** / TEARDOWN **PASS** / **BRANCH UNPUBLISHED** / **MAIN NOT YET UPDATED**. Branch `e2e-suite-contract-repair-v1` on local source branch; approved Solution #6 implementation present. Accepted architect evidence: disposable DB `127.0.0.1:55433/dat_e2e`; compose project `dat-e2e`; 29/29 migrations; app `http://127.0.0.1:13000`; no Production/Supabase/remote DB contact; THEORY_EXAM SUPER_ADMIN session + POST `/api/admin/lessons` 201; vehicles navigation-generated `/api/admin/vehicles` requests 0 + explicit probe 403; product behavior/auth/schema/migrations unchanged. `TEST-HYGIENE-001` **TECHNICALLY RESOLVED — SOURCE LIFECYCLE PENDING** (not **CLOSED ON MAIN**). Next gate: **ARCHITECT_SOLUTION6_POST_COMMIT_VALIDATION_GO_NO_GO**. Do **not** advance to Solution #7. `TEST-GATE-001` remains queued separately.
+Solution #6 `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` — **CLOSED ON PUBLISHED MAIN**. Implementation `c9bd18e016fd599567aefd3efe3ec2d472fe7744`; local exact-SHA canonical validation **PASS**; disposable browser E2E **2/2 PASS**; hosted main pipeline `2812557887` / IID **382** **SUCCESS**; jobs `check` **16252583317** + `database-integration` **16252583318** **SUCCESS** (`allow_failure: false`). `TEST-HYGIENE-001` **CLOSED**. Playwright local suite owns disposable deterministic browser fixtures; Production Smoke remains separate; `TEST-GATE-001` remains separate. Source branch `e2e-suite-contract-repair-v1` **RETAINED** at `c9bd18e…` (local and remote) — cleanup pending closure-commit CI. Next gate: **ARCHITECT_SOLUTION6_CLOSURE_PIPELINE_VALIDATION_AND_CLEANUP_GO_NO_GO**. Solution #7 `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` — **NOT STARTED**.
 `UNAUTHORIZED_DIAGNOSTIC_MUTATION=ACKNOWLEDGED` — process/governance
 deviation only; one ephemeral `docker run --rm alpine …` diagnostic
 during read-only runner investigation; no repository/product/DB
@@ -224,12 +224,12 @@ explicitly marked live here.
   COMPLETE.** Source branch cleanup **COMPLETE** (local and remote). Do
   **not** reopen Solution #5.
 - Solution #6 / `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` —
-  **TECHNICALLY RESOLVED IN LOCAL SOURCE WORKTREE** / final EQR **PASS** /
-  canonical **PASS** / disposable local browser E2E **2/2 PASS** / worktree
-  hygiene runtime **PASS** / **BRANCH UNPUBLISHED** /
-  **MAIN NOT YET UPDATED**. `TEST-HYGIENE-001` **TECHNICALLY RESOLVED — SOURCE
-  LIFECYCLE PENDING** (not **CLOSED ON MAIN**). Next gate:
-  **ARCHITECT_SOLUTION6_POST_COMMIT_VALIDATION_GO_NO_GO**.
+  **CLOSED ON PUBLISHED MAIN**. Implementation `c9bd18e…`; hosted main
+  pipeline `2812557887` / IID **382** **SUCCESS**; `TEST-HYGIENE-001`
+  **CLOSED**. Source branch **RETAINED** — cleanup pending closure-commit CI.
+  Next gate: **ARCHITECT_SOLUTION6_CLOSURE_PIPELINE_VALIDATION_AND_CLEANUP_GO_NO_GO**.
+- Solution #7 / `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` —
+  **NOT STARTED**.
 - `UNAUTHORIZED_DIAGNOSTIC_MUTATION=ACKNOWLEDGED` — process/governance
   deviation only; ephemeral `docker run --rm alpine …` diagnostic during
   read-only runner investigation; no repository/product/DB mutation;
