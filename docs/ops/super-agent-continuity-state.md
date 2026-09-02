@@ -3,11 +3,11 @@
 
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
-**Continuity sync:** `CONTINUITY_SYNC_STATUS=CURRENT` (Solution #6 **CLOSED ON PUBLISHED MAIN**; `TEST-HYGIENE-001` **CLOSED**; hosted main pipeline `2812557887` / IID **382** **SUCCESS**; source branch **RETAINED** — cleanup pending closure-commit CI).
+**Continuity sync:** `CONTINUITY_SYNC_STATUS=CURRENT` (Solution #6 **CLOSED AND CLEANED UP**; source branch **ABSENT** local + remote; final published-main closure baseline `4ad75eb428bf090b7d9e3079184e7bca0b5d1af7`. Solution #7 `billing-projection-atomic-idempotency-v1` **IMPLEMENTED + VALIDATED IN LOCAL SOURCE WORKTREE** / **SOURCE LIFECYCLE PENDING** / **BRANCH UNPUBLISHED** / **MAIN NOT YET UPDATED**. Next gate: **ARCHITECT_SOLUTION7_POST_COMMIT_VALIDATION_GO_NO_GO**).
 
 **Live recovery snapshot:** Solution #5 `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070 — **CLOSED ON PUBLISHED MAIN**. Final published-main baseline `2f803cab90e51dcd2df4bff07ca4426362f1c54f` (historical — superseded by Solution #6 implementation on `main`). Durable technical closure anchor `da6cabf14377afcfa1fb1cb910f1db0c890eac57` (historical). Source branch cleanup **COMPLETE** (local and remote). Do **not** reopen Solution #5.
 
-Solution #6 `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` — **CLOSED ON PUBLISHED MAIN**. Implementation `c9bd18e016fd599567aefd3efe3ec2d472fe7744`; local exact-SHA canonical validation **PASS**; disposable browser E2E **2/2 PASS**; hosted main pipeline `2812557887` / IID **382** **SUCCESS**; jobs `check` **16252583317** + `database-integration` **16252583318** **SUCCESS** (`allow_failure: false`). `TEST-HYGIENE-001` **CLOSED**. Playwright local suite owns disposable deterministic browser fixtures; Production Smoke remains separate; `TEST-GATE-001` remains separate. Source branch `e2e-suite-contract-repair-v1` **RETAINED** at `c9bd18e…` (local and remote) — cleanup pending closure-commit CI. Next gate: **ARCHITECT_SOLUTION6_CLOSURE_PIPELINE_VALIDATION_AND_CLEANUP_GO_NO_GO**. Solution #7 `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` — **NOT STARTED**.
+Solution #6 `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` — **CLOSED AND CLEANED UP**. Implementation `c9bd18e016fd599567aefd3efe3ec2d472fe7744`; local exact-SHA canonical validation **PASS**; disposable browser E2E **2/2 PASS**; hosted main pipeline `2812557887` / IID **382** **SUCCESS**; jobs `check` **16252583317** + `database-integration` **16252583318** **SUCCESS** (`allow_failure: false`). `TEST-HYGIENE-001` **CLOSED**. Playwright local suite owns disposable deterministic browser fixtures; Production Smoke remains separate; `TEST-GATE-001` remains separate. Source branch **ABSENT** local + remote. Final published-main closure baseline `4ad75eb428bf090b7d9e3079184e7bca0b5d1af7`. Solution #7 `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` — **IMPLEMENTED + VALIDATED IN LOCAL SOURCE WORKTREE** / **SOURCE LIFECYCLE PENDING** / **BRANCH UNPUBLISHED** / **MAIN NOT YET UPDATED**. Base `4ad75eb428bf090b7d9e3079184e7bca0b5d1af7`. Next gate: **ARCHITECT_SOLUTION7_POST_COMMIT_VALIDATION_GO_NO_GO**.
 `UNAUTHORIZED_DIAGNOSTIC_MUTATION=ACKNOWLEDGED` — process/governance
 deviation only; one ephemeral `docker run --rm alpine …` diagnostic
 during read-only runner investigation; no repository/product/DB
@@ -224,12 +224,17 @@ explicitly marked live here.
   COMPLETE.** Source branch cleanup **COMPLETE** (local and remote). Do
   **not** reopen Solution #5.
 - Solution #6 / `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` —
-  **CLOSED ON PUBLISHED MAIN**. Implementation `c9bd18e…`; hosted main
+  **CLOSED AND CLEANED UP**. Implementation `c9bd18e…`; hosted main
   pipeline `2812557887` / IID **382** **SUCCESS**; `TEST-HYGIENE-001`
-  **CLOSED**. Source branch **RETAINED** — cleanup pending closure-commit CI.
-  Next gate: **ARCHITECT_SOLUTION6_CLOSURE_PIPELINE_VALIDATION_AND_CLEANUP_GO_NO_GO**.
+  **CLOSED**. Source branch **ABSENT** local + remote. Final
+  published-main closure baseline
+  `4ad75eb428bf090b7d9e3079184e7bca0b5d1af7`.
 - Solution #7 / `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` —
-  **NOT STARTED**.
+  **IMPLEMENTED + VALIDATED IN LOCAL SOURCE WORKTREE** /
+  **SOURCE LIFECYCLE PENDING** / **BRANCH UNPUBLISHED** /
+  **MAIN NOT YET UPDATED**. Base
+  `4ad75eb428bf090b7d9e3079184e7bca0b5d1af7`. Next gate:
+  **ARCHITECT_SOLUTION7_POST_COMMIT_VALIDATION_GO_NO_GO**.
 - `UNAUTHORIZED_DIAGNOSTIC_MUTATION=ACKNOWLEDGED` — process/governance
   deviation only; ephemeral `docker run --rm alpine …` diagnostic during
   read-only runner investigation; no repository/product/DB mutation;

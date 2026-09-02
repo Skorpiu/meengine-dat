@@ -1,17 +1,29 @@
+import type { Prisma } from "@prisma/client";
+import { SubscriptionStatus } from "@prisma/client";
 import type { BillingProjection } from "./types";
+import type { BillingSubscriptionStatus } from "./types";
 import {
   parseBillingEventPayloadV1,
   projectBillingEventPayloadV1,
   type BillingPayloadParseError,
 } from "./payload-v1";
-import { db } from "@/lib/db";
 import { subscriptionTierFromBillingPlanKey } from "./prisma-bridge";
-import { SubscriptionStatus } from "@prisma/client";
-import type { BillingSubscriptionStatus } from "./types";
 
 export type BillingProcessResult =
   | { ok: true; projection: BillingProjection }
   | { ok: false; error: BillingPayloadParseError };
+
+/**
+ * Transaction-scoped writer for commercial billing projection.
+ * Callers must pass the interactive-transaction client, never a parallel singleton.
+ */
+export type BillingProjectionWriteClient = {
+  organization: Pick<Prisma.TransactionClient["organization"], "update">;
+  entitlementGrant: Pick<
+    Prisma.TransactionClient["entitlementGrant"],
+    "createMany" | "updateMany"
+  >;
+};
 
 /**
  * Minimal processor: take a persisted BillingEvent.payload and produce a projection.
@@ -50,14 +62,17 @@ function toSubscriptionStatus(
   }
 }
 
-export async function applyBillingProjectionForOrganization(input: {
-  organizationId: string;
-  occurredAt: Date;
-  projection: BillingProjection;
-}): Promise<void> {
+export async function applyBillingProjectionForOrganization(
+  tx: BillingProjectionWriteClient,
+  input: {
+    organizationId: string;
+    occurredAt: Date;
+    projection: BillingProjection;
+  },
+): Promise<void> {
   const patch = input.projection.subscriptionPatch;
   if (patch) {
-    await db.organization.update({
+    await tx.organization.update({
       where: { id: input.organizationId },
       data: {
         subscriptionTier: patch.planKey
@@ -77,7 +92,7 @@ export async function applyBillingProjectionForOrganization(input: {
   const disableKeys =
     input.projection.entitlementsDelta?.disableFeatureKeys ?? [];
   if (disableKeys.length > 0) {
-    await db.entitlementGrant.updateMany({
+    await tx.entitlementGrant.updateMany({
       where: {
         organizationId: input.organizationId,
         source: "BILLING",
@@ -100,7 +115,7 @@ export async function applyBillingProjectionForOrganization(input: {
 
   if (!shouldGrant) return;
 
-  await db.entitlementGrant.createMany({
+  await tx.entitlementGrant.createMany({
     data: enableKeys.map((featureKey) => ({
       organizationId: input.organizationId,
       featureKey,

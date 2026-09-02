@@ -28,8 +28,12 @@ export {
   recordBillingEvent,
   recordBillingEventWithOutcome,
   markBillingEventFailed,
+  markBillingEventFailedIfProcessable,
   markBillingEventProcessed,
+  lockBillingEventRowForUpdate,
+  toBillingProcessingFailureJson,
   type RecordBillingEventInput,
+  type BillingProcessingFailureJson,
 } from "./event-store";
 
 export {
@@ -50,7 +54,9 @@ export {
 
 export {
   processPersistedBillingEventPayload,
+  applyBillingProjectionForOrganization,
   type BillingProcessResult,
+  type BillingProjectionWriteClient,
 } from "./processor";
 
 export {

@@ -4,16 +4,24 @@ const h = vi.hoisted(() => {
   const createMock = vi.fn();
   const findUniqueMock = vi.fn();
   const updateMock = vi.fn();
+  const updateManyMock = vi.fn();
 
   const prismaMock = {
     billingEvent: {
       create: createMock,
       findUnique: findUniqueMock,
       update: updateMock,
+      updateMany: updateManyMock,
     },
   };
 
-  return { prismaMock, createMock, findUniqueMock, updateMock };
+  return {
+    prismaMock,
+    createMock,
+    findUniqueMock,
+    updateMock,
+    updateManyMock,
+  };
 });
 
 vi.mock("@/lib/db", () => ({
@@ -24,7 +32,10 @@ import {
   recordBillingEvent,
   getBillingEventByProviderEventId,
   markBillingEventFailed,
+  markBillingEventFailedIfProcessable,
   markBillingEventProcessed,
+  lockBillingEventRowForUpdate,
+  toBillingProcessingFailureJson,
 } from "./event-store";
 
 describe("billing event store (idempotent foundation)", () => {
@@ -116,5 +127,77 @@ describe("billing event store (idempotent foundation)", () => {
         processingResult: { error: "boom", retryable: false },
       },
     });
+  });
+
+  it("locks a billing_events row with FOR UPDATE through the transaction client", async () => {
+    const queryRaw = vi.fn().mockResolvedValue([{ id: "e1" }]);
+
+    await lockBillingEventRowForUpdate({ $queryRaw: queryRaw }, "e1");
+
+    expect(queryRaw).toHaveBeenCalledTimes(1);
+  });
+
+  it("serializes unknown apply errors into JSON-safe failure records", () => {
+    const fromError = toBillingProcessingFailureJson(
+      "apply",
+      new Error("db exploded"),
+    );
+    expect(fromError).toEqual({
+      stage: "apply",
+      code: "APPLY_FAILED",
+      message: "db exploded",
+    });
+
+    const fromObject = toBillingProcessingFailureJson("apply", {
+      code: "P2003",
+      message: "FK failed",
+    });
+    expect(fromObject).toEqual({
+      stage: "apply",
+      code: "P2003",
+      message: "FK failed",
+    });
+  });
+
+  it("conditionally marks FAILED only for processable statuses", async () => {
+    h.updateManyMock.mockResolvedValue({ count: 1 });
+
+    const res = await markBillingEventFailedIfProcessable("e3", {
+      stage: "apply",
+      code: "APPLY_FAILED",
+      message: "rolled back",
+    });
+
+    expect(res).toEqual({ outcome: "updated", status: "FAILED" });
+    expect(h.updateManyMock).toHaveBeenCalledWith({
+      where: {
+        id: "e3",
+        status: { in: ["RECEIVED", "FAILED"] },
+      },
+      data: {
+        status: "FAILED",
+        processedAt: expect.any(Date),
+        processingResult: {
+          stage: "apply",
+          code: "APPLY_FAILED",
+          message: "rolled back",
+        },
+      },
+    });
+    expect(h.updateMock).not.toHaveBeenCalled();
+  });
+
+  it("does not overwrite PROCESSED when conditional FAILED matches zero rows", async () => {
+    h.updateManyMock.mockResolvedValue({ count: 0 });
+    h.findUniqueMock.mockResolvedValue({ status: "PROCESSED" });
+
+    const res = await markBillingEventFailedIfProcessable("e4", {
+      stage: "apply",
+      code: "APPLY_FAILED",
+      message: "stale failure",
+    });
+
+    expect(res).toEqual({ outcome: "already_processed", status: "PROCESSED" });
+    expect(h.updateMock).not.toHaveBeenCalled();
   });
 });

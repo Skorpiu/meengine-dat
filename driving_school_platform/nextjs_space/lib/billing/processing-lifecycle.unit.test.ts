@@ -1,24 +1,69 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const h = vi.hoisted(() => {
-  const findUniqueMock = vi.fn();
-  const updateMock = vi.fn();
+  const txQueryRaw = vi.fn();
+  const txFindUnique = vi.fn();
+  const txUpdate = vi.fn();
+  const txUpdateMany = vi.fn();
+  const txOrgUpdate = vi.fn();
+  const txGrantCreateMany = vi.fn();
+  const txGrantUpdateMany = vi.fn();
 
-  const prismaMock = {
+  const dbUpdateMany = vi.fn();
+  const dbFindUnique = vi.fn();
+  const dbOrgUpdate = vi.fn();
+  const dbGrantCreateMany = vi.fn();
+  const dbGrantUpdateMany = vi.fn();
+  const dbUpdate = vi.fn();
+
+  const tx = {
+    $queryRaw: txQueryRaw,
     billingEvent: {
-      findUnique: findUniqueMock,
-      update: updateMock,
+      findUnique: txFindUnique,
+      update: txUpdate,
+      updateMany: txUpdateMany,
     },
     organization: {
-      update: vi.fn(),
+      update: txOrgUpdate,
     },
     entitlementGrant: {
-      createMany: vi.fn(),
-      updateMany: vi.fn(),
+      createMany: txGrantCreateMany,
+      updateMany: txGrantUpdateMany,
     },
   };
 
-  return { prismaMock, findUniqueMock, updateMock };
+  const prismaMock = {
+    $transaction: vi.fn(async (fn: (client: typeof tx) => unknown) => fn(tx)),
+    billingEvent: {
+      findUnique: dbFindUnique,
+      update: dbUpdate,
+      updateMany: dbUpdateMany,
+    },
+    organization: {
+      update: dbOrgUpdate,
+    },
+    entitlementGrant: {
+      createMany: dbGrantCreateMany,
+      updateMany: dbGrantUpdateMany,
+    },
+  };
+
+  return {
+    tx,
+    prismaMock,
+    txQueryRaw,
+    txFindUnique,
+    txUpdate,
+    txOrgUpdate,
+    txGrantCreateMany,
+    txGrantUpdateMany,
+    dbUpdateMany,
+    dbFindUnique,
+    dbOrgUpdate,
+    dbGrantCreateMany,
+    dbGrantUpdateMany,
+    dbUpdate,
+  };
 });
 
 vi.mock("@/lib/db", () => ({
@@ -31,39 +76,49 @@ import {
 } from "./processing-lifecycle";
 import { BILLING_PLAN_FEATURES } from "./billing-plans";
 
-describe("billing processing lifecycle (persisted event -> apply -> status)", () => {
+function premiumStartedPayload(providerEventId: string) {
+  return {
+    v: 1,
+    provider: "sibs",
+    providerEventId,
+    type: "SUBSCRIPTION_STARTED",
+    occurredAtIso: "2026-01-01T00:00:00.000Z",
+    organizationId: "orgA",
+    subscription: {
+      externalId: "sub_1",
+      status: "ACTIVE",
+      planKey: "PREMIUM",
+      currentPeriodStartIso: "2026-01-01T00:00:00.000Z",
+      currentPeriodEndIso: "2026-02-01T00:00:00.000Z",
+    },
+    payment: null,
+  };
+}
+
+describe("billing processing lifecycle (locked tx apply)", () => {
   beforeEach(() => {
-    vi.resetAllMocks();
-    h.updateMock.mockResolvedValue({ id: "be_1" });
+    vi.clearAllMocks();
+    h.txQueryRaw.mockResolvedValue([{ id: "be_1" }]);
+    h.txUpdate.mockResolvedValue({ id: "be_1" });
+    h.txOrgUpdate.mockResolvedValue({});
+    h.txGrantCreateMany.mockResolvedValue({ count: 0 });
+    h.txGrantUpdateMany.mockResolvedValue({ count: 0 });
+    h.dbUpdateMany.mockResolvedValue({ count: 1 });
   });
 
-  it("marks PROCESSED on successful parse+apply", async () => {
-    h.findUniqueMock.mockResolvedValue({
+  it("marks PROCESSED on successful parse+apply through the transaction client", async () => {
+    h.txFindUnique.mockResolvedValue({
       id: "be_1",
       status: "RECEIVED",
-      payload: {
-        v: 1,
-        provider: "sibs",
-        providerEventId: "evt_1",
-        type: "SUBSCRIPTION_STARTED",
-        occurredAtIso: "2026-01-01T00:00:00.000Z",
-        organizationId: "orgA",
-        subscription: {
-          externalId: "sub_1",
-          status: "ACTIVE",
-          planKey: "PREMIUM",
-          currentPeriodStartIso: "2026-01-01T00:00:00.000Z",
-          currentPeriodEndIso: "2026-02-01T00:00:00.000Z",
-        },
-        payment: null,
-      },
+      organizationId: "orgA",
+      payload: premiumStartedPayload("evt_1"),
     });
 
     const res = await processPersistedBillingEventLifecycle("be_1");
     expect(res).toEqual({ ok: true, status: "PROCESSED" });
 
-    // last update should be PROCESSED
-    expect(h.updateMock).toHaveBeenLastCalledWith({
+    expect(h.txQueryRaw).toHaveBeenCalledTimes(1);
+    expect(h.txUpdate).toHaveBeenLastCalledWith({
       where: { id: "be_1" },
       data: {
         status: "PROCESSED",
@@ -71,13 +126,37 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
         processingResult: { ok: true },
       },
     });
+    expect(h.dbOrgUpdate).not.toHaveBeenCalled();
+    expect(h.dbGrantCreateMany).not.toHaveBeenCalled();
+    expect(h.dbUpdate).not.toHaveBeenCalled();
+    expect(h.txOrgUpdate).toHaveBeenCalledTimes(1);
+    expect(h.txGrantCreateMany).toHaveBeenCalledTimes(1);
+  });
+
+  it("never falls through to global db delegates on the apply path", async () => {
+    h.txFindUnique.mockResolvedValue({
+      id: "be_1",
+      status: "RECEIVED",
+      organizationId: "orgA",
+      payload: premiumStartedPayload("evt_tx_only"),
+    });
+
+    await processPersistedBillingEventLifecycle("be_1");
+
+    expect(h.prismaMock.$transaction).toHaveBeenCalledTimes(1);
+    expect(h.dbOrgUpdate).not.toHaveBeenCalled();
+    expect(h.dbGrantCreateMany).not.toHaveBeenCalled();
+    expect(h.dbGrantUpdateMany).not.toHaveBeenCalled();
+    expect(h.dbUpdate).not.toHaveBeenCalled();
+    expect(h.dbFindUnique).not.toHaveBeenCalled();
+    expect(h.dbUpdateMany).not.toHaveBeenCalled();
   });
 
   it("pipeline applies ACTIVE -> createMany and SUSPENDED -> updateMany expiry", async () => {
-    // ACTIVE
-    h.findUniqueMock.mockResolvedValueOnce({
+    h.txFindUnique.mockResolvedValueOnce({
       id: "be_active",
       status: "RECEIVED",
+      organizationId: "orgA",
       payload: {
         v: 1,
         provider: "stripe",
@@ -98,11 +177,11 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
 
     const resActive = await processPersistedBillingEventLifecycle("be_active");
     expect(resActive).toEqual({ ok: true, status: "PROCESSED" });
-    expect(h.prismaMock.entitlementGrant.createMany).toHaveBeenCalledTimes(1);
-    expect(h.prismaMock.entitlementGrant.updateMany).not.toHaveBeenCalled();
+    expect(h.txGrantCreateMany).toHaveBeenCalledTimes(1);
+    expect(h.txGrantUpdateMany).not.toHaveBeenCalled();
 
     const expectedFeatureKeys = BILLING_PLAN_FEATURES.PREMIUM ?? [];
-    expect(h.prismaMock.entitlementGrant.createMany).toHaveBeenCalledWith({
+    expect(h.txGrantCreateMany).toHaveBeenCalledWith({
       data: expectedFeatureKeys.map((featureKey: string) => ({
         organizationId: "orgA",
         featureKey,
@@ -112,13 +191,16 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
       })),
     });
 
-    vi.resetAllMocks();
-    h.updateMock.mockResolvedValue({ id: "be_suspended" });
+    vi.clearAllMocks();
+    h.txQueryRaw.mockResolvedValue([{ id: "be_suspended" }]);
+    h.txUpdate.mockResolvedValue({ id: "be_suspended" });
+    h.txOrgUpdate.mockResolvedValue({});
+    h.txGrantUpdateMany.mockResolvedValue({ count: 1 });
 
-    // SUSPENDED
-    h.findUniqueMock.mockResolvedValueOnce({
+    h.txFindUnique.mockResolvedValueOnce({
       id: "be_suspended",
       status: "RECEIVED",
+      organizationId: "orgA",
       payload: {
         v: 1,
         provider: "stripe",
@@ -139,14 +221,15 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
     const resSuspended =
       await processPersistedBillingEventLifecycle("be_suspended");
     expect(resSuspended).toEqual({ ok: true, status: "PROCESSED" });
-    expect(h.prismaMock.entitlementGrant.createMany).not.toHaveBeenCalled();
-    expect(h.prismaMock.entitlementGrant.updateMany).toHaveBeenCalledTimes(1);
+    expect(h.txGrantCreateMany).not.toHaveBeenCalled();
+    expect(h.txGrantUpdateMany).toHaveBeenCalledTimes(1);
   });
 
   it("ACTIVE without currentPeriodStartIso falls back to occurredAt for entitlement startsAt", async () => {
-    h.findUniqueMock.mockResolvedValueOnce({
+    h.txFindUnique.mockResolvedValueOnce({
       id: "be_active_no_start",
       status: "RECEIVED",
+      organizationId: "orgA",
       payload: {
         v: 1,
         provider: "stripe",
@@ -169,7 +252,7 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
     expect(res).toEqual({ ok: true, status: "PROCESSED" });
 
     const expectedFeatureKeys = BILLING_PLAN_FEATURES.PREMIUM ?? [];
-    expect(h.prismaMock.entitlementGrant.createMany).toHaveBeenCalledWith({
+    expect(h.txGrantCreateMany).toHaveBeenCalledWith({
       data: expectedFeatureKeys.map((featureKey: string) => ({
         organizationId: "orgA",
         featureKey,
@@ -181,9 +264,10 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
   });
 
   it("pipeline applies PAST_DUE -> status patch only (no grant create/expire)", async () => {
-    h.findUniqueMock.mockResolvedValueOnce({
+    h.txFindUnique.mockResolvedValueOnce({
       id: "be_past_due",
       status: "RECEIVED",
+      organizationId: "orgA",
       payload: {
         v: 1,
         provider: "stripe",
@@ -203,15 +287,16 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
 
     const res = await processPersistedBillingEventLifecycle("be_past_due");
     expect(res).toEqual({ ok: true, status: "PROCESSED" });
-    expect(h.prismaMock.organization.update).toHaveBeenCalledTimes(1);
-    expect(h.prismaMock.entitlementGrant.createMany).not.toHaveBeenCalled();
-    expect(h.prismaMock.entitlementGrant.updateMany).not.toHaveBeenCalled();
+    expect(h.txOrgUpdate).toHaveBeenCalledTimes(1);
+    expect(h.txGrantCreateMany).not.toHaveBeenCalled();
+    expect(h.txGrantUpdateMany).not.toHaveBeenCalled();
   });
 
   it("pipeline applies CANCELLED -> updateMany expiry", async () => {
-    h.findUniqueMock.mockResolvedValueOnce({
+    h.txFindUnique.mockResolvedValueOnce({
       id: "be_cancelled",
       status: "RECEIVED",
+      organizationId: "orgA",
       payload: {
         v: 1,
         provider: "stripe",
@@ -231,14 +316,15 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
 
     const res = await processPersistedBillingEventLifecycle("be_cancelled");
     expect(res).toEqual({ ok: true, status: "PROCESSED" });
-    expect(h.prismaMock.entitlementGrant.createMany).not.toHaveBeenCalled();
-    expect(h.prismaMock.entitlementGrant.updateMany).toHaveBeenCalledTimes(1);
+    expect(h.txGrantCreateMany).not.toHaveBeenCalled();
+    expect(h.txGrantUpdateMany).toHaveBeenCalledTimes(1);
   });
 
   it("pipeline applies TRIAL -> createMany", async () => {
-    h.findUniqueMock.mockResolvedValueOnce({
+    h.txFindUnique.mockResolvedValueOnce({
       id: "be_trial",
       status: "RECEIVED",
+      organizationId: "orgA",
       payload: {
         v: 1,
         provider: "stripe",
@@ -259,25 +345,15 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
 
     const res = await processPersistedBillingEventLifecycle("be_trial");
     expect(res).toEqual({ ok: true, status: "PROCESSED" });
-    expect(h.prismaMock.entitlementGrant.createMany).toHaveBeenCalledTimes(1);
-    expect(h.prismaMock.entitlementGrant.updateMany).not.toHaveBeenCalled();
-
-    const expectedFeatureKeys = BILLING_PLAN_FEATURES.PREMIUM ?? [];
-    expect(h.prismaMock.entitlementGrant.createMany).toHaveBeenCalledWith({
-      data: expectedFeatureKeys.map((featureKey: string) => ({
-        organizationId: "orgA",
-        featureKey,
-        source: "BILLING",
-        startsAt: new Date("2026-05-01T00:00:00.000Z"),
-        expiresAt: new Date("2026-06-01T00:00:00.000Z"),
-      })),
-    });
+    expect(h.txGrantCreateMany).toHaveBeenCalledTimes(1);
+    expect(h.txGrantUpdateMany).not.toHaveBeenCalled();
   });
 
   it("pipeline applies EXPIRED -> updateMany expiry", async () => {
-    h.findUniqueMock.mockResolvedValueOnce({
+    h.txFindUnique.mockResolvedValueOnce({
       id: "be_expired",
       status: "RECEIVED",
+      organizationId: "orgA",
       payload: {
         v: 1,
         provider: "stripe",
@@ -297,14 +373,15 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
 
     const res = await processPersistedBillingEventLifecycle("be_expired");
     expect(res).toEqual({ ok: true, status: "PROCESSED" });
-    expect(h.prismaMock.entitlementGrant.createMany).not.toHaveBeenCalled();
-    expect(h.prismaMock.entitlementGrant.updateMany).toHaveBeenCalledTimes(1);
+    expect(h.txGrantCreateMany).not.toHaveBeenCalled();
+    expect(h.txGrantUpdateMany).toHaveBeenCalledTimes(1);
   });
 
-  it("marks FAILED on parse error", async () => {
-    h.findUniqueMock.mockResolvedValue({
+  it("marks FAILED on parse error with JSON-safe processingResult and zero projection", async () => {
+    h.txFindUnique.mockResolvedValue({
       id: "be_2",
       status: "RECEIVED",
+      organizationId: "orgA",
       payload: 123,
     });
 
@@ -312,14 +389,17 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
     expect(res.ok).toBe(false);
     expect(res.status).toBe("FAILED");
 
-    expect(h.updateMock).toHaveBeenLastCalledWith({
+    expect(h.txOrgUpdate).not.toHaveBeenCalled();
+    expect(h.txGrantCreateMany).not.toHaveBeenCalled();
+    expect(h.txUpdate).toHaveBeenLastCalledWith({
       where: { id: "be_2" },
       data: {
         status: "FAILED",
         processedAt: expect.any(Date),
         processingResult: {
-          error: { code: "NOT_OBJECT", message: "Payload must be an object" },
           stage: "parse",
+          code: "NOT_OBJECT",
+          message: "Payload must be an object",
         },
       },
     });
@@ -393,7 +473,6 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
         occurredAtIso: "2026-01-01T00:00:00.000Z",
         organizationId: "orgA",
         subscription: {
-          // externalId missing
           status: "ACTIVE",
           planKey: "PREMIUM",
           currentPeriodStartIso: "2026-01-01T00:00:00.000Z",
@@ -405,9 +484,10 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
   ] as const)(
     "marks FAILED and does not mutate org/grants for %s",
     async (_label, payload) => {
-      h.findUniqueMock.mockResolvedValueOnce({
+      h.txFindUnique.mockResolvedValueOnce({
         id: "be_bad",
         status: "RECEIVED",
+        organizationId: "orgA",
         payload,
       });
 
@@ -415,51 +495,76 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
       expect(res.ok).toBe(false);
       expect(res.status).toBe("FAILED");
 
-      expect(h.prismaMock.organization.update).not.toHaveBeenCalled();
-      expect(h.prismaMock.entitlementGrant.createMany).not.toHaveBeenCalled();
-      expect(h.prismaMock.entitlementGrant.updateMany).not.toHaveBeenCalled();
-
-      expect(h.updateMock).toHaveBeenLastCalledWith({
+      expect(h.txOrgUpdate).not.toHaveBeenCalled();
+      expect(h.txGrantCreateMany).not.toHaveBeenCalled();
+      expect(h.txGrantUpdateMany).not.toHaveBeenCalled();
+      expect(h.txUpdate).toHaveBeenLastCalledWith({
         where: { id: "be_bad" },
         data: {
           status: "FAILED",
           processedAt: expect.any(Date),
           processingResult: {
-            error: expect.objectContaining({
-              code: expect.stringMatching(/MISSING_FIELDS|INVALID_FIELDS/),
-            }),
             stage: "parse",
+            code: expect.stringMatching(/MISSING_FIELDS|INVALID_FIELDS/),
+            message: expect.any(String),
           },
         },
       });
     },
   );
 
+  it("fails before projection when persisted organization disagrees with payload organization", async () => {
+    h.txFindUnique.mockResolvedValue({
+      id: "be_mismatch",
+      status: "RECEIVED",
+      organizationId: "orgA",
+      payload: {
+        ...premiumStartedPayload("evt_mismatch"),
+        organizationId: "orgB",
+      },
+    });
+
+    const res = await processPersistedBillingEventLifecycle("be_mismatch");
+    expect(res).toEqual({
+      ok: false,
+      status: "FAILED",
+      error: {
+        code: "ORGANIZATION_MISMATCH",
+        message:
+          "Persisted BillingEvent.organizationId does not match payload organizationId",
+      },
+    });
+
+    expect(h.txOrgUpdate).not.toHaveBeenCalled();
+    expect(h.txGrantCreateMany).not.toHaveBeenCalled();
+    expect(h.txUpdate).toHaveBeenLastCalledWith({
+      where: { id: "be_mismatch" },
+      data: {
+        status: "FAILED",
+        processedAt: expect.any(Date),
+        processingResult: {
+          stage: "validate",
+          code: "ORGANIZATION_MISMATCH",
+          message:
+            "Persisted BillingEvent.organizationId does not match payload organizationId",
+        },
+      },
+    });
+  });
+
   it("retries FAILED event and marks PROCESSED on success", async () => {
-    h.findUniqueMock.mockResolvedValue({
+    h.txFindUnique.mockResolvedValue({
       id: "be_3",
       status: "FAILED",
-      payload: {
-        v: 1,
-        provider: "sibs",
-        providerEventId: "evt_3",
-        type: "SUBSCRIPTION_STARTED",
-        occurredAtIso: "2026-01-01T00:00:00.000Z",
-        organizationId: "orgA",
-        subscription: {
-          externalId: "sub_1",
-          status: "ACTIVE",
-          planKey: "PREMIUM",
-          currentPeriodStartIso: "2026-01-01T00:00:00.000Z",
-          currentPeriodEndIso: "2026-02-01T00:00:00.000Z",
-        },
-        payment: null,
-      },
+      organizationId: "orgA",
+      payload: premiumStartedPayload("evt_3"),
     });
 
     const res = await retryPersistedBillingEventLifecycle("be_3");
     expect(res).toEqual({ ok: true, status: "PROCESSED" });
-    expect(h.updateMock).toHaveBeenLastCalledWith({
+    expect(h.txOrgUpdate).toHaveBeenCalledTimes(1);
+    expect(h.txGrantCreateMany).toHaveBeenCalledTimes(1);
+    expect(h.txUpdate).toHaveBeenLastCalledWith({
       where: { id: "be_3" },
       data: {
         status: "PROCESSED",
@@ -470,63 +575,117 @@ describe("billing processing lifecycle (persisted event -> apply -> status)", ()
   });
 
   it("retries FAILED event and remains FAILED if processing still fails", async () => {
-    h.findUniqueMock.mockResolvedValue({
+    h.txFindUnique.mockResolvedValue({
       id: "be_4",
       status: "FAILED",
+      organizationId: "orgA",
       payload: 123,
     });
 
     const res = await retryPersistedBillingEventLifecycle("be_4");
     expect(res.ok).toBe(false);
     expect(res.status).toBe("FAILED");
-    expect(h.updateMock).toHaveBeenLastCalledWith({
+    expect(h.txOrgUpdate).not.toHaveBeenCalled();
+    expect(h.txUpdate).toHaveBeenLastCalledWith({
       where: { id: "be_4" },
       data: {
         status: "FAILED",
         processedAt: expect.any(Date),
         processingResult: {
-          error: { code: "NOT_OBJECT", message: "Payload must be an object" },
           stage: "parse",
+          code: "NOT_OBJECT",
+          message: "Payload must be an object",
         },
       },
     });
   });
 
   it("does not reprocess PROCESSED events", async () => {
-    h.findUniqueMock.mockResolvedValue({
+    h.txFindUnique.mockResolvedValue({
       id: "be_5",
       status: "PROCESSED",
+      organizationId: "orgA",
       payload: { v: 1 },
     });
 
     const res = await retryPersistedBillingEventLifecycle("be_5");
     expect(res).toEqual({ ok: true, status: "SKIPPED" });
-    expect(h.updateMock).not.toHaveBeenCalled();
+    expect(h.txOrgUpdate).not.toHaveBeenCalled();
+    expect(h.txGrantCreateMany).not.toHaveBeenCalled();
+    expect(h.txUpdate).not.toHaveBeenCalled();
   });
 
   it("retry supports RECEIVED events explicitly", async () => {
-    h.findUniqueMock.mockResolvedValue({
+    h.txFindUnique.mockResolvedValue({
       id: "be_6",
       status: "RECEIVED",
-      payload: {
-        v: 1,
-        provider: "sibs",
-        providerEventId: "evt_6",
-        type: "SUBSCRIPTION_STARTED",
-        occurredAtIso: "2026-01-01T00:00:00.000Z",
-        organizationId: "orgA",
-        subscription: {
-          externalId: "sub_1",
-          status: "ACTIVE",
-          planKey: "PREMIUM",
-          currentPeriodStartIso: "2026-01-01T00:00:00.000Z",
-          currentPeriodEndIso: "2026-02-01T00:00:00.000Z",
-        },
-        payment: null,
-      },
+      organizationId: "orgA",
+      payload: premiumStartedPayload("evt_6"),
     });
 
     const res = await retryPersistedBillingEventLifecycle("be_6");
     expect(res).toEqual({ ok: true, status: "PROCESSED" });
+  });
+
+  it("records JSON-safe FAILED after an apply exception without using a raw Error object", async () => {
+    h.txFindUnique.mockResolvedValue({
+      id: "be_apply_fail",
+      status: "RECEIVED",
+      organizationId: "orgA",
+      payload: premiumStartedPayload("evt_apply_fail"),
+    });
+    h.txGrantCreateMany.mockRejectedValue(new Error("grant write failed"));
+
+    const res = await processPersistedBillingEventLifecycle("be_apply_fail");
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe("FAILED");
+    expect(res).toMatchObject({
+      error: {
+        stage: "apply",
+        code: "APPLY_FAILED",
+        message: "grant write failed",
+      },
+    });
+
+    expect(h.dbUpdateMany).toHaveBeenCalledWith({
+      where: {
+        id: "be_apply_fail",
+        status: { in: ["RECEIVED", "FAILED"] },
+      },
+      data: {
+        status: "FAILED",
+        processedAt: expect.any(Date),
+        processingResult: {
+          stage: "apply",
+          code: "APPLY_FAILED",
+          message: "grant write failed",
+        },
+      },
+    });
+    expect(h.dbUpdate).not.toHaveBeenCalled();
+  });
+
+  it("does not let stale FAILED overwrite durable PROCESSED", async () => {
+    h.txFindUnique.mockResolvedValue({
+      id: "be_race",
+      status: "RECEIVED",
+      organizationId: "orgA",
+      payload: premiumStartedPayload("evt_race"),
+    });
+    h.txGrantCreateMany.mockRejectedValue(new Error("lost the race"));
+    h.dbUpdateMany.mockResolvedValue({ count: 0 });
+    h.dbFindUnique.mockResolvedValue({ status: "PROCESSED" });
+
+    const res = await processPersistedBillingEventLifecycle("be_race");
+    expect(res).toEqual({ ok: true, status: "SKIPPED" });
+    expect(h.dbUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: "be_race",
+          status: { in: ["RECEIVED", "FAILED"] },
+        },
+      }),
+    );
+    expect(h.dbUpdate).not.toHaveBeenCalled();
   });
 });

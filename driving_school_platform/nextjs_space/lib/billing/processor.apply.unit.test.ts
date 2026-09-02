@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { applyBillingProjectionForOrganization } from "./processor";
 
-const h = vi.hoisted(() => {
+describe("billing processor apply (subscription -> org patch + entitlement grants)", () => {
   const orgUpdateMock = vi.fn();
   const grantCreateManyMock = vi.fn();
   const grantUpdateManyMock = vi.fn();
 
-  const prismaMock = {
+  const tx = {
     organization: {
       update: orgUpdateMock,
     },
@@ -15,27 +16,11 @@ const h = vi.hoisted(() => {
     },
   };
 
-  return {
-    prismaMock,
-    orgUpdateMock,
-    grantCreateManyMock,
-    grantUpdateManyMock,
-  };
-});
-
-vi.mock("@/lib/db", () => ({
-  db: h.prismaMock,
-}));
-
-// import after mocks
-import { applyBillingProjectionForOrganization } from "./processor";
-
-describe("billing processor apply (subscription -> org patch + entitlement grants)", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    h.orgUpdateMock.mockResolvedValue({});
-    h.grantCreateManyMock.mockResolvedValue({ count: 0 });
-    h.grantUpdateManyMock.mockResolvedValue({ count: 0 });
+    orgUpdateMock.mockResolvedValue({});
+    grantCreateManyMock.mockResolvedValue({ count: 0 });
+    grantUpdateManyMock.mockResolvedValue({ count: 0 });
   });
 
   it("updates subscription fields and creates BILLING EntitlementGrant rows for plan features", async () => {
@@ -43,7 +28,7 @@ describe("billing processor apply (subscription -> org patch + entitlement grant
     const periodStart = new Date("2026-04-01T00:00:00.000Z");
     const periodEnd = new Date("2026-06-01T00:00:00.000Z");
 
-    await applyBillingProjectionForOrganization({
+    await applyBillingProjectionForOrganization(tx, {
       organizationId: "orgA",
       occurredAt,
       projection: {
@@ -60,7 +45,7 @@ describe("billing processor apply (subscription -> org patch + entitlement grant
       },
     });
 
-    expect(h.orgUpdateMock).toHaveBeenCalledWith({
+    expect(orgUpdateMock).toHaveBeenCalledWith({
       where: { id: "orgA" },
       data: {
         subscriptionTier: "PREMIUM",
@@ -69,7 +54,7 @@ describe("billing processor apply (subscription -> org patch + entitlement grant
       },
     });
 
-    expect(h.grantCreateManyMock).toHaveBeenCalledWith({
+    expect(grantCreateManyMock).toHaveBeenCalledWith({
       data: [
         {
           organizationId: "orgA",
@@ -87,14 +72,14 @@ describe("billing processor apply (subscription -> org patch + entitlement grant
         },
       ],
     });
-    expect(h.grantUpdateManyMock).not.toHaveBeenCalled();
+    expect(grantUpdateManyMock).not.toHaveBeenCalled();
   });
 
   it("falls back to occurredAt when currentPeriodStart is missing", async () => {
     const occurredAt = new Date("2026-05-01T00:00:00.000Z");
     const periodEnd = new Date("2026-06-01T00:00:00.000Z");
 
-    await applyBillingProjectionForOrganization({
+    await applyBillingProjectionForOrganization(tx, {
       organizationId: "orgA",
       occurredAt,
       projection: {
@@ -110,7 +95,7 @@ describe("billing processor apply (subscription -> org patch + entitlement grant
       },
     });
 
-    expect(h.grantCreateManyMock).toHaveBeenCalledWith({
+    expect(grantCreateManyMock).toHaveBeenCalledWith({
       data: [
         {
           organizationId: "orgA",
@@ -121,13 +106,13 @@ describe("billing processor apply (subscription -> org patch + entitlement grant
         },
       ],
     });
-    expect(h.grantUpdateManyMock).not.toHaveBeenCalled();
+    expect(grantUpdateManyMock).not.toHaveBeenCalled();
   });
 
   it("expires active BILLING grants for terminal subscription events (CANCELLED)", async () => {
     const occurredAt = new Date("2026-05-01T00:00:00.000Z");
 
-    await applyBillingProjectionForOrganization({
+    await applyBillingProjectionForOrganization(tx, {
       organizationId: "orgA",
       occurredAt,
       projection: {
@@ -143,9 +128,9 @@ describe("billing processor apply (subscription -> org patch + entitlement grant
       },
     });
 
-    expect(h.orgUpdateMock).toHaveBeenCalledTimes(1);
-    expect(h.grantCreateManyMock).not.toHaveBeenCalled();
-    expect(h.grantUpdateManyMock).toHaveBeenCalledWith({
+    expect(orgUpdateMock).toHaveBeenCalledTimes(1);
+    expect(grantCreateManyMock).not.toHaveBeenCalled();
+    expect(grantUpdateManyMock).toHaveBeenCalledWith({
       where: {
         organizationId: "orgA",
         source: "BILLING",
@@ -160,7 +145,7 @@ describe("billing processor apply (subscription -> org patch + entitlement grant
   it("does not expire grants when disableFeatureKeys is empty", async () => {
     const occurredAt = new Date("2026-05-01T00:00:00.000Z");
 
-    await applyBillingProjectionForOrganization({
+    await applyBillingProjectionForOrganization(tx, {
       organizationId: "orgA",
       occurredAt,
       projection: {
@@ -176,6 +161,6 @@ describe("billing processor apply (subscription -> org patch + entitlement grant
       },
     });
 
-    expect(h.grantUpdateManyMock).not.toHaveBeenCalled();
+    expect(grantUpdateManyMock).not.toHaveBeenCalled();
   });
 });
