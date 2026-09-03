@@ -19,11 +19,11 @@ describe("committed Prisma migration discovery", () => {
       resolveDefaultPrismaMigrationsDir(appRoot),
     );
 
-    expect(names).toHaveLength(29);
+    expect(names).toHaveLength(30);
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
     expect(names[0]).toBe("20251111214609_init_supabase");
     expect(names[names.length - 1]).toBe(
-      "20260714160000_platform_commercial_catalog_schema_foundation_v1",
+      "20260903120000_add_user_auth_session_version",
     );
     expect(new Set(names).size).toBe(names.length);
   });

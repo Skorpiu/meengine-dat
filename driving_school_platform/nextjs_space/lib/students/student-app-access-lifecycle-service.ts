@@ -144,6 +144,7 @@ async function invalidateLinkedUserAccess(
     where: { id: userId },
     data: {
       isApproved: false,
+      authSessionVersion: { increment: 1 },
       passwordResetToken: null,
       passwordResetExpiresAt: null,
       emailVerificationToken: null,

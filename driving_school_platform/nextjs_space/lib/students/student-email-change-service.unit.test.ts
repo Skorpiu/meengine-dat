@@ -291,6 +291,7 @@ describe("changeStudentEmail", () => {
         data: expect.objectContaining({
           email: "new@school.test",
           isEmailVerified: true,
+          authSessionVersion: { increment: 1 },
         }),
       }),
     );

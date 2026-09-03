@@ -10,7 +10,7 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 
 | Slice | Priority | Status |
 | ----- | -------- | ------ |
-| `jwt-session-revocation-v1` / `AUTH-SESSION-001` | **P0/P1** | **ACTIVE** — Solution #8 intake + architecture accepted; implementation **not** yet authorized. Baseline `b639325b0fc1435d65ab87045b32b19d6b8e5a04`. Architecture `USER_SESSION_VERSION_EPOCH`. Framework authority NextAuth **4.24.15**. Solution #7 **CLOSED AND CLEANED UP**. Queued after #8 unchanged: `LICENSING-002`, `LICENSING-001`, `AUTH-RATE-001`, `TEST-GATE-001`. |
+| `jwt-session-revocation-v1` / `AUTH-SESSION-001` | **P0/P1** | **ACTIVE** — Solution #8 **IMPLEMENTED LOCALLY** / **LOCAL EQR PASS** / commit + source publication pending. Architecture `USER_SESSION_VERSION_EPOCH`. Field `authSessionVersion`. Migration created locally / not applied remotely. Real PostgreSQL proof PASS. Canonical `pnpm check` PASS. Queued after #8 unchanged: `LICENSING-002`, `LICENSING-001`, `AUTH-RATE-001`, `TEST-GATE-001`. |
 
 <!-- dat-46-solution-ledger-v1 -->
 ## DAT_4.6 Solution ledger
@@ -24,9 +24,9 @@ Prioritized backlog for DAT. **P0** is safety; feature work starts at **P1** unl
 | #5 | `database-integration-test-harness-v1` / `TEST-ARCH-001` | **CLOSED ON PUBLISHED MAIN** — final baseline `2f803ca…`; source cleanup **COMPLETE**; do **not** reopen |
 | #6 | `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` | **CLOSED AND CLEANED UP** — implementation `c9bd18e…`; hosted main pipeline `2812557887` / IID **382** **SUCCESS**; `TEST-HYGIENE-001` **CLOSED**; source branch **ABSENT** local + remote; final published-main closure baseline `4ad75eb428bf090b7d9e3079184e7bca0b5d1af7` |
 | #7 | `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` | **CLOSED AND CLEANED UP**. Finding `BILLING-SEC-002` **CLOSED**. Implementation `8d575aa166bc906e389c5f093343b45906933f34`. Closure anchor `b639325b0fc1435d65ab87045b32b19d6b8e5a04`. Closure pipeline `2813866658` / IID **386** **SUCCESS**. Source branch **ABSENT** local + remote |
-| #8 | `jwt-session-revocation-v1` / `AUTH-SESSION-001` | **ACTIVE** / **INTAKE ACCEPTED** / **ARCHITECTURE ACCEPTED** / **IMPLEMENTATION NOT YET AUTHORIZED**. Baseline `b639325b0fc1435d65ab87045b32b19d6b8e5a04`. Architecture `USER_SESSION_VERSION_EPOCH`. Framework authority NextAuth **4.24.15**. Expected additive `authSessionVersion` schema/migration **NOT YET CREATED**. Remote migration must precede main code integration that reads the column. Local branch present; remote **ABSENT** |
+| #8 | `jwt-session-revocation-v1` / `AUTH-SESSION-001` | **ACTIVE** / **IMPLEMENTED LOCALLY** / **LOCAL EQR PASS** / **COMMIT + SOURCE PUBLICATION PENDING**. Architecture `USER_SESSION_VERSION_EPOCH`. Framework authority NextAuth **4.24.15**. Migration `20260903120000_add_user_auth_session_version` created locally / not applied remotely. Real PostgreSQL DEC-070 proof PASS. Canonical `pnpm check` PASS. Remote migration and main integration **NOT AUTHORIZED**. Finding remediation **NOT YET PUBLISHED** / **NOT CLOSED** |
 
-DAT_4.6 conversation/context remains healthy. Solution #8 is the current active work. No handoff to DAT_4.7 is currently required. Do not begin LICENSING while Solution #8 is active.
+DAT_4.6 conversation/context remains healthy. Solution #8 is the current active work (implementation EQR review pending). No handoff to DAT_4.7 is currently required. Do not begin LICENSING while Solution #8 is active.
 
 **Closed context:** `engineering-excellence-audit-v1` closed 2026-08-13 by explicit human GO (51 findings / 51/51 coverage; no repository-static frontier). Solution #1 / `BILLING-SEC-001` / `billing-webhook-authenticity-gate-v1` is **CLOSED BY CONTAINMENT** and integrated into `main`. Solution #2 / `DEP-SEC-001` **CLOSED ON PUBLISHED MAIN** at `0409d92525940be751e6bc07c9da32668a834e53`. Solution #3 / `CONFIG-ENV-001` **CLOSED ON PUBLISHED MAIN** at `14c3865372502f074941a1fc81a55b5ec7f1b589` (DEC-068; historical Solution #3 merge, not current live `main`). `gitlab-ci-database-isolation-v1` **CLOSED ON PUBLISHED MAIN** at integration `594484998da5893b349bea4d2de1ac7447d37de6` (implementation `9c88e3942876d65ae1290819151022cf600aefa5`; closure-doc publication `14b07dfc2ece5100dfee9b5f1c56f9ee0ab09ebe`; final hosted main pipeline **#2780314232** SUCCESS; canonical job `check` **#16037631071** SUCCESS; `allow_failure: false`; source branch cleanup **COMPLETE**, local and remote). Solution #4 / `DB-MIGRATION-001` / `migration-deploy-target-safety-gate-v1` is **CLOSED ON PUBLISHED MAIN** (DEC-069; published-main validation anchor `4c74d6a714e68492dbcf535ca0527f01131eba66`; source-branch cleanup **COMPLETE**). DEC-068 unchanged (no `CI` / `GITLAB_CI` remote-DB escape). No DB or migration was performed as part of CI isolation. `node-24-runtime-migration-v1` closed 2026-08-04 at merge `909b69a`: Node 24.18.0 local compatibility, repository/CI pins, GitLab `node:24`, Vercel Preview, Project Setting 24.x, Production deployment and post-deploy non-destructive hosted gates passed. The earlier full mutation smoke evidence remains valid; mutation smoke was not repeated for this runtime/config-only change. Fixtures (DEC-064), invite-link repair and the earlier hosted verification remain **closed** — do not re-apply without new evidence + human authorization. Runbook: [production-smoke-e2e.md](../../driving_school_platform/nextjs_space/docs/ops/production-smoke-e2e.md).
 
@@ -468,12 +468,12 @@ Security comes first. Within the same priority tier, dependency order and prereq
 
 - **Priority:** P0/P1.
 - **Source:** `AUTH-SESSION-001`.
-- **Status:** **ACTIVE** — Solution #8 / intake accepted / architecture accepted / implementation **not** yet authorized.
-- **Baseline:** `b639325b0fc1435d65ab87045b32b19d6b8e5a04`.
+- **Status:** **ACTIVE** — Solution #8 / **IMPLEMENTED LOCALLY** / **LOCAL EQR PASS** / commit + source publication pending. Finding `AUTH-SESSION-001` remediation implemented locally — **NOT YET PUBLISHED** / **NOT CLOSED**.
+- **Baseline activation SHA:** `a47493ddac65dc74c102f9f52a2b38d38ad24b3e` (remote source HEAD unchanged until implementation commit).
 - **Architecture:** `USER_SESSION_VERSION_EPOCH` — authoritative `User.authSessionVersion` (default 0) matched to JWT claim `authSessionVersion`; legacy missing claim treated as 0; fail closed on mismatch / missing user / DB verification error.
 - **Framework authority:** NextAuth **4.24.15**.
-- **Expected schema/migration:** additive `authSessionVersion` / required / **NOT YET CREATED**. Remote additive migration must precede serving code that depends on the column.
-- Replace DB-Session deletion as the revocation primitive for JWT sessions with the version contract above.
+- **Migration:** `20260903120000_add_user_auth_session_version` **CREATED LOCALLY** / **NOT APPLIED REMOTELY**. Remote additive migration must precede serving code that depends on the column.
+- **Proof:** focused unit PASS; real PostgreSQL DEC-070 PASS; canonical `pnpm check` PASS.
 - Cover access removal, deactivation, email change and password reset (same-transaction increments).
 
 ### `auth-email-link-trusted-origin-v1`
@@ -620,7 +620,7 @@ Security comes first. Within the same priority tier, dependency order and prereq
 
 These items are **deliberately queued** for future engineering excellence. They do **not** change the canonical Solution ordering, are **not** assigned Solution numbers, and are **not** required to close `TEST-ARCH-001` / Solution #5. Promote earlier only when a concrete dependency or trigger makes that technically justified (see queue rule below).
 
-**Queue rule:** canonical sequence remains Solution #5 (**CLOSED** — do not reopen) → Solution #6 `e2e-suite-contract-repair-v1` (**CLOSED AND CLEANED UP**) → Solution #7 `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` (**CLOSED AND CLEANED UP**; implementation `8d575aa…`; closure anchor `b639325…`; closure pipeline `2813866658` / IID **386** SUCCESS; source **ABSENT** local + remote) → Solution #8 `jwt-session-revocation-v1` / `AUTH-SESSION-001` (**ACTIVE** / intake + architecture accepted / implementation pending). These hardening slices may move up only when justified — for example: RLS/grant proof need → `integration-application-role-profile-v1`; more child-process config dependencies → `integration-child-env-minimization-v1`; a third Prisma CLI consumer → `neutral-prisma-cli-execution-helper-v1`. Do **not** reorder later findings because of these excellence items.
+**Queue rule:** canonical sequence remains Solution #5 (**CLOSED** — do not reopen) → Solution #6 `e2e-suite-contract-repair-v1` (**CLOSED AND CLEANED UP**) → Solution #7 `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` (**CLOSED AND CLEANED UP**; implementation `8d575aa…`; closure anchor `b639325…`; closure pipeline `2813866658` / IID **386** SUCCESS; source **ABSENT** local + remote) → Solution #8 `jwt-session-revocation-v1` / `AUTH-SESSION-001` (**ACTIVE** / **IMPLEMENTED LOCALLY** / **LOCAL EQR PASS** / commit pending). These hardening slices may move up only when justified — for example: RLS/grant proof need → `integration-application-role-profile-v1`; more child-process config dependencies → `integration-child-env-minimization-v1`; a third Prisma CLI consumer → `neutral-prisma-cli-execution-helper-v1`. Do **not** reorder later findings because of these excellence items.
 
 #### `integration-child-env-minimization-v1`
 
@@ -759,7 +759,7 @@ This is the canonical finding-to-work mapping for the engineering audit. A findi
 | `SCHEMA-LEGACY-001` | `legacy-exam-model-disposition-v1` |
 | `TOOLCHAIN-002` | `toolchain-next-env-alignment-v1` |
 | `BILLING-SEC-002` | `billing-projection-atomic-idempotency-v1` (**CLOSED AND CLEANED UP** — Solution #7; implementation `8d575aa166bc906e389c5f093343b45906933f34`; closure anchor `b639325b0fc1435d65ab87045b32b19d6b8e5a04`; closure pipeline `2813866658` / IID **386** SUCCESS; source branch **ABSENT** local + remote) |
-| `AUTH-SESSION-001` | `jwt-session-revocation-v1` (Solution #8 — **ACTIVE** / intake + architecture accepted / implementation pending; baseline `b639325b0fc1435d65ab87045b32b19d6b8e5a04`; architecture `USER_SESSION_VERSION_EPOCH`; NextAuth **4.24.15**) |
+| `AUTH-SESSION-001` | `jwt-session-revocation-v1` (Solution #8 — **ACTIVE** / **IMPLEMENTED LOCALLY** / **LOCAL EQR PASS** / commit pending; architecture `USER_SESSION_VERSION_EPOCH`; NextAuth **4.24.15**; migration created locally / not applied remotely; finding **NOT CLOSED**) |
 | `AUTH-LINK-001` | `auth-email-link-trusted-origin-v1` |
 | `PLATFORM-ATOM-001` | `platform-onboarding-transaction-boundary-v1` |
 | `LICENSING-002` | `license-key-security-hardening-v1` |
@@ -982,7 +982,7 @@ migration work.
 Execute in smallest-safe slices, respecting prerequisites:
 
 - `billing-projection-atomic-idempotency-v1` — **CLOSED AND CLEANED UP** (Solution #7 / `BILLING-SEC-002`; implementation `8d575aa…`; closure anchor `b639325…`; closure pipeline `2813866658` / IID **386** SUCCESS; source **ABSENT** local + remote)
-- `jwt-session-revocation-v1` — **ACTIVE** (Solution #8 / `AUTH-SESSION-001`; intake + architecture accepted; implementation pending)
+- `jwt-session-revocation-v1` — **ACTIVE** (Solution #8 / `AUTH-SESSION-001`; **IMPLEMENTED LOCALLY** / **LOCAL EQR PASS** / commit pending)
 - `license-key-security-hardening-v1`
 - `provider-owned-entitlement-mutation-boundary-v1`
 - `nextauth-credentials-rate-limit-alignment-v1`

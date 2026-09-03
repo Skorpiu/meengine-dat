@@ -66,6 +66,7 @@ model User {
   emailVerificationToken     String?
   emailVerificationExpiresAt DateTime?
   isApproved                 Boolean                  @default(false)
+  authSessionVersion          Int                      @default(0)
   passwordResetToken         String?
   passwordResetExpiresAt     DateTime?
   createdAt                  DateTime                 @default(now())

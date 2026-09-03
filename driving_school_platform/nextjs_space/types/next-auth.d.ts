@@ -21,6 +21,8 @@ declare module "next-auth" {
     lastName: string | null;
     isApproved: boolean;
     organizationId: string | null;
+    /** Server-side JWT revocation epoch; not exposed on session.user. */
+    authSessionVersion: number;
   }
 }
 
@@ -31,5 +33,7 @@ declare module "next-auth/jwt" {
     lastName: string | null;
     isApproved: boolean;
     organizationId: string | null;
+    /** Server-side JWT revocation epoch claim. */
+    authSessionVersion?: number;
   }
 }

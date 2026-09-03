@@ -245,7 +245,10 @@ describe("confirmPasswordReset", () => {
     expect(h.bcryptHashMock).toHaveBeenCalledWith(validPassword, 12);
     expect(h.userUpdateMock).toHaveBeenCalledWith({
       where: { id: "u1" },
-      data: { passwordHash: "hashed-new-password" },
+      data: {
+        passwordHash: "hashed-new-password",
+        authSessionVersion: { increment: 1 },
+      },
     });
     expect(h.passwordResetUpdateManyMock).toHaveBeenCalledWith({
       where: {

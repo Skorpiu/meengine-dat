@@ -239,7 +239,10 @@ export async function confirmPasswordReset(
 
     await tx.user.update({
       where: { id: record.userId },
-      data: { passwordHash },
+      data: {
+        passwordHash,
+        authSessionVersion: { increment: 1 },
+      },
     });
 
     await tx.passwordResetToken.updateMany({

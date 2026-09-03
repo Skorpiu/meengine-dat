@@ -5,6 +5,7 @@ import { prisma } from "./db";
 import bcrypt from "bcryptjs";
 import { getRequestHost, resolveOrganizationIdFromHost } from "./tenant";
 import { getCredentialsLoginBlockReason } from "./auth/credentials-login-eligibility";
+import { assertJwtAuthSessionVersion } from "./auth/jwt-session-revocation";
 type GetRequestHostArg = Parameters<typeof getRequestHost>[0];
 
 export const authOptions: NextAuthOptions = {
@@ -85,6 +86,7 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           isApproved: user.isApproved,
           organizationId: user.organizationId ?? null,
+          authSessionVersion: user.authSessionVersion,
         };
       },
     }),
@@ -97,7 +99,23 @@ export const authOptions: NextAuthOptions = {
         token.lastName = user.lastName ?? null;
         token.isApproved = user.isApproved;
         token.organizationId = user.organizationId ?? null;
+        token.authSessionVersion = user.authSessionVersion;
+        return token;
       }
+
+      // Established JWT: verify User existence + session epoch (fail closed).
+      // Do not live-refresh role/org/isApproved claims here.
+      const currentVersion = await assertJwtAuthSessionVersion({
+        tokenSub: token.sub,
+        tokenAuthSessionVersion: token.authSessionVersion,
+        loadAuthority: (userId) =>
+          prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, authSessionVersion: true },
+          }),
+      });
+
+      token.authSessionVersion = currentVersion;
       return token;
     },
     async session({ session, token }) {

@@ -85,7 +85,10 @@ describe("deactivateInstructorRecord", () => {
     });
     expect(h.userUpdateMock).toHaveBeenCalledWith({
       where: { id: "user-1" },
-      data: { isApproved: false },
+      data: {
+        isApproved: false,
+        authSessionVersion: { increment: 1 },
+      },
     });
     expect(h.sessionDeleteManyMock).toHaveBeenCalledWith({
       where: { userId: "user-1" },

@@ -413,5 +413,11 @@ describe("changeInstructorEmail side effects", () => {
     );
     expect(userUpdateCalls).toHaveLength(1);
     expect(userUpdateCalls[0][0].data).not.toHaveProperty("isApproved");
+    expect(userUpdateCalls[0][0].data).toEqual(
+      expect.objectContaining({
+        email: "new@school.test",
+        authSessionVersion: { increment: 1 },
+      }),
+    );
   });
 });

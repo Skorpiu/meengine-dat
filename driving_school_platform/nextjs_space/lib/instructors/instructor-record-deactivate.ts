@@ -118,7 +118,10 @@ async function applyDeactivate(
 
   await tx.user.update({
     where: { id: row.userId },
-    data: { isApproved: false },
+    data: {
+      isApproved: false,
+      authSessionVersion: { increment: 1 },
+    },
   });
 
   await tx.session.deleteMany({ where: { userId: row.userId } });

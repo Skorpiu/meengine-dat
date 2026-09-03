@@ -377,6 +377,7 @@ export async function changeStudentEmail(input: {
             email: normalizedEmail,
             isEmailVerified: true,
             emailVerified: verifiedAt,
+            authSessionVersion: { increment: 1 },
           },
         });
 

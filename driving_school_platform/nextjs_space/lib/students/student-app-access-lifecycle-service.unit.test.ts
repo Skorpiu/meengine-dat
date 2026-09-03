@@ -173,7 +173,10 @@ describe("removeStudentAppAccess", () => {
     });
     expect(h.userUpdateMock).toHaveBeenCalledWith({
       where: { id: "user-1" },
-      data: expect.objectContaining({ isApproved: false }),
+      data: expect.objectContaining({
+        isApproved: false,
+        authSessionVersion: { increment: 1 },
+      }),
     });
   });
 
