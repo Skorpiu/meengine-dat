@@ -3,11 +3,11 @@
 
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
-**Continuity sync:** `CONTINUITY_SYNC_STATUS=CURRENT` (Solution #6 **CLOSED AND CLEANED UP**; source branch **ABSENT** local + remote; final published-main closure baseline `4ad75eb428bf090b7d9e3079184e7bca0b5d1af7`. Solution #7 `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` **PUBLISHED ON MAIN** / **HOSTED MAIN VALIDATION PASS** / **CLOSED**. Finding `BILLING-SEC-002` **CLOSED**. Durable implementation anchor `8d575aa166bc906e389c5f093343b45906933f34`. Hosted main pipeline `2813791386` / IID **385** **SUCCESS**; jobs `check` **16261884876** + `database-integration` **16261884877** **SUCCESS**. Source branch **retained** pending closure-commit hosted validation. Next recommended: `jwt-session-revocation-v1` / `AUTH-SESSION-001` — **NOT STARTED**).
+**Continuity sync:** `CONTINUITY_SYNC_STATUS=CURRENT` (Solution #6 **CLOSED AND CLEANED UP**; source branch **ABSENT** local + remote; final published-main closure baseline `4ad75eb428bf090b7d9e3079184e7bca0b5d1af7`. Solution #7 `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` **CLOSED AND CLEANED UP**. Finding `BILLING-SEC-002` **CLOSED**. Durable implementation anchor `8d575aa166bc906e389c5f093343b45906933f34`. Closure anchor `b639325b0fc1435d65ab87045b32b19d6b8e5a04`. Closure pipeline `2813866658` / IID **386** **SUCCESS**. Source branch **ABSENT** local + remote. Solution #8 / `jwt-session-revocation-v1` / `AUTH-SESSION-001` — **ACTIVE** / **INTAKE ACCEPTED** / **ARCHITECTURE ACCEPTED** / **IMPLEMENTATION NOT YET AUTHORIZED**. Baseline `b639325b0fc1435d65ab87045b32b19d6b8e5a04`. Architecture `USER_SESSION_VERSION_EPOCH`. Framework authority NextAuth **4.24.15**. Expected additive `authSessionVersion` schema/migration **NOT YET CREATED**. Remote migration must precede main code integration that reads the column. Local branch present; remote **ABSENT**).
 
 **Live recovery snapshot:** Solution #5 `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070 — **CLOSED ON PUBLISHED MAIN**. Final published-main baseline `2f803cab90e51dcd2df4bff07ca4426362f1c54f` (historical — superseded by Solution #6 implementation on `main`). Durable technical closure anchor `da6cabf14377afcfa1fb1cb910f1db0c890eac57` (historical). Source branch cleanup **COMPLETE** (local and remote). Do **not** reopen Solution #5.
 
-Solution #6 `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` — **CLOSED AND CLEANED UP**. Implementation `c9bd18e016fd599567aefd3efe3ec2d472fe7744`; local exact-SHA canonical validation **PASS**; disposable browser E2E **2/2 PASS**; hosted main pipeline `2812557887` / IID **382** **SUCCESS**; jobs `check` **16252583317** + `database-integration` **16252583318** **SUCCESS** (`allow_failure: false`). `TEST-HYGIENE-001` **CLOSED**. Playwright local suite owns disposable deterministic browser fixtures; Production Smoke remains separate; `TEST-GATE-001` remains separate. Source branch **ABSENT** local + remote. Final published-main closure baseline `4ad75eb428bf090b7d9e3079184e7bca0b5d1af7`. Solution #7 `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` — **PUBLISHED ON MAIN** / **HOSTED MAIN VALIDATION PASS** / **CLOSED**. Finding `BILLING-SEC-002` **CLOSED**. Durable implementation anchor `8d575aa166bc906e389c5f093343b45906933f34`. Hosted main pipeline `2813791386` / IID **385** **SUCCESS**; jobs `check` **16261884876** + `database-integration` **16261884877** **SUCCESS** (`allow_failure: false`). Source branch `billing-projection-atomic-idempotency-v1` **retained** pending closure-commit hosted validation. Cleanup only after: closure commit → published main → closure pipeline SUCCESS. Public webhook remains fail-closed (`BILLING-SEC-001`). `TEST-GATE-001` remains separate. Next recommended: `jwt-session-revocation-v1` / `AUTH-SESSION-001` — **NOT STARTED**.
+Solution #6 `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` — **CLOSED AND CLEANED UP**. Implementation `c9bd18e016fd599567aefd3efe3ec2d472fe7744`; local exact-SHA canonical validation **PASS**; disposable browser E2E **2/2 PASS**; hosted main pipeline `2812557887` / IID **382** **SUCCESS**; jobs `check` **16252583317** + `database-integration` **16252583318** **SUCCESS** (`allow_failure: false`). `TEST-HYGIENE-001` **CLOSED**. Playwright local suite owns disposable deterministic browser fixtures; Production Smoke remains separate; `TEST-GATE-001` remains separate. Source branch **ABSENT** local + remote. Final published-main closure baseline `4ad75eb428bf090b7d9e3079184e7bca0b5d1af7`. Solution #7 `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` — **CLOSED AND CLEANED UP**. Finding `BILLING-SEC-002` **CLOSED**. Durable implementation anchor `8d575aa166bc906e389c5f093343b45906933f34`. Closure anchor `b639325b0fc1435d65ab87045b32b19d6b8e5a04`. Closure pipeline `2813866658` / IID **386** **SUCCESS**. Source branch **ABSENT** local + remote. Public webhook remains fail-closed (`BILLING-SEC-001`). `TEST-GATE-001` remains separate. Solution #8 / `jwt-session-revocation-v1` / `AUTH-SESSION-001` — **ACTIVE** / **INTAKE ACCEPTED** / **ARCHITECTURE ACCEPTED** / **IMPLEMENTATION NOT YET AUTHORIZED**. Baseline `b639325b0fc1435d65ab87045b32b19d6b8e5a04`. Architecture `USER_SESSION_VERSION_EPOCH` (`User.authSessionVersion` + JWT claim `authSessionVersion`; legacy missing claim = 0; fail closed). Framework authority: NextAuth **4.24.15**. Expected schema/migration: additive `authSessionVersion` / **NOT YET CREATED**. Deployment safety: remote additive migration must precede serving code that reads the column. Local branch `jwt-session-revocation-v1` present; remote **ABSENT**. Queued after #8 unchanged: `LICENSING-002`, `LICENSING-001`, `AUTH-RATE-001`, `TEST-GATE-001`.
 `UNAUTHORIZED_DIAGNOSTIC_MUTATION=ACKNOWLEDGED` — process/governance
 deviation only; one ephemeral `docker run --rm alpine …` diagnostic
 during read-only runner investigation; no repository/product/DB
@@ -230,26 +230,31 @@ explicitly marked live here.
   published-main closure baseline
   `4ad75eb428bf090b7d9e3079184e7bca0b5d1af7`.
 - Solution #7 / `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` —
-  **PUBLISHED ON MAIN** / **HOSTED MAIN VALIDATION PASS** / **CLOSED**.
-  Finding `BILLING-SEC-002` **CLOSED**. Durable implementation
-  anchor `8d575aa166bc906e389c5f093343b45906933f34`. Hosted main
-  pipeline `2813791386` / IID **385** **SUCCESS**; jobs `check`
-  **16261884876** + `database-integration` **16261884877** **SUCCESS**
-  (`allow_failure: false`). Durable technical conclusions: billing event
-  projection and lifecycle completion are one PostgreSQL transaction;
-  BillingEvent row serialization uses `FOR UPDATE`; replay of
-  `PROCESSED` is idempotent; failed transactional apply rolls back
-  commercial state; conditional `FAILED` recording cannot overwrite
-  `PROCESSED`; persisted/payload organization mismatch cannot cross
-  tenant boundary; webhook remains fail-closed under `BILLING-SEC-001`;
-  no schema/migration was required; real PostgreSQL integration proves
-  rollback/retry/concurrency; `TEST-GATE-001` remains separate. Source
-  branch `billing-projection-atomic-idempotency-v1` **retained**
-  pending closure-commit hosted validation. Cleanup only after: closure
-  commit → published main → closure pipeline SUCCESS. Do not invent a
-  future closure-commit SHA.
-- Next recommended: `jwt-session-revocation-v1` / `AUTH-SESSION-001` —
-  **NOT STARTED**. Do not begin. Queued unchanged:
+  **CLOSED AND CLEANED UP**. Finding `BILLING-SEC-002` **CLOSED**. Durable
+  implementation anchor `8d575aa166bc906e389c5f093343b45906933f34`. Closure
+  anchor `b639325b0fc1435d65ab87045b32b19d6b8e5a04`. Closure pipeline
+  `2813866658` / IID **386** **SUCCESS**. Source branch **ABSENT** local +
+  remote. Durable technical conclusions: billing event projection and
+  lifecycle completion are one PostgreSQL transaction; BillingEvent row
+  serialization uses `FOR UPDATE`; replay of `PROCESSED` is idempotent;
+  failed transactional apply rolls back commercial state; conditional
+  `FAILED` recording cannot overwrite `PROCESSED`; persisted/payload
+  organization mismatch cannot cross tenant boundary; webhook remains
+  fail-closed under `BILLING-SEC-001`; no schema/migration was required;
+  real PostgreSQL integration proves rollback/retry/concurrency;
+  `TEST-GATE-001` remains separate.
+- Solution #8 / `jwt-session-revocation-v1` / `AUTH-SESSION-001` —
+  **ACTIVE** / **INTAKE ACCEPTED** / **ARCHITECTURE ACCEPTED** /
+  **IMPLEMENTATION NOT YET AUTHORIZED**. Baseline
+  `b639325b0fc1435d65ab87045b32b19d6b8e5a04`. Architecture
+  `USER_SESSION_VERSION_EPOCH` (`User.authSessionVersion` + JWT claim
+  `authSessionVersion`; legacy missing claim = 0; fail closed). Framework
+  authority: NextAuth **4.24.15**. Expected schema/migration: additive
+  `authSessionVersion` / **NOT YET CREATED**. Deployment safety: remote
+  additive migration must precede serving code that reads the column
+  (`SOURCE_VALIDATION_BEFORE_REMOTE_MIGRATION=yes`;
+  `REMOTE_MIGRATION_BEFORE_MAIN_CODE_INTEGRATION=yes`). Local branch
+  present; remote **ABSENT**. Queued after #8 unchanged:
   `LICENSING-002`, `LICENSING-001`, `AUTH-RATE-001`, `TEST-GATE-001`.
 - `UNAUTHORIZED_DIAGNOSTIC_MUTATION=ACKNOWLEDGED` — process/governance
   deviation only; ephemeral `docker run --rm alpine …` diagnostic during
@@ -268,9 +273,9 @@ explicitly marked live here.
   `neutral-prisma-cli-execution-helper-v1`;
   `integration-application-role-profile-v1`;
   `pre-eqr-format-normalization`.
-- DAT_4.6 conversation/context healthy after Solution #7 published-main
-  closure; no DAT_4.7 handoff required. Do not begin
-  `jwt-session-revocation-v1`.
+- DAT_4.6 conversation/context healthy; Solution #8 is the current active
+  work; no DAT_4.7 handoff required. Do not begin LICENSING while
+  Solution #8 is active.
 
 <!-- dat-45-live-recovery-navigator-v1 -->
 ## LIVE recovery navigator (DAT_4.5 — historical)
