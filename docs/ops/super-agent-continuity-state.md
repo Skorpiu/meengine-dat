@@ -3,11 +3,11 @@
 
 **Purpose:** conversation-independent DAT knowledge continuity and operational recovery.
 
-**Continuity sync:** `CONTINUITY_SYNC_STATUS=CURRENT` (Solution #8 / `jwt-session-revocation-v1` / `AUTH-SESSION-001` — **CLOSED ON PUBLISHED MAIN** / **SOURCE CLEANUP PENDING**. Finding `AUTH-SESSION-001` **CLOSED**. Implementation anchor `5af60d259d9f394590f926ceaaacf6f454aac282`. Main technical pipeline `2819681959` / IID **389** SUCCESS. Production read-only smoke **PASS**. Migration `20260903120000_add_user_auth_session_version` **APPLIED** on Production by human (DEC-069). Same deploy also applied historical `20260714160000_platform_commercial_catalog_schema_foundation_v1` (governance deviation; technical risk LOW; no commercial seed). Queued follow-ups: `migration-deploy-pending-set-enumeration-v1`; `production-smoke-hosted-timeout-hardening-v1`. Source branch **STILL PRESENT**. Closure record = current docs-only closure publication; resolve live `main`. Ordered next after cleanup: `LICENSING-002`. Solutions #6–#7 remain **CLOSED AND CLEANED UP**).
+**Continuity sync:** `CONTINUITY_SYNC_STATUS=CURRENT` (Solution #8 / `jwt-session-revocation-v1` / `AUTH-SESSION-001` — **CLOSED AND CLEANED UP**. Finding `AUTH-SESSION-001` **CLOSED**. Implementation anchor `5af60d259d9f394590f926ceaaacf6f454aac282`. Closure anchor `dadecd8c3103fbae53a36ae22f012545515e4ab0`. Main technical pipeline `2819681959` / IID **389** SUCCESS. Closure pipeline `2819992756` / IID **390** SUCCESS. Production read-only smoke **PASS**. Source branch **ABSENT** local + remote. Queued follow-ups inactive: `migration-deploy-pending-set-enumeration-v1`; `production-smoke-hosted-timeout-hardening-v1`. Solution #9 / `license-key-security-hardening-v1` / `LICENSING-002` — **ACTIVE**. Finding `LICENSING-002` **OPEN**. Architecture **PENDING INTAKE / ARCHITECT REVIEW**. Implementation **NOT AUTHORIZED**. Schema/migration **UNDETERMINED**. Remote DB / Production **NOT AUTHORIZED**. Hosted activation validation **PENDING** natural source push pipeline. Ordered after #9 (not activated): `LICENSING-001` → `AUTH-RATE-001` → `TEST-GATE-001`. Solutions #6–#8 remain **CLOSED AND CLEANED UP**).
 
 **Live recovery snapshot:** Solution #5 `database-integration-test-harness-v1` / `TEST-ARCH-001` / DEC-070 — **CLOSED ON PUBLISHED MAIN**. Final published-main baseline `2f803cab90e51dcd2df4bff07ca4426362f1c54f` (historical — superseded by later solutions on `main`). Durable technical closure anchor `da6cabf14377afcfa1fb1cb910f1db0c890eac57` (historical). Source branch cleanup **COMPLETE** (local and remote). Do **not** reopen Solution #5.
 
-Solution #6 `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` — **CLOSED AND CLEANED UP**. Implementation `c9bd18e016fd599567aefd3efe3ec2d472fe7744`; hosted main pipeline `2812557887` / IID **382** **SUCCESS**. Source branch **ABSENT** local + remote. Final published-main closure baseline `4ad75eb428bf090b7d9e3079184e7bca0b5d1af7`. Solution #7 `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` — **CLOSED AND CLEANED UP**. Finding `BILLING-SEC-002` **CLOSED**. Durable implementation anchor `8d575aa166bc906e389c5f093343b45906933f34`. Closure anchor `b639325b0fc1435d65ab87045b32b19d6b8e5a04`. Closure pipeline `2813866658` / IID **386** **SUCCESS**. Source branch **ABSENT** local + remote. Solution #8 / `jwt-session-revocation-v1` / `AUTH-SESSION-001` — **CLOSED ON PUBLISHED MAIN** / **SOURCE CLEANUP PENDING**. Finding `AUTH-SESSION-001` **CLOSED**. Architecture `USER_SESSION_VERSION_EPOCH` (`User.authSessionVersion` Int `@default(0)` + JWT claim `authSessionVersion`; legacy missing claim = 0; fail closed). Framework authority: NextAuth **4.24.15**. Implementation anchor `5af60d259d9f394590f926ceaaacf6f454aac282`. Activation `a47493ddac65dc74c102f9f52a2b38d38ad24b3e`. Migration `20260903120000_add_user_auth_session_version` **APPLIED** on Production by **human** operator via DEC-069 (`AUTH_SESSION_REMOTE_SCHEMA_READY=yes`). Hosted source pipeline `2816551646` / IID **388** SUCCESS. Main technical pipeline `2819681959` / IID **389** SUCCESS. Production Ready at application behavior anchor `5af60d259d9f394590f926ceaaacf6f454aac282`; Production read-only smoke **PASS** (fixture 1/0/0 in 42.0s; API exit 0; health PASS; signup guard PASS `403 public_signup_disabled`; readonly UI 4/0/0; mutation smoke NOT RUN; 0 persisted mutations). Same migrate deploy also applied historical `20260714160000_platform_commercial_catalog_schema_foundation_v1` (human 2026-09-03; technical risk LOW; governance deviation yes; no commercial seed; no rollback). Queued unnumbered follow-ups (not remediated here): `migration-deploy-pending-set-enumeration-v1`; `production-smoke-hosted-timeout-hardening-v1`. Source branch `jwt-session-revocation-v1` **STILL PRESENT** at `5af60d259d9f394590f926ceaaacf6f454aac282`. Closure record = current docs-only closure publication; resolve live `main`. Ordered next after Solution #8 cleanup: `LICENSING-002`, then `LICENSING-001`, `AUTH-RATE-001`, `TEST-GATE-001`. Do **not** begin LICENSING while cleanup is pending.
+Solution #6 `e2e-suite-contract-repair-v1` / `TEST-HYGIENE-001` — **CLOSED AND CLEANED UP**. Implementation `c9bd18e016fd599567aefd3efe3ec2d472fe7744`; hosted main pipeline `2812557887` / IID **382** **SUCCESS**. Source branch **ABSENT** local + remote. Final published-main closure baseline `4ad75eb428bf090b7d9e3079184e7bca0b5d1af7`. Solution #7 `billing-projection-atomic-idempotency-v1` / `BILLING-SEC-002` — **CLOSED AND CLEANED UP**. Finding `BILLING-SEC-002` **CLOSED**. Durable implementation anchor `8d575aa166bc906e389c5f093343b45906933f34`. Closure anchor `b639325b0fc1435d65ab87045b32b19d6b8e5a04`. Closure pipeline `2813866658` / IID **386** **SUCCESS**. Source branch **ABSENT** local + remote. Solution #8 / `jwt-session-revocation-v1` / `AUTH-SESSION-001` — **CLOSED AND CLEANED UP**. Finding `AUTH-SESSION-001` **CLOSED**. Architecture `USER_SESSION_VERSION_EPOCH` (`User.authSessionVersion` Int `@default(0)` + JWT claim `authSessionVersion`; legacy missing claim = 0; fail closed). Framework authority: NextAuth **4.24.15**. Implementation anchor `5af60d259d9f394590f926ceaaacf6f454aac282`. Closure anchor `dadecd8c3103fbae53a36ae22f012545515e4ab0`. Activation `a47493ddac65dc74c102f9f52a2b38d38ad24b3e`. Migration `20260903120000_add_user_auth_session_version` **APPLIED** on Production by **human** operator via DEC-069 (`AUTH_SESSION_REMOTE_SCHEMA_READY=yes`). Hosted source pipeline `2816551646` / IID **388** SUCCESS. Main technical pipeline `2819681959` / IID **389** SUCCESS. Closure pipeline `2819992756` / IID **390** SUCCESS. Production Ready at application behavior anchor `5af60d259d9f394590f926ceaaacf6f454aac282`; Production read-only smoke **PASS** (fixture 1/0/0 in 42.0s; API exit 0; health PASS; signup guard PASS `403 public_signup_disabled`; readonly UI 4/0/0; mutation smoke NOT RUN; 0 persisted mutations). Same migrate deploy also applied historical `20260714160000_platform_commercial_catalog_schema_foundation_v1` (human 2026-09-03; technical risk LOW; governance deviation yes; no commercial seed; no rollback). Queued unnumbered follow-ups (inactive; do not promote ahead of Solution #9): `migration-deploy-pending-set-enumeration-v1`; `production-smoke-hosted-timeout-hardening-v1`. Source branch `jwt-session-revocation-v1` **ABSENT** local + remote. Solution #9 / `license-key-security-hardening-v1` / `LICENSING-002` — **ACTIVE**. Finding `LICENSING-002` **OPEN**. Priority **P1** commercial security. Architecture **PENDING INTAKE / ARCHITECT REVIEW**. Implementation **NOT AUTHORIZED**. Schema/migration **UNDETERMINED**. Remote DB / Production **NOT AUTHORIZED**. Remediation objective: `CRYPTOGRAPHIC_KEY_GENERATION` + `ATOMIC_SINGLE_USE_CONSUMPTION` + `CONCURRENCY_SAFE_IDEMPOTENT_ENTITLEMENT_EFFECTS`. Published `main` baseline at activation entry: `dadecd8c3103fbae53a36ae22f012545515e4ab0`. Hosted activation validation **PENDING** natural source push. Ordered after #9 (not activated): `LICENSING-001` → `AUTH-RATE-001` → `TEST-GATE-001`.
 `UNAUTHORIZED_DIAGNOSTIC_MUTATION=ACKNOWLEDGED` — process/governance
 deviation only; one ephemeral `docker run --rm alpine …` diagnostic
 during read-only runner investigation; no repository/product/DB
@@ -244,23 +244,38 @@ explicitly marked live here.
   real PostgreSQL integration proves rollback/retry/concurrency;
   `TEST-GATE-001` remains separate.
 - Solution #8 / `jwt-session-revocation-v1` / `AUTH-SESSION-001` —
-  **CLOSED ON PUBLISHED MAIN** / **SOURCE CLEANUP PENDING**. Finding
-  `AUTH-SESSION-001` **CLOSED**. Architecture
-  `USER_SESSION_VERSION_EPOCH` (`User.authSessionVersion` Int `@default(0)`
-  + JWT claim `authSessionVersion`; legacy missing claim = 0; fail closed).
-  Framework authority: NextAuth **4.24.15**. Implementation anchor
-  `5af60d259d9f394590f926ceaaacf6f454aac282`. Migration
-  `20260903120000_add_user_auth_session_version` **APPLIED** on Production
-  by **human** operator via DEC-069 (`AUTH_SESSION_REMOTE_SCHEMA_READY=yes`).
-  Main technical pipeline `2819681959` / IID **389** SUCCESS. Production
-  read-only smoke **PASS**. Same migrate deploy also applied historical
+  **CLOSED AND CLEANED UP**. Finding `AUTH-SESSION-001` **CLOSED**.
+  Architecture `USER_SESSION_VERSION_EPOCH` (`User.authSessionVersion`
+  Int `@default(0)` + JWT claim `authSessionVersion`; legacy missing
+  claim = 0; fail closed). Framework authority: NextAuth **4.24.15**.
+  Implementation anchor `5af60d259d9f394590f926ceaaacf6f454aac282`.
+  Closure anchor `dadecd8c3103fbae53a36ae22f012545515e4ab0`. Migration
+  `20260903120000_add_user_auth_session_version` **APPLIED** on
+  Production by **human** operator via DEC-069
+  (`AUTH_SESSION_REMOTE_SCHEMA_READY=yes`). Main technical pipeline
+  `2819681959` / IID **389** SUCCESS. Closure pipeline `2819992756` /
+  IID **390** SUCCESS. Production read-only smoke **PASS**. Same migrate
+  deploy also applied historical
   `20260714160000_platform_commercial_catalog_schema_foundation_v1`
   (technical risk LOW; governance deviation yes; no commercial seed).
-  Queued follow-ups: `migration-deploy-pending-set-enumeration-v1`;
-  `production-smoke-hosted-timeout-hardening-v1`. Source branch **STILL
-  PRESENT**. Closure record = current docs-only closure publication;
-  resolve live `main`. Ordered next after cleanup: `LICENSING-002`,
-  `LICENSING-001`, `AUTH-RATE-001`, `TEST-GATE-001`.
+  Queued follow-ups (inactive; do not promote ahead of Solution #9):
+  `migration-deploy-pending-set-enumeration-v1`;
+  `production-smoke-hosted-timeout-hardening-v1`. Source branch
+  **ABSENT** local + remote.
+- Solution #9 / `license-key-security-hardening-v1` / `LICENSING-002` —
+  **ACTIVE**. Finding `LICENSING-002` **OPEN**. Priority **P1**
+  commercial security. Architecture **PENDING INTAKE / ARCHITECT
+  REVIEW**. Implementation **NOT AUTHORIZED**. Schema/migration
+  **UNDETERMINED**. Remote DB / Production **NOT AUTHORIZED**.
+  Accepted finding statement: weak/non-cryptographic key generation;
+  pre-transaction single-use check; no atomic conditional consume;
+  concurrent activation can attempt duplicate entitlement effects.
+  Remediation objective: `CRYPTOGRAPHIC_KEY_GENERATION` +
+  `ATOMIC_SINGLE_USE_CONSUMPTION` +
+  `CONCURRENCY_SAFE_IDEMPOTENT_ENTITLEMENT_EFFECTS`. Hosted activation
+  validation **PENDING** natural source push. Ordered after #9 (not
+  activated): `LICENSING-001` → `AUTH-RATE-001` → `TEST-GATE-001`.
+  Do **not** claim remediated.
 - `UNAUTHORIZED_DIAGNOSTIC_MUTATION=ACKNOWLEDGED` — process/governance
   deviation only; ephemeral `docker run --rm alpine …` diagnostic during
   read-only runner investigation; no repository/product/DB mutation;
@@ -278,10 +293,11 @@ explicitly marked live here.
   `neutral-prisma-cli-execution-helper-v1`;
   `integration-application-role-profile-v1`;
   `pre-eqr-format-normalization`.
-- DAT_4.6 conversation/context healthy; Solution #8 is **CLOSED ON
-  PUBLISHED MAIN** / **SOURCE CLEANUP PENDING**. Do not begin LICENSING
-  while Solution #8 cleanup is pending. Ordered technical next after
-  cleanup: `LICENSING-002`.
+- DAT_4.6 conversation/context healthy; Solution #8 is **CLOSED AND
+  CLEANED UP**. Solution #9 / `LICENSING-002` is the **only** active
+  canonical engineering Solution (architecture pending; implementation
+  **NOT AUTHORIZED**). Ordered after #9 (not activated):
+  `LICENSING-001` → `AUTH-RATE-001` → `TEST-GATE-001`.
 
 <!-- dat-45-live-recovery-navigator-v1 -->
 ## LIVE recovery navigator (DAT_4.5 — historical)
@@ -1485,7 +1501,7 @@ A fresh SA session must be able to state from committed repository evidence:
 - authoritative hosted login page is `/auth/login` on both hosts.
 - A3.2 session cache evidence: repeated anonymous and dummy-cookie requests remained Vercel MISS with age=0 and no ETag.
 - login page caching is public-page behavior and is not promoted as a finding.
-- `AUTH-SESSION-001` is **CLOSED** by Solution #8 / `jwt-session-revocation-v1` (**CLOSED ON PUBLISHED MAIN** / **SOURCE CLEANUP PENDING**; implementation `5af60d259d9f394590f926ceaaacf6f454aac282`). Historical Wave A3 wording that JWT revocation remained unresolved after cookie/cache evidence is superseded.
+- `AUTH-SESSION-001` is **CLOSED** by Solution #8 / `jwt-session-revocation-v1` (**CLOSED AND CLEANED UP**; implementation `5af60d259d9f394590f926ceaaacf6f454aac282`; closure anchor `dadecd8c3103fbae53a36ae22f012545515e4ab0`; source **ABSENT** local + remote). Historical Wave A3 wording that JWT revocation remained unresolved after cookie/cache evidence is superseded. Historical closure-record wording “SOURCE CLEANUP PENDING” is superseded by live Git cleanup.
 - initial awk-based A3 attempt is explicitly non-authoritative; A3.1/A3.2 are the valid evidence.
 - no credential, login mutation, real-session cookie output, database or hosted mutation occurred.
 
@@ -1498,7 +1514,7 @@ A fresh SA session must be able to state from committed repository evidence:
 - billing webhook is POST-only, deployed on both public hosts and contains zero detected authenticity-verification signals in the route.
 - license/features, settings and feature-flags return anonymous 401 on tenant and Platform hosts.
 - no anonymous commercial 200 surface was discovered.
-- `BILLING-SEC-001`, `BILLING-SEC-002`, `LICENSING-001`, `LICENSING-002` and `AUTHZ-OPERATOR-001` all remain open according to their existing contracts.
+- `BILLING-SEC-001` closed by containment; `BILLING-SEC-002` **CLOSED** (Solution #7). `LICENSING-001` remains open (not activated). `LICENSING-002` remains **OPEN** and is the active Solution #9 finding (implementation **NOT AUTHORIZED**). `AUTHZ-OPERATOR-001` remains open according to its existing contract.
 - A4 creates no new finding.
 - Security Wave A1-A4 is complete.
 - next phase: Wave B read-only data disposition for legacy/dormant operational models.
